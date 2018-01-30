@@ -704,6 +704,9 @@ done:
 	NSArray				*patchPatchesArray;
 	NSString			*downloadURL;
 	NSError				*err;
+	
+	MPCrypto 			*mpCrypto = [[MPCrypto alloc] init];
+	SecKeyRef			pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
     
     // Staging
     NSString *stageDir;
@@ -724,7 +727,8 @@ done:
 	}
 
 	logit(lcl_vInfo, @"Begin installing patches.");
-    for (i = 0; i < [updatesArray count]; i++) {
+    for (i = 0; i < [updatesArray count]; i++)
+	{
 		// Create/Get Dictionary of Patch to install
 		patch = nil;
 		patch = [NSDictionary dictionaryWithDictionary:[updatesArray objectAtIndex:i]];
@@ -751,18 +755,36 @@ done:
         // -------------------------------------------
         installResult = -1;
 
-        if ([[patch objectForKey:@"type"] isEqualTo:@"Third"] && (aFilter == 0 || aFilter == 2))
+        if ([patch[@"type"] isEqualTo:@"Third"] && (aFilter == 0 || aFilter == 2))
         {
-            logit(lcl_vInfo,@"Starting install for %@",[patch objectForKey:@"patch"]);
+            logit(lcl_vInfo,@"Starting install for %@",patch[@"patch"]);
 
 			if (iLoadMode == YES) {
-				printf("Begin: %s\n", [[patch objectForKey:@"patch"] cString]);
+				printf("Begin: %s\n", [patch[@"patch"] cString]);
 			}
             
             // Get all of the patches, main and subs
             // This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
-            patchPatchesArray = [NSArray arrayWithArray:[[patch objectForKey:@"patches"] objectForKey:@"patches"]];
+			NSDictionary *_curPatch = [patch objectForKey:@"patches"]; //Patch Install Dict
+            patchPatchesArray = [NSArray arrayWithArray:[patch[@"patches"] objectForKey:@"patches"]];
             logit(lcl_vDebug,@"Current patch has total patches associated with it %ld", ([patchPatchesArray count]-1));
+			
+			// Verify Patch Signature before proceeding
+			// Verify task Has SW Signature
+			/*
+			if (![_curPatch objectForKey:@"patch_sig"]) {
+				logit(lcl_vError,@"%@ patch has no signature, will not install.",patch[@"patch"]);
+				continue;
+			}
+			
+			// Verify Signature for patch
+			if (![self isValidPatch:_curPatch]) {
+				logit(lcl_vError,@"Unable to verify signature for patch, %@ will not install.",patch[@"patch"]);
+				continue;
+			} else {
+				logit(lcl_vInfo,@"Signature was verfied for %@.",patch[@"patch"]);
+			}
+			 */
 
             NSString *dlPatchLoc; //Download location Path
             int patchIndex = 0;
@@ -788,7 +810,6 @@ done:
                     // -------------------------------------------
                     // Check to see if the patch has been staged
                     // -------------------------------------------
-                    MPCrypto *mpCrypto = [[MPCrypto alloc] init];
                     stageDir = [NSString stringWithFormat:@"%@/Data/.stage/%@",MP_ROOT_CLIENT,[patch objectForKey:@"patch_id"]];
                     if ([fm fileExistsAtPath:[stageDir stringByAppendingPathComponent:[[currPatchToInstallDict objectForKey:@"url"] lastPathComponent]]])
                     {
@@ -854,7 +875,8 @@ done:
 
                 // *****************************
                 // Run PreInstall Script
-                if ([[currPatchToInstallDict objectForKey:@"preinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"preinst"] isEqualTo:@"NA"] == NO) {
+                if ([[currPatchToInstallDict objectForKey:@"preinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"preinst"] isEqualTo:@"NA"] == NO)
+				{
                     logit(lcl_vInfo,@"Begin pre install script.");
                     NSString *preInstScript = [[currPatchToInstallDict objectForKey:@"preinst"] decodeBase64AsString];
                     logit(lcl_vDebug,@"preInstScript=%@",preInstScript);
@@ -916,7 +938,8 @@ done:
 
                 // *****************************
                 // Run PostInstall Script
-                if ([[currPatchToInstallDict objectForKey:@"postinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"postinst"] isEqualTo:@"NA"] == NO) {
+                if ([[currPatchToInstallDict objectForKey:@"postinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"postinst"] isEqualTo:@"NA"] == NO)
+				{
                     logit(lcl_vInfo,@"Begin post install script.");
                     NSString *postInstScript = [[currPatchToInstallDict objectForKey:@"postinst"] decodeBase64AsString];
                     logit(lcl_vDebug,@"postInstScript=%@",postInstScript);
@@ -934,7 +957,8 @@ done:
                 // *****************************
                 // Instal is complete, post result to web service
 
-                @try {
+                @try
+				{
                     MPWebServices *mpws = [[MPWebServices alloc] init];
                     NSError *wsErr = nil;
                     [mpws postPatchInstallResultsToWebService:[patch objectForKey:@"patch_id"] patchType:@"third" error:&wsErr];
@@ -1151,7 +1175,6 @@ done:
 done:
     // Added a global notification to update image icon of MPClientStatus
     [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRefreshStatusIconNotification" object:nil];
-    
 	[self removeTaskRunning:kMPPatchUPDATE];
 }
 
@@ -2093,9 +2116,9 @@ done:
 
 - (BOOL)installSoftwareWithTask:(NSDictionary *)aTask error:(NSError **)err
 {
+	NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
     BOOL taskCanBeInstalled = [self softwareTaskCriteriaCheck:aTask];
     if (!taskCanBeInstalled) {
-        NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
         [errorDetail setValue:@"Software Task failed basic criteria check." forKey:NSLocalizedDescriptionKey];
         *err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1001 userInfo:errorDetail];
         return NO;
@@ -2106,6 +2129,28 @@ done:
     [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
     logit(lcl_vInfo,@"Installing %@ (%@).",[aTask objectForKey:@"name"],[aTask objectForKey:@"id"]);
     logit(lcl_vInfo,@"INFO: %@",[aTask valueForKeyPath:@"Software.sw_type"]);
+	
+	
+	// Verify task Has SW Signature
+	/*
+	if (![aTask objectForKey:@"sw_signature"]) {
+		logit(lcl_vError,@"%@ task has no signature, will not install task.",[aTask objectForKey:@"name"]);
+		[errorDetail setValue:@"Software Task failed, task has no signature." forKey:NSLocalizedDescriptionKey];
+		*err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1002 userInfo:errorDetail];
+		return NO;
+	}
+	
+	// Verify Signature for Software task
+	logit(lcl_vInfo,@"Verify signature for task %@",[aTask objectForKey:@"name"]);
+	if (![self isValidSoftwareTask:aTask[@"Software"] signature:aTask[@"sw_signature"]]) {
+		logit(lcl_vError,@"Unable to verify signature for task %@ task, will not install task.",aTask[@"name"]);
+		[errorDetail setValue:@"Unable to verify signature for software task." forKey:NSLocalizedDescriptionKey];
+		*err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1003 userInfo:errorDetail];
+		return NO;
+	} else {
+		logit(lcl_vInfo,@"Signature for %@ passed verification.",aTask[@"name"]);
+	}
+	 */
 
     // Create Path to download software to
     NSString *swLoc = NULL;
@@ -2301,6 +2346,73 @@ done:
 }
 
 #pragma mark - Misc
+
+// Patch
+- (BOOL)isValidPatch:(NSDictionary *)patch
+{
+	return YES; //Disabled
+	
+	MPCrypto 	*mpCrypto = [[MPCrypto alloc] init];
+	SecKeyRef	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
+	
+	logit(lcl_vInfo,@"Checking signature for patch.");
+	BOOL res = NO;
+	NSString *strData = [self stringArrayToHash:patch[@"patches"]];
+	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:patch[@"patch_sig"] options:0];
+	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
+	sigData = nil;
+	return res;
+}
+
+//Patch
+- (NSString *)stringArrayToHash:(NSArray *)patches
+{
+	NSMutableString *_stringToSign = [NSMutableString new];
+	NSArray *fields = @[@"baseline",@"env",@"hash",@"name",@"postinst",@"preinst",@"reboot",@"size",@"type",@"url"];
+	for (NSDictionary *p in patches)
+	{
+		for (NSString *k in fields)
+		{
+			if ([[p allKeys] containsObject:k]) {
+				[_stringToSign appendString:[p objectForKey:k]];
+			}
+		}
+	}
+	return (NSString *)_stringToSign;
+}
+
+// Software
+- (BOOL)isValidSoftwareTask:(NSDictionary *)task signature:(NSString *)signature
+{
+	return YES; //Disabled
+	
+	MPCrypto 	*mpCrypto = [[MPCrypto alloc] init];
+	SecKeyRef	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
+	
+	BOOL res = NO;
+	NSString *strData = [self stringDictionaryToHash:task];
+	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:signature options:0];
+	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
+	sigData = nil;
+	return res;
+}
+
+// Software
+- (NSString *)stringDictionaryToHash:(NSDictionary *)task
+{
+	NSMutableString *_stringToSign = [NSMutableString new];
+	NSArray *fields = @[@"auto_patch",@"name",@"patch_bundle_id",@"reboot",@"sid",@"state",
+						@"sw_env_var",@"sw_hash",@"sw_post_install",@"sw_pre_install",@"sw_size",
+						@"sw_type",@"sw_uninstall",@"sw_url",@"vendor",@"vendorUrl",@"version"];
+	
+	for (NSString *k in fields)
+	{
+		if ([[task allKeys] containsObject:k]) {
+			[_stringToSign appendString:[task objectForKey:k]];
+		}
+	}
+	return (NSString *)_stringToSign;
+}
 
 - (void)cleanupPreStagePatches:(NSArray *)aApprovedPatches
 {

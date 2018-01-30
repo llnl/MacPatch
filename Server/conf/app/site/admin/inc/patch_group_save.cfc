@@ -244,8 +244,8 @@
         </cftry>
         <cftry>
             <cfquery datasource="#this.ds#" name="qGetUpdatesThird">
-            	Select mpg.name as name, mpgp.patch_id as id, cpfv.type as type, cpfv.reboot as reboot, cpfv.suname as suname, mpp.pkg_hash as hash, 
-                mpp.pkg_path as path, mpp.pkg_size as size,cpfv.patch_install_weight, cpfv.patch_reboot_override, cpfv.severity
+            	Select mpg.name as name, mpgp.patch_id as id, mpp.bundle_id as bundle_id, cpfv.type as type, cpfv.reboot as reboot, cpfv.suname as suname,  
+                mpp.pkg_hash as hash, mpp.pkg_path as path, mpp.pkg_size as size,cpfv.patch_install_weight, cpfv.patch_reboot_override, cpfv.severity
                 From mp_patch_group mpg
                 Join mp_patch_group_patches mpgp
                 ON mpg.id = mpgp.patch_group_id
@@ -325,6 +325,7 @@
 			<!--- Main Dict for the Patch --->	
 			<cfset _cUpdate = {} />
 			<cfset _cUpdate[ "patch_id" ] = "#item#" />
+            <cfset _cUpdate[ "bundle_id" ] = "#patchRes.bundle_id#" />
             <cfset _cUpdate[ "patch_install_weight" ] = "#patchRes.patch_install_weight#" />
 			<cfset _cUpdate[ "patches" ] = "" />
             <cfset _cUpdate[ "severity" ] = "#patchRes.patch_severity#" />

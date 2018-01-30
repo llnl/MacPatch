@@ -9,11 +9,11 @@
 	<key>CFBundleName</key>
 	<string>MPAgent</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.0.0.3</string>
+	<string>3.0.2.2</string>
 	<key>CFBundleVersion</key>
-	<string>3.0.0.3</string>
+	<string>3.0.2.2</string>
 	<key>MPInfo</key>
-	<string>MacPatch 3.0.0 Client Software</string>
+	<string>MacPatch 3.0.2 Client Software</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

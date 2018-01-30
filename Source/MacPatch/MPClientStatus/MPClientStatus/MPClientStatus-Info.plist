@@ -27,7 +27,7 @@
 	<key>LSUIElement</key>
 	<true/>
 	<key>MPInfo</key>
-	<string>MacPatch 3.0.0 Client Software</string>
+	<string>MacPatch 3.0.2 Client Software</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

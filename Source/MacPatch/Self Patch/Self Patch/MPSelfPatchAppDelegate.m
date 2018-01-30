@@ -69,6 +69,10 @@ static BOOL gDone = false;
 
 // Private Methods
 @interface MPSelfPatchAppDelegate ()
+{
+	MPCrypto 	*mpCrypto;
+	SecKeyRef	pubKeyRef;
+}
 
 // Helper
 - (void)connect;
@@ -216,7 +220,9 @@ static BOOL gDone = false;
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification 
 {
-	// Set up preferences for the app.	
+	// Set up preferences for the app.
+	mpCrypto = [[MPCrypto alloc] init];
+	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
 	
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	if (![d objectForKey:@"colBaselineOnLaunch"]) {
@@ -1297,13 +1303,13 @@ done:
             // Create/Get Dictionary of Patch to install  
             patch = nil;
             patch = [NSDictionary dictionaryWithDictionary:[patchesToInstallArray objectAtIndex:i]];
-            logit(lcl_vDebug,@"Checking to see if patch %@ needs a reboot; \"%@\"",[patch objectForKey:@"patch"],[patch objectForKey:@"restart"]);
+            logit(lcl_vDebug,@"Checking to see if patch %@ needs a reboot; \"%@\"",patch[@"patch"], patch[@"restart"]);
             
             // Check if patch needs a reboot
-            if (([[[patch objectForKey:@"restart"] uppercaseString] isEqualTo:@"N"] || [[[patch objectForKey:@"restart"] uppercaseString] isEqualTo:@"NO"] || [[[patch objectForKey:@"restart"] uppercaseString] isEqualTo:@"FALSE"]) || [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] == YES)
+            if (([[patch[@"restart"] uppercaseString] isEqualTo:@"N"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"NO"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"FALSE"]) || [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] == YES)
             {
                 logit(lcl_vInfo,@"Allow Install of Reboot Patches is %@",[[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? @"ON":@"OFF");
-                logit(lcl_vInfo,@"Preparing to install %@(%@)",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
+                logit(lcl_vInfo,@"Preparing to install %@(%@)",patch[@"patch"],patch[@"version"]);
                 logit(lcl_vDebug,@"Patch to process: %@",patch);
                 
                 /* Disabled for a min
@@ -1318,20 +1324,38 @@ done:
                 
                 if ([[patch objectForKey:@"type"] isEqualTo:@"Third"])
                 {
-                    NSString *infoText = [NSString stringWithFormat:@"Starting install for %@",[patch objectForKey:@"patch"]];
+                    NSString *infoText = [NSString stringWithFormat:@"Starting install for %@",patch[@"patch"]];
                     [self progress:infoText];
-                    
-                    
+					
                     // Get all of the patches, main and subs
                     // This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
-                    patchPatchesArray = [NSArray arrayWithArray:[[patch objectForKey:@"patches"] objectForKey:@"patches"]];
+					NSDictionary *_curPatch = [patch objectForKey:@"patches"]; //Patch Install Dict
+                    patchPatchesArray = [NSArray arrayWithArray:[_curPatch objectForKey:@"patches"]];
                     logit(lcl_vDebug,@"Current patch has total patches associated with it %d", (int)([patchPatchesArray count]-1));
-                    
+					
+					// Verify Patch Signature before proceeding
+					// Verify task Has SW Signature
+					/*
+					if (![_curPatch objectForKey:@"patch_sig"]) {
+						logit(lcl_vError,@"%@ patch has no signature, will not install.",patch[@"patch"]);
+						[self updateTableAndArrayControllerWithPatch:patch status:2];
+						continue;
+					}
+					
+					// Verify Signature for Patch
+					if (![self isValidPatch:_curPatch]) {
+						logit(lcl_vError,@"Unable to verify signature for patch, %@ will not install.",patch[@"patch"]);
+						[self updateTableAndArrayControllerWithPatch:patch status:2];
+						continue;
+					} else {
+						logit(lcl_vInfo,@"Signature was verfied for %@.",patch[@"patch"]);
+					}
+					 */
+					
                     NSString *dlPatchLoc; //Download location Path
                     int patchIndex = 0;
-                    for (patchIndex=0;patchIndex < [patchPatchesArray count];patchIndex++)
+                    for (patchIndex=0; patchIndex < [patchPatchesArray count]; patchIndex++)
                     {
-                        
                         // Make sure we only process the dictionaries in the NSArray
                         if ([[patchPatchesArray objectAtIndex:patchIndex] isKindOfClass:[NSDictionary class]]) {
                             currPatchToInstallDict = [NSDictionary dictionaryWithDictionary:[patchPatchesArray objectAtIndex:patchIndex]];
@@ -1359,7 +1383,6 @@ done:
                             // -------------------------------------------
                             // Check to see if the patch has been staged
                             // -------------------------------------------
-                            MPCrypto *mpCrypto = [[MPCrypto alloc] init];
                             stageDir = [NSString stringWithFormat:@"%@/Data/.stage/%@",MP_ROOT_CLIENT,[patch objectForKey:@"patch_id"]];
                             if ([fm fileExistsAtPath:[stageDir stringByAppendingPathComponent:[[currPatchToInstallDict objectForKey:@"url"] lastPathComponent]]])
                             {
@@ -1476,7 +1499,8 @@ done:
                             installResult = -1;
                             
                             // Install pkg(s)
-                            for (int ii = 0; ii < [pkgList count]; ii++) {
+                            for (int ii = 0; ii < [pkgList count]; ii++)
+							{
                                 pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,[pkgList objectAtIndex:ii]];
                                 [self progress:[NSString stringWithFormat:@"Installing %@",[pkgPath lastPathComponent]]];
                                 
@@ -1548,12 +1572,12 @@ done:
                         }
                         
                         [self progress:[NSString stringWithFormat:@"Patch install completed."]];
-                        	 
-                        
                         [self updateTableAndArrayControllerWithPatch:patch status:1];
                         
                     } // End patchArray To install
-                } else if ([[patch objectForKey:@"type"] isEqualTo:@"Apple"]) {
+                }
+				else if ([[patch objectForKey:@"type"] isEqualTo:@"Apple"])
+				{
                     // Process Apple Type Patches
                     
                     infoText = [NSString stringWithFormat:@"Starting install for %@",[patch objectForKey:@"patch"]];
@@ -1652,11 +1676,15 @@ done:
 
                         [self updateTableAndArrayControllerWithPatch:patch status:1];
                     }
-                } else {
+                }
+				else
+				{
                     continue;
                 }
                 
-            } else {
+            }
+			else
+			{
                 logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
                 //[self generateRebootPatchForDownload:patch];
                 if ([[NSUserDefaults standardUserDefaults] boolForKey:@"preStageRebootPatches"] == YES) {
@@ -1958,6 +1986,37 @@ done:
     });
 }
 
+#pragma mark Misc
+
+- (BOOL)isValidPatch:(NSDictionary *)patch
+{
+	return YES; //Disabled
+	
+	logit(lcl_vInfo,@"Checking signature for patch.");
+	BOOL res = NO;
+	NSString *strData = [self stringArrayToHash:patch[@"patches"]];
+	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:patch[@"patch_sig"] options:0];
+	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
+	sigData = nil;
+	return res;
+}
+
+- (NSString *)stringArrayToHash:(NSArray *)patches
+{
+	NSMutableString *_stringToSign = [NSMutableString new];
+	NSArray *fields = @[@"baseline",@"env",@"hash",@"name",@"postinst",@"preinst",@"reboot",@"size",@"type",@"url"];
+	for (NSDictionary *p in patches)
+	{
+		for (NSString *k in fields)
+		{
+			if ([[p allKeys] containsObject:k]) {
+				[_stringToSign appendString:[p objectForKey:k]];
+			}
+		}
+	}
+	return (NSString *)_stringToSign;
+}
+
 #pragma mark Notifications
 
 - (void)receiveAllowInstallRebootPatchesNotification:(NSNotification *)notification
@@ -2005,8 +2064,8 @@ done:
 	if(notification)
 	{
 		NSDictionary *tmpDict = [notification userInfo];
-		if ([tmpDict objectForKey:@"pname"]) {
-			[self progress:[NSString stringWithFormat:@"Scanning for %@",[tmpDict objectForKey:@"pname"]]];
+		if ([tmpDict objectForKey:@"patch_name"]) {
+			[self progress:[NSString stringWithFormat:@"Scanning for %@",[tmpDict objectForKey:@"patch_name"]]];
 				
 		}
 		if ([tmpDict objectForKey:@"iData"]) {

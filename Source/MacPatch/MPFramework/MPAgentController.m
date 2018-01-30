@@ -269,7 +269,8 @@
         logit(lcl_vInfo,@"Building approved patch list...");
         for (int i=0; i<[customPatchesArray count]; i++) {
             customPatch	= [customPatchesArray objectAtIndex:i];
-            for (int x=0;x < [approvedCustomPatches count]; x++) {
+            for (int x=0;x < [approvedCustomPatches count]; x++)
+			{
                 approvedPatch	= [approvedCustomPatches objectAtIndex:x];
                 if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]]) {
                     logit(lcl_vInfo,@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);
@@ -281,7 +282,7 @@
                     [tmpDict setObject:approvedPatch forKey:@"patches"];
                     [tmpDict setObject:[customPatch objectForKey:@"patch_id"] forKey:@"patch_id"];
                     [tmpDict setObject:@"Third" forKey:@"type"];
-                    [tmpDict setObject:[customPatch objectForKey:@"bundleID"] forKey:@"bundleID"];
+                    [tmpDict setObject:[approvedPatch objectForKey:@"bundle_id"] forKey:@"bundleID"];
                     
                     logit(lcl_vDebug,@"Custom Patch Dictionary Added: %@",tmpDict);
                     [approvedUpdatesArray addObject:tmpDict];
@@ -366,9 +367,11 @@ done:
     logit(lcl_vInfo,@"Building approved patch list...");
     for (int i=0; i<[customPatchesArray count]; i++) {
         customPatch	= [customPatchesArray objectAtIndex:i];
-        for (int x=0;x < [approvedCustomPatches count]; x++) {
+        for (int x=0;x < [approvedCustomPatches count]; x++)
+		{
             approvedPatch	= [approvedCustomPatches objectAtIndex:x];
-            if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]]) {
+            if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]])
+			{
                 logit(lcl_vInfo,@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);
                 tmpDict = [[NSMutableDictionary alloc] init];
                 [tmpDict setObject:[customPatch objectForKey:@"patch"] forKey:@"patch"];
@@ -378,10 +381,10 @@ done:
                 [tmpDict setObject:approvedPatch forKey:@"patches"];
                 [tmpDict setObject:[customPatch objectForKey:@"patch_id"] forKey:@"patch_id"];
                 [tmpDict setObject:@"Third" forKey:@"type"];
-                [tmpDict setObject:[customPatch objectForKey:@"bundleID"] forKey:@"bundleID"];
+                [tmpDict setObject:[approvedPatch objectForKey:@"bundle_id"] forKey:@"bundleID"];
                 
                 logit(lcl_vDebug,@"Custom Patch Dictionary Added: %@",tmpDict);
-                [approvedUpdatesArray addObject:tmpDict];
+                [approvedUpdatesArray addObject:[tmpDict copy]];
                 tmpDict = nil;
                 break;
             }
@@ -873,10 +876,12 @@ done:
     // Scan for Patches
     [self scanForPatchUsingBundleID:aPatchBundleID];
     updatesArrayRaw = [NSArray arrayWithArray:approvedPatches];
+	qldebug(@"updatesArrayRaw: %@",updatesArrayRaw);
     // Filter on bundle ID
     NSPredicate *p = [NSPredicate predicateWithFormat:@"(bundleID == %@)", aPatchBundleID];
 	updatesArray = [updatesArrayRaw filteredArrayUsingPredicate:p];
-    
+    qldebug(@"updatesArray: %@",updatesArray);
+	
 	if (!updatesArray) {
 		logit(lcl_vInfo,@"Updates array is nil");
         [self removeTaskRunning:kMPPatchUPDATE];

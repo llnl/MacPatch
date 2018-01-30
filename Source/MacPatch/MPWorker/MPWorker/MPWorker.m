@@ -200,8 +200,8 @@ typedef NSUInteger MPPostDataType;
     NSString *fHash;
     MPAsus *mpa = [[MPAsus alloc] init];
     
-    if ([pkgType isEqualToString:@"SCRIPTZIP"]) {
-        
+    if ([pkgType isEqualToString:@"SCRIPTZIP"])
+	{
         NSString *zipFile = [NSString pathWithComponents:[NSArray arrayWithObjects:[mp_SOFTWARE_DATA_DIR path],@"sw",[aSWDict objectForKey:@"id"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent], nil]];
         logit(lcl_vInfo,@"Verify %@ (%@)",[aSWDict objectForKey:@"name"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent]);
         fHash = [mpCrypto md5HashForFile:zipFile];
@@ -241,7 +241,9 @@ typedef NSUInteger MPPostDataType;
             }
         }
         
-    } else if ([pkgType isEqualToString:@"PACKAGEZIP"]) {
+    }
+	else if ([pkgType isEqualToString:@"PACKAGEZIP"])
+	{
         
         NSString *zipFile = [NSString pathWithComponents:[NSArray arrayWithObjects:[mp_SOFTWARE_DATA_DIR path],@"sw",[aSWDict objectForKey:@"id"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent], nil]];
         fHash = [mpCrypto md5HashForFile:zipFile];
@@ -1549,7 +1551,7 @@ done:
                 qlerror(@"%@",dlErr.localizedDescription);
                 return 1; // Error creating stage patch dir. Can not use it.
             }
-            qlinfo(@"%@ has been staged.",[aPatch objectForKey:@"patches"]);
+            qlinfo(@"%@ (%@) has been staged.",aPatch[@"patches"][@"patches"][0][@"name"],aPatch[@"patches"][@"patch_id"]);
         }
     }
     

@@ -95,6 +95,21 @@
  */
 - (NSString *)secKeyDecrypt:(SecKeyRef)aKey padding:(SecPadding)aSecPadding stringToDecrypt:(NSString *)AstringToDecrypt error:(NSError **)err;
 
+#pragma mark - Sign & Verify
+
+/**
+ Verify Signed data using a public key.
+ This method defaults to SHA1 padding for the signed data
+
+ @param plainData The string to verify
+ @param signature Signature created by private key
+ @param publicKey Public Key
+ @return BOOL
+ */
+- (BOOL)verifiedSignedData:(NSString *)plainData signature:(NSData *)signature pubKey:(SecKeyRef)publicKey;
+- (BOOL)verifiedSignedDataUsingAlgorithm:(SecPadding)secPad verifyData:(NSString *)plainData signature:(NSData *)signature pubKey:(SecKeyRef)publicKey;
+
+
 /*! Creates RSA/PEM Key Pair for client registration
  * \returns NSDictionary with keys
  */

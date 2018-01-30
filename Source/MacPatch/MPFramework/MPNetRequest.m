@@ -249,7 +249,7 @@ OSStatus extractIdentityAndTrust(CFDataRef inPKCS12Data, SecIdentityRef *outIden
     MPSimpleKeychain *skc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_KEYCHAIN_FILE];
     MPKeyItem *keyItem = [skc retrieveKeyItemForService:kMPClientService error:&err];
     if (err) {
-        logit(lcl_vWarning,@"getClientKey: %@",err.localizedDescription);
+		//logit(lcl_vWarning,@"getClientKey: %@",err.localizedDescription);
         return @"NA";
     }
     return keyItem.secret;

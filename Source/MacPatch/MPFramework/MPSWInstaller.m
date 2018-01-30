@@ -735,7 +735,7 @@ typedef NSUInteger MPPostDataType;
 		if ([[tmpStr trim] length] != 0)
         {
             if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
-                logit(lcl_vInfo,@"%@",tmpStr);
+                logit(lcl_vDebug,@"%@",tmpStr);
                 [self postDataToClient:tmpStr type:kMPInstallStatus];
             } else {
                 logit(lcl_vDebug,@"%@",tmpStr);
@@ -990,7 +990,7 @@ typedef NSUInteger MPPostDataType;
 		if ([[tmpStr trim] length] != 0)
         {
             if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
-                logit(lcl_vInfo,@"%@",tmpStr);
+                logit(lcl_vDebug,@"%@",tmpStr);
                 [self postDataToClient:tmpStr type:kMPInstallStatus];
                 // Older Post Back
                 NSMutableDictionary *notificationInfo = [NSMutableDictionary dictionary];

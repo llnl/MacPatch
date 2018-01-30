@@ -1513,4 +1513,14 @@
     return result;
 }
 
+- (NSDictionary *)getServerKey:(NSError **)err
+{
+	NSError *error = nil;
+	NSDictionary *result = nil;
+	NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/server/key/%@",[MPSystemInfo clientUUID]];
+	result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
+	if (err != NULL) *err = error;
+	return result;
+}
+
 @end

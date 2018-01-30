@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
@@ -28,20 +28,20 @@ if [ -e "${SRC}/ccusr" ]; then
 fi
 
 # Script Functions
-isIload () 
+isIload ()
 {
 	pid=`ps -e | grep iLoadAssistant | grep -v grep | awk '{print $1}'`
 	echo $pid
 }
 
-function setOwner 
+function setOwner
 {
 	if [ -f "$1" ]; then
 		/usr/sbin/chown -R root:wheel $1
 	fi
 }
 
-function setOwnerAndPerms 
+function setOwnerAndPerms
 {
 	if [ -f "$1" ]; then
 		/usr/sbin/chown root:wheel $1
@@ -49,7 +49,7 @@ function setOwnerAndPerms
 	fi
 }
 
-existsAndDelete () 
+existsAndDelete ()
 {
 	if [ -f "$1" ]; then
 		echo "Removing (rm -f) file $1"
@@ -58,6 +58,14 @@ existsAndDelete ()
 		echo "Removing (rm -rf) directory $1"
 		rm -rf "$1" 2>/dev/null
 	fi
+}
+
+function relaunchSoftwareupdated 
+{
+	swdpid=`ps -aef | grep softwareupdated | grep -v grep | awk '{print $2}'`
+	if [ $? ]; then
+		kill -9 $swdpid
+	fi 
 }
 
 function runClientActions {
@@ -81,9 +89,11 @@ function runClientActions {
 	if [ -z "$(isIload)" ]; then
 
 		# Run Client Vul Scan
-		/Library/MacPatch/Client/MPAgentExec -s
+		# Add 3 min timeout, sometimes softwareupdated does not respond
+		relaunchSoftwareupdated
+		/Library/MacPatch/Client/MPAgentExec -s & sleep 180; kill $!
 		sleep 1
-		
+
 		# Run Client AV Scan
 		/Library/MacPatch/Client/MPAgentExec -a
 		sleep 1
@@ -92,7 +102,7 @@ function runClientActions {
 		#loop CNT
 		NXTDAY=$(date -j -v+1d +"%Y-%m-%d")
 		INT=0
-		while [ $INT -lt $CNT ]; do 
+		while [ $INT -lt $CNT ]; do
 			if [ `/usr/libexec/PlistBuddy -c "Print :mpTasks:$INT:cmd" /Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist` == "kMPVulScan" ]; then
 				/usr/libexec/PlistBuddy -c "Set :mpTasks:$INT:startdate $NXTDAY" /Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist
 			elif [ `/usr/libexec/PlistBuddy -c "Print :mpTasks:$INT:cmd" /Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist` == "kMPVulUpdate" ]; then
@@ -112,13 +122,13 @@ function removeOldRegFiles {
 # Set Up Python Virtualenv
 
 function setupPyVirtEnv
-{ 
+{
 	LIBDIR="/Library/MacPatch/Client/lib"
 	PNGHOST="pypi.python.org"
 
 	ping -c 1 "$PNGHOST" > /dev/null
 	if [ $? -eq 0 ]; then
-		echo "ping $PNGHOST is up" 
+		echo "ping $PNGHOST is up"
 	else
 		echo "ping $PNGHOST is down"
 	fi
@@ -149,16 +159,16 @@ function setupPyVirtEnv
 	if [ $? != 0 ]; then
 		echo "Install Xcode Command Line Tools"
 		# create the placeholder file that's checked by CLI updates' .dist code
-	    # in Apple's SUS catalog
-	    touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
-	    # find the CLI Tools update
-	    PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
-	    if [ $? != 0 ]; then
-	    	PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
-	    fi
-	    # install it
-	    softwareupdate -i "$PROD"
-	    rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+		# in Apple's SUS catalog
+		touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+		# find the CLI Tools update
+		PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
+		if [ $? != 0 ]; then
+			PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
+		fi
+		# install it
+		softwareupdate -i "$PROD"
+		rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
 	fi
 
 	# Create Virtualenv "python" and install extera modules
@@ -172,7 +182,7 @@ function setupPyVirtEnv
 		if [ $? -ne 0 ] ; then
 			echo " Error installing $mod"
 		fi
-	done  
+	done
 
 	deactivate
 }
@@ -230,15 +240,16 @@ else
 fi
 
 # ******************************************************************
-# Get Server SSL Cert and trust it *********************************
+# Install Included Profiles - With PRE prefix 	********************
 #
-SRVHOST=`/usr/bin/defaults read "${agentPrefs}" MPServerAddress`
-SRVPORT=`/usr/bin/defaults read "${agentPrefs}" MPServerPort`
-SRVSTR="$SRVHOST:443" 
-CRTFILE="/Library/MacPatch/Client/lib/$SRVHOST.crt"
-
-echo "Q" | /usr/bin/openssl s_client -tls1 -connect $SRVSTR 2>/dev/null | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > ${CRTFILE}
-/usr/bin/security add-trusted-cert -d -r trustRoot -k "/Library/Keychains/System.keychain" "${CRTFILE}" 
+if [ -d "${SRC}" ]; then
+	# Find all mobileconfig files not begin with pst
+	# will install pst at the end of the script
+	find "$SRC" -type f ! -name "pst*.mobileconfig" -print0 | while read -d $'\0' file
+	do
+		/usr/bin/profiles -I -F "$file"
+	done
+fi
 
 # ******************************************************************
 # Add MacPatch Client Plugins if included **************************
@@ -246,7 +257,7 @@ echo "Q" | /usr/bin/openssl s_client -tls1 -connect $SRVSTR 2>/dev/null | sed -n
 if [ -d "${SRC}/Plugins" ]; then
 	if [ ! -d "/Library/MacPatch/Client/lib/PlugIns" ]; then
 		mkdir -p "/Library/MacPatch/Client/lib/PlugIns"
-	fi 
+	fi
 	/usr/bin/find "${SRC}"/Plugins -name '*.bundle' -exec /bin/cp -r {} /Library/MacPatch/Client/lib/PlugIns/ \;
 fi
 
@@ -259,8 +270,14 @@ if [ -f "${SRC}/ServerPub.pem" ]; then
 fi
 
 # ******************************************************************
-# Run Client Check-in
+# Kill and respawn softwareupdated
+# softwareupdated sometimes goes out to lunch preventing
+# softwareupdate from returning a result.
 
+#relaunchSoftwareupdated
+
+# ******************************************************************
+# Run Client Check-in
 
 regEnabled=`defaults read "${agentPrefsPlist}" registrationEnabled`
 case "$regEnabled" in
@@ -293,7 +310,7 @@ if [ $regEnabled == 1 ]; then
 		# If reg key file exists we use that
 		# Register Client With Provided Key
 		if [ -f "${SRC}/.mpreg.key" ]; then
-			regFile="${SRC}/.mpreg.key" 
+			regFile="${SRC}/.mpreg.key"
 			regKey=$(<$regFile)
 			/Library/MacPatch/Client/MPAgent -r $regKey
 			if [ $? == 0 ]; then
@@ -330,7 +347,7 @@ fi
 
 # ******************************************************************
 # Launch Worker		    ********************************************
-# 
+#
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.worker.plist
 sleep 2
 
@@ -341,7 +358,7 @@ sleep 3
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************
 #
-# Note: On Mac OS X 10.6 and higher they have to stoped and started as 
+# Note: On Mac OS X 10.6 and higher they have to stoped and started as
 # the current logged in user.
 #
 
@@ -351,7 +368,7 @@ fi
 
 /usr/bin/killall MPClientStatus
 
-# Without this, may have a hard time upgrading 
+# Without this, may have a hard time upgrading
 pkgutil --forget gov.llnl.mp.agent.base
 pkgutil --forget gov.llnl.macpatch.base
 
@@ -360,6 +377,17 @@ pkgutil --forget gov.llnl.macpatch.base
 #
 if [ ! -e "/Library/Logs/MacPatch" ]; then
 	ln -s /Library/MacPatch/Client/Logs /Library/Logs/MacPatch
+fi
+
+# ******************************************************************
+# Install Included Profiles - With POST prefix 	********************
+#
+if [ -d "${SRC}" ]; then
+	for file in "${SRC}"/profiles/post*.mobileconfig; do
+		if [ -f "$file" ]; then
+			/usr/bin/profiles -I -F "$file"
+		fi
+	done
 fi
 
 exit 0;

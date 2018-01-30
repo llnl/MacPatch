@@ -88,6 +88,10 @@ enum {
 typedef NSUInteger MPInstallIconStatus;
 
 @interface ScanAndPatchVC ()
+{
+	MPCrypto 	*mpCrypto;
+	SecKeyRef	pubKeyRef;
+}
 
 - (NSArray *)scanForAppleUpdates:(NSError **)err;
 - (NSArray *)scanForCustomUpdates:(NSError **)err;
@@ -144,6 +148,9 @@ typedef NSUInteger MPInstallIconStatus;
 
 - (void)scanAndPatch
 {
+	mpCrypto = [[MPCrypto alloc] init];
+	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
+	
     progressCount = 0;
     progressCountTotal = 0;
     
@@ -270,9 +277,29 @@ typedef NSUInteger MPInstallIconStatus;
                 
                 // Get all of the patches, main and subs
                 // This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
-                patchPatchesArray = [NSArray arrayWithArray:[[patch objectForKey:@"patches"] objectForKey:@"patches"]];
+				NSDictionary *_curPatch = patch[@"patches"]; //Patch Install Dict
+                patchPatchesArray = [NSArray arrayWithArray:[patch[@"patches"] objectForKey:@"patches"]];
                 qldebug(@"Current patch has total patches associated with it %d", (int)([patchPatchesArray count]-1));
-                
+				
+				// Verify Patch Signature before proceeding
+				// Verify task Has SW Signature
+				/*
+				if (![_curPatch objectForKey:@"patch_sig"]) {
+					logit(lcl_vError,@"%@ patch has no signature, will not install.",patch[@"patch"]);
+					[self updateTableAndArrayController:i status:2];
+					continue;
+				}
+				
+				// Verify Signature for Patch
+				if (![self isValidPatch:_curPatch]) {
+					logit(lcl_vError,@"Unable to verify signature for patch, %@ will not install.",patch[@"patch"]);
+					[self updateTableAndArrayController:i status:2];
+					continue;
+				} else {
+					logit(lcl_vInfo,@"Signature was verfied for %@.",patch[@"patch"]);
+				}
+				 */
+				
                 NSString *dlPatchLoc; //Download location Path
                 int patchIndex = 0;
                 for (patchIndex=0;patchIndex < [patchPatchesArray count];patchIndex++)
@@ -329,8 +356,8 @@ typedef NSUInteger MPInstallIconStatus;
                     [progressText setStringValue:[NSString stringWithFormat:@"Validating downloaded patch."]];
                     [progressText performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
                     
-                    MPCrypto *mpCrypto = [[MPCrypto alloc] init];
-                    NSString *fileHash = [mpCrypto md5HashForFile:dlPatchLoc];
+                    MPCrypto *mpCryptoX = [[MPCrypto alloc] init];
+                    NSString *fileHash = [mpCryptoX md5HashForFile:dlPatchLoc];
                     
                     qlinfo(@"Downloaded file hash: %@ (%@)",fileHash,[currPatchToInstallDict objectForKey:@"hash"]);
                     if ([[[currPatchToInstallDict objectForKey:@"hash"] uppercaseString] isEqualTo:[fileHash uppercaseString]] == NO)
@@ -689,8 +716,8 @@ typedef NSUInteger MPInstallIconStatus;
                             [progressText setStringValue:[NSString stringWithFormat:@"Validating downloaded patch."]];
                             [progressText performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
                             
-                            MPCrypto *mpCrypto = [[MPCrypto alloc] init];
-                            NSString *fileHash = [mpCrypto md5HashForFile:dlPatchLoc];
+                            MPCrypto *mpCryptoX = [[MPCrypto alloc] init];
+                            NSString *fileHash = [mpCryptoX md5HashForFile:dlPatchLoc];
                             
                             qlinfo(@"Downloaded file hash: %@ (%@)",fileHash,[currPatchToInstallDict objectForKey:@"hash"]);
                             if ([[[currPatchToInstallDict objectForKey:@"hash"] uppercaseString] isEqualTo:[fileHash uppercaseString]] == NO)
@@ -1340,7 +1367,6 @@ typedef NSUInteger MPInstallIconStatus;
 
 - (void)installData:(InstallAppleUpdate *)installUpdate data:(NSString *)aData type:(NSUInteger)dataType
 {
-    
     @try
     {
         if (dataType == kMPProcessStatus) {
@@ -1381,6 +1407,35 @@ typedef NSUInteger MPInstallIconStatus;
         qlerror(@"%@",exception);
     }
     return _img;
+}
+
+- (BOOL)isValidPatch:(NSDictionary *)patch
+{
+	return YES; //Disabled
+	
+	logit(lcl_vInfo,@"Checking signature for patch.");
+	BOOL res = NO;
+	NSString *strData = [self stringArrayToHash:patch[@"patches"]];
+	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:patch[@"patch_sig"] options:0];
+	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
+	sigData = nil;
+	return res;
+}
+
+- (NSString *)stringArrayToHash:(NSArray *)patches
+{
+	NSMutableString *_stringToSign = [NSMutableString new];
+	NSArray *fields = @[@"baseline",@"env",@"hash",@"name",@"postinst",@"preinst",@"reboot",@"size",@"type",@"url"];
+	for (NSDictionary *p in patches)
+	{
+		for (NSString *k in fields)
+		{
+			if ([[p allKeys] containsObject:k]) {
+				[_stringToSign appendString:[p objectForKey:k]];
+			}
+		}
+	}
+	return (NSString *)_stringToSign;
 }
 
 #pragma mark - Web Services

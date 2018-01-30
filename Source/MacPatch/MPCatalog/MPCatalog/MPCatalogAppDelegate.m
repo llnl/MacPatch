@@ -31,6 +31,7 @@
 #import "SWDistInfoController.h"
 #import "RebootWindow.h"
 #import "AFNetworking.h"
+#import <Security/Security.h>
 
 #define MP_INSTALLED_DATA       @".installed.plist"
 
@@ -198,6 +199,10 @@
 
 // Private Methods
 @interface MPCatalogAppDelegate ()
+{
+	MPCrypto 	*mpc;
+	SecKeyRef 	pubKeyRef;
+}
 
 // Reboot
 - (IBAction)showRebootPanel:(id)sender;
@@ -299,6 +304,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification 
 {
+	mpc = [[MPCrypto alloc] init];
+	
+	NSData *pubKey = [NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY];
+	pubKeyRef = [mpc getKeyRef:pubKey];
+	
 	// Center the Window
 	[window center];
 }
@@ -934,7 +944,27 @@
                     [statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
                     logit(lcl_vInfo,@"Installing %@ (%@).",[d objectForKey:@"name"],[d objectForKey:@"id"]);
                     logit(lcl_vInfo,@"INFO: %@",[d valueForKeyPath:@"Software.sw_type"]);
-                    
+					
+					// Verify task Has SW Signature
+					/*
+					if (![d objectForKey:@"sw_signature"]) {
+						logit(lcl_vError,@"%@ task has no signature, will not install task.",[d objectForKey:@"name"]);
+						[self updateArrayControllerWithDictionary:d forActionType:@"error"];
+						continue;
+					}
+					
+					// Verify Signature for Software task
+					logit(lcl_vInfo,@"Verify signature for task %@",[d objectForKey:@"name"]);
+					if (![self isValidSoftwareTask:[d objectForKey:@"Software"] signature:[d objectForKey:@"sw_signature"]]) {
+						logit(lcl_vError,@"Unable to verify signature for task %@ task, will not install task.",[d objectForKey:@"name"]);
+						[self updateArrayControllerWithDictionary:d forActionType:@"error"];
+						continue;
+					} else {
+						logit(lcl_vInfo,@"Signature for %@ passed verification.",[d objectForKey:@"name"]);
+					}
+					 */
+					
+					// If user pushed cancel
                     if ([self hasCanceledInstall:d]) break;
                     
                     // Create Path to download software to
@@ -1674,6 +1704,47 @@
     }
     
     return NO;
+}
+
+- (BOOL)isValidSoftwareTask:(NSDictionary *)task signature:(NSString *)signature
+{
+	BOOL res = NO;
+	NSString *strData = [self stringArrayToHash:task];
+	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:signature options:0];
+	res = [mpc verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
+	sigData = nil;
+	return res;
+}
+
+- (NSString *)stringArrayToHash:(NSDictionary *)task
+{
+	NSMutableString *_stringToSign = [NSMutableString new];
+	NSArray *fields = @[@"auto_patch",@"name",@"patch_bundle_id",@"reboot",@"sid",@"state",
+					  @"sw_env_var",@"sw_hash",@"sw_post_install",@"sw_pre_install",@"sw_size",
+					  @"sw_type",@"sw_uninstall",@"sw_url",@"vendor",@"vendorUrl",@"version"];
+	
+	for (NSString *k in fields)
+	{
+		if ([[task allKeys] containsObject:k]) {
+			[_stringToSign appendString:[task objectForKey:k]];
+		}
+	}
+	return (NSString *)_stringToSign;
+}
+
+- (NSString *)dictToJSONString:(NSDictionary *)dict withPrettyPrint:(BOOL)prettyPrint
+{
+	NSError *error;
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dict
+													   options:(NSJSONWritingOptions) (prettyPrint ? NSJSONWritingPrettyPrinted : 0)
+														 error:&error];
+	
+	if (! jsonData) {
+		NSLog(@"bv_jsonStringWithPrettyPrint: error: %@", error.localizedDescription);
+		return @"{}";
+	} else {
+		return [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+	}
 }
 
 #pragma mark - Proxy Methods

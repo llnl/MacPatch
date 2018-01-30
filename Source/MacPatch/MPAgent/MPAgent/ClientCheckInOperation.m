@@ -90,6 +90,7 @@
 {
 	@try {
 		[self runCheckIn];
+		[self verifyServerKey];
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);
@@ -155,7 +156,8 @@
         NSString *uri;
         NSData *reqData;
         id postRes;
-		@try {
+		@try
+		{
             // Send Checkin Data
 			err = nil;
             uri = [@"/api/v1/client/checkin" stringByAppendingPathComponent:[si g_cuuid]];
@@ -185,7 +187,8 @@
 		}
 		
 		// Read Client Plist Info, and post it...
-		@try {
+		@try
+		{
 			MPDefaultsWatcher *mpd = [[MPDefaultsWatcher alloc] init];
 			NSMutableDictionary *mpDefaults = [[NSMutableDictionary alloc] initWithDictionary:[mpd readConfigPlist]];
 			[mpDefaults setObject:[si g_cuuid] forKey:@"cuuid"];
@@ -220,6 +223,49 @@
 		}	
 
 		logit(lcl_vInfo,@"Running client check in completed.");
+	}
+}
+
+- (void)verifyServerKey
+{
+	@autoreleasepool
+	{
+		NSError *err = nil;
+		MPWebServices *mpws = [[MPWebServices alloc] init];
+		NSDictionary *keys = [mpws getServerKey:&err];
+		if (err) {
+			logit(lcl_vError,@"%@",err.localizedDescription);
+			return;
+		}
+		
+		MPCrypto *mpc = [[MPCrypto alloc] init];
+		
+		NSString *pubKeyHashCur;
+		NSString *pubKeyHashNew;
+		NSString *pubKeyNew = [keys objectForKey:@"pubKey"];
+		[pubKeyNew writeToFile:@"/tmp/._serverPubKey.pem" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+		pubKeyHashNew = [mpc md5HashForFile:@"/tmp/._serverPubKey.pem"];
+		pubKeyHashCur = [mpc md5HashForFile:MP_SERVER_PUB_KEY];
+		
+		if (![pubKeyHashNew isEqualToString:pubKeyHashCur])
+		{
+			err = nil;
+			[fm removeItemAtPath:MP_SERVER_PUB_KEY error:&err];
+			if (err) {
+				logit(lcl_vError,@"%@",err.localizedDescription);
+				return;
+			}
+			
+			err = nil;
+			[fm moveItemAtPath:@"/tmp/._serverPubKey.pem" toPath:MP_SERVER_PUB_KEY error:&err];
+			if (err) {
+				logit(lcl_vError,@"%@",err.localizedDescription);
+				return;
+			}
+		}
+		
+		// Keys match
+		return;
 	}
 }
 

@@ -78,7 +78,7 @@
 
         NSDictionary *_curFile = [NSDictionary dictionaryWithContentsOfFile:AGENT_SERVERS_PLIST];
         if (![_curFile objectForKey:@"version"] || ![_curFile objectForKey:@"id"]) {
-            qlerror(@"Error, could not find objects version and listid.");
+            qlerror(@"Error, could not find objects version and list id.");
             return NO;
         }
 

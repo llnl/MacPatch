@@ -82,5 +82,6 @@
 
 - (BOOL)getAgentRegStatusWithKeyHash:(NSString *)keyHash error:(NSError **)err;
 - (BOOL)postAgentReister:(NSDictionary *)aDict regKey:(NSString *)aRegKey error:(NSError **)err;
+- (NSDictionary *)getServerKey:(NSError **)err;
 
 @end
