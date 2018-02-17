@@ -278,41 +278,39 @@
 		
 		<!--- Build the Apple Updates Struct --->
 		<cfloop query="qGetUpdatesApple">
-			<cfif #Right(Trim(suname),1)# NEQ "-">
-				<cfset _aUpdate = {} />
-				<cfset _aUpdate[ "name" ] = "#Trim(suname)#" />
-				<cfset _aUpdate[ "patchid" ] = "#Trim(patch_id)#" />
-				<cfset _aUpdate[ "baseline" ] = "0" />
-                <cfset _aUpdate[ "patch_install_weight" ] = "#patch_install_weight#" />
-                <cfset _aUpdate[ "patch_reboot_override" ] = "#patch_reboot_override#" />
-                <cfset _aUpdate[ "severity" ] = "#severity#" />
-				<cfif #hasCriteria# EQ "0">
-					<cfset _aUpdate[ "hasCriteria" ] = "FALSE" />
-				<cfelse>
-					<cfset _aUpdate[ "hasCriteria" ] = "TRUE" />
-					<cfset _aUpdate[ "criteria_pre" ] = "" />
-					<cfloop query="a_criteria">
-						<cfset _criteria_pre = arrayNew(1)>
-						<cfif #a_criteria.type_action# EQ "0">
-							<cfset _pre = {} />
-							<cfset _pre[ "order" ] = "#a_criteria.type_order#" />
-							<cfset _pre[ "data" ] = "#iif( len(a_criteria.type_Data) is not 0, DE( ToBase64(a_criteria.type_Data)), DE('NA'))#" />
-							<cfset b = ArrayAppend(_criteria_pre,_pre)>
-						</cfif>
-					</cfloop>
-					<cfset _aUpdate[ "criteria_post" ] = "" />
-					<cfloop query="a_criteria">
-						<cfset _criteria_post = arrayNew(1)>
-						<cfif #a_criteria.type_action# EQ "1">
-							<cfset _post = {} />
-							<cfset _post[ "order" ] = "#a_criteria.type_order#" />
-							<cfset _post[ "data" ] = "#iif( len(a_criteria.type_Data) is not 0, DE( ToBase64(a_criteria.type_Data)), DE('NA'))#" />
-							<cfset c = ArrayAppend(_criteria_post,_post)>
-						</cfif>
-					</cfloop>		
-				</cfif>
-				<cfset a = ArrayAppend(_AppleUpdates,_aUpdate)>
+			<cfset _aUpdate = {} />
+			<cfset _aUpdate[ "name" ] = "#Trim(suname)#" />
+			<cfset _aUpdate[ "patchid" ] = "#patch_id#" />
+			<cfset _aUpdate[ "baseline" ] = "0" />
+            <cfset _aUpdate[ "patch_install_weight" ] = "#patch_install_weight#" />
+            <cfset _aUpdate[ "patch_reboot_override" ] = "#patch_reboot_override#" />
+            <cfset _aUpdate[ "severity" ] = "#severity#" />
+			<cfif #hasCriteria# EQ "0">
+				<cfset _aUpdate[ "hasCriteria" ] = "FALSE" />
+			<cfelse>
+				<cfset _aUpdate[ "hasCriteria" ] = "TRUE" />
+				<cfset _aUpdate[ "criteria_pre" ] = "" />
+				<cfloop query="a_criteria">
+					<cfset _criteria_pre = arrayNew(1)>
+					<cfif #a_criteria.type_action# EQ "0">
+						<cfset _pre = {} />
+						<cfset _pre[ "order" ] = "#a_criteria.type_order#" />
+						<cfset _pre[ "data" ] = "#iif( len(a_criteria.type_Data) is not 0, DE( ToBase64(a_criteria.type_Data)), DE('NA'))#" />
+						<cfset b = ArrayAppend(_criteria_pre,_pre)>
+					</cfif>
+				</cfloop>
+				<cfset _aUpdate[ "criteria_post" ] = "" />
+				<cfloop query="a_criteria">
+					<cfset _criteria_post = arrayNew(1)>
+					<cfif #a_criteria.type_action# EQ "1">
+						<cfset _post = {} />
+						<cfset _post[ "order" ] = "#a_criteria.type_order#" />
+						<cfset _post[ "data" ] = "#iif( len(a_criteria.type_Data) is not 0, DE( ToBase64(a_criteria.type_Data)), DE('NA'))#" />
+						<cfset c = ArrayAppend(_criteria_post,_post)>
+					</cfif>
+				</cfloop>		
 			</cfif>
+			<cfset a = ArrayAppend(_AppleUpdates,_aUpdate)>
 		</cfloop>
 		<cfset response.AppleUpdates = _AppleUpdates />
 		

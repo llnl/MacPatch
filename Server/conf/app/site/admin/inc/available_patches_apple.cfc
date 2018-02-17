@@ -76,11 +76,21 @@
         
 		<cfif oper EQ "edit">
 			<cftry>
-				<cfquery name="editRecord" datasource="#session.dbsource#" result="res">
+				<cfquery name="editRecord1" datasource="#session.dbsource#" result="res1">
+					UPDATE
+						apple_patches
+					SET
+						supatchname = <cfqueryparam value="#arguments.supatchname#">
+					WHERE
+						supatchname = <cfqueryparam value="#arguments.id#">
+				</cfquery>
+
+				<cfquery name="editRecord2" datasource="#session.dbsource#" result="res2">
 					UPDATE
 						apple_patches_mp_additions
 					SET
-						patch_state = <cfqueryparam value="#Arguments.patch_state#">
+						patch_state = <cfqueryparam value="#Arguments.patch_state#">,
+						supatchname = <cfqueryparam value="#arguments.supatchname#">
 					WHERE
 						supatchname = <cfqueryparam value="#arguments.id#">
 				</cfquery>
