@@ -5,19 +5,19 @@
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
- 
+
  This file is part of MacPatch, a program for installing and patching
  software.
- 
+
  MacPatch is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License (as published by the Free
  Software Foundation) version 2, dated June 1991.
- 
+
  MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
  WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
  License for more details.
- 
+
  You should have received a copy of the GNU General Public License along
  with MacPatch; if not, write to the Free Software Foundation, Inc.,
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -25,11 +25,11 @@
 
 '''
     Script: MPSUSPatchSync
-    Version: 1.2.0
+    Version: 1.3.0
 
     Description: This Script read all of the patch information
-    from the apple software update sucatlog files and post the 
-    info to the MacPatch database.    
+    from the apple software update sucatlog files and post the
+    info to the MacPatch database.
 
     Requirements:
     Python, the requests Library is required use pip or easy_install
@@ -68,7 +68,7 @@ import datetime
 import logging
 import os
 import argparse
-import re 
+import re
 import json
 import requests
 import xml.etree.ElementTree as ET
@@ -99,7 +99,6 @@ wsPostKey       = '123456' # Ref from siteconfig.json settings->server->apiKey
 
 # Do not Change
 susConfig = {}
-wsPostAPIold    = '/Service/MPServerService.cfc?method=PostApplePatchContent'
 wsPostAPIURI    = '/api/v1/sus/patches/apple'
 wsPostKeyHash   = 'NA'  #hashlib.md5(wsPostKey).hexdigest()
 wsPostVersion   = "1.0.0"
@@ -124,6 +123,7 @@ def returnDateTimeAsString(aDate):
     # Converts a datetime object to string, needed for JSON
     return aDate.strftime('%Y-%m-%d %H:%M:%S')
 
+# Deprecated
 def readServerMetadata(metaURL):
 
     title = 'NA'
@@ -132,7 +132,7 @@ def readServerMetadata(metaURL):
 
     r = requests.get(metaURL)
     if r.status_code == requests.codes.ok:
-        
+
         plist = plistlib.readPlistFromString(r.text.encode('utf-8'))
 
         if plist.has_key("CFBundleShortVersionString"):
@@ -143,7 +143,7 @@ def readServerMetadata(metaURL):
             _loc = plist.get('localization',None)
             if _loc == None:
                 _loc = plist.get('localizations',None)
-            
+
             if _loc != None:
                 if _loc.has_key("English"):
                     localization = _loc["English"]
@@ -157,7 +157,7 @@ def readServerMetadata(metaURL):
                         title = localization['title']
                     if localization.has_key('description'):
                         description = base64.b64encode(str(localization['description']).encode('utf-8'))
-        
+
         except Exception, e:
             logger.error("Error: %s" % e)
             logger.error("Offending URL: %s" % metaURL)
@@ -176,44 +176,54 @@ def readDistributionFile(distURL):
     distData['suname'] = ''
     distData['restart'] = 'NoRestart'
     distData['version'] = None
-    distData['titleAlt'] = 'NA'
+    distData['title'] = ''
+    distData['description'] = ''
 
     r = requests.get(distURL)
     if r.status_code == requests.codes.ok:
 
         root = ET.fromstring(r.text.encode('utf-8'))
         c = root.findall("./choice[@suDisabledGroupID]")
+        
         if len(c) == 1:
             for x in c:
                 distData['name'] = x.get('suDisabledGroupID','')
-                
+                distData['title'] = x.get('title','')
+                distData['version'] = x.get('versStr','')
                 if len(x) >= 1:
                     distData['restart'] = x[0].get('onConclusion','NoRestart')
-                    distData['version'] = x[0].get('version','')
                     distData['suname'] = distData['name'] + "-" + distData['version']
+        
+        _strings = root.findtext("./localization/strings")
 
-        if distData['version'] == None or distData['version'] == '':
-            # Find the CDATA
-            d = root.findall("./localization/strings")
-            enList = [x for x in d if x.get('language') == 'en' or x.get('language') == 'English']
-            # if the strings are in English/en
-            if len(enList) == 1:
-                # Find the SU_VER ... Matches both SU_VERS & SU_VERSION
-                m = re.findall(r'.\bSU_VER.*',enList[0].text)
-                # Clean the found string
-                tmpVer = returnVersionFromCDATAString(m[0])
-                # If we have found string
-                if tmpVer != "":
-                    distData['version'] = tmpVer
-                    distData['suname'] = distData['name'] + "-" + distData['version']
+        # Get Title
+        if distData['title'] == '' or distData['title'] == 'SU_TITLE':
+            _su_title = re.findall(r'(?<="SU_TITLE" =).?"(.*)(?=\"|\';)', _strings)
+            if len(_su_title) >= 1:
+                distData['title'] = _su_title[0]
 
-                t = re.findall(r'.\SU_TITLE.*',enList[0].text)
-                tmpTitle = returnVersionFromCDATAString(t[0])
-                if tmpTitle != "":
-                    # Clean the found string
-                    distData['titleAlt'] = tmpTitle
+        # Get Version
+        if distData['version'] == '' or distData['version'] == None or distData['version'] == 'SU_VERS':
+            _su_vers = re.findall(r'(?<="SU_VERS" =).?"(.*)(?=\"|\';)', _strings)
+            if len(_su_vers) >= 1:
+                distData['version'] = _su_vers[0]
+
+        # Get Description
+        if distData['description'] == None or distData['description'] == '':
+            _desc = re.findall(r'(?<="SU_DESCRIPTION" =).?\'(.*)(?<=</html>)', _strings, re.DOTALL | re.MULTILINE)
+            if len(_desc) >= 1:
+                # distData['description'] = _desc[0]
+                distData['description'] = base64.b64encode(str(_desc[0]).encode('utf-8'))
+
+        # Some of apples patches now have a space where the version number
+        # would go, patch wont install without the space
+        if distData['version'] == None or distData['version'] == '' or distData['version'] == ' ':
+            distData['suname'] = distData['name'] + "- "
+        else:
+            distData['suname'] = distData['name'] + "-" + distData['version']
+
     else:
-        print "Error reading distribution file."            
+        print "Error reading distribution file."
 
     return distData
 
@@ -244,7 +254,7 @@ def postDataToWebService(patches, config):
             logger.error(request.text)
 
     except requests.exceptions.RequestException as e:
-        logger.error(e)   
+        logger.error(e)
 
 def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
 
@@ -253,7 +263,7 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
     else:
         r = requests.get(sucatalog)
         if r.status_code == requests.codes.ok:
-            prefs = plistlib.readPlistFromString(r.text.encode('utf-8'))    
+            prefs = plistlib.readPlistFromString(r.text.encode('utf-8'))
 
     if not prefs:
         return None
@@ -264,7 +274,7 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
     logger.info("Found " + str(len(productKeys)) + " to process." )
 
     for key in productKeys:
-        
+
         logger.info("Processing key " + key )
 
         patch = {}
@@ -273,17 +283,18 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
             patch['postdate'] = returnDateTimeAsString(prefs['Products'][key]['PostDate'])
         else:
             patch['postdate'] = '1984-01-01 00:00:00'
-        if len(prefs['Products'][key]['Packages']) > 0 and prefs['Products'][key]['Packages'][0].has_key("Size"): 
+        if len(prefs['Products'][key]['Packages']) > 0 and prefs['Products'][key]['Packages'][0].has_key("Size"):
             patch['size'] = str(prefs['Products'][key]['Packages'][0]['Size'])
         else:
             patch['size'] = '0'
+
         patch['title'] = 'NA'
         patch['description'] = base64.b64encode('NA')
         patch['name'] = ''
         patch['suname'] = 'NA'
         patch['restart'] = ''
         patch['version'] = '1.0.0'
-        
+
         if prefs['Products'][key].has_key("ServerMetadataURL"):
             patch['ServerMetadataURL'] = prefs['Products'][key]["ServerMetadataURL"]
         else:
@@ -296,16 +307,17 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
                 patch['Distribution'] = prefs['Products'][key]["Distributions"]['English']
             else:
                 patch['Distribution'] = ""
-        else:   
+        else:
             patch['Distribution'] = ""
 
         if len(patch['Distribution']) >= 1:
             df = readDistributionFile(patch['Distribution'])
             patch.update(df.copy())
 
-        if len(patch['ServerMetadataURL']) >= 1:
-            md = readServerMetadata(patch['ServerMetadataURL'])
-            patch.update(md.copy())
+        # Deprecated
+        #if len(patch['ServerMetadataURL']) >= 1:
+        #   md = readServerMetadata(patch['ServerMetadataURL'])
+        #   patch.update(md.copy())
 
         # Make sure we dont have an empty patch name
         if len(patch['name']) <= 2:
@@ -315,7 +327,7 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
         # If we end up with a empty title check to see if we got one from the dist file
         if patch['title'] == 'NA':
             if patch['titleAlt'] != 'NA':
-                patch['title'] = patch['titleAlt']     
+                patch['title'] = patch['titleAlt']
 
 
         patch.pop("titleAlt", None)
@@ -330,13 +342,15 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
                     containsFilterItem = True
                     break
 
-        if containsFilterItem == True:
-            logger.info("Excluding patch: " + str(patch['suname']))
-            print("Excluding patch: " + str(patch['suname']))
-        else:
+        if patch['akey'] in patch['suname']:
+            containsFilterItem = True
+
+        if containsFilterItem == False:
             logger.info("Adding patch: " + str(patch['suname']))
             print("Adding patch: " + str(patch['suname']))
-            patches.append(patch)        
+            patches.append(patch)
+        else:
+            logger.info("Excluding patch: " + str(patch['suname']))
 
     return patches
 
@@ -355,8 +369,8 @@ def main():
         hdlr = logging.FileHandler(logFile)
         formatter = logging.Formatter('%(asctime)s %(levelname)s --- %(message)s')
         hdlr.setFormatter(formatter)
-        logger.addHandler(hdlr) 
-        
+        logger.addHandler(hdlr)
+
         if args.debug:
             logger.setLevel(logging.DEBUG)
         else:
@@ -378,15 +392,15 @@ def main():
         config_data = json.loads(json_data_fh)
         if "settings" in config_data:
             settings = config_data['settings']
-        else:            
+        else:
             print "Structure of config files is not correct."
             sys.exit(1)
-        
+
 
     logger.info('# ------------------------------------------------------')
     logger.info('# Starting SUS patch sync'                               )
     logger.info('# ------------------------------------------------------')
-    
+
     if args.data != None:
         if os.path.exists(args.data):
             file = open(args.data, 'r')
@@ -406,11 +420,11 @@ def main():
             for cat in settings['Catalogs']:
                 if 'enabled' in cat:
                     if cat['enabled'] == True:
-                        if _port != 80: 
+                        if _port != 80:
                             catStr = "http://"+settings['ASUSServer']+":"+settings['ASUSServerPort']+cat['catalogurl']
                         else:
                             catStr = "http://"+settings['ASUSServer']+cat['catalogurl']
-                    
+
                         catalogs.append(catStr)
 
         else:
@@ -433,8 +447,8 @@ def main():
         logger.info("Total patches found %d, begin removing duplicates." % len(patchesRaw))
         patches = {v['akey']:v for v in patchesRaw}.values()
         logger.info("Total patches %d to post to web service." % len(patches))
-    
-    
+
+
     if args.noPost:
         logger.info("Posting patches to web service is disabled")
         print("Posting patches to web service is disabled, using the --noPost arg.")
@@ -446,6 +460,6 @@ def main():
         file = open("/tmp/SUSPatches.json", "w")
         file.write(json.dumps(patches))
         file.close()
-    
+
 if __name__ == '__main__':
     main()

@@ -190,6 +190,21 @@ rm -r ${BUILDROOT}/Release
 
 mkdir ${BUILDROOT}/Combined/Packages
 
+# Add Config Profiles
+echo
+read -p "Would you like to add config profiles to install? [Y/N])? [N]: " CPROFILE
+CPROFILE=${CPROFILE:-N}
+if [ "$CPROFILE" == "y" ] || [ "$CPROFILE" == "Y" ]; then
+	echo
+	read -p "Please specify directory to profiles to be installed: " CPROFILEDIR
+	echo "DIR: $CPROFILEDIR"
+	if [ -d "$CPROFILEDIR" ]; then 
+		mkdir -p ${BUILDROOT}/Base/Scripts/profiles
+		cp "$CPROFILEDIR"/*.mobileconfig ${BUILDROOT}/Base/Scripts/profiles
+		open ${BUILDROOT}
+	fi
+fi
+
 # Create the Base Agent pkg
 pkgbuild --root ${BUILDROOT}/Base/Files/Library \
 --component-plist ${BUILDROOT}/Base/Components.plist \

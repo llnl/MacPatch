@@ -987,7 +987,12 @@ done:
 	
 	spTask = [[NSTask alloc] init];
     [spTask setLaunchPath: ASUS_BIN_PATH];
-    [spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
+	
+	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
+		[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+	} else {
+		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
+	}
 	
     NSPipe *pipe = [NSPipe pipe];
     [spTask setStandardOutput: pipe];
@@ -1022,7 +1027,7 @@ done:
 	NSArray *strArr = [NSArray arrayWithArray:[string componentsSeparatedByString:@"\n"]];
 	
 	NSMutableArray *tmpAppleUpdates = [[NSMutableArray alloc] init];
-	NSString *tmpStr;
+	NSString *tmpStr, *line, *lineCleanStart;
 	NSMutableDictionary *tmpDict;
 	
 	for (int i=0; i<[strArr count]; i++) {
@@ -1038,26 +1043,30 @@ done:
 			}
 			
 			// Strip the White Space and any New line data
+			line = [strArr objectAtIndex:i];
 			tmpStr = [[strArr objectAtIndex:i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			
-			// If the object/string starts with *,!,- then allow it
-			if ([[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"*"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"!"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"-"]) {
-				tmpDict = [[NSMutableDictionary alloc] init];
-				logit(lcl_vInfo,@"Apple Update: %@",[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))]);
-				[tmpDict setObject:[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] forKey:@"patch"];
-				[tmpDict setObject:@"Apple" forKey:@"type"];
-				[tmpDict setObject:[[[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
-				[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
-				[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
-				[tmpDict setObject:[self getRecommendedFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"recommended"];
-				if ([[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] containsString:@"[restart]" ignoringCase:YES] == TRUE) {
-					[tmpDict setObject:@"Y" forKey:@"restart"];
-				} else {
-					[tmpDict setObject:@"N" forKey:@"restart"];
+			if ([tmpStr hasPrefix:@"*"] || [tmpStr hasPrefix:@"!"])
+			{
+				@try
+				{
+					lineCleanStart = [self cleanLine:line];
+					tmpDict = [[NSMutableDictionary alloc] init];
+					[tmpDict setObject:lineCleanStart forKey:@"patch"];
+					[tmpDict setObject:@"Apple" forKey:@"type"];
+					[tmpDict setObject:[[lineCleanStart componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
+					[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+					[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
+					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
+					
+					[tmpAppleUpdates addObject:[tmpDict copy]];
+					tmpDict = nil;
 				}
-				
-				[tmpAppleUpdates addObject:tmpDict];
-			} // if is an update
+				@catch (NSException *exception)
+				{
+					qlerror(@"Error create patch dict. %@",exception);
+				}
+			}
 		} // if / empty lines
 	} // for loop
 	appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
@@ -1065,6 +1074,27 @@ done:
 	logit(lcl_vDebug,@"Apple Updates Found, %@",appleUpdates);
 	return appleUpdates;
 }
+
+- (NSString *)cleanLine:(NSString *)line
+{
+	// Removes the beginning of the line
+	NSString *component = @"*";
+	NSString *_lineTrimed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if ([_lineTrimed hasPrefix:@"*"])
+	{
+		component = @"* ";
+	}
+	else if ([_lineTrimed hasPrefix:@"!"])
+	{
+		component = @"! ";
+	}
+	
+	NSMutableArray *items = [[line componentsSeparatedByString:component] mutableCopy];
+	[items removeObjectAtIndex:0];
+	// With first item removed put it all back together
+	return  [items componentsJoinedByString:component];
+}
+
 // Proxy Method
 - (NSArray *)scanForCustomUpdatesViaHelper
 {

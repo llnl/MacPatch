@@ -20,7 +20,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 
 ### Client
 * Mac OS X Intel 32 & 64bit.  
-* Mac OS X 10.8.0 and higher.
+* Mac OS X 10.9.0 and higher.
 
 ##### Server Requirements:
 * Mac OS X or Mac OS X Server 10.10 or higher 
@@ -29,7 +29,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 * 4 GB of RAM, 8 GB is recommended
 * Python 2.7
 * Java v1.8 or higher (Java 8 may not available in older distributions of Linux)
-* MySQL version 5.1 or higher, MySQL 5.6.x is recommended.
+* MySQL version 5.1 or higher, MySQL 5.7 requires additional config.
 
 ## Install and Setup
 

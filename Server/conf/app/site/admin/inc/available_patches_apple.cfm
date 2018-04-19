@@ -34,7 +34,7 @@
 				colModel :[
 				  {name:'akeyE',index:'akeyE', width:18, align:"center", sortable:false, resizable:false, search:false},
 				  {name:'akey',index:'akey', width:18, align:"center", sortable:false, resizable:false, search:false},
-				  {name:'supatchname', index:'supatchname', width:160},
+				  {name:'supatchname', index:'supatchname', width:160, editable:true},
 				  {name:'version', index:'version', width:50, sorttype:'float'},
 				  {name:'title', index:'title', width:160, align:"left"},
 				  {name:'restartaction', index:'restartaction', width:40, align:"center"},
