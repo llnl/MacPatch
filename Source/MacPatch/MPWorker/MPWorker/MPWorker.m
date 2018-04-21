@@ -989,7 +989,8 @@ done:
     [spTask setLaunchPath: ASUS_BIN_PATH];
 	
 	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
-		[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		//[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	} else {
 		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	}
@@ -1574,7 +1575,11 @@ done:
             
             logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
             NSString *dlPatchLoc = [mpa downloadUpdate:downloadURL error:&dlErr];
-            
+			if (dlErr) {
+				qlerror(@"%@",dlErr.localizedDescription);
+				return 1; // Error creating stage patch dir. Can not use it.
+			}
+			
             dlErr = nil;
             [fm moveItemAtPath:dlPatchLoc toPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]] error:&dlErr];
             if (dlErr) {

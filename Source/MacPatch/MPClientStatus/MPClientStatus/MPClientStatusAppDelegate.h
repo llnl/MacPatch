@@ -70,6 +70,18 @@
 	NSURLConnection *showLastCheckInConnection;
 	NSMutableData *showLastCheckInResultsData;
 	
+	// Critial Patch Window
+	IBOutlet NSWindow *__unsafe_unretained criticalWindow;
+	IBOutlet NSTextField *criticalWinTitleText;
+	IBOutlet NSImageView *criticalWinIcon;
+	IBOutlet NSTextField *criticalWinBodyText;
+	IBOutlet NSProgressIndicator *criticalWinProgress;
+	IBOutlet NSTextField *criticalWinProgressText;
+	IBOutlet NSButton *criticalWinInstallButton;
+	IBOutlet NSButton *criticalWinNotNowButton;
+	IBOutlet NSButton *criticalWinRebootButton;
+	IBOutlet NSPopUpButton *criticalWinPopUpDown;
+	
 @private
     
 	MPAppUsage *mpAppUsage;
@@ -107,6 +119,11 @@
 
 // Client CheckIn String
 @property (nonatomic, strong) NSOperationQueue *queue;
+
+// Critical Update Notify
+@property (nonatomic, strong) NSMutableArray *criticalUpdates;
+@property (nonatomic, strong) NSDate *showCriticalWindowAtDate;
+@property (nonatomic, strong) NSTimer *criticalUpdatesTimer;
 
 #pragma mark -
 #pragma mark Methods

@@ -99,26 +99,56 @@ typedef NSUInteger MPPostDataType;
 
 - (int)installAppleSoftwareUpdate:(NSString *)aUpdate
 {
+	NSArray *appArgs;
+	GCDTask *gTask = [[GCDTask alloc] init];
     NSDictionary *defaultEnv = [[NSProcessInfo processInfo] environment];
     NSMutableDictionary *env = [[NSMutableDictionary alloc] initWithDictionary:defaultEnv];
-    [env setObject:@"YES" forKey:@"NSUnbufferedIO"];
-    [env setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
-    
-    NSArray *appArgs;
-    // >= 10.8
-    if ((int)NSAppKitVersionNumber >= 1187 )
-    {
-        appArgs = @[@"--verbose",@"-i", aUpdate];
-    } else {
-        appArgs = @[@"-i", aUpdate];
-    }
-    
+	[env setObject:@"YES" forKey:@"NSUnbufferedIO"];
+	[env setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+	/*
+	[env setObject:@"/private/var/root" forKey:@"HOME"];
+	 
+	NSFileManager *fmd = [NSFileManager defaultManager];
+	[fmd createDirectoryAtPath:@"/private/var/tmp/mp" withIntermediateDirectories:YES attributes:NULL error:NULL];
+	
+	NSTask *tsk = [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"load",@"/Library/LaunchDaemons/gov.llnl.mp.install.plist"]];
+	
+	[NSThread sleepForTimeInterval:2.0];
+	
+	NSString *runIt = @"RunIt";
+	[runIt writeToFile:@"/private/var/tmp/mp/run.txt" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+	
+	[NSThread sleepForTimeInterval:10.0];
+	return 0;
+	 */
+/*
+	if ([aUpdate isEqualToString:@"macOS High Sierra 10.13.3 Update Combo- "])
+	{
+		//appArgs = @[@"-S",@"-u",@"local",@"-i",@"/bin/bash",@"-l",@"-i", @"'softwareupdate -i \"macOS High Sierra 10.13.3 Update Combo- \"' > /dev/tty"];
+		//[gTask setLaunchPath:@"/usr/bin/sudo"];
+		appArgs = @[@"-i", @"-l", @"-c", @"'softwareupdate -i \"macOS High Sierra 10.13.3 Update Combo- \"'"];
+		[gTask setLaunchPath:@"/bin/bash"];
+		
+ 
+ .com.apple.installer.keep
+ 	AtomicUpdates
+	}
+	else
+	{
+ 	*/
+		// >= 10.8
+		if ((int)NSAppKitVersionNumber >= 1187 )
+		{
+			appArgs = @[@"--verbose",@"-i", aUpdate];
+		} else {
+			appArgs = @[@"-i", aUpdate];
+		}
+		[gTask setLaunchPath:ASUS_BIN_PATH];
+	//}
+	
     logit(lcl_vInfo,@"softwareupdate Args: %@",appArgs);
-    
-    GCDTask *gTask = [[GCDTask alloc] init];
-    
+	
     [gTask setArguments:appArgs];
-    [gTask setLaunchPath:ASUS_BIN_PATH];
     [gTask setEnvironment:env];
     gcdTask = gTask;
     

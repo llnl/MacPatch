@@ -59,6 +59,7 @@
 
 @property (nonatomic, assign) BOOL               iLoadMode;
 @property (nonatomic, assign) BOOL               forceRun;
+@property (nonatomic, assign) BOOL               overrideRebootPatchInstalls;
 
 @property (nonatomic, strong) NSArray            *approvedPatches;
 

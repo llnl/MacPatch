@@ -192,6 +192,11 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
             [progressBar setDoubleValue:1.0];
             [progressBar setMaxValue:progressCountTotal+1];
         });
+		
+		NSSortDescriptor *desc = [NSSortDescriptor sortDescriptorWithKey:@"patch_install_weight" ascending:YES];
+		approvedUpdates = [approvedUpdates sortedArrayUsingDescriptors:[NSArray arrayWithObject:desc]];
+		
+		qlinfo(@"Sorted patches min: %@",approvedUpdates);
 
         // Begin Patching
         __block NSDictionary *patch;
@@ -382,37 +387,62 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
         if ([apple count] == 0 ) {
             qlinfo(@"No Apple updates found.");
             sleep(1);
-        } else {
+        }
+		else
+		{
             // We have Apple patches, now add them to the array of approved patches
             
             // If no items in array, lets bail...
             if ([approvedApplePatches count] == 0 ) {
                 qlinfo(@"No Patch Group patches found.");
                 qlinfo(@"No apple updates found for \"%@\" patch group.",[[mpDefauts defaults] objectForKey:@"PatchGroup"]);
-            } else {
+            }
+			else
+			{
                 // Build Approved Patches
                 qlinfo(@"Building approved apple patch list...");
-                for (int i=0; i<[apple count]; i++) {
-                    for (int x=0;x < [approvedApplePatches count]; x++) {
-                        if ([[[approvedApplePatches objectAtIndex:x] objectForKey:@"name"] isEqualTo:[[apple objectAtIndex:i] objectForKey:@"patch"]])
+				NSDictionary *_applePatch;
+				NSDictionary *_applePatchApproved;
+				
+                for (int i=0; i<[apple count]; i++)
+				{
+					_applePatch = [apple objectAtIndex:i];
+					
+                    for (int x=0;x < [approvedApplePatches count]; x++)
+					{
+						_applePatchApproved = [approvedApplePatches objectAtIndex:x];
+						
+                        if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
                         {
-                            qlinfo(@"Patch %@ approved for update.",[[approvedApplePatches objectAtIndex:x] objectForKey:@"name"]);
+							if ([_applePatch objectForKey:@"user_install"])
+							{
+								if ([_applePatch objectForKey:@"user_install"] == 1)
+								{
+									qlwarning(@"Patch %@ is approved. Will not install due to being a user required install patch.",_applePatch[@"patch"]);
+									break;
+								}
+							}
+
+                            qlinfo(@"Patch %@ approved for update.",_applePatchApproved[@"name"]);
                             
                             tmpPatchDict = [[NSMutableDictionary alloc] init];
                             [tmpPatchDict setObject:[NSNumber numberWithBool:YES] forKey:@"selected"];
-                            [tmpPatchDict setObject:[[apple objectAtIndex:i] objectForKey:@"patch"] forKey:@"patch"];
-                            [tmpPatchDict setObject:[[apple objectAtIndex:i] objectForKey:@"size"] forKey:@"size"];
-                            [tmpPatchDict setObject:[[apple objectAtIndex:i] objectForKey:@"description"] forKey:@"description"];
-                            [tmpPatchDict setObject:[[apple objectAtIndex:i] objectForKey:@"restart"] forKey:@"restart"];
-                            [tmpPatchDict setObject:[[apple objectAtIndex:i] objectForKey:@"version"] forKey:@"version"];
-                            [tmpPatchDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"hasCriteria"] forKey:@"hasCriteria"];
+                            [tmpPatchDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+                            [tmpPatchDict setObject:_applePatch[@"size"] forKey:@"size"];
+                            [tmpPatchDict setObject:_applePatch[@"description"] forKey:@"description"];
+                            [tmpPatchDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+                            [tmpPatchDict setObject:_applePatch[@"version"] forKey:@"version"];
+                            [tmpPatchDict setObject:_applePatchApproved[@"hasCriteria"] forKey:@"hasCriteria"];
                             
-                            if ([[[approvedApplePatches objectAtIndex:x] objectForKey:@"hasCriteria"] boolValue] == YES) {
-                                if ([[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] && [[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] count] > 0) {
-                                    [tmpPatchDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] forKey:@"criteria_pre"];
+                            if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
+							{
+                                if ([_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
+								{
+                                    [tmpPatchDict setObject:_applePatchApproved[@"criteria_pre"] forKey:@"criteria_pre"];
                                 }
-                                if ([[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] && [[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] count] > 0) {
-                                    [tmpPatchDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] forKey:@"criteria_post"];
+                                if (_applePatchApproved[@"criteria_post"] && [_applePatchApproved[@"criteria_post"] count] > 0)
+								{
+                                    [tmpPatchDict setObject:_applePatchApproved[@"criteria_post"] forKey:@"criteria_post"];
                                 }
                             }
                             

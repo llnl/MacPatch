@@ -218,7 +218,7 @@
         <cftry>
             <cfquery datasource="#this.ds#" name="qGetUpdatesApple">
             	Select mpg.name, mpgp.patch_id, cpfv.type, cpfv.reboot, cpfv.suname, cpfv.size,
-                cpfv.patch_install_weight, cpfv.patch_reboot_override, cpfv.severity,
+                cpfv.patch_install_weight, cpfv.patch_reboot_override, cpfv.severity, mpaa.user_install,
 				CASE WHEN EXISTS
 				( SELECT 1
 					FROM mp_apple_patch_criteria v
@@ -230,6 +230,8 @@
                 ON mpg.id = mpgp.patch_group_id
                 Join combined_patches_view cpfv
                 ON mpgp.patch_id = cpfv.id
+                Left Join apple_patches_mp_additions mpaa
+                ON mpaa.supatchname = cpfv.suname
 
                 Where mpg.id like <cfqueryparam value="#arguments.PatchGroupID#">
                 AND cpfv.type = 'Apple'
@@ -284,6 +286,7 @@
 			<cfset _aUpdate[ "baseline" ] = "0" />
             <cfset _aUpdate[ "patch_install_weight" ] = "#patch_install_weight#" />
             <cfset _aUpdate[ "patch_reboot_override" ] = "#patch_reboot_override#" />
+            <cfset _aUpdate[ "user_install" ] = #user_install# />
             <cfset _aUpdate[ "severity" ] = "#severity#" />
 			<cfif #hasCriteria# EQ "0">
 				<cfset _aUpdate[ "hasCriteria" ] = "FALSE" />

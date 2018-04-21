@@ -1,6 +1,6 @@
 from mpconsole import db
 
-# Rev 6
+# Rev 6a
 #
 
 from datetime import *
@@ -394,6 +394,7 @@ class ApplePatchAdditions(CommonBase):
 	patch_install_weight = Column(INTEGER(unsigned=True), server_default="60")
 	patch_reboot = Column(INTEGER(unsigned=True), server_default="0")
 	osver_support = Column(String(10), nullable=False, server_default="NA")
+	user_install = Column(INTEGER(1), server_default="0")
 
 # mp_apple_patch_criteria
 class ApplePatchCriteria(CommonBase):

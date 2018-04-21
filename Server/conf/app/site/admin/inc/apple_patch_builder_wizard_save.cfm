@@ -20,10 +20,13 @@
 <cftry>
 <cfquery name="qInsert1" datasource="#session.dbsource#" result="res">
 	Update	apple_patches_mp_additions
-    Set		severity = <cfqueryparam value="#form.patch_severity#">,
+      Set
+      severity = <cfqueryparam value="#form.patch_severity#">,
 			patch_install_weight = <cfqueryparam value="#form.patchInstallWeight#">,
-			patch_reboot = <cfqueryparam value="#form.patch_reboot#">
-    Where	supatchname = <cfqueryparam value="#form.akey#">
+			patch_reboot = <cfqueryparam value="#form.patch_reboot#">,
+      user_install = <cfqueryparam value="#form.user_install#">
+      Where 
+      supatchname = <cfqueryparam value="#form.akey#">
 </cfquery>
 <cfcatch type="any">
 	<!--- The message to display. --->

@@ -139,9 +139,9 @@
             <div id="row">
               <div id="left"> Patch Description</div>
               <div id="center" style="color:black;">
-				<div style="border: 1px solid black;width:90%;height:180px;overflow-y:scroll;padding:4px;">	
-				  <cfoutput>#selPatch.description#</cfoutput>
-				</div>  
+				        <div style="border: 1px solid black;width:90%;height:170px;overflow-y:scroll;padding:4px;">	
+				          <cfoutput>#selPatch.description#</cfoutput>
+				        </div>  
               </div>
             </div>
             <div id="row">
@@ -156,21 +156,32 @@
                 </cfselect>
               </div>
             </div>
-			<div id="row">
+            <div id="row">
               <div id="left"> Patch Install Weight </div>
               <div id="center" style="color:black;">
                 <input name="patchInstallWeight" id="patchInstallWeight" type="range" min="0" max="100" step="1" title="" value="<cfoutput>#selPatch.patch_install_weight#</cfoutput>" onchange="document.getElementById('patchInstallWeight-out').innerHTML = this.value" />
-				<span id="patchInstallWeight-out"><cfoutput>#selPatch.patch_install_weight#</cfoutput></span>
+                <span id="patchInstallWeight-out"><cfoutput>#selPatch.patch_install_weight#</cfoutput></span>
               </div>
             </div>
-			<div id="row">
+            <div id="row">
               <div id="left"> Patch Reboot Override</div>
               <div id="center" style="color:black;">
                 <cfselect name="patch_reboot" size="1" required="yes">
-					<cfoutput>
+                <cfoutput>
                 	<option #IIF(selPatch.patch_reboot EQ 1,DE('selected'),DE(''))# value="1">True</option>
                 	<option #IIF(selPatch.patch_reboot EQ 0,DE('selected'),DE(''))# value="0">False</option>
-					</cfoutput>
+                </cfoutput>
+                </cfselect>
+              </div>
+            </div>
+            <div id="row">
+              <div id="left"> Patch Requires User Install</div>
+              <div id="center" style="color:black;">
+                <cfselect name="user_install" size="1" required="yes">
+                <cfoutput>
+                  <option #IIF(selPatch.user_install EQ 1,DE('selected'),DE(''))# value="1">True</option>
+                  <option #IIF(selPatch.user_install EQ 0,DE('selected'),DE(''))# value="0">False</option>
+                </cfoutput>
                 </cfselect>
               </div>
             </div>

@@ -140,7 +140,6 @@
 				
 				logit(lcl_vDebug,@"%@",result);
 				logit(lcl_vInfo,@"AV info collection has been completed.");
-				logit(lcl_vInfo,@"See the MPAgentExec.log file for more information.");
 			}
 		}	
 	}
@@ -176,7 +175,6 @@
 			
 			logit(lcl_vDebug,@"%@",result);
 			logit(lcl_vInfo,@"AV inventory and defs update has been completed.");
-			logit(lcl_vInfo,@"See the MPAgentExec.log file for more information.");
 		}	
 	}
 }

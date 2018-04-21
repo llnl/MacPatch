@@ -33,6 +33,8 @@
 #import "VDKQueue.h"
 #import "EventToSend.h"
 
+NSString * const kMenuIconNorml		= @"mpmenubar_normal";
+NSString * const kMenuIconAlert		= @"mpmenubar_alert2";
 
 // Private Methods
 @interface MPClientStatusAppDelegate ()
@@ -116,12 +118,18 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
 // App Launching Filter Rules
 @synthesize appRules;
 
+// Critical Updates
+@synthesize criticalUpdates;
+@synthesize showCriticalWindowAtDate;
+@synthesize criticalUpdatesTimer;
+
 #pragma mark UI Events
 -(void)awakeFromNib
 {
     // Remove all notifications, will get re-added if needed.
     [[NSUserNotificationCenter defaultUserNotificationCenter] removeAllDeliveredNotifications];
-    
+    criticalUpdates = [NSMutableArray new];
+	
     // Turn off Scheduled Software Updates
     [self setupWatchedFolder];
     [self setAsusAlertOpen:NO];
@@ -129,7 +137,7 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
     
     statusItem = [[NSStatusBar systemStatusBar] statusItemWithLength:NSVariableStatusItemLength];
     [statusItem setMenu:statusMenu];
-    [statusItem setImage:[NSImage imageNamed:@"mpmenubar_normal.png"]];
+    [statusItem setImage:[NSImage imageNamed:kMenuIconNorml]];
     [statusItem setHighlightMode:YES];
     
     // App Version Info
@@ -146,6 +154,8 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
                                                         selector: @selector(userNotificationReceived:)
                                                             name: kRebootRequiredNotification
                                                           object: nil];
+	
+	[self displayPatchDataMethod]; // Show needed patches
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -775,7 +785,7 @@ done:
         // If No Patches ...
         if (!data) {
             [self setPatchCount:0];
-            [statusItem setImage:[NSImage imageNamed:@"mpmenubar_normal.png"]];
+            [statusItem setImage:[NSImage imageNamed:kMenuIconNorml]];
             [checkPatchStatusMenuItem setTitle:@"Patches Needed: 0"];
             [checkPatchStatusMenuItem setSubmenu:NULL];
             
@@ -802,7 +812,7 @@ done:
         } else if ([data count] <= 0) {
             
             [self setPatchCount:[data count]];
-            [statusItem setImage:[NSImage imageNamed:@"mpmenubar_normal.png"]];
+            [statusItem setImage:[NSImage imageNamed:kMenuIconNorml]];
             [checkPatchStatusMenuItem setTitle:@"Patches Needed: 0"];
             [checkPatchStatusMenuItem setSubmenu:NULL];
             [statusMenu update];
@@ -827,7 +837,7 @@ done:
             
         } else {
             [self setPatchCount:[data count]];
-            [statusItem setImage:[NSImage imageNamed:@"mpmenubar_alert2.png"]];
+            [statusItem setImage:[NSImage imageNamed:kMenuIconAlert]];
         }
         
         [checkPatchStatusMenuItem setTitle:subMenuTitle];
@@ -1113,6 +1123,243 @@ done:
     return result;
 }
 
+#pragma mark -
+#pragma mark Critical Patches Window
+- (void)setupPopDownButton
+{
+	
+	NSMenu *menu = [(NSPopUpButton *)criticalWinPopUpDown menu];
+	
+	// Add the image menu item back to the first menu item.
+	NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:@"Not Now" action:nil keyEquivalent:@""];
+	[menu addItem:menuItem];
+	
+	NSMenuItem *menuItem1 = [[NSMenuItem alloc] initWithTitle:@"Remind in 1 hour" action:@selector(notNow:) keyEquivalent:@""];
+	[menuItem1 setTag:3600]; //3600 1hour
+	[menu insertItem:menuItem1 atIndex:1];
+	
+	NSMenuItem *menuItem2 = [[NSMenuItem alloc] initWithTitle:@"Remind in 2 hours" action:@selector(notNow:) keyEquivalent:@""];
+	[menuItem2 setTag:7200]; //7200 2hours
+	[menu insertItem:menuItem2 atIndex:2];
+	
+	NSMenuItem *menuItem3 = [[NSMenuItem alloc] initWithTitle:@"Remind me tomorrow" action:@selector(notNow:) keyEquivalent:@""];
+	[menuItem3 setTag:86400]; //86400 24hours
+	[menu insertItem:menuItem3 atIndex:3];
+	
+	criticalWinPopUpDown.menu = menu;
+	[criticalWinPopUpDown selectItemAtIndex:0];
+	/*
+	 dispatch_async(dispatch_get_main_queue(), ^(void)
+	 {
+	 });
+	 */
+}
+
+- (void)readCriticalUpdatesFile
+{
+	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_CRITICAL_UPDATES_PLIST])
+	{
+		NSArray *updatesFromFile = [NSArray arrayWithContentsOfFile:MP_CRITICAL_UPDATES_PLIST];
+		[self.criticalUpdates removeAllObjects];
+		[self.criticalUpdates addObjectsFromArray:updatesFromFile];
+	}
+	// No Timer is set, open window
+	if (self.criticalUpdates.count >= 1)
+	{
+		if (!showCriticalWindowAtDate)
+		{
+			[self showCriticalWindow:nil];
+		}
+	}
+	else
+	{
+		if (criticalUpdatesTimer)
+		{
+			[criticalUpdatesTimer invalidate];
+			criticalUpdatesTimer = nil;
+		}
+	}
+}
+
+
+- (IBAction)showCriticalWindow:(id)sender
+{
+	[self setupPopDownButton]; // Setup Menu items for critical updates window
+	
+	NSImage *bg = [[NSImage alloc] initWithSize:[criticalWindow frame].size];
+	// Begin drawing into our main image
+	[bg lockFocus];
+	
+	// Background Color
+	[[NSColor colorWithRed:0.93 green:0.93 blue:0.93 alpha:1.0] set];
+	NSRectFill(NSMakeRect(0, 0, [bg size].width, [bg size].height));
+	
+	// Border Color
+	[[NSColor colorWithRed:0.74 green:0.36 blue:0.36 alpha:1.0] set];
+	
+	NSRect bounds = NSMakeRect(0, 0, [criticalWindow frame].size.width, [criticalWindow frame].size.height);
+	NSBezierPath *border = [NSBezierPath bezierPathWithRoundedRect:bounds xRadius:8 yRadius:8];
+	[border setLineWidth:6.0];
+	[border stroke];
+	[bg unlockFocus];
+	
+	[criticalWindow setBackgroundColor:[NSColor colorWithPatternImage:bg]];
+	[criticalWindow makeKeyAndOrderFront:nil];
+	[criticalWindow setLevel:kCGMaximumWindowLevel];
+	[NSApp arrangeInFront:self];
+	[NSApp activateIgnoringOtherApps:YES];
+	
+	dispatch_async(dispatch_get_main_queue(), ^(void)
+				   {
+					   [self->criticalWinBodyText setHidden:NO];
+					   [self->criticalWinProgressText setHidden:YES];
+					   [self->criticalWinProgress setHidden:YES];
+					   self->criticalWinPopUpDown.enabled = YES;
+					   self->criticalWinPopUpDown.hidden = NO;
+					   self->criticalWinInstallButton.enabled = YES;
+					   self->criticalWinInstallButton.hidden = NO;
+					   self->criticalWinRebootButton.hidden = YES;
+				   });
+}
+
+// Not Now, will close the window and reschedule the notification
+// for the duration set by the user.
+- (IBAction)notNow:(id)sender
+{
+	if (self.criticalUpdates.count <= 0)
+	{
+		[criticalWindow close];
+		return;
+	}
+	
+	NSMenuItem *i = sender;
+	showCriticalWindowAtDate = [NSDate dateWithTimeIntervalSinceNow:i.tag];
+	criticalUpdatesTimer = [[NSTimer alloc]
+							initWithFireDate: showCriticalWindowAtDate
+							interval:1.0f
+							target:self
+							selector:@selector(showCriticalWindow:)
+							userInfo:nil
+							repeats:NO];
+	
+	[[NSRunLoop currentRunLoop] addTimer:criticalUpdatesTimer forMode:NSDefaultRunLoopMode];
+	[criticalWindow close];
+}
+
+- (IBAction)rebootNow:(id)sender
+{
+	NSAlert *alert = [[NSAlert alloc] init];
+	[alert setMessageText:@"Rebooting System"];
+	[alert setInformativeText:@"Please make sure all data is saved before continuing."];
+	[alert addButtonWithTitle:@"OK"];
+#ifdef DEBUG
+	[alert addButtonWithTitle:@"Cancel"];
+#endif
+	[alert setAlertStyle:NSCriticalAlertStyle];
+	
+	if ([alert runModal] == NSAlertFirstButtonReturn)
+	{
+		// OK clicked, delete the record
+		[criticalWindow close];
+		OSStatus error = noErr;
+		error = SendAppleEventToSystemProcess(kAERestart);
+		
+		if (error == noErr) {
+			logit(lcl_vInfo,@"Computer is going to restart now!");
+			[NSApp terminate:self];
+		} else {
+			logit(lcl_vError,@"Computer wouldn't restart: %d", (int)error);
+		}
+		return;
+	}
+}
+
+- (IBAction)installPatch:(id)sender
+{
+	[self readCriticalUpdatesFile];
+	logit(lcl_vInfo,@"criticalUpdates: %@",criticalUpdates);
+	
+	
+	// Build array of patches to install
+	NSMutableArray *patchesToInstall = [NSMutableArray new];
+	for (NSDictionary *patch in criticalUpdates)
+	{
+		[patchesToInstall addObject:patch[@"patch"]];
+	}
+	if (criticalUpdates.count<=0) {
+		[criticalWindow close];
+	}
+	
+	
+	GCDTask* asusTask;
+	
+	dispatch_async(dispatch_get_main_queue(), ^(void)
+				   {
+					   self->criticalWinBodyText.hidden = YES;
+					   self->criticalWinProgressText.hidden = NO;
+					   self->criticalWinProgressText.stringValue = @"Installing Critical Update...";
+					   
+					   self->criticalWinProgress.hidden = NO;
+					   self->criticalWinProgress.indeterminate = YES;
+					   self->criticalWinProgress.usesThreadedAnimation = YES;
+					   [self->criticalWinProgress startAnimation:nil];
+					   
+					   self->criticalWinPopUpDown.hidden = YES;
+					   self->criticalWinInstallButton.hidden = YES;
+					   
+					   self->criticalWinRebootButton.hidden = NO;
+					   self->criticalWinRebootButton.enabled = NO;
+					   self->criticalWinRebootButton.title = @"Installing";
+				   });
+	
+	for (NSString *patch in patchesToInstall)
+	{
+		asusTask = [[GCDTask alloc] init];
+		[asusTask setLaunchPath:@"/usr/sbin/softwareupdate"];
+		[asusTask setArguments:@[@"-i", patch]];
+		
+		[asusTask launchWithOutputBlock:^(NSData *stdOutData) {
+			NSString* output = [[NSString alloc] initWithData:stdOutData encoding:NSUTF8StringEncoding];
+			NSString *outStr = [output stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			
+			logit(lcl_vInfo,@"%@",outStr);
+			if (output.length>0)
+			{
+				dispatch_async(dispatch_get_main_queue(), ^(void) {
+					self->criticalWinProgressText.stringValue = outStr;
+				});
+			}
+		} andErrorBlock:^(NSData *stdErrData) {
+			NSString* output = [[NSString alloc] initWithData:stdErrData encoding:NSUTF8StringEncoding];
+			NSString *outStr = [output stringByTrimmingCharactersInSet: [NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			logit(lcl_vError,@"%@",outStr);
+		} onLaunch:^{
+			logit(lcl_vInfo,@"Task has started running.");
+			dispatch_async(dispatch_get_main_queue(), ^(void) {
+				self->criticalWinProgressText.stringValue = [@"Installing " stringByAppendingFormat:@"%@",patch];
+			});
+		} onExit:^(int exit) {
+			NSLog(@"Task has now quit. %d",exit);
+			// Need to post install result. To Web Services
+			if ([patch isEqualToString:[patchesToInstall lastObject]])
+			{
+				[self readyForReboot];
+			}
+		}];
+	}
+}
+
+- (void)readyForReboot
+{
+	dispatch_async(dispatch_get_main_queue(), ^(void)
+				   {
+					   self->criticalWinProgressText.stringValue = @"Update installed. Close all work and reboot.";
+					   [self->criticalWinProgress stopAnimation:nil];
+					   self->criticalWinRebootButton.enabled = YES;
+					   self->criticalWinRebootButton.title = @"Reboot";
+				   });
+}
+
 
 #pragma mark -
 #pragma mark Softwareupdate
@@ -1131,33 +1378,54 @@ done:
 #pragma mark Watch Patch Needed File
 - (void)setupWatchedFolder
 {
-    NSString *watchedFolder = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"Data"];
-    vdkQueue = [[VDKQueue alloc] init];
-    [vdkQueue setDelegate:self];
-    [vdkQueue addPath:watchedFolder];
-    [vdkQueue setAlwaysPostNotifications:YES];
+	logit(lcl_vInfo,@"setupWatchedFolder");
+	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_CRITICAL_UPDATES_PLIST])
+	{
+		[[NSArray array] writeToFile:MP_CRITICAL_UPDATES_PLIST atomically:NO];
+	}
+	
+	NSString *watchedFolder = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"Data"];
+	vdkQueue = [[VDKQueue alloc] init];
+	[vdkQueue setDelegate:self];
+	[vdkQueue addPath:watchedFolder];
+	[vdkQueue addPath:MP_CRITICAL_UPDATES_PLIST];
+	[vdkQueue setAlwaysPostNotifications:YES];
+	[self readCriticalUpdatesFile];
 }
 
 -(void) VDKQueue:(VDKQueue *)queue receivedNotification:(NSString*)note forPath:(NSString*)fpath
 {
-    if ([note.description isEqualTo:@"VDKQueueFileWrittenToNotification"]) {
-        if ([[NSFileManager defaultManager] fileExistsAtPath:PATCHES_NEEDED_PLIST])
-        {
-            NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:PATCHES_NEEDED_PLIST error:nil];
-            
-            if (attrs != nil) {
-                NSDate *cdate = (NSDate*)[attrs objectForKey: NSFileModificationDate];
-                if ([cdate timeIntervalSince1970] > [self.lastPatchStatusUpdate timeIntervalSince1970])
-                {
-                    [self displayPatchDataMethod];
-                }
-            }
-        }
-        else
-        {
-            [self removeStatusFiles];
-        }
-    }
+	logit(lcl_vInfo,@"NOTE: %@ (%@)",note,fpath);
+	if ([note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"] || [note.description isEqualTo:@"VDKQueueLinkCountChangedNotification"])
+	{
+		logit(lcl_vInfo,@"VDKQueueFileAttributesChangedNotification");
+		if ([fpath isEqualToString:MP_CRITICAL_UPDATES_PLIST])
+		{
+			logit(lcl_vInfo,@"%@",MP_CRITICAL_UPDATES_PLIST);
+			[self readCriticalUpdatesFile];
+		}
+		return;
+	}
+	
+	if ([note.description isEqualTo:@"VDKQueueFileWrittenToNotification"])
+	{
+		if ([[NSFileManager defaultManager] fileExistsAtPath:PATCHES_NEEDED_PLIST])
+		{
+			NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:PATCHES_NEEDED_PLIST error:nil];
+			
+			if (attrs != nil) {
+				NSDate *cdate = (NSDate*)[attrs objectForKey: NSFileModificationDate];
+				if ([cdate timeIntervalSince1970] > [self.lastPatchStatusUpdate timeIntervalSince1970])
+				{
+					[self displayPatchDataMethod];
+				}
+			}
+		}
+		else
+		{
+			[self removeStatusFiles];
+		}
+	}
 }
 
 #pragma mark -

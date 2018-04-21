@@ -77,6 +77,8 @@ NSString * const MP_AGENT_HASH              = @"/Library/Application Support/Mac
 NSString * const OS_MIGRATION_STATUS        = @"/Users/Shared/.migrationid";
 NSString * const MP_SERVER_PUB_KEY	        = @"/Library/Application Support/MacPatch/.keys/ServerPub.pem";
 
+NSString * const MP_CRITICAL_UPDATES_PLIST  = @"/Users/Shared/.mpCriUpdates.plist";
+
 @implementation Constants
 
 @end
