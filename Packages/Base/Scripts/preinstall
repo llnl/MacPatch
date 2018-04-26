@@ -84,6 +84,10 @@ if [ -d "/Library/Application Support/MacPatch/SW_Data/sw" ]; then
 	rm -rf /Library/Application\ Support/MacPatch/SW_Data/sw/*
 fi
 
+if [ -f "/Users/Shared/.mpCriUpdates.plist" ]; then
+	rm -f /Users/Shared/.mpCriUpdates.plist
+fi
+
 # Remove Old Crash Reports
 find /Library/Logs -type f -name "MP*.crash" -exec rm -f {} \;
 
