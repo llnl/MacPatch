@@ -38,6 +38,7 @@
 		8FD8909D16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */; };
 		8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */; };
 		8FE6B4831B4C79A1000A0471 /* warn.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4821B4C79A1000A0471 /* warn.png */; };
+		8FE9DE4F208FD93F0079B794 /* CriticalWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */; };
 		8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF66A8D19BF5774002379BF /* VDKQueue.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 /* End PBXBuildFile section */
 
@@ -89,6 +90,8 @@
 		8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MacPatchInstalleArtBlack.png; sourceTree = "<group>"; };
 		8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MPBaseRoundIcon.png; sourceTree = "<group>"; };
 		8FE6B4821B4C79A1000A0471 /* warn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn.png; sourceTree = "<group>"; };
+		8FE9DE4D208FD93F0079B794 /* CriticalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CriticalWindow.h; sourceTree = "<group>"; };
+		8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CriticalWindow.m; sourceTree = "<group>"; };
 		8FF66A8C19BF5774002379BF /* VDKQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VDKQueue.h; sourceTree = "<group>"; };
 		8FF66A8D19BF5774002379BF /* VDKQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VDKQueue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -179,6 +182,8 @@
 				8FF66A8D19BF5774002379BF /* VDKQueue.m */,
 				8FC36B391B45BF1F0099D214 /* EventToSend.h */,
 				8FC36B3A1B45BF1F0099D214 /* EventToSend.c */,
+				8FE9DE4D208FD93F0079B794 /* CriticalWindow.h */,
+				8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */,
 				8FD8909016DFE9B900A870A3 /* FMDB */,
 				8FD8907316DFE8BE00A870A3 /* Resources */,
 				8FD8905116DFE84600A870A3 /* Supporting Files */,
@@ -313,6 +318,7 @@
 				8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */,
 				8FD8909916DFE9CE00A870A3 /* FMResultSet.m in Sources */,
 				8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */,
+				8FE9DE4F208FD93F0079B794 /* CriticalWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

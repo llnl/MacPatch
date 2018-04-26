@@ -422,6 +422,27 @@ done:
     [self cleanup];
 }
 
+- (int)writeDataToFile:(id)data file:(NSString *)aFile
+{
+	int result = -1;
+	if (!proxy) {
+		[self connect];
+		if (!proxy) goto done;
+	}
+	
+	@try
+	{
+		result = [proxy writeDataToFileViaHelper:data toFile:aFile];
+	}
+	@catch (NSException *e) {
+		logit(lcl_vError,@"Trying to write data to file(%@). %@",aFile, e);
+	}
+	
+done:
+	[self cleanup];
+	return result;
+}
+
 #pragma mark -
 #pragma mark Client Info
 - (IBAction)getMPClientVersionInfo:(id)sender
@@ -1129,6 +1150,7 @@ done:
 {
 	
 	NSMenu *menu = [(NSPopUpButton *)criticalWinPopUpDown menu];
+	[menu removeAllItems];
 	
 	// Add the image menu item back to the first menu item.
 	NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:@"Not Now" action:nil keyEquivalent:@""];
@@ -1294,23 +1316,28 @@ done:
 	GCDTask* asusTask;
 	
 	dispatch_async(dispatch_get_main_queue(), ^(void)
-				   {
-					   self->criticalWinBodyText.hidden = YES;
-					   self->criticalWinProgressText.hidden = NO;
-					   self->criticalWinProgressText.stringValue = @"Installing Critical Update...";
-					   
-					   self->criticalWinProgress.hidden = NO;
-					   self->criticalWinProgress.indeterminate = YES;
-					   self->criticalWinProgress.usesThreadedAnimation = YES;
-					   [self->criticalWinProgress startAnimation:nil];
-					   
-					   self->criticalWinPopUpDown.hidden = YES;
-					   self->criticalWinInstallButton.hidden = YES;
-					   
-					   self->criticalWinRebootButton.hidden = NO;
-					   self->criticalWinRebootButton.enabled = NO;
-					   self->criticalWinRebootButton.title = @"Installing";
-				   });
+	   {
+		   self->criticalWinBodyText.hidden = YES;
+		   self->criticalWinProgressText.hidden = NO;
+		   self->criticalWinProgressText.stringValue = @"Installing Critical Update...";
+		   
+		   self->criticalWinProgress.hidden = NO;
+		   self->criticalWinProgress.indeterminate = YES;
+		   self->criticalWinProgress.usesThreadedAnimation = YES;
+		   [self->criticalWinProgress startAnimation:nil];
+		   
+		   self->criticalWinPopUpDown.hidden = YES;
+		   self->criticalWinInstallButton.hidden = YES;
+		   
+		   self->criticalWinRebootButton.hidden = NO;
+		   self->criticalWinRebootButton.enabled = NO;
+		   self->criticalWinRebootButton.title = @"Installing";
+		   
+		   [self->criticalWinProgress display];
+	   });
+	
+	// Must run scan first!
+	[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/softwareupdate" arguments:@[@"-l"]];
 	
 	for (NSString *patch in patchesToInstall)
 	{
@@ -1341,6 +1368,9 @@ done:
 		} onExit:^(int exit) {
 			NSLog(@"Task has now quit. %d",exit);
 			// Need to post install result. To Web Services
+			[self removePatchFromCriticalFile:patch];
+			[self postPatchInstall:patch type:@"apple"];
+			
 			if ([patch isEqualToString:[patchesToInstall lastObject]])
 			{
 				[self readyForReboot];
@@ -1360,6 +1390,43 @@ done:
 				   });
 }
 
+- (void)removePatchFromCriticalFile:(NSString *)patch
+{
+	logit(lcl_vInfo,@"Removing %@ from %@",patch,MP_CRITICAL_UPDATES_PLIST);
+	
+	NSMutableArray *newArray = [NSMutableArray new];
+	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_CRITICAL_UPDATES_PLIST])
+	{
+		NSArray *updatesFromFile = [NSArray arrayWithContentsOfFile:MP_CRITICAL_UPDATES_PLIST];
+		for (NSDictionary *p in updatesFromFile)
+		{
+			if (![p[@"patch"] isEqualToString:patch])
+			{
+				[newArray addObject:p];
+			}
+			else
+			{
+				logit(lcl_vDebug,@"%@ not added to new array.",patch);
+			}
+		}
+		
+		[self writeDataToFile:(NSArray*)newArray file:MP_CRITICAL_UPDATES_PLIST];
+	}
+
+	return;
+}
+
+- (void)postPatchInstall:(NSString *)patch type:(NSString *)type
+{
+	MPWebServices *mpws = [[MPWebServices alloc] init];
+	NSError *wsErr = nil;
+	[mpws postPatchInstallResultsToWebService:patch patchType:@"apple" error:&wsErr];
+	logit(lcl_vInfo,@"Posting patch (%@) install to web service.",patch);
+	if (wsErr) {
+		logit(lcl_vError,@"%@", wsErr.localizedDescription);
+	}
+	mpws = nil;
+}
 
 #pragma mark -
 #pragma mark Softwareupdate
@@ -1393,23 +1460,24 @@ done:
 	[self readCriticalUpdatesFile];
 }
 
--(void) VDKQueue:(VDKQueue *)queue receivedNotification:(NSString*)note forPath:(NSString*)fpath
+-(void) VDKQueue:(VDKQueue *)vdkqueue receivedNotification:(NSString*)note forPath:(NSString*)fpath
 {
-	logit(lcl_vInfo,@"NOTE: %@ (%@)",note,fpath);
-	if ([note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"] || [note.description isEqualTo:@"VDKQueueLinkCountChangedNotification"])
+	if ([note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"] || [note.description isEqualTo:@"VDKQueueLinkCountChangedNotification"] || [note.description isEqualTo:@"VDKQueueFileDeletedNotification"])
 	{
-		logit(lcl_vInfo,@"VDKQueueFileAttributesChangedNotification");
+		[NSThread sleepForTimeInterval:5.0];
+		//logit(lcl_vInfo,@"VDKQueueFileAttributesChangedNotification");
 		if ([fpath isEqualToString:MP_CRITICAL_UPDATES_PLIST])
 		{
-			logit(lcl_vInfo,@"%@",MP_CRITICAL_UPDATES_PLIST);
+			logit(lcl_vInfo,@"readCriticalUpdatesFile: %@",MP_CRITICAL_UPDATES_PLIST);
 			[self readCriticalUpdatesFile];
 		}
 		return;
 	}
 	
-	if ([note.description isEqualTo:@"VDKQueueFileWrittenToNotification"])
+	if ([note.description isEqualTo:@"VDKQueueFileWrittenToNotification"] || [note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"])
 	{
-		if ([[NSFileManager defaultManager] fileExistsAtPath:PATCHES_NEEDED_PLIST])
+		if ([[NSFileManager defaultManager] fileExistsAtPath:PATCHES_NEEDED_PLIST] &&
+			[fpath isEqualToString:[MP_ROOT_CLIENT stringByAppendingPathComponent:@"Data"]])
 		{
 			NSDictionary *attrs = [[NSFileManager defaultManager] attributesOfItemAtPath:PATCHES_NEEDED_PLIST error:nil];
 			

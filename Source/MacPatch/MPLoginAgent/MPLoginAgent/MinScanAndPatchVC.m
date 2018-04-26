@@ -414,9 +414,9 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
 						
                         if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
                         {
-							if ([_applePatch objectForKey:@"user_install"])
+							if ([_applePatchApproved objectForKey:@"user_install"])
 							{
-								if ([_applePatch objectForKey:@"user_install"] == 1)
+								if ([[_applePatchApproved objectForKey:@"user_install"] intValue] == 1)
 								{
 									qlwarning(@"Patch %@ is approved. Will not install due to being a user required install patch.",_applePatch[@"patch"]);
 									break;
@@ -436,7 +436,7 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
                             
                             if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
 							{
-                                if ([_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
+                                if (_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
 								{
                                     [tmpPatchDict setObject:_applePatchApproved[@"criteria_pre"] forKey:@"criteria_pre"];
                                 }

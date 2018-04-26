@@ -966,7 +966,7 @@ done:
         NSArray 		*approvedApplePatches 	 = [patchGroupPatches objectForKey:@"AppleUpdates"];
         NSArray 		*approvedCustomPatches 	 = [patchGroupPatches objectForKey:@"CustomUpdates"];
 		NSMutableArray	*userInstallApplePatches = [[NSMutableArray alloc] init];
-        
+		
         // Scan for Apple Patches
         int catResult = [self setCatalogURL];
         if (catResult != 0) {
@@ -1056,11 +1056,14 @@ done:
 							
                             if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
 							{
+								logit(lcl_vDebug,@"Apple Data: %@",_applePatch);
+								logit(lcl_vDebug,@"MP Data: %@",_applePatchApproved);
+								
 								// Check to see if the approved apple patch requires a user
 								// to install the patch, right now this is for 10.13 os updates
-								if ([_applePatch objectForKey:@"user_install"])
+								if ([_applePatchApproved objectForKey:@"user_install"])
 								{
-									if ([_applePatch objectForKey:@"user_install"] == 1)
+									if ([[_applePatchApproved objectForKey:@"user_install"] intValue] == 1)
 									{
 										logit(lcl_vInfo,@"Approved (User Install) update %@",_applePatch[@"patch"]);
 										logit(lcl_vDebug,@"Approved: %@",_applePatchApproved);
@@ -1069,14 +1072,12 @@ done:
 									}
 								}
 								
-								
-								
                                 tmpDict = [[NSMutableDictionary alloc] init];
                                 [tmpDict setObject:[NSNumber numberWithBool:YES] forKey:@"select"];
-                                [tmpDict setObject:_applePatchApproved[@"size"] forKey:@"size"];
-                                [tmpDict setObject:_applePatchApproved[@"patch"] forKey:@"patch"];
-                                [tmpDict setObject:_applePatchApproved[@"description"] forKey:@"description"];
-                                [tmpDict setObject:_applePatchApproved[@"restart"] forKey:@"restart"];
+                                [tmpDict setObject:_applePatch[@"size"] forKey:@"size"];
+                                [tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+                                [tmpDict setObject:_applePatch[@"description"] forKey:@"description"];
+                                [tmpDict setObject:_applePatch[@"restart"] forKey:@"restart"];
 								
 								if ([[_applePatch[@"restart"] uppercaseString] isEqualTo:@"Y"] || [[_applePatch[@"restart"] uppercaseString] isEqualTo:@"YES"])
                                 {
@@ -1274,6 +1275,7 @@ done:
 		// The MP_CRITICAL_UPDATES_PLIST constant is for User Install updates
 		if (userInstallApplePatches.count >= 1)
 		{
+			qldebug(@"Write user install patches (%d) to critical watch file.",(int)userInstallApplePatches.count);
 			[self writeDataToFile:userInstallApplePatches file:MP_CRITICAL_UPDATES_PLIST];
 		}
         

@@ -1465,12 +1465,53 @@ done:
 // Proxy Method
 - (int)writeDataToFileViaHelper:(id)data toFile:(NSString *)aFile
 {
-    NSError *err = nil;
-    [data writeToFile:aFile atomically:YES encoding:NSUTF8StringEncoding error:&err];
-    if (err) {
-        logit(lcl_vError,@"Error writing data to file(%@). %@",aFile,[err description]);
-        return 1;
-    }
+	
+	logit(lcl_vDebug,@"Writing data to file %@",aFile);
+	NSError *err = nil;
+	
+	if([data isKindOfClass:[NSArray class]] || [data isKindOfClass:[NSMutableArray class]])
+	{
+		//Is array
+		if (![data writeToFile:aFile atomically:NO])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSDictionary class]] || [data isKindOfClass:[NSMutableDictionary class]])
+	{
+		//is dictionary
+		if (![data writeToFile:aFile atomically:NO])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSString class]] || [data isKindOfClass:[NSMutableString class]])
+	{
+		//is string
+		[data writeToFile:aFile atomically:YES encoding:NSUTF8StringEncoding error:&err];
+		if (err) {
+			logit(lcl_vError,@"Error writing data to file(%@). %@",aFile,[err description]);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSData class]] || [data isKindOfClass:[NSMutableData class]])
+	{
+		//is data
+		if (![data writeToFile:aFile atomically:YES])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else
+	{
+		//is something else
+		logit(lcl_vError,@"Error writing data to file %@. Unsupported file type.",aFile);
+		return 1;
+	}
+	
     return 0;
 }
 // Proxy Method

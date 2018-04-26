@@ -271,18 +271,26 @@
         if (!applePatchesArray)
 		{
             logit(lcl_vInfo,@"The scan results for ASUS scan were nil.");
-        } else {
+        }
+		else
+		{
             // If no items in array, lets bail...
-            if ([applePatchesArray count] == 0 ) {
+            if ([applePatchesArray count] == 0 )
+			{
                 logit(lcl_vInfo,@"No Apple updates found.");
                 sleep(1);
-            } else {
+            }
+			else
+			{
                 // We have Apple patches, now add them to the array of approved patches
                 
                 // If no items in array, lets bail...
-                if ([approvedApplePatches count] == 0 ) {
+                if ([approvedApplePatches count] == 0 )
+				{
                     logit(lcl_vInfo,@"No apple updates found for \"%@\" patch group.",[_defaults objectForKey:@"PatchGroup"]);
-                } else {
+                }
+				else
+				{
                     // Build Approved Patches
                     logit(lcl_vInfo,@"Building approved patch list...");
 					NSDictionary *_applePatch;
@@ -290,6 +298,7 @@
                     for (int i=0; i<[applePatchesArray count]; i++)
 					{
 						_applePatch = [applePatchesArray objectAtIndex:i];
+						
                         for (int x=0;x < [approvedApplePatches count]; x++)
 						{
 							_applePatchApproved = [approvedApplePatches objectAtIndex:x];
@@ -298,9 +307,9 @@
 							{
 								// Check to see if the approved apple patch requires a user
 								// to install the patch, right now this is for 10.13 os updates
-								if ([_applePatch objectForKey:@"user_install"])
+								if ([_applePatchApproved objectForKey:@"user_install"])
 								{
-									if ([_applePatch objectForKey:@"user_install"] == 1)
+									if ([[_applePatchApproved objectForKey:@"user_install"] intValue] == 1)
 									{
 										logit(lcl_vInfo,@"Approved (User Install) update %@",_applePatch[@"patch"]);
 										logit(lcl_vDebug,@"Approved: %@",_applePatchApproved);
@@ -317,7 +326,7 @@
                                 [tmpDict setObject:[_applePatch objectForKey:@"description"] forKey:@"description"];
                                 [tmpDict setObject:[_applePatch objectForKey:@"restart"] forKey:@"restart"];
                                 [tmpDict setObject:[_applePatch objectForKey:@"version"] forKey:@"version"];
-                                [tmpDict setObject:[_applePatch objectForKey:@"severity"] forKey:@"severity"];
+                                [tmpDict setObject:[_applePatchApproved objectForKey:@"severity"] forKey:@"severity"];
                                 
                                 if ([_applePatchApproved objectForKey:@"hasCriteria"])
 								{
@@ -2406,7 +2415,7 @@ done:
 - (BOOL)isValidPatch:(NSDictionary *)patch
 {
 	return YES; //Disabled
-	
+	/*
 	MPCrypto 	*mpCrypto = [[MPCrypto alloc] init];
 	SecKeyRef	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
 	
@@ -2417,6 +2426,7 @@ done:
 	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
 	sigData = nil;
 	return res;
+	 */
 }
 
 //Patch

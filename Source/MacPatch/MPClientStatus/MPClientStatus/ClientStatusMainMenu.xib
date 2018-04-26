@@ -996,7 +996,7 @@ DQ
             </connections>
             <point key="canvasLocation" x="393" y="-21"/>
         </window>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="2QM-FM-Zi7">
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="2QM-FM-Zi7" customClass="CriticalWindow">
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="1950" y="1183" width="573" height="142"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1418"/>
@@ -1048,6 +1048,9 @@ DQ
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="systemBold" size="14"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="installPatch:" target="494" id="Nz0-Z0-uPp"/>
+                        </connections>
                     </button>
                     <button hidden="YES" verticalHuggingPriority="750" id="4Ay-8T-4eJ">
                         <rect key="frame" x="446" y="49" width="113" height="33"/>
@@ -1056,6 +1059,9 @@ DQ
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="systemBold"/>
                         </buttonCell>
+                        <connections>
+                            <action selector="rebootNow:" target="494" id="k2M-Cu-uXB"/>
+                        </connections>
                     </button>
                     <popUpButton canDrawConcurrently="YES" id="yxV-dd-G3o">
                         <rect key="frame" x="444" y="25" width="117" height="36"/>
@@ -1065,6 +1071,9 @@ DQ
                             <font key="font" metaFont="systemBold"/>
                             <menu key="menu" id="0Dz-Sr-1Vc"/>
                         </popUpButtonCell>
+                        <connections>
+                            <action selector="notNow:" target="494" id="bzg-6O-jCI"/>
+                        </connections>
                     </popUpButton>
                 </subviews>
                 <animations>
@@ -1081,7 +1090,7 @@ LQAyADcAQQBHAFAAVwBcAGQAeQB7AH0AfwCBAIsAkgCXAKIApQCnAKkAqwCwALsAxADMAM8A2ADdAOoA
                     </caTransition>
                 </animations>
             </view>
-            <point key="canvasLocation" x="-203" y="-397"/>
+            <point key="canvasLocation" x="-362.5" y="-429"/>
         </window>
     </objects>
     <resources>
