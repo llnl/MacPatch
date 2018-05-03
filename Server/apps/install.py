@@ -1,13 +1,10 @@
 import pip
 import os
+import argparse
 from sys import platform
 
-_pre_ = [
-	"pip",
-	"setuptools"
-]
-
 _all_ = [
+	"pycrypto>=2.6.1",
 	"alembic>=0.8.7",
 	"aniso8601>=1.1.0",
 	"blinker>=1.4",
@@ -42,19 +39,22 @@ _all_ = [
 	"WTForms>=2.1",
 	"Flask-APScheduler>=1.7.0",
 	"flask-cors>=2.0.0",
-	"flask-security>=1.7.0"
+	"flask-security>=1.7.0",
+	"yattag>=1.8.0",
+	"requests>=2.18.4",
+	"mysql-connector-python",
+	"uWSGI>=2.0.14"
 ]
 
 _failed_ = []
 
 MP_HOME     = "/opt/MacPatch"
 MP_SRV_BASE = MP_HOME+"/Server"
+CA_CERT     = None
 
-srcDir      = MP_SRV_BASE+"/apps/_src_"
-cryptoPKG   = srcDir+"/M2Crypto-0.21.1-py2.7-macosx-10.8-intel.egg"
-
-linux = ["M2Crypto==0.24.0", "uWSGI>=2.0.14", "mysql-connector-python-rf>=2.1.3"]
-darwin = ["mysql-connector-python-rf>=2.1.3", ]
+# Platform Specific Packages
+linux = ["M2Crypto==0.24.0"]
+darwin = []
 
 def easyInstall(package):
 	print "Running Easy Install"
@@ -63,16 +63,15 @@ def easyInstall(package):
 		print("Easy Install Python Module: " + package)
 		os.system("easy_install --quiet " + package)
 
-def installAlt(package):
-	# Debugging
-	# pip.main(["install", "--pre", "--upgrade", "--no-index",
-	#         "--find-links=.", package, "--log-file", "log.txt", "-vv"])
-	pip.main(["install", "--quiet", "--no-cache-dir", "--no-index", "--find-links=.", package])
-
 def upgrade(packages, platformStr="linux"):
+	import pip
+
 	for package in packages:
 		if platformStr == 'linux':
-			res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--upgrade", "--trusted-host", "pypi.python.org", package])
+			if CA_CERT is not None:
+				res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--upgrade", "--cert", CA_CERT, package])
+			else:
+				res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--upgrade", package])
 		else:
 			res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--upgrade", package])
 
@@ -82,9 +81,14 @@ def upgrade(packages, platformStr="linux"):
 
 def install(packages, platformStr="linux"):
 	for package in packages:
+		import pip
+
 		print("Installing Python Module: " + package)
 		if platformStr == 'linux':
-			res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--trusted-host", "pypi.python.org", package])
+			if CA_CERT is not None:
+				res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", "--cert", CA_CERT, package])
+			else:
+				res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", package])
 		else:
 			res = pip.main(['install', "--quiet", "--egg", "--no-cache-dir", package])
 
@@ -93,6 +97,14 @@ def install(packages, platformStr="linux"):
 			print("Error installing " + package + ". Please verify env.")
 
 if __name__ == '__main__':
+
+	'''Main command processing'''
+	parser = argparse.ArgumentParser(description='Process some args.')
+	parser.add_argument('--ca', help="SSL Inspection CA certificate file", required=False, default=None)
+	args = parser.parse_args()
+
+	if args.ca:
+		CA_CERT = args.ca
 
 	isMac = platform.startswith('darwin')
 	isLinux = platform.startswith('linux')
@@ -105,7 +117,6 @@ if __name__ == '__main__':
 
 	print "Running python package installs for operating system type " + osType
 
-	upgrade(_pre_, osType)
 	install(_all_, osType)
 
 	if len(_failed_) > 0:
@@ -119,4 +130,3 @@ if __name__ == '__main__':
 	if platform.startswith('darwin'):
 		print "Install Darwin Packages"
 		install(darwin, osType)
-		easyInstall(cryptoPKG)

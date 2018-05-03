@@ -989,7 +989,8 @@ done:
     [spTask setLaunchPath: ASUS_BIN_PATH];
 	
 	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
-		[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		//[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	} else {
 		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	}
@@ -1384,7 +1385,7 @@ done:
 - (void)setLogoutHookViaHelper
 {
     // This has been changed in MacPatch 2.2.0
-    NSString *_atFile = @"/private/tmp/.MPAuthRun";
+    NSString *_atFile = MP_AUTHRUN_FILE;
     NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
     NSString *_rbText = @"reboot";
     // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
@@ -1464,12 +1465,53 @@ done:
 // Proxy Method
 - (int)writeDataToFileViaHelper:(id)data toFile:(NSString *)aFile
 {
-    NSError *err = nil;
-    [data writeToFile:aFile atomically:YES encoding:NSUTF8StringEncoding error:&err];
-    if (err) {
-        logit(lcl_vError,@"Error writing data to file(%@). %@",aFile,[err description]);
-        return 1;
-    }
+	
+	logit(lcl_vDebug,@"Writing data to file %@",aFile);
+	NSError *err = nil;
+	
+	if([data isKindOfClass:[NSArray class]] || [data isKindOfClass:[NSMutableArray class]])
+	{
+		//Is array
+		if (![data writeToFile:aFile atomically:NO])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSDictionary class]] || [data isKindOfClass:[NSMutableDictionary class]])
+	{
+		//is dictionary
+		if (![data writeToFile:aFile atomically:NO])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSString class]] || [data isKindOfClass:[NSMutableString class]])
+	{
+		//is string
+		[data writeToFile:aFile atomically:YES encoding:NSUTF8StringEncoding error:&err];
+		if (err) {
+			logit(lcl_vError,@"Error writing data to file(%@). %@",aFile,[err description]);
+			return 1;
+		}
+	}
+	else if	([data isKindOfClass:[NSData class]] || [data isKindOfClass:[NSMutableData class]])
+	{
+		//is data
+		if (![data writeToFile:aFile atomically:YES])
+		{
+			logit(lcl_vError,@"Error writing data to file %@",aFile);
+			return 1;
+		}
+	}
+	else
+	{
+		//is something else
+		logit(lcl_vError,@"Error writing data to file %@. Unsupported file type.",aFile);
+		return 1;
+	}
+	
     return 0;
 }
 // Proxy Method
@@ -1574,7 +1616,11 @@ done:
             
             logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
             NSString *dlPatchLoc = [mpa downloadUpdate:downloadURL error:&dlErr];
-            
+			if (dlErr) {
+				qlerror(@"%@",dlErr.localizedDescription);
+				return 1; // Error creating stage patch dir. Can not use it.
+			}
+			
             dlErr = nil;
             [fm moveItemAtPath:dlPatchLoc toPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]] error:&dlErr];
             if (dlErr) {
@@ -1714,7 +1760,8 @@ done:
     int rb = 0;
     switch ( taskAction ) {
         case 0:
-            rb = reboot(RB_AUTOBOOT);
+			//rb = reboot(RB_AUTOBOOT);
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
             qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
             if (rb == -1) {
                 // Try Forcing it :-)

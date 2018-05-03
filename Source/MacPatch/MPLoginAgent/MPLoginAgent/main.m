@@ -100,11 +100,11 @@ static void fixDefaultsIfNeeded(void)
 int main(int argc, char * argv[])
 {
     NSFileManager *fm = [NSFileManager defaultManager];
-    if (![fm fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
+    if (![fm fileExistsAtPath:MP_AUTHRUN_FILE]) {
         return 0;
     } else {
         // This way it does not run over and over
-        [fm removeFileIfExistsAtPath:@"/private/tmp/.MPAuthRun"];
+        [fm removeFileIfExistsAtPath:MP_AUTHRUN_FILE];
     }
     
     int             retVal;

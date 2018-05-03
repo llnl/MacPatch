@@ -10,6 +10,9 @@
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
 		8FC36B3D1B45C0850099D214 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC36B3C1B45C0850099D214 /* Carbon.framework */; };
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
+		8FC855E32097BE0A00E3ED78 /* warn_20.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FC855E22097BE0A00E3ED78 /* warn_20.png */; };
+		8FC855E62097BE9800E3ED78 /* alert-yellow_small.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FC855E42097BE9800E3ED78 /* alert-yellow_small.png */; };
+		8FC855E72097BE9800E3ED78 /* alert-yellow_small@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FC855E52097BE9800E3ED78 /* alert-yellow_small@2x.png */; };
 		8FCCBA7119AFD1BB001F4C3B /* CHMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */; };
 		8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */; };
 		8FCCBA7519AFD40A001F4C3B /* RestartReq.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7319AFD40A001F4C3B /* RestartReq.tif */; };
@@ -38,6 +41,7 @@
 		8FD8909D16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */; };
 		8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */; };
 		8FE6B4831B4C79A1000A0471 /* warn.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4821B4C79A1000A0471 /* warn.png */; };
+		8FE9DE4F208FD93F0079B794 /* CriticalWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */; };
 		8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF66A8D19BF5774002379BF /* VDKQueue.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 /* End PBXBuildFile section */
 
@@ -48,6 +52,9 @@
 		8FC36B3C1B45C0850099D214 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		8FC41313192571FA00BB394F /* AppLaunchObject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppLaunchObject.h; sourceTree = "<group>"; };
 		8FC41314192571FA00BB394F /* AppLaunchObject.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppLaunchObject.m; sourceTree = "<group>"; };
+		8FC855E22097BE0A00E3ED78 /* warn_20.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn_20.png; sourceTree = "<group>"; };
+		8FC855E42097BE9800E3ED78 /* alert-yellow_small.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "alert-yellow_small.png"; sourceTree = "<group>"; };
+		8FC855E52097BE9800E3ED78 /* alert-yellow_small@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "alert-yellow_small@2x.png"; sourceTree = "<group>"; };
 		8FCCBA6E19AFD1BB001F4C3B /* CHMenuViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHMenuViewController.h; sourceTree = "<group>"; };
 		8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMenuViewController.m; sourceTree = "<group>"; };
 		8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHMenuViewController.xib; sourceTree = "<group>"; };
@@ -89,6 +96,8 @@
 		8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MacPatchInstalleArtBlack.png; sourceTree = "<group>"; };
 		8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MPBaseRoundIcon.png; sourceTree = "<group>"; };
 		8FE6B4821B4C79A1000A0471 /* warn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn.png; sourceTree = "<group>"; };
+		8FE9DE4D208FD93F0079B794 /* CriticalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CriticalWindow.h; sourceTree = "<group>"; };
+		8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CriticalWindow.m; sourceTree = "<group>"; };
 		8FF66A8C19BF5774002379BF /* VDKQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VDKQueue.h; sourceTree = "<group>"; };
 		8FF66A8D19BF5774002379BF /* VDKQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VDKQueue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -179,6 +188,8 @@
 				8FF66A8D19BF5774002379BF /* VDKQueue.m */,
 				8FC36B391B45BF1F0099D214 /* EventToSend.h */,
 				8FC36B3A1B45BF1F0099D214 /* EventToSend.c */,
+				8FE9DE4D208FD93F0079B794 /* CriticalWindow.h */,
+				8FE9DE4E208FD93F0079B794 /* CriticalWindow.m */,
 				8FD8909016DFE9B900A870A3 /* FMDB */,
 				8FD8907316DFE8BE00A870A3 /* Resources */,
 				8FD8905116DFE84600A870A3 /* Supporting Files */,
@@ -201,6 +212,9 @@
 			isa = PBXGroup;
 			children = (
 				8FE6B4821B4C79A1000A0471 /* warn.png */,
+				8FC855E22097BE0A00E3ED78 /* warn_20.png */,
+				8FC855E42097BE9800E3ED78 /* alert-yellow_small.png */,
+				8FC855E52097BE9800E3ED78 /* alert-yellow_small@2x.png */,
 				8FCCBA7319AFD40A001F4C3B /* RestartReq.tif */,
 				8FCCBA7419AFD40A001F4C3B /* empty.tif */,
 				8FD8907416DFE8D000A870A3 /* mpmenubar_alert2.png */,
@@ -285,9 +299,12 @@
 				8FE6B4831B4C79A1000A0471 /* warn.png in Resources */,
 				8FCCBA7519AFD40A001F4C3B /* RestartReq.tif in Resources */,
 				8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */,
+				8FC855E32097BE0A00E3ED78 /* warn_20.png in Resources */,
 				8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */,
 				8FD8907816DFE8D000A870A3 /* mpmenubar_alert2.png in Resources */,
 				8FD8907916DFE8D000A870A3 /* mpmenubar_normal.png in Resources */,
+				8FC855E72097BE9800E3ED78 /* alert-yellow_small@2x.png in Resources */,
+				8FC855E62097BE9800E3ED78 /* alert-yellow_small.png in Resources */,
 				8FD8907A16DFE8D000A870A3 /* MPClientStatus.icns in Resources */,
 				8FD8907B16DFE8D000A870A3 /* ClientStatusMainMenu.xib in Resources */,
 				8FCCBA7619AFD40A001F4C3B /* empty.tif in Resources */,
@@ -313,6 +330,7 @@
 				8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */,
 				8FD8909916DFE9CE00A870A3 /* FMResultSet.m in Sources */,
 				8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */,
+				8FE9DE4F208FD93F0079B794 /* CriticalWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

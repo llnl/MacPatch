@@ -81,6 +81,8 @@
     [[NSApplication sharedApplication] setPresentationOptions:NSApplicationPresentationAutoHideMenuBar | NSApplicationPresentationAutoHideDock];
 
     NSRect windowFrame = [[self panel] frame];
+	
+	// This Sets the background to full screen
     windowFrame.size.height = [[NSScreen mainScreen] frame].size.height;
     windowFrame.size.width = [[NSScreen mainScreen] frame].size.width;
     windowFrame.origin.x = (double)0;

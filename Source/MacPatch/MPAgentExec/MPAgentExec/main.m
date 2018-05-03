@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.0.2.2"
+#define APPVERSION	@"3.0.5.0"
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
@@ -45,6 +45,7 @@ int main (int argc, char * argv[])
         BOOL verboseLogging = NO;
         BOOL isILoadMode = NO;
         BOOL forceRunTask = NO;
+		BOOL overrideReboot = NO;
         int _UpdateType = 0; // 0 All, 1 = Apple, 2 = Third
         NSString *_updateBundle = nil;
         NSDictionary *_defaultsOverride = nil;
@@ -64,13 +65,14 @@ int main (int argc, char * argv[])
                 {"UpdateFilter"			,required_argument	,0, 'f'},
                 {"UpdateBundle"			,required_argument	,0, 'B'},
                 {"Critial"				,no_argument	    ,0, 'x'},
-                {"AVInfo"				,no_argument	    ,0, 'a'},
-                {"AVUpdate"				,no_argument	    ,0, 'U'},
+				{"AVInfo"				,no_argument	    ,0, 'a'},
+				{"AVUpdate"				,no_argument	    ,0, 'U'},
                 {"AgentUpdate"			,no_argument		,0, 'G'},
                 {"AllowClient"			,no_argument	    ,0, 'C'},
                 {"AllowServer"			,no_argument	    ,0, 'S'},
                 {"iload"				,no_argument	    ,0, 'i'},
                 {"FORCERUN"				,no_argument		,0, 'F'},
+				{"installRebootPatches"	,no_argument		,0, 'R'},
                 {"cuuid"                ,no_argument		,0, 'c'},
                 // Software Dist
                 {"installSWUsingGRP"    ,required_argument	,0, 'g'},
@@ -85,7 +87,7 @@ int main (int argc, char * argv[])
             };
             // getopt_long stores the option index here.
             int option_index = 0;
-            c = getopt_long (argc, argv, "Dsuf:B:aUGCSiFcg:d:P:eVvh", long_options, &option_index);
+            c = getopt_long (argc, argv, "Dsuf:B:aUGCSiFRcg:d:P:eVvh", long_options, &option_index);
 
             // Detect the end of the options.
             if (c == -1) {
@@ -157,6 +159,9 @@ int main (int argc, char * argv[])
                     case 'F':
                         forceRunTask = YES;
                         break;
+					case 'R':
+						overrideReboot = YES;
+						break;
                     case 'e':
                         echoToConsole = YES;
                         break;
@@ -216,6 +221,9 @@ int main (int argc, char * argv[])
         if (forceRunTask == YES) {
             [controller setForceRun:YES];
         }
+		if (overrideReboot == YES) {
+			[controller setOverrideRebootPatchInstalls:YES];
+		}
 
         int result = NO;
         switch (a_Type) {

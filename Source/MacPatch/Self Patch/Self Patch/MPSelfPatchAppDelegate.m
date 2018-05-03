@@ -757,6 +757,8 @@ done:
     
     @try
     {
+		NSString *info = [NSString stringWithFormat:@"Pre-staging %@. This may take a while.",patch[@"patch"]];
+		[self progress:info];
         result = [proxy stagePatchWithBaseDirectory:patch directory:MP_ROOT_CLIENT];
     }
     @catch (NSException *e) {
@@ -921,13 +923,14 @@ done:
         
         // Get Patch Group Patches
         [self progress:@"Getting approved patch list for client."];
-        MPWebServices *mpws = [[MPWebServices alloc] init];
-        NSError       *wsErr = nil;
-        NSDictionary  *patchGroupPatches;
-        BOOL           useLocalPatchesFile = NO;
-        NSString      *patchGroupRevLocal = [MPClientInfo patchGroupRev];
+        MPWebServices 	*mpws = [[MPWebServices alloc] init];
+        NSError       	*wsErr = nil;
+        NSDictionary  	*patchGroupPatches;
+        BOOL           	useLocalPatchesFile = NO;
+        NSString      	*patchGroupRevLocal = [MPClientInfo patchGroupRev];
         
-        if (![patchGroupRevLocal isEqualToString:@"-1"]) {
+        if (![patchGroupRevLocal isEqualToString:@"-1"])
+		{
             NSString *patchGroupRevRemote = [mpws getPatchGroupContentRev:&wsErr];
             if (!wsErr) {
                 if ([patchGroupRevLocal isEqualToString:patchGroupRevRemote]) {
@@ -941,7 +944,8 @@ done:
                 }
             }
         }
-        if (!useLocalPatchesFile) {
+        if (!useLocalPatchesFile)
+		{
             wsErr = nil;
             patchGroupPatches = [mpws getPatchGroupContent:&wsErr];
             if (wsErr) {
@@ -959,9 +963,10 @@ done:
             [self scanComplete:NO];
             return;
         }
-        NSArray *approvedApplePatches = [patchGroupPatches objectForKey:@"AppleUpdates"];
-        NSArray *approvedCustomPatches = [patchGroupPatches objectForKey:@"CustomUpdates"]; 
-        
+        NSArray 		*approvedApplePatches 	 = [patchGroupPatches objectForKey:@"AppleUpdates"];
+        NSArray 		*approvedCustomPatches 	 = [patchGroupPatches objectForKey:@"CustomUpdates"];
+		NSMutableArray	*userInstallApplePatches = [[NSMutableArray alloc] init];
+		
         // Scan for Apple Patches
         int catResult = [self setCatalogURL];
         if (catResult != 0) {
@@ -1011,61 +1016,107 @@ done:
         }
         
         // Process patches
-        if (!applePatchesArray) {
+        if (!applePatchesArray)
+		{
             logit(lcl_vInfo,@"The scan results for ASUS scan were nil.");
-        } else {
+        }
+		else
+		{
             // If no items in array, lets bail...
-            if ([applePatchesArray count] == 0 ) {
+            if ([applePatchesArray count] == 0 )
+			{
                 [self progress:@"No Apple updates found."];
                 sleep(1);
-            } else {
+            }
+			else
+			{
                 // We have Apple patches, now add them to the array of approved patches
                 
                 
                 // If no items in array, lets bail...
-                if ([approvedApplePatches count] == 0 ) {
+                if ([approvedApplePatches count] == 0 )
+				{
                     [self progress:@"No Patch Group patches found."];
                     logit(lcl_vInfo,@"No apple updates found for \"%@\" patch group.",[defaults objectForKey:@"PatchGroup"]);
-                } else {
+                }
+				else
+				{
                     // Build Approved Patches
                     [self progress:@"Building approved patch list..."];
+					NSDictionary *_applePatch;
+					NSDictionary *_applePatchApproved;
                     
-                    for (int i=0; i<[applePatchesArray count]; i++) {
-                        for (int x=0;x < [approvedApplePatches count]; x++) {
-                            if ([[[approvedApplePatches objectAtIndex:x] objectForKey:@"name"] isEqualTo:[[applePatchesArray objectAtIndex:i] objectForKey:@"patch"]]) {
+                    for (int i=0; i<[applePatchesArray count]; i++)
+					{
+						_applePatch = [applePatchesArray objectAtIndex:i];
+						
+                        for (int x=0;x < [approvedApplePatches count]; x++)
+						{
+							_applePatchApproved = [approvedApplePatches objectAtIndex:x];
+							
+                            if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
+							{
+								logit(lcl_vDebug,@"Apple Data: %@",_applePatch);
+								logit(lcl_vDebug,@"MP Data: %@",_applePatchApproved);
+								
+								// Check to see if the approved apple patch requires a user
+								// to install the patch, right now this is for 10.13 os updates
+								if ([_applePatchApproved objectForKey:@"user_install"])
+								{
+									if ([[_applePatchApproved objectForKey:@"user_install"] intValue] == 1)
+									{
+										logit(lcl_vInfo,@"Approved (User Install) update %@",_applePatch[@"patch"]);
+										logit(lcl_vDebug,@"Approved: %@",_applePatchApproved);
+										[userInstallApplePatches addObject:@{@"type":@"Apple",@"patch":_applePatch[@"patch"]}];
+										break;
+									}
+								}
+								
                                 tmpDict = [[NSMutableDictionary alloc] init];
                                 [tmpDict setObject:[NSNumber numberWithBool:YES] forKey:@"select"];
-                                [tmpDict setObject:[[applePatchesArray objectAtIndex:i] objectForKey:@"size"] forKey:@"size"];
-                                [tmpDict setObject:[[applePatchesArray objectAtIndex:i] objectForKey:@"patch"] forKey:@"patch"];
-                                [tmpDict setObject:[[applePatchesArray objectAtIndex:i] objectForKey:@"description"] forKey:@"description"];
-                                [tmpDict setObject:[[applePatchesArray objectAtIndex:i] objectForKey:@"restart"] forKey:@"restart"];
-                                if ([[[[applePatchesArray objectAtIndex:i] objectForKey:@"restart"] uppercaseString] isEqualTo:@"Y"] || [[[[applePatchesArray objectAtIndex:i] objectForKey:@"restart"] uppercaseString] isEqualTo:@"YES"])
+                                [tmpDict setObject:_applePatch[@"size"] forKey:@"size"];
+                                [tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+                                [tmpDict setObject:_applePatch[@"description"] forKey:@"description"];
+                                [tmpDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+								
+								if (_applePatchApproved[@"user_install"]) {
+									[tmpDict setObject:_applePatchApproved[@"user_install"] forKey:@"user_install"];
+								}
+								
+								if ([[_applePatch[@"restart"] uppercaseString] isEqualTo:@"Y"] || [[_applePatch[@"restart"] uppercaseString] isEqualTo:@"YES"])
                                 {
                                     [tmpDict setObject:rebootImage forKey:@"reboot"];
-                                } else {
+                                }
+								else
+								{
                                     [tmpDict setObject:emptyImage forKey:@"reboot"];
                                 }
-                                if ([[[applePatchesArray objectAtIndex:i] objectForKey:@"baseline"] isEqualTo:@"1"]) {
+								
+                                if ([_applePatch[@"baseline"] isEqualTo:@"1"])
+								{
                                     [tmpDict setObject:baselineImage forKey:@"baseline"];
                                     break;
                                 }
                                 
-                                [tmpDict setObject:[[applePatchesArray objectAtIndex:i] objectForKey:@"version"] forKey:@"version"];
+                                [tmpDict setObject:[_applePatch objectForKey:@"version"] forKey:@"version"];
                                 
-                                if ([[approvedApplePatches objectAtIndex:x] objectForKey:@"hasCriteria"]) {
-                                    
-                                    [tmpDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"hasCriteria"] forKey:@"hasCriteria"];
-                                    if ([[[approvedApplePatches objectAtIndex:x] objectForKey:@"hasCriteria"] boolValue] == YES) {
-                                        if ([[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] && [[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] count] > 0) {
-                                            [tmpDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_pre"] forKey:@"criteria_pre"];
+                                if (_applePatchApproved[@"hasCriteria"])
+								{
+                                    [tmpDict setObject:_applePatchApproved[@"hasCriteria"] forKey:@"hasCriteria"];
+                                    if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
+									{
+                                        if (_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
+										{
+                                            [tmpDict setObject:[_applePatchApproved objectForKey:@"criteria_pre"] forKey:@"criteria_pre"];
                                         }
-                                        if ([[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] && [[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] count] > 0) {
-                                            [tmpDict setObject:[[approvedApplePatches objectAtIndex:x] objectForKey:@"criteria_post"] forKey:@"criteria_post"];
+                                        if (_applePatchApproved[@"criteria_post"] && [_applePatchApproved[@"criteria_post"] count] > 0)
+										{
+                                            [tmpDict setObject:_applePatchApproved[@"criteria_post"] forKey:@"criteria_post"];
                                         }
                                     }	
                                 }
                                 [tmpDict setObject:@"Apple" forKey:@"type"];
-                                [tmpDict setObject:[[approvedApplePatches objectAtIndex:i] objectForKey:@"patch_install_weight"] forKey:@"patch_install_weight"];
+                                [tmpDict setObject:_applePatchApproved[@"patch_install_weight"] forKey:@"patch_install_weight"];
                                 logit(lcl_vDebug,@"Apple Patch Dictionary Added: %@",tmpDict);
                                 [approvedUpdatesArray addObject:tmpDict];
                                 break;
@@ -1171,6 +1222,14 @@ done:
             if ([_dict objectForKey:@"reboot"]) {
                 [_dict removeObjectForKey:@"reboot"];
             }
+			if (_dict[@"user_install"])
+			{
+				if ([_dict[@"user_install"] intValue] == 1)
+				{
+					// Skip user install, from the list. This is for logout installs
+					// continue;
+				}
+			}
             [_requiredPatchesArray addObject:_dict];
         }
 
@@ -1223,6 +1282,14 @@ done:
                 [self removeStatusFiles];
             }
         }
+		
+		// Write out user_install patches, overwrite the file contents.
+		// The MP_CRITICAL_UPDATES_PLIST constant is for User Install updates
+		if (userInstallApplePatches.count >= 1)
+		{
+			qldebug(@"Write user install patches (%d) to critical watch file.",(int)userInstallApplePatches.count);
+			// [self writeDataToFile:userInstallApplePatches file:MP_CRITICAL_UPDATES_PLIST];
+		}
         
         BOOL needsPatches = ([approvedUpdatesArray count] <= 0) ? YES : NO;
         [self scanComplete:needsPatches];
@@ -1231,6 +1298,9 @@ done:
 
 - (void)scanComplete:(BOOL)patchesNeeded
 {
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"ScanForNotification" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] removeObserver:self name:@"ScanForNotificationFinished" object:nil];
+	
     [self progress:@"Scan Completed."];
     [spStatusProgress stopAnimation:nil];
     
@@ -1297,16 +1367,20 @@ done:
         int i;
         int installResult = 1;
         int	launchRebootWindow = 0;
+		int	launchRebootWindowAlt = 0; //Alternate count for launch reboot window, this one does not set .MPAuthRun
         
         for (i = 0; i < [patchesToInstallArray count]; i++)
         {
             // Create/Get Dictionary of Patch to install  
             patch = nil;
             patch = [NSDictionary dictionaryWithDictionary:[patchesToInstallArray objectAtIndex:i]];
+			if ([[patch objectForKey:@"type"] isEqualTo:@"Apple"]) {
+				logit(lcl_vInfo,@"Patch: %@",patch);
+			}
             logit(lcl_vDebug,@"Checking to see if patch %@ needs a reboot; \"%@\"",patch[@"patch"], patch[@"restart"]);
             
             // Check if patch needs a reboot
-            if (([[patch[@"restart"] uppercaseString] isEqualTo:@"N"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"NO"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"FALSE"]) || [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] == YES)
+            if (([[patch[@"restart"] uppercaseString] isEqualTo:@"N"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"NO"] || [[patch[@"restart"] uppercaseString] isEqualTo:@"FALSE"]) || [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] == YES || [patch[@"user_install"] intValue] == 1)
             {
                 logit(lcl_vInfo,@"Allow Install of Reboot Patches is %@",[[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? @"ON":@"OFF");
                 logit(lcl_vInfo,@"Preparing to install %@(%@)",patch[@"patch"],patch[@"version"]);
@@ -1590,11 +1664,14 @@ done:
                     // Update the table view to show we are in the install process
                     [self updateTableAndArrayControllerWithPatch:patch status:0];
                     
-                    if ([[patch objectForKey:@"hasCriteria"] boolValue] == NO || ![patch objectForKey:@"hasCriteria"]) {
+                    if ([[patch objectForKey:@"hasCriteria"] boolValue] == NO || ![patch objectForKey:@"hasCriteria"])
+					{
                         
                         installResult = [self installAppleSoftwareUpdate:[patch objectForKey:@"patch"]];
                         
-                    } else {
+                    }
+					else
+					{
                         logit(lcl_vInfo,@"%@ has install criteria assigned to it.",[patch objectForKey:@"patch"]);
                         
                         NSDictionary *criteriaDictPre, *criteriaDictPost;
@@ -1630,8 +1707,9 @@ done:
                             logit(lcl_vError,@"The install for %@ returned an error.",[patch objectForKey:@"patch"]); 
                             goto instResult;
                         }
-                        
-                        if ([patch objectForKey:@"criteria_post"]) {
+
+                        if ([patch objectForKey:@"criteria_post"])
+						{
                             logit(lcl_vInfo,@"Processing post-install criteria.");  
                             for (i=0;i<[[patch objectForKey:@"criteria_post"] count];i++)
                             {
@@ -1652,13 +1730,23 @@ done:
                     }
                     
                 instResult:				
-                    if (installResult != 0) {	
+                    if (installResult != 0)
+					{
                         [self progress:[NSString stringWithFormat:@"Error installing update, error code %d.",installResult]];
                         	 
                         logit(lcl_vError,@"Error installing update, error code %d.",installResult);
                         [self updateTableAndArrayControllerWithPatch:patch status:2];
                         continue;
-                    } else {
+                    }
+					else
+					{
+						// If the patch is a user_install, show the reboot to finish the install
+						if ([patch[@"user_install"] intValue] == 1)
+						{
+							[self clearUserInstallPatch:patch[@"patch"]]; // Remove the installed user_install patch from file
+							launchRebootWindowAlt++;
+						}
+						
                         [self progress:[NSString stringWithFormat:@"%@ was installed successfully.",[patch objectForKey:@"patch"]]];
                         	 
                         logit(lcl_vInfo,@"%@ was installed successfully.",[patch objectForKey:@"patch"]);
@@ -1687,10 +1775,36 @@ done:
 			{
                 logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
                 //[self generateRebootPatchForDownload:patch];
-                if ([[NSUserDefaults standardUserDefaults] boolForKey:@"preStageRebootPatches"] == YES) {
-                    if ([self preStagePatch:patch]) {
-                        qlerror(@"Pre staging for %@ failed.",[patch objectForKey:@"patch"]);
-                    }
+                if ([[NSUserDefaults standardUserDefaults] boolForKey:@"preStageRebootPatches"] == YES)
+				{
+					if ([defaults objectForKey:@"PreStageUpdates"])
+					{
+						// Some times bools end up as strings, need to check
+						BOOL isPreStage = NO;
+						id preStageUpdates = [defaults objectForKey:@"PreStageUpdates"];
+						if([preStageUpdates  isKindOfClass:[NSNumber class]])
+						{
+							if ([preStageUpdates isEqualToNumber:@(YES)]) {
+								isPreStage = YES;
+							}
+						}
+						else if ([preStageUpdates  isKindOfClass:[NSString class]])
+						{
+							if ([preStageUpdates isEqualToString:@"1"]) {
+								isPreStage = YES;
+							}
+						}
+						
+						if (isPreStage) {
+							if ([self preStagePatch:patch]) {
+								qlerror(@"Pre staging for %@ failed.",[patch objectForKey:@"patch"]);
+							}
+						}
+					} else {
+						if ([self preStagePatch:patch]) {
+							qlerror(@"Pre staging for %@ failed.",[patch objectForKey:@"patch"]);
+						}
+					}
                 }
                 launchRebootWindow++;
                 [self updateTableAndArrayControllerWithPatch:patch status:3];
@@ -1708,7 +1822,8 @@ done:
         });
         
         // Open the Reboot App
-        if (launchRebootWindow > 0) {
+        if (launchRebootWindow > 0)
+		{
             [self setLogoutHook];
 
             if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
@@ -1720,7 +1835,11 @@ done:
             [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil];
             [self openRebootApp];
         }
-        
+		else if (launchRebootWindowAlt >= 1)
+		{
+			[self openRebootApp];
+		}
+			
         // Create a file to tell MPStatus to update is patch info...
         [fm createFileAtPath:[CLIENT_PATCH_STATUS_FILE stringByExpandingTildeInPath] 
                                                 contents:[@"update" dataUsingEncoding:NSASCIIStringEncoding] 
@@ -1759,11 +1878,19 @@ done:
      */
     
     OSStatus error = noErr;
+
+	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
+	{
+		error = SendAppleEventToSystemProcess(kAERestart);
+	}
+	else
+	{
 #ifdef DEBUG
-    error = SendAppleEventToSystemProcess(kAELogOut);
+		error = SendAppleEventToSystemProcess(kAELogOut);
 #else
-    error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+    	error = SendAppleEventToSystemProcess(kAEReallyLogOut);
 #endif
+	}
     
     if (error == noErr) {
         NSLog(@"Computer is going to logout!");
@@ -1984,6 +2111,25 @@ done:
     dispatch_async(dispatch_get_main_queue(), ^(void){
         [self.spStatusText setStringValue:text];
     });
+}
+
+- (void)clearUserInstallPatch:(NSString *)patch
+{
+	logit(lcl_vInfo,@"Clear patch (%@) from %@.",patch, MP_CRITICAL_UPDATES_PLIST);
+	NSMutableArray *patches = [NSMutableArray arrayWithContentsOfFile:MP_CRITICAL_UPDATES_PLIST];
+	if (patches.count > 0)
+	{
+		for (NSDictionary *p in patches)
+		{
+			if([p[@"patch"] isEqualToString:patch])
+			{
+				[patches removeObject:p];
+				logit(lcl_vInfo,@"Patch %@ removed from array.",patch);
+				break;
+			}
+		}
+		[self writeDataToFile:patches file:MP_CRITICAL_UPDATES_PLIST];
+	}
 }
 
 #pragma mark Misc

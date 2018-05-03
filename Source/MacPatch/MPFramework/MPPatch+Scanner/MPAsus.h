@@ -62,7 +62,7 @@
 
 - (NSArray *)scanForAppleUpdates;
 - (NSString *)getSizeFromDescription:(NSString *)aDesc;
-- (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
+//- (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
 
 - (void)scanAppleSoftwareUpdates:(NSArray *)approvedUpdates;
 - (void)installAppleSoftwareUpdates:(NSArray *)approvedUpdates;

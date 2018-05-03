@@ -47,6 +47,8 @@ echo
 echo " - Set overall MacPatch Client version ( e.g. 2.9.0 ) "
 read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
 AGENT_VER=${AGENT_VER:-$AGENT_VERS}
+BASEPKGVER=$AGENT_VER
+UPDTPKGVER=$AGENT_VER
 
 # Set Client Build Number
 AGENT_BUILDS="1"

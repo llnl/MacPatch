@@ -1,17 +1,18 @@
 from mpapi import db
 
-# Rev 6
+# Rev 9
 #
 
 from datetime import *
 from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey
-from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, INTEGER
+from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, TEXT, INTEGER
 
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
 class CommonBase(db.Model):
 	__abstract__ = True
+	__tablelabel__ = ''
 
 	@property
 	def asDict(self):
@@ -30,6 +31,25 @@ class CommonBase(db.Model):
 						result[column.name] = getattr(self, column.name)
 				except Exception, e:
 					result[column.name] = getattr(self, column.name)
+
+		return result
+
+	@property
+	def asDictWithRID(self):
+		"""Convert date/datetime to string inorder to jsonify"""
+		result = {}
+		for column in self.__table__.columns:
+			try:
+				if column.type.python_type in [type(date(2000, 1, 1)), type(datetime(2000, 1, 1))]:
+					if getattr(self, column.name) is not None:
+						result[column.name] = str(getattr(self, column.name))
+					else:
+						# don't convert None to string
+						result[column.name] = getattr(self, column.name)
+				else:
+					result[column.name] = getattr(self, column.name)
+			except Exception, e:
+				result[column.name] = getattr(self, column.name)
 
 		return result
 
@@ -78,7 +98,6 @@ def get_class_by_tablename(tablename):
 
 # LDAP
 class User(UserMixin):
-
 	def __init__(self, username, data):
 		self.username = username
 		self.data = data
@@ -118,27 +137,26 @@ class MPUser(CommonBase):
 
 # mp_agent_registration
 class MPAgentRegistration(CommonBase):
-
 	__tablename__ = 'mp_agent_registration'
 
-	rid = Column(BigInteger, primary_key=True, autoincrement=True)
-	cuuid = Column(String(50), nullable=False)
-	enabled = Column(Integer, server_default='0')
+	rid = Column(BigInteger, primary_key=True, autoincrement=True, info='rid')
+	cuuid = Column(String(50), nullable=False, info='Client ID')
+	enabled = Column(Integer, server_default='0', info='Enabled')
 	clientKey = Column(String(100), server_default='NA')
 	pubKeyPem = Column(MEDIUMTEXT())
 	pubKeyPemHash = Column(MEDIUMTEXT())
-	hostname = Column(String(255), nullable=False)
-	serialno = Column(String(255), nullable=False)
-	reg_date = Column(DateTime, nullable=False, server_default='1970-01-01 00:00:00')
+	hostname = Column(String(255), nullable=False, info='Hostname')
+	serialno = Column(String(255), nullable=False, info='Serial No')
+	reg_date = Column(DateTime, nullable=False, server_default='1970-01-01 00:00:00', info='Reg Date')
 
 # mp_clients_wait_reg
 class MpClientsWantingRegistration(CommonBase):
 	__tablename__ = 'mp_clients_wait_reg'
 
-	rid = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
-	cuuid = Column(String(50), nullable=False, unique=True)
-	hostname = Column(String(255), nullable=False)
-	req_date = Column(DateTime, nullable=True)
+	rid = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, info='rid')
+	cuuid = Column(String(50), nullable=False, unique=True, info='Client ID')
+	hostname = Column(String(255), nullable=False, info='Hostname')
+	req_date = Column(DateTime, nullable=True, info='Request Date')
 
 # mp_clients_reg_conf
 class MpClientsRegistrationSettings(CommonBase):
@@ -163,13 +181,13 @@ class MpClientRegKeys(CommonBase):
 class MpRegKeys(CommonBase):
 	__tablename__ = 'mp_reg_keys'
 
-	rid = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
-	regKey = Column(String(255), nullable=False)
-	keyType = Column(Integer, nullable=True, server_default='0')
-	keyQuery = Column(String(255), nullable=False)
-	active = Column(Integer, nullable=True, server_default='1')
-	validFromDate = Column(DateTime, nullable=True, server_default='1970-01-01 00:00:00')
-	validToDate = Column(DateTime, nullable=True, server_default='1970-01-01 00:00:00')
+	rid = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True, info='rid')
+	regKey = Column(String(255), nullable=False, info='Registration Key')
+	keyType = Column(Integer, nullable=True, server_default='0', info='Key Type')
+	keyQuery = Column(String(255), nullable=False, info='Key Query')
+	active = Column(Integer, nullable=True, server_default='1', info='Active')
+	validFromDate = Column(DateTime, nullable=True, server_default='1970-01-01 00:00:00', info='Date - Available From')
+	validToDate = Column(DateTime, nullable=True, server_default='1970-01-01 00:00:00', info='Date - Available To')
 
 # mp_site_keys
 class MpSiteKeys(CommonBase):
@@ -184,6 +202,14 @@ class MpSiteKeys(CommonBase):
 	request_new_key = Column(Integer, nullable=True, server_default='0')
 	mdate = Column(DateTime, nullable=True, server_default='1970-01-01 00:00:00')
 
+# mp_server_log_req
+class MpServerLogReq(CommonBase):
+	__tablename__ = 'mp_server_log_req'
+
+	rid = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
+	uuid = Column(String(50), nullable=False)
+	dts = Column(String(255), nullable=False)
+	type = Column(String(255), nullable=False)
 
 # ------------------------------------------
 ## Main
@@ -207,9 +233,12 @@ class MpClient(CommonBase):
 	agent_version   = Column(String(20), server_default='NA', info='Agent Ver', doc='3')
 	agent_build     = Column(String(10), server_default='0', info='Agent Build', doc='4')
 	client_version  = Column(String(20), server_default='NA', info='Client Ver', doc='5')
+	fileVaultStatus = Column(String(255), nullable=True, server_default='NA', info='FileVault Status', doc='13')
+	firmwareStatus  = Column(String(255), nullable=True, server_default='NA', info='Firmware Status', doc='14')
 
 # mp_clients_plist
 class MpClientPlist(CommonBase):
+	# Deprecated as of MP3.1
 	__tablename__ = 'mp_clients_plist'
 
 	rid                 = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -257,7 +286,7 @@ class MpClientGroupAdmins(CommonBase):
 	__tablename__ = 'mp_client_group_admin'
 
 	rid             = Column(BigInteger, primary_key=True, autoincrement=True)
-	group_id        = Column(String(50), nullable=False, index=True, unique=True)
+	group_id        = Column(String(50), nullable=False, index=True, unique=False)
 	group_admin     = Column(String(255), nullable=False, index=True, unique=False)
 
 # mp_client_group_members
@@ -273,7 +302,7 @@ class MpClientTasks(CommonBase):
 	__tablename__ = 'mp_client_tasks'
 
 	rid             = Column(BigInteger, primary_key=True, autoincrement=True)
-	group_id        = Column(String(50), nullable=False, index=True, unique=True)
+	group_id        = Column(String(50), nullable=False, index=True, unique=False)
 
 	id  			= Column(INTEGER(4, unsigned=True),   info="Task ID")
 	name 			= Column(String(255), nullable=False, info="Name")
@@ -294,10 +323,11 @@ class MpClientTasks(CommonBase):
 class MPGroupConfig(CommonBase):
 	__tablename__ = 'mp_group_config'
 
-	rid             = Column(BigInteger, primary_key=True, autoincrement=True)
-	group_id        = Column(String(50), index=True, nullable=False)
-	rev_settings    = Column(BigInteger, server_default='1')
-	rev_tasks       = Column(BigInteger, server_default='1')
+	rid = Column(BigInteger, primary_key=True, autoincrement=True)
+	group_id = Column(String(50), index=True, nullable=False)
+	rev_settings = Column(BigInteger, server_default='1')
+	rev_tasks = Column(BigInteger, server_default='1')
+	tasks_version = Column(BigInteger, server_default='0')
 
 # mp_client_settings
 class MpClientSettings(CommonBase):
@@ -394,6 +424,7 @@ class ApplePatchAdditions(CommonBase):
 	patch_install_weight    = Column(INTEGER(unsigned=True), server_default="60")
 	patch_reboot            = Column(INTEGER(unsigned=True), server_default="0")
 	osver_support           = Column(String(10), nullable=False, server_default="NA")
+	user_install            = Column(INTEGER(1), server_default="0")
 
 # mp_apple_patch_criteria
 class ApplePatchCriteria(CommonBase):
@@ -523,31 +554,53 @@ class MpPatchGroupPatches(CommonBase):
 class MpClientAgent(CommonBase):
 	__tablename__ = 'mp_client_agents'
 
-	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
-	puuid       = Column(String(50), nullable=False)
-	type        = Column(String(10), nullable=False)
-	osver       = Column(String(255), nullable=False, server_default="*")
-	agent_ver   = Column(String(10), nullable=False)
-	version     = Column(String(10))
-	build       = Column(String(10))
-	pkg_name    = Column(String(100), nullable=False)
-	pkg_url     = Column(String(255))
-	pkg_hash    = Column(String(50))
-	active      = Column(Integer, nullable=False, server_default="0")
-	state       = Column(Integer, nullable=False, server_default="0")
-	cdate       = Column(DateTime, server_default='1970-01-01 00:00:00')
-	mdate       = Column(DateTime, server_default='1970-01-01 00:00:00')
+	rid 		= Column(BigInteger, primary_key=True, autoincrement=True)
+	puuid 		= Column(String(50), nullable=False)
+	type 		= Column(String(10), nullable=False, info="Type")
+	osver 		= Column(String(255), nullable=False, server_default="*", info="OS Ver")
+	agent_ver 	= Column(String(10), nullable=False, info="Agent Ver")
+	version 	= Column(String(10), info="Version")
+	build 		= Column(String(10), info="Build")
+	pkg_name 	= Column(String(100), nullable=False, info="Package")
+	pkg_url 	= Column(String(255), info="Package URL")
+	pkg_hash 	= Column(String(50), info="Package Hash")
+	active 		= Column(Integer, nullable=False, server_default="0", info="Active")
+	state 		= Column(Integer, nullable=False, server_default="0", info="State")
+	cdate 		= Column(DateTime, server_default='1970-01-01 00:00:00', info="Create Date")
+	mdate 		= Column(DateTime, server_default='1970-01-01 00:00:00', info="Mod Date")
 
 # mp_client_agents_filters
 class MpClientAgentsFilter(CommonBase):
 	__tablename__ = 'mp_client_agents_filters'
 
-	rid                 = Column(BigInteger, primary_key=True, autoincrement=True)
-	type                = Column(String(255), nullable=False)
-	attribute           = Column(String(255), nullable=False)
-	attribute_oper      = Column(String(10), nullable=False)
-	attribute_filter    = Column(String(255), nullable=False)
-	attribute_condition = Column(String(10), nullable=False)
+	rid 				= Column(BigInteger, primary_key=True, autoincrement=True)
+	type 				= Column(String(255), nullable=False, info="Type")
+	attribute 			= Column(String(255), nullable=False, info="Attribute")
+	attribute_oper 		= Column(String(10), nullable=False, info="Operator")
+	attribute_filter 	= Column(String(255), nullable=False, info="Filter")
+	attribute_condition = Column(String(10), nullable=False, info="Condition")
+
+# mp_client_agent_plugins
+class MpClientAgentPlugins(CommonBase):
+	__tablename__ = 'mp_client_agent_plugins'
+
+	rid 				= Column(BigInteger, primary_key=True, autoincrement=True)
+	puuid 				= Column(String(50), nullable=False)
+	plugin				= Column(String(255), info="Plugin")
+	bundleIdentifier	= Column(String(255), info="Bundle Identifier")
+	version				= Column(String(10), info="Version")
+
+# mp_client_agent_profiles
+class MpClientAgentProfiles(CommonBase):
+	__tablename__ = 'mp_client_agent_profiles'
+
+	rid 			= Column(BigInteger, primary_key=True, autoincrement=True)
+	puuid 			= Column(String(50), nullable=False)
+	displayName		= Column(String(255), info="Display Name")
+	identifier		= Column(String(255), info="Identifier")
+	organization	= Column(String(255), info="Organization")
+	version			= Column(String(10), info="Version")
+	fileName		= Column(String(255), info="File Name")
 
 # ------------------------------------------
 ## AntiVirus
@@ -585,9 +638,9 @@ class AvDefs(CommonBase):
 # mp_inv_state
 class MpInvState(CommonBase):
 	__tablename__ = 'mp_inv_state'
-	rid = Column(BigInteger, primary_key=True, autoincrement=True)
-	cuuid = Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
-	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
+	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
+	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # ------------------------------------------
 ## Servers
@@ -667,6 +720,29 @@ class MpOsConfigProfilesAssigned(CommonBase):
 	profileID   = Column(String(50), primary_key=True, nullable=False)
 	groupID     = Column(String(50), primary_key=True, nullable=False)
 
+# mp_os_config_profiles_group_policy
+class MpOsProfilesGroupAssigned(CommonBase):
+	__tablename__ = 'mp_os_config_profiles_group_policy'
+
+	rid 		= Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
+	gPolicyID 	= Column(String(50), nullable=False, info="Policy ID")
+	profileID 	= Column(String(50), nullable=False, info="Profile ID")
+	groupID 	= Column(String(50), nullable=False, info="Group ID")
+	title 		= Column(String(255), info="Name")
+	description = Column(Text,  info="Description")
+	enabled 	= Column(INTEGER(1, unsigned=True), server_default='1', info="Enabled")
+
+# mp_os_config_profiles_criteria
+class MpOsProfilesCriteria(CommonBase):
+	__tablename__ = 'mp_os_config_profiles_criteria'
+
+	rid 		= Column(BigInteger, primary_key=True, autoincrement=True)
+	gPolicyID 	= Column(String(50), nullable=False)
+	type 		= Column(String(25))
+	type_data 	= Column(MEDIUMTEXT())
+	type_action = Column(INTEGER(1, unsigned=True), server_default='0')
+	type_order 	= Column(INTEGER(2, unsigned=True), server_default='0')
+
 # ------------------------------------------
 ## Software
 
@@ -674,28 +750,29 @@ class MpOsConfigProfilesAssigned(CommonBase):
 class MpSoftware(CommonBase):
 	__tablename__ = 'mp_software'
 
-	rid                 = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
-	suuid               = Column(String(50), primary_key=True, nullable=False, info="Software ID")
-	patch_bundle_id     = Column(String(100), info="Patch Bundle ID")
-	auto_patch          = Column(Integer, nullable=False, server_default='0', info="Auto Patch")
-	sState              = Column(Integer, server_default='0', info="State", doc=70)
-	sName               = Column(String(255), nullable=False, info="Name")
-	sVendor             = Column(String(255), info="Vendor")
-	sVersion            = Column(String(40), nullable=False, info="Version")
-	sDescription        = Column(String(255), info="Description")
-	sVendorURL          = Column(String(255), info="Vendor URL")
-	sReboot             = Column(Integer, server_default='1', info="Reboot")
-	sw_type             = Column(String(10), info="SW Type")
-	sw_path             = Column(String(255), info="Patch")
-	sw_url              = Column(String(255), info="URL")
-	sw_size             = Column(BigInteger, server_default='0', info="Size")
-	sw_hash             = Column(String(50), info="Hash")
+	rid                 	= Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
+	suuid               	= Column(String(50), primary_key=True, nullable=False, info="Software ID")
+	patch_bundle_id     	= Column(String(100), info="Patch Bundle ID")
+	auto_patch          	= Column(Integer, nullable=False, server_default='0', info="Auto Patch")
+	sState              	= Column(Integer, server_default='0', info="State", doc=70)
+	sName              		= Column(String(255), nullable=False, info="Name")
+	sVendor             	= Column(String(255), info="Vendor")
+	sVersion            	= Column(String(40), nullable=False, info="Version")
+	sDescription        	= Column(String(255), info="Description")
+	sVendorURL          	= Column(String(255), info="Vendor URL")
+	sReboot             	= Column(Integer, server_default='1', info="Reboot")
+	sw_type             	= Column(String(10), info="SW Type")
+	sw_path             	= Column(String(255), info="Patch")
+	sw_url              	= Column(String(255), info="URL")
+	sw_size             	= Column(BigInteger, server_default='0', info="Size")
+	sw_hash             	= Column(String(50), info="Hash")
 	sw_pre_install_script   = Column(LONGTEXT(), info="Preinstall Script")
 	sw_post_install_script  = Column(LONGTEXT(), info="Postinstall Script")
 	sw_uninstall_script     = Column(LONGTEXT(), info="Uninstall Script")
 	sw_env_var              = Column(String(255), info="Install ENV")
 	cdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Create Date", doc=99)
 	mdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Mod Date", doc=98)
+	sw_img_path 			= Column(TEXT(), info="SW Icon")
 
 # mp_software_criteria
 class MpSoftwareCriteria(CommonBase):
@@ -757,7 +834,7 @@ class MpSoftwareInstall(CommonBase):
 	__tablename__ = 'mp_software_installs'
 
 	rid             = Column(BigInteger, primary_key=True, nullable=False, autoincrement=True)
-	cuuid           = Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
+	cuuid           = Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=False)
 	tuuid           = Column(String(50))
 	suuid           = Column(String(50))
 	action          = Column(String(1), server_default='i')
@@ -809,7 +886,6 @@ class MpUploadRequest(CommonBase):
 	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
 	uid         = Column(String(255), nullable=False)
 	requestid   = Column(String(50), nullable=False)
-	requestid   = Column(String(50), nullable=False)
 	enabled     = Column(Integer, server_default='1')
 	cdate       = Column(DateTime, server_default='1970-01-01 00:00:00')
 
@@ -820,12 +896,12 @@ class MpUploadRequest(CommonBase):
 class MPPluginHash(CommonBase):
 	__tablename__ = 'mp_agent_plugins'
 
-	rid             = Column(BigInteger, primary_key=True, autoincrement=True)
-	pluginName      = Column(String(255), nullable=False)
-	pluginBundleID  = Column(String(100), nullable=False)
-	pluginVersion   = Column(String(20), nullable=False)
-	hash            = Column(String(100), nullable=False)
-	active          = Column(Integer, server_default='0')
+	rid 			= Column(BigInteger, primary_key=True, autoincrement=True)
+	pluginName 		= Column(String(255), nullable=False, info="Name")
+	pluginBundleID 	= Column(String(100), nullable=False, info="Bundle ID")
+	pluginVersion 	= Column(String(20), nullable=False, info="Version")
+	hash 			= Column(String(100), nullable=False, info="Hash")
+	active 			= Column(Integer, server_default='0', info="Enabled")
 
 # ------------------------------------------
 ## OS Migration
@@ -955,6 +1031,19 @@ class AdHocReports(CommonBase):
 	disabled        = Column(INTEGER(1, unsigned=True), server_default='0')
 	disabledDate    = Column(DateTime, server_default='1970-01-01 00:00:00')
 
+# mp_adhoc_reports
+class InvReports(CommonBase):
+	__tablename__ = 'mp_inv_reports'
+
+	rid 		= Column(BigInteger, primary_key=True, autoincrement=True)
+	name 		= Column(String(255), nullable=False)
+	owner 		= Column(String(255), nullable=False)
+	scope 		= Column(INTEGER(1, unsigned=True), server_default='0')
+	rtable 		= Column(String(255), nullable=False)
+	rcolumns 	= Column(LONGTEXT())
+	rquery 		= Column(LONGTEXT())
+	cdate 		= Column(DateTime, server_default='1970-01-01 00:00:00')
+	mdate 		= Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # Required Inventory Tables
 # mpi_DirectoryServices
@@ -964,7 +1053,6 @@ class MPIDirectoryServices(CommonBase):
 	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
 	cuuid       = Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
 	mdate       = Column(DateTime, server_default='1970-01-01 00:00:00')
-
 	mpa_cn                  = Column(String(255))
 	mpa_AD_Kerberos_ID      = Column(String(255))
 	mpa_HasSLAM             = Column(String(255))
