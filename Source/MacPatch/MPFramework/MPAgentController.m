@@ -834,8 +834,9 @@ done:
 			if ([_defaults objectForKey:@"Reboot"]) {
 				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					int rb = 0;
-					rb = reboot(RB_AUTOBOOT);
+					//int rb = 0;
+					//rb = reboot(RB_AUTOBOOT);
+					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 				} else {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					[self removeTaskRunning:kMPPatchUPDATE];
@@ -1162,8 +1163,9 @@ done:
 			if ([_defaults objectForKey:@"Reboot"]) {
 				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					int rb = 0;
-					rb = reboot(RB_AUTOBOOT);
+					//int rb = 0;
+					//rb = reboot(RB_AUTOBOOT);
+					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 				} else {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					goto done;

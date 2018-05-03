@@ -634,6 +634,31 @@ done:
 	} else {
 		[self writeTaskRunning:kMPPatchUPDATE];
 	}
+	
+	// Check for console user
+	logit(lcl_vInfo, @"Checking for any logged in users.");
+	BOOL hasConsoleUserLoggedIn = TRUE;
+	@try {
+		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
+		if (!hasConsoleUserLoggedIn)
+		{
+			NSError *fileErr = nil;
+			[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+			if (fileErr)
+			{
+				logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
+			}
+			else
+			{
+				// No need to continue, MPLoginAgent will perform the updates
+				// Since no user is logged in.
+				return;
+			}
+		}
+	}
+	@catch (NSException * e) {
+		logit(lcl_vInfo, @"Error getting console user status. %@",e);
+	}
 
 	// Filter - 0 = All,  1 = Apple, 2 = Third
 	NSArray *updatesArray = nil;
@@ -646,7 +671,9 @@ done:
         // Critical
         // Critical updates are allways written to a file
         updateFilePath = [NSString stringWithString:PATCHES_CRITICAL_PLIST];
-    } else {
+    }
+	else
+	{
         // Non Critical
         if ([fm fileExistsAtPath:updateFilePath])
         {
@@ -699,8 +726,10 @@ done:
 	_osType = [[MPSystemInfo osVersionInfo] objectForKey:@"ProductName"];
     logit(lcl_vInfo, @"OS Full Info: (%@)",[MPSystemInfo osVersionInfo]);
     logit(lcl_vInfo, @"OS Info: (%@)",_osType);
-	if ([_osType isEqualToString:@"Mac OS X"]) {
-		if ([_defaults objectForKey:@"AllowClient"]) {
+	if ([_osType isEqualToString:@"Mac OS X"])
+	{
+		if ([_defaults objectForKey:@"AllowClient"])
+		{
 
             NSNumber *AllowClientVal = [NSNumber numberWithInt:1];
             if([[_defaults objectForKey:@"AllowClient"] isKindOfClass:[NSString class]])
@@ -719,8 +748,10 @@ done:
 	}
 
 	logit(lcl_vInfo, @"Validating server install status.");
-	if ([_osType isEqualToString:@"Mac OS X Server"]) {
-		if ([_defaults objectForKey:@"AllowServer"]) {
+	if ([_osType isEqualToString:@"Mac OS X Server"])
+	{
+		if ([_defaults objectForKey:@"AllowServer"])
+		{
 
             NSNumber *AllowServerVal = [NSNumber numberWithInt:0];
             if([[_defaults objectForKey:@"AllowServer"] isKindOfClass:[NSString class]])
@@ -770,16 +801,6 @@ done:
 	int installResult = 1;
 	int	launchRebootWindow = 0;
 	int installedPatchesNeedingReboot = 0;
-
-    // Check for console user
-	logit(lcl_vInfo, @"Checking for any logged in users.");
-    BOOL hasConsoleUserLoggedIn = TRUE;
-	@try {
-		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
-	}
-	@catch (NSException * e) {
-		logit(lcl_vInfo, @"Error getting console user status. %@",e);
-	}
 
 	logit(lcl_vInfo, @"Begin installing patches.");
     for (i = 0; i < [updatesArray count]; i++)
@@ -1201,8 +1222,9 @@ done:
 			if ([_defaults objectForKey:@"Reboot"]) {
 				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					int rb = 0;
-					rb = reboot(RB_AUTOBOOT);
+					//int rb = 0;
+					//rb = reboot(RB_AUTOBOOT);
+					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 				} else {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					goto done;
@@ -1218,7 +1240,7 @@ done:
     {
 		logit(lcl_vInfo,@"Patches that require reboot need to be installed. Opening reboot dialog now.");
         // 10.9
-        NSString *_atFile = @"/private/tmp/.MPAuthRun";
+        NSString *_atFile = MP_AUTHRUN_FILE;
         NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
 		NSString *_rbText = @"reboot";
         // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
@@ -1572,8 +1594,9 @@ done:
 			if ([_defaults objectForKey:@"Reboot"]) {
 				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					int rb = 0;
-					rb = reboot(RB_AUTOBOOT);
+					//int rb = 0;
+					//rb = reboot(RB_AUTOBOOT);
+					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 				} else {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					goto done;
@@ -1587,7 +1610,7 @@ done:
     {
 		logit(lcl_vInfo,@"Patches that require reboot need to be installed. Opening reboot dialog now.");
         // 10.9 support
-        NSString *_atFile = @"/private/tmp/.MPAuthRun";
+        NSString *_atFile = MP_AUTHRUN_FILE;
         NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
 		NSString *_rbText = @"reboot";
         // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun

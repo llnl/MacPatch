@@ -77,6 +77,8 @@ extern NSString * const OS_MIGRATION_STATUS;
 extern NSString * const MP_SERVER_PUB_KEY;
 
 extern NSString * const MP_CRITICAL_UPDATES_PLIST;
+extern NSString * const MP_AUTHRUN_FILE;
+
 
 @interface Constants : NSObject {
 

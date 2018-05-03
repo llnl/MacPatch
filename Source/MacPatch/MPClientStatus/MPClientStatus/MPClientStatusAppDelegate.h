@@ -85,8 +85,9 @@
 @private
     
 	MPAppUsage *mpAppUsage;
-    VDKQueue *vdkQueue;
 }
+
+@property (nonatomic, strong) VDKQueue *vdkQueue;
 
 @property (unsafe_unretained) IBOutlet NSWindow *window;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkInStatusMenuItem;
@@ -94,6 +95,7 @@
 @property (unsafe_unretained) IBOutlet NSMenuItem *selfVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *MPVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkAgentAndUpdateMenuItem;
+@property (unsafe_unretained) IBOutlet NSMenuItem *installCriticalUpdateMenuItem;
 @property (nonatomic, assign) BOOL openASUS;
 @property (nonatomic, assign) BOOL asusAlertOpen;
 

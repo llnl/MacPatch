@@ -23,20 +23,20 @@
 //  BASED ON UKKQUEUE:
 //
 //      This is an updated, modernized and streamlined version of the excellent UKKQueue class, which was authored by Uli Kusterer.
-//      UKKQueue was written back in 2003 and there have been many, many improvements to Objective-C since then. VDKQueue uses the 
+//      UKKQueue was written back in 2003 and there have been many, many improvements to Objective-C since then. VDKQueue uses the
 //      core of Uli's original class, but makes it faster and more efficient. Method calls are reduced. Grand Central Dispatch is used in place
 //      of Uli's "threadProxy" objects. The memory footprint is roughly halved, as I don't create the overhead that UKKQueue does.
 //
 //      VDKQueue is also simplified. The option to use it as a singleton is removed. You simply alloc/init an instance and add paths you want to
-//      watch. Your objects can be alerted to changes either by notifications or by a delegate method (or both). See below. 
+//      watch. Your objects can be alerted to changes either by notifications or by a delegate method (or both). See below.
 //
 //      It also fixes several bugs. For one, it won't crash if it can't create a file descriptor to a file you ask it to watch. (By default, an OS X process can only
 //      have about 3,000 file descriptors open at once. If you hit that limit, UKKQueue will crash. VDKQueue will not.)
 //
 
 //
-//  DEPENDENCIES: 
-//      
+//  DEPENDENCIES:
+//
 //      VDKQueue requires OS 10.6+ because it relies on Grand Central Dispatch.
 //
 
@@ -57,7 +57,7 @@
 //
 //      Other frameworks out there try to work around this issue by immediately attempting to re-open the file descriptor to the path. This is not bulletproof and may fail;
 //      it all depends on the timing of disk I/O. Bottom line: you could not rely on it and might miss future changes to the file path you're supposedly watching. That's why
-//      VDKQueue does not take this approach, but favors the "manual" method of "stop-watching-then-rewatch". 
+//      VDKQueue does not take this approach, but favors the "manual" method of "stop-watching-then-rewatch".
 //
 
 
@@ -80,9 +80,9 @@
 #define VDKQueueNotifyAboutAccessRevocation			NOTE_REVOKE		// Access to item was revoked.
 
 #define VDKQueueNotifyDefault						(VDKQueueNotifyAboutRename | VDKQueueNotifyAboutWrite \
-                                                    | VDKQueueNotifyAboutDelete | VDKQueueNotifyAboutAttributeChange \
-                                                    | VDKQueueNotifyAboutSizeIncrease | VDKQueueNotifyAboutLinkCountChanged \
-                                                    | VDKQueueNotifyAboutAccessRevocation)
+| VDKQueueNotifyAboutDelete | VDKQueueNotifyAboutAttributeChange \
+| VDKQueueNotifyAboutSizeIncrease | VDKQueueNotifyAboutLinkCountChanged \
+| VDKQueueNotifyAboutAccessRevocation)
 
 //
 //  Notifications that this class sends to the NSWORKSPACE notification center.
@@ -117,22 +117,21 @@ extern NSString * VDKQueueAccessRevocationNotification;
 
 @interface VDKQueue : NSObject
 {
-    id<VDKQueueDelegate>    _delegate;
-    BOOL                    _alwaysPostNotifications;               // By default, notifications are posted only if there is no delegate set. Set this value to YES to have notes posted even when there is a delegate.
+	id<VDKQueueDelegate>    _delegate;
+	BOOL                    _alwaysPostNotifications;               // By default, notifications are posted only if there is no delegate set. Set this value to YES to have notes posted even when there is a delegate.
 	
 @private
-    int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
-	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that
-																	// each VDKQueuePathEntry is for.
-    BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
+	int						_coreQueueFD;                           // The actual kqueue ID (Unix file descriptor).
+	NSMutableDictionary    *_watchedPathEntries;                    // List of VDKQueuePathEntries. Keys are NSStrings of the path that each VDKQueuePathEntry is for.
+	BOOL                    _keepWatcherThreadRunning;              // Set to NO to cancel the thread that watches _coreQueueFD for kQueue events
 }
 
 
 //
 //  Note: there is no need to ask whether a path is already being watched. Just add it or remove it and this class
 //        will take action only if appropriate. (Add only if we're not already watching it, remove only if we are.)
-//  
-//  Warning: You must pass full, root-relative paths. Do not pass tilde-abbreviated paths or file URLs. 
+//
+//  Warning: You must pass full, root-relative paths. Do not pass tilde-abbreviated paths or file URLs.
 //
 - (void) addPath:(NSString *)aPath;
 - (void) addPath:(NSString *)aPath notifyingAbout:(u_int)flags;     // See note above for values to pass in "flags"

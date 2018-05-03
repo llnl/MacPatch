@@ -24,20 +24,22 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#import <Cocoa/Cocoa.h>
-#import "MacPatch.h"
+#ifdef __OBJC__
+	#import <Cocoa/Cocoa.h>
+	#import "MacPatch.h"
 
-// Define Logfile init's
-#define FileLevelLogComponent lcl_cMain
+	// Define Logfile init's
+	#define FileLevelLogComponent lcl_cMain
 
-#define log_err(_format, ...) \
-lcl_log(FileLevelLogComponent, lcl_vError, _format, ##__VA_ARGS__);
+	#define log_err(_format, ...) \
+	lcl_log(FileLevelLogComponent, lcl_vError, _format, ##__VA_ARGS__);
 
-#define log_info(_format, ...) \
-lcl_log(FileLevelLogComponent, lcl_vInfo, _format, ##__VA_ARGS__);
+	#define log_info(_format, ...) \
+	lcl_log(FileLevelLogComponent, lcl_vInfo, _format, ##__VA_ARGS__);
 
-#define log_debug(_format, ...) \
-lcl_log(FileLevelLogComponent, lcl_vDebug, _format, ##__VA_ARGS__);
+	#define log_debug(_format, ...) \
+	lcl_log(FileLevelLogComponent, lcl_vDebug, _format, ##__VA_ARGS__);
 
-#define logit(_level, _format, ...) \
-lcl_log(FileLevelLogComponent, _level, _format, ##__VA_ARGS__);
+	#define logit(_level, _format, ...) \
+	lcl_log(FileLevelLogComponent, _level, _format, ##__VA_ARGS__);
+#endif

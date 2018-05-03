@@ -90,6 +90,7 @@ function runClientActions {
 
 		# Run Client Vul Scan
 		# Add 3 min timeout, sometimes softwareupdated does not respond
+		
 		relaunchSoftwareupdated
 		/Library/MacPatch/Client/MPAgentExec -s & sleep 180; kill $!
 		sleep 1

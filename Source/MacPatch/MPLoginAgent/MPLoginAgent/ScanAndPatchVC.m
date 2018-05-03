@@ -1344,7 +1344,8 @@ typedef NSUInteger MPInstallIconStatus;
     int rb = 0;
     switch ( action ) {
         case 0:
-            rb = reboot(RB_AUTOBOOT);
+			//rb = reboot(RB_AUTOBOOT);
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
             qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
             if (rb == -1) {
                 // Try Forcing it :-)

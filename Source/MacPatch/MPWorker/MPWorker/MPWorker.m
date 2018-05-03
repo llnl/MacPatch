@@ -1385,7 +1385,7 @@ done:
 - (void)setLogoutHookViaHelper
 {
     // This has been changed in MacPatch 2.2.0
-    NSString *_atFile = @"/private/tmp/.MPAuthRun";
+    NSString *_atFile = MP_AUTHRUN_FILE;
     NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
     NSString *_rbText = @"reboot";
     // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
@@ -1760,7 +1760,8 @@ done:
     int rb = 0;
     switch ( taskAction ) {
         case 0:
-            rb = reboot(RB_AUTOBOOT);
+			//rb = reboot(RB_AUTOBOOT);
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
             qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
             if (rb == -1) {
                 // Try Forcing it :-)

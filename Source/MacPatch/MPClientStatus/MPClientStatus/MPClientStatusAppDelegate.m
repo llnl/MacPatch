@@ -32,6 +32,7 @@
 #import "CHMenuViewController.h"
 #import "VDKQueue.h"
 #import "EventToSend.h"
+#include <unistd.h>
 
 NSString * const kMenuIconNorml		= @"mpmenubar_normal";
 NSString * const kMenuIconAlert		= @"mpmenubar_alert2";
@@ -82,12 +83,14 @@ NSString *const kRebootRequiredNotification         = @"kRebootRequiredNotificat
 NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotification";
 
 #pragma mark Properties
+@synthesize vdkQueue;
 @synthesize window;
 @synthesize checkInStatusMenuItem;
 @synthesize checkPatchStatusMenuItem;
 @synthesize selfVersionInfoMenuItem;
 @synthesize MPVersionInfoMenuItem;
 @synthesize checkAgentAndUpdateMenuItem;
+@synthesize installCriticalUpdateMenuItem;
 
 @synthesize openASUS;
 @synthesize asusAlertOpen;
@@ -156,6 +159,7 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
                                                           object: nil];
 	
 	[self displayPatchDataMethod]; // Show needed patches
+	[installCriticalUpdateMenuItem setHidden:YES];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -560,7 +564,7 @@ done:
     [agentDict setObject:[clientVer objectForKey:@"version"] forKey:@"client_version" defaultObject:@"0"];
     [agentDict setObject:@"false" forKey:@"needsreboot" defaultObject:@"false"];
     
-    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
+    if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE]) {
         [agentDict setObject:@"true" forKey:@"needsreboot"];
     }
     
@@ -1146,6 +1150,16 @@ done:
 
 #pragma mark -
 #pragma mark Critical Patches Window
+- (void)setWindowPosition
+{
+	NSPoint pos;
+	NSRect mainScreenRect = [[NSScreen mainScreen] visibleFrame];
+	pos.x = mainScreenRect.origin.x + mainScreenRect.size.width - ([criticalWindow frame].size.width + 50);
+	pos.y = mainScreenRect.origin.y + mainScreenRect.size.height - ([criticalWindow frame].size.height + 50);
+	[criticalWindow setFrameOrigin : pos];
+}
+
+
 - (void)setupPopDownButton
 {
 	
@@ -1179,15 +1193,31 @@ done:
 
 - (void)readCriticalUpdatesFile
 {
+	logit(lcl_vInfo,@"Read Critical Updates File...");
 	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_CRITICAL_UPDATES_PLIST])
 	{
 		NSArray *updatesFromFile = [NSArray arrayWithContentsOfFile:MP_CRITICAL_UPDATES_PLIST];
 		[self.criticalUpdates removeAllObjects];
 		[self.criticalUpdates addObjectsFromArray:updatesFromFile];
 	}
+
+	__block NSMenuItem *mi;
+	
 	// No Timer is set, open window
 	if (self.criticalUpdates.count >= 1)
 	{
+		dispatch_async(dispatch_get_main_queue(), ^(void)
+		{
+			for (int x = 0; x < statusMenu.itemArray.count; x++)
+			{
+				if ([[statusMenu itemAtIndex:x] tag] == 17)
+				{
+					mi = [statusMenu itemAtIndex:x];
+					[mi setHidden:NO];
+				}
+			}
+		});
+		
 		if (!showCriticalWindowAtDate)
 		{
 			[self showCriticalWindow:nil];
@@ -1195,12 +1225,32 @@ done:
 	}
 	else
 	{
+		dispatch_async(dispatch_get_main_queue(), ^(void)
+		{
+			// Make sure we are not in a reboot scenario
+			if (criticalWinRebootButton.hidden && !criticalWinInstallButton.hidden )
+			{
+				[criticalWindow close];
+			}
+			
+			for (int x = 0; x < statusMenu.itemArray.count; x++)
+			{
+				if ([[statusMenu itemAtIndex:x] tag] == 17)
+				{
+					mi = [statusMenu itemAtIndex:x];
+					[mi setHidden:YES];
+				}
+			}
+		});
+		
 		if (criticalUpdatesTimer)
 		{
 			[criticalUpdatesTimer invalidate];
 			criticalUpdatesTimer = nil;
 		}
 	}
+	
+	[statusMenu update];
 }
 
 
@@ -1242,6 +1292,8 @@ done:
 					   self->criticalWinInstallButton.hidden = NO;
 					   self->criticalWinRebootButton.hidden = YES;
 				   });
+	
+	[self setWindowPosition];
 }
 
 // Not Now, will close the window and reschedule the notification
@@ -1281,10 +1333,13 @@ done:
 	
 	if ([alert runModal] == NSAlertFirstButtonReturn)
 	{
+		[self writeDataToFile:@"reboot" file:MP_AUTHRUN_FILE];
+		
 		// OK clicked, delete the record
 		[criticalWindow close];
 		OSStatus error = noErr;
-		error = SendAppleEventToSystemProcess(kAERestart);
+		error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+		//execve("killall loginwindow",0,0);
 		
 		if (error == noErr) {
 			logit(lcl_vInfo,@"Computer is going to restart now!");
@@ -1299,9 +1354,8 @@ done:
 - (IBAction)installPatch:(id)sender
 {
 	[self readCriticalUpdatesFile];
-	logit(lcl_vInfo,@"criticalUpdates: %@",criticalUpdates);
-	
-	
+	logit(lcl_vDebug,@"criticalUpdates: %@",criticalUpdates);
+
 	// Build array of patches to install
 	NSMutableArray *patchesToInstall = [NSMutableArray new];
 	for (NSDictionary *patch in criticalUpdates)
@@ -1312,9 +1366,7 @@ done:
 		[criticalWindow close];
 	}
 	
-	
 	GCDTask* asusTask;
-	
 	dispatch_async(dispatch_get_main_queue(), ^(void)
 	   {
 		   self->criticalWinBodyText.hidden = YES;
@@ -1464,13 +1516,14 @@ done:
 {
 	if ([note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"] || [note.description isEqualTo:@"VDKQueueLinkCountChangedNotification"] || [note.description isEqualTo:@"VDKQueueFileDeletedNotification"])
 	{
-		[NSThread sleepForTimeInterval:5.0];
-		//logit(lcl_vInfo,@"VDKQueueFileAttributesChangedNotification");
+		[NSThread sleepForTimeInterval:1.0];
 		if ([fpath isEqualToString:MP_CRITICAL_UPDATES_PLIST])
 		{
 			logit(lcl_vInfo,@"readCriticalUpdatesFile: %@",MP_CRITICAL_UPDATES_PLIST);
 			[self readCriticalUpdatesFile];
 		}
+		
+		[NSThread detachNewThreadSelector:@selector(restartWatchFolder:) toTarget:self withObject:note.description];
 		return;
 	}
 	
@@ -1496,6 +1549,19 @@ done:
 	}
 }
 
+- (void)restartWatchFolder:(NSString *)action
+{
+	@autoreleasepool
+	{
+		if ([action isEqualTo:@"VDKQueueFileDeletedNotification"])
+		{
+			[NSThread sleepForTimeInterval:5.0];
+			vdkQueue = nil;
+			[self setupWatchedFolder];
+		}
+	}
+}
+
 #pragma mark -
 #pragma mark Logout Method
 
@@ -1511,7 +1577,7 @@ done:
 - (IBAction)logoutAndPatch:(id)sender
 {
     // Add .MPAuthRun so that the priv helpr tool runs
-    [[NSFileManager defaultManager] createFileAtPath:@"/private/tmp/.MPAuthRun"
+    [[NSFileManager defaultManager] createFileAtPath:MP_AUTHRUN_FILE
                                             contents:[@"Logout" dataUsingEncoding:NSUTF8StringEncoding]
                                           attributes:nil];
     
@@ -1705,7 +1771,7 @@ done:
 {
     if ([notification.actionButtonTitle isEqualToString:@"Patch"]) {
         // Dont show patch info if reboot is required.
-        if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE]) {
             [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notification];
         }
     }

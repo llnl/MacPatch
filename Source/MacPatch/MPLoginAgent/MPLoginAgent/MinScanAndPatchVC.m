@@ -21,8 +21,6 @@
 
 #define	BUNDLE_ID       @"gov.llnl.MPLoginAgent"
 
-extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
-
 @interface MinScanAndPatchVC ()
 
 // Main
@@ -182,8 +180,11 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
         // If we have no patches, close out.
         if (progressCountTotal <= 0)
         {
-            [self toggleStatusProgress];
-            [self rebootOrLogout:1]; // Exit app, no reboot.
+			qlinfo(@"No updates to install. Rebooting system");
+			//[self toggleStatusProgress];
+			//[self rebootOrLogout:1]; // Exit app, no reboot.
+			//[self countDownToClose];
+			[NSThread detachNewThreadSelector:@selector(countDownToClose) toTarget:self withObject:nil];
             return;
         }
         
@@ -235,64 +236,85 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
         qlinfo(@"Patches have been installed, system will now reboot.");
         [self countDownToClose];
     }
-    
 }
 
 - (void)countDownToClose
 {
-    for (int i = 0; i < 5;i++)
-    {
-        // Message that window is closing
-        [self progress:[NSString stringWithFormat:@"Rebooting system in %d seconds...",(5-i)]];
-        sleep(1);
-    }
-    
-    [self progress:@"Rebooting System Please Be Patient"];
-    [self rebootOrLogout:0];
+	@autoreleasepool
+	{
+		for (int i = 0; i < 5;i++)
+		{
+			qlinfo(@"Rebooting system in %d seconds...",(5-i));
+			// Message that window is closing
+			[self progress:[NSString stringWithFormat:@"Rebooting system in %d seconds...",(5-i)]];
+			sleep(1);
+		}
+		
+		[self progress:@"Rebooting System Please Be Patient"];
+		[self rebootOrLogout:0];
+	}
+}
+
+- (void)countDownShowRebootButton
+{
+	@autoreleasepool
+	{
+		for (int i = 0; i < 300;i++)
+		{
+			sleep(1);
+		}
+		dispatch_async(dispatch_get_global_queue(0, 0), ^{
+			dispatch_async(dispatch_get_main_queue(), ^{
+				cancelButton.title = @"Reboot";
+				cancelButton.hidden = NO;
+			});
+		});
+	}
 }
 
 - (void)rebootOrLogout:(int)action
 {
-    // exit(0);
-
     int rb = 0;
-    switch ( action ) {
+    switch ( action )
+	{
         case 0:
-            rb = reboot(RB_AUTOBOOT);
-            qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
-            if (rb == -1) {
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+			qlinfo(@"MPAuthPlugin issued a launchctl reboot.");
+			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
+			//rb = reboot(RB_AUTOBOOT);
+			//qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
+			//if (rb == -1) {
                 // Try Forcing it :-)
                 //qlinfo(@"Attempting to force reboot...");
-                NSLog(@"Attempting to force reboot...");
                 //execve("/sbin/reboot",0,0);
-            }
+			//}
             break;
         case 1:
-            // Code to just do logout
-            [NSApp performSelector:@selector(terminate:) withObject:nil afterDelay:0.0];
+            // just return to loginwindow
+			exit(0);
             break;
         default:
             // Code
+			exit(0);
             break;
     }
-
 }
 
 - (void)toggleStatusProgress
 {
-    if ([progressBar isHidden]) {
-        
+    if ([progressBar isHidden])
+	{
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
-            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [progressBar setUsesThreadedAnimation:YES];
                 [progressBar setHidden:NO];
                 [progressBar startAnimation:nil];
-                //[progressBar performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
             });
         });
         
-    } else {
+    }
+ 	else
+	{
         [progressBar setHidden:YES];
         [progressBar stopAnimation:nil];
     }
@@ -300,50 +322,28 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 
 - (IBAction)cancelOperation:(id)sender
 {
+	/*
     [self progress:@"Cancelling, waiting for current request to finish..."];
     dispatch_async(dispatch_get_main_queue(), ^(void)
     {
         cancelButton.enabled = FALSE;
         self.cancelTask = TRUE;
     });
+	 */
+	if ([cancelButton.title isEqualToString:@"Reboot"])
+	{
+		int rb = 0;
+		qlerror(@"User forced a reboot. Some items may not have gotten installed.");
+		rb = reboot(RB_AUTOBOOT);
+	}
 }
 
 - (void)_stopThread
 {
     @autoreleasepool
     {
-        MDSendAppleEventToSystemProcess(kAERestart);
+        [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
     }
-}
-
-OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
-{
-    qlinfo(@"MDSendAppleEventToSystemProcess called");
-    
-    AEAddressDesc targetDesc;
-    static const ProcessSerialNumber kPSNOfSystemProcess = {0, kSystemProcess };
-    AppleEvent eventReply = {typeNull, NULL};
-    AppleEvent eventToSend = {typeNull, NULL};
-    
-    OSStatus status = AECreateDesc(typeProcessSerialNumber,
-                                   &kPSNOfSystemProcess, sizeof(kPSNOfSystemProcess), &targetDesc);
-    
-    if (status != noErr) return status;
-    
-    status = AECreateAppleEvent(kCoreEventClass, eventToSendID,
-                                &targetDesc, kAutoGenerateReturnID, kAnyTransactionID, &eventToSend);
-    
-    AEDisposeDesc(&targetDesc);
-    
-    if (status != noErr) return status;
-    
-    status = AESendMessage(&eventToSend, &eventReply,
-                           kAENormalPriority, kAEDefaultTimeout);
-    
-    AEDisposeDesc(&eventToSend);
-    if (status != noErr) return status;
-    AEDisposeDesc(&eventReply);
-    return status;
 }
 
 #pragma mark - Scanning

@@ -42,6 +42,13 @@
                     <attributedString key="attributedTitle"/>
                     <modifierMask key="keyEquivalentModifierMask"/>
                 </menuItem>
+                <menuItem title="Install Critical Update..." image="alert-yellow_small" tag="17" id="ksQ-Jd-S6v">
+                    <attributedString key="attributedTitle"/>
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="showCriticalWindow:" target="494" id="HWx-Xj-jJg"/>
+                    </connections>
+                </menuItem>
                 <menuItem isSeparatorItem="YES" id="547"/>
                 <menuItem title="Client Info" id="wu2-kW-dul">
                     <modifierMask key="keyEquivalentModifierMask"/>
@@ -914,6 +921,7 @@
                 <outlet property="criticalWinRebootButton" destination="4Ay-8T-4eJ" id="orB-df-5mi"/>
                 <outlet property="criticalWinTitleText" destination="Y0d-y2-7Qw" id="PIn-PG-4fo"/>
                 <outlet property="criticalWindow" destination="2QM-FM-Zi7" id="kFD-9p-EIS"/>
+                <outlet property="installCriticalUpdate" destination="ksQ-Jd-S6v" id="IqG-vF-eEX"/>
                 <outlet property="rebootBodyText" destination="iMy-tp-ciN" id="hwX-WZ-oIh"/>
                 <outlet property="rebootTitleText" destination="mwm-Oi-5Fq" id="Tf2-Am-UEt"/>
                 <outlet property="rebootWindow" destination="Rir-3v-4PY" id="tNt-9b-JG4"/>
@@ -1095,6 +1103,7 @@ LQAyADcAQQBHAFAAVwBcAGQAeQB7AH0AfwCBAIsAkgCXAKIApQCnAKkAqwCwALsAxADMAM8A2ADdAOoA
     </objects>
     <resources>
         <image name="MPBaseRoundIcon" width="512" height="512"/>
+        <image name="alert-yellow_small" width="22" height="21"/>
         <image name="warn" width="600" height="500"/>
     </resources>
 </document>
