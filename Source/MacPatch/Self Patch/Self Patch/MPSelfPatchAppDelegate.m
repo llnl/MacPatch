@@ -1227,7 +1227,7 @@ done:
 				if ([_dict[@"user_install"] intValue] == 1)
 				{
 					// Skip user install, from the list. This is for logout installs
-					// continue;
+					continue;
 				}
 			}
             [_requiredPatchesArray addObject:_dict];
@@ -1288,7 +1288,7 @@ done:
 		if (userInstallApplePatches.count >= 1)
 		{
 			qldebug(@"Write user install patches (%d) to critical watch file.",(int)userInstallApplePatches.count);
-			// [self writeDataToFile:userInstallApplePatches file:MP_CRITICAL_UPDATES_PLIST];
+			[self writeDataToFile:userInstallApplePatches file:MP_CRITICAL_UPDATES_PLIST];
 		}
         
         BOOL needsPatches = ([approvedUpdatesArray count] <= 0) ? YES : NO;
