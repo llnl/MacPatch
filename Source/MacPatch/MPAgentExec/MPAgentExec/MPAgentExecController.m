@@ -626,7 +626,12 @@ done:
     [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:NO];
 }
 
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical
+{
+	return [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:aCritical stayAliveForProvisioning:NO];
+}
+
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical stayAliveForProvisioning:(BOOL)stayAlive
 {
 	if ([self isTaskRunning:kMPPatchUPDATE]) {
 		logit(lcl_vInfo,@"Scan and update patches is already running. Now exiting.");
@@ -638,7 +643,8 @@ done:
 	// Check for console user
 	logit(lcl_vInfo, @"Checking for any logged in users.");
 	BOOL hasConsoleUserLoggedIn = TRUE;
-	@try {
+	@try
+	{
 		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
 		if (!hasConsoleUserLoggedIn)
 		{
@@ -652,6 +658,27 @@ done:
 			{
 				// No need to continue, MPLoginAgent will perform the updates
 				// Since no user is logged in.
+				if (stayAlive == YES)
+				{
+					// Wait until system is logged out.
+					while ([self isLocalUserLoggedIn]) {
+						[NSThread sleepForTimeInterval:1.0];
+					}
+					
+					// Add a delay to allow MPLoginAgent to Launch
+					[NSThread sleepForTimeInterval:10.0];
+					
+					BOOL loginAgentIsRunning = YES;
+					while (loginAgentIsRunning == YES)
+					{
+						[NSThread sleepForTimeInterval:2.0];
+						if (![self isloginAgentRunning])
+						{
+							break;
+						}
+					}
+				}
+				
 				return;
 			}
 		}
@@ -2553,6 +2580,18 @@ done:
 - (void)downloadError
 {
     logit(lcl_vError,@"Download Had An Error");
+}
+
+- (BOOL)isloginAgentRunning
+{
+	BOOL result = NO;
+	NSArray *procList = [MPSystemInfo bsdProcessList];
+	for (NSDictionary *p in procList) {
+		if ([[p objectForKey:@"processName"] isEqualToString:@"MPLoginAgent"]) {
+			result = YES;
+		}
+	}
+	return result;
 }
 
 #pragma mark - Proxy Methods
