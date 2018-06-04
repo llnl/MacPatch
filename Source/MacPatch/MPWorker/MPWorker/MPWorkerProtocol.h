@@ -78,6 +78,8 @@
 
 - (int)stagePatchWithBaseDirectory:(in bycopy NSDictionary *)aPatch directory:(in bycopy NSString *)path;
 
+- (int)runCMD:(in bycopy NSString *)binPath arguments:(in bycopy NSArray *)arguments;
+
 // Inventory Collection
 - (int)collectInventoryData;
 

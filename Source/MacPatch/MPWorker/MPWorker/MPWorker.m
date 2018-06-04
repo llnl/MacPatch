@@ -1636,6 +1636,18 @@ done:
 }
 
 // Proxy Method
+- (int)runCMD:(in bycopy NSString *)binPath arguments:(in bycopy NSArray *)arguments
+{
+	int result = -1;
+	
+	NSTask *task = [NSTask launchedTaskWithLaunchPath:binPath arguments:arguments];
+	[task waitUntilExit];
+	
+	result = [task terminationStatus];
+	return result;
+}
+
+// Proxy Method
 - (BOOL)unzipFile:(in bycopy NSString *)file error:(NSError **)error;
 {
     BOOL result = NO;
@@ -1646,7 +1658,7 @@ done:
         qlerror(@"%@",_err.localizedDescription);
         if (error != NULL) *error = _err;
     }
-    
+	
     return result;
 }
 

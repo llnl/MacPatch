@@ -274,20 +274,12 @@
 
 - (void)rebootOrLogout:(int)action
 {
-    int rb = 0;
     switch ( action )
 	{
         case 0:
 			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 			qlinfo(@"MPAuthPlugin issued a launchctl reboot.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
-			//rb = reboot(RB_AUTOBOOT);
-			//qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
-			//if (rb == -1) {
-                // Try Forcing it :-)
-                //qlinfo(@"Attempting to force reboot...");
-                //execve("/sbin/reboot",0,0);
-			//}
             break;
         case 1:
             // just return to loginwindow

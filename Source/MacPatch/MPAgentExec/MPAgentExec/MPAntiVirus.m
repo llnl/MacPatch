@@ -246,7 +246,6 @@
                            @"/Applications/Norton Solutions/Symantec AntiVirus.app",
                            @"/Applications/Norton Solutions/Norton AntiVirus.app",
                            @"/Applications/Symantec Solutions/Symantec Endpoint Protection.app",
-                           @"/Applications/Sophos Anti-Virus.app",
                            nil];
     // Find the
     for (NSString *item in avAppArray) {
@@ -269,7 +268,7 @@
     [_tmpAvDict setValue:@"symantec" forKey:@"av_type"];
     [_tmpAvDict setValue:[_avAppInfo valueForKey:@"CFBundleExecutable"] forKey:@"app_name"];
     [_tmpAvDict setValue:avApplication forKey:@"app_path"];
-    [_tmpAvDict setValue:[_avAppInfo valueForKey:@"CFBundleVersion"] forKey:@"app_version"];
+    [_tmpAvDict setValue:[_avAppInfo valueForKey:@"CFBundleShortVersionString"] forKey:@"app_version"];
     [_tmpAvDict setValue:[_avAppInfo valueForKey:@"CFBundleShortVersionString"] forKey:@"CFBundleShortVersionString"];
     [_tmpAvDict setValue:[self symantecDefsDate] forKey:@"defs_date"];
     
@@ -285,6 +284,7 @@
                             @"/Library/Application Support/Symantec/AntiVirus/Engine/V.GRD",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/v.grd",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/V.GRD",
+							@"/Library/Application Support/Symantec/Silo/NFM/Definitions/virusdefs/definfo.dat",
                             nil];
     
     NSString *avDefsAltPath = @"/Library/Application Support/Symantec/LiveUpdate/ActiveRegistry/NAV12Defs.plist";
@@ -346,16 +346,22 @@
     // Parse Defs File
     NSString *_defsDate = nil;
     NSArray *_lines = [_avDefsFileData componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
-    for (NSString *_line in _lines) {
-        //LastModifiedGmtFormated
-        if ([_line containsString:@"LastModifiedGmtFormated" ignoringCase:YES]) {
-            logit(lcl_vDebug,@"containsString: %@",_line);
-            _defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
-            logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
-            break;
-        }
-    }
-    [self setAvDefsDate:[NSString stringWithString:_defsDate]];
+	for (NSString *_line in _lines) {
+		//LastModifiedGmtFormated
+		if ([_line containsString:@"LastModifiedGmtFormated" ignoringCase:YES]) {
+			logit(lcl_vDebug,@"containsString: %@",_line);
+			_defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
+			logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+			break;
+		}
+		else if ([_line containsString:@"CurDefs" ignoringCase:YES])
+		{
+			logit(lcl_vDebug,@"containsString: %@",_line);
+			_defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
+			logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+		}
+	}
+    [self setAvDefsDate:[_defsDate copy]];
     return _defsDate;
 }
 
