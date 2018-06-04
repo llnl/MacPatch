@@ -447,6 +447,32 @@ done:
 	return result;
 }
 
+- (int)runClientCheckinViaHelper
+{
+	int result = -1;
+	if (!proxy) {
+		[self connect];
+		if (!proxy) goto done;
+	}
+	
+	@try
+	{
+		if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MacPatch/Client/MPAgent"]) {
+			result = [proxy runCMD:@"/Library/MacPatch/Client/MPAgent" arguments:@[@"-c"]];
+		} else {
+			logit(lcl_vError,@"File missing /Library/MacPatch/Client/MPAgent.");
+			result = 2;
+		}
+	}
+	@catch (NSException *e) {
+		logit(lcl_vError,@"Trying to run MPAgent client checkin.");
+	}
+	
+done:
+	[self cleanup];
+	return result;
+}
+
 #pragma mark -
 #pragma mark Client Info
 - (IBAction)getMPClientVersionInfo:(id)sender
@@ -540,6 +566,17 @@ done:
 }
 
 // Performs a client checkin
+- (BOOL)performClientCheckInMethod
+{
+	BOOL result = NO;
+	int taskResult = 99;
+	taskResult = [self runClientCheckinViaHelper];
+	if (taskResult == 0) {
+		result = YES;
+	}
+	return result;
+}
+/*
 - (BOOL)performClientCheckInMethod
 {
     int y = 0;
@@ -647,6 +684,7 @@ done:
         return NO;
     }
 }
+ */
 
 - (NSDictionary *)systemVersionDictionary
 {
