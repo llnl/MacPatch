@@ -369,6 +369,7 @@ if [ $? != 0 ] ; then
   easy_install --quiet pip
 fi
 
+shopt -s expand_aliases
 alias pip_exe=`which pip`
 if $USELINUX; then
 	PIPVER=`pip --version`
