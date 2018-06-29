@@ -369,16 +369,14 @@ if [ $? != 0 ] ; then
   easy_install --quiet pip
 fi
 
+alias pip_exe=`which pip`
 if $USELINUX; then
 	PIPVER=`pip --version`
 	if [ $? != 0 ] ; then
 		echo "PIP ($HAVEPIP) is broken, using alt version."
 		alias pip_exe="/usr/local/bin/pip"
-	else
-		alias pip_exe="/usr/bin/pip"
 	fi
 fi
-
 
 pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
 for p in "${pip_mods[@]}"
