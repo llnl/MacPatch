@@ -625,7 +625,7 @@ if command_exists virtualenv ; then
 	else
 		# Install M2Crypto first
 		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-		pip -q install -r pyRequired-test.txt $CA_STR
+		pip -q install --no-cache-dir -r pyRequired-test.txt $CA_STR
 	fi
 
 	deactivate
