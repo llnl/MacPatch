@@ -369,18 +369,29 @@ if [ $? != 0 ] ; then
   easy_install --quiet pip
 fi
 
+if $USELINUX; then
+	PIPVER=`pip --version`
+	if [ $? != 0 ] ; then
+		echo "PIP ($HAVEPIP) is broken, using alt version."
+		alias pip_exe="/usr/local/bin/pip"
+	else
+		alias pip_exe="/usr/bin/pip"
+	fi
+fi
+
+
 pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
 for p in "${pip_mods[@]}"
 do
   echo " - Installing ${p}, python module."
   if $USELINUX; then
-	pip install --quiet --upgrade ${p}
+	pip_exe install --quiet --upgrade ${p}
 	if [ $? != 0 ] ; then
 		echo " Error installing ${p}"
 		sleep 2
 		echo
 		echo " - Trying ${p}, python module again."
-		pip -q install --upgrade ${p}
+		pip_exe -q install --upgrade ${p}
 		if [ $? != 0 ] ; then
 			echo " Error installing ${p}"
 		fi
@@ -647,8 +658,6 @@ if command_exists virtualenv ; then
 			pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
 		fi
 	fi
-
-
 
 	deactivate
 else
