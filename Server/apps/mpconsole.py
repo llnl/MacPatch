@@ -8,10 +8,6 @@ from mpapi.extensions import db
 import multiprocessing
 from werkzeug.security import generate_password_hash
 
-import warnings
-from flask.exthook import ExtDeprecationWarning
-warnings.simplefilter('ignore', ExtDeprecationWarning)
-
 from mpconsole import create_app
 from mpconsole.model import *
 

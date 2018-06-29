@@ -379,6 +379,8 @@ if $USELINUX; then
 	fi
 fi
 
+# Set Python Modules, for Ubuntu I use apt to install a couple to prevent
+# issues from occuring.
 if $USEUBUNTU ; then
 	pip_mods=( "setuptools" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel")
 else
