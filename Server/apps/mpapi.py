@@ -6,10 +6,6 @@ from flask_migrate import MigrateCommand
 from mpdb import addDefaultData, resetSiteKeys, addSiteKeys
 import multiprocessing
 
-import warnings
-from flask.exthook import ExtDeprecationWarning
-warnings.simplefilter('ignore', ExtDeprecationWarning)
-
 from mpapi import create_app
 from mpapi.model import AgentConfig, AgentConfigData
 

@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.0.0
+# Version: 3.0.1
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -12,27 +12,27 @@
 # Simply modify the GITROOT and BUILDROOT variables
 #
 # History:
-# 1.4:    Remove Jetty Support
-#     Added Tomcat 7.0.57
-# 1.5:    Added Tomcat 7.0.63
-# 1.6:    Variableized the tomcat config
-#     removed all Jetty refs
-# 1.6.1:  Now using InstallPyMods.sh script to install python modules
-# 1.6.2:  Fix cp paths
-# 1.6.3:  Updated OpenJDK to 1.8.0
-# 1.6.4:  Updated to install Ubuntu packages
-# 1.6.5:  More ubuntu updates
-# 2.0.0:  Apache HTTPD removed
-#     Single Tomcat Instance, supports webservices and console
-# 2.0.1:  Updated java version check
-# 2.0.2:  Updated linux package requirements
-# 2.0.3:  Added Mac PKG support
-# 2.0.4:  Added compile for Mac MPServerAdmin.app
-#     Removed create archive (aka zip)
-# 2.0.5     Disabled the MPServerAdmin app build, having issue
-#     with the launch services.
-# 3.0.0     Rewritten for new Python Env
-#
+# 1.4:      Remove Jetty Support
+#           Added Tomcat 7.0.57
+# 1.5:      Added Tomcat 7.0.63
+# 1.6:      Variableized the tomcat config
+#           removed all Jetty refs
+# 1.6.1:    Now using InstallPyMods.sh script to install python modules
+# 1.6.2:    Fix cp paths
+# 1.6.3:    Updated OpenJDK to 1.8.0
+# 1.6.4:    Updated to install Ubuntu packages
+# 1.6.5:    More ubuntu updates
+# 2.0.0:    Apache HTTPD removed
+#           Single Tomcat Instance, supports webservices and console
+# 2.0.1:    Updated java version check
+# 2.0.2:    Updated linux package requirements
+# 2.0.3:    Added Mac PKG support
+# 2.0.4:    Added compile for Mac MPServerAdmin.app
+#           Removed create archive (aka zip)
+# 2.0.5:    Disabled the MPServerAdmin app build, having issue
+#           with the launch services.
+# 3.0.0:    Rewritten for new Python Env
+# 3.0.1:    Fixed pip 10.x issues and Ubuntu issues
 #
 # ----------------------------------------------------------------------------
 
@@ -87,6 +87,7 @@ TMP_DIR="${MPBASE}/.build/tmp"
 SRC_DIR="${MPSERVERBASE}/conf/src/server"
 TOMCAT_SW="NA"
 OWNERGRP="79:70"
+CA_CERT="NA"
 
 # PKG Variables
 MP_MAC_PKG=false
@@ -104,7 +105,7 @@ if [[ $platform == 'linux' ]]; then
   LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`
   if [[ $LNXDIST == *"Red"*  || $LNXDIST == *"Cent"* ]]; then
 	USERHEL=true
-  else
+  elif [[ $LNXDIST == "Ubuntu" ]]; then
 	USEUBUNTU=true
   fi
 
@@ -266,6 +267,10 @@ command_exists () {
 	type "$1" &> /dev/null ;
 }
 
+function ver {
+	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+}
+
 # ------------------
 # Create Skeleton Dir Structure
 # ------------------
@@ -337,12 +342,28 @@ if $USELINUX; then
 	done
 
   elif $USEUBUNTU; then
+	  # Check and wait for running apt jobs to finish
+	  i=0
+	  tput sc
+	  while fuser /var/lib/dpkg/lock >/dev/null 2>&1 ; do
+		  case $(($i % 4)) in
+			  0 ) j="-" ;;
+			  1 ) j="\\" ;;
+			  2 ) j="|" ;;
+			  3 ) j="/" ;;
+		  esac
+		  tput rc
+		  echo -en "\r[$j] Waiting for other software installs to finish..."
+		  sleep 0.5
+		  ((i=i+1))
+	  done
+
 	#statements
-	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-dev" "python-pip" "swig")
+	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-setuptools" "python-dev" "python-pip" "python-virtualenv" "python-mysql.connector" "swig")
 	for i in "${pkgs[@]}"
 	do
-	  p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
-	  if [ -z $p ]; then
+	  p=`dpkg -s ${i}`
+	  if [ $? == 1 ]; then
 		echo
 		echo "Install $i"
 		echo
@@ -364,18 +385,35 @@ if [ $? != 0 ] ; then
   easy_install --quiet pip
 fi
 
-pip_mods=( "pip" "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
+shopt -s expand_aliases
+alias pip_exe=`which pip`
+if $USELINUX; then
+	PIPVER=`pip --version`
+	if [ $? != 0 ] ; then
+		echo "PIP ($HAVEPIP) is broken, using alt version."
+		alias pip_exe="/usr/local/bin/pip"
+	fi
+fi
+
+# Set Python Modules, for Ubuntu I use apt to install a couple to prevent
+# issues from occuring.
+if $USEUBUNTU ; then
+	pip_mods=( "setuptools" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel")
+else
+	pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
+fi
+
 for p in "${pip_mods[@]}"
 do
   echo " - Installing ${p}, python module."
   if $USELINUX; then
-	pip install --quiet --upgrade ${p}
+	pip_exe install --quiet --upgrade ${p}
 	if [ $? != 0 ] ; then
 		echo " Error installing ${p}"
 		sleep 2
 		echo
 		echo " - Trying ${p}, python module again."
-		pip install --egg --quiet --upgrade ${p}
+		pip_exe -q install --upgrade ${p}
 		if [ $? != 0 ] ; then
 			echo " Error installing ${p}"
 		fi
@@ -387,9 +425,9 @@ do
 
 	if (( $minorVer >= 11 )); then
 		# Needed to install when SIP is active
-		pip install --egg --quiet ${p}
+		pip -q install ${p}
 	else
-		pip install --egg --quiet --no-cache-dir --upgrade ${p}
+		pip -q install --no-cache-dir --upgrade ${p}
 	fi
 
 	if [ $? != 0 ] ; then
@@ -586,17 +624,71 @@ chown $OWNERGRP "${MPSERVERBASE}/apps/log"
 chmod 2777 "${MPSERVERBASE}/apps/log"
 
 if command_exists virtualenv ; then
-	virtualenv --no-site-packages env
+	VENV_VER=`virtualenv --version`
+	echo "virtualenv version $VENV_VER"
+	if [ $(ver $VENV_VER) -lt $(ver "15.0.0") ]; then
+		echo "virtualenv is an older version."
+		echo "Install and setup of the virtual environment may not succeed."
+		read -p "Would you like to continue (Y/N)? [Y]: " VENVOK
+		VENVOK=${VENVOK:-Y}
+		if [ "$VENVOK" == "Y" ] || [ "$VENVOK" == "y" ] ; then
+			echo
+		else
+			exit 1
+		fi
+	fi
+	if $USELINUX ; then
+		if $USEUBUNTU; then
+			# Bug With Ubuntu, need to include site packages,
+			# can install mysql-connector other than using apt
+			virtualenv --system-site-packages env
+		else
+			virtualenv --no-site-packages env
+		fi
+	else
+		virtualenv --no-site-packages env
+	fi
+
 	source env/bin/activate
-	python install.py
+
+	CA_STR=""
+	if [ "$CA_CERT" != "NA" ]; then
+		CA_STR="--cert \"$CA_CERT\""
+	fi
+
+	if $USEMACOS; then
+		# Install M2Crypto first
+		OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+		env LDFLAGS="-L${OPENSSLPWD}/lib" \
+		CFLAGS="-I${OPENSSLPWD}/include" \
+		SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequired.txt $CA_STR
+
+		echo "Installing mysql-connector-python-rf"
+		pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
+	else
+		# Install M2Crypto first
+		echo "Installing m2crypto"
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+		echo "Installing all required python modules"
+		pip -q install --no-cache-dir -r pyRequired-test.txt $CA_STR
+
+		if $USERHEL ; then
+			echo "Installing mysql-connector-python-rf"
+			pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
+		fi
+	fi
+
 	deactivate
 else
 	echo "virtualenv was not found. Please create virtual env."
 	echo
 	echo "% cd $MPSERVERBASE/apps"
-	echo "% virtualenv --no-site-packages env"
+	echo "% virtualenv --no-site-packages --no-pip env"
 	echo "% source env/bin/activate"
-	echo "% python install.py"
+	echo "% pip -q install -r pyRequired.txt"
 	echo "% deactivate"
 	echo
 fi
