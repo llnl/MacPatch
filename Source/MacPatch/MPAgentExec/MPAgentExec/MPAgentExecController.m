@@ -626,7 +626,12 @@ done:
     [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:NO];
 }
 
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical
+{
+	return [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:aCritical stayAliveForProvisioning:NO];
+}
+
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical stayAliveForProvisioning:(BOOL)stayAlive
 {
 	if ([self isTaskRunning:kMPPatchUPDATE]) {
 		logit(lcl_vInfo,@"Scan and update patches is already running. Now exiting.");
@@ -634,6 +639,56 @@ done:
 	} else {
 		[self writeTaskRunning:kMPPatchUPDATE];
 	}
+<<<<<<< HEAD
+=======
+	
+	// Check for console user
+	logit(lcl_vInfo, @"Checking for any logged in users.");
+	BOOL hasConsoleUserLoggedIn = TRUE;
+	@try
+	{
+		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
+		if (!hasConsoleUserLoggedIn)
+		{
+			NSError *fileErr = nil;
+			[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+			if (fileErr)
+			{
+				logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
+			}
+			else
+			{
+				// No need to continue, MPLoginAgent will perform the updates
+				// Since no user is logged in.
+				if (stayAlive == YES)
+				{
+					// Wait until system is logged out.
+					while ([self isLocalUserLoggedIn]) {
+						[NSThread sleepForTimeInterval:1.0];
+					}
+					
+					// Add a delay to allow MPLoginAgent to Launch
+					[NSThread sleepForTimeInterval:10.0];
+					
+					BOOL loginAgentIsRunning = YES;
+					while (loginAgentIsRunning == YES)
+					{
+						[NSThread sleepForTimeInterval:2.0];
+						if (![self isloginAgentRunning])
+						{
+							break;
+						}
+					}
+				}
+				
+				return;
+			}
+		}
+	}
+	@catch (NSException * e) {
+		logit(lcl_vInfo, @"Error getting console user status. %@",e);
+	}
+>>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
 
 	// Filter - 0 = All,  1 = Apple, 2 = Third
 	NSArray *updatesArray = nil;
@@ -2564,6 +2619,18 @@ done:
 - (void)downloadError
 {
     logit(lcl_vError,@"Download Had An Error");
+}
+
+- (BOOL)isloginAgentRunning
+{
+	BOOL result = NO;
+	NSArray *procList = [MPSystemInfo bsdProcessList];
+	for (NSDictionary *p in procList) {
+		if ([[p objectForKey:@"processName"] isEqualToString:@"MPLoginAgent"]) {
+			result = YES;
+		}
+	}
+	return result;
 }
 
 #pragma mark - Proxy Methods

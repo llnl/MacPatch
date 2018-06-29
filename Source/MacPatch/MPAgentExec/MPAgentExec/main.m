@@ -31,7 +31,11 @@
 #include <getopt.h>
 #include <unistd.h>
 
+<<<<<<< HEAD
 #define APPVERSION	@"3.0.5.5"
+=======
+#define APPVERSION	@"3.0.6.0"
+>>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
@@ -244,7 +248,12 @@ int main (int argc, char * argv[])
                 if (_updateBundle) {
                     [controller scanAndUpdateCustomWithPatchBundleID:_updateBundle];
                 } else {
-                    [controller scanForPatchesAndUpdateWithFilter:_UpdateType];
+					if (isILoadMode)
+					{
+						[controller scanForPatchesAndUpdateWithFilterCritical:_UpdateType critical:NO stayAliveForProvisioning:YES];
+					} else {
+                    	[controller scanForPatchesAndUpdateWithFilter:_UpdateType];
+					}
                 }
                 break;
             case 3:

@@ -81,6 +81,7 @@
 -(void)scanForPatchesAndUpdate;
 -(void)scanForPatchesAndUpdateWithFilter:(int)aFilter;
 -(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical stayAliveForProvisioning:(BOOL)stayAlive;
 -(void)scanAndUpdateCustomWithPatchBundleID:(NSString *)aPatchBundleID;
 
 -(BOOL)checkPatchPreAndPostForRebootRequired:(NSArray *)aDictArray;
