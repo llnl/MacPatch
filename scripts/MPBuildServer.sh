@@ -338,11 +338,11 @@ if $USELINUX; then
 
   elif $USEUBUNTU; then
 	#statements
-	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-dev" "python-pip" "swig")
+	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-setuptools" "python-dev" "python-pip" "swig")
 	for i in "${pkgs[@]}"
 	do
-	  p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
-	  if [ -z $p ]; then
+	  p=`dpkg -s ${i}`
+	  if [ $? == 1 ]; then
 		echo
 		echo "Install $i"
 		echo
@@ -364,7 +364,7 @@ if [ $? != 0 ] ; then
   easy_install --quiet pip
 fi
 
-pip_mods=( "pip" "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
+pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
 for p in "${pip_mods[@]}"
 do
   echo " - Installing ${p}, python module."
@@ -586,17 +586,51 @@ chown $OWNERGRP "${MPSERVERBASE}/apps/log"
 chmod 2777 "${MPSERVERBASE}/apps/log"
 
 if command_exists virtualenv ; then
+	VENV_VER=`virtualenv --version`
+	echo "virtualenv version $VENV_VER"
+	if [ $(ver $VENV_VER) -lt $(ver "15.0.0") ]; then
+		echo "virtualenv is an older version."
+		echo "Install and setup of the virtual environment may not succeed."
+		read -p "Would you like to continue (Y/N)? [Y]: " VENVOK
+		VENVOK=${VENVOK:-Y}
+		if [ "$VENVOK" == "Y" ] || [ "$VENVOK" == "y" ] ; then
+			echo
+		else
+			exit 1
+		fi
+	fi
+
 	virtualenv --no-site-packages env
 	source env/bin/activate
-	python install.py
+
+	CA_STR=""
+	if [ "$CA_CERT" != "NA" ]; then
+		CA_STR="--cert \"$CA_CERT\""
+	fi
+
+	if $USEMACOS; then
+		# Install M2Crypto first
+		OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+		env LDFLAGS="-L${OPENSSLPWD}/lib" \
+		CFLAGS="-I${OPENSSLPWD}/include" \
+		SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequired.txt $CA_STR
+	else
+		# Install M2Crypto first
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+		pip -q install -r pyRequired-test.txt $CA_STR
+	fi
+
 	deactivate
 else
 	echo "virtualenv was not found. Please create virtual env."
 	echo
 	echo "% cd $MPSERVERBASE/apps"
-	echo "% virtualenv --no-site-packages env"
+	echo "% virtualenv --no-site-packages --no-pip env"
 	echo "% source env/bin/activate"
-	echo "% python install.py"
+	echo "% pip -q install -r pyRequired.txt"
 	echo "% deactivate"
 	echo
 fi
