@@ -330,8 +330,7 @@ if $USELINUX; then
   if $USERHEL; then
 	# Check if needed packges are installed or install
 	# "mysql-connector-python"
-	pkgs=("gcc" "gcc-c++" "java-1.8.0-openjdk" "java-1.8.0-openjdk-devel" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release"
-	 "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig")
+	pkgs=("gcc" "gcc-c++" "java-1.8.0-openjdk" "java-1.8.0-openjdk-devel" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig")
 
 	for i in "${pkgs[@]}"
 	do
@@ -344,8 +343,7 @@ if $USELINUX; then
 
   elif $USEUBUNTU; then
 	#statements
-	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless"
-	 "python-setuptools" "python-dev" "python-pip" "python-mysql.connector" "swig")
+	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-setuptools" "python-dev" "python-pip" "python-virtualenv" "python-mysql.connector" "swig")
 	for i in "${pkgs[@]}"
 	do
 	  p=`dpkg -s ${i}`
@@ -643,7 +641,7 @@ if command_exists virtualenv ; then
 		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 		echo "Installing all required python modules"
 		pip -q install --no-cache-dir -r pyRequired-test.txt $CA_STR
-		
+
 		if $USERHEL ; then
 			echo "Installing mysql-connector-python-rf"
 			pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
