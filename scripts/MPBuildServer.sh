@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.0.0
+# Version: 3.0.1
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -12,27 +12,27 @@
 # Simply modify the GITROOT and BUILDROOT variables
 #
 # History:
-# 1.4:    Remove Jetty Support
-#     Added Tomcat 7.0.57
-# 1.5:    Added Tomcat 7.0.63
-# 1.6:    Variableized the tomcat config
-#     removed all Jetty refs
-# 1.6.1:  Now using InstallPyMods.sh script to install python modules
-# 1.6.2:  Fix cp paths
-# 1.6.3:  Updated OpenJDK to 1.8.0
-# 1.6.4:  Updated to install Ubuntu packages
-# 1.6.5:  More ubuntu updates
-# 2.0.0:  Apache HTTPD removed
-#     Single Tomcat Instance, supports webservices and console
-# 2.0.1:  Updated java version check
-# 2.0.2:  Updated linux package requirements
-# 2.0.3:  Added Mac PKG support
-# 2.0.4:  Added compile for Mac MPServerAdmin.app
-#     Removed create archive (aka zip)
-# 2.0.5     Disabled the MPServerAdmin app build, having issue
-#     with the launch services.
-# 3.0.0     Rewritten for new Python Env
-#
+# 1.4:      Remove Jetty Support
+#           Added Tomcat 7.0.57
+# 1.5:      Added Tomcat 7.0.63
+# 1.6:      Variableized the tomcat config
+#           removed all Jetty refs
+# 1.6.1:    Now using InstallPyMods.sh script to install python modules
+# 1.6.2:    Fix cp paths
+# 1.6.3:    Updated OpenJDK to 1.8.0
+# 1.6.4:    Updated to install Ubuntu packages
+# 1.6.5:    More ubuntu updates
+# 2.0.0:    Apache HTTPD removed
+#           Single Tomcat Instance, supports webservices and console
+# 2.0.1:    Updated java version check
+# 2.0.2:    Updated linux package requirements
+# 2.0.3:    Added Mac PKG support
+# 2.0.4:    Added compile for Mac MPServerAdmin.app
+#           Removed create archive (aka zip)
+# 2.0.5:    Disabled the MPServerAdmin app build, having issue
+#           with the launch services.
+# 3.0.0:    Rewritten for new Python Env
+# 3.0.1:    Fixed pip 10.x issues
 #
 # ----------------------------------------------------------------------------
 
@@ -264,6 +264,10 @@ function rmF {
 
 command_exists () {
 	type "$1" &> /dev/null ;
+}
+
+function ver {
+	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
 # ------------------
