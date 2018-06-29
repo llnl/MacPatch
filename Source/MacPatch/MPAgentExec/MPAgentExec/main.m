@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.0.5.1"
+#define APPVERSION	@"3.0.5.5"
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
@@ -235,7 +235,10 @@ int main (int argc, char * argv[])
                 }
                 break;
             case 2:
-                if (isILoadMode == YES) {
+                if (isILoadMode == YES)
+				{
+					// Override reebot allows MPAgentExec to patch the system
+					[controller setOverrideRebootPatchInstalls:YES];
                     [controller setILoadMode:YES];
                 }
                 if (_updateBundle) {
