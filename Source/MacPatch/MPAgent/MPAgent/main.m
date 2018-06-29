@@ -35,7 +35,11 @@
 #include <unistd.h>
 #include "MPDefaultServers.h"
 
-#define APPVERSION	@"3.0.5.1"
+<<<<<<< HEAD
+#define APPVERSION	@"3.0.5.5"
+=======
+#define APPVERSION	@"3.0.6.0"
+>>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
 #define APPNAME		@"MPAgent"
 
 void usage(void);

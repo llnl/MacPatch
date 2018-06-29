@@ -104,8 +104,9 @@
 		NSMutableDictionary *agentDict;
 		logit(lcl_vInfo,@"Running client check in.");
 		@try {
-        NSDictionary *consoleUserDict = [MPSystemInfo consoleUserData];
-        NSDictionary *hostNameDict = [MPSystemInfo hostAndComputerNames];
+        	NSDictionary *consoleUserDict = [MPSystemInfo consoleUserData];
+        	NSDictionary *hostNameDict = [MPSystemInfo hostAndComputerNames];
+			NSDictionary *activeNetData = [MPSystemInfo activeInterfaceData];
         
 			NSDictionary *clientVer = nil;
 			if ([fm fileExistsAtPath:AGENT_VER_PLIST]) {
@@ -126,8 +127,8 @@
 			[agentDict setObject:[hostNameDict objectForKey:@"localHostName"] forKey:@"hostname"];
 			[agentDict setObject:[hostNameDict objectForKey:@"localComputerName"] forKey:@"computername"];
 			[agentDict setObject:[consoleUserDict objectForKey:@"consoleUser"] forKey:@"consoleuser"];
-			[agentDict setObject:[MPSystemInfo getIPAddress] forKey:@"ipaddr"];
-			[agentDict setObject:[MPSystemInfo getMacAddressForInterface:@"en0"] forKey:@"macaddr"];
+			[agentDict setObject:activeNetData[@"ipAddr"] forKey:@"ipaddr"];
+			[agentDict setObject:activeNetData[@"macAddr"] forKey:@"macaddr"];
 			[agentDict setObject:[si g_osVer] forKey:@"osver"];
 			[agentDict setObject:[si g_osType] forKey:@"ostype"];
 			[agentDict setObject:[si g_agentVer] forKey:@"agent_version"];

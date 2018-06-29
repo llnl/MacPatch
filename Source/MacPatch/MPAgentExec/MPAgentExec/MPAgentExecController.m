@@ -626,7 +626,12 @@ done:
     [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:NO];
 }
 
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical
+{
+	return [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:aCritical stayAliveForProvisioning:NO];
+}
+
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical stayAliveForProvisioning:(BOOL)stayAlive
 {
 	if ([self isTaskRunning:kMPPatchUPDATE]) {
 		logit(lcl_vInfo,@"Scan and update patches is already running. Now exiting.");
@@ -634,11 +639,14 @@ done:
 	} else {
 		[self writeTaskRunning:kMPPatchUPDATE];
 	}
+<<<<<<< HEAD
+=======
 	
 	// Check for console user
 	logit(lcl_vInfo, @"Checking for any logged in users.");
 	BOOL hasConsoleUserLoggedIn = TRUE;
-	@try {
+	@try
+	{
 		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
 		if (!hasConsoleUserLoggedIn)
 		{
@@ -652,6 +660,27 @@ done:
 			{
 				// No need to continue, MPLoginAgent will perform the updates
 				// Since no user is logged in.
+				if (stayAlive == YES)
+				{
+					// Wait until system is logged out.
+					while ([self isLocalUserLoggedIn]) {
+						[NSThread sleepForTimeInterval:1.0];
+					}
+					
+					// Add a delay to allow MPLoginAgent to Launch
+					[NSThread sleepForTimeInterval:10.0];
+					
+					BOOL loginAgentIsRunning = YES;
+					while (loginAgentIsRunning == YES)
+					{
+						[NSThread sleepForTimeInterval:2.0];
+						if (![self isloginAgentRunning])
+						{
+							break;
+						}
+					}
+				}
+				
 				return;
 			}
 		}
@@ -659,6 +688,7 @@ done:
 	@catch (NSException * e) {
 		logit(lcl_vInfo, @"Error getting console user status. %@",e);
 	}
+>>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
 
 	// Filter - 0 = All,  1 = Apple, 2 = Third
 	NSArray *updatesArray = nil;
@@ -779,6 +809,39 @@ done:
 	if (iLoadMode == YES) {
 		printf("Updates to install: %d\n", (int)[updatesArray count]);
 	}
+	
+	// Check for console user
+	logit(lcl_vInfo, @"Checking for any logged in users.");
+	BOOL hasConsoleUserLoggedIn = TRUE;
+	@try {
+		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
+		if (overrideRebootPatchInstalls == NO)
+		{
+			if (!hasConsoleUserLoggedIn)
+			{
+				NSError *fileErr = nil;
+				[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+				if (fileErr)
+				{
+					logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
+				}
+				else
+				{
+					// No need to continue, MPLoginAgent will perform the updates
+					// Since no user is logged in.
+					return;
+				}
+			}
+		}
+		else
+		{
+			logit(lcl_vInfo, @"Override reboot patch installs has been enabled. Updates will be applied by MPAgentExec.");
+		}
+	}
+	@catch (NSException * e) {
+		logit(lcl_vInfo, @"Error getting console user status. %@",e);
+	}
+	
 
     // -------------------------------------------
     // Begin Patching Process
@@ -1215,10 +1278,13 @@ done:
 	if (installedPatchesNeedingReboot > 0)
     {
         if (iLoadMode == YES) {
-			logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
-			goto done;
+			//logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
+			logit(lcl_vInfo,@"Patches have been installed that require a reboot. System is now rebooting.");
+			[self removeTaskRunning:kMPPatchUPDATE];
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 		}
-		if (hasConsoleUserLoggedIn == NO) {
+		if (hasConsoleUserLoggedIn == NO)
+		{
 			if ([_defaults objectForKey:@"Reboot"]) {
 				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
@@ -2553,6 +2619,18 @@ done:
 - (void)downloadError
 {
     logit(lcl_vError,@"Download Had An Error");
+}
+
+- (BOOL)isloginAgentRunning
+{
+	BOOL result = NO;
+	NSArray *procList = [MPSystemInfo bsdProcessList];
+	for (NSDictionary *p in procList) {
+		if ([[p objectForKey:@"processName"] isEqualToString:@"MPLoginAgent"]) {
+			result = YES;
+		}
+	}
+	return result;
 }
 
 #pragma mark - Proxy Methods

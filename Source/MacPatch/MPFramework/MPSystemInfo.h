@@ -31,11 +31,16 @@
 + (NSString *)clientUUID;
 
 // Networking
-+ (NSString *)getActiveInterface;
-+ (NSString *)getMacAddressForActiveInterface;
-+ (NSString *)getMacAddressForInterface:(NSString *)bsdIfName;
-+ (NSString *)getIPAddress;
-+ (NSString *)getIPAddressForInterface:(NSString *)bsdIfName;
++ (NSString *)getActiveInterface __deprecated;
++ (NSString *)getMacAddressForActiveInterface __deprecated;
++ (NSString *)getMacAddressForInterface:(NSString *)bsdIfName __deprecated;
++ (NSString *)getIPAddress __deprecated;
++ (NSString *)getIPAddressForInterface:(NSString *)bsdIfName __deprecated;
+
+// NEW Network collection methods
++ (NSString *)getMacAddressForInterfaceUsingC:(NSString *)interface;
+// Will Return Interface, MAC address, IP Address
++ (NSDictionary *)activeInterfaceData;
 
 // System Info
 + (NSDictionary *)consoleUserData;
