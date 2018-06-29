@@ -330,7 +330,8 @@ if $USELINUX; then
   if $USERHEL; then
 	# Check if needed packges are installed or install
 	# "mysql-connector-python"
-	pkgs=("gcc" "gcc-c++" "java-1.8.0-openjdk" "java-1.8.0-openjdk-devel" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig")
+	pkgs=("gcc" "gcc-c++" "java-1.8.0-openjdk" "java-1.8.0-openjdk-devel" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release"
+	 "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig")
 
 	for i in "${pkgs[@]}"
 	do
@@ -343,7 +344,8 @@ if $USELINUX; then
 
   elif $USEUBUNTU; then
 	#statements
-	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless" "python-setuptools" "python-dev" "python-pip" "swig")
+	pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "openjdk-8-jdk" "openjdk-8-jdk-headless"
+	 "python-setuptools" "python-dev" "python-pip" "python-mysql.connector" "swig")
 	for i in "${pkgs[@]}"
 	do
 	  p=`dpkg -s ${i}`
@@ -380,7 +382,7 @@ do
 		sleep 2
 		echo
 		echo " - Trying ${p}, python module again."
-		pip install --egg --quiet --upgrade ${p}
+		pip -q install --upgrade ${p}
 		if [ $? != 0 ] ; then
 			echo " Error installing ${p}"
 		fi
@@ -392,9 +394,9 @@ do
 
 	if (( $minorVer >= 11 )); then
 		# Needed to install when SIP is active
-		pip install --egg --quiet ${p}
+		pip -q install ${p}
 	else
-		pip install --egg --quiet --no-cache-dir --upgrade ${p}
+		pip -q install --no-cache-dir --upgrade ${p}
 	fi
 
 	if [ $? != 0 ] ; then
@@ -604,8 +606,18 @@ if command_exists virtualenv ; then
 			exit 1
 		fi
 	fi
+	if $USELINUX ; then
+		if $USEUBUNTU; then
+			# Bug With Ubuntu, need to include site packages,
+			# can install mysql-connector other than using apt
+			virtualenv --system-site-packages env
+		else
+			virtualenv --no-site-packages env
+		fi
+	else
+		virtualenv --no-site-packages env
+	fi
 
-	virtualenv --no-site-packages env
 	source env/bin/activate
 
 	CA_STR=""
