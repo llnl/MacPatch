@@ -628,6 +628,8 @@ if command_exists virtualenv ; then
 		pip -q install --no-cache-dir -r pyRequired-test.txt $CA_STR
 	fi
 
+	pip -q install --egg mysql-connector-python-rf --no-cache-dir $CA_STR
+
 	deactivate
 else
 	echo "virtualenv was not found. Please create virtual env."
