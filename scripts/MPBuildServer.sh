@@ -634,16 +634,23 @@ if command_exists virtualenv ; then
 		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
 		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequired.txt $CA_STR
+
+		echo "Installing mysql-connector-python-rf"
+		pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
 	else
 		# Install M2Crypto first
 		echo "Installing m2crypto"
 		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 		echo "Installing all required python modules"
 		pip -q install --no-cache-dir -r pyRequired-test.txt $CA_STR
+		
+		if $USERHEL ; then
+			echo "Installing mysql-connector-python-rf"
+			pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
+		fi
 	fi
 
-	echo "Installing mysql-connector-python-rf"
-	pip -q install mysql-connector-python-rf --no-cache-dir $CA_STR
+
 
 	deactivate
 else
