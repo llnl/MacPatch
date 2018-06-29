@@ -87,6 +87,7 @@ TMP_DIR="${MPBASE}/.build/tmp"
 SRC_DIR="${MPSERVERBASE}/conf/src/server"
 TOMCAT_SW="NA"
 OWNERGRP="79:70"
+CA_CERT="NA"
 
 # PKG Variables
 MP_MAC_PKG=false
