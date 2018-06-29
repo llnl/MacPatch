@@ -32,7 +32,7 @@
 # 2.0.5:    Disabled the MPServerAdmin app build, having issue
 #           with the launch services.
 # 3.0.0:    Rewritten for new Python Env
-# 3.0.1:    Fixed pip 10.x issues
+# 3.0.1:    Fixed pip 10.x issues and Ubuntu issues
 #
 # ----------------------------------------------------------------------------
 
@@ -105,7 +105,7 @@ if [[ $platform == 'linux' ]]; then
   LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`
   if [[ $LNXDIST == *"Red"*  || $LNXDIST == *"Cent"* ]]; then
 	USERHEL=true
-  else
+  elif [[ $LNXDIST == "Ubuntu" ]]; then
 	USEUBUNTU=true
   fi
 
@@ -379,7 +379,12 @@ if $USELINUX; then
 	fi
 fi
 
-pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
+if $USEUBUNTU ; then
+	pip_mods=( "setuptools" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel")
+else
+	pip_mods=( "setuptools" "virtualenv" "pycrypto" "argparse" "biplist" "python-crontab" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf")
+fi
+
 for p in "${pip_mods[@]}"
 do
   echo " - Installing ${p}, python module."
