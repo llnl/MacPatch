@@ -1,7 +1,7 @@
 //
 //  MPSystemInfo.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -31,16 +31,11 @@
 + (NSString *)clientUUID;
 
 // Networking
-+ (NSString *)getActiveInterface __deprecated;
-+ (NSString *)getMacAddressForActiveInterface __deprecated;
-+ (NSString *)getMacAddressForInterface:(NSString *)bsdIfName __deprecated;
-+ (NSString *)getIPAddress __deprecated;
-+ (NSString *)getIPAddressForInterface:(NSString *)bsdIfName __deprecated;
-
-// NEW Network collection methods
-+ (NSString *)getMacAddressForInterfaceUsingC:(NSString *)interface;
-// Will Return Interface, MAC address, IP Address
-+ (NSDictionary *)activeInterfaceData;
++ (NSString *)getActiveInterface;
++ (NSString *)getMacAddressForActiveInterface;
++ (NSString *)getMacAddressForInterface:(NSString *)bsdIfName;
++ (NSString *)getIPAddress;
++ (NSString *)getIPAddressForInterface:(NSString *)bsdIfName;
 
 // System Info
 + (NSDictionary *)consoleUserData;

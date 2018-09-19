@@ -1,7 +1,7 @@
 //
 //  MPInv.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,6 +24,7 @@
  */
 
 #import "MPInv.h"
+#import "MPSettings.h"
 #import "NSDirectoryServices.h"
 #import "FMDatabase.h"
 #import "FMDatabaseAdditions.h"
@@ -40,15 +41,21 @@
 #import "MPInventoryPlugin.h"
 #import "InventoryPlugin.h"
 #import "MPFirmware.h"
+#import "LocalAdminAccounts.h"
+#import "SmartCardReaderList.h"
+
 
 #define kSP_DATA_Dir			@"/private/tmp/.mpData"
 #define kSP_APP                 @"/usr/sbin/system_profiler"
-#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,SINetworkInfo,AppStoreApps,MPServerList,MPServerListInfo,Plugins,FirmwarePasswordInfo"
+#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,SINetworkInfo,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders"
 #define kTasksPlist             @"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist"
 #define kInvHashData            @"/Library/MacPatch/Client/Data/.gov.llnl.mp.inv.data.plist"
 
 
 @interface MPInv ()
+{
+    MPSettings *settings;
+}
 
 - (NSString *)hashForArray:(NSArray *)aArray;
 - (BOOL)hasInvDataChanged:(NSString *)aInvType hash:(NSString *)aHash;
@@ -60,15 +67,15 @@
 @implementation MPInv
 
 @synthesize invResults;
-@synthesize cUUID;
 
 #pragma mark -
 
 - (id)init 
 {
 	self = [super init];
-	if (self) {
-		[self setCUUID:[MPSystemInfo clientUUID]];
+	if (self)
+    {
+        settings = [MPSettings sharedInstance];
 	}	
 	return self;
 }
@@ -77,32 +84,28 @@
 
 - (BOOL)hasInvDataInDB
 {
-    BOOL res = NO;
-    NSError *err = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [[MPAgent sharedInstance] g_clientKey];
-    res = [mpws clientHasInvDataInDB:&err];
-    if (err) {
-        logit(lcl_vError,@"%@",err.localizedDescription);
+    NSError *error = nil;
+    BOOL result = NO;
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    result = [rest getAgentHasInventoryDataInDB:&error];
+    if (error) {
+        logit(lcl_vError,@"%@",error.localizedDescription);
         return NO;
     }
-
-    return res;
+    return result;
 }
 
-- (int)postInvDataState
+- (BOOL)postInvDataState
 {
-    int res = -1;
-    NSError *err = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [[MPAgent sharedInstance] g_clientKey];
-    res = [mpws postClientHasInvData:&err];
-    if (err) {
-        logit(lcl_vError,@"%@",err.localizedDescription);
-        return 1;
+    NSError *error = nil;
+    BOOL result = NO;
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    result = [rest postAgentHasInventoryData:&error];
+    if (error) {
+        logit(lcl_vError,@"%@",error.localizedDescription);
+        return NO;
     }
-
-    return res;
+    return result;
 }
 
 - (int)collectInventoryData
@@ -247,7 +250,11 @@
                 tmpArr = [self parseAgentServerInfo];
             } else if ([[item objectForKey:@"type"] isEqual:@"FirmwarePasswordInfo"]) {
                 tmpArr = [self parseFirmwarePasswordData];
-            }
+			} else if ([[item objectForKey:@"type"] isEqual:@"LocalAdminAccounts"]) {
+				tmpArr = [self parseLocalAdminAccounts];
+			} else if ([[item objectForKey:@"type"] isEqual:@"SmartCardReaders"]) {
+				tmpArr = [self parseSmartCardReaders];
+			}
 
 			if (tmpArr) {
                 //
@@ -304,9 +311,9 @@
 
 - (BOOL)processInventoryData:(NSArray *)dataArray inventoryNode:(NSDictionary *)invNode
 {
-    MPDataMgr   *dataMgr = [[MPDataMgr alloc] init];
-    NSString    *dataMgrJSON;
-    NSString    *invCollectionHash;
+    MPDataMgr    *dataMgr = [[MPDataMgr alloc] init];
+    NSDictionary *dataMgrData;
+    NSString     *invCollectionHash;
     
     // Gen a hash for the inv results, if it has not changed dont post it.
     invCollectionHash = [self hashForArray:dataArray];
@@ -315,15 +322,16 @@
         return YES;
     }
     
-    dataMgrJSON = [dataMgr GenJSONForDataMgr:dataArray
+    dataMgrData = [dataMgr GenDataForDataMgr:dataArray
                                      dbTable:[invNode objectForKey:@"wstype"]
                                dbTablePrefix:@"mpi_"
                                dbFieldPrefix:@"mpa_"
                                 updateFields:@"rid,cuuid"
                                    deleteCol:@"cuuid"
-                              deleteColValue:[self cUUID]];
+                              deleteColValue:[settings ccuid]];
     
-    if ([self sendResultsToWebService:dataMgrJSON]) {
+    if ([self sendResultsToWebService:dataMgrData])
+    {
         logit(lcl_vInfo,@"Results for %@ posted.",[invNode objectForKey:@"wstype"]);
         [self writeInvDataHashToFile:[invNode objectForKey:@"type"] hash:invCollectionHash];
     } else {
@@ -333,22 +341,26 @@
     return YES;
 }
 
-- (BOOL)sendResultsToWebService:(NSString *)aDataMgrData
+- (BOOL)sendResultsToWebService:(NSDictionary *)aDataMgrData
 {
-	BOOL result = NO;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [[MPAgent sharedInstance] g_clientKey];
-    NSError *wsErr = nil;
-    result = [mpws postDataMgrData:aDataMgrData error:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"Results posted to webservice returned false.");
-        logit(lcl_vError,@"%@",wsErr.localizedDescription);
+    MPHTTPRequest *req;
+    MPWSResult *result;
+    
+    req = [[MPHTTPRequest alloc] init];
+    
+    NSString *urlPath = [@"/api/v1/client/inventory" stringByAppendingPathComponent:[settings ccuid]];
+    result = [req runSyncPOST:urlPath body:aDataMgrData];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"AppStore Data post, returned true.");
+        logit(lcl_vDebug,@"AppStore Data Result: %@",result.result);
     } else {
-        logit(lcl_vInfo,@"Results posted to webservice.");
-        result = YES;
+        logit(lcl_vError,@"AppStore Data post, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
+        return NO;
     }
     
-	return result;
+    return YES;
 }
 
 - (NSString *)getProfileData:(NSString *)profileType error:(NSError **)error
@@ -381,7 +393,8 @@
 	}
 	
 	// If File Exists then delete it
-	if ([fm fileExistsAtPath:[kSP_DATA_Dir stringByAppendingPathComponent:spFileName] isDirectory:NO]) {
+	isDir = NO;
+	if ([fm fileExistsAtPath:[kSP_DATA_Dir stringByAppendingPathComponent:spFileName] isDirectory:&isDir] && isDir) {
         [fm removeItemAtPath:[kSP_DATA_Dir stringByAppendingPathComponent:spFileName] error:NULL];
 	}
 
@@ -1470,6 +1483,19 @@ done:
     return _groups;
 }
 
+- (NSArray *)parseLocalAdminAccounts
+{
+	LocalAdminAccounts *la = [[LocalAdminAccounts alloc] init];
+	NSArray *_groups = [la gatherLocalAdminAccounts];
+	if (_groups.count <= 0)
+	{
+		logit(lcl_vError,@"Error, no admin acounts found in query.");
+		return nil;
+	}
+	
+	return _groups;
+}
+
 - (NSArray *)parseFileVaultInfo
 {
     MPFileVaultInfo *fv = [[MPFileVaultInfo alloc] init];
@@ -1713,6 +1739,14 @@ done:
     
     NSArray *res = [NSArray arrayWithObject:(NSDictionary *)fwDict];
     return res;
+}
+
+- (NSArray *)parseSmartCardReaders
+{
+	NSArray *result;
+	SmartCardReaderList *scl = [[SmartCardReaderList alloc] init];
+	result = [scl getSmartCardReaders];
+	return result;
 }
 
 #pragma mark Helper

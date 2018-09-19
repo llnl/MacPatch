@@ -1,7 +1,7 @@
 //
 //  NSString+Helper.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -214,16 +214,7 @@
 		range = [cleanedString rangeOfCharacterFromSet:invalidXMLCharacterSet];
 	}
 	
-	//
-    NSArray *cleanFromString = [NSArray arrayWithObjects:@"&quot;",@"&lt;",@"&amp;",@"&gt;",@"&apos;",nil];
-    /*
-	cleanedString = (NSMutableString *)[cleanedString replaceAll:@"&quot;" replaceString:@""];
-	cleanedString = (NSMutableString *)[cleanedString replaceAll:@"&lt;" replaceString:@""];
-	cleanedString = (NSMutableString *)[cleanedString replaceAll:@"&amp;" replaceString:@""];
-	cleanedString = (NSMutableString *)[cleanedString replaceAll:@"&gt;" replaceString:@""];
-	cleanedString = (NSMutableString *)[cleanedString replaceAll:@"&apos;" replaceString:@""];
-     */
-    
+    NSArray *cleanFromString = @[@"&quot;",@"&lt;",@"&amp;",@"&gt;",@"&apos;"];
     NSString *cleanString = [cleanedString replaceAllUsingObjects:cleanFromString replaceString:@""];
 	return cleanString;
 }
@@ -241,6 +232,30 @@
     }
     
     return NO;
+}
+
+- (BOOL)isBase64String
+{
+	NSString *input = [[self componentsSeparatedByCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsJoinedByString:@""];
+	if ([input length] % 4 == 0)
+	{
+		static NSCharacterSet *invertedBase64CharacterSet = nil;
+		if (invertedBase64CharacterSet == nil) {
+			invertedBase64CharacterSet = [[NSCharacterSet characterSetWithCharactersInString:@"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/="] invertedSet];
+		}
+		return [input rangeOfCharacterFromSet:invertedBase64CharacterSet options:NSLiteralSearch].location == NSNotFound;
+	}
+	return NO;
+}
+
+- (NSString *)stringByTrimmingWhitespaceFromFront
+{
+	const char *cStringValue = [self UTF8String];
+	
+	int i;
+	for (i = 0; cStringValue[i] != '\0' && isspace(cStringValue[i]); i++);
+	
+	return [self substringFromIndex:i];
 }
 
 @end

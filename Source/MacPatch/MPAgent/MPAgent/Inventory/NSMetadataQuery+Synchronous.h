@@ -3,7 +3,7 @@
 //  TestPercent
 //
 //  Created by Heizer, Charles on 7/30/14.
-//  Copyright (c) 2017 Lawrence Livermore National Laboratory. All rights reserved.
+//  Copyright (c) 2018 Lawrence Livermore National Laboratory. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>

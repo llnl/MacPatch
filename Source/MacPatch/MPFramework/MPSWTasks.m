@@ -1,7 +1,7 @@
 //
 //  MPSWTasks.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,17 +24,18 @@
  */
 
 #import "MPSWTasks.h"
-#import "MPWebServices.h"
+#import "MPRESTfull.h"
+#import "MPSettings.h"
 
-@interface MPSWTasks () 
+@interface MPSWTasks ()
+{
+    MPSettings *settings;
+}
 
 @end
 
 @implementation MPSWTasks
 
-@synthesize mpHostConfigInfo;
-
-@synthesize defaults;
 @synthesize groupHash;
 @synthesize groupName;
 
@@ -48,17 +49,15 @@
     self = [super init];
     if (self)
     {
-        MPDefaults *d = [[MPDefaults alloc] init];
-        [self setDefaults:[d defaults]];
-
-        if (aGroup) {
+        settings = [MPSettings sharedInstance];
+        
+        if (aGroup)
+        {
             [self setGroupName:aGroup];
-        } else {
-            if ([defaults objectForKey:@"SWDistGroup"]) {
-                [self setGroupName:[defaults objectForKey:@"SWDistGroup"]];
-            } else {
-                [self setGroupName:@"NA"];
-            }
+        }
+        else
+        {
+            [self setGroupName:settings.agent.swDistGroup];
         }    
         [self setGroupHash:aHash];
     }
@@ -71,22 +70,20 @@
     return;
 }
 
-- (id)getSWTasksForGroupFromServer:(NSError **)err
+- (NSArray *)getSoftwareTasksForGroup:(NSError **)err
 {
+    NSArray *result = [NSArray array];
     NSError *error = nil;
-    id result = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    result = [mpws getSWTasksForGroup:self.groupName error:&error];
-    if (error) {
+    MPRESTfull *mprest = [[MPRESTfull alloc] init];
+    result = [mprest getSoftwareTasksForGroup:self.groupName error:&error];
+    if (error)
+    {
         if (err != NULL) {
             *err = error;
         } else {
             qlerror(@"%@",error.localizedDescription);
         }
-        return @"NA";
     }
-    
-    qldebug(@"Result: %@",result);
     return result;
 }
 
@@ -102,19 +99,17 @@
     [params setObject:resultString forKey:@"ResultString"];
     [params setObject:@"i" forKey:@"Action"];
 
-
+    BOOL result = NO;
     NSError *error = nil;
-    int result = -1;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    result = [mpws postSWInstallResults:(NSDictionary *)params error:&error];
-    if (error)
-    {
+    MPRESTfull *mprest = [[MPRESTfull alloc] init];
+    result = [mprest postSoftwareInstallResults:(NSDictionary *)params error:&error];
+    if (error) {
         qlerror(@"%@",error.localizedDescription);
         return 1;
     }
-
-    qldebug(@"Result [postSWInstallResults]: %d",result);
-    return result;
+    
+    qldebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
+    return (result ? 0:1);
 }
 
 - (int)postUnInstallResults:(int)resultNo resultText:(NSString *)resultString task:(NSDictionary *)taskDict
@@ -130,18 +125,17 @@
     [params setObject:@"u" forKey:@"Action"];
 
 
+    BOOL result = NO;
     NSError *error = nil;
-    int result = -1;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    result = [mpws postSWInstallResults:(NSDictionary *)params error:&error];
-    if (error)
-    {
+    MPRESTfull *mprest = [[MPRESTfull alloc] init];
+    result = [mprest postSoftwareInstallResults:(NSDictionary *)params error:&error];
+    if (error) {
         qlerror(@"%@",error.localizedDescription);
         return 1;
     }
-
-    qldebug(@"Result [postUnInstallResults]: %d",result);
-    return result;
+    
+    qldebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
+    return (result ? 0:1);
 }
 
 @end

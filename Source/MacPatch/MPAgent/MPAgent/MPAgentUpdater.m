@@ -1,7 +1,7 @@
 //
 //  MPAgentUpdater.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -29,6 +29,7 @@
 @interface MPAgentUpdater ()
 {
     NSFileManager *fm;
+    MPSettings *settings;
 }
 
 @property (nonatomic,readwrite) NSString *agentUpdaterPath;
@@ -49,6 +50,7 @@
     if (self) {
         self.agentUpdaterPath = [MP_ROOT stringByAppendingPathComponent:@"Updater/MPAgentUp2Date"];
         fm = [NSFileManager defaultManager];
+        settings = [MPSettings sharedInstance];
     }
     return self;
 }
@@ -222,16 +224,32 @@
         }
     }
     
-    // Check for updates
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [[MPAgent sharedInstance] g_clientKey];
-    NSError *wsErr = nil;
-    NSDictionary *result = [mpws getAgentUpdaterUpdates:verString error:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"%@",wsErr);
+    NSDictionary *result = [self getAgentUpdateDataFromWS:verString];
+    return result;
+}
+
+# pragma mark Web Service Request
+- (NSDictionary *)getAgentUpdateDataFromWS:(NSString *)version
+{
+    NSDictionary *data;
+    MPHTTPRequest *req;
+    MPWSResult *result;
+
+    req = [[MPHTTPRequest alloc] init];
+
+    NSString *urlPath = [@"/api/v2/agent/updater" stringByAppendingFormat:@"/%@/%@",settings.ccuid, version];
+    result = [req runSyncGET:urlPath];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"Agent Settings data, returned true.");
+        data = result.result[@"data"];
+    } else {
+        logit(lcl_vError,@"Agent Settings data, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
         return nil;
     }
-    return result;
+    
+    return data;
 }
 
 @end

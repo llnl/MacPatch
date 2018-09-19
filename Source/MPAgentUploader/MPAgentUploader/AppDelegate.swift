@@ -31,6 +31,10 @@ import Cocoa
 import Alamofire
 import LogKit
 var log = LXLogger()
+
+//import SwiftyBeaver
+//let log = SwiftyBeaver.self
+
 var MPAlamofire = Alamofire.SessionManager()
 
 @NSApplicationMain
@@ -39,10 +43,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     let defaults = UserDefaults.standard
     
-    func applicationDidFinishLaunching(_ aNotification: Notification) {
-        // Insert code here to initialize your application
-
+    func applicationDidFinishLaunching(_ aNotification: Notification)
+	{
         log = LXLogger(endpoints: [
+            
             LXRotatingFileEndpoint(
                 baseURL: URL(fileURLWithPath: logPath),
                 numberOfFiles: 7,
@@ -54,7 +58,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 })
             )
         ])
-
+        
         NotificationCenter.default.post(name: Notification.Name("setLogLevel"), object: nil)
     }
 
@@ -63,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     lazy var preferencesWindowController: PreferencesWindowController  = {
-        let wcSB = NSStoryboard(name: "Preferences", bundle: Bundle.main)
+        let wcSB = NSStoryboard(name: NSStoryboard.Name(rawValue: "Preferences"), bundle: Bundle.main)
         // or whichever bundle
         return wcSB.instantiateInitialController() as! PreferencesWindowController
     }()
@@ -76,15 +80,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @IBAction func showLogFileInConsole(_ sender: NSObject?)
     {
         let logFile = NSHomeDirectory().stringByAppendingPathComponent(path: "Library/Logs/1_AgentUploader.log")
-        NSWorkspace.shared().openFile(logFile, withApplication: "Console")
+        NSWorkspace.shared.openFile(logFile, withApplication: "Console")
         
     }
+	
+	@IBAction func resetAuthInfo(_ sender: NSObject?)
+	{
+		NotificationCenter.default.post(name: Notification.Name("ResetAuthToken"), object: nil)
+	}
     
     @IBAction func pressed(sender: AnyObject) {
-        if let window = NSApplication.shared().mainWindow {
+        if let window = NSApplication.shared.mainWindow {
             if let viewController = window.contentViewController as? ViewController {
                 // do stuff
-                print("Hello")
                 viewController.displayMigrationPlistSheet()
             }
         }

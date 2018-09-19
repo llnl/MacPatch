@@ -1,7 +1,7 @@
 //
 //  MPWebServices.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,15 +24,13 @@
  */
 
 #import "MPWebServices.h"
-#import "MPDefaults.h"
 #import "MPFailedRequests.h"
-
+#import "MPSettings.h"
 
 @interface MPWebServices ()
-
-@property (strong) NSString *_cuuid;
-@property (strong) NSString *_osver;
-@property (strong) NSDictionary *_defaults;
+{
+    MPSettings *settings;
+}
 
 - (void)writePatchGroupCacheFileData:(NSString *)aData;
 
@@ -47,9 +45,6 @@
 
 @implementation MPWebServices
 
-@synthesize _cuuid;
-@synthesize _osver;
-@synthesize _defaults;
 @synthesize clientKey;
 
 -(id)init
@@ -57,24 +52,8 @@
 	self = [super init];
 	if (self)
     {
-        [self set_cuuid:[MPSystemInfo clientUUID]];
-        [self set_osver:[[MPSystemInfo osVersionOctets] objectForKey:@"minor"]];
-        MPDefaults *d = [[MPDefaults alloc] init];
-        [self set_defaults:[d defaults]];
+        settings = [MPSettings sharedInstance];
         [self setClientKey:@"NA"];
-	}
-    return self;
-}
-
--(id)initWithDefaults:(NSDictionary *)aDefaults
-{
-	self = [super init];
-	if (self)
-    {
-        [self setClientKey:@"NA"];
-        [self set_cuuid:[MPSystemInfo clientUUID]];
-        [self set_osver:[[MPSystemInfo osVersionOctets] objectForKey:@"minor"]];
-        [self set_defaults:aDefaults];
 	}
     return self;
 }
@@ -376,7 +355,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:aRegKey forKey:@"registrationKey"];
     [params setObject:[regPayload objectForKey:@"cKey"] forKey:@"clientKey"];
     [params setObject:[regPayload objectForKey:@"CPubKeyPem"] forKey:@"clientPubKeyPem"];
@@ -450,7 +429,7 @@
     
     qlinfo(@"Write patch group hash and data to filesystem.");
     
-    [patchGroupCacheFileData setObject:patchGroupInfo forKey:[_defaults objectForKey:@"PatchGroup"]];
+    [patchGroupCacheFileData setObject:patchGroupInfo forKey:settings.agent.patchGroup];
     [patchGroupCacheFileData writeToFile:patchGroupCacheFile atomically:YES];
 
 #if !__has_feature(objc_arc)
@@ -529,7 +508,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:@"SAV" forKey:@"avAgent"];
     [params setObject:_theArch forKey:@"theArch"];
     NSData *res = [self requestWithMethodAndParams:@"GetAVDefsDate" params:(NSDictionary *)params error:&error];
@@ -540,7 +519,7 @@
         } else {
             qlerror(@"%@",error.localizedDescription);
         }
-        return NO;
+        return @"";
     }
 
     // Parse Main JSON Result
@@ -574,7 +553,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:@"SAV" forKey:@"avAgent"];
     [params setObject:_theArch forKey:@"theArch"];
     NSData *res = [self requestWithMethodAndParams:@"GetAVDefsFile" params:(NSDictionary *)params error:&error];
@@ -677,7 +656,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:@"json" forKey:@"type"];
     [params setObject:jData forKey:@"data"];
     [params setObject:@"NA" forKey:@"signature"];
@@ -729,7 +708,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:aStatus forKey:@"action"];
     [params setObject:[[MPSystemInfo osVersionInfo] objectForKey:@"ProductUserVisibleVersion"] forKey:@"os"];
     [params setObject:Label forKey:@"label"];
@@ -769,7 +748,7 @@
     NSError *error = nil;
     MPJsonResult *jres = [[MPJsonResult alloc] init];
     // Request, convert params to json
-    NSDictionary *params = @{@"clientID":self._cuuid, @"action":aStatus,@"os": [[MPSystemInfo osVersionInfo] objectForKey:@"ProductUserVisibleVersion"],
+    NSDictionary *params = @{@"clientID":settings.ccuid, @"action":aStatus,@"os": [[MPSystemInfo osVersionInfo] objectForKey:@"ProductUserVisibleVersion"],
                              @"label":Label, @"migrationID":migrationID};
 
     NSString *jData = [jres serializeJSONDataAsString:params error:&error];
@@ -782,7 +761,7 @@
         return 1;
     }
     
-    NSString *uri = [NSString stringWithFormat:@"/api/v1/provisioning/migration/%@",[MPSystemInfo clientUUID]];
+    NSString *uri = [NSString stringWithFormat:@"/api/v1/provisioning/migration/%@",settings.ccuid];
     id res = [self restPostRequestforURI:uri body:jData resultType:@"string" error:&error];
     qldebug(@"[postOSMigrationStatusNew] %@",res);
     if (error) {
@@ -894,8 +873,66 @@
 
 #pragma mark Convience methods
 
+/*
+- (void)runCheckIn
+{
+    NSDictionary *agentData = [self agentData];
+    if (!agentData)
+    {
+        logit(lcl_vError,@"Agent data is nil, can not post client checkin data.");
+        return;
+    }
+    
+    MPWSResult *result;
+    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+    NSString *urlPath = [@"/api/v1/client/checkin" stringByAppendingPathComponent:[si g_cuuid]];
+    result = [req runSyncPOST:urlPath body:agentData];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"Running client base checkin, returned true.");
+        // Process Setting Revisions
+        [self updateGroupSettings:result.result];
+    } else {
+        logit(lcl_vError,@"Running client base checkin, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
+    }
+    
+    logit(lcl_vInfo,@"Running client check in completed.");
+    
+    return;
+}
+*/
+
+- (NSString *)patchGroupContentUrlPath
+{
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/group/%@",settings.ccuid];
+    return urlPath;
+}
+
+- (NSDictionary *)getPatchGroupContentCLI:(NSError **)err
+{
+    MPWSResult *result;
+    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+    NSString *urlPath = [self patchGroupContentUrlPath];
+    result = [req runSyncGET:urlPath];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        // Process Results
+        logit(lcl_vDebug,@"Patch Group Patches: %@",result.result);
+        return result.result;
+    } else {
+        logit(lcl_vError,@"Running client base checkin, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
+    }
+    
+    logit(lcl_vInfo,@"Running client check in completed.");
+    
+    return nil;
+}
+
 - (NSDictionary *)getPatchGroupContent:(NSError **)err
 {
+    /*
     NSError *wsErr = nil;
     NSString *uri;
     NSData *reqData;
@@ -903,7 +940,7 @@
     
     @try
     {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/%@/%@",[_defaults objectForKey:@"PatchGroup"],[MPSystemInfo clientUUID]];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/%@/%@",[_defaults objectForKey:@"PatchGroup"],settings.ccuid];
         reqData = [self getRequestWithURIforREST:uri error:&wsErr];
         if (wsErr) {
             if (err != NULL) *err = wsErr;
@@ -942,6 +979,7 @@
     }
     // Should not get here
     return nil;
+     */
 }
 
 - (NSString *)getPatchGroupContentRev:(NSError **)err
@@ -953,7 +991,7 @@
     
     @try
     {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/rev/%@/%@",[_defaults objectForKey:@"PatchGroup"],[MPSystemInfo clientUUID]];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/rev/%@/%@", settings.agent.patchGroup, settings.ccuid];
         reqData = [self getRequestWithURIforREST:uri error:&wsErr];
         if (wsErr) {
             if (err != NULL) *err = wsErr;
@@ -990,7 +1028,7 @@
     
     @try
     {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/critical/%@",[MPSystemInfo clientUUID]];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/group/critical/%@",settings.ccuid];
         reqData = [self getRequestWithURIforREST:uri error:&wsErr];
         if (wsErr) {
             if (err != NULL) *err = wsErr;
@@ -1022,7 +1060,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/server/list/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/server/list/%@",settings.ccuid];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1032,7 +1070,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/server/list/version/%@/%@",aListID,[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/server/list/version/%@/%@",aListID,settings.ccuid];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1042,7 +1080,7 @@
 {
     NSError *error = nil;
     id result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/inventory/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/inventory/%@",settings.ccuid];
     result = [self restPostRequestforURI:aURI body:aDataMgrJSON resultType:@"string" error:&error];
     if (err != NULL) *err = error;
     if (([result isEqualToString:@""] || (result == nil)) && !error) {
@@ -1059,25 +1097,20 @@
 
 - (NSArray *)getCustomPatchScanListWithSeverity:(NSString *)aSeverity error:(NSError **)err
 {
-    NSString *patchState;
-    if ([[_defaults allKeys] containsObject:@"PatchState"] == YES) {
-        patchState = [NSString stringWithString:[_defaults objectForKey:@"PatchState"]];
-    } else {
-        patchState = @"Production";
-    }
+    NSString *patchState = @"Production";
     
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:patchState forKey:@"state"];
     
     NSString *uri;
     if (!aSeverity) {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scanlist/%@/%@",[MPSystemInfo clientUUID], patchState];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scanlist/%@/%@",settings.ccuid, patchState];
     } else {
         // Set OS Level *, any OS
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scanlist/%@/%@/*/%@",[MPSystemInfo clientUUID], patchState, aSeverity];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scanlist/%@/%@/*/%@",settings.ccuid, patchState, aSeverity];
     }
     NSDictionary *res = [self restGetRequestforURI:uri resultType:@"json" error:&error];
     if (error)
@@ -1131,9 +1164,9 @@
     NSString *uri;
     // 1 = Apple, 2 = Third
     if (aType == 0) {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scan/1/%@",[MPSystemInfo clientUUID]];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scan/1/%@",settings.ccuid];
     } else if ( aType == 1 ) {
-        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scan/2/%@",[MPSystemInfo clientUUID]];
+        uri = [NSString stringWithFormat:@"/api/v1/client/patch/scan/2/%@",settings.ccuid];
     } else {
         //Err
         uri = [NSString stringWithFormat:@"/api/v1/client/patch/scan/3/<string:cuuid>"];
@@ -1161,7 +1194,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/update/%@/%@/%@",[MPSystemInfo clientUUID], curAppVersion, curBuildVersion];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/update/%@/%@/%@",settings.ccuid, curAppVersion, curBuildVersion];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1171,7 +1204,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/updater/%@/%@",[MPSystemInfo clientUUID], curAppVersion];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/updater/%@/%@",settings.ccuid, curAppVersion];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1183,28 +1216,7 @@
     
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sus/catalogs/list/%@/%@/%@",[os objectForKey:@"major"],[os objectForKey:@"minor"],[MPSystemInfo clientUUID]];
-    result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
-    if (err != NULL) *err = error;
-    return result;
-}
-
-- (NSDictionary *)getSUSServerListVersion:(NSString *)aVersion listid:(NSString *)aListID error:(NSError **)err
-{
-    NSString *susListID = @"1";
-    if ([_defaults objectForKey:@"SUSListID"])
-    {
-        if ([[_defaults objectForKey:@"SUSListID"] isKindOfClass:[NSString class]]) {
-            susListID = [_defaults objectForKey:@"SUSListID"];
-        } else if ([[_defaults objectForKey:@"SUSListID"] isKindOfClass:[NSNumber class]]) {
-            susListID = [[_defaults objectForKey:@"SUSListID"] stringValue];
-        }
-    }
-    //susListID = [NSString stringWithFormat:@"/%@",[susListID copy]];
-    
-    NSError *error = nil;
-    NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sus/list/version/%@/%@",[MPSystemInfo clientUUID],susListID];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sus/catalogs/list/%@/%@/%@",[os objectForKey:@"major"],[os objectForKey:@"minor"],settings.ccuid];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1215,7 +1227,7 @@
     NSError *error = nil;
     NSString *result = nil;
     id raw_res;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/inventory/state/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/inventory/state/%@",settings.ccuid];
     raw_res = [self restGetRequestforURI:aURI resultType:@"string" error:&error];
     if (err != NULL) *err = error;
     
@@ -1239,7 +1251,7 @@
 {
     // Request
     NSError *error = nil;
-    NSString *uri = [NSString stringWithFormat:@"/api/v1/client/inventory/state/%@",[MPSystemInfo clientUUID]];
+    NSString *uri = [NSString stringWithFormat:@"/api/v1/client/inventory/state/%@",settings.ccuid];
     id res = [self restPostRequestforURI:uri body:nil resultType:@"string" error:&error];
     qldebug(@"[postClientHasInvData] %@",res);
     if (error) {
@@ -1258,7 +1270,7 @@
 {
     NSError *error = nil;
     id result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",aPatch,aPatchType,[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",aPatch,aPatchType,settings.ccuid];
     result = [self restPostRequestforURI:aURI body:nil resultType:@"string" error:&error];
     qldebug(@"[postPatchInstallResultsToWebService][result]: %@",result);
     if (err != NULL) *err = error;
@@ -1273,7 +1285,7 @@
 {
     NSError *error = nil;
     NSArray *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/profiles/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/profiles/%@",settings.ccuid];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1289,7 +1301,7 @@
     NSError *error = nil;
     id result = nil;
     
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/groups/%@/%@",[MPSystemInfo clientUUID], aState];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/groups/%@/%@",settings.ccuid, aState];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1306,7 +1318,7 @@
     NSError *error = nil;
     id result = nil;
     
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/tasks/%@/%@",[MPSystemInfo clientUUID], aGroupName];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/tasks/%@/%@",settings.ccuid, aGroupName];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1328,7 +1340,7 @@
     
     
     id result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/installed/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/installed/%@",settings.ccuid];
     result = [self restPostRequestforURI:aURI body:bodyStr resultType:@"string" error:&error];
     if (err != NULL) *err = error;
     if ([result isEqualToString:@""] && !error) {
@@ -1353,7 +1365,7 @@
     NSError *error = nil;
     id result = nil;
     
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/task/%@/%@",[MPSystemInfo clientUUID], aTaskID];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/sw/task/%@/%@",settings.ccuid, aTaskID];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     qldebug(@"result: %@",result);
     if (err != NULL) *err = error;
@@ -1365,7 +1377,7 @@
     NSError *error = nil;
     NSString *result = nil;
     
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/plugin/hash/%@/%@/%@/%@",[MPSystemInfo clientUUID], pName, bundleID, pVer];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/plugin/hash/%@/%@/%@/%@",settings.ccuid, pName, bundleID, pVer];
     result = [self restGetRequestforURI:aURI resultType:@"string" error:&error];
     qldebug(@"result: %@",result);
     if (err != NULL) *err = error;
@@ -1377,7 +1389,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/patch/status/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/patch/status/%@",settings.ccuid];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
@@ -1399,7 +1411,7 @@
     
     
     id result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/av/%@",[MPSystemInfo clientUUID]];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/av/%@",settings.ccuid];
     result = [self restPostRequestforURI:aURI body:bodyStr resultType:@"string" error:&error];
     if (err != NULL) *err = error;
     if ([result isEqualToString:@""] && !error) {
@@ -1423,7 +1435,7 @@
     // Request
     NSError *error = nil;
     NSMutableDictionary *params = [[NSMutableDictionary alloc] init];
-    [params setObject:self._cuuid forKey:@"clientID"];
+    [params setObject:settings.ccuid forKey:@"clientID"];
     [params setObject:@"SAV" forKey:@"avAgent"];
     [params setObject:_theArch forKey:@"theArch"];
     NSData *res = [self requestWithMethodAndParams:@"GetAVDefsDate" params:(NSDictionary *)params error:&error];
@@ -1434,7 +1446,7 @@
         } else {
             qlerror(@"%@",error.localizedDescription);
         }
-        return NO;
+        return @"";
     }
     
     // Parse Main JSON Result
@@ -1474,9 +1486,9 @@
     id result = nil;
     NSString *aURI;
     if (!aRegKey) {
-        aURI = [NSString stringWithFormat:@"/api/v1/client/register/%@",[MPSystemInfo clientUUID]];
+        aURI = [NSString stringWithFormat:@"/api/v1/client/register/%@",settings.ccuid];
     } else {
-        aURI = [NSString stringWithFormat:@"/api/v1/client/register/%@/%@",[MPSystemInfo clientUUID],aRegKey];
+        aURI = [NSString stringWithFormat:@"/api/v1/client/register/%@/%@",settings.ccuid,aRegKey];
     }
     qldebug(@"aURI: %@",aURI);
     
@@ -1501,9 +1513,9 @@
     NSError *error = nil;
     NSString *aURI;
     if (!keyHash) {
-        aURI = [NSString stringWithFormat:@"/api/v1/client/register/status/%@",[MPSystemInfo clientUUID]];
+        aURI = [NSString stringWithFormat:@"/api/v1/client/register/status/%@",settings.ccuid];
     } else {
-        aURI = [NSString stringWithFormat:@"/api/v1/client/register/status/%@/%@",[MPSystemInfo clientUUID],keyHash];
+        aURI = [NSString stringWithFormat:@"/api/v1/client/register/status/%@/%@",settings.ccuid,keyHash];
     }
     
     qldebug(@"aURI: %@",aURI);
@@ -1511,16 +1523,6 @@
     if (err != NULL) *err = error;
     
     return result;
-}
-
-- (NSDictionary *)getServerKey:(NSError **)err
-{
-	NSError *error = nil;
-	NSDictionary *result = nil;
-	NSString *aURI = [NSString stringWithFormat:@"/api/v1/client/server/key/%@",[MPSystemInfo clientUUID]];
-	result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
-	if (err != NULL) *err = error;
-	return result;
 }
 
 @end

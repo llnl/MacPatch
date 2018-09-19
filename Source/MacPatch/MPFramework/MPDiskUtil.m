@@ -1,7 +1,7 @@
 //
 //  MPDiskUtil.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -36,7 +36,7 @@
 
 - (long)getFreeDiskSpaceAtPath:(NSString *)aPath
 {
-	NSDictionary *fileAttributes = [[NSFileManager defaultManager] fileSystemAttributesAtPath:@"/"];
+	NSDictionary *fileAttributes = [[NSFileManager defaultManager] fileSystemAttributesAtPath:aPath];
 	unsigned long freeSpace = (long)[[fileAttributes objectForKey:NSFileSystemFreeSize] longLongValue];
 	return (freeSpace / 1024);
 	//NSLog(@"free disk space: %dGB", (int)(freeSpace / 1024 / 1024 / 1024 ));

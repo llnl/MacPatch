@@ -1,7 +1,7 @@
 //
 //  MPDefaults.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,6 +27,13 @@
 
 #import <Cocoa/Cocoa.h>
 
+typedef NS_ENUM(NSInteger, MPSettingsKey) {
+    kMPServers  = 0,
+    kMPSettings = 1,
+    kMPSUServers = 2,
+    kMPTasks = 3
+};
+
 @interface MPDefaults : NSObject 
 {
 	NSDictionary *defaults;
@@ -43,5 +50,14 @@
 - (void)readPlist:(NSString *)aPlist;
 - (id)readPlist:(NSString *)aPlist objectForKey:(NSString *)aKey;
 - (NSDictionary *)readDefaults;
+
+
+// MP 3.1
+- (id)initUsingSettings;
+
+- (void)updateSettingsData:(NSDictionary *)settingsRevisons;
+
+- (NSInteger)revisionForKey:(MPSettingsKey)key;
+- (id)settingsForKey:(MPSettingsKey)key;
 
 @end

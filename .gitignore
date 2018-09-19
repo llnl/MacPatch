@@ -8,21 +8,8 @@ __pycache__/
 
 # Distribution / packaging
 .Python
-env/
-build/
-develop-eggs/
-dist/
+
 downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-*.egg-info/
-.installed.cfg
-#*.egg
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
@@ -33,17 +20,6 @@ var/
 # Installer logs
 pip-log.txt
 pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*,cover
-.hypothesis/
 
 # Translations
 *.mo
@@ -84,12 +60,6 @@ ENV/
 env/
 myenv/
 
-# Spyder project settings
-.spyderproject
-
-# Rope project settings
-.ropeproject
-
 # PyCharm
 .idea/
 
@@ -98,7 +68,7 @@ myenv/
 # gitignore contributors: remember to update Global/Xcode.gitignore, Objective-C.gitignore & Swift.gitignore
 
 ## Build generated
-build/
+# build/
 DerivedData/
 
 ## Various settings
@@ -139,7 +109,7 @@ Carthage/Build
 
 # fastlane
 #
-# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the 
+# It is recommended to not store the screenshots in the git repo. Instead, use fastlane to re-generate the
 # screenshots whenever they are needed.
 # For more information about the recommended setup visit:
 # https://github.com/fastlane/fastlane/blob/master/fastlane/docs/Gitignore.md
@@ -159,4 +129,10 @@ iOSInjectionProject/
 # Misc
 Source_dev/
 ._static
+*.log
+*.log.*
 working/
+
+# MacPatch, ignore root dir items
+/Server
+/Content

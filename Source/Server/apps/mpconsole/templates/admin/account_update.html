@@ -1,0 +1,130 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-editable/css/bootstrap-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+	 <style>
+		 .panel {
+			 width: 720px;
+		 }
+		 .well {
+			 width: 720px;
+		 }
+	</style>
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form method='post' action='/console/account/{{data.user_id or 'add'}}' id="myForm">
+		<div class="well">
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">User ID</label>
+				<div class="col-sm-6">
+					{% if data.user_id %}
+						<input class="form-control" id="disabledInput" type="text" value="{{data.user_id}}" disabled>
+					{% else %}
+						<input class="form-control" id="disabledInput" type="text" value="" name="user_id">
+					{% endif %}
+				</div>
+			</div>
+			{% if not data.user_id %}
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">User Password</label>
+				<div class="col-sm-6">
+					<input class="form-control" id="disabledInput" type="password" name="user_pass">
+				</div>
+			</div>
+			{% endif %}
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">User Type</label>
+				<div class="col-sm-6">
+					<input class="form-control" id="disabledInput" type="text" value="{% if data.user_type == 2 %} LDAP {% else %} Standard {% endif %}" disabled>
+				</div>
+			</div>
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">User Email Address</label>
+				<div class="col-sm-6">
+					<input class="form-control" name="user_email" type="text" value="{{data.user_email or ''}}">
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">User Email Notify</label>
+				<div class="col-sm-6">
+				  <label class="form-check-label">
+					<input class="form-check-input" type="radio" name="email_notification" value="1" {% if data.email_notification == 1 %}checked{% endif %}> Yes
+					<input class="form-check-input" type="radio" name="email_notification" value="0" {% if data.email_notification == 0 %}checked{% endif %}> No
+				  </label>
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">Account Enabled</label>
+				<div class="col-sm-6">
+				  <label class="form-check-label">
+					<input class="form-check-input" type="radio" name="enabled" value="1" {% if data.enabled == 1 %}checked{% endif %}> Yes
+					<input class="form-check-input" type="radio" name="enabled" value="0" {% if data.enabled == 0 %}checked{% endif %}> No
+				  </label>
+				</div>
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-heading">
+				<h4 class="panel-title">Account Rights</h4>
+			</div>
+			<div class="panel-body">
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Admin Rights</label>
+					<div class="col-sm-6">
+					  <label class="form-check-label">
+						<input class="form-check-input" type="radio" name="admin" value="1" {% if data.admin == 1 %}checked{% endif %}> Yes
+						<input class="form-check-input" type="radio" name="admin" value="0" {% if data.admin == 0 %}checked{% endif %}> No
+					  </label>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">AutoPKG Rights</label>
+					<div class="col-sm-6">
+					  <label class="form-check-label">
+						<input class="form-check-input" type="radio" name="autopkg" value="1" {% if data.autopkg == 1 %}checked{% endif %}> Yes
+						<input class="form-check-input" type="radio" name="autopkg" value="0" {% if data.autopkg == 0 %}checked{% endif %}> No
+					  </label>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">Agent Upload Rights</label>
+					<div class="col-sm-6">
+					  <label class="form-check-label">
+						<input class="form-check-input" type="radio" name="agentUpload" value="1" {% if data.agentUpload == 1 %}checked{% endif %}> Yes
+						<input class="form-check-input" type="radio" name="agentUpload" value="0" {% if data.agentUpload == 0 %}checked{% endif %}> No
+					  </label>
+					</div>
+				</div>
+
+				<div class="form-group row">
+					<label class="col-sm-3 col-form-label">API Rights</label>
+					<div class="col-sm-6">
+					  <label class="form-check-label">
+						<input class="form-check-input" type="radio" name="apiAccess" value="1" {% if data.apiAccess == 1 %}checked{% endif %}> Yes
+						<input class="form-check-input" type="radio" name="apiAccess" value="0" {% if data.apiAccess == 0 %}checked{% endif %}> No
+					  </label>
+					</div>
+				</div>
+			</div>
+		</div>
+
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function() {
+		   $("#myForm").submit();
+	   });
+	});
+</script>

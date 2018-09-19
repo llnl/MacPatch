@@ -1,6 +1,6 @@
 #!/bin/sh
 
-Version="2.0.3"
+Version="2.0.2"
 mpBaseDir="/Library/MacPatch"
 mpClientDir="${mpBaseDir}/Client"
 mpUpdateDir="${mpBaseDir}/Updater"
@@ -138,6 +138,8 @@ if [ "`whoami`" != "root" ] ; then   # If not root user,
    exit $ErrorFromSudoCommand #    Exit so script doesn't run again
 fi
 
+
+
 # MacPatch Deployment Dir
 if [ -d $mpBaseDir ]; then
 
@@ -187,7 +189,7 @@ if [ -d $mpBaseDir ]; then
 	
 	# Delete Client Data
 	existsAndDelete "/Library/Application Support/MPClientStatus"
-	existsAndDelete "/Library/Application Support/MacPatch"
+	existsAndDelete "/Library/Application Support/MacPatch/SW_Data"
 
 	# Priv Helper Tool
 	existsAndDelete "/Library/PrivilegedHelperTools/MPLoginAgent.app"	

@@ -1,7 +1,7 @@
 //
 //  MPCatalogAppDelegate.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -26,13 +26,11 @@
 #import <Cocoa/Cocoa.h>
 #import "MacPatch.h"
 #import "MPWorkerProtocol.h"
-#import "MPNetRequest.h"
 
 @class PreferenceController;
 @class SWDistInfoController;
-@class MPDefaults;
 
-@interface MPCatalogAppDelegate : NSObject <NSApplicationDelegate, MPWorkerClient, NSTabViewDelegate, MPNetRequestController>
+@interface MPCatalogAppDelegate : NSObject <NSApplicationDelegate, MPWorkerClient, NSTabViewDelegate>
 {
     NSWindow *__unsafe_unretained window;
 	
@@ -63,7 +61,6 @@
 	id                              proxy;
 
 @private
-    MPDefaults              *mpDefaults;
 	BOOL					isDownloading;
     BOOL                    cancelInstalls;
     NSDictionary            *_defaults;
@@ -87,10 +84,10 @@
 @property (nonatomic, strong) IBOutlet NSToolbarItem		*refreshButton;
 @property (nonatomic, strong) IBOutlet NSToolbarItem		*infoButton;
 @property (nonatomic, strong) IBOutlet NSPopUpButton		*swDistGroupsButton;
+@property (nonatomic, strong) IBOutlet NSPopUpButton		*swGroupsPopupButton;
 @property (nonatomic, strong)          NSOperationQueue     *queue;
 @property (nonatomic, strong)          NSMutableArray       *selectedItems;
 @property (nonatomic, strong)          NSArray              *swDistGroupsArray;
-@property (nonatomic, strong)          MPDefaults           *mpDefaults;
 
 @property (nonatomic, strong) IBOutlet NSPanel              *rebootPanel;
 @property (nonatomic, strong) IBOutlet NSPanel              *swDistInfoPanel;

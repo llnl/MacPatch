@@ -1,7 +1,7 @@
 //
 //  MPAsus.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,11 +27,21 @@
 #import "MPNetworkUtils.h"
 #import "MPPatchScan.h"
 #import "Constants.h"
-#import "MPNetConfig.h"
-#import "MPNetRequest.h"
+#include <stdlib.h>
+//#import "MPNetConfig.h"
+//#import "MPNetRequest.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPAsus
+
+@interface MPAsus ()
+{
+    NSFileManager *fm;
+    MPSettings *settings;
+    Agent *agent;
+}
+
+@end
 
 @implementation MPAsus
 
@@ -52,37 +62,22 @@
     self = [super init];
 	if (self)
     {
+        fm = [NSFileManager defaultManager];
         mpNetworkUtils = [[MPNetworkUtils alloc] init];
-        MPDefaults *mpDefaults = [[MPDefaults alloc] init];
-        defaults = [mpDefaults defaults];
+        settings = [MPSettings sharedInstance];
+        agent = settings.agent;
 
-        if ([defaults objectForKey:@"PatchGroup"]) {
-			[self setPatchGroup:[defaults objectForKey:@"PatchGroup"]];
-		} else {
-			[self setPatchGroup:@"RecommendedPatches"];
-		}
-
-		if ([defaults objectForKey:@"AllowClient"]) {
-			NSString *cVal = [defaults objectForKey:@"AllowServer"];
-			if ([cVal isEqualToString:@"1"] || [cVal isEqualToString:@"Y"] || [cVal isEqualToString:@"Yes"] || [cVal isEqualToString:@"T"] || [cVal isEqualToString:@"True"]) {
-				[self setAllowClient:YES];
-			} else {
-				[self setAllowClient:NO];
-			}
-		} else {
-			[self setAllowClient:YES];
-		}
-
-		if ([defaults objectForKey:@"AllowServer"]) {
-			NSString *sVal = [defaults objectForKey:@"AllowServer"];
-			if ([sVal isEqualToString:@"1"] || [sVal isEqualToString:@"Y"] || [sVal isEqualToString:@"Yes"] || [sVal isEqualToString:@"T"] || [sVal isEqualToString:@"True"]) {
-				[self setAllowServer:YES];
-			} else {
-				[self setAllowServer:NO];
-			}
-		} else {
-			[self setAllowServer:NO];
-		}
+        if (agent.patchClient == 1 || agent.patchServer == 1) {
+            [self setAllowClient:YES];
+        } else {
+            [self setAllowClient:NO];
+        }
+        
+        if (agent.patchServer == 1) {
+            [self setAllowServer:YES];
+        } else {
+            [self setAllowServer:NO];
+        }
     }
     return self;
 }
@@ -118,48 +113,16 @@
 - (void)writeLogoutHook
 {
     // MP 2.2.0 & Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
-    NSString *_atFile = @"/private/tmp/.MPAuthRun";
     NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
     NSString *_rbText = @"reboot";
+    
     // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
     NSDictionary *rebootPlist = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"reboot"];
     [rebootPlist writeToFile:_rbFile atomically:YES];
-    [_rbText writeToFile:_atFile atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+    [_rbText writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
     NSDictionary *_fileAttr =  [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedLong:0777],@"NSFilePosixPermissions",nil];
-    [[NSFileManager defaultManager] setAttributes:_fileAttr ofItemAtPath:_rbFile error:NULL];
-    [[NSFileManager defaultManager] setAttributes:_fileAttr ofItemAtPath:_atFile error:NULL];
-}
-
-- (NSData *)installResultsToXML:(NSArray *)aInstalledPatches
-{
-	/*
-	 <?xml version="1.0" encoding="UTF-8"?>
-	 <root>
-	 <cuuid></cuuid>
-	 <idate></idate>
-	 <patch></patch>
-	 <patch></patch>
-	 </root>
-	 */
-	
-	NSXMLElement *root = (NSXMLElement *)[NSXMLNode elementWithName:@"root"];
-	NSXMLDocument *xmlDoc = [[NSXMLDocument alloc] initWithRootElement:root];
-	[xmlDoc setVersion:@"1.0"];
-	[xmlDoc setCharacterEncoding:@"UTF-8"];
-	
-	[root addChild:[NSXMLNode elementWithName:@"cuuid" stringValue:[MPSystemInfo clientUUID]]];
-	
-	[root addChild:[NSXMLNode elementWithName:@"idate" stringValue:[MPDate dateTimeStamp]]];
-	
-	NSEnumerator *enumerator = [aInstalledPatches objectEnumerator];
-	id anObject;
-	while ((anObject = [enumerator nextObject])) {
-		[root addChild:[NSXMLNode elementWithName:@"patch" stringValue:anObject]];
-	}
-	
-	NSData *xmlData = [xmlDoc XMLDataWithOptions:NSXMLNodePrettyPrint];
-
-	return xmlData;
+    [fm setAttributes:_fileAttr ofItemAtPath:_rbFile error:NULL];
+    [fm setAttributes:_fileAttr ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
 }
 
 - (NSArray *)installResultsToDictArray:(NSArray *)aInstalledPatches type:(NSString *)aType
@@ -208,13 +171,7 @@
 	
 	NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath: ASUS_BIN_PATH];
-	
-	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
-		// [task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
-		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
-	} else {
-		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
-	}
+    [task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	
     NSPipe *pipe = [NSPipe pipe];
     [task setStandardOutput: pipe];
@@ -249,7 +206,7 @@
 	NSArray *strArr = [NSArray arrayWithArray:[string componentsSeparatedByString:@"\n"]];
 	
 	NSMutableArray *tmpAppleUpdates = [[NSMutableArray alloc] init];
-	NSString *tmpStr, *line, *lineCleanStart;
+	NSString *tmpStr;
 	NSMutableDictionary *tmpDict;
 	
 	for (int i=0; i<[strArr count]; i++) {
@@ -265,30 +222,26 @@
 			}	
 			
 			// Strip the White Space and any New line data
-			line = [strArr objectAtIndex:i];
 			tmpStr = [[strArr objectAtIndex:i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			if ([tmpStr hasPrefix:@"*"] || [tmpStr hasPrefix:@"!"])
-			{
-				@try
-				{
-					lineCleanStart = [self cleanLine:line];
-					tmpDict = [[NSMutableDictionary alloc] init];
-					[tmpDict setObject:lineCleanStart forKey:@"patch"];
-					[tmpDict setObject:@"Apple" forKey:@"type"];
-					[tmpDict setObject:[[lineCleanStart componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
-					[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
-					[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
-					
-					[tmpAppleUpdates addObject:[tmpDict copy]];
-					tmpDict = nil;
+			
+			// If the object/string starts with *,!,- then allow it 
+			if ([[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"*"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"!"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"-"]) {
+				tmpDict = [[NSMutableDictionary alloc] init];
+				qlinfo(@"Apple Update: %@",[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))]);
+				[tmpDict setObject:[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] forKey:@"patch"];
+				[tmpDict setObject:@"Apple" forKey:@"type"];
+				[tmpDict setObject:[[[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
+				[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+				[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+				[tmpDict setObject:[self getRecommendedFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"recommended"];
+				if ([[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] containsString:@"[restart]" ignoringCase:YES] == TRUE) {
+					[tmpDict setObject:@"Yes" forKey:@"restart"];
+				} else {
+					[tmpDict setObject:@"No" forKey:@"restart"];
 				}
-				@catch (NSException *exception)
-				{
-					qlerror(@"Error create patch dict. %@",exception);
-				}
-			}
+				
+				[tmpAppleUpdates addObject:tmpDict];
+			} // if is an update
 		} // if / empty lines
 	} // for loop
 	appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
@@ -297,31 +250,25 @@
 	return appleUpdates;
 }
 
-- (NSString *)cleanLine:(NSString *)line
-{
-	// Removes the beginning of the line
-	NSString *component = @"*";
-	NSString *_lineTrimed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	if ([_lineTrimed hasPrefix:@"*"])
-	{
-		component = @"* ";
-	}
-	else if ([_lineTrimed hasPrefix:@"!"])
-	{
-		component = @"! ";
-	}
-	
-	NSMutableArray *items = [[line componentsSeparatedByString:component] mutableCopy];
-	[items removeObjectAtIndex:0];
-	// With first item removed put it all back together
-	return  [items componentsJoinedByString:component];
-}
-
 - (NSString *)getSizeFromDescription:(NSString *)aDesc
 {
-	NSString *tmpStr = [[aDesc componentsSeparatedByString:@","] lastObject];
-	tmpStr = [[[tmpStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "] firstObject];
-	return tmpStr;
+	NSArray *tmpArr1 = [aDesc componentsSeparatedByString:@","];
+	NSArray *tmpArr2 = [[[tmpArr1 objectAtIndex:1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "];
+	return [[tmpArr2 objectAtIndex:0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
+
+- (NSString *)getRecommendedFromDescription:(NSString *)aDesc
+{
+	NSRange textRange;
+	textRange =[aDesc rangeOfString:@"recommended"];
+	
+	if(textRange.location != NSNotFound) {
+		return @"Y";
+	} else {
+		return @"N";
+	}
+	
+	return @"N";
 }
 
 - (void)scanAppleSoftwareUpdates:(NSArray *)approvedUpdates
@@ -476,50 +423,18 @@ done:
 
 #pragma mark Custom Patch install
 
--(NSString *)downloadUpdate:(NSString *)aURL error:(NSError **)err
+- (NSString *)downloadUpdate:(NSString *)aURL error:(NSError **)err
 {
-    
-    MPNetConfig *mpNetConfig = [[MPNetConfig alloc] init];
-    NSError *error = nil;
-    NSURLResponse *response;
-    
-    MPNetRequest *req;
-    NSURLRequest *urlReq;
     NSString *res = nil;
-    NSArray *servers = [mpNetConfig servers];
-    for (MPNetServer *srv in servers)
-    {
-        qlinfo(@"Trying Server %@",srv.host);
-        req = [[MPNetRequest alloc] initWithMPServer:srv];
-        error = nil;
-        urlReq = [req buildDownloadRequest:aURL];
-        if (urlReq)
-        {
-            res = nil;
-            res = [req downloadFileRequest:urlReq returningResponse:&response error:&error];
-            if (error) {
-                if (err != NULL) {
-                    *err = error;
-                }
-                qlerror(@"[%@][%d](%@ %d): %@",srv.host,(int)srv.port,error.domain,(int)error.code,error.localizedDescription);
-                continue;
-            }
-            // Make any previouse error pointers nil, now that we have a valid host/connection
-            if (err != NULL) {
-                *err = nil;
-            }
-            break;
-        } else {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"NSURLRequest was nil." forKey:NSLocalizedDescriptionKey];
-            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1001 userInfo:userInfo];
-            qlerror(@"%@",error.localizedDescription);
-            if (err != NULL) {
-                *err = error;
-            }
-            continue;
+    NSError *error = nil;
+    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+	NSString *dlDir = [self genTempDirPathFromURL:aURL];
+    res = [req runSyncFileDownload:aURL downloadDirectory:dlDir error:&error];
+    if (error) {
+        if (err != NULL) {
+            *err = error;
         }
     }
-    
     return res;
 }
 
@@ -625,7 +540,7 @@ done:
         return [@"/private/tmp" stringByAppendingPathComponent:appName];
 	}
 	
-	NSString *tempDirectoryPath = [[NSFileManager defaultManager] stringWithFileSystemRepresentation:tempDirectoryNameCString length:strlen(result)];
+	NSString *tempDirectoryPath = [fm stringWithFileSystemRepresentation:tempDirectoryNameCString length:strlen(result)];
 	free(tempDirectoryNameCString);
 
 	tempFilePath = [tempDirectoryPath stringByAppendingPathComponent:[aURL lastPathComponent]];	
@@ -651,6 +566,22 @@ done:
     qltrace(@"%@",result);
 	if (err != NULL) *err = aErr;	
     return 0;
+}
+
+- (NSString *)genTempDirPathFromURL:(NSString *)url
+{
+	NSString *pathTemplate = [NSString stringWithFormat:@"%@.XXXXXX",url.lastPathComponent];
+	NSString *tempFilePathTemplate = [NSString pathWithComponents:@[NSTemporaryDirectory(), pathTemplate]];
+	
+	// Convert template to ASCII for use by C library functions
+	const char* tempFilePathTemplateASCII = [tempFilePathTemplate cStringUsingEncoding:NSASCIIStringEncoding];
+	
+	// Copy template to temporary buffer so it can be modified in place
+	char *tempFilePathASCII = calloc(strlen(tempFilePathTemplateASCII) + 1, 1);
+	strcpy(tempFilePathASCII, tempFilePathTemplateASCII);
+	
+	NSString *tempPath = [NSString stringWithCString:tempFilePathASCII encoding:NSASCIIStringEncoding];
+	return [NSString stringWithFormat:@"/tmp/%@",tempPath.lastPathComponent];
 }
 
 #pragma mark Notifications

@@ -1,7 +1,7 @@
 //
 //  ClientCheckInOperation.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,8 +25,9 @@
 
 #import "ClientCheckInOperation.h"
 #import "MPAgent.h"
-#import "MPDefaultsWatcher.h"
-
+#import "MacPatch.h"
+#import "MPSettings.h"
+#import "Software.h"
 
 @interface ClientCheckInOperation (Private)
 
@@ -45,8 +46,8 @@
 	if ((self = [super init])) {
 		isExecuting = NO;
         isFinished  = NO;
-		si	= [MPAgent sharedInstance];
-		fm	= [NSFileManager defaultManager];
+		settings	= [MPSettings sharedInstance];
+		fm          = [NSFileManager defaultManager];
 	}	
 	
 	return self;
@@ -90,7 +91,6 @@
 {
 	@try {
 		[self runCheckIn];
-		[self verifyServerKey];
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);
@@ -100,174 +100,85 @@
 
 - (void)runCheckIn
 {
-	@autoreleasepool {
-		NSMutableDictionary *agentDict;
-		logit(lcl_vInfo,@"Running client check in.");
-		@try {
-        	NSDictionary *consoleUserDict = [MPSystemInfo consoleUserData];
-        	NSDictionary *hostNameDict = [MPSystemInfo hostAndComputerNames];
-			NSDictionary *activeNetData = [MPSystemInfo activeInterfaceData];
-        
-			NSDictionary *clientVer = nil;
-			if ([fm fileExistsAtPath:AGENT_VER_PLIST]) {
-				if ([fm isReadableFileAtPath:AGENT_VER_PLIST] == NO ) {
-                [fm setAttributes:[NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:0664UL] forKey:NSFilePosixPermissions]
-                     ofItemAtPath:AGENT_VER_PLIST 
-                            error:NULL];
-				}
-				clientVer = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];	
-			} else {
-				clientVer = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:@"NA",@"NA",@"NA",@"NA",@"NA",@"NA",nil] 
-														forKeys:[NSArray arrayWithObjects:@"version",@"major",@"minor",@"bug",@"build",@"framework",nil]];
-			}
-			
-			agentDict = [[NSMutableDictionary alloc] init];
-			[agentDict setObject:[si g_cuuid] forKey:@"cuuid"];
-			[agentDict setObject:[si g_serialNo] forKey:@"serialno"];
-			[agentDict setObject:[hostNameDict objectForKey:@"localHostName"] forKey:@"hostname"];
-			[agentDict setObject:[hostNameDict objectForKey:@"localComputerName"] forKey:@"computername"];
-			[agentDict setObject:[consoleUserDict objectForKey:@"consoleUser"] forKey:@"consoleuser"];
-			[agentDict setObject:activeNetData[@"ipAddr"] forKey:@"ipaddr"];
-			[agentDict setObject:activeNetData[@"macAddr"] forKey:@"macaddr"];
-			[agentDict setObject:[si g_osVer] forKey:@"osver"];
-			[agentDict setObject:[si g_osType] forKey:@"ostype"];
-			[agentDict setObject:[si g_agentVer] forKey:@"agent_version"];
-			[agentDict setObject:[clientVer objectForKey:@"build"] forKey:@"agent_build"];
-            NSString *cVer = [NSString stringWithFormat:@"%@.%@.%@",[clientVer objectForKey:@"major"],[clientVer objectForKey:@"minor"],[clientVer objectForKey:@"bug"]];
-			[agentDict setObject:cVer forKey:@"client_version"];
-			[agentDict setObject:@"false" forKey:@"needsreboot"];
-			
-			if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE]) {
-				[agentDict setObject:@"true" forKey:@"needsreboot"];	
-			}
+    // Collect Agent Checkin Data
+    MPClientInfo *ci = [[MPClientInfo alloc] init];
+    NSDictionary *agentData = [ci agentData];
+    if (!agentData)
+    {
+        logit(lcl_vError,@"Agent data is nil, can not post client checkin data.");
+        return;
+    }
+    
+    // Post Client Checkin Data to WS
+    NSError *error = nil;
+    NSDictionary *revsDict;
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    revsDict = [rest postClientCheckinData:agentData error:&error];
+    if (error) {
+        logit(lcl_vError,@"Running client check in had an error.");
+        logit(lcl_vError,@"%@", error.localizedDescription);
+    }
+    else
+    {
+        [self updateGroupSettings:revsDict];
+		[self installRequiredSoftware:revsDict];
+    }
 
-        logit(lcl_vDebug, @"Agent Data: %@",agentDict);
-		}
-		@catch (NSException * e) {
-			logit(lcl_vError,@"[NSException]: %@",e);
-			logit(lcl_vError,@"No client checkin data will be posted.");
-			return;
-		}	
-		
-        MPWebServices *mpws = [[MPWebServices alloc] init];
-        mpws.clientKey = [si g_clientKey];
-		
-		NSError *err = nil;
-		BOOL postResult = NO;
-        NSString *uri;
-        NSData *reqData;
-        id postRes;
-		@try
-		{
-            // Send Checkin Data
-			err = nil;
-            uri = [@"/api/v1/client/checkin" stringByAppendingPathComponent:[si g_cuuid]];
-            reqData = [mpws postRequestWithURIforREST:uri body:agentDict error:&err];
-            if (err) {
-                logit(lcl_vError,@"%@",[err localizedDescription]);
-            } else {
-                // Parse JSON result, if error code is not 0
-                err = nil;
-                postRes = [mpws returnRequestWithType:reqData resultType:@"string" error:&err];
-                logit(lcl_vDebug,@"%@",postRes);
-                if (err) {
-                    logit(lcl_vError,@"%@",[err localizedDescription]);
-                } else {
-                    postResult = YES;
-                }
-            }
-            
-            if (postResult) {
-                logit(lcl_vInfo,@"Running client base checkin, returned true.");
-            } else {
-                logit(lcl_vError,@"Running client base checkin, returned false.");
-            }
-		}
-		@catch (NSException * e) {
-			logit(lcl_vError,@"[NSException]: %@",e);
-		}
-		
-		// Read Client Plist Info, and post it...
-		@try
-		{
-			MPDefaultsWatcher *mpd = [[MPDefaultsWatcher alloc] init];
-			NSMutableDictionary *mpDefaults = [[NSMutableDictionary alloc] initWithDictionary:[mpd readConfigPlist]];
-			[mpDefaults setObject:[si g_cuuid] forKey:@"cuuid"];
-
-            logit(lcl_vDebug, @"Agent Plist: %@",mpDefaults);
-			
-            err = nil;
-            uri = [@"/api/v1/client/checkin/plist" stringByAppendingPathComponent:[si g_cuuid]];
-            reqData = [mpws postRequestWithURIforREST:uri body:mpDefaults error:&err];
-            if (err) {
-                logit(lcl_vError,@"%@",[err localizedDescription]);
-            } else {
-                // Parse JSON result, if error code is not 0
-                err = nil;
-                postRes = [mpws returnRequestWithType:reqData resultType:@"string" error:&err];
-                logit(lcl_vDebug,@"%@",postRes);
-                if (err) {
-                    logit(lcl_vError,@"%@",[err localizedDescription]);
-                } else {
-                    postResult = YES;
-                }
-            }
-            
-			if (postResult) {
-				logit(lcl_vInfo,@"Running client config checkin, returned true.");
-			} else {
-				logit(lcl_vError,@"Running client config checkin, returned false.");
-			}
-		}
-		@catch (NSException * e) {
-			logit(lcl_vError,@"[NSException]: %@",e);
-		}	
-
-		logit(lcl_vInfo,@"Running client check in completed.");
-	}
+    logit(lcl_vInfo,@"Running client check in completed.");
+    return;
 }
 
-- (void)verifyServerKey
+- (void)updateGroupSettings:(NSDictionary *)settingRevisions
 {
-	@autoreleasepool
-	{
-		NSError *err = nil;
-		MPWebServices *mpws = [[MPWebServices alloc] init];
-		NSDictionary *keys = [mpws getServerKey:&err];
-		if (err) {
-			logit(lcl_vError,@"%@",err.localizedDescription);
-			return;
-		}
-		
-		MPCrypto *mpc = [[MPCrypto alloc] init];
-		
-		NSString *pubKeyHashCur;
-		NSString *pubKeyHashNew;
-		NSString *pubKeyNew = [keys objectForKey:@"pubKey"];
-		[pubKeyNew writeToFile:@"/tmp/._serverPubKey.pem" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
-		pubKeyHashNew = [mpc md5HashForFile:@"/tmp/._serverPubKey.pem"];
-		pubKeyHashCur = [mpc md5HashForFile:MP_SERVER_PUB_KEY];
-		
-		if (![pubKeyHashNew isEqualToString:pubKeyHashCur])
-		{
-			err = nil;
-			[fm removeItemAtPath:MP_SERVER_PUB_KEY error:&err];
-			if (err) {
-				logit(lcl_vError,@"%@",err.localizedDescription);
-				return;
-			}
-			
-			err = nil;
-			[fm moveItemAtPath:@"/tmp/._serverPubKey.pem" toPath:MP_SERVER_PUB_KEY error:&err];
-			if (err) {
-				logit(lcl_vError,@"%@",err.localizedDescription);
-				return;
-			}
-		}
-		
-		// Keys match
+    // Query for Revisions
+    // Call MPSettings to update if nessasary
+    logit(lcl_vInfo,@"Check and Update Agent Settings.");
+    logit(lcl_vDebug,@"Setting Revisions from server: %@", settingRevisions);
+    MPSettings *set = [MPSettings sharedInstance];
+    [set compareAndUpdateSettings:settingRevisions];
+	return;
+}
+
+- (void)installRequiredSoftware:(NSDictionary *)checkinResult
+{
+	logit(lcl_vInfo,@"Install required client group software.");
+	
+	NSArray *swTasks;
+	if (!checkinResult[@"swTasks"]) {
+		logit(lcl_vError,@"Checkin result did not contain sw tasks object.");
 		return;
 	}
+	
+	swTasks = checkinResult[@"swTasks"];
+	if (swTasks.count >= 1)
+	{
+		Software *sw = [[Software alloc] init];
+		for (NSDictionary *t in swTasks)
+		{
+			NSString *task = t[@"tuuid"];
+			if ([sw isSoftwareTaskInstalled:task])
+			{
+				continue;
+			}
+			else
+			{
+				NSError *err = nil;
+				MPRESTfull *mpRest = [[MPRESTfull alloc] init];
+				NSDictionary *swTask = [mpRest getSoftwareTaskUsingTaskID:task error:&err];
+				if (err) {
+					logit(lcl_vError,@"%@",err.localizedDescription);
+					continue;
+				}
+				logit(lcl_vInfo,@"Begin installing %@.",swTask[@"name"]);
+				int res = [sw installSoftwareTask:swTask];
+				if (res != 0) {
+					logit(lcl_vError,@"Required software, %@ failed to install.",swTask[@"name"]);
+				}
+			}
+		}
+	}
 }
+
+
 
 @end

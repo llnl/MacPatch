@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+Client Groups
+{%  endblock %}
+
+{% block bodyPanel %}
+	<table id="table" data-toolbar="#toolbar" data-show-export="true">
+		<div id="toolbar">
+			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script>
+
+	var gRights = [];
+	{% for r in rights %}
+		gRights.push("{{r}}");
+	{% endfor %}
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+			striped: true,
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			showRefresh: false,
+			resizable: false,
+			sortable: true,
+			showColumns: false,
+			idField: 'group_id',
+			sortName: 'count',
+			sortOrder: 'desc',
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			columns: [
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter
+			},
+			{% for col in columns %}
+			{
+				field: '{{col.name}}',
+				title: '{{col.info}}',
+				{% if col.name ==  'rid' or  col.name ==  'group_id' %}
+				visible: false,
+				{% endif %}
+				sortable: true
+			},
+			{% endfor %}
+			{
+				field: 'count',
+				title: 'No. Clients',
+				sortable: true
+			},
+			],
+			data: [
+			{% for g in data %}
+			{
+				{% for col in columns %}
+					{{col.name}}: '{{g[col.name]}}',
+				{% endfor %}
+					'count': 0,
+				{% if counts|length >= 1 %}
+					{% for count in counts %}
+						{% if count['group_id'] == g['group_id'] %}
+							'count': {{count['total']}},
+						{% endif %}
+					{% endfor %}
+				{% endif %}
+			},
+			{% endfor %}
+			]
+		});
+	});
+
+	function operateFormatter(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<table>');
+		htmlData.push('<tr><td>');
+		var hasRowRight = false;
+
+		hasRowRight = false;
+		for (i = 0; i < gRights.length; i++)
+		{
+			if (gRights[i] == row.group_id || row.group_name == 'Default')
+			{
+				hasRowRight = true;
+			}
+		}
+		if (hasRowRight || row.group_name == 'Default')
+		{
+			htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch Group">');
+			htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>');
+			htmlData.push('</td><td>');
+			htmlData.push('<a class="modify" href="javascript:void(0)" title="Modify Patch Group">');
+			htmlData.push('<i class="fa fa-edit fa-lg"></i></a>');
+			htmlData.push('</td><td>');
+		}
+		if (row['group_owner'] == '{{session.user}}' && row['count'] <= 0 && row.group_name != 'Default') {
+			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
+			htmlData.push('<i class="fa fa-trash-o fa-lg"></i></a>');
+			htmlData.push('</td>');
+		} else {
+			htmlData.push('&nbsp;&nbsp;&nbsp;&nbsp;');
+		}
+
+		htmlData.push('</td></tr></table>');
+		return htmlData.join('');
+	}
+
+	window.operateEvents = {
+		'click .edit': function (e, value, row, index)
+		{
+			var _url = '/clients/group/' + row.group_id
+			$(location).attr('href',_url);
+		},
+		'click .modify': function (e, value, row, index)
+		{
+			var _url = '/clients/group/modify/'+ row.group_id
+			$.get( _url )
+			.fail(function(jqXHR, textStatus, errorThrown) {
+				alert("Error: Group could not be modified. You dont have rights to do this.");
+			})
+			.done(function(data) {
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalDialog').modal('show');
+			});
+		},
+		'click .remove': function (e, value, row, index)
+		{
+			if (confirm('Are you sure you want to delete this patch group (' + row['name'] +') ?'))
+			{
+				var _url = "/clients/group/" + row.group_id;
+				return $.ajax({
+					url: _url,
+					type: 'DELETE',
+					data: {},
+					success: function(data)
+					{
+						$('#table').bootstrapTable('remove', {
+							field: 'group_id',
+							values: [row.group_id]
+						});
+						$('#table').bootstrapTable('refresh');
+					},
+					error: function (xhr, textStatus, errorThrown)
+					{
+						var err = eval("(" + xhr.responseText + ")");
+						resetModalWindow();
+						$('#modalSaveButton').hide();
+						$('#modalCancelButton').html('Close');
+						$('#modalTitle').html('Error, Removing Client Group');
+						$('#modalBody').html(err.errormsg);
+						$('#modalBody').css({'height':'160px'});
+						$('#modalHeader').addClass('panel-heading');
+						$('#modalContent').addClass('panel-danger');
+						$('#modalDialog').modal('show');
+					}
+				});
+			}
+		}
+	};
+
+	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+	$(function ()
+	{
+		$delButton.click(function ()
+		{
+			var ids = $.map($table.bootstrapTable('getSelections'), function (row) {
+				return row.puuid;
+			});
+			$table.bootstrapTable('remove', {
+				field: 'puuid',
+				values: ids
+			});
+		});
+
+		$addButton.click(function ()
+		{
+			$.get( "/clients/group/add").done(function(data) {
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalDialog').modal('show');
+			});
+		});
+	});
+	</script>
+{% endblock %}

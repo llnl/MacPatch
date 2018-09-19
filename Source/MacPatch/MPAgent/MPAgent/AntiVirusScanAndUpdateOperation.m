@@ -1,7 +1,7 @@
 //
 //  AntiVirusScanAndUpdateOperation.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -26,6 +26,9 @@
 #import "AntiVirusScanAndUpdateOperation.h"
 #import "MPAgent.h"
 #import "MacPatch.h"
+#import "AntiVirus.h"
+
+static NSString * const _taskRunFile = @"/tmp/.mpAVUpdateRunning";
 
 @interface AntiVirusScanAndUpdateOperation (Private)
 
@@ -39,6 +42,7 @@
 
 @implementation AntiVirusScanAndUpdateOperation
 
+@synthesize forceRun;
 @synthesize scanType;
 @synthesize taskPID;
 @synthesize taskFile;
@@ -79,7 +83,7 @@
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 
-    [self killTaskUsingPID];
+    [self killTask];
 }
 
 - (void)start 
@@ -100,9 +104,9 @@
 {
 	@try {
 		if (scanType == 0) {
-			[self runAVInfoScan];
+			[self runAVscan];
 		} else if (scanType == 1) {
-			[self runAVInfoScanAndDefsUpdate];
+			[self runAVscanAndUpdate];
 		}
 	}
 	@catch (NSException * e) {
@@ -111,111 +115,142 @@
 	[self finish];
 }
 
-- (void)runAVInfoScan
+- (void)runAVscan
 {
-	@autoreleasepool {
+	@autoreleasepool
+    {
 		logit(lcl_vInfo,@"Running client AV scan.");
-		NSString *appPath = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"MPAgentExec"];
-		
-		if (![fm fileExistsAtPath:appPath]) {
-			logit(lcl_vError,@"Unable to find MPAgentExec app.");
-		} else {
-            NSError *err = nil;
-            MPCodeSign *cs = [[MPCodeSign alloc] init];
-            BOOL result = [cs verifyAppleDevBinary:appPath error:&err];
-            if (err) {
-                logit(lcl_vError,@"%ld: %@",err.code,err.localizedDescription);
-            }
-            cs = nil;
-            if (result == YES)
-            {
-				NSError *error = nil;
-				NSString *result;
-				MPNSTask *mpr = [[MPNSTask alloc] init];
-				result = [mpr runTask:appPath binArgs:[NSArray arrayWithObjects:@"-a", nil] error:&error];
-				
-				if (error) {
-					logit(lcl_vError,@"%@",[error description]);
-				}
-				
-				logit(lcl_vDebug,@"%@",result);
-				logit(lcl_vInfo,@"AV info collection has been completed.");
-			}
-		}	
-	}
-}
-
-- (void)runAVInfoScanAndDefsUpdate
-{
-	@autoreleasepool {
-		logit(lcl_vInfo,@"Running client AV scan and update.");
-		NSString *appPath = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"MPAgentExec"];
-		
-		if (![fm fileExistsAtPath:appPath]) {
-			logit(lcl_vError,@"Unable to find MPAgentExec app.");
-		}
-
-        NSError *err = nil;
-        MPCodeSign *cs = [[MPCodeSign alloc] init];
-        BOOL result = [cs verifyAppleDevBinary:appPath error:&err];
-        if (err) {
-            logit(lcl_vError,@"%ld: %@",err.code,err.localizedDescription);
+        
+        if ([self isTaskRunning]) {
+            logit(lcl_vInfo,@"Scanning for av defs is already running. Now exiting.");
+            return;
+        } else {
+            [self writeTaskRunning];
         }
-        cs = nil;
-        if (result == YES)
-		{
-			NSError *error = nil;
-			NSString *result;
-			MPNSTask *mpr = [[MPNSTask alloc] init];
-			result = [mpr runTask:appPath binArgs:[NSArray arrayWithObjects:@"-U", nil] error:&error];
-			
-			if (error) {
-				logit(lcl_vError,@"%@",[error description]);
-			}
-			
-			logit(lcl_vDebug,@"%@",result);
-			logit(lcl_vInfo,@"AV inventory and defs update has been completed.");
-		}	
+        
+        logit(lcl_vInfo,@"Begin scan for AV defs.");
+        AntiVirus *mpav = [[AntiVirus alloc] init];
+        [mpav scanDefs];
+        mpav = nil;
+        
+        logit(lcl_vInfo,@"Scan for AV defs complete.");
+        [self removeTaskRunning];
 	}
 }
 
-- (int)runAVDefsUpdate
+- (void)runAVscanAndUpdate
 {
-    return 0;
+	@autoreleasepool
+    {
+        if ([self isTaskRunning]) {
+            logit(lcl_vInfo,@"Updating av defs is already running. Now exiting.");
+            return;
+        } else {
+            [self writeTaskRunning];
+        }
+        
+        logit(lcl_vInfo,@"Begin scan and update for AV defs.");
+        AntiVirus *mpav = [[AntiVirus alloc] init];
+        [mpav scanAndUpdateDefs];
+        mpav = nil;
+        
+        logit(lcl_vInfo,@"Scan and update for AV defs complete.");
+        [self removeTaskRunning];
+	}
 }
 
-- (void)killTaskUsingPID
+- (BOOL)isTaskRunning
 {
+    if (forceRun == YES) {
+        return NO;
+    }
+    
+    NSDate *cdate; // CDate of File
+    NSDate *cdatePlus; // CDate of file plus ... hrs
+    NSDate *ndate = [NSDate date]; // Now
+
+    if ([fm fileExistsAtPath:_taskRunFile]) {
+        cdate = [[fm attributesOfItemAtPath:_taskRunFile error:nil] fileCreationDate];
+        cdatePlus = [cdate dateByAddingTimeInterval:14400]; // Add 4 Hours
+        NSComparisonResult result = [ndate compare:cdatePlus];
+        if( result == NSOrderedAscending ) {
+            // cdatePlus is in the future
+            return YES;
+        } else if(result==NSOrderedDescending) {
+            // cdatePlus is in the past
+            [self killTask];
+            logit(lcl_vError, @"Task file %@ found. File older than 4 hours. Deleting file.",_taskRunFile);
+            
+            [self removeTaskRunning];
+            return NO;
+        }
+        // Both dates are the same
+        return NO;
+    }
+    
+    return NO;
+}
+
+-(void)writeTaskRunning
+{
+    if (forceRun == NO) {
+        NSString *_id = [@([[NSProcessInfo processInfo] processIdentifier]) stringValue];
+        [_id writeToFile:_taskRunFile atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+    }
+}
+
+-(void)removeTaskRunning
+{
+    logit(lcl_vInfo,@"Remove Task Running file %@.",_taskRunFile);
+    if ([fm fileExistsAtPath:_taskRunFile]) {
+        logit(lcl_vInfo,@"File exists %@",_taskRunFile);
+        if (forceRun == NO) {
+            logit(lcl_vInfo,@"File remove %@",_taskRunFile);
+            NSError *err = nil;
+            [fm removeItemAtPath:_taskRunFile error:&err];
+            if (err) {
+                logit(lcl_vError,@"File remove %@\nError=%@",_taskRunFile,[err description]);
+            }
+        } else {
+            logit(lcl_vInfo,@"Force run is set to true for %@. No file will be removed.",_taskRunFile);
+        }
+    }
+}
+
+- (void)killTask
+{
+    int _taskPID = -99;
     NSError *err = nil;
     // If File Does Not Exists, not PID to kill
-    if (![fm fileExistsAtPath:self.taskFile]) {
+    if (![fm fileExistsAtPath:_taskRunFile]) {
         return;
     } else {
-        NSString *strPID = [NSString stringWithContentsOfFile:self.taskFile encoding:NSUTF8StringEncoding error:&err];
+        NSString *strPID = [NSString stringWithContentsOfFile:_taskRunFile encoding:NSUTF8StringEncoding error:&err];
         if (err) {
             logit(lcl_vError,@"%ld: %@",err.code,err.localizedDescription);
         }
         if ([strPID intValue] > 0) {
-            [self setTaskPID:[strPID intValue]];
+            _taskPID = [strPID intValue];
         }
     }
     
-    if (self.taskPID == -99) {
+    if (_taskPID == -99) {
         logit(lcl_vWarning,@"No task PID was defined");
         return;
     }
     
     // Make Sure it's running before we send a SIGKILL
     NSArray *procArr = [MPSystemInfo bsdProcessList];
-    NSArray *filtered = [procArr filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"processID == %i", self.taskPID]];
+    NSArray *filtered = [procArr filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"processID == %i", _taskPID]];
     if ([filtered count] <= 0) {
         return;
     } else if ([filtered count] == 1 ) {
-        kill( self.taskPID, SIGKILL );
+        kill( _taskPID, SIGKILL );
     } else {
         logit(lcl_vError,@"Can not kill task using PID. Found to many using the predicate.");
         logit(lcl_vDebug,@"%@",filtered);
     }
 }
+
 
 @end

@@ -1,7 +1,7 @@
 //
 //  MPOSUpgrade.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,6 +25,7 @@
 
 #import "MPOSUpgrade.h"
 #import "MacPatch.h"
+#import "MPRESTfull.h"
 
 @interface MPOSUpgrade()
 
@@ -40,10 +41,8 @@
     NSError *err = nil;
     if ([[action lowercaseString] isEqualToString:@"start"] || [[action lowercaseString] isEqualToString:@"stop"])
     {
-        MPWebServices *mpws = [[MPWebServices alloc] init];
-        
-        int res = -1;
-        res = [mpws postOSMigrationStatusNew:action label:aLabel migrationID:aUpgradeID error:&err];
+        MPRESTfull *mprest = [[MPRESTfull alloc] init];
+        [mprest postOSMigrationStatus:action label:aLabel migrationID:aUpgradeID error:&err];
         if (err) {
             if (error != NULL) *error = err;
             logit(lcl_vError,@"Error posting upgrade status.")

@@ -27,7 +27,7 @@
 	<key>MPInfo</key>
 	<string>MacPatch 3.0.0 Client Software</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2017 Lawrence Livremore National Laboratory. All rights reserved.</string>
+	<string>Copyright © 2018 Lawrence Livremore National Laboratory. All rights reserved.</string>
 	<key>NSMainNibFile</key>
 	<string>MPTaskEditor_MainMenu</string>
 	<key>NSPrincipalClass</key>

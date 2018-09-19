@@ -1,7 +1,7 @@
 //
 //  MacPatch.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,42 +28,24 @@
 // Logging
 #import "lcl.h"
 #import "MPLog.h"
+
+// Settings
+#import "MPSettings.h"
+
 // Uitlities & Networking
 #import "MPNetworkUtils.h"
-#import "MPDefaults.h"
 #import "MPDiskUtil.h"
 #import "MPSystemInfo.h"
 #import "MPDate.h"
-#import "MPClientCheckInData.h"
 #import "MPNSTask.h"
 #import "MPClientInfo.h"
 #import "GCDTask.h"
 
-// New Networking
-#import "MPNetConfig.h"
-#import "MPNetRequest.h"
-#import "MPNetServer.h"
-#import "MPJsonResult.h"
-#import "MPResult.h"
-#import "Reachability.h"
-#import "MPServerList.h"
-#import "MPSUServerList.h"
-
-#import "AFNetworking.h"
-#import "AFURLRequestSerialization.h"
-#import "AFURLResponseSerialization.h"
-#import "AFSecurityPolicy.h"
-#import "AFNetworkReachabilityManager.h"
-
-#import "AFURLConnectionOperation.h"
-#import "AFHTTPRequestOperation.h"
-#import "AFHTTPRequestOperationManager.h"
-
-#if ( ( defined(__MAC_OS_X_VERSION_MAX_ALLOWED) && __MAC_OS_X_VERSION_MAX_ALLOWED >= 1090) || \
-( defined(__IPHONE_OS_VERSION_MAX_ALLOWED) && __IPHONE_OS_VERSION_MAX_ALLOWED >= 70000 ) )
-    #import "AFURLSessionManager.h"
-    #import "AFHTTPSessionManager.h"
-#endif
+// Networking Add for MP 3.1.0
+#import "MPHTTPRequest.h"
+#import "MPWSResult.h"
+#import "STHTTPRequest.h"
+#import "MPRESTfull.h"
 
 // Patching & Scanning
 #import "MPAsus.h"
@@ -77,17 +59,17 @@
 #import "MPApplePatch.h"
 #import "MPCustomPatch.h"
 
-// AntiVirus
-// #import "MPAntiVirus.h"
-
 // Software Distribution
 #import "MPSWTasks.h"
 #import "MPSWInstaller.h"
 
 // WebServices
 #import "MPDataMgr.h"
-#import "MPWebServices.h"
+//#import "MPWebServices.h"
 #import "MPFailedRequests.h"
+
+// New WS Class
+#import "MPRESTfull.h"
 
 // Crypto
 #import "MPCrypto.h"
@@ -96,6 +78,9 @@
 #import "MPKeyItem.h"
 #import "MPSimpleKeychain.h"
 #import "MPRemoteFingerprint.h"
+
+// SQLite
+#import "FMDB.h"
 
 // Helpers
 #import "NSString+Helper.h"
@@ -107,6 +92,14 @@
 #import "NSDate+Helper.h"
 #import "NSData+Base64.h"
 #import "NSString+Base64.h"
+#import "NSTask+Helper.h"
+
+// -- Models
+// Settings
+#import "Agent.h"
+#import "Server.h"
+#import "Suserver.h"
+#import "Task.h"
 
 // Inventory Plugin
 //#import "InventoryPlugin.h"

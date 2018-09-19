@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>MacPatch - Admin Console</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+
+    <!-- MetisMenu CSS -->
+    <link href="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.css') }}" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+
+    <script>
+        function downloadAgent(path) {
+            var iframe = document.getElementById('dlagent');
+            iframe.src = path;
+        }
+	</script>
+
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-md-offset-3">
+                <div class="login-panel panel panel-default">
+                    <div class="panel-heading text-center">
+                        <img class="center-block" src="{{ url_for('static', filename='img/mp_3_icon_90.png') }}" />
+                        <h4 class="center-block">MacPatch Client Agent</h4>
+                    </div>
+                    <div class="panel-body">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent</th>
+                                        <th>Version</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for row in data %}
+                                    <tr>
+                                        <td>
+                                            <a href="#" onclick="downloadAgent('/mp-content/clients/{{row.puuid}}/MPClientInstall.pkg.zip');return false;">
+                                                <i class="glyphicon glyphicon-save"></i> MPClientInstall.pkg.zip
+                                            </a>
+                                        </td>
+                                        <td>{{row.version}}</td>
+                                        <td>{{row.mdate}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <iframe id="dlagent" style="display:none;"></iframe>
+                    </div>
+                    <div class="panel-footer text-center">
+                        <a href="/auth/login">
+                            <h5>MacPatch Admin Console</h5>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+            <div class="row">
+                <div class="col-md-6 col-md-offset-3">
+                    <article class="flashes">
+                        {% with messages = get_flashed_messages() %}
+                          {% if messages %}
+                            <ul>
+                            {% for message in messages %}
+                              <li>{{ message }}</li>
+                            {% endfor %}
+                            </ul>
+                          {% endif %}
+                        {% endwith %}
+                    </article>
+                </div>
+            </div>
+
+    </div>
+
+    <!-- jQuery -->
+    <script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+    <!-- Metis Menu Plugin JavaScript -->
+    <script src="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.js') }}"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="{{ url_for('static', filename='yarn_components/sb-admin-2/js/sb-admin-2.js') }}"></script>
+
+</body>
+
+</html>

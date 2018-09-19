@@ -1,7 +1,7 @@
 //
 //  Constants.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -43,6 +43,8 @@ extern NSString * const PATCHES_NEEDED_PLIST;
 extern NSString * const PATCHES_APPROVED_PLIST;
 extern NSString * const PATCHES_CRITICAL_PLIST;
 extern NSString * const PATCH_GROUP_PATCHES_PLIST;
+extern NSString * const SOFTWARE_DATA_DIR;
+extern NSString * const SOFTWARE_REQUIRED_PLIST;
 
 extern NSString * const WS_CLIENT_REG;
 extern NSString * const WS_CLIENT_FILE;
@@ -74,11 +76,12 @@ extern NSString * const kMPAVUpdate;
 extern NSString * const MP_KEYCHAIN_FILE;
 extern NSString * const MP_AGENT_HASH;
 extern NSString * const OS_MIGRATION_STATUS;
-extern NSString * const MP_SERVER_PUB_KEY;
+
+extern NSString * const MP_AGENT_DEPL_PLIST;
+extern NSString * const MP_AGENT_SETTINGS;
 
 extern NSString * const MP_CRITICAL_UPDATES_PLIST;
 extern NSString * const MP_AUTHRUN_FILE;
-
 
 @interface Constants : NSObject {
 

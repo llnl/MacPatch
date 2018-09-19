@@ -1,0 +1,79 @@
+#!/bin/sh
+
+# ***************************************************************************************
+# PostFlight Script for MacPatch Server Installer
+# ver 1.0.1
+# Created By Charles Heizer
+# LLNL
+#
+# History:
+# 1.0.1 Now using InstallPyMods.sh script to install python modules
+#
+# ***************************************************************************************
+
+systemVersion=`/usr/bin/sw_vers -productVersion`
+majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
+minorVer=`echo $systemVersion | cut -d . -f 2`
+buildVer=`echo $systemVersion | cut -d . -f 3`
+
+# Script Parent Dir Path
+SRC=$(cd $(dirname "$0"); pwd)
+
+MPBaseDir="/Library/MacPatch"
+dts=`date +%Y%m%d%H%M%S`
+
+# ------------------------------------
+# Create New Self Signed Cert
+# ------------------------------------
+rm /Library/MacPatch/Server/conf/apacheCerts/server.crt
+rm /Library/MacPatch/Server/conf/apacheCerts/server.key
+
+USER="MacPatch"
+EMAIL="admin@localhost"
+ORG="MacPatch"
+DOMAIN=`hostname`
+COUNTRY="NO"
+STATE="State"
+LOCATION="Country"
+
+OPTS=(/C="$COUNTRY"/ST="$STATE"/L="$LOCATION"/O="$ORG"/OU="$USER"/CN="$DOMAIN"/emailAddress="$EMAIL")
+COMMAND=(openssl req -new -x509 -nodes -days 999 -subj "${OPTS[@]}" -newkey rsa:2048 -keyout /tmp/server.key -out /tmp/server.crt)
+
+"${COMMAND[@]}"
+if (( $? )) ; then
+    echo -e "ERROR: Something went wrong!"
+    exit 1
+else
+	mv /tmp/server.key /Library/MacPatch/Server/conf/apacheCerts/server.key
+	mv /tmp/server.crt /Library/MacPatch/Server/conf/apacheCerts/server.crt
+fi
+
+# ------------------------------------
+# Install Python Packages
+# ------------------------------------
+if [ -f "/usr/bin/easy_install" ]; then
+	/Library/MacPatch/Server/conf/scripts/InstallPyMods.sh
+fi
+
+# ------------------------------------
+# Sym-Link the HTTPD LaunchDaemon
+# ------------------------------------
+if [ -f /Library/LaunchDaemons/gov.llnl.mp.httpd.plist ]; then
+	# Remove Old File first
+	rm /Library/LaunchDaemons/gov.llnl.mp.httpd.plist
+fi
+
+# ------------------------------------
+# Move Server Admin
+# ------------------------------------
+cd /Library/MacPatch/Server 
+unzip /Library/MacPatch/Server/conf/bin/MPServerAdmin.app.zip 
+
+# ------------------------------------
+# Sym-Link the HTTPD LaunchDaemon
+# ------------------------------------
+/Library/MacPatch/Server/conf/scripts/Permissions.sh
+
+open /Library/MacPatch/Server
+
+exit 0

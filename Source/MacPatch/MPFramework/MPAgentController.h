@@ -1,7 +1,7 @@
 //
 //  MPAgentController.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -33,7 +33,6 @@
 {
     MPServerConnection *mpServerConnection;
     
-    NSDictionary    *_defaults;
     NSString        *_cuuid;
     NSString        *_appPid;
     
@@ -50,7 +49,6 @@
     NSString        *errorMsg;
 }
 
-@property (nonatomic, strong) NSDictionary          *_defaults;
 @property (nonatomic, strong) NSString              *_cuuid;
 @property (nonatomic, strong) NSString              *_appPid;
 

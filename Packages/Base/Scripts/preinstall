@@ -61,31 +61,23 @@ fi
 # ***************************************************************************************
 # MacPatch Pre-Deployment
 #
-
-# Remove the temp Migration Dir if exists
-if [ -d "/private/tmp/MPMigration" ]; then
-	rm -rf "/private/tmp/MPMigration"
-fi
-
-mkdir -p "/private/tmp/MPMigration"
-
-if [ -f "/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist" ]; then
-	cp "/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist" "/private/tmp/MPMigration/gov.llnl.mp.tasks.plist"
-fi		
-
-
+		
 if [ -d "$MPClientDir" ]; then
 	echo "Removing $MPClientDir"
 	rm -rf "$MPClientDir"
 fi
 
+if [ -f /Library/Application\ Support/MacPatch/gov.llnl.mp.plist ]; then
+	rm -f /Library/Application\ Support/MacPatch/gov.llnl.mp.plist
+fi
+
+if [ -f /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist ]; then
+	rm -f /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+fi
+
 # Clean up old downloads
 if [ -d "/Library/Application Support/MacPatch/SW_Data/sw" ]; then
 	rm -rf /Library/Application\ Support/MacPatch/SW_Data/sw/*
-fi
-
-if [ -f "/Users/Shared/.mpCriUpdates.plist" ]; then
-	rm -f /Users/Shared/.mpCriUpdates.plist
 fi
 
 # Remove Old Crash Reports

@@ -1,7 +1,7 @@
 //
 //  MPInstaller.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -169,7 +169,7 @@
 - (void)setLogoutHook
 {
     // MP 2.2.0 & Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
-    NSString *_atFile = @"/private/tmp/.MPAuthRun";
+    NSString *_atFile = MP_AUTHRUN_FILE;
     NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
     NSString *_rbText = @"reboot";
     // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun

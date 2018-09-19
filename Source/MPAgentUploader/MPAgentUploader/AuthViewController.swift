@@ -73,10 +73,11 @@ class AuthViewController: NSViewController
     {
         self.authStatusField.stringValue = ""
         self.authProgressWheel.startAnimation(nil)
-        
-        let _ssl = (x_useSSL == NSOnState) ? "https" : "http"
+   
+        let _ssl = (NSControl.StateValue.init(x_useSSL!) == NSControl.StateValue.on) ? "https" : "http"
         let _url: String = "\(_ssl)://\(x_mpServer!):\(x_mpPort!)\(URI_PREFIX)/auth/token"
-        
+		log.debug("Auth Request URL: \(_url)")
+		
         let _params: Parameters = ["authUser":authUserID.stringValue, "authPass":authUserPass.stringValue]
         
         MPAlamofire.request(_url, method: .post, parameters: _params, encoding: JSONEncoding.default).validate().responseJSON
@@ -85,6 +86,7 @@ class AuthViewController: NSViewController
             switch response.result
             {
             case .failure(let error):
+				log.error("\(error.localizedDescription)")
                 self.authStatusField.stringValue = error.localizedDescription
             
             case .success(let resultData):

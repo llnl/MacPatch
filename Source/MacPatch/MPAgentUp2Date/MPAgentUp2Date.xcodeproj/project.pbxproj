@@ -20,6 +20,8 @@
 		8FD88E4416DFB46300A870A3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD88E3A16DFB46300A870A3 /* libz.dylib */; };
 		8FD88E4616DFB46300A870A3 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD88E3C16DFB46300A870A3 /* libicucore.dylib */; };
 		8FD88E4A16DFB4BE00A870A3 /* MPAgentUp2DateController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD88E4916DFB4BE00A870A3 /* MPAgentUp2DateController.m */; };
+		8FF5B50C1FC65914006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5091FC658D7006F5FB2 /* Python.framework */; };
+		8FFD37E41FA3968500115F33 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FFD37E31FA3968500115F33 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,6 +56,8 @@
 		8FD88E4716DFB4AE00A870A3 /* MPAgentUp2Date-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPAgentUp2Date-Info.plist"; sourceTree = "<group>"; };
 		8FD88E4816DFB4BE00A870A3 /* MPAgentUp2DateController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentUp2DateController.h; sourceTree = "<group>"; };
 		8FD88E4916DFB4BE00A870A3 /* MPAgentUp2DateController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentUp2DateController.m; sourceTree = "<group>"; };
+		8FF5B5091FC658D7006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
+		8FFD37E31FA3968500115F33 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -61,6 +65,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FF5B50C1FC65914006F5FB2 /* Python.framework in Frameworks */,
+				8FFD37E41FA3968500115F33 /* libsqlite3.tbd in Frameworks */,
 				8FD88E2016DFB40B00A870A3 /* Foundation.framework in Frameworks */,
 				8FD88E3D16DFB46300A870A3 /* libMacPatch.a in Frameworks */,
 				8FD88E3E16DFB46300A870A3 /* Cocoa.framework in Frameworks */,
@@ -97,6 +103,8 @@
 		8FD88E1E16DFB40B00A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FF5B5091FC658D7006F5FB2 /* Python.framework */,
+				8FFD37E31FA3968500115F33 /* libsqlite3.tbd */,
 				8FD88E3316DFB46300A870A3 /* libMacPatch.a */,
 				8FD88E3416DFB46300A870A3 /* Cocoa.framework */,
 				8FD88E3516DFB46300A870A3 /* CoreFoundation.framework */,
@@ -159,7 +167,7 @@
 		8FD88E1416DFB40B00A870A3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = LLNL;
 			};
 			buildConfigurationList = 8FD88E1716DFB40B00A870A3 /* Build configuration list for PBXProject "MPAgentUp2Date" */;
@@ -198,12 +206,20 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -226,7 +242,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -238,12 +254,20 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -259,7 +283,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -277,7 +301,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -307,7 +331,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

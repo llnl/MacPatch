@@ -1,7 +1,7 @@
 //
 //  MPWorker.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -200,8 +200,8 @@ typedef NSUInteger MPPostDataType;
     NSString *fHash;
     MPAsus *mpa = [[MPAsus alloc] init];
     
-    if ([pkgType isEqualToString:@"SCRIPTZIP"])
-	{
+    if ([pkgType isEqualToString:@"SCRIPTZIP"]) {
+        
         NSString *zipFile = [NSString pathWithComponents:[NSArray arrayWithObjects:[mp_SOFTWARE_DATA_DIR path],@"sw",[aSWDict objectForKey:@"id"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent], nil]];
         logit(lcl_vInfo,@"Verify %@ (%@)",[aSWDict objectForKey:@"name"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent]);
         fHash = [mpCrypto md5HashForFile:zipFile];
@@ -241,12 +241,12 @@ typedef NSUInteger MPPostDataType;
             }
         }
         
-    }
-	else if ([pkgType isEqualToString:@"PACKAGEZIP"])
-	{
+    } else if ([pkgType isEqualToString:@"PACKAGEZIP"]) {
         
         NSString *zipFile = [NSString pathWithComponents:[NSArray arrayWithObjects:[mp_SOFTWARE_DATA_DIR path],@"sw",[aSWDict objectForKey:@"id"],[[aSWDict valueForKeyPath:@"Software.sw_url"] lastPathComponent], nil]];
         fHash = [mpCrypto md5HashForFile:zipFile];
+		logit(lcl_vInfo,@"Check file: %@.",[zipFile lastPathComponent]);
+		logit(lcl_vInfo,@"Check Hash: %@ = %@.",[fHash uppercaseString],[aSWDict valueForKeyPath:@"Software.sw_hash"]);
         if (![[fHash uppercaseString] isEqualToString:[aSWDict valueForKeyPath:@"Software.sw_hash"]]) {
             logit(lcl_vError,@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
             return 1;
@@ -987,13 +987,7 @@ done:
 	
 	spTask = [[NSTask alloc] init];
     [spTask setLaunchPath: ASUS_BIN_PATH];
-	
-	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
-		//[spTask setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
-		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
-	} else {
-		[spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
-	}
+    [spTask setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	
     NSPipe *pipe = [NSPipe pipe];
     [spTask setStandardOutput: pipe];
@@ -1028,7 +1022,7 @@ done:
 	NSArray *strArr = [NSArray arrayWithArray:[string componentsSeparatedByString:@"\n"]];
 	
 	NSMutableArray *tmpAppleUpdates = [[NSMutableArray alloc] init];
-	NSString *tmpStr, *line, *lineCleanStart;
+	NSString *tmpStr;
 	NSMutableDictionary *tmpDict;
 	
 	for (int i=0; i<[strArr count]; i++) {
@@ -1044,30 +1038,28 @@ done:
 			}
 			
 			// Strip the White Space and any New line data
-			line = [strArr objectAtIndex:i];
-			tmpStr = [[strArr objectAtIndex:i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-			if ([tmpStr hasPrefix:@"*"] || [tmpStr hasPrefix:@"!"])
-			{
-				@try
-				{
-					lineCleanStart = [self cleanLine:line];
-					tmpDict = [[NSMutableDictionary alloc] init];
-					[tmpDict setObject:lineCleanStart forKey:@"patch"];
-					[tmpDict setObject:@"Apple" forKey:@"type"];
-					[tmpDict setObject:[[lineCleanStart componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
-					[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
-					[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
-					
-					[tmpAppleUpdates addObject:[tmpDict copy]];
-					tmpDict = nil;
+			// tmpStr = [[strArr objectAtIndex:i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			tmpStr = [[strArr objectAtIndex:i] stringByTrimmingWhitespaceFromFront];
+			
+			// If the object/string starts with *,!,- then allow it
+			if ([[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"*"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"!"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"-"]) {
+				tmpDict = [[NSMutableDictionary alloc] init];
+				logit(lcl_vInfo,@"Apple Update RAW: %@",tmpStr);
+				logit(lcl_vInfo,@"Apple Update: %@",[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))]);
+				[tmpDict setObject:[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] forKey:@"patch"];
+				[tmpDict setObject:@"Apple" forKey:@"type"];
+				[tmpDict setObject:[[[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
+				[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+				[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+				[tmpDict setObject:[self getRecommendedFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"recommended"];
+				if ([[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] containsString:@"[restart]" ignoringCase:YES] == TRUE) {
+					[tmpDict setObject:@"Yes" forKey:@"restart"];
+				} else {
+					[tmpDict setObject:@"No" forKey:@"restart"];
 				}
-				@catch (NSException *exception)
-				{
-					qlerror(@"Error create patch dict. %@",exception);
-				}
-			}
+				
+				[tmpAppleUpdates addObject:tmpDict];
+			} // if is an update
 		} // if / empty lines
 	} // for loop
 	appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
@@ -1075,27 +1067,6 @@ done:
 	logit(lcl_vDebug,@"Apple Updates Found, %@",appleUpdates);
 	return appleUpdates;
 }
-
-- (NSString *)cleanLine:(NSString *)line
-{
-	// Removes the beginning of the line
-	NSString *component = @"*";
-	NSString *_lineTrimed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	if ([_lineTrimed hasPrefix:@"*"])
-	{
-		component = @"* ";
-	}
-	else if ([_lineTrimed hasPrefix:@"!"])
-	{
-		component = @"! ";
-	}
-	
-	NSMutableArray *items = [[line componentsSeparatedByString:component] mutableCopy];
-	[items removeObjectAtIndex:0];
-	// With first item removed put it all back together
-	return  [items componentsJoinedByString:component];
-}
-
 // Proxy Method
 - (NSArray *)scanForCustomUpdatesViaHelper
 {
@@ -1385,16 +1356,15 @@ done:
 - (void)setLogoutHookViaHelper
 {
     // This has been changed in MacPatch 2.2.0
-    NSString *_atFile = MP_AUTHRUN_FILE;
     NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
     NSString *_rbText = @"reboot";
     // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
     NSDictionary *rebootPlist = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"reboot"];
     [rebootPlist writeToFile:_rbFile atomically:YES];
-    [_rbText writeToFile:_atFile atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+    [_rbText writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
     NSDictionary *_fileAttr =  [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedLong:0777],@"NSFilePosixPermissions",nil];
     [[NSFileManager defaultManager] setAttributes:_fileAttr ofItemAtPath:_rbFile error:NULL];
-    [[NSFileManager defaultManager] setAttributes:_fileAttr ofItemAtPath:_atFile error:NULL];
+    [[NSFileManager defaultManager] setAttributes:_fileAttr ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
 }
 // Proxy Method
 - (int)setPermissionsForFileViaHelper:(in bycopy NSString *)aFile posixPerms:(unsigned long)posixPermissions
@@ -1512,7 +1482,7 @@ done:
 		return 1;
 	}
 	
-    return 0;
+	return 0;
 }
 // Proxy Method
 - (int)writeArrayToFileViaHelper:(NSArray *)data toFile:(NSString *)aFile
@@ -1616,18 +1586,14 @@ done:
             
             logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
             NSString *dlPatchLoc = [mpa downloadUpdate:downloadURL error:&dlErr];
-			if (dlErr) {
-				qlerror(@"%@",dlErr.localizedDescription);
-				return 1; // Error creating stage patch dir. Can not use it.
-			}
-			
+            
             dlErr = nil;
             [fm moveItemAtPath:dlPatchLoc toPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]] error:&dlErr];
             if (dlErr) {
                 qlerror(@"%@",dlErr.localizedDescription);
                 return 1; // Error creating stage patch dir. Can not use it.
             }
-            qlinfo(@"%@ (%@) has been staged.",aPatch[@"patches"][@"patches"][0][@"name"],aPatch[@"patches"][@"patch_id"]);
+            qlinfo(@"%@ has been staged.",[aPatch objectForKey:@"patches"]);
         }
     }
     
@@ -1658,10 +1624,11 @@ done:
         qlerror(@"%@",_err.localizedDescription);
         if (error != NULL) *error = _err;
     }
-	
+    
     return result;
 }
 
+// Proxy Method
 - (BOOL)removeStagedDirectory:(in bycopy NSString *)stagedDirectory
 {
     BOOL result = NO;
@@ -1679,6 +1646,40 @@ done:
         result = YES;
     }
     return result;
+}
+
+// Proxy Method
+- (BOOL)removeFilesUsingExtensionsFromDirectory:(in bycopy NSString *)stagedDirectory types:(in bycopy NSArray *)types
+{
+	BOOL result = YES;
+
+	NSMutableString *predString = [[NSMutableString alloc] initWithString:@""];
+	for (NSString *t in types)
+	{
+		[predString appendFormat:@"(SELF like [cd] '*.%@')", t];
+		if (![t isEqualToString:[types lastObject]]) {
+			[predString appendString:@" OR "];
+		}
+	}
+	
+	// Example -- @"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"
+	NSPredicate *predicate = [NSPredicate predicateWithFormat:(NSString *)predString];
+	NSArray *fileList = [[fm contentsOfDirectoryAtPath:stagedDirectory error:NULL] filteredArrayUsingPredicate:predicate];
+	qldebug(@"[removeFilesUsingExtensionsFromDirectory]: Files found %@",fileList);
+
+	NSError *rmErr = nil;
+	for (NSString *f in fileList)
+	{
+		rmErr = nil;
+		[fm removeItemAtPath:f error:&rmErr];
+		if (rmErr)
+		{
+			qlerror(@"Error removing file %@",f);
+			qlerror(@"%@",rmErr);
+		}
+	}
+
+	return result;
 }
 
 #pragma mark SelfPatch Misc
@@ -1763,23 +1764,33 @@ done:
     return taskResult;
 }
 
+// Proxy Method
+- (NSDictionary *)clientCheckInData
+{
+	MPClientInfo *ci = [[MPClientInfo alloc] init];
+	NSDictionary *agentData = [ci agentData];
+	return agentData;
+}
+
+// Proxy Method
+- (void)updateClientGroupSettingViaHelper:(in bycopy NSDictionary *)settingsRevs
+{
+	MPSettings *set = [MPSettings sharedInstance];
+	[set compareAndUpdateSettings:settingsRevs];
+	return;
+}
+
 #pragma mark AuthPlugin
 - (void)logoutInstallCompletion:(int)taskAction
 {
 #ifdef DEBUG
     NSLog(@"Reboot would happen ...");
 #else
-    int rb = 0;
-    switch ( taskAction ) {
+    switch ( taskAction )
+	{
         case 0:
-			//rb = reboot(RB_AUTOBOOT);
-			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
-            qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
-            if (rb == -1) {
-                // Try Forcing it :-)
-                qlinfo(@"Attempting to force reboot...");
-                execve("/sbin/reboot",0,0);
-            }
+            qlinfo(@"MPAuthPlugin issued a reboot.");
+            [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
             break;
         case 1:
             // Code to just do logout
@@ -1827,6 +1838,12 @@ done:
         }
     }
     return 0;
+}
+
+// Proxy Method
+- (int)collectAgentDiagnosticsDataViaHelper
+{
+	return 0;
 }
 
 @end

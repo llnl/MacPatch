@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+			Client Dashboard - {{client_id}}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+		<style>
+			.clickable {
+				cursor: pointer;
+			}
+		</style>
+	{% endblock %}
+
+
+</head>
+
+<body>
+	{% block bodyPanel %}
+	<div class="span12 pagination-centered">
+		<div class="row">
+			<div class="col-sm-12">
+				<div class="panel panel-default">
+					<div class="panel-body">
+						<div class="container">
+							<div class="row">
+								<div class="col-sm-4" style="font-size:small;"><b>Client ID:</b> {{cData.cuuid}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>IP Address:</b> {{cData.ipaddr}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>Filevault:</b> {{cData.fileVaultStatus}}</div>
+							</div>
+							<div class="row">
+								<div class="col-sm-4" style="font-size:small;"><b>OS Version:</b> {{cData.osver}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>MAC Address:</b> {{cData.macaddr}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>Firmware:</b> {{cData.firmwareStatus}}</div>
+							</div>
+							<div class="row">
+								<div class="col-sm-4" style="font-size:small;"><b>Current User:</b> {{cData.consoleuser}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>Serial No:</b> {{cData.serialno}}</div>
+								<div class="col-sm-4" style="font-size:small;"><b>Reboot Needed:</b> {{cData.needsreboot}}</div>
+							</div>
+							<div class="row">
+
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<span class="clickable">
+							Required Patches
+							<i class="glyphicon glyphicon-chevron-down pull-right"></i>
+						</span>
+					</div>
+					<!-- /.panel-heading -->
+					<div class="panel-body">
+						<table id="rpatchesTable" class="table table-striped table-condensed"></table>
+					</div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="panel panel-default">
+					<div class="panel-heading">
+						<span class="clickable">
+							Last 10 Installed Patches
+							<i class="glyphicon glyphicon-chevron-down pull-right"></i>
+						</span>
+					</div>
+					<!-- /.panel-heading -->
+					<div class="panel-body">
+						<table id="ipatchesTable" class="table table-striped table-condensed"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-lg-12">
+				<div class="panel panel-default">
+					<div class="panel-heading" style="height:40px;">
+						<div class="pull-left">
+							<div id="invTitle">Inventory</div>
+						</div>
+						<div class="pull-right">
+							<div class="dropdown">
+								<div class="btn-group">
+									<button type="button" id="menu1" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+										Collections
+										<span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu pull-right" role="menu">
+										{% for t in invTypes %}
+										<li><a id="{{t['table']}}" href="#">{{t['name']}}</a></li>
+										{% endfor %}
+									</ul>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- /.panel-heading -->
+					<div class="panel-body">
+						<table id="invTable" class="table table-striped table-condensed table-bordered table-hover" data-show-export="true" style="width:auto"></table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	 <script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+	{% block javascript %}
+	<script type="text/javascript">
+
+	var _invArr = [];
+	{% for t in invTypes %}
+		_invArr.push({table: '{{t['table']}}', name: '{{t['name']}}'});
+	{% endfor %}
+
+	$( document ).ready(function()
+	{
+		$.get('/clients/dashboard/required/{{client_id}}').done(function(data) {
+
+			var obj = JSON.parse(data);
+			var _rows = obj['data'];
+			var _cols = obj.columns;
+
+			$('#rpatchesTable').bootstrapTable(
+			{
+				striped: true,
+				pagination: false,
+				sidePagination: 'client',
+				search: false,
+				showRefresh: false,
+				resizable: true,
+				sortable: true,
+				showColumns: false,
+				columns: _cols,
+				data: _rows
+			});
+		});
+
+		$.get('/clients/dashboard/installed/{{client_id}}').done(function(data)
+		{
+			var obj1 = JSON.parse(data);
+			var _rows1 = obj1['data'];
+			var _cols1 = obj1.columns;
+
+			$('#ipatchesTable').bootstrapTable(
+			{
+				striped: true,
+				pagination: false,
+				sidePagination: 'client',
+				search: false,
+				showRefresh: false,
+				resizable: true,
+				sortable: true,
+				showColumns: false,
+				columns: _cols1,
+				data: _rows1
+			});
+		});
+
+		$(function(){
+			$(".dropdown-menu").on("click", "li", function(event)
+			{
+				// var invType = event.toElement.id; // Get the text of the element
+				var invType = event.target.id; // Get the text of the element
+				// alert(invType);
+
+				$.get('/clients/dashboard/inventory/{{client_id}}/'+invType).done(function(data)
+				{
+					for (var key in _invArr) {
+						if (_invArr[key]['table'] == invType) {
+							$('#invTitle').html("Inventory - " + _invArr[key]['name']);
+						}
+					}
+
+					var obj2 = JSON.parse(data);
+					var _rows2 = obj2['data'];
+					var _cols2 = obj2['columns'];
+
+					$('#invTable').bootstrapTable('destroy');
+
+					if (_rows2.length > 1) {
+						$('#invTable').addClass('table-condensed');
+					}
+
+					$('#invTable').bootstrapTable(
+					{
+						striped: true,
+						pagination: true,
+						sidePagination: 'client',
+						search: true,
+						showRefresh: false,
+						resizable: true,
+						sortable: true,
+						showColumns: true,
+						exportDataType: 'all',
+						exportTypes: ['json', 'csv', 'excel'],
+						columns: _cols2,
+						data: _rows2
+					});
+				});
+
+			})
+		})
+	});
+	$(document).on('click', '.panel-heading span.clickable', function(e){
+		var $this = $(this);
+		if(!$this.hasClass('panel-collapsed')) {
+			$this.parents('.panel').find('.panel-body').slideUp();
+			$this.addClass('panel-collapsed');
+			$this.find('i').removeClass('glyphicon-chevron-down').addClass('glyphicon-chevron-up');
+
+		} else {
+			$this.parents('.panel').find('.panel-body').slideDown();
+			$this.removeClass('panel-collapsed');
+			$this.find('i').removeClass('glyphicon-chevron-up').addClass('glyphicon-chevron-down');
+
+		}
+	});
+	</script>
+	{% endblock %}
+</body>
+</html>

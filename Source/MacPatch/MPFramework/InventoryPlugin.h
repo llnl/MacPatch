@@ -3,7 +3,7 @@
 //  MPAgent
 //
 //  Created by Heizer, Charles on 9/1/15.
-//  Copyright (c) 2017 LLNL. All rights reserved.
+//  Copyright (c) 2018 LLNL. All rights reserved.
 //
 
 // InventoryPlugin.h -- protocol for MacPatch Inventory plugins to use

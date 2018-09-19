@@ -1,7 +1,7 @@
 //
 //  MPTaskValidate.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,10 +25,10 @@
 
 #import "MPTaskValidate.h"
 
-NSString * const kMPCheckIn			= @"Every@900";
+NSString * const kMPCheckIn			= @"Every@300";
 NSString * const kMPAgentCheck		= @"Every@3600";
 NSString * const kMPVulScan			= @"Recurring@Daily@12:00:00";
-NSString * const kMPVulUpdate		= @"Recurring@Daily@12:10:00";
+NSString * const kMPVulUpdate		= @"Recurring@Daily@12:30:00";
 NSString * const kMPAVCheck			= @"EVERYRAND@14400";
 NSString * const kMPAVInfo			= @"EVERYRAND@1800";
 NSString * const kMPInvScan			= @"EVERY@21600";
@@ -38,321 +38,9 @@ NSString * const kMPProfiles        = @"EVERY@1800";
 NSString * const kMPSrvList         = @"EVERY@600";
 NSString * const kMPSUSrvList       = @"EVERY@1800";
 NSString * const kMPAppStore        = @"EVERY@7200";
-NSString * const kStartDate			= @"2011-01-01";
-NSString * const kEndDate			= @"3000-01-01";
+NSString * const kStartDate			= @"2017-01-01";
+NSString * const kEndDate			= @"2030-01-01";
 NSString * const kMPPatchCrit		= @"EVERY@1800";
-
-#define MP_TASKS_PLIST_DEFAULT		@"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist.default"
-#define DEFAULT_TASKS_DATA @"<?xml version=\"1.0\" encoding=\"UTF-8\"?> \
-<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \
-<plist version=\"1.0\"> \
-<dict> \
-<key>mpTasks</key> \
-<array> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPCheckIn</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Checkin Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>1</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>Every@900</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Checkin</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPAgentCheck</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Update Agent Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>2</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>Every@3600</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Update Agent </string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPVulScan</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Vulnerability Scan Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>3</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>Recurring@Daily@12:00:00</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Vulnerability Scan</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPVulUpdate</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Vulnerability Update Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>4</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>Recurring@Daily@12:30:00</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Vulnerability Update</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPAVCheck</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Antivirus Scan &amp; Update Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>5</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERYRAND@14400</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Antivirus Scan &amp; Update</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPAVInfo</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Antivirus Info Scan Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>8</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERYRAND@1800</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Antivirus Info Scan</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPInvScan</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Client Inventory Scan Task</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>6</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERY@21600</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Client Inventory Scan</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2011-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPSWDistMan</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Check for Mandatory Software</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>7</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERY@14400</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Mandatory Software Install</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2012-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPSrvList</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>Server List scan and update</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>9</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERY@600</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>Server List scan and update</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2012-01-01</string> \
-</dict> \
-<dict> \
-<key>active</key> \
-<string>1</string> \
-<key>cmd</key> \
-<string>kMPSUSrvList</string> \
-<key>cmdalt</key> \
-<string>0</string> \
-<key>description</key> \
-<string>SU Server List scan and update</string> \
-<key>enddate</key> \
-<string>3000-01-01</string> \
-<key>id</key> \
-<string>12</string> \
-<key>idrev</key> \
-<string>1</string> \
-<key>idsig</key> \
-<string>0</string> \
-<key>interval</key> \
-<string>EVERY@1800</string> \
-<key>mode</key> \
-<string>0</string> \
-<key>name</key> \
-<string>SU Server List scan and update</string> \
-<key>parent</key> \
-<string>0</string> \
-<key>scope</key> \
-<string>Global</string> \
-<key>startdate</key> \
-<string>2012-01-01</string> \
-</dict> \
-</array> \
-</dict> \
-</plist> \
-"
 
 #pragma mark -
 #pragma mark NSString Category
@@ -401,17 +89,6 @@ NSString * const kMPPatchCrit		= @"EVERY@1800";
 #pragma mark MPTaskValidate
 
 @implementation MPTaskValidate
-
-@synthesize defaultTasks;
-
--(id)init
-{
-    if (self = [super init])
-    {
-        [self readDefaultTasks];
-    }
-    return self;
-}
 
 - (int)validateTask:(NSDictionary *)aTask
 {
@@ -498,8 +175,20 @@ NSString * const kMPPatchCrit		= @"EVERY@1800";
 			return NO;	
 		}
 		NSString *_mod = [[aInterval objectAtIndex:1] uppercaseString];
-		if ([_mod isEqualToString:@"DAILY"] || [_mod isEqualToString:@"WEEKLY"] || [_mod isEqualToString:@"MONTHLY"]) {
+		if ([_mod isEqualToString:@"DAILY"] || [_mod isEqualToString:@"DAILYRAND"] || [_mod isEqualToString:@"WEEKLY"] || [_mod isEqualToString:@"MONTHLY"]) {
 			return [[aInterval objectAtIndex:2] isValidTimeString];
+		} else {
+			return NO;
+		}
+	}
+	
+	// Only DailyRand can have 4 options
+	if ([aInterval count] == 4) {
+		if ([aInterval objectAtIndex:0] == NULL || [aInterval objectAtIndex:1] == NULL || [aInterval objectAtIndex:2] == NULL || [aInterval objectAtIndex:3] == NULL) {
+			return NO;
+		}
+		if ([[[aInterval objectAtIndex:0] uppercaseString] isEqual:@"DAILYRAND"]) {
+			return [[aInterval objectAtIndex:3] isValidNumberString];
 		} else {
 			return NO;
 		}
@@ -521,35 +210,6 @@ NSString * const kMPPatchCrit		= @"EVERY@1800";
 		return YES;
 	} else {
 		return NO;
-	}
-}
-
-- (void)readDefaultTasks
-{
-	NSString *error;
-	NSPropertyListFormat format;
-	NSData *dataDefault = [NSData dataWithData:[DEFAULT_TASKS_DATA dataUsingEncoding:NSUTF8StringEncoding]];
-	NSMutableDictionary *theDefaultPlist = [NSPropertyListSerialization propertyListFromData:dataDefault 
-																			mutabilityOption:NSPropertyListImmutable 
-																					  format:&format 
-																			errorDescription:&error];
-	if (!theDefaultPlist) {
-		logit(lcl_vError,@"Error, unable to read defaults. %@",error);	
-	}
-	
-	[self setDefaultTasks:[NSDictionary dictionaryWithDictionary:theDefaultPlist]];
-}
-
-- (NSDictionary *)resetTaskFromDefaults:(NSString *)aCMDName
-{
-	NSArray *x = [NSArray arrayWithArray:[defaultTasks objectForKey:@"mpTasks"]];
-	NSPredicate *p = [NSPredicate predicateWithFormat:@"cmd contains[cd] %@",aCMDName];
-	NSArray *filtered = [x filteredArrayUsingPredicate:p];
-	
-	if ([filtered count] == 1) {
-		return [filtered objectAtIndex:0];
-	} else {
-		return nil;
 	}
 }
 

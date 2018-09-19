@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<!-- Custom CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+	<!-- Custom Fonts -->
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+	<link href="{{ url_for('static', filename='yarn_components/jquery-steps-tc/demo/css/jquery.steps.css') }}" rel="stylesheet">
+
+	<link href="{{ url_for('static', filename='css/range.css') }}" rel="stylesheet">
+
+	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+
+	<style type="text/css" media="screen">
+		#spanLink {
+			cursor:pointer;
+			color:#337ab7;
+			text-decoration:underline;
+		}
+
+		.wizard .content {
+			min-height: 600px;
+		}
+		.wizard .content > .body {
+			width: 100%;
+			height: auto;
+			padding: 15px;
+			position: relative;
+		}
+
+		.wizard > .steps > ul > li {
+			width: 20%;
+		}
+
+		.top-buffer { margin-top:8px; }
+
+		#sw_pre_install_script {
+			height: 160px;
+			width: 520px;
+		}
+
+		#sw_post_install_script {
+			height: 160px;
+			width: 520px;
+		}
+
+		#sw_uninstall_script {
+			height: 160px;
+			width: 520px;
+		}
+		.range {
+			width: 600px;
+		}
+
+		.selectize-input {
+			width: 600px !important;
+		}
+	</style>
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="content">
+	<form id="softwarePKGForm" action="#">
+		<div id="wizard">
+			<!-- Section 1 -->
+			<h1>Software Package Information</h1>
+			<section>
+				<h4>Software Package Information</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Name</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="sName" SIZE="50" required="isReq" message="Error [software name]: Name is required." value="{{data['PKG'].sName or ''}}">
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. "FireFox")</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Version</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="sVersion" SIZE="50" required="isReq" message="Error [software version]: Version is required." value="{{data['PKG'].sVersion or ''}}">
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. "3.5.4")</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Vendor</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="sVendor" SIZE="50" value="{{data['PKG'].sVendor or ''}}">
+							</div>
+							<div class="col-md-2"></div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Description</label>
+							</div>
+							<div class="col-md-7">
+								<textarea name="sDescription" cols="80" rows="14">{{data['PKG'].sDescription or ''}}</textarea>
+							</div>
+							<div class="col-md-2"></div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Vendor Info URL</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="sVendorURL" SIZE="50" value="{{data['PKG'].sVendorURL or ''}}">
+							</div>
+							<div class="col-md-2"></div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Package State</label>
+							</div>
+							<div class="col-md-7">
+								<select name="sState" size="1">
+									<option value="0" {% if data['PKG'].sState == 0 %}Selected{% endif %}>Create</option>
+									<option value="1" {% if data['PKG'].sState == 1 %}Selected{% endif %}>QA</option>
+									<option value="2" {% if data['PKG'].sState == 2 %}Selected{% endif %}>Production</option>
+									<option value="3" {% if data['PKG'].sState == 3 %}Selected{% endif %}>Disabled</option>
+								</select>
+							</div>
+							<div class="col-md-2"></div>
+						</div>
+
+					</div>
+				</div>
+			</section>
+			<!-- Section 2 -->
+			<h1>Package</h1>
+			<section>
+				<h4>Software Icon</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Image</label>
+							</div>
+							<div class="col-md-7">
+								<input type="file" name="sw_img_path" id="sw_img_path">
+								<br>
+								<div style="font-size:12px;padding-bottom:10px;">
+									{% if data['PKG'].sw_img_path %}
+									{{ data['PKG'].sw_img_path }}
+									{% endif %}
+								</div>
+							</div>
+							<div class="col-md-3">
+								{% if data['PKG'].sw_img_path %}
+								<img src="/mp-content{{ data['PKG'].sw_img_path }}" height="24" />
+								{% endif %}
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+				<h4>Package</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Package</label>
+							</div>
+							<div class="col-md-7">
+								<input type="file" name="mainPackage" id="mainPackage">
+								<br>
+								<div style="font-size:12px;padding-bottom:10px;">
+									{% if data['PKG'].sw_url %}
+									<a href="/mp-content/{{data['PKG'].sw_url}}">
+										<img src="{{ url_for('static', filename='img/arrow_down.png') }}" height="14" />{{ data['PKG'].sw_url.split("/") | last }} ({{data['PKG'].sw_hash }})
+									</a>
+									{% endif %}
+								</div>
+							</div>
+							<div class="col-md-3">
+								<small>Note: The file must be a zip file or dmg file.</small>
+							</div>
+						</div>
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Package Type</label>
+							</div>
+							<div class="col-md-7">
+								<select name="sw_type" size="1">
+									<option value="packageZip" {% if data['PKG'].sw_type == "packageZip" %}Selected{% endif %}>Package/Zip (pkg/mpkg)</option>
+									<option value="packageDMG" {% if data['PKG'].sw_type == "packageDMG" %}Selected{% endif %}>DMG/Package</option>
+									<option value="appDMG" {% if data['PKG'].sw_type == "appDMG" %}Selected{% endif %}>DMG/Application</option>
+									<option value="appZip" {% if data['PKG'].sw_type == "appZip" %}Selected{% endif %}>Application/Zip</option>
+									<option value="scriptZip" {% if data['PKG'].sw_type == "scriptZip" %}Selected{% endif %}>Script/Zip</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<small></small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Installer Env Variables</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" id="env_var" name="sw_env_var" SIZE="60" value="{{data['PKG'].sw_env_var or ''}}">
+							</div>
+							<div class="col-md-3">
+								<small>(Example: ATTR=VALUE,ATTR=VALUE)</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Requires Reboot</label>
+							</div>
+							<div class="col-md-7">
+								<select name="sReboot" size="1">
+									<option value="0" {% if data['PKG'].sReboot == 0 %}Selected{% endif %}>No</option>
+									<option value="1" {% if data['PKG'].sReboot == 1 %}Selected{% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<small></small>
+							</div>
+						</div>
+					</div>
+				</div>
+				<br>
+				<h4>Patching</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Group ID {{data['PKG'].patch_bundle_id}}</label>
+							</div>
+							<div class="col-md-7">
+								<select id="bundleIDLst" name="patch_bundle_id" size="1">
+									<option value="">...</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<small>(e.g. org.mozilla.firefox)</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Enable Auto-Patch</label>
+							</div>
+							<div class="col-md-7">
+								<select name="auto_patch" size="1">
+									<option value="0" {% if data['PKG'].auto_patch == 0 %}Selected{% endif %}>No</option>
+									<option value="1" {% if data['PKG'].auto_patch == 1 %}Selected{% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-3">
+								<small></small>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</section>
+			<!-- Section 3 -->
+			<h1>Filters</h1>
+			<section>
+				<h4>Install Filters</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>OS Type</label>
+							</div>
+							<div class="col-md-7">
+								<select name="req_os_type" size="1">
+									<option {% if data['PKGCRI_OSType'] == 'Mac OS X, Mac OS X Serve' %}Selected{% endif %}>Mac OS X, Mac OS X Serve</option>
+									<option {% if data['PKGCRI_OSType'] == 'Mac OS X' %}Selected{% endif %}>Mac OS X</option>
+									<option {% if data['PKGCRI_OSType'] == 'Mac OS X Server' %}Selected{% endif %}>Mac OS X Server</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. "Mac OS X, Mac OS X Server")</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>OS Version</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="req_os_ver" SIZE="50" required="isReq" message="Error [Required OS Version]: A OS version is required." value="{{data['PKGCRI_OSVer'] or '*'}}">
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. "10.4.*,10.5.*")</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Architecture Type</label>
+							</div>
+							<div class="col-md-7">
+								<select name="req_os_arch" size="1">
+									<option {% if data['PKGCRI_OSArch'] == 'PPC, X86' %}Selected{% endif %}>PPC, X86</option>
+									<option {% if data['PKGCRI_OSArch'] == 'X86' %}Selected{% endif %}>X86</option>
+									<option {% if data['PKGCRI_OSArch'] == 'PPC' %}Selected{% endif %}>PPC</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. "PPC, X86"; Universal)</small>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+			<!-- Section 4 --->
+			<h1>Scripts</h1>
+			<section>
+				<h4>Package Scripts</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>PreInstall Script</label>
+							</div>
+							<div class="col-md-7">
+								<div id="sw_pre_install_script">{{data['PKG'].sw_pre_install_script  or ''}}</div>
+							</div>
+							<div class="col-md-3">
+								<small>Note: The return code of "0" is True.</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>PostInstall Script</label>
+							</div>
+							<div class="col-md-7">
+								<div id="sw_post_install_script">{{data['PKG'].sw_post_install_script  or ''}}</div>
+							</div>
+							<div class="col-md-3">
+								<small>Note: The return code of "0" is True.</small>
+							</div>
+						</div>
+
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Uninstall Script</label>
+							</div>
+							<div class="col-md-7">
+								<div id="sw_uninstall_script">{{data['PKG'].sw_uninstall_script  or ''}}</div>
+							</div>
+							<div class="col-md-2">
+								<small></small>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</section>
+			<h1>Save</h1>
+			<section>
+				<h4>Install Requisites &amp; Save</h4>
+				<div class="container-fluid">
+					<div class="form-group">
+
+						<div class="optionBoxPre">
+							<input type="hidden" id="reqPreID" value="0">
+							<div class="blockPre">
+								<label>Pre-Requisite Package(s)</label>
+								<span class="addPre" id='spanLink'><p><h5><img src="/static/img/pkg_add.png"/> Add Package</h5></span><p>
+							</div>
+						</div>
+
+						<div class="row top-buffer">&nbsp;</div>
+
+						<div class="optionBoxPost">
+							<input type="hidden" id="reqPstID" value="0">
+							<div class="blockPost">
+								<label>Post-Requisite Package(s)</label>
+								<span class="addPost" id='spanLink'><p><h5><img src="/static/img/pkg_add.png"/> Add Package</h5></span><p>
+							</div>
+						</div>
+
+					</div>
+				</div>
+			</section>
+		</div>
+		<input type="hidden" name="suuid" value="{{data['SUUID']}}">
+	</form>
+</div>
+{%  endblock %}
+
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<!-- jQuery Step Wizard -->
+	<script src="{{ url_for('static', filename='static_components/modernizr/modernizr.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/jquery-steps-tc/build/jquery.steps.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
+
+	<script>
+		$(document).ready(function()
+		{
+			// Create Global vars
+			var vars = {}; // used for global variables on dynamic names
+			var acePreReq = []; // array of ace editors
+			var acePstReq = []; // array of ace editors
+			var selectData = [];
+
+			function createCSS(name,rules)
+			{
+				var style = document.createElement('style');
+				style.type = 'text/css';
+				document.getElementsByTagName('head')[0].appendChild(style);
+				if(!(style.sheet||{}).insertRule) {
+					(style.styleSheet || style.sheet).addRule(name, rules);
+				} else {
+					style.sheet.insertRule(name+"{"+rules+"}",0);
+				}
+			}
+
+			// jQuery Wizard
+			$("#softwarePKGForm").children("div").steps(
+			{
+				headerTag: "h1",
+				bodyTag: "section",
+				{% if session.role[0] != 1 %}
+				enableFinishButton: false,
+				{% endif %}
+				onFinishing: function (event, currentIndex)
+				{
+					// Add ACE Editor Data to form to post
+					var formData = new FormData($('#softwarePKGForm')[0]);
+					var formDataNew = new FormData();
+
+					// Loop and add values to new form data obj
+					for (var pair of formData.entries())
+					{
+						//console.log('Eval: '+pair[0]);
+						if (pair[0] == 'mainPackage' && $('#mainPackage').val() == '')
+						{
+							continue;
+						}
+						if (pair[0] == 'sw_img_path' && $('#sw_img_path').val() == '')
+						{
+							continue;
+						}
+						//console.log('Append: '+pair[0]);
+						formDataNew.append(pair[0], pair[1]);
+					}
+
+					// Add ACE Editor Data to form to post
+					formDataNew.append('sw_pre_install_script', preinstall.getValue());
+					formDataNew.append('sw_post_install_script', postinstall.getValue());
+					formDataNew.append('sw_uninstall_script', uninstall.getValue());
+
+					$.ajax({
+						type:'POST',
+						url: '/software/package/save',
+						data: formDataNew,
+						cache: false,
+						processData: false,
+						contentType: false,
+						success: function(){
+							alert("Software Package Saved Successfully");
+							$('#modalDialog').modal('hide');
+							return true;
+						},
+						error: function(jqXHR, textStatus, errorThrown) {
+							alert("Software Package Failed to Save");
+							//$('#modalDialog').modal('hide');
+							return false;
+						}
+					});
+					return true;
+				},
+				onFinished: function (event, currentIndex)
+				{
+					//alert("Submitted!");
+					$('#modalDialog').modal('hide');
+					parent.closeModal();
+				}
+			});
+
+			// Populate the Software Requisits
+			function populateRequisits()
+			{
+				{% for pre in data['PKGPREREQ'] %}
+					x = {}
+					x['order'] = {{pre['order'] or 0}};
+					x['name'] = "{{pre['name']}}";
+					x['suuid'] = "{{pre['suuid']}}";
+					var idName = "preSWPKG"+x['order']
+					addReq(x['order'],0);
+					selectReqOption(idName,x['suuid']);
+				{% endfor %}
+
+				{% for pst in data['PKGPOSTREQ'] %}
+					x = {}
+					x['order'] = {{pst['order'] or 0}};
+					x['name'] = "{{pst['name']}}";
+					x['suuid'] = "{{pst['suuid']}}";
+					var idName = "postSWPKG"+x['order']
+					addReq(x['order'],1);
+					selectReqOption(idName,x['suuid']);
+				{% endfor %}
+			}
+
+			// Method is used to populate patch bundle ID list
+			function getSelectData()
+			{
+				$('#bundleIDLst').append("<option value=''>...</option>");
+				{% for x in data['BUNDLEIDS'] %}
+					{% if data['PKG'].patch_bundle_id == x[0] %}
+						$('#bundleIDLst').append("<option value='{{x[0]}}' selected>{{x[0]}} ({{x[1]}})</option>");
+					{% else %}
+						$('#bundleIDLst').append("<option value='{{x[0]}}'>{{x[0]}} ({{x[1]}})</option>");
+					{% endif %}
+				{% endfor %}
+				$('#bundleIDLst').selectize({
+					create: true,
+					sortField: {field: 'text'}
+				});
+			}
+
+			function populateData()
+			{
+				//populateCriteria();
+				populateRequisits();
+				getSelectData();
+			}
+
+			// Call funtion to load any criteria data
+			window.onload = populateData();
+
+			function addRequisit(sid, type)
+			{
+				var _name = "preSWPKG";
+				var _order = "preSWPKG_Order_"+sid;
+				var _htm = '<div class="blockPre" id="'+_name+'_row_'+sid+'">';
+
+				if (type == 1) {
+					_name = "postSWPKG";
+					_order = "postSWPKG_Order_"+sid;
+					_htm = '<div class="blockPost" id="'+_name+'_row_'+sid+'">';
+				}
+
+				// Row
+				_htm = _htm + '<div class="row top-buffer">';
+
+				// Left Column
+				_htm = _htm + '<div class="col-md-2">';
+				// Remove Image
+				_htm = _htm + '<span class="remove"><img src="/static/img/cancel.png" style="vertical-align:top;margin-top:2px;" height="14" width="14"></span>';
+				_htm = _htm + "&nbsp;";
+				// Order
+				_htm = _htm + "<input type='text' name='"+_order+"' value='"+sid+"' size='4'><small>(Order)</small>";
+				_htm = _htm + "</div>"; //Left
+
+				// Right Column
+				_htm = _htm + '<div class="col-md-6">';
+				_htm = _htm + "<select name='"+ _name + "_" + sid +"' id='"+ _name + sid +"' size='1' style='vertical-align:top;'></select>";
+				_htm = _htm + '</div>'; // Right
+
+				_htm = _htm + "</div>"; // Row
+				_htm = _htm + "</div>"; // Block
+
+				if (type == 0) {
+					$('.blockPre:last').after(_htm);
+				} else {
+					$('.blockPost:last').after(_htm);
+				}
+
+				return _name + sid;
+			}
+
+			$(document.body).on('change','select',function()
+			{
+				function css(selector, property, value)
+				{
+					for (var i=0; i<document.styleSheets.length;i++) {//Loop through all styles
+						//Try add rule
+						try { document.styleSheets[i].insertRule(selector+ ' {'+property+':'+value+'}', document.styleSheets[i].cssRules.length);
+						} catch(err) {try { document.styleSheets[i].addRule(selector, property+':'+value);} catch(err) {}}//IE
+					}
+				}
+
+				var id = $(this).attr("id");
+
+				if ( id.includes("reqPatchCriteria") )
+				{
+					var res = id.replace("reqPatchCriteria", "");
+					var name = "#editor_"+res;
+
+					var e = document.getElementById(id);
+					var _val = e.options[e.selectedIndex].text;
+
+					if (_val != "Script") {
+						css(name, 'height', '40px');
+					} else {
+						css(name, 'height', '240px');
+					}
+				}
+			});
+
+			// Add Pre requisit sw package
+			$('.addPre').click(function()
+			{
+				var sid = document.getElementById('reqPreID').value;
+				sid++;
+				var _id = addRequisit(sid,0)
+				var idName = "#"+_id;
+
+				$(idName).append("<option value=''>...</option>");
+				{% for x in data['SWLIST'] %}
+					$(idName).append("<option value='{{x[0]}}'>{{x[1]}}</option>");
+				{% endfor %}
+
+				$(idName).selectize({
+					create: true,
+					sortField: {field: 'text'}
+				});
+				document.getElementById('reqPreID').value = sid;
+			});
+
+			// Add Post requisit sw package
+			$('.addPost').click(function()
+			{
+				var sid = document.getElementById('reqPstID').value;
+				sid++;
+				var _id = addRequisit(sid,1)
+				var idName = "#"+_id;
+
+				$(idName).append("<option value=''>...</option>");
+				{% for x in data['SWLIST'] %}
+					$(idName).append("<option value='{{x[0]}}'>{{x[1]}}</option>");
+				{% endfor %}
+
+				$(idName).selectize({
+					create: true,
+					sortField: {field: 'text'}
+				});
+				document.getElementById('reqPstID').value = sid;
+			});
+
+			// Add Pre or Post Rquisit for existing data
+			// This will also populate the, this will be cleaned up
+			// in the future
+			function addReq(order, type)
+			{
+				var _id = addRequisit(order,type)
+				var idName = "#"+_id;
+				$(idName).append("<option value=''>...</option>");
+
+				{% for x in data['SWLIST'] %}
+					$(idName).append("<option value='{{x[0]}}'>{{x[1]}}</option>");
+				{% endfor %}
+
+				$(idName).selectize({
+					create: true,
+					sortField: {field: 'text'}
+				});
+
+				document.getElementById('reqPstID').value = order;
+			}
+
+			function selectReqOption(selList, suuid)
+			{
+				var $select = $('#'+selList).selectize();
+				$select[0].selectize.setValue(suuid);
+			}
+
+			$('.optionBoxPre').on('click', '.remove', function()
+			{
+				var row = $(this).parent().parent().parent();
+				row.remove();
+			});
+
+			$('.optionBoxPost').on('click', '.remove', function()
+			{
+				var row = $(this).parent().parent().parent();
+				row.remove();
+			});
+
+			// Add ACE Editors for scripts
+			var preinstall = ace.edit("sw_pre_install_script");
+			preinstall.setTheme("ace/theme/eclipse");
+			preinstall.setFontSize('10px');
+			preinstall.getSession().setMode("ace/mode/sh");
+
+			var postinstall = ace.edit("sw_post_install_script");
+			postinstall.setTheme("ace/theme/eclipse");
+			postinstall.setFontSize('10px');
+			postinstall.getSession().setMode("ace/mode/sh");
+
+			var uninstall = ace.edit("sw_uninstall_script");
+			uninstall.setTheme("ace/theme/eclipse");
+			uninstall.setFontSize('10px');
+			uninstall.getSession().setMode("ace/mode/sh");
+		});
+	</script>
+{% endblock %}

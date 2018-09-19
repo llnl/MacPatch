@@ -1,7 +1,7 @@
 //
 //  MPWebServices.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -26,16 +26,8 @@
 #import <Foundation/Foundation.h>
 
 @interface MPWebServices : NSObject
-{
-    @private
-    NSString *_cuuid;
-    NSString *_osver;
-    NSDictionary *_defaults;
-}
 
 @property (nonatomic, strong) NSString *clientKey;
-
--(id)initWithDefaults:(NSDictionary *)aDefaults;
 
 // Registration
 - (BOOL)getIsClientAgentRegistered:(NSError **)err;
@@ -82,6 +74,5 @@
 
 - (BOOL)getAgentRegStatusWithKeyHash:(NSString *)keyHash error:(NSError **)err;
 - (BOOL)postAgentReister:(NSDictionary *)aDict regKey:(NSString *)aRegKey error:(NSError **)err;
-- (NSDictionary *)getServerKey:(NSError **)err;
 
 @end

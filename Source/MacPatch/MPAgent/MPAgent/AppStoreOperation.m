@@ -1,21 +1,40 @@
 //
 //  AppStoreOperation.m
-//  MPAgent
-//
-//  Created by Charles Heizer on 11/14/16.
-//  Copyright © 2016 LLNL. All rights reserved.
-//
+/*
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "AppStoreOperation.h"
 #import "MPAppStore.h"
 #import "MacPatch.h"
+#import "MPSettings.h"
+#import "MPClientKey.h"
 
 
 @interface AppStoreOperation (Private)
 
 - (void)collectDataAndPostIt;
 - (BOOL)processData:(NSArray *)dataArray table:(NSString *)tableName;
-- (BOOL)sendResultsToWebService:(NSString *)aDataMgrData;
+- (BOOL)sendResultsToWebService:(NSDictionary *)aDataMgrData;
 
 @end
 
@@ -30,8 +49,8 @@
     {
         isExecuting = NO;
         isFinished  = NO;
-        si	= [MPAgent sharedInstance];
-        fm	= [NSFileManager defaultManager];
+        settings    = [MPSettings sharedInstance];
+        fm          = [NSFileManager defaultManager];
     }
     
     return self;
@@ -106,16 +125,16 @@
 
 - (BOOL)processData:(NSArray *)dataArray table:(NSString *)tableName
 {
-    MPDataMgr   *dataMgr = [[MPDataMgr alloc] init];
-    NSString    *dataMgrJSON;
+    MPDataMgr       *dataMgr = [[MPDataMgr alloc] init];
+    NSDictionary    *dataMgrJSON;
     
-    dataMgrJSON = [dataMgr GenJSONForDataMgr:dataArray
+    dataMgrJSON = [dataMgr GenDataForDataMgr:dataArray
                                      dbTable:tableName
                                dbTablePrefix:@"mpi_"
                                dbFieldPrefix:@"mpa_"
                                 updateFields:@"rid,cuuid"
                                    deleteCol:@"cuuid"
-                              deleteColValue:[si g_cuuid]];
+                              deleteColValue:[settings ccuid]];
     
     if ([self sendResultsToWebService:dataMgrJSON]) {
         logit(lcl_vInfo,@"Results for %@ posted.",tableName);
@@ -126,22 +145,26 @@
     return YES;
 }
 
-- (BOOL)sendResultsToWebService:(NSString *)aDataMgrData
+- (BOOL)sendResultsToWebService:(NSDictionary *)aDataMgrData
 {
-    BOOL result = NO;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [si g_clientKey];
-    NSError *wsErr = nil;
-    result = [mpws postDataMgrData:aDataMgrData error:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"Results posted to webservice returned false.");
-        logit(lcl_vError,@"%@",wsErr.localizedDescription);
+    MPHTTPRequest *req;
+    MPWSResult *result;
+    
+    req = [[MPHTTPRequest alloc] init];
+    
+    NSString *urlPath = [@"/api/v1/client/inventory" stringByAppendingPathComponent:[settings ccuid]];
+    result = [req runSyncPOST:urlPath body:aDataMgrData];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"AppStore Data post, returned true.");
+        logit(lcl_vDebug,@"AppStore Data Result: %@",result.result);
     } else {
-        logit(lcl_vInfo,@"Results posted to webservice.");
-        result = YES;
+        logit(lcl_vError,@"AppStore Data post, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
+        return NO;
     }
     
-    return result;
+    return YES;
 }
 
 @end

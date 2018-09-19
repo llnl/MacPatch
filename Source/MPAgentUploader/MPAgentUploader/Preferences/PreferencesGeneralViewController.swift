@@ -40,9 +40,9 @@ class PreferencesGeneralViewController: NSViewController
     
     override func viewDidAppear()
     {
-        let _agentUploadState = defaults.bool(forKey: "doNotUpload") ? NSOnState : NSOffState
-        let _debugState = defaults.bool(forKey: "Debug")  ? NSOnState : NSOffState
-        let _selfSignedState = defaults.bool(forKey: "selfSigned")  ? NSOnState : NSOffState
+        let _agentUploadState = defaults.bool(forKey: "doNotUpload") ? NSControl.StateValue.on : NSControl.StateValue.off
+        let _debugState = defaults.bool(forKey: "Debug")  ? NSControl.StateValue.on : NSControl.StateValue.off
+        let _selfSignedState = defaults.bool(forKey: "selfSigned")  ? NSControl.StateValue.on : NSControl.StateValue.off
         
         self.agentUploadButton.state = _agentUploadState
         self.loggingButton.state = _debugState

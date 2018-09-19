@@ -1,7 +1,7 @@
 //
 //  MPCrypto.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -341,7 +341,8 @@ done:
     OSStatus err = 0;
     SecExternalFormat format = kSecFormatPEMSequence;
     
-    err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, kNilOptions, NULL, &imported);
+    //err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, kNilOptions, NULL, &imported);
+    err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, NULL, NULL, &imported);
     if (err != 0) {
         NSLog(@"SecItemImport[importPublicKey]: %@ ERROR: %@", self.class, [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil]);
     }
@@ -510,42 +511,6 @@ done:
     
     NSString *newStr = [[NSString alloc] initWithData:(__bridge NSData *)decryptedData encoding:NSUTF8StringEncoding];
     return newStr;
-}
-
-#pragma mark - Sign & Verify
-
-- (BOOL)verifiedSignedData:(NSString *)plainData signature:(NSData *)signature pubKey:(SecKeyRef)publicKey
-{
-	return [self verifiedSignedDataUsingAlgorithm:kSecPaddingPKCS1SHA1 verifyData:plainData signature:signature pubKey:publicKey];
-}
-
-- (BOOL)verifiedSignedDataUsingAlgorithm:(SecPadding)secPad verifyData:(NSString *)plainData signature:(NSData *)signature pubKey:(SecKeyRef)publicKey
-{
-	/* Signed data is assumed to have been base64 decoded prior to methos being used */
-	
-	if (!publicKey || plainData.length <1) {
-		return NO;
-	}
-	
-	NSData *data = [plainData dataUsingEncoding:NSUTF8StringEncoding];
-	OSStatus ret;
-	BOOL retStatus = NO;
-	
-	// Sec Paddding types
-	/* 
-		kSecPaddingPKCS1SHA1,kSecPaddingPKCS1SHA224
-	 	kSecPaddingPKCS1SHA256, kSecPaddingPKCS1SHA384
-	 	kSecPaddingPKCS1SHA512
-	*/
-	
-	ret = SecKeyRawVerify(publicKey, secPad, data.bytes, data.length, signature.bytes, signature.length);
-	if (ret==errSecSuccess) {
-		retStatus = YES;
-	} else {
-		NSError *err = [self errorForOSStatus:ret];
-		qlerror(@"%@",err.localizedDescription);
-	}
-	return retStatus;
 }
 
 #pragma mark - Error Codes for OSStatus

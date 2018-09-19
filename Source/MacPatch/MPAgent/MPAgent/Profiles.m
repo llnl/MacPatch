@@ -1,7 +1,7 @@
 //
 //  Profiles.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,8 +24,7 @@
  */
 
 #import "Profiles.h"
-#import "MPAgent.h"
-#import "MPDefaultsWatcher.h"
+#import "MPSettings.h"
 #import "MacPatch.h"
 
 static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
@@ -33,7 +32,7 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 @interface Profiles (Private)
 
 - (void)scanAndInstallPofiles;
-- (NSArray *)retrieveProfileIDData:(NSError **)aErr;
+- (NSArray *)retrieveProfileIDData;
 - (NSArray *)readLocalProfileData;
 - (NSArray *)readMPInstalledProfiles;
 - (NSArray *)readMPInstalledProfileData;
@@ -53,11 +52,12 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 
 - (id)init
 {
-	if ((self = [super init])) {
+    self = [super init];
+	if (self) {
 		isExecuting = NO;
         isFinished  = NO;
-		si	= [MPAgent sharedInstance];
-		fm	= [NSFileManager defaultManager];
+		settings	= [MPSettings sharedInstance];
+		fm          = [NSFileManager defaultManager];
 	}
 
 	return self;
@@ -99,12 +99,12 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 
 - (void)main
 {
-	//@try {
+	@try {
 		[self scanAndInstallPofiles];
-	//}
-	//@catch (NSException * e) {
-	//	logit(lcl_vError,@"[NSException]: %@",e);
-	//}
+	}
+	@catch (NSException * e) {
+		logit(lcl_vError,@"[NSException]: %@",e);
+	}
 	[self finish];
 }
 
@@ -112,18 +112,14 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 {
 	@autoreleasepool
     {
-        NSError *err = nil;
-        NSArray *profiles = [self retrieveProfileIDData:&err];
-        if (err) {
-            qlerror(@"Error: %@",err.localizedDescription);
-            return;
-        }
+        NSArray *profiles = [self retrieveProfileIDData];
         if (!profiles) {
             qlinfo(@"No profile data.");
             return;
         } else {
             qldebug(@"MP Profiles:%@",profiles);
         }
+        
         NSMutableArray *profileIdentities = [[NSMutableArray alloc] init];
         NSMutableArray *profilesToRemove = [[NSMutableArray alloc] init];
         NSArray *installedProfiles = [self readMPInstalledProfileData]; // returns an array of recorded installed profile id's
@@ -238,24 +234,27 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
     }
 }
 
-- (NSArray *)retrieveProfileIDData:(NSError **)err
+- (NSArray *)retrieveProfileIDData
 {
-    NSArray *result = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    mpws.clientKey = [[MPAgent sharedInstance] g_clientKey];
-    NSError *error = nil;
-    result = [mpws getProfileIDDataForClient:&error];
-    if (error)
-    {
-        if (err != NULL) {
-            *err = error;
-        } else {
-            qlerror(@"%@",error.localizedDescription);
-        }
+    NSArray *data = nil;
+    MPHTTPRequest *req;
+    MPWSResult *result;
+    
+    req = [[MPHTTPRequest alloc] init];
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/profiles/%@",settings.ccuid];
+    result = [req runSyncGET:urlPath];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"Agent Settings data, returned true.");
+        data = result.result[@"data"];
+    } else {
+        logit(lcl_vError,@"Agent Settings data, returned false.");
+        logit(lcl_vDebug,@"%@",result.toDictionary);
         return nil;
     }
-
-    return result;
+    
+    return data;
 }
 
 - (NSArray *)readLocalProfileData
@@ -286,15 +285,12 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
         for (NSDictionary *p in [profileDict objectForKey:@"_computerlevel"])
         {
             qldebug(@"Adding:\n%@",[p objectForKey:@"ProfileIdentifier"]);
-            //[profileIDs addObject:[p objectForKey:@"ProfileIdentifier"]];
             [profileIDs addObject:p];
         }
     } else {
         qlinfo(@"No computerlevel profiles.");
         return nil;
     }
-    // Quick Clean Up
-    // qldebug(@"ProfileID: %@",profileIDs);
     return [NSArray arrayWithArray:[profileIDs copy]];
 }
 

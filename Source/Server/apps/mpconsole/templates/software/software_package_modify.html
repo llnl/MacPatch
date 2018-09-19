@@ -1,0 +1,401 @@
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<!-- Custom CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+	<!-- Custom Fonts -->
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+	<link href="{{ url_for('static', filename='smartwizard/css/bp_main.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='smartwizard/css/smart_wizard.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<form method='post' action='/software/package/save' id="customPatchForm" enctype="multipart/form-data">
+	<input type="hidden" name="suuid" value="{{data['SUUID']}}">
+	<table align="center" border="0" cellpadding="0" cellspacing="0">
+	<tr>
+		<td>
+			<div id="wizard" class="swMain">
+				<ul>
+					<li>
+						<a href="#step-1">
+							<span class="stepDesc">
+								Step 1<br />
+								<small>Software Package Information</small>
+							</span>
+						</a>
+					</li>
+					<li>
+						<a href="#step-2">
+							<span class="stepDesc">
+								Step 2<br />
+								<small>Package</small>
+							</span>
+						</a>
+					</li>
+					<li>
+						<a href="#step-3">
+							<span class="stepDesc">
+								Step 3<br />
+								<small>Criteria</small>
+							</span>
+						</a>
+					</li>
+					<li>
+						<a href="#step-4">
+							<span class="stepDesc">
+								Step 4<br />
+								<small>Save</small>
+							</span>
+						</a>
+					</li>
+				</ul>
+				<div id="step-1">
+					<div id="wrapper">
+						<div style="float:left;" id="1"><h4>Software Package Information</h4></div>
+						<div style="float:right;" id="2"></div>
+						<div style="clear:both"></div>
+					</div>
+					<div id="row">
+						<div id="left"> Name </div>
+						<div id="center">
+							<input type="text" name="sName" SIZE="50" required="isReq" message="Error [software name]: Name is required." value="{{data['PKG'].sName or ''}}">
+						</div>
+						<div id="right"> (e.g. "FireFox") </div>
+					</div>
+					<div id="row">
+						<div id="left"> Version </div>
+						<div id="center">
+							<input type="text" name="sVersion" SIZE="50" required="isReq" message="Error [software version]: Version is required." value="{{data['PKG'].sVersion or ''}}">
+						</div>
+						<div id="right"> (e.g. "3.5.4") </div>
+					</div>
+					<div id="row">
+						<div id="left"> Vendor </div>
+						<div id="center">
+							<input type="text" name="sVendor" SIZE="50" value="{{data['PKG'].sVendor or ''}}">
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+					<div id="row">
+						<div id="left"> Description </div>
+						<div id="center">
+							<textarea name="sDescription" cols="48" rows="9">{{data['PKG'].sDescription or ''}}</textarea>
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+					<div id="row">
+						<div id="left"> Vendor Info URL </div>
+						<div id="center">
+							<input type="text" name="sVendorURL" SIZE="50" value="{{data['PKG'].sVendorURL or ''}}">
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+					<div id="row">
+						<div id="left"> Package State </div>
+						<div id="center">
+							<select name="sState" size="1">
+								<option value="0" {% if data['PKG'].sState == 0 %}Selected{% endif %}>Create</option>
+								<option value="1" {% if data['PKG'].sState == 1 %}Selected{% endif %}>QA</option>
+								<option value="2" {% if data['PKG'].sState == 2 %}Selected{% endif %}>Production</option>
+								<option value="3" {% if data['PKG'].sState == 3 %}Selected{% endif %}>Disabled</option>
+							</select>
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+				</div> <!-- End Step 1 -->
+				<div id="step-2">
+					<div id="wrapper">
+						<div style="float:left;" id="1"><h4>Package</h4></div>
+						<div style="float:right;" id="2"></div>
+						<div style="clear:both"></div>
+					</div>
+					<div id="row">
+						<div id="left"> Package </div>
+						<div id="center">
+							<input type="file" name="mainPackage">
+							<br>
+							<div style="font-size:12px;padding:10px;">
+								{% if data['PKG'].sw_url %}
+								<a href="/mp-content/{{data['PKG'].sw_url}}">
+									<img src="{{ url_for('static', filename='img/arrow_down.png') }}" height="14" />{{ data['PKG'].sw_url.split("/") | last }} ({{data['PKG'].sw_hash }})
+								</a>
+								{% endif %}
+							</div>
+						</div>
+						<div id="right">Note: The file must be a zip file for dmg file.</div>
+					</div>
+					<div id="row">
+						<div id="left"> Package Type </div>
+						<div id="center">
+							<select name="sw_type" size="1">
+								<option value="scriptZip" {% if data['PKG'].sw_type == "scriptZip" %}Selected{% endif %}>Script/Zip</option>
+								<option value="packageZip" {% if data['PKG'].sw_type == "packageZip" %}Selected{% endif %}>Package/Zip (pkg/mpkg)</option>
+								<option value="appZip" {% if data['PKG'].sw_type == "appZip" %}Selected{% endif %}>Application/Zip</option>
+								<option value="packageDMG" {% if data['PKG'].sw_type == "packageDMG" %}Selected{% endif %}>DMG/Package</option>
+								<option value="appDMG" {% if data['PKG'].sw_type == "appDMG" %}Selected{% endif %}>DMG/Application</option>
+							</select>
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+					<div id="row">
+						<div id="left"> PreInstall Script </div>
+						<div id="center">
+							<textarea name="sw_pre_install_script" cols="60" rows="7">{{data['PKG'].sw_pre_install_script  or ''}}</textarea>
+						</div>
+						<div id="right"> Note: The return code of "0" is True. </div>
+					</div>
+					<div id="row">
+						<div id="left"> PostInstall Script </div>
+						<div id="center">
+							<textarea name="sw_post_install_script" cols="60" rows="7">{{data['PKG'].sw_post_install_script  or ''}}</textarea>
+						</div>
+						<div id="right"> Note: The return code of "0" is True. </div>
+					</div>
+					<div id="row">
+						<div id="left"> Installer Env Variables </div>
+						<div id="center">
+							<input type="text" id="env_var" name="sw_env_var" SIZE="60" value="{{data['PKG'].sw_env_var or ''}}">
+						</div>
+						<div id="right">(Example: ATTR=VALUE,ATTR=VALUE)</div>
+					</div>
+					<div id="row">
+						<div id="left"> Patch Requires Reboot </div>
+						<div id="center">
+							<select name="sReboot" size="1">
+								<option value="1" {% if data['PKG'].sReboot == 1 %}Selected{% endif %}>Yes</option>
+								<option value="0" {% if data['PKG'].sReboot == 0 %}Selected{% endif %}>No</option>
+							</select>
+						</div>
+						<div id="right">&nbsp;</div>
+					</div>
+				</div> <!-- End Step 2 -->
+				<div id="step-3">
+					<div id="wrapper">
+						<div style="float:left;" id="1"><h4>Install Criteria</h4></div>
+						<div style="float:right;" id="2"></div>
+						<div style="clear:both"></div>
+					</div>
+					<div id="row">
+						<div id="left"> OS Type </div>
+						<div id="center">
+							<select name="req_os_type" size="1">
+								<option {% if data['PKGCRI_OSType'] == 'Mac OS X' %}Selected{% endif %}>Mac OS X</option>
+								<option {% if data['PKGCRI_OSType'] == 'Mac OS X Server' %}Selected{% endif %}>Mac OS X Server</option>
+								<option {% if data['PKGCRI_OSType'] == 'Mac OS X, Mac OS X Serve' %}Selected{% endif %}>Mac OS X, Mac OS X Serve</option>
+							</select>
+						</div>
+						<div id="right"> (e.g. "Mac OS X, Mac OS X Server") </div>
+					</div>
+					<div id="row">
+						<div id="left"> OS Version </div>
+						<div id="center">
+							<input type="text" name="req_os_ver" SIZE="50" required="isReq" message="Error [Required OS Version]: A OS version is required." value="{{data['PKGCRI_OSVer'] or ''}}">
+						</div>
+						<div id="right"> (e.g. "10.4.*,10.5.*") </div>
+					</div>
+					<div id="row">
+						<div id="left"> Architecture Type </div>
+						<div id="center">
+							<select name="req_os_arch" size="1">
+								<option {% if data['PKGCRI_OSArch'] == 'X86' %}Selected{% endif %}>X86</option>
+								<option {% if data['PKGCRI_OSArch'] == 'PPC' %}Selected{% endif %}>PPC</option>
+								<option {% if data['PKGCRI_OSArch'] == 'PPC, X86' %}Selected{% endif %}>PPC, X86</option>
+							</select>
+						</div>
+						<div id="right"> (e.g. "PPC, X86"; Universal) </div>
+					</div>
+					<div id="row">
+						<div id="left"> Uninstall Script </div>
+						<div id="center">
+							<textarea name="sw_uninstall_script" cols="60" rows="9">{{data['PKG'].sw_uninstall_script or ''}}</textarea>
+						</div>
+						<div id="right"> &nbsp; </div>
+					</div>
+
+					<div id="wrapper">
+						<div style="float:left;" id="1"><h4>Patching Info</h4></div>
+						<div style="float:right;" id="2"></div>
+						<div style="clear:both"></div>
+					</div>
+
+					<div id="row">
+						<div id="left"> Patch Group ID {{data['PKG'].patch_bundle_id}}</div>
+						<div id="center">
+							<select name="patch_bundle_id" size="1">
+								<option value="">...</option>
+								{% for x in data['BUNDLEIDS'] %}
+								<option value="{{x[0]}}" {% if data['PKG'].patch_bundle_id == x[0] %}Selected{% endif %}>{{x[0]}} ({{x[1]}})</option>
+								{% endfor %}
+							</select>
+						</div>
+						<div id="right"> (e.g. org.mozilla.firefox) </div>
+					</div>
+					<div id="row">
+						<div id="left"> Enable Auto-Patch </div>
+						<div id="center">
+							<select name="auto_patch" size="1">
+								<option {% if data['PKG'].auto_patch == 1 %}Selected{% endif %} value="1">Yes</option>
+								<option {% if data['PKG'].auto_patch == 0 %}Selected{% endif %} value="0">No</option>
+							</select>
+						</div>
+						<div id="right"> &nbsp; </div>
+					</div>
+				</div> <!-- End Step 3 -->
+				<div id="step-4">
+					<div id="wrapper">
+						<div style="float:left;" id="1"><h4>Install Requisites &amp; Save</h4></div>
+						<div style="float:right;" id="2"></div>
+						<div style="clear:both"></div>
+					</div>
+					<br />
+					<label>Pre-Requisite Package(s)</label>
+					<h4>
+						<a href="#" onClick="addFormField('preSWPKG','preid','divTxtPre'); return false;">
+							<img src="{{ url_for('static', filename='img/pkg_add.png') }}" />Add
+						</a>
+					</h4>
+
+					<div id="divTxtPre">
+						<br>
+						{% for req in data['PKGPREREQ'] %}
+							<p id="rowPrePKG{{req.order}}" style="margin-top:4px;">
+								<img onClick='removeFormField("#rowPrePKG{{req.order}}"); return false;' src="/static/img/cancel.png" style="vertical-align:middle;" height="14" width="14">
+
+								<select name="preSWPKG_{{req.order}}" size="1">
+									{% for x in data['SWLIST'] %}
+									{% if x[0] == req.suuid %}
+										<option value="{{x[0]}}" selected>{{x[1]}}</option>
+									{% else %}
+										<option value="{{x[0]}}">{{x[1]}}</option>
+									{% endif %}
+									{% endfor %}
+								</select>
+
+								&nbsp; <input type="text" name="preSWPKGOrder_{{req.order}}" value="{{req.order}}" size="3"> (Order)
+							</p>
+						{% endfor %}
+					</div>
+					<input type="hidden" id="preid" value="{{data['PKGPREREQ']|length or 0}}">
+					<br />
+
+					<label>Post-Requisite Package(s)</label>
+					<h4>
+						<a href="#" onClick="addFormField('postSWPKG','postid','divTxtPost'); return false;">
+							<img src="{{ url_for('static', filename='img/pkg_add.png') }}" />Add
+						</a>
+					</h4>
+
+					<div id="divTxtPost">
+						{% for req in data['PKGPOSTREQ'] %}
+							<p id="rowPostPKG{{req.order}}" style="margin-top:4px;">
+								<img onClick='removeFormField("#rowPostPKG{{req.order}}"); return false;' src="/static/img/cancel.png" style="vertical-align:middle;" height="14" width="14">
+
+								<select name="postSWPKG_{{req.order}}" size="1">
+									{% for x in data['SWLIST'] %}
+									{% if x[0] == req.suuid %}
+										<option value="{{x[0]}}" selected>{{x[1]}}</option>
+									{% else %}
+										<option value="{{x[0]}}">{{x[1]}}</option>
+									{% endif %}
+									{% endfor %}
+								</select>
+
+								&nbsp; <input type="text" name="postSWPKGOrder_{{req.order}}" value="{{req.order}}" size="3"> (Order)
+							</p>
+						{% endfor %}
+					</div>
+					<input type="hidden" id="postid" value="{{data['PKGPOSTREQ']|length or 0}}">
+				</div> <!-- End Step 4 -->
+
+			</div>
+		</td>
+	</tr>
+	</table>
+</form>
+{%  endblock %}
+
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='smartwizard/js/jquery.smartWizard-2.0.min.js') }}"></script>
+	<script type="text/javascript">
+		// Init the Wizard
+		$('#wizard').smartWizard({
+			keyNavigation: false,
+			onFinish:onFinishCallback,
+		});
+		// Click the Finish Button at the end of the Wizard
+		function onFinishCallback()
+		{
+			alert("Hello");
+			var formData = new FormData($('#customPatchForm')[0]);
+			$.ajax({
+				type:'POST',
+				url: '/software/package/save',
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				enctype: 'multipart/form-data',
+				success: function(){
+					alert("successful post");
+				}
+			});
+		}
+	</script>
+	<script type="text/javascript">
+		function addFormCriteriaField(frmFieldName, pid, divid)
+		{
+			var id = document.getElementById(pid).value;
+			{% if data['PKGCRILEN'] > 2 %}
+				if (id == 0) {
+					{% if hasOSArch == True %}
+						id = parseInt({{ data['PKGCRILEN'] - 3 }}) + 1;
+					{% else %}
+						id = parseInt({{ data['PKGCRILEN'] - 2 }}) + 1;
+					{% endif %}
+				} else {
+					id = parseInt(id) + 1;
+				}
+			{% else %}
+				id = parseInt(id) + 1;
+			{% endif %}
+
+			document.getElementById(pid).value = id;
+			var rmRef = "<a href='#' onClick='removeFormField(\"#row" + frmFieldName + id +"\"); return false;'><img src='/static/img/cancel.png' style='vertical-align:top;margin-top:2px;' height='14' width='14'></a>";
+			var sel = "&nbsp;<select name='type_"+ id + "' id='"+frmFieldName + id +"' size='1' style='vertical-align:top\;'><option>BundleID</option><option>File</option><option>Script</option></select>&nbsp;&nbsp;";
+
+			$("#"+divid).append("&nbsp;<p id='row" + frmFieldName + id +"' style='margin-top:4px;'>&nbsp;"+sel+"&nbsp;<textarea name='" + frmFieldName + "_" + id + "' id='"+frmFieldName + id +"' cols=\"60\" />&nbsp;<input type='text' name='"+frmFieldName+"Order_"+id+"' value='"+id+"' size='4' style='vertical-align:top\;'><span style='vertical-align:top\;'>(Order)</span>&nbsp;"+rmRef+"</p>");
+		}
+
+		function addFormField(frmFieldName, pid, divid)
+		{
+			var id = document.getElementById(pid).value;
+
+			id = (id - 1) + 2;
+			document.getElementById(pid).value = id;
+			var _row    =  "<p id='row" + frmFieldName + id +"' style='margin-top:4px;'>";
+			var rmRef   = "<img src='/static/img/cancel.png' style='vertical-align:middle;' height='14' width='14' onClick='removeFormField(\"#row" + frmFieldName + id +"\")\; return false\;'>&nbsp;";
+			var hdTxt   = "<select name='" + frmFieldName + "_" + id + "' id='"+frmFieldName + id +"' size='1'>{% for x in data['SWLIST'] %}<option value='{{x[0]}}''>{{x[1]}}</option>{% endfor %}</select>";
+			var _rowEnd = "&nbsp;&nbsp; <input type='text' name='"+frmFieldName+"Order_"+id+"' value='"+id+"' size='3'> (Order)<p>";
+			var _htm = _row + rmRef + hdTxt + _rowEnd;
+
+			$("#"+divid).append(_htm);
+		}
+
+		function removeFormField(id) {
+			var x=window.confirm("Are you sure you want to remove this?")
+			if (x) {
+				$(id).remove();
+			}
+		}
+
+	</script>
+{% endblock %}

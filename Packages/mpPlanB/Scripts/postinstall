@@ -1,0 +1,22 @@
+#!/bin/sh -x
+
+# ***************************************************************************************
+# PostFlight Script for MacPatch PlanB Installer
+# ver 1.0
+# Created By Charles Heizer @ LLNL
+#
+# ***************************************************************************************
+
+
+
+# ******************************************************************
+# Run Client Check-in
+CLIENTID=`/Library/MacPatch/Client/MPAgent -c`
+
+# ******************************************************************
+# Launch the MP PlanB service ***************************************
+#
+/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.planb.plist
+/bin/sleep 2
+
+exit 0;

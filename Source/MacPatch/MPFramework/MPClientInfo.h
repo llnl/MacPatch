@@ -2,7 +2,7 @@
 //  MPClientInfo.h
 //  MPLibrary
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,6 +28,14 @@
 
 @interface MPClientInfo : NSObject
 
-+ (NSString *)patchGroupRev;
+- (NSString *)patchGroupRev;
+
+
+/**
+ Returns all data needed for client checkin
+
+ @return NSDictionary
+ */
+- (NSDictionary *)agentData;
 
 @end

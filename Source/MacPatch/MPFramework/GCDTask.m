@@ -17,7 +17,7 @@
 
 - (void) launchWithOutputBlock: (void (^)(NSData* stdOutData)) stdOut
                  andErrorBlock: (void (^)(NSData* stdErrData)) stdErr
-                      onLaunch: (void (^)()) launched
+                      onLaunch: (void (^)(void)) launched
                         onExit: (void (^)(int)) exit
 {
     executingTask = [[NSTask alloc] init];
@@ -75,6 +75,9 @@
     _stdoutSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,[stdoutPipe fileHandleForReading].fileDescriptor, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     _stderrSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,[stderrPipe fileHandleForReading].fileDescriptor, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
     
+    //_stdoutSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,[stdoutPipe fileHandleForReading].fileDescriptor, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    //_stderrSource = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ,[stderrPipe fileHandleForReading].fileDescriptor, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    
     /* Set stdout source event handler to read data and send it out. */
     dispatch_source_set_event_handler(_stdoutSource, ^ {
         void* buffer = malloc(GCDTASK_BUFFER_MAX);
@@ -83,7 +86,7 @@
         do
         {
             errno = 0;
-            bytesRead = read([stdoutPipe fileHandleForReading].fileDescriptor, buffer, GCDTASK_BUFFER_MAX);
+			bytesRead = read([self->stdoutPipe fileHandleForReading].fileDescriptor, buffer, GCDTASK_BUFFER_MAX);
         } while(bytesRead == -1 && errno == EINTR);
         
         if(bytesRead > 0)
@@ -91,11 +94,11 @@
             // Create before dispatch to prevent a race condition.
             NSData* dataToPass = [NSData dataWithBytes:buffer length:bytesRead];
             dispatch_async(dispatch_get_main_queue(), ^{
-                if(!_hasExecuted)
+				if(!self->_hasExecuted)
                 {
                     if(launched)
                         launched();
-                    _hasExecuted = TRUE;
+					self->_hasExecuted = TRUE;
                 }
                 if(stdOut)
                 {
@@ -106,10 +109,10 @@
         
         if(errno != 0 && bytesRead <= 0)
         {
-            dispatch_source_cancel(_stdoutSource);
+			dispatch_source_cancel(self->_stdoutSource);
             dispatch_async(dispatch_get_main_queue(), ^{
                 if(exit)
-                    exit([executingTask terminationStatus]);
+					exit([self->executingTask terminationStatus]);
             });
         }
 
@@ -125,7 +128,7 @@
         do
         {
             errno = 0;
-            bytesRead = read([stderrPipe fileHandleForReading].fileDescriptor, buffer, GCDTASK_BUFFER_MAX);
+			bytesRead = read([self->stderrPipe fileHandleForReading].fileDescriptor, buffer, GCDTASK_BUFFER_MAX);
         } while(bytesRead == -1 && errno == EINTR);
         
         if(bytesRead > 0)
@@ -141,7 +144,7 @@
         
         if(errno != 0 && bytesRead <= 0)
         {
-            dispatch_source_cancel(_stderrSource);
+			dispatch_source_cancel(self->_stderrSource);
         }
         
         free(buffer);
@@ -197,7 +200,7 @@
     [executingTask interrupt];
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(10 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^(void)
     {
-        [executingTask terminate];
+		[self->executingTask terminate];
     });
 }
 

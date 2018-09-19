@@ -1,0 +1,384 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<style type="text/css">
+		.table {
+		  table-layout:fixed;
+		}
+
+		.table td {
+		  white-space: nowrap;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		}
+
+	</style>
+{%  endblock %}
+
+{% block pageHeader %}
+<div class="container-fluid">
+	<div class="row">
+		<div class="col-lg-6 col-xs-12">
+			Client Agent - Deployment
+		</div>
+		<div class="col-lg-6 col-xs-12 text-right">
+			<button class="btn btn-default" onclick='download("/mp-content/clients/{{curAgentID}}/MPClientInstall.pkg.zip")'>
+				<span class="glyphicon glyphicon-save"></span> Current Client Agent
+			</button>
+			<button class="btn btn-default" onclick='download("/mp-content/tools/MPAgentUploader.zip")'>
+				<span class="glyphicon glyphicon-save"></span> Agent Uploader
+			</button>
+			<iframe id="dl-agentuploader" style="display:none;"></iframe>
+		</div>
+	</div><!--  .row -->
+</div>
+
+
+
+{%  endblock %}
+
+{% block bodyPanel %}
+	<!-- Tab panes -->
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs">
+		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#agents" data-toggle="tab">Client Agents</a></li>
+		<li {% if selectedTab == 2 %}class="active"{% endif %}><a href="#filters" data-toggle="tab">Deploy Filter</a></li>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="agents">
+			{% if gResults['Admin'] == True %}
+				<div id="toolbar">
+					<button id="delAgentButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
+				</div>
+				<table id="tableAgents" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbar">
+
+				</table>
+
+			{% else %}
+				<table id="tableAgents" class="table table-condensed" data-row-style="rowStyle"></table>
+			{% endif %}
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="filters">
+			{% if gResults['Admin'] == True %}
+				<table id="tableFilters" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbarFilters">
+				<div id="toolbarFilters">
+					<button id="addFilterButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+					<button id="delFilterButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
+				</div>
+				</table>
+			{% else %}
+				<table id="tableFilters" class="table table-condensed" data-row-style="rowStyle"></table>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/min/moment.min.js') }}"></script>
+	<script>
+	function download(path) {
+		var iframe = document.getElementById('dl-agentuploader');
+		iframe.src = path;
+	}
+
+	$( document ).ready(function()
+	{
+		$('#tableAgents').bootstrapTable({
+			striped: true,
+			ajax: function loadMyRows(params)
+			{
+				if (params.data.search == '') {
+					params.data.search = undefined;
+				}
+				// /profiles/group/<groupid>
+				var _url = "/console/agents";
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			sidePagination: "server",
+			showRefresh: true,
+			idField: 'rid',
+			columns: [
+				{
+					field: 'rowState',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+				},
+				{% for col in agentCols %}
+					{
+
+						{% if col[2] == '0' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}',
+						{% if col[0] == 'active' and session.role[0] == 1 %}
+						editable: {
+							type: 'select',
+							url:  '/console/agents/update/active',
+							source: [
+								{value: 0, text: 'False'},
+								{value: 1, text: 'True'},
+							]
+						},
+						{% endif %}
+						{% if col[0] == 'build' and session.role[0] == 1 %}
+						editable: {
+							type: 'text',
+							url:  '/console/agents/update/build'
+						},
+						{% endif %}
+						{% if col[0] == 'agent_ver' and session.role[0] == 1 %}
+						editable: {
+							type: 'text',
+							url:  '/console/agents/update/agent_ver'
+						},
+						{% endif %}
+						{% if col[0] == 'version' and session.role[0] == 1 %}
+						editable: {
+							type: 'text',
+							url:  '/console/agents/update/version'
+						},
+						{% endif %}
+						{% if col[0] == 'osver' and session.role[0] == 1 %}
+						editable: {
+							type: 'text',
+							url:  '/console/agents/update/osver'
+						},
+						{% endif %}
+					},
+				{% endfor %}
+			]
+		});
+
+		$('#tableFilters').bootstrapTable({
+			striped: true,
+			ajax: function loadMyRows(params)
+			{
+				if (params.data.search == '') {
+					params.data.search = undefined;
+				}
+				// /profiles/group/<groupid>
+				var _url = "/console/agent/filters";
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			sidePagination: "server",
+			showRefresh: true,
+			columns: [
+				{
+					field: 'rowState',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+				},
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: operateEventsFilter,
+					formatter: operateFormatterFilter,
+					visible: true,
+					width: '40px'
+				},
+				{% for col in filterCols %}
+					{
+
+						{% if col[2] == '0' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+
+					},
+				{% endfor %}
+			]
+		});
+
+		$('#addFilterButton').click(function ()
+		{
+			$.get( "/console/agent/filter/0").done(function(data)
+			{
+				$('#modalTitle').html('Add Agent Filter');
+				$('#modalCancelButton').html('Close');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'300px'});
+				$('#modalDialog').addClass("modal-mid");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$filtersTable.bootstrapTable('refresh');
+				});
+			});
+		});
+	});
+
+	$('#tableAgents').on('editable-save.bs.table', function ()
+	{
+			$('#tableAgents').bootstrapTable('refresh');
+	});
+
+	$('#tableAgents').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function ()
+	{
+			$('#delAgentButton').prop('disabled', !$('#tableAgents').bootstrapTable('getSelections').length);
+
+			// save your data, here just save the current page
+			// selections = getIdSelections();
+			// push or splice the selections if you want to save all data selections
+	});
+
+	$('#tableFilters').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function ()
+	{
+			$('#delFilterButton').prop('disabled', !$('#tableFilters').bootstrapTable('getSelections').length);
+
+			// save your data, here just save the current page
+			// selections = getIdSelections();
+			// push or splice the selections if you want to save all data selections
+	});
+
+	function operateFormatterFilter(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<a class="editFilter" href="javascript:void(0)" title="Edit Filter">');
+		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
+		htmlData.push('</a>');
+		return htmlData.join('');
+	}
+
+	var $filtersTable = $('#tableFilters');
+
+	window.operateEventsFilter = {
+		'click .editFilter': function (e, value, row, index)
+		{
+			$.get( "/console/agent/filter/" + row['rid']).done(function(data)
+			{
+				$('#modalTitle').html('Edit Agent Filter');
+				$('#modalCancelButton').html('Close');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'300px'});
+				$('#modalDialog').addClass("modal-mid");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$filtersTable.bootstrapTable('refresh');
+				});
+			});
+		}
+	};
+
+	var $_delAgentButton = $('#delAgentButton'), $_delFilterButton = $('#delFilterButton');
+	$(function () {
+		$_delAgentButton.click(function ()
+		{
+			var rows = $('#tableAgents').bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _puuid = rows[x]['puuid'];
+				rowsArr.push(_puuid);
+			}
+
+			let unique = [...new Set(rowsArr)];
+
+			confirm_str = "Are you sure you want to remove these agent(s)?\nNote: This remove the related agent package if not selected.\n Base.pkg and Updater.pkg";
+			if (confirm(confirm_str) == true)
+			{
+				var _url = "/console/agent/deploy";
+				$.ajax({
+					url: _url,
+					type: 'DELETE',
+					cache: false,
+					data: {'filters':unique.toString()},
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+						$('#tableAgents').bootstrapTable('refresh');
+						alert("Agent(s) removed successfully.");
+					}
+				});
+			}
+		});
+
+		$_delFilterButton.click(function ()
+		{
+			var rows = $('#tableFilters').bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _rid = rows[x]['rid'];
+				rowsArr.push(_rid);
+			}
+
+			let unique = [...new Set(rowsArr)];
+
+			if (confirm("Are you sure you want to remove these agent filter(s)?") == true)
+			{
+				var _url = "/console/agent/deploy/filter";
+				$.ajax({
+					url: _url,
+					type: 'DELETE',
+					cache: false,
+					data: {'filters':unique.toString()},
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+						$('#tableFilters').bootstrapTable('refresh');
+						alert("Filter(s) removed successfully.");
+					}
+				});
+			}
+		});
+	});
+	</script>
+{% endblock %}

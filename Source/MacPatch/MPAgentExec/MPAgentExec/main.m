@@ -1,7 +1,7 @@
 //
 //  main.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -31,11 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-<<<<<<< HEAD
-#define APPVERSION	@"3.0.5.5"
-=======
-#define APPVERSION	@"3.0.6.0"
->>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
+#define APPVERSION	@"3.1.0.0"
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
@@ -49,10 +45,8 @@ int main (int argc, char * argv[])
         BOOL verboseLogging = NO;
         BOOL isILoadMode = NO;
         BOOL forceRunTask = NO;
-		BOOL overrideReboot = NO;
         int _UpdateType = 0; // 0 All, 1 = Apple, 2 = Third
         NSString *_updateBundle = nil;
-        NSDictionary *_defaultsOverride = nil;
 
         // Inventory
         NSString *argType = NULL;
@@ -68,15 +62,15 @@ int main (int argc, char * argv[])
                 {"Update"				,no_argument	    ,0, 'u'},
                 {"UpdateFilter"			,required_argument	,0, 'f'},
                 {"UpdateBundle"			,required_argument	,0, 'B'},
+				
+				{"UpdateBundleAlt"		,required_argument	,0, 'b'},
+				
                 {"Critial"				,no_argument	    ,0, 'x'},
-				{"AVInfo"				,no_argument	    ,0, 'a'},
-				{"AVUpdate"				,no_argument	    ,0, 'U'},
                 {"AgentUpdate"			,no_argument		,0, 'G'},
                 {"AllowClient"			,no_argument	    ,0, 'C'},
                 {"AllowServer"			,no_argument	    ,0, 'S'},
                 {"iload"				,no_argument	    ,0, 'i'},
                 {"FORCERUN"				,no_argument		,0, 'F'},
-				{"installRebootPatches"	,no_argument		,0, 'R'},
                 {"cuuid"                ,no_argument		,0, 'c'},
                 // Software Dist
                 {"installSWUsingGRP"    ,required_argument	,0, 'g'},
@@ -91,7 +85,7 @@ int main (int argc, char * argv[])
             };
             // getopt_long stores the option index here.
             int option_index = 0;
-            c = getopt_long (argc, argv, "Dsuf:B:aUGCSiFRcg:d:P:eVvh", long_options, &option_index);
+            c = getopt_long (argc, argv, "Dsuf:B:b:GCSiFcg:d:P:eVvh", long_options, &option_index);
 
             // Detect the end of the options.
             if (c == -1) {
@@ -119,20 +113,18 @@ int main (int argc, char * argv[])
                         a_Type = 2;
                         _updateBundle = [NSString stringWithUTF8String:optarg];
                         break;
-                    case 'a':
-                        a_Type = 3;
-                        break;
-                    case 'U':
-                        a_Type = 4;
-                        break;
+					case 'b':
+						a_Type = 11;
+						_updateBundle = [NSString stringWithUTF8String:optarg];
+						break;
                     case 'G':
                         a_Type = 5;
                         break;
                     case 'C':
-                        _defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowClient"];
+                        //_defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowClient"];
                         break;
                     case 'S':
-                        _defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowServer"];
+                        //_defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowServer"];
                         break;
                     case 'c':
                         printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
@@ -163,9 +155,6 @@ int main (int argc, char * argv[])
                     case 'F':
                         forceRunTask = YES;
                         break;
-					case 'R':
-						overrideReboot = YES;
-						break;
                     case 'e':
                         echoToConsole = YES;
                         break;
@@ -219,15 +208,9 @@ int main (int argc, char * argv[])
 
         // Run Functions
         MPAgentExecController *controller = [[MPAgentExecController alloc] init];
-        if (_defaultsOverride) {
-            [controller overRideDefaults:_defaultsOverride];
-        }
         if (forceRunTask == YES) {
             [controller setForceRun:YES];
         }
-		if (overrideReboot == YES) {
-			[controller setOverrideRebootPatchInstalls:YES];
-		}
 
         int result = NO;
         switch (a_Type) {
@@ -239,28 +222,14 @@ int main (int argc, char * argv[])
                 }
                 break;
             case 2:
-                if (isILoadMode == YES)
-				{
-					// Override reebot allows MPAgentExec to patch the system
-					[controller setOverrideRebootPatchInstalls:YES];
+                if (isILoadMode == YES) {
                     [controller setILoadMode:YES];
                 }
                 if (_updateBundle) {
                     [controller scanAndUpdateCustomWithPatchBundleID:_updateBundle];
                 } else {
-					if (isILoadMode)
-					{
-						[controller scanForPatchesAndUpdateWithFilterCritical:_UpdateType critical:NO stayAliveForProvisioning:YES];
-					} else {
-                    	[controller scanForPatchesAndUpdateWithFilter:_UpdateType];
-					}
+                    [controller scanForPatchesAndUpdateWithFilter:_UpdateType];
                 }
-                break;
-            case 3:
-                [controller scanForAVDefs];
-                break;
-            case 4:
-                [controller scanForAVDefsAndUpdate];
                 break;
             case 5:
                 [controller scanAndUpdateAgentUpdater];
@@ -284,6 +253,12 @@ int main (int argc, char * argv[])
                 // Scan for and install critical updates
                 [controller scanForPatchesAndUpdateWithFilterCritical:_UpdateType critical:YES];
                 break;
+			case 11:
+				if (_updateBundle) {
+					NSError *_err = nil;
+					[controller scanForPatchUsingBundleIDAlt:_updateBundle error:&_err];
+				}
+				break;
             default:
                 logit(lcl_vError, @"should never have gotten here!");
                 break;
@@ -306,9 +281,6 @@ void usage(void) {
     printf("\n    \tOverrides configuration which prevents client from being updated.\n");
     printf(" -C \tAllowClient override.\n");
     printf(" -S \tAllowServer override.\n\n");
-    // Symantec Antivirus
-	printf(" -a \tScan for AV info.\n");
-	printf(" -U \tScan for AV info and update outdated AV defs.\n\n");
     // Agent Updates
     printf(" -G \tScan for Agent updates and update if needed.\n");
 	printf(" -i \tScan & Update approved patches in iLoad output mode.\n\n");

@@ -2,7 +2,7 @@
 //  main.m
 //  MPAgent
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,7 +25,8 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "MPAppController.h"
+#import <SystemConfiguration/SystemConfiguration.h>
+#import "AgentController.h"
 #import "MPAgentRegister.h"
 #import "MPInv.h"
 #import "MPOSUpgrade.h"
@@ -33,13 +34,8 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
-#include "MPDefaultServers.h"
 
-<<<<<<< HEAD
-#define APPVERSION	@"3.0.5.5"
-=======
-#define APPVERSION	@"3.0.6.0"
->>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
+#define APPVERSION	@"3.1.0.0"
 #define APPNAME		@"MPAgent"
 
 void usage(void);
@@ -47,21 +43,24 @@ const char * consoleUser(void);
 
 int main (int argc, char * argv[])
 {
-	@autoreleasepool {
-    
+	@autoreleasepool
+    {
 		int a_Type              = 99;
 		BOOL echoToConsole      = NO;
 		BOOL debugLogging       = NO;
 		BOOL traceLogging       = NO;
 		BOOL verboseLogging     = NO;
+        
         // Registration
         BOOL doRegistration     = NO;
         BOOL readRegInfo        = NO;
+        BOOL runZetaTest        = NO;
         NSString *regKeyArg     = @"999999999";
         NSString *regKeyHash    = @"999999999";
         
         // Inventory
         NSString *invArg        = NULL;
+        
         // OS Migration
         BOOL osMigration        = NO;
         NSString *osMigAction   = NULL;
@@ -82,14 +81,12 @@ int main (int argc, char * argv[])
 				{"Scan"				,no_argument	    ,0, 's'},
 				{"Update"			,no_argument	    ,0, 'u'},
 				{"Inventory"		,no_argument	    ,0, 'i'},
-				{"AVInfo"			,no_argument	    ,0, 'a'},
+				{"AVScan"			,no_argument	    ,0, 'a'},
 				{"AVUpdate"			,no_argument	    ,0, 'U'},
 				{"AgentUpdater"		,no_argument	    ,0, 'G'},
                 {"SWScanUpdate" 	,no_argument	    ,0, 'S'},
                 {"Profile"          ,no_argument	    ,0, 'p'},
                 {"WebServicePost"   ,no_argument	    ,0, 'w'},
-                {"Servers"          ,no_argument	    ,0, 'n'},
-                {"SUServers"        ,no_argument	    ,0, 'z'},
 				{"Echo"				,no_argument		,0, 'e'},
 				{"Verbose"			,no_argument		,0, 'V'},
 				{"version"			,no_argument		,0, 'v'},
@@ -106,11 +103,13 @@ int main (int argc, char * argv[])
                 {"OSUpgradeID"          ,required_argument	,0, 'm'},
                 // Current Console User
                 {"consoleUser"          ,no_argument		,0, 'x'},
+                // TEST
+                {"zeta"                 ,no_argument        ,0, 'Z'},
 				{0, 0, 0, 0}
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "dqDTcsuiaUGSpwnzeVvhr::R::t:ACk:l:m:x", long_options, &option_index);
+			c = getopt_long (argc, argv, "dqDTcsuiaUGSpweVvhr::R::t:ACk:l:m:xZ", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -151,12 +150,6 @@ int main (int argc, char * argv[])
                 case 'p':
 					a_Type = 9;
 					break;
-                case 'n':
-					a_Type = 10;
-					break;
-                case 'z':
-                    a_Type = 13;
-                    break;
                 case 'w':
 					a_Type = 11;
 					break;
@@ -195,7 +188,7 @@ int main (int argc, char * argv[])
 					verboseLogging = YES;
 					break;
 				case 'D':
-					verboseLogging = YES;
+					debugLogging = YES;
 					break;
 				case 'T':
 					traceLogging = YES;
@@ -220,6 +213,9 @@ int main (int argc, char * argv[])
                     if (optarg) {
                         regKeyHash = [NSString stringWithUTF8String:optarg];
                     }
+                    break;
+                case 'Z':
+                    runZetaTest = YES;
                     break;
 				case 'h':
 				case '?':
@@ -252,19 +248,15 @@ int main (int argc, char * argv[])
         NSString *_logFile = [NSString stringWithFormat:@"%@/Logs/MPAgent.log",MP_ROOT_CLIENT];
 		[MPLog setupLogging:_logFile level:lcl_vDebug];
 		
-		if ([[NSUserDefaults standardUserDefaults] boolForKey:@"MPAgentDebug"]) {
-			debugLogging = YES;
-		}
-		
 		if (verboseLogging || debugLogging) {
 			lcl_configure_by_name("*", lcl_vDebug);
-			if (verboseLogging) {
+			if (verboseLogging || echoToConsole) {
 				[LCLLogFile setMirrorsToStdErr:YES];
 			}
 			logit(lcl_vInfo,@"***** %@ v.%@ started -- Debug Enabled *****", APPNAME, APPVERSION);
 		} else if (traceLogging) {
 			lcl_configure_by_name("*", lcl_vTrace);
-			if (verboseLogging) {
+			if (verboseLogging || echoToConsole) {
 				[LCLLogFile setMirrorsToStdErr:YES];
 			}
 			logit(lcl_vInfo,@"***** %@ v.%@ started -- Trace Enabled *****", APPNAME, APPVERSION);
@@ -276,13 +268,23 @@ int main (int argc, char * argv[])
 			logit(lcl_vInfo,@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
 		}
         
-        // Check for Servers Plist, if not there then create it with default servers
-        logit(lcl_vInfo,@"Checking for default servers plist %@.",AGENT_SERVERS_PLIST);
-        if (![[NSFileManager defaultManager] fileExistsAtPath:AGENT_SERVERS_PLIST])
+        // Zeta Test
+        if (runZetaTest)
         {
-            qlinfo(@"Create default servers plist.");
-            MPDefaultServers *mpSrvs = [[MPDefaultServers alloc] init];
-            [mpSrvs createDefaultServersList];
+            /*
+            MPHTTPRequest *ch = [MPHTTPRequest new];
+            NSDictionary *data = [ch agentData];
+            MPWSResult *result;
+            result = [ch runSyncPOST:[@"/api/v1/client/checkin" stringByAppendingPathComponent:[data objectForKey:@"cuuid"]] body:data];
+            if (!result) {
+                NSLog(@"Error running sync POST");
+            } else {
+                NSLog(@"Status: %d",(int)result.statusCode);
+                NSLog(@"Result: %@",result.toDictionary);
+            }
+            */
+            exit(0);
+             
         }
         
         // Process Inventory
@@ -321,7 +323,7 @@ int main (int argc, char * argv[])
                 printf("\nAgent has been registered.\n");
             } else {
                 fprintf(stderr, "Agent registration has failed.\n");
-                [[NSFileManager defaultManager] removeItemAtPath:MP_KEYCHAIN_FILE error:NULL];
+                //[[NSFileManager defaultManager] removeItemAtPath:MP_KEYCHAIN_FILE error:NULL];
                 exit(1);
             }
             
@@ -331,7 +333,6 @@ int main (int argc, char * argv[])
         }
         else if (readRegInfo)
         {
-            
             MPAgentRegister *mpar = [[MPAgentRegister alloc] init];
             
             if (![regKeyHash isEqualToString:@"999999999"]) {
@@ -357,7 +358,6 @@ int main (int argc, char * argv[])
         }
         else if (osMigration)
         {
-            
             NSString *uID;
             MPOSUpgrade *mposu = [[MPOSUpgrade alloc] init];
             if ([[osMigID lowercaseString] isEqualTo:@"auto"]) {
@@ -386,8 +386,9 @@ int main (int argc, char * argv[])
         }
         else
         {
-            MPAppController *mpac = [[MPAppController alloc] init];
+            AgentController *mpac = [[AgentController alloc] init];
             [mpac runWithType:a_Type];
+            
             [[NSRunLoop currentRunLoop] run];
         }
 		
@@ -404,8 +405,6 @@ void usage(void)
 	printf(" -d \tRun as background daemon.\n");
     printf(" -q \tRun as background daemon using operation queues.\n");
 	printf(" -c \t --CheckIn \t\tRun client checkin.\n");
-    printf(" -n \t --Servers \t\tRun server list verify/update.\n");
-    printf(" -z \t --SUServers \t\tRun SUS server list verify/update.\n");
     printf(" -w \t --WebServicePost \tRe-post failed post attempts.\n\n");
     printf("OS Profiles \n\n");
     printf(" -p \t --Profile \tScan & Install macOS profiles.\n\n");
@@ -418,6 +417,9 @@ void usage(void)
     printf(" -k \t --OSUpgrade \tOS Migration/Upgrade action state (Start/Stop)\n");
     printf(" -l \t --OSLabel \tOS Migration/Upgrade label\n");
     printf(" -m \t --OSUpgradeID \tA Unique Migration/Upgrade ID (Optional Will Auto Gen by default)\n\n");
+	printf("Antivirus (Symantec) \n\n");
+	printf(" -a \t --AVScan \tCollects Antivirus data installed on system.\n");
+	printf(" -U \t --AVUpdate \tUpdates antivirus defs.\n\n");
     printf("Inventory \n");
     printf("Option: -t [ALL] or [SPType]\n\n");
     printf(" -t\tInventory type, All is default.\n");
@@ -436,6 +438,7 @@ void usage(void)
     printf(" \t\tDiskInfo\n");
     printf(" \t\tUsers\n");
     printf(" \t\tGroups\n");
+	printf(" \t\tLocalAdminAccounts\n");
     printf(" \t\tFileVault\n");
     printf(" \t\tPowerManagment\n");
     printf(" \t\tBatteryInfo\n");

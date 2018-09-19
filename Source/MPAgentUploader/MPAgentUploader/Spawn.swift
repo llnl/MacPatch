@@ -65,7 +65,8 @@ public final class Spawn {
     
     func watchStreams() {
         func callback(x: UnsafeMutableRawPointer) -> UnsafeMutableRawPointer? {
-            let threadInfo = unsafeBitCast(x, to: UnsafeMutablePointer<ThreadInfo>.self).pointee
+			//let threadInfo = unsafeBitCast(x, to: UnsafeMutablePointer<ThreadInfo>.self).pointee
+			let threadInfo = x.assumingMemoryBound(to: Spawn.ThreadInfo.self).pointee
             let outputPipe = threadInfo.outputPipe
             close(outputPipe[1])
             let bufferSize: size_t = 1024 * 8

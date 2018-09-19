@@ -2,7 +2,7 @@
 //  ScanAndPatchVC.m
 //  MPLoginAgent
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -89,8 +89,7 @@ typedef NSUInteger MPInstallIconStatus;
 
 @interface ScanAndPatchVC ()
 {
-	MPCrypto 	*mpCrypto;
-	SecKeyRef	pubKeyRef;
+    MPSettings *settings;
 }
 
 - (NSArray *)scanForAppleUpdates:(NSError **)err;
@@ -126,7 +125,7 @@ typedef NSUInteger MPInstallIconStatus;
         alreadyInit = YES;
         
         fm = [NSFileManager defaultManager];
-        mpDefauts = [[MPDefaults alloc] init];
+        settings = [MPSettings sharedInstance];
         mpScanner = [[MPScanner alloc] init];
         mpScanner.delegate = self;
         
@@ -148,9 +147,6 @@ typedef NSUInteger MPInstallIconStatus;
 
 - (void)scanAndPatch
 {
-	mpCrypto = [[MPCrypto alloc] init];
-	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
-	
     progressCount = 0;
     progressCountTotal = 0;
     
@@ -210,11 +206,6 @@ typedef NSUInteger MPInstallIconStatus;
         approvedPatches = [self filterFoundPatches:[self patchGroupPatches]
                                       applePatches:resultApple
                                     customePatches:resultCustom];
-		
-		NSSortDescriptor *desc = [NSSortDescriptor sortDescriptorWithKey:@"patch_install_weight" ascending:YES];
-		approvedPatches = [approvedPatches sortedArrayUsingDescriptors:[NSArray arrayWithObject:desc]];
-		
-		qlinfo(@"Sorted patches full: %@",approvedPatches);
         
         progressCountTotal = (int)[approvedPatches count];
         [progressCountText setStringValue:[NSString stringWithFormat:@"Updates to install: %d",progressCountTotal]];
@@ -282,29 +273,9 @@ typedef NSUInteger MPInstallIconStatus;
                 
                 // Get all of the patches, main and subs
                 // This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
-				NSDictionary *_curPatch = patch[@"patches"]; //Patch Install Dict
-                patchPatchesArray = [NSArray arrayWithArray:[patch[@"patches"] objectForKey:@"patches"]];
+                patchPatchesArray = [NSArray arrayWithArray:[[patch objectForKey:@"patches"] objectForKey:@"patches"]];
                 qldebug(@"Current patch has total patches associated with it %d", (int)([patchPatchesArray count]-1));
-				
-				// Verify Patch Signature before proceeding
-				// Verify task Has SW Signature
-				/*
-				if (![_curPatch objectForKey:@"patch_sig"]) {
-					logit(lcl_vError,@"%@ patch has no signature, will not install.",patch[@"patch"]);
-					[self updateTableAndArrayController:i status:2];
-					continue;
-				}
-				
-				// Verify Signature for Patch
-				if (![self isValidPatch:_curPatch]) {
-					logit(lcl_vError,@"Unable to verify signature for patch, %@ will not install.",patch[@"patch"]);
-					[self updateTableAndArrayController:i status:2];
-					continue;
-				} else {
-					logit(lcl_vInfo,@"Signature was verfied for %@.",patch[@"patch"]);
-				}
-				 */
-				
+                
                 NSString *dlPatchLoc; //Download location Path
                 int patchIndex = 0;
                 for (patchIndex=0;patchIndex < [patchPatchesArray count];patchIndex++)
@@ -361,8 +332,8 @@ typedef NSUInteger MPInstallIconStatus;
                     [progressText setStringValue:[NSString stringWithFormat:@"Validating downloaded patch."]];
                     [progressText performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
                     
-                    MPCrypto *mpCryptoX = [[MPCrypto alloc] init];
-                    NSString *fileHash = [mpCryptoX md5HashForFile:dlPatchLoc];
+                    MPCrypto *mpCrypto = [[MPCrypto alloc] init];
+                    NSString *fileHash = [mpCrypto md5HashForFile:dlPatchLoc];
                     
                     qlinfo(@"Downloaded file hash: %@ (%@)",fileHash,[currPatchToInstallDict objectForKey:@"hash"]);
                     if ([[[currPatchToInstallDict objectForKey:@"hash"] uppercaseString] isEqualTo:[fileHash uppercaseString]] == NO)
@@ -721,8 +692,8 @@ typedef NSUInteger MPInstallIconStatus;
                             [progressText setStringValue:[NSString stringWithFormat:@"Validating downloaded patch."]];
                             [progressText performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
                             
-                            MPCrypto *mpCryptoX = [[MPCrypto alloc] init];
-                            NSString *fileHash = [mpCryptoX md5HashForFile:dlPatchLoc];
+                            MPCrypto *mpCrypto = [[MPCrypto alloc] init];
+                            NSString *fileHash = [mpCrypto md5HashForFile:dlPatchLoc];
                             
                             qlinfo(@"Downloaded file hash: %@ (%@)",fileHash,[currPatchToInstallDict objectForKey:@"hash"]);
                             if ([[[currPatchToInstallDict objectForKey:@"hash"] uppercaseString] isEqualTo:[fileHash uppercaseString]] == NO)
@@ -1002,10 +973,21 @@ typedef NSUInteger MPInstallIconStatus;
 {
     NSError       *error = nil;
     NSDictionary  *patchGroupPatches = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    BOOL           useLocalPatchesFile = NO;
-    NSString      *patchGroupRevLocal = [MPClientInfo patchGroupRev];
+    MPRESTfull    *rest = [[MPRESTfull alloc] init];
     
+	// BOOL           useLocalPatchesFile = NO;
+    
+    patchGroupPatches = [rest getApprovedPatchesForClient:&error];
+    if (error) {
+        qlerror(@"There was a issue getting the approved patches for the patch group, scan will exit.");
+        qlerror(@"%@",error.localizedDescription);
+        return nil;
+    }
+    
+    /* CEH - Look at re-implementing local cache of patch group patches
+     
+    NSString      *patchGroupRevLocal = [MPClientInfo patchGroupRev];
+ 
     if (![patchGroupRevLocal isEqualToString:@"-1"]) {
         NSString *patchGroupRevRemote = [mpws getPatchGroupContentRev:&error];
         if (!error) {
@@ -1034,6 +1016,7 @@ typedef NSUInteger MPInstallIconStatus;
         logit(lcl_vError,@"There was a issue getting the approved patches for the patch group, scan will exit.");
         return nil;
     }
+    */
     
     return patchGroupPatches;
 }
@@ -1066,7 +1049,7 @@ typedef NSUInteger MPInstallIconStatus;
             // If no items in array, lets bail...
             if ([approvedApplePatches count] == 0 ) {
                 qlinfo(@"No Patch Group patches found.");
-                qlinfo(@"No apple updates found for \"%@\" patch group.",[[mpDefauts defaults] objectForKey:@"PatchGroup"]);
+                qlinfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
             } else {
                 // Build Approved Patches
                 qlinfo(@"Building approved apple patch list...");
@@ -1341,17 +1324,11 @@ typedef NSUInteger MPInstallIconStatus;
 #ifdef DEBUG
     qldebug(@"Reboot would happen ...");
 #else
-    int rb = 0;
-    switch ( action ) {
+    switch ( action )
+	{
         case 0:
-			//rb = reboot(RB_AUTOBOOT);
-			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
-            qlinfo(@"MPAuthPlugin issued a reboot (%d)",rb);
-            if (rb == -1) {
-                // Try Forcing it :-)
-                qlinfo(@"Attempting to force reboot...");
-                execve("/sbin/reboot",0,0);
-            }
+            qlinfo(@"MPAuthPlugin issued a reboot.");
+            [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
             break;
         case 1:
             // Code to just do logout
@@ -1373,6 +1350,7 @@ typedef NSUInteger MPInstallIconStatus;
 
 - (void)installData:(InstallAppleUpdate *)installUpdate data:(NSString *)aData type:(NSUInteger)dataType
 {
+    
     @try
     {
         if (dataType == kMPProcessStatus) {
@@ -1415,43 +1393,15 @@ typedef NSUInteger MPInstallIconStatus;
     return _img;
 }
 
-- (BOOL)isValidPatch:(NSDictionary *)patch
-{
-	return YES; //Disabled
-	
-	logit(lcl_vInfo,@"Checking signature for patch.");
-	BOOL res = NO;
-	NSString *strData = [self stringArrayToHash:patch[@"patches"]];
-	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:patch[@"patch_sig"] options:0];
-	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
-	sigData = nil;
-	return res;
-}
-
-- (NSString *)stringArrayToHash:(NSArray *)patches
-{
-	NSMutableString *_stringToSign = [NSMutableString new];
-	NSArray *fields = @[@"baseline",@"env",@"hash",@"name",@"postinst",@"preinst",@"reboot",@"size",@"type",@"url"];
-	for (NSDictionary *p in patches)
-	{
-		for (NSString *k in fields)
-		{
-			if ([[p allKeys] containsObject:k]) {
-				[_stringToSign appendString:[p objectForKey:k]];
-			}
-		}
-	}
-	return (NSString *)_stringToSign;
-}
-
 #pragma mark - Web Services
 
 - (void)postInstallToWebService:(NSString *)aPatch type:(NSString *)aType
 {
     BOOL result = NO;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
     NSError *wsErr = nil;
-    result = [mpws postPatchInstallResultsToWebService:aPatch patchType:aType error:&wsErr];
+    
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    result = [rest postPatchInstallResults:aPatch type:aType error:&wsErr];
     if (wsErr) {
         qlerror(@"%@",wsErr.localizedDescription);
     } else {
@@ -1461,7 +1411,6 @@ typedef NSUInteger MPInstallIconStatus;
             qlerror(@"Patch (%@) install result was not posted to webservice.",aPatch);
         }
     }
-    
     return;
 }
 

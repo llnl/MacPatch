@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>{% block title %}{% endblock %}</title>
+
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<!-- Custom Fonts -->
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+</head>
+<body>
+
+<div class="modal fade" id="modalDialogAlt" tabindex="-1" role="dialog">
+	<div class="modal-dialog">
+		<div class="modal-content" id="modalContentAlt">
+			<div class="modal-header" id="modalHeaderAlt">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h4 class="modal-title" id="modalTitleAlt"></h4>
+			</div>
+			<div class="modal-body" id="modalBodyAlt">
+				<!-- output data here-->
+			</div>
+			<div class="modal-footer" id="modalFooterAlt">
+				<button type="button" class="btn btn-default" data-dismiss="modal" id="modalCancelButtonAlt">Cancel</button>
+				<button type="button" class="btn btn-primary" id="modalSaveButtonAlt">Save</button>
+			</div>
+		</div><!-- /.modal-content -->
+	</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+{% block bodyPanel %}{% endblock %}
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<!-- Bootstrap Table -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+{% endblock %}
+</body>
+
+</html>

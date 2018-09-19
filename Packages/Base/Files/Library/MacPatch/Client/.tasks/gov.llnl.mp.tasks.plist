@@ -22,7 +22,7 @@
 			<key>idsig</key>
 			<string>0</string>
 			<key>interval</key>
-			<string>Every@600</string>
+			<string>Every@900</string>
 			<key>mode</key>
 			<string>0</string>
 			<key>name</key>

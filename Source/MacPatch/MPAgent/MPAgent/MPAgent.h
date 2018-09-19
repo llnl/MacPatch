@@ -1,7 +1,7 @@
 //
 //  MPAgent.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,47 +27,38 @@
 
 @interface MPAgent : NSObject
 {
-	NSDictionary		*g_Defaults;
 	NSDictionary		*g_OSVers;
 	NSString			*g_cuuid;
 	NSString			*g_serialNo;
-	NSString			*g_osVer;
-	NSString			*g_osType;
 	NSString			*g_agentVer;
-    NSMutableArray		*g_Tasks;
-	NSString			*g_TasksHash;
 	NSMutableDictionary	*g_AppHashes;
     NSString			*g_agentPid;
     NSString			*g_hostName;
-    NSString			*g_clientKey;
+
     // SWDist
     NSMutableArray		*g_SWDistTasks;
 	NSString			*g_SWDistTasksHash;
     NSString			*g_SWDistTasksJSONHash;
 }
 
-@property (nonatomic, strong) NSDictionary          *g_Defaults;
 @property (nonatomic, strong) NSDictionary          *g_OSVers;
 @property (nonatomic, strong) NSString              *g_cuuid;
 @property (nonatomic, strong) NSString              *g_serialNo;
-@property (nonatomic, strong) NSString              *g_osVer;
-@property (nonatomic, strong) NSString              *g_osType;
 @property (nonatomic, strong) NSString              *g_agentVer;
-@property (nonatomic, strong) NSMutableArray        *g_Tasks;
-@property (nonatomic, strong) NSString              *g_TasksHash;
 @property (nonatomic, strong) NSMutableDictionary   *g_AppHashes;
 @property (nonatomic, strong) NSString              *g_agentPid;
 @property (nonatomic, strong) NSString              *g_hostName;
-@property (nonatomic, strong) NSString              *g_clientKey;
 // SWDist
 @property (nonatomic, strong) NSMutableArray        *g_SWDistTasks;
 @property (nonatomic, strong) NSString              *g_SWDistTasksHash;
 @property (nonatomic, strong) NSString              *g_SWDistTasksJSONHash;
 
 + (MPAgent *)sharedInstance;
+
 - (NSString *)collectCUUIDFromHost;
 - (NSDictionary *)systemVersionDictionary;
 - (NSString *)getHostSerialNumber;
 - (NSDictionary *)getOSInfo;
+- (NSString *)clientKey;
 
 @end

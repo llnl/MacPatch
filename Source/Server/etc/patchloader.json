@@ -1,0 +1,48 @@
+{
+	"description" : "Configuration settings for SUS Patch loader",
+	"settings": {
+		"ASUSServer": "swscan.apple.com",
+		"Catalogs": [
+			{
+				"osver": "10.9",
+				"catalogurl":"/content/catalogs/others/index-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"enabled": false
+			},
+			{
+				"osver": "10.10",
+				"catalogurl":"/content/catalogs/others/index-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"enabled": false
+			},
+			{
+				"osver": "10.11",
+				"catalogurl":"/content/catalogs/others/index-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"enabled": true
+			},
+			{
+				"osver": "10.12",
+				"catalogurl":"/content/catalogs/others/index-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"enabled": true
+			},
+			{
+				"osver": "10.13",
+				"catalogurl":"/content/catalogs/others/index-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"enabled": true
+			}
+		],
+		"MPServerAddress":"127.0.0.1",
+		"MPServerPort":"3601",
+		"MPServerUseSSL": false,
+		"filter": [
+				"Voice Update*",
+				"Multi-Lingual Voices",
+				"*Printer Software Update",
+				"Dictation Language Update*",
+				"SpeechRecognition*",
+				"FontAssets*",
+				"*Printer Drivers Update",
+				"*Word List Update",
+				"Photo Content Themes",
+				"Photo Content Catalogs"
+		]
+	}
+}
