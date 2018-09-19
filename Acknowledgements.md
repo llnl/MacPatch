@@ -89,7 +89,7 @@ MacPatch 3.1.x makes use of the following open source components:
 | passlib | 1.7.1 |
 | protobuf | 3.5.2.post1 |
 | pyasn1 | 0.4.2 |
-| pycrypto | 2.6.1 |
+| cryptography | 2.2.2 |
 | python-dateutil | 2.7.2 |
 | python-editor | 1.0.3 |
 | pytz | 2018.4 |

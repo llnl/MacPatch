@@ -11,9 +11,12 @@ import json
 import os.path
 from . mplogger import log_Debug, log_Info, log_Error
 
-from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
-from Crypto.Hash import SHA256, SHA
+from cryptography.exceptions import *
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+
 from base64 import b64encode, b64decode, encodestring
 
 from . import db
@@ -76,29 +79,57 @@ def return_data_for_server_key(key):
 def signData(data):
 	qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
 	if qKeys is not None:
-		# Using SHA1 padding
-		rsakey = RSA.importKey(qKeys.priKey)
-		signer = PKCS1_v1_5.new(rsakey)
-		digest = SHA.new()
 
-		digest.update(data)
-		sign = signer.sign(digest)
-		return b64encode(sign)
+		if isinstance(data, dict):
+			_data = ""
+			for key in sorted(data):
+				if not isinstance(data[key], dict):
+					_data = _data + str(key) + str(data[key])
+				else:
+					_data = _data + str(key) + "DICT"
+
+			data = _data
+
+		try:
+			private_key = serialization.load_pem_private_key( str(qKeys.priKey),None, default_backend() )
+			signature = private_key.sign( data, padding.PKCS1v15(), hashes.SHA1() )
+			encodedSignature = b64encode(signature)
+
+			return encodedSignature
+
+		except InvalidKey:
+			log_Error("InvalidKey, Unable to sign data.")
+			return None
+		except:
+			log_Error("Error, Unable to sign data.")
+			return None
 	else:
 		return None
 
 def verifySignedData(signature, data):
 	qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
 	if qKeys is not None:
-		# Using SHA1 padding
-		rsakey = RSA.importKey(qKeys.pubKey)
-		signer = PKCS1_v1_5.new(rsakey)
-		digest = SHA.new()
-
-		digest.update(data)
-		if signer.verify(digest, b64decode(signature)):
+		try:
+			# Get Keys
+			private_key = serialization.load_pem_private_key(str(qKeys.priKey), None, default_backend())
+			public_key = private_key.public_key()
+			# Verify Signature
+			result = public_key.verify(b64decode(signature), data, padding.PKCS1v15(),hashes.SHA1())
 			return True
+		except InvalidSignature:
+			log_Error("InvalidSignature, Unable to verify signature.")
+			log_Debug("Signature: " + signature)
+			log_Debug("Data: " + data)
+			print('InvalidSignature.')
+			return False
+		except InvalidKey:
+			log_Error("InvalidKey, Unable to verify signature.")
+			return False
+		except:
+			log_Error("Error, Unable to verify signature.")
+			return False
 
+	log_Error("[verifySignedData] Error, unable to get RSA keys from database.")
 	return False
 
 # ----------------------------------------------------------------------------
