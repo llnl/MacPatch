@@ -292,7 +292,8 @@ Client Group - {{group_name}}
 			{
 				field: '{{col.name}}',
 				title: '{{col.info}}',
-				{% if col.name == 'rid' or col.name == 'cuuid' or col.name == 'cdate' or col.name == 'ostype' %}
+				{% if col.name == 'rid' or col.name == 'cuuid' or col.name == 'cdate' or col.name == 'ostype'
+                or col.name == 'SLAM' or col.name == 'macaddr' or col.name == 'ADDN' %}
 				visible: false,
 				{% elif col.name == 'needsreboot' %}
 				align: 'center',
@@ -907,14 +908,5 @@ Client Group - {{group_name}}
 			});
 		});
 	});
-
-	var $_tableTasks = $('#tableTasks');
-	$(function () {
-		$_tableTasks.bootstrapTable('refresh', {
-			query: {pageSize: 2}
-		});
-	});
-
-
 	</script>
 {% endblock %}
