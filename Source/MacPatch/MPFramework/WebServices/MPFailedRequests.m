@@ -1,7 +1,7 @@
 //
 //  MPFailedRequests.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,7 +24,7 @@
  */
 
 #import "MPFailedRequests.h"
-#import "MPWebServices.h"
+//#import "MPWebServices.h"
 
 @implementation MPFailedRequests
 
@@ -105,6 +105,7 @@
 
 - (BOOL)postFailedRequests
 {
+    /*
     NSMutableDictionary *reqFile = [NSMutableDictionary dictionaryWithDictionary:[self readFailedRequestsPlist]];
     if (!reqFile) {
         qlinfo(@"No failed requests to post. Failed requests file not found.");
@@ -195,6 +196,8 @@
     } else {
         return NO;
     }
+     */
+    return NO;
 }
 
 @end

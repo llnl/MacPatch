@@ -1,4 +1,4 @@
-# ![MPLogo](/Docs/Images/MPLogo_64x64.png) MacPatch 3
+# ![MPLogo](/Docs/Images/MPLogo_64x64.png) MacPatch 3.1
 
 ## Overview
 MacPatch simplifies the act of patching and installing software on Mac OS X based systems. The client relies on using the built-in software update application for patching the Mac OS X system updates and it's own scan and patch engine for custom patches. 
@@ -18,18 +18,16 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 
 ## System Requirements
 
-### Client
-* Mac OS X Intel 32 & 64bit.  
-* Mac OS X 10.9.0 and higher.
+### Client 
+* Mac OS X 10.10.x and higher.
 
 ##### Server Requirements:
 * Mac OS X or Mac OS X Server 10.10 or higher 
-* Linux Fedora (19 and higher), RHEL 7, Ubuntu 16.x
-* Using Intel Hardware, PPC is not supported
+* Linux: RHEL 7, CentOS 7, Ubuntu 16.x
 * 4 GB of RAM, 8 GB is recommended
 * Python 2.7
-* Java v1.8 or higher (Java 8 may not available in older distributions of Linux)
-* MySQL version 5.1 or higher, MySQL 5.7 requires additional config.
+* MySQL version 5.1 or higher, MySQL 5.6.x is recommended.
+	* Note: MySQL 8 has not been tested. 	
 
 ## Install and Setup
 

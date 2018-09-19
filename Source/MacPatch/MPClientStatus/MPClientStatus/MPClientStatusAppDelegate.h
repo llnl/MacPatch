@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,7 +27,7 @@
 #import "MPWorkerProtocol.h"
 #import "VDKQueue.h"
 
-@class MPDefaults, MPAsus, MPAppUsage;
+@class MPAsus, MPAppUsage;
 
 @interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,VDKQueueDelegate,NSUserNotificationCenterDelegate>
 {
@@ -85,9 +85,8 @@
 @private
     
 	MPAppUsage *mpAppUsage;
+    VDKQueue *vdkQueue;
 }
-
-@property (nonatomic, strong) VDKQueue *vdkQueue;
 
 @property (unsafe_unretained) IBOutlet NSWindow *window;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkInStatusMenuItem;
@@ -95,7 +94,6 @@
 @property (unsafe_unretained) IBOutlet NSMenuItem *selfVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *MPVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkAgentAndUpdateMenuItem;
-@property (unsafe_unretained) IBOutlet NSMenuItem *installCriticalUpdateMenuItem;
 @property (nonatomic, assign) BOOL openASUS;
 @property (nonatomic, assign) BOOL asusAlertOpen;
 
@@ -147,11 +145,6 @@
 // Refresh Status
 - (IBAction)refreshClientStatus:(id)sender;
 
-// Checkin Data
-- (NSDictionary *)systemVersionDictionary;
-- (NSDictionary *)getOSInfo;
-- (NSString *)getHostSerialNumber;
-
 // Show Last CheckIn Info
 - (void)showLastCheckIn;
 - (void)showLastCheckInMethod;
@@ -160,7 +153,6 @@
 - (IBAction)openSoftwareCatalogApplications:(id)sender;
 
 // Kill SoftwareUpdate GUI App
-- (void)notificationReceived:(NSNotification *)aNotification;
 - (void)killApplication:(NSNumber *)aPID;
 - (void)openSoftwareUpdateApplication:(id)sender;
 

@@ -2,7 +2,7 @@
 //  MPCodeSign.m
 //  MPFramework
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,9 +25,25 @@
  */
 
 #import "MPCodeSign.h"
-#import "MPDefaults.h"
+//#import "MPDefaults.h"
+
+@interface MPCodeSign ()
+{
+    MPSettings *settings;
+}
+@end
 
 @implementation MPCodeSign
+
+- (id)init
+{
+    self = [super init];
+    if (self)
+    {
+        settings = [MPSettings sharedInstance];
+    }
+    return self;
+}
 
 - (BOOL)verifyAppleBinary:(NSString *)aFilePath error:(NSError **)err
 {
@@ -46,11 +62,8 @@
 
 - (BOOL)verifyBinary:(NSString *)aFilePath requirement:(NSString *)aRequirement error:(NSError **)err
 {
-    MPDefaults *d = [[MPDefaults alloc] init];
-    if ([[d defaults] objectForKey:@"CheckSignatures"]) {
-        if ([[[d defaults] objectForKey:@"CheckSignatures"] boolValue] == NO) {
-            return YES;
-        }
+    if (settings.agent.verifySignatures == 0) {
+        return YES;
     }
     
     NSError *error = nil;
@@ -115,60 +128,6 @@
         logit(lcl_vError,@"%@ is not signed or trusted.",aFilePath);
     }
     return result;
-}
-
-
-+ (BOOL)checkSignature:(NSString *)aStringPath
-{
-	BOOL result = NO;
-	NSArray *_fingerPrintBaseArray = [NSArray arrayWithObjects:@"0",@"0",nil];
-    
-    // Check to see if use code sign validation is enabled
-    MPDefaults *d = [[MPDefaults alloc] init];
-    if ([[d defaults] objectForKey:@"CheckSignatures"]) {
-        if ([[[d defaults] objectForKey:@"CheckSignatures"] boolValue] == NO) {
-            return YES;
-        }
-    }
-	
-	NSTask * task = [[NSTask alloc] init];
-	NSPipe * newPipe = [NSPipe pipe];
-	NSFileHandle * readHandle = [newPipe fileHandleForReading];
-	NSData * inData;
-	NSString * tempString;
-	[task setLaunchPath:@"/usr/bin/codesign"];
-	NSArray *args = [NSArray arrayWithObjects:@"-h", @"-dvvv", @"-r-", aStringPath, nil];
-	[task setArguments:args];
-	[task setStandardOutput:newPipe];
-	[task setStandardError:newPipe];
-	[task launch];
-	inData = [readHandle readDataToEndOfFile];
-	tempString = [[NSString alloc] initWithData:inData encoding:NSASCIIStringEncoding];
-	logit(lcl_vDebug,@"Codesign result:\n%@",tempString);
-    
-	if ([tempString rangeOfString:@"missing or invalid"].length > 0 || [tempString rangeOfString:@"modified"].length > 0 || [tempString rangeOfString:@"CSSMERR_TP_NOT_TRUSTED"].length > 0)
-	{
-		logit(lcl_vError,@"%@ is not signed or trusted.",aStringPath);
-		goto done;
-	} else if ([tempString rangeOfString:@"Apple Root CA"].length > 0) {
-		logit(lcl_vDebug,@"%@ is signed and trusted.",aStringPath);
-		result = YES;
-		goto done;
-	}
-	
-	for (NSString *fingerPrint in _fingerPrintBaseArray) {
-		if ([tempString rangeOfString:fingerPrint].length > 0) {
-			logit(lcl_vDebug,@"%@ is signed and trusted.",aStringPath);
-			result = YES;
-			break;
-		}
-	}
-	
-	if (result != YES) {
-		logit(lcl_vError,@"%@ is not signed or trusted.",aStringPath);
-	}
-done:
-	return result;
 }
 
 @end

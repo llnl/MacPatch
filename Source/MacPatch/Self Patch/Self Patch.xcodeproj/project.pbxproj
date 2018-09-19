@@ -34,6 +34,37 @@
 		8FD8911016E5259100A870A3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910716E5259100A870A3 /* libz.dylib */; };
 		8FD8911116E5259100A870A3 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910816E5259100A870A3 /* libMacPatch.a */; };
 		8FD8914116E535C300A870A3 /* WindowViewSubclass.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8914016E535C200A870A3 /* WindowViewSubclass.m */; };
+		8FE15D2C1FFEE06C00F4A1CB /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F336E9F1BA88EFE00983D78 /* EventToSend.c */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		8FE15D2D1FFEE06C00F4A1CB /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD890B616DFEDB700A870A3 /* main.m */; };
+		8FE15D2E1FFEE06C00F4A1CB /* MPSelfPatchAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD890F216E5253600A870A3 /* MPSelfPatchAppDelegate.m */; };
+		8FE15D2F1FFEE06C00F4A1CB /* PrefsController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD890F416E5253600A870A3 /* PrefsController.m */; };
+		8FE15D301FFEE06C00F4A1CB /* WindowViewSubclass.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8914016E535C200A870A3 /* WindowViewSubclass.m */; };
+		8FE15D321FFEE06C00F4A1CB /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FFD37ED1FA5101800115F33 /* libsqlite3.tbd */; };
+		8FE15D331FFEE06C00F4A1CB /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910816E5259100A870A3 /* libMacPatch.a */; };
+		8FE15D341FFEE06C00F4A1CB /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910516E5259100A870A3 /* libicucore.dylib */; };
+		8FE15D351FFEE06C00F4A1CB /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910716E5259100A870A3 /* libz.dylib */; };
+		8FE15D361FFEE06C00F4A1CB /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD890AA16DFEDB700A870A3 /* Cocoa.framework */; };
+		8FE15D371FFEE06C00F4A1CB /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910016E5259100A870A3 /* Security.framework */; };
+		8FE15D381FFEE06C00F4A1CB /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910116E5259100A870A3 /* SystemConfiguration.framework */; };
+		8FE15D391FFEE06C00F4A1CB /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910216E5259100A870A3 /* CoreServices.framework */; };
+		8FE15D3A1FFEE06C00F4A1CB /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910316E5259100A870A3 /* IOKit.framework */; };
+		8FE15D3B1FFEE06C00F4A1CB /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8910416E5259100A870A3 /* CoreFoundation.framework */; };
+		8FE15D3C1FFEE06C00F4A1CB /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F336EA11BA8909D00983D78 /* Carbon.framework */; };
+		8FE15D3D1FFEE06C00F4A1CB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5011FC6587D006F5FB2 /* Python.framework */; };
+		8FE15D3F1FFEE06C00F4A1CB /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890B316DFEDB700A870A3 /* InfoPlist.strings */; };
+		8FE15D401FFEE06C00F4A1CB /* Preferences.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890F516E5253600A870A3 /* Preferences.xib */; };
+		8FE15D411FFEE06C00F4A1CB /* Warning.png in Resources */ = {isa = PBXBuildFile; fileRef = 8F226CCF1AB21AB900354546 /* Warning.png */; };
+		8FE15D421FFEE06C00F4A1CB /* MPAlert.png in Resources */ = {isa = PBXBuildFile; fileRef = 8F336E991BA88A1000983D78 /* MPAlert.png */; };
+		8FE15D431FFEE06C00F4A1CB /* SelfPatchMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890F616E5253600A870A3 /* SelfPatchMainMenu.xib */; };
+		8FE15D441FFEE06C00F4A1CB /* MPSelfPatch.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890F716E5253600A870A3 /* MPSelfPatch.icns */; };
+		8FE15D451FFEE06C00F4A1CB /* empty.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8F1592031767B64B006BE1E0 /* empty.tif */; };
+		8FE15D461FFEE06C00F4A1CB /* RestartReq.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8FA9ADF81767B6930055506B /* RestartReq.tif */; };
+		8FE15D471FFEE06C00F4A1CB /* LogOutReq.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8F779398181EDB8D008FA072 /* LogOutReq.tif */; };
+		8FE15D481FFEE06C00F4A1CB /* Installcomplete.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8FA9ADFA1767B6A00055506B /* Installcomplete.tif */; };
+		8FE15D491FFEE06C00F4A1CB /* exclamation.tif in Resources */ = {isa = PBXBuildFile; fileRef = 7258911B179F6BE50058FF64 /* exclamation.tif */; };
+		8FE15D4A1FFEE06C00F4A1CB /* running.tiff in Resources */ = {isa = PBXBuildFile; fileRef = 7258911D179F6BF60058FF64 /* running.tiff */; };
+		8FF5B5021FC65886006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5011FC6587D006F5FB2 /* Python.framework */; };
+		8FFD37EE1FA5101800115F33 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FFD37ED1FA5101800115F33 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -76,6 +107,10 @@
 		8FD8911216E525F000A870A3 /* MPWorkerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWorkerProtocol.h; sourceTree = "<group>"; };
 		8FD8913F16E535C200A870A3 /* WindowViewSubclass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WindowViewSubclass.h; sourceTree = "<group>"; };
 		8FD8914016E535C200A870A3 /* WindowViewSubclass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WindowViewSubclass.m; sourceTree = "<group>"; };
+		8FE15D4E1FFEE06C00F4A1CB /* Self Patch-Signed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Self Patch-Signed.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FE15D4F1FFEE06C00F4A1CB /* Self Patch copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Self Patch copy-Info.plist"; path = "/Users/heizer1/Code/MP/development-31/MacPatch/Source/MacPatch/Self Patch/Self Patch copy-Info.plist"; sourceTree = "<absolute>"; };
+		8FF5B5011FC6587D006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Python.framework; sourceTree = "<group>"; };
+		8FFD37ED1FA5101800115F33 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -83,6 +118,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FFD37EE1FA5101800115F33 /* libsqlite3.tbd in Frameworks */,
 				8FD8911116E5259100A870A3 /* libMacPatch.a in Frameworks */,
 				8FD8910E16E5259100A870A3 /* libicucore.dylib in Frameworks */,
 				8FD8911016E5259100A870A3 /* libz.dylib in Frameworks */,
@@ -93,6 +129,26 @@
 				8FD8910C16E5259100A870A3 /* IOKit.framework in Frameworks */,
 				8FD8910D16E5259100A870A3 /* CoreFoundation.framework in Frameworks */,
 				8F336EA21BA8909E00983D78 /* Carbon.framework in Frameworks */,
+				8FF5B5021FC65886006F5FB2 /* Python.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8FE15D311FFEE06C00F4A1CB /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FE15D321FFEE06C00F4A1CB /* libsqlite3.tbd in Frameworks */,
+				8FE15D331FFEE06C00F4A1CB /* libMacPatch.a in Frameworks */,
+				8FE15D341FFEE06C00F4A1CB /* libicucore.dylib in Frameworks */,
+				8FE15D351FFEE06C00F4A1CB /* libz.dylib in Frameworks */,
+				8FE15D361FFEE06C00F4A1CB /* Cocoa.framework in Frameworks */,
+				8FE15D371FFEE06C00F4A1CB /* Security.framework in Frameworks */,
+				8FE15D381FFEE06C00F4A1CB /* SystemConfiguration.framework in Frameworks */,
+				8FE15D391FFEE06C00F4A1CB /* CoreServices.framework in Frameworks */,
+				8FE15D3A1FFEE06C00F4A1CB /* IOKit.framework in Frameworks */,
+				8FE15D3B1FFEE06C00F4A1CB /* CoreFoundation.framework in Frameworks */,
+				8FE15D3C1FFEE06C00F4A1CB /* Carbon.framework in Frameworks */,
+				8FE15D3D1FFEE06C00F4A1CB /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -105,6 +161,7 @@
 				8FD890B016DFEDB700A870A3 /* Self Patch */,
 				8FD890A916DFEDB700A870A3 /* Frameworks */,
 				8FD890A816DFEDB700A870A3 /* Products */,
+				8FE15D4F1FFEE06C00F4A1CB /* Self Patch copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -112,6 +169,7 @@
 			isa = PBXGroup;
 			children = (
 				8FD890A716DFEDB700A870A3 /* Self Patch.app */,
+				8FE15D4E1FFEE06C00F4A1CB /* Self Patch-Signed.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -119,6 +177,8 @@
 		8FD890A916DFEDB700A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FF5B5011FC6587D006F5FB2 /* Python.framework */,
+				8FD890AA16DFEDB700A870A3 /* Cocoa.framework */,
 				8F336EA11BA8909D00983D78 /* Carbon.framework */,
 				8FD8910016E5259100A870A3 /* Security.framework */,
 				8FD8910116E5259100A870A3 /* SystemConfiguration.framework */,
@@ -129,7 +189,7 @@
 				8FD8910616E5259100A870A3 /* libcrypto.dylib */,
 				8FD8910716E5259100A870A3 /* libz.dylib */,
 				8FD8910816E5259100A870A3 /* libMacPatch.a */,
-				8FD890AA16DFEDB700A870A3 /* Cocoa.framework */,
+				8FFD37ED1FA5101800115F33 /* libsqlite3.tbd */,
 				8FD890AC16DFEDB700A870A3 /* Other Frameworks */,
 			);
 			name = Frameworks;
@@ -212,14 +272,37 @@
 			productReference = 8FD890A716DFEDB700A870A3 /* Self Patch.app */;
 			productType = "com.apple.product-type.application";
 		};
+		8FE15D2A1FFEE06C00F4A1CB /* Self Patch-Signed */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8FE15D4B1FFEE06C00F4A1CB /* Build configuration list for PBXNativeTarget "Self Patch-Signed" */;
+			buildPhases = (
+				8FE15D2B1FFEE06C00F4A1CB /* Sources */,
+				8FE15D311FFEE06C00F4A1CB /* Frameworks */,
+				8FE15D3E1FFEE06C00F4A1CB /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "Self Patch-Signed";
+			productName = "Self Patch";
+			productReference = 8FE15D4E1FFEE06C00F4A1CB /* Self Patch-Signed.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		8FD8909F16DFEDB700A870A3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = LLNL;
+				TargetAttributes = {
+					8FE15D2A1FFEE06C00F4A1CB = {
+						DevelopmentTeam = BLZUAP2L36;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = 8FD890A216DFEDB700A870A3 /* Build configuration list for PBXProject "Self Patch" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -234,6 +317,7 @@
 			projectRoot = "";
 			targets = (
 				8FD890A616DFEDB700A870A3 /* Self Patch */,
+				8FE15D2A1FFEE06C00F4A1CB /* Self Patch-Signed */,
 			);
 		};
 /* End PBXProject section */
@@ -258,6 +342,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		8FE15D3E1FFEE06C00F4A1CB /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FE15D3F1FFEE06C00F4A1CB /* InfoPlist.strings in Resources */,
+				8FE15D401FFEE06C00F4A1CB /* Preferences.xib in Resources */,
+				8FE15D411FFEE06C00F4A1CB /* Warning.png in Resources */,
+				8FE15D421FFEE06C00F4A1CB /* MPAlert.png in Resources */,
+				8FE15D431FFEE06C00F4A1CB /* SelfPatchMainMenu.xib in Resources */,
+				8FE15D441FFEE06C00F4A1CB /* MPSelfPatch.icns in Resources */,
+				8FE15D451FFEE06C00F4A1CB /* empty.tif in Resources */,
+				8FE15D461FFEE06C00F4A1CB /* RestartReq.tif in Resources */,
+				8FE15D471FFEE06C00F4A1CB /* LogOutReq.tif in Resources */,
+				8FE15D481FFEE06C00F4A1CB /* Installcomplete.tif in Resources */,
+				8FE15D491FFEE06C00F4A1CB /* exclamation.tif in Resources */,
+				8FE15D4A1FFEE06C00F4A1CB /* running.tiff in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
@@ -270,6 +373,18 @@
 				8FD890F816E5253600A870A3 /* MPSelfPatchAppDelegate.m in Sources */,
 				8FD890F916E5253600A870A3 /* PrefsController.m in Sources */,
 				8FD8914116E535C300A870A3 /* WindowViewSubclass.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8FE15D2B1FFEE06C00F4A1CB /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FE15D2C1FFEE06C00F4A1CB /* EventToSend.c in Sources */,
+				8FE15D2D1FFEE06C00F4A1CB /* main.m in Sources */,
+				8FE15D2E1FFEE06C00F4A1CB /* MPSelfPatchAppDelegate.m in Sources */,
+				8FE15D2F1FFEE06C00F4A1CB /* PrefsController.m in Sources */,
+				8FE15D301FFEE06C00F4A1CB /* WindowViewSubclass.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -293,12 +408,20 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -322,7 +445,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -339,12 +462,20 @@
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -361,7 +492,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -376,12 +507,16 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Self Patch/Self Patch-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Self Patch/Self Patch-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -393,14 +528,66 @@
 			buildSettings = {
 				CLANG_ENABLE_OBJC_ARC = YES;
 				COMBINE_HIDPI_IMAGES = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Self Patch/Self Patch-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = "Self Patch/Self Patch-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		8FE15D4C1FFEE06C00F4A1CB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = BLZUAP2L36;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Self Patch/Self Patch-Prefix.pch";
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = "Self Patch copy-Info.plist";
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.Self-Patch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		8FE15D4D1FFEE06C00F4A1CB /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = BLZUAP2L36;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Self Patch/Self Patch-Prefix.pch";
+				HEADER_SEARCH_PATHS = "$(inherited)";
+				INFOPLIST_FILE = "Self Patch copy-Info.plist";
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.Self-Patch";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -422,6 +609,15 @@
 			buildConfigurations = (
 				8FD890C516DFEDB700A870A3 /* Debug */,
 				8FD890C616DFEDB700A870A3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8FE15D4B1FFEE06C00F4A1CB /* Build configuration list for PBXNativeTarget "Self Patch-Signed" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8FE15D4C1FFEE06C00F4A1CB /* Debug */,
+				8FE15D4D1FFEE06C00F4A1CB /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

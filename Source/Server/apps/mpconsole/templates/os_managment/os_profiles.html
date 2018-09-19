@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+{%  endblock %}
+
+{% block pageHeader %}
+	OS Profiles
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed">
+		<div id="toolbar">
+			{% if session.role[0] == 1 %}
+			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+			{% endif %}
+		</div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		  {
+			  url: "/osmanage/profiles/list",
+			  striped: true,
+			  pagination: true,
+			  sidePagination: 'client',
+			  showRefresh: true,
+			  pageList: ['10', '25', '50', '100', 'All'],
+			  search: true,
+			  idField: 'profileID',
+			  sortable: true,
+			  showColumns: true,
+
+			  columns: [
+			  {
+				  field: 'state',
+				  checkbox: true,
+				  rowspan: 1,
+				  align: 'center',
+				  valign: 'middle',
+				  width: 40,
+				  {% if session.role[0] != 1 %}
+				  visible: false,
+				  {% endif %}
+			  },
+			  {
+				  field: 'operate',
+				  title: '',
+				  align: 'center',
+				  events: operateEvents,
+				  formatter: operateFormatter,
+				  width: 60
+			  },
+
+
+			  {% for col in columns %}
+			  {
+				  field: '{{col[0]}}',
+				  title: '{{col[1]}}',
+				  {% if col[0] == 'profileID' %}
+				  visible: false,
+				  {% elif col[2] == '0' %}
+				  visible: false,
+				  {% endif %}
+				  sortable: true
+			  },
+			  {% endfor %}
+			  ],
+			  data: [
+				  {% for d in data %}
+				  {
+					  {% for col in columns %}
+						  {{col[0]}} : `{{ d[col[0]] }}`,
+					  {% endfor %}
+				  },
+				  {% endfor %}
+			  ]
+		});
+	});
+
+	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+	$(function ()
+	{
+		$delButton.click(function ()
+		{
+			var ids = $.map($table.bootstrapTable('getSelections'), function (row)
+			{
+				return row.profileID;
+			});
+
+			var formData = new FormData();
+			formData.append("profileID", ids);
+			$.ajax({
+				type:'DELETE',
+				url: '/osmanage/profile/delete',
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				success: function(){
+					alert("OS Profile Deleted Successfully");
+					$('#modalDialog').modal('hide');
+					$table.bootstrapTable('remove', {
+						field: 'profileID',
+						values: ids
+					});
+				},
+				error: function(jqXHR, textStatus, errorThrown){
+					alert("OS Profile Failed to Delete");
+					$('#modalDialog').modal('hide');
+				}
+			});
+			return true;
+		});
+
+		$addButton.click(function ()
+		{
+			$.get( "/osmanage/profiles/add").done(function(data) {
+				$('#modalTitle').html("New OS Profile");
+				$('#modalBody').html(data);
+				$('#modalFooter').hide();
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalBody').css({'height':'72vh'});
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+				});
+			});
+		});
+	});
+
+	function operateFormatter(value, row, index)
+	{
+		return [
+			{% if session.role[0] == 1 %}
+			'<a class="edit" href="javascript:void(0)" title="Edit Profile">',
+			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
+			{% else %}
+			'<a class="edit" href="javascript:void(0)" title="Profile Data">',
+			'<i class="fa fa-search fa-lg" aria-hidden="true"></i>',
+			{% endif %}
+			'</a>&nbsp;'
+		].join('');
+	}
+
+	window.operateEvents = {
+		'click .edit': function (e, value, row, index)
+		{
+			$.get( "/osmanage/profiles/update/" + row['profileID']).done(function(data) {
+				$('#modalTitle').html("Edit OS Profile");
+				$('#modalBody').html(data);
+				$('#modalFooter').hide();
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalBody').css({'height':'72vh'});
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+				});
+			});
+		},
+		'click .description': function (e, value, row, index) {
+			alert('You click description action, row: ' + JSON.stringify(row));
+		}
+	};
+	</script>
+{% endblock %}

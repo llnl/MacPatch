@@ -1,0 +1,14 @@
+[Unit]
+Description=MacPatch Admin Console Service
+After=network.target
+
+[Service]
+Type=simple
+
+ExecStart=/bin/bash /opt/MacPatch/Server/conf/scripts/systemd/MPConsole.sh start
+ExecStop=/bin/bash /opt/MacPatch/Server/conf/scripts/systemd/MPConsole.sh stop
+
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

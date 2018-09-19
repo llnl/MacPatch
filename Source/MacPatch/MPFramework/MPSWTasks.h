@@ -1,7 +1,7 @@
 //
 //  MPSWTasks.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,24 +27,15 @@
 
 
 @interface MPSWTasks : NSObject
-{
-    NSDictionary *defaults;
-    NSString *groupName;
-    NSString *groupHash;
 
-@private
-    NSDictionary *mpHostConfigInfo;
-}
-
-@property(strong) NSDictionary *defaults;
 @property(strong) NSString *groupName;
 @property(strong) NSString *groupHash;
-@property(nonatomic, strong) NSDictionary *mpHostConfigInfo;
 
 - (id)initWithGroupAndHash:(NSString *)aGroup hash:(NSString *)aHash;
 
-- (id)getSWTasksForGroupFromServer:(NSError **)err;
+- (NSArray *)getSoftwareTasksForGroup:(NSError **)err;
 
 - (int)postInstallResults:(int)resultNo resultText:(NSString *)resultString task:(NSDictionary *)taskDict;
 - (int)postUnInstallResults:(int)resultNo resultText:(NSString *)resultString task:(NSDictionary *)taskDict;
+
 @end

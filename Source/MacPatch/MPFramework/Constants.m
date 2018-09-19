@@ -1,7 +1,7 @@
 //
 //  Constants.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -43,6 +43,8 @@ NSString * const PATCHES_NEEDED_PLIST       = @"/Library/MacPatch/Client/Data/.n
 NSString * const PATCHES_APPROVED_PLIST     = @"/Library/MacPatch/Client/Data/.approvedPatches.plist";
 NSString * const PATCHES_CRITICAL_PLIST     = @"/Library/MacPatch/Client/Data/.criticalPatches.plist";
 NSString * const PATCH_GROUP_PATCHES_PLIST  = @"/Library/MacPatch/Client/Data/.gov.llnl.mp.patchgroup.data.plist";
+NSString * const SOFTWARE_DATA_DIR          = @"/Library/Application Support/MacPatch/SW_Data";
+NSString * const SOFTWARE_REQUIRED_PLIST    = @"/Library/MacPatch/Client/Data/.requiredSoftware.plist";
 
 NSString * const WS_CLIENT_REG              = @"/MPRegister.cfc";
 NSString * const WS_CLIENT_FILE             = @"/Service/MPClientService.cfc";
@@ -75,7 +77,9 @@ NSString * const MP_KEYCHAIN_FILE           = @"/Library/Application Support/Mac
 NSString * const MP_AGENT_HASH              = @"/Library/Application Support/MacPatch/.keyHash";
 
 NSString * const OS_MIGRATION_STATUS        = @"/Users/Shared/.migrationid";
-NSString * const MP_SERVER_PUB_KEY	        = @"/Library/Application Support/MacPatch/.keys/ServerPub.pem";
+
+NSString * const MP_AGENT_DEPL_PLIST        = @"/Library/Application Support/MacPatch/gov.llnl.mpagent.plist";
+NSString * const MP_AGENT_SETTINGS          = @"/Library/Application Support/MacPatch/gov.llnl.mp.plist";
 
 NSString * const MP_CRITICAL_UPDATES_PLIST  = @"/Users/Shared/.mpCriUpdates.plist";
 NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun";

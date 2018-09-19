@@ -1,7 +1,7 @@
 //
 //  MPSimpleKeychain.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -69,11 +69,14 @@
                 return nil;
             }
         } else {
+            keyChainFile = [aKeyChainFile copy];
+            /*
             OSStatus result = [self createKeyChain:aKeyChainFile];
             if (result != noErr) {
                 NSLog(@"Create Keychain error: %d",result);
                 return nil;
             }
+             */
         }
     }
     return self;
@@ -176,7 +179,7 @@
 {
     if (![self keychainIsUnlocked]) {
         if (![self unlockKeyChain:keyChainFile]) {
-            return NO;
+            return nil;
         }
     }
     
@@ -321,7 +324,8 @@
     SecTrustedApplicationRef MPUpdateAgent = NULL;
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
+	result = SecTrustedApplicationCreateFromPath(NULL, &MPAgent);
+	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgentExec", &MPAgentExec);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPCatalog.app", &MPCatalog);

@@ -1,7 +1,7 @@
 //
 //  MPDefaults.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -141,6 +141,32 @@
     } else {
         return defaults;
     }
+}
+
+#pragma mark - MacPatch 3.1 Methods
+// MP 3.1
+- (id)initUsingSettings
+{
+    self = [super init];
+    if (self) {
+        
+    }
+    return self;
+}
+
+- (void)updateSettingsData:(NSDictionary *)settingsRevisons
+{
+    
+}
+
+- (NSInteger)revisionForKey:(MPSettingsKey)key
+{
+    return 0;
+}
+
+- (id)settingsForKey:(MPSettingsKey)key
+{
+    return nil;
 }
 
 @end

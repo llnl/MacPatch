@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>AdditionalCurlOptions</key>
+    <array>
+        <string>ciphers = "rsa_aes_128_sha,rsa_aes_256_sha,rsa_3des_sha"</string>
+    </array>
+    <key>AppleCatalogURLs</key>
+    <array>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/index.sucatalog</string>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/index-1.sucatalog</string>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/others/index-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog</string>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/others/index-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog</string>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/others/index-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog</string>
+        <string>http://[SUS-BASE-SERVER]/content/catalogs/others/index-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog</string>
+    </array>
+    <key>LocalCatalogURLBase</key>
+    <string>http://[SUS-SERVER-NAME]</string>
+    <key>PreferredLocalizations</key>
+    <array>
+        <string>English</string>
+        <string>en</string>
+    </array>
+    <key>RepoSyncLogFile</key>
+    <string>[SRVBASE]/logs/reposado_sync.log</string>
+    <key>UpdatesMetadataDir</key>
+    <string>[SRVCONTENT]/Reposado/metadata</string>
+    <key>UpdatesRootDir</key>
+    <string>[SRVCONTENT]/Reposado/html</string>
+</dict>
+</plist>

@@ -2,9 +2,28 @@
 //  MinScanAndPatchVC.m
 //  MPLoginAgent
 //
-//  Created by Charles Heizer on 6/30/17.
-//  Copyright © 2017 Charles Heizer. All rights reserved.
-//
+/*
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "MinScanAndPatchVC.h"
 #import "MacPatch.h"
@@ -21,7 +40,12 @@
 
 #define	BUNDLE_ID       @"gov.llnl.MPLoginAgent"
 
+extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
+
 @interface MinScanAndPatchVC ()
+{
+    MPSettings *settings;
+}
 
 // Main
 - (void)scanAndPatch;
@@ -74,7 +98,7 @@
         alreadyInit = YES;
         
         fm = [NSFileManager defaultManager];
-        mpDefauts = [[MPDefaults alloc] init];
+        settings = [MPSettings sharedInstance];
         mpScanner = [[MPScanner alloc] init];
         mpScanner.delegate = self;
         cancelTask = FALSE;
@@ -180,11 +204,8 @@
         // If we have no patches, close out.
         if (progressCountTotal <= 0)
         {
-			qlinfo(@"No updates to install. Rebooting system");
-			//[self toggleStatusProgress];
-			//[self rebootOrLogout:1]; // Exit app, no reboot.
-			//[self countDownToClose];
-			[NSThread detachNewThreadSelector:@selector(countDownToClose) toTarget:self withObject:nil];
+            [self toggleStatusProgress];
+            [self rebootOrLogout:1]; // Exit app, no reboot.
             return;
         }
         
@@ -193,11 +214,6 @@
             [progressBar setDoubleValue:1.0];
             [progressBar setMaxValue:progressCountTotal+1];
         });
-		
-		NSSortDescriptor *desc = [NSSortDescriptor sortDescriptorWithKey:@"patch_install_weight" ascending:YES];
-		approvedUpdates = [approvedUpdates sortedArrayUsingDescriptors:[NSArray arrayWithObject:desc]];
-		
-		qlinfo(@"Sorted patches min: %@",approvedUpdates);
 
         // Begin Patching
         __block NSDictionary *patch;
@@ -236,23 +252,20 @@
         qlinfo(@"Patches have been installed, system will now reboot.");
         [self countDownToClose];
     }
+    
 }
 
 - (void)countDownToClose
 {
-	@autoreleasepool
-	{
-		for (int i = 0; i < 5;i++)
-		{
-			qlinfo(@"Rebooting system in %d seconds...",(5-i));
-			// Message that window is closing
-			[self progress:[NSString stringWithFormat:@"Rebooting system in %d seconds...",(5-i)]];
-			sleep(1);
-		}
-		
-		[self progress:@"Rebooting System Please Be Patient"];
-		[self rebootOrLogout:0];
-	}
+    for (int i = 0; i < 5;i++)
+    {
+        // Message that window is closing
+        [self progress:[NSString stringWithFormat:@"Rebooting system in %d seconds...",(5-i)]];
+        sleep(1);
+    }
+    
+    [self progress:@"Rebooting System Please Be Patient"];
+    [self rebootOrLogout:0];
 }
 
 - (void)countDownShowRebootButton
@@ -274,29 +287,30 @@
 
 - (void)rebootOrLogout:(int)action
 {
-    switch ( action )
+	switch ( action )
 	{
-        case 0:
+		case 0:
 			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 			qlinfo(@"MPAuthPlugin issued a launchctl reboot.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
-            break;
-        case 1:
-            // just return to loginwindow
+			break;
+		case 1:
+			// just return to loginwindow
 			exit(0);
-            break;
-        default:
-            // Code
+			break;
+		default:
+			// Code
 			exit(0);
-            break;
-    }
+			break;
+	}
 }
 
 - (void)toggleStatusProgress
 {
-    if ([progressBar isHidden])
-	{
+    if ([progressBar isHidden]) {
+        
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [progressBar setUsesThreadedAnimation:YES];
                 [progressBar setHidden:NO];
@@ -304,9 +318,7 @@
             });
         });
         
-    }
- 	else
-	{
+    } else {
         [progressBar setHidden:YES];
         [progressBar stopAnimation:nil];
     }
@@ -315,12 +327,12 @@
 - (IBAction)cancelOperation:(id)sender
 {
 	/*
-    [self progress:@"Cancelling, waiting for current request to finish..."];
-    dispatch_async(dispatch_get_main_queue(), ^(void)
-    {
-        cancelButton.enabled = FALSE;
-        self.cancelTask = TRUE;
-    });
+	 [self progress:@"Cancelling, waiting for current request to finish..."];
+	 dispatch_async(dispatch_get_main_queue(), ^(void)
+	 {
+	 cancelButton.enabled = FALSE;
+	 self.cancelTask = TRUE;
+	 });
 	 */
 	if ([cancelButton.title isEqualToString:@"Reboot"])
 	{
@@ -334,8 +346,38 @@
 {
     @autoreleasepool
     {
-        [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+        MDSendAppleEventToSystemProcess(kAERestart);
     }
+}
+
+OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
+{
+    qlinfo(@"MDSendAppleEventToSystemProcess called");
+    
+    AEAddressDesc targetDesc;
+    static const ProcessSerialNumber kPSNOfSystemProcess = {0, kSystemProcess };
+    AppleEvent eventReply = {typeNull, NULL};
+    AppleEvent eventToSend = {typeNull, NULL};
+    
+    OSStatus status = AECreateDesc(typeProcessSerialNumber,
+                                   &kPSNOfSystemProcess, sizeof(kPSNOfSystemProcess), &targetDesc);
+    
+    if (status != noErr) return status;
+    
+    status = AECreateAppleEvent(kCoreEventClass, eventToSendID,
+                                &targetDesc, kAutoGenerateReturnID, kAnyTransactionID, &eventToSend);
+    
+    AEDisposeDesc(&targetDesc);
+    
+    if (status != noErr) return status;
+    
+    status = AESendMessage(&eventToSend, &eventReply,
+                           kAENormalPriority, kAEDefaultTimeout);
+    
+    AEDisposeDesc(&eventToSend);
+    if (status != noErr) return status;
+    AEDisposeDesc(&eventReply);
+    return status;
 }
 
 #pragma mark - Scanning
@@ -379,33 +421,29 @@
         if ([apple count] == 0 ) {
             qlinfo(@"No Apple updates found.");
             sleep(1);
-        }
-		else
-		{
+        } else {
             // We have Apple patches, now add them to the array of approved patches
             
             // If no items in array, lets bail...
             if ([approvedApplePatches count] == 0 ) {
                 qlinfo(@"No Patch Group patches found.");
-                qlinfo(@"No apple updates found for \"%@\" patch group.",[[mpDefauts defaults] objectForKey:@"PatchGroup"]);
-            }
-			else
-			{
+                qlinfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
+            } else {
                 // Build Approved Patches
                 qlinfo(@"Building approved apple patch list...");
 				NSDictionary *_applePatch;
 				NSDictionary *_applePatchApproved;
 				
-                for (int i=0; i<[apple count]; i++)
+				for (int i=0; i<[apple count]; i++)
 				{
 					_applePatch = [apple objectAtIndex:i];
 					
-                    for (int x=0;x < [approvedApplePatches count]; x++)
+					for (int x=0;x < [approvedApplePatches count]; x++)
 					{
 						_applePatchApproved = [approvedApplePatches objectAtIndex:x];
 						
-                        if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
-                        {
+						if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
+						{
 							if ([_applePatchApproved objectForKey:@"user_install"])
 							{
 								if ([[_applePatchApproved objectForKey:@"user_install"] intValue] == 1)
@@ -414,43 +452,43 @@
 									break;
 								}
 							}
-
-                            qlinfo(@"Patch %@ approved for update.",_applePatchApproved[@"name"]);
-                            
-                            tmpPatchDict = [[NSMutableDictionary alloc] init];
-                            [tmpPatchDict setObject:[NSNumber numberWithBool:YES] forKey:@"selected"];
-                            [tmpPatchDict setObject:_applePatch[@"patch"] forKey:@"patch"];
-                            [tmpPatchDict setObject:_applePatch[@"size"] forKey:@"size"];
-                            [tmpPatchDict setObject:_applePatch[@"description"] forKey:@"description"];
-                            [tmpPatchDict setObject:_applePatch[@"restart"] forKey:@"restart"];
-                            [tmpPatchDict setObject:_applePatch[@"version"] forKey:@"version"];
-                            [tmpPatchDict setObject:_applePatchApproved[@"hasCriteria"] forKey:@"hasCriteria"];
-                            
-                            if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
+							
+							qlinfo(@"Patch %@ approved for update.",_applePatchApproved[@"name"]);
+							
+							tmpPatchDict = [[NSMutableDictionary alloc] init];
+							[tmpPatchDict setObject:[NSNumber numberWithBool:YES] forKey:@"selected"];
+							[tmpPatchDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+							[tmpPatchDict setObject:_applePatch[@"size"] forKey:@"size"];
+							[tmpPatchDict setObject:_applePatch[@"description"] forKey:@"description"];
+							[tmpPatchDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+							[tmpPatchDict setObject:_applePatch[@"version"] forKey:@"version"];
+							[tmpPatchDict setObject:_applePatchApproved[@"hasCriteria"] forKey:@"hasCriteria"];
+							
+							if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
 							{
-                                if (_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
+								if (_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
 								{
-                                    [tmpPatchDict setObject:_applePatchApproved[@"criteria_pre"] forKey:@"criteria_pre"];
-                                }
-                                if (_applePatchApproved[@"criteria_post"] && [_applePatchApproved[@"criteria_post"] count] > 0)
+									[tmpPatchDict setObject:_applePatchApproved[@"criteria_pre"] forKey:@"criteria_pre"];
+								}
+								if (_applePatchApproved[@"criteria_post"] && [_applePatchApproved[@"criteria_post"] count] > 0)
 								{
-                                    [tmpPatchDict setObject:_applePatchApproved[@"criteria_post"] forKey:@"criteria_post"];
-                                }
-                            }
-                            
-                            [tmpPatchDict setObject:@"Apple" forKey:@"type"];
-                            [tmpPatchDict setObject:[[approvedApplePatches objectAtIndex:i] objectForKey:@"patch_install_weight"] forKey:@"patch_install_weight"];
-                            
-                            [approvedUpdatesArray addObject:tmpPatchDict];
-                            qldebug(@"Apple Patch Dictionary Added: %@",tmpPatchDict);
-                            break;
-                        }
-                    }
-                }
+									[tmpPatchDict setObject:_applePatchApproved[@"criteria_post"] forKey:@"criteria_post"];
+								}
+							}
+							
+							[tmpPatchDict setObject:@"Apple" forKey:@"type"];
+							[tmpPatchDict setObject:[[approvedApplePatches objectAtIndex:i] objectForKey:@"patch_install_weight"] forKey:@"patch_install_weight"];
+							
+							[approvedUpdatesArray addObject:tmpPatchDict];
+							qldebug(@"Apple Patch Dictionary Added: %@",tmpPatchDict);
+							break;
+						}
+					}
+				}
             }
         }
     }
-    
+	
     // Filter Custom Patches
     qlinfo(@"Building approved custom patch list...");
     for (int i=0; i<[custom count]; i++) {
@@ -460,7 +498,7 @@
             if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]])
             {
                 qlinfo(@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);
-            
+				
                 tmpPatchDict = [[NSMutableDictionary alloc] init];
                 [tmpPatchDict setObject:[NSNumber numberWithBool:YES] forKey:@"selected"];
                 [tmpPatchDict setObject:[customPatch objectForKey:@"patch"] forKey:@"patch"];
@@ -497,8 +535,21 @@
 {
     NSError       *error = nil;
     NSDictionary  *patchGroupPatches = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
+    MPRESTfull    *rest = [[MPRESTfull alloc] init];
+    
     BOOL           useLocalPatchesFile = NO;
+    
+    // Get Approved Patch group patches
+    patchGroupPatches = [rest getApprovedPatchesForClient:&error];
+    if (error)
+    {
+        qlerror(@"There was a issue getting the approved patches for the patch group, scan will exit.");
+        qlerror(@"%@",error.localizedDescription);
+        return nil;
+    }
+    
+    /* CEH - Look at re-implementing local cache of patch group patches
+     
     NSString      *patchGroupRevLocal = [MPClientInfo patchGroupRev];
     
     if (![patchGroupRevLocal isEqualToString:@"-1"]) {
@@ -529,7 +580,7 @@
         logit(lcl_vError,@"There was a issue getting the approved patches for the patch group, scan will exit.");
         return nil;
     }
-    
+    */
     return patchGroupPatches;
 }
 
@@ -1114,9 +1165,10 @@
 - (void)postInstallToWebService:(NSString *)aPatch type:(NSString *)aType
 {
     BOOL result = NO;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
     NSError *wsErr = nil;
-    result = [mpws postPatchInstallResultsToWebService:aPatch patchType:aType error:&wsErr];
+    
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    result = [rest postPatchInstallResults:aPatch type:aType error:&wsErr];
     if (wsErr) {
         qlerror(@"%@",wsErr.localizedDescription);
     } else {
@@ -1126,7 +1178,6 @@
             qlerror(@"Patch (%@) install result was not posted to webservice.",aPatch);
         }
     }
-    
     return;
 }
 @end

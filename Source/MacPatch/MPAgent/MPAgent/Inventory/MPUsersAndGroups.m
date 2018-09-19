@@ -1,7 +1,7 @@
 //
 //  MPUsersAndGroups.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -159,6 +159,49 @@
     }
     
     return [NSArray arrayWithArray:result];
+}
+
+- (NSDictionary *)getInfoForUserGUID:(NSString *)userGUID
+{
+	NSError *err = nil;
+	// Attributes to Return on search
+	NSArray *attrs = @[ kODAttributeTypeFullName, kODAttributeTypeRecordName, kODAttributeTypePrimaryNTDomain, kODAttributeTypeUniqueID, kODAttributeTypePrimaryGroupID, @"dsAttrTypeStandard:AppleMetaRecordName", @"dsAttrTypeStandard:OriginalNodeName"];
+	// Replacement attribute names for dictionary result
+	NSArray *attrsNames = @[ @"FullName", @"RecordName", @"PrimaryNTDomain", @"uidNumber", @"gidNumber", @"DistinguishedName", @"OriginalNodeName"];
+	
+	ODQuery *_query = [ODQuery  queryWithNode: [ODNode nodeWithSession:nil type:kODNodeTypeLocalNodes error:NULL]
+							   forRecordTypes: nil
+									attribute: kODAttributeTypeGUID
+									matchType: kODMatchContains
+								  queryValues: userGUID
+							 returnAttributes: kODAttributeTypeNativeOnly
+							   maximumResults: 0
+										error: &err];
+	
+	if (err) return nil;
+	
+	NSMutableDictionary *d = [NSMutableDictionary dictionary];
+	NSArray *res = [_query resultsAllowingPartial:NO error:&err];
+	for (id record in res) {
+		if ([[self valueForODAttribute:record attribute:kODAttributeTypeGUID] isEqualToString:userGUID])
+		{
+			id keyData = nil; // keyData is an array
+			for (int i = 0; i < [attrs count]; i++)
+			{
+				NSString *srtName = [[attrs[i] componentsSeparatedByString:@":"] objectAtIndex:1];
+				if ([srtName isEqualToString:@"RecordName"]) {
+					// Just return login name, short name
+					keyData = @[[[record valuesForAttribute:attrs[i] error:NULL] objectAtIndex:0]];
+				} else {
+					keyData = ([record valuesForAttribute:attrs[i] error:NULL] ?:@[@"NA"]);
+				}
+				
+				[d setObject:[keyData componentsJoinedByString:@","] forKey:attrsNames[i]];
+			}
+			break;
+		}
+	}
+	return d;
 }
 
 @end

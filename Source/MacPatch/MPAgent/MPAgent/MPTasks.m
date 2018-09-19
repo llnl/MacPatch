@@ -1,7 +1,7 @@
 //
 //  MPTasks.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,193 +25,33 @@
 
 #import "MPTasks.h"
 #import "MPTaskValidate.h"
+#import "Task.h"
 
-#define MP_TASKS_PLIST				@"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist"
-#define MP_TASKS_ALT_PLIST			@"/Library/MacPatch/Client/MPTasks.plist"
+@interface MPTasks ()
+
+@end
 
 @implementation MPTasks
 
-@synthesize _taskPlist;
 
-- (id)init
+// NEW MP 3.1
+- (NSArray *)setNextRunForTasks:(NSArray *)aTasks
 {
-    self = [super init];
-    if (self) {
-        // Initialization code here.
-        si = [MPAgent sharedInstance];
-		if ([[NSFileManager defaultManager] fileExistsAtPath:MP_TASKS_PLIST] == NO) {
-			if ([[NSFileManager defaultManager] fileExistsAtPath:[@"~/Desktop/MPTasks.plist" stringByExpandingTildeInPath]] == YES) { 
-				[self set_taskPlist:[@"~/Desktop/MPTasks.plist" stringByExpandingTildeInPath]];
-			} else if ([[NSFileManager defaultManager] fileExistsAtPath:MP_TASKS_ALT_PLIST] == YES) { 
-				[self set_taskPlist:MP_TASKS_ALT_PLIST];	
-			} else {
-				[self set_taskPlist:MP_TASKS_PLIST];	
-			}
-		} else {
-			[self set_taskPlist:MP_TASKS_PLIST];
-		}	
-		logit(lcl_vDebug,@"Using tasks from %@",_taskPlist);	
+    NSMutableArray *tmpArr = [[NSMutableArray alloc] init];
+    NSMutableDictionary *tmpDict;
+    int i = 0;
+    double sd, ed = 0;
+    for (i=0;i<[aTasks count];i++)
+    {
+        tmpDict = [[NSMutableDictionary alloc] initWithDictionary:[aTasks objectAtIndex:i]];
+        sd = [[NSDate shortDateFromString:[tmpDict objectForKey:@"startdate"]] timeIntervalSince1970];
+        ed = [[NSDate shortDateFromString:[tmpDict objectForKey:@"enddate"]] timeIntervalSince1970];
+        [tmpDict setObject:[NSNumber numberWithDouble:sd] forKey:@"startDateInt"];
+        [tmpDict setObject:[NSNumber numberWithDouble:ed] forKey:@"endDateInt"];
+        [tmpArr addObject:[self genNextRunAt:tmpDict]];
+        tmpDict = nil;
     }
-    
-    return self;
-}
-
-- (int)validateTasksPlist
-{
-	// Read the plist
-	NSString *error;
-	NSPropertyListFormat format;
-	NSData *data = [NSData dataWithContentsOfFile:_taskPlist];
-	NSMutableDictionary *thePlist = [NSPropertyListSerialization propertyListFromData:data 
-																	 mutabilityOption:NSPropertyListImmutable 
-																			   format:&format 
-																	 errorDescription:&error];
-	if (!thePlist) {
-		logit(lcl_vError,@"Error reading plist from file '%@', error = '%@'",_taskPlist,error);
-		return 1;
-	} 
-	
-	int	w = 0;
-	int i = 0;
-	int x = 0;
-	NSDictionary *rDict;
-	NSMutableArray *_newTasks = [[NSMutableArray alloc] initWithArray:[thePlist objectForKey:@"mpTasks"]];
-	MPTaskValidate *taskValidate = [[MPTaskValidate alloc] init];
-	//	Return Codes
-	//	0 = Valid	
-	//	1 = Error, replace with default cmd
-	//	2 = Invalid Interval, we will reset startdate and endate as well
-	//	99 = Not a valid command type, should disable it.
-	for (i=0;i<[_newTasks count]; i++) {
-		x = [taskValidate validateTask:[_newTasks objectAtIndex:i]];
-		if (x == 0) {
-			continue;
-		} else if (x == 1) {
-			logit(lcl_vInfo,@"Restoring task id: %@",[[_newTasks objectAtIndex:i] objectForKey:@"id"]);
-			w++;
-			rDict = nil;
-			rDict = [taskValidate resetTaskFromDefaults:[[_newTasks objectAtIndex:i] objectForKey:@"cmd"]];
-			if (rDict) {
-				[_newTasks replaceObjectAtIndex:i withObject:rDict];
-			} else {
-				logit(lcl_vError,@"Unable to replace %@, with default value.",[_newTasks objectAtIndex:i]);
-			}
-		} else if (x == 2) {
-			logit(lcl_vInfo,@"Updating interval data for task id: %@",[[_newTasks objectAtIndex:i] objectForKey:@"id"]);
-			logit(lcl_vDebug,@"Old:\n%@",[_newTasks objectAtIndex:i]);
-			w++;
-			rDict = nil;
-			rDict = [taskValidate updateTaskIntervalForCommand:[_newTasks objectAtIndex:i] cmd:[[_newTasks objectAtIndex:i] objectForKey:@"cmd"]];
-			logit(lcl_vDebug,@"New:\n%@",rDict);
-			if (rDict) {
-				[_newTasks replaceObjectAtIndex:i withObject:rDict];
-			} else {
-				logit(lcl_vError,@"Unable to replace %@, with default value.",[_newTasks objectAtIndex:i]);
-			}
-		} else if (x == 3) {
-			logit(lcl_vInfo,@"Updating end date data for task id: %@",[[_newTasks objectAtIndex:i] objectForKey:@"id"]);
-			logit(lcl_vDebug,@"Old:\n%@",[_newTasks objectAtIndex:i]);
-			w++;
-			rDict = nil;
-			rDict = [taskValidate updateEndDateForTask:[_newTasks objectAtIndex:i]];
-			logit(lcl_vDebug,@"New:\n%@",rDict);
-			if (rDict) {
-				[_newTasks replaceObjectAtIndex:i withObject:rDict];
-			} else {
-				logit(lcl_vError,@"Unable to replace %@, with default value.",[_newTasks objectAtIndex:i]);
-			}	
-		} else if (x == 99) {
-			// Disable
-			logit(lcl_vInfo,@"Disabling (99) task id: %@",[[_newTasks objectAtIndex:i] objectForKey:@"id"]);
-			w++;
-			rDict = nil;
-			rDict = [taskValidate disableTask:[_newTasks objectAtIndex:i]];
-			if (rDict) {
-				[_newTasks replaceObjectAtIndex:i withObject:rDict];
-			} else {
-				logit(lcl_vError,@"Unable to replace %@, with default value.",[_newTasks objectAtIndex:i]);
-			}
-		} else {
-			// Disable
-			logit(lcl_vInfo,@"Disabling task id: %@",[[_newTasks objectAtIndex:i] objectForKey:@"id"]);
-			w++;
-			rDict = nil;
-			rDict = [taskValidate disableTask:[_newTasks objectAtIndex:i]];
-			if (rDict) {
-				[_newTasks replaceObjectAtIndex:i withObject:rDict];
-			} else {
-				logit(lcl_vError,@"Unable to replace %@, with default value.",[_newTasks objectAtIndex:i]);
-			}
-		}
-	}
-	// Write out new/updated tasks file
-	if (w > 0) {
-		logit(lcl_vDebug,@"Writting out new tasks file.\n%@",_newTasks);
-		NSDictionary *_updatedDict = [NSDictionary dictionaryWithObject:_newTasks forKey:@"mpTasks"];
-		[_updatedDict writeToFile:MP_TASKS_PLIST atomically:YES];
-	}
-	return 0;
-}
-
-- (void)readAndSetTasksFromPlist
-{
-	[self validateTasksPlist];
-	
-	NSDictionary *result = nil;
-	NSFileManager *fm = [NSFileManager defaultManager];
-	// See if the plist exists
-	if ([fm fileExistsAtPath:_taskPlist] == NO)
-	{
-		logit(lcl_vError,@"Error plist file '%@' does not exist.",_taskPlist);
-		return;
-	}
-	
-	// Read the plist
-	NSString *error;
-	NSPropertyListFormat format;
-	NSData *data = [NSData dataWithContentsOfFile:_taskPlist];
-	NSMutableDictionary *thePlist = [NSPropertyListSerialization propertyListFromData:data 
-																	 mutabilityOption:NSPropertyListImmutable 
-																			   format:&format 
-																	 errorDescription:&error];
-	if (!thePlist) {
-		logit(lcl_vError,@"Error reading plist from file '%@', error = '%@'",_taskPlist,error);
-		return;
-	} 
-	
-	result = [NSDictionary dictionaryWithDictionary:thePlist];
-	[self loadTasks:[result objectForKey:@"mpTasks"]];
-}
-
-- (void)updateTasksPlist
-{
-    NSDictionary *tmpDict = [NSDictionary dictionaryWithObject:[si g_Tasks] forKey:@"tasks"];
-	@try {
-		[tmpDict writeToFile:_taskPlist atomically:YES];
-	}
-	@catch (NSException * e) {
-		logit(lcl_vError,@"Error updating config plist, %@",_taskPlist);
-	}
-}
-
-- (void)loadTasks:(NSArray *)aTasks
-{
-	NSMutableArray *tmpArr = [[NSMutableArray alloc] init];
-	NSMutableDictionary *tmpDict;
-	int i = 0;
-	double sd, ed = 0;
-	for (i=0;i<[aTasks count];i++)
-	{
-		tmpDict = [[NSMutableDictionary alloc] initWithDictionary:[aTasks objectAtIndex:i]];
-		sd = [[NSDate shortDateFromString:[tmpDict objectForKey:@"startdate"]] timeIntervalSince1970];
-		ed = [[NSDate shortDateFromString:[tmpDict objectForKey:@"enddate"]] timeIntervalSince1970];
-		[tmpDict setObject:[NSNumber numberWithDouble:sd] forKey:@"startDateInt"];
-		[tmpDict setObject:[NSNumber numberWithDouble:ed] forKey:@"endDateInt"];
-		[tmpArr addObject:[self genNextRunAt:tmpDict]];
-		logit(lcl_vDebug,@"Task loaded: %@",tmpDict);
-		tmpDict = nil;
-	}
-    [si setG_Tasks:tmpArr];
+    return tmpArr;
 }
 
 - (NSDictionary *)genNextRunAt:(NSDictionary *)aTask
@@ -231,10 +71,10 @@
 		if ([[tmpDict objectForKey:@"cmd"] isEqualToString:@"kMPCheckIn"]) {
 			if ([intervalArray count] == 2) {
 				if ([intervalArray objectAtIndex:0] == NULL || [intervalArray objectAtIndex:1] == NULL) {
-					[tmpDict setObject:@"Every@900" forKey:@"interval"];
+					[tmpDict setObject:@"Every@300" forKey:@"interval"];
 				}
 			} else if ([intervalArray count] == 3) {
-				[tmpDict setObject:@"Every@900" forKey:@"interval"];
+				[tmpDict setObject:@"Every@300" forKey:@"interval"];
 			}
 		} else if ([[tmpDict objectForKey:@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
 			if ([intervalArray count] == 2) {
@@ -363,6 +203,27 @@
 				next_run = [[NSDate addDayToInterval:[[tmpDict objectForKey:@"nextrun"] intValue]] timeIntervalSince1970];
 			}
 		}
+		else if ([[[intervalArray objectAtIndex:1] uppercaseString] isEqualToString:@"DAILYRAND"])
+		{
+			int dailyRandDelay = arc4random() % 1800; //Default is 30min
+			if (intervalArray.count == 4) {
+				dailyRandDelay = arc4random() % [[intervalArray objectAtIndex:3] intValue];
+			}
+			
+			if (![tmpDict objectForKey:@"nextrun"]) {
+				// If Less than right now ...
+				logit(lcl_vTrace,@"%ld < %ld",(long)[[NSDate dateFromString:_dt] timeIntervalSince1970], (long)[[NSDate date] timeIntervalSince1970]);
+				if ([[NSDate dateFromString:_dt] timeIntervalSince1970] > [[NSDate date] timeIntervalSince1970]) {
+					next_run = 	(double)[[NSDate dateFromString:_dt] timeIntervalSince1970];
+				} else {
+					next_run = [[NSDate addDayToInterval:[[NSDate dateFromString:_dt] timeIntervalSince1970]] timeIntervalSince1970];
+				}
+			} else {
+				next_run = [[NSDate addDayToInterval:[[tmpDict objectForKey:@"nextrun"] intValue]] timeIntervalSince1970];
+			}
+			
+			next_run = (double)(next_run + dailyRandDelay);
+		}
 		else if ([[[intervalArray objectAtIndex:1] uppercaseString] isEqualToString:@"WEEKLY"]) 
 		{
 			NSString *_sdt = [NSString stringWithFormat:@"%@ %@",[tmpDict objectForKey:@"startdate"],[intervalArray objectAtIndex:2]];
@@ -413,96 +274,20 @@
 			[tmpDict setObject:@"0" forKey:@"active"]; // Disable the task
 		}
 	}
-	logit(lcl_vInfo,@"%@ next run at %@",[tmpDict objectForKey:@"name"],[[NSDate dateWithTimeIntervalSince1970:next_run] descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z"
-																																			  timeZone:[NSTimeZone localTimeZone]
-																																				locale:nil]);
+    
+    
+    NSString *nextRunStr = [[NSDate dateWithTimeIntervalSince1970:next_run] descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z" timeZone:[NSTimeZone localTimeZone] locale:nil];
+    if ([[tmpDict objectForKey:@"active"] isEqualTo:@"1"]) {
+        logit(lcl_vInfo,@"%@ next run at %@",tmpDict[@"name"],nextRunStr);
+    } else {
+        logit(lcl_vInfo,@"%@ next run at %@ (DISABLED TASK)",tmpDict[@"name"],nextRunStr);
+    }
 
 	[tmpDict setObject:[NSNumber numberWithDouble:next_run] forKey:@"nextrun"];
 	NSDictionary *results = [NSDictionary dictionaryWithDictionary:tmpDict];
 	tmpDict = nil;
 	
 	return results;
-}
-
-- (void)updateTaskRunAt:(NSString *)aTaskID
-{
-	NSMutableDictionary *tmpDict;
-	int i = 0;
-	double next_run = 0;
-	for (i=0;i<[[si g_Tasks] count];i++)
-	{
-		tmpDict = [[NSMutableDictionary alloc] initWithDictionary:[[si g_Tasks] objectAtIndex:i]];
-		if ([[tmpDict objectForKey:@"id"] isEqualToString:aTaskID])
-		{
-			/* Once@Time; Recurring@Daily,Weekly,Monthly@Time;Every@seconds */
-			NSArray *intervalArray = [[tmpDict objectForKey:@"interval"] componentsSeparatedByString:@"@"];
-			if ([[[intervalArray objectAtIndex:0] uppercaseString] isEqualToString:@"EVERY"]) 
-			{
-				next_run = [[tmpDict objectForKey:@"nextrun"] doubleValue] + [[intervalArray objectAtIndex:1] intValue];
-			} 
-			else if ([[[intervalArray objectAtIndex:0] uppercaseString] isEqualToString:@"EVERYRAND"]) 
-			{
-				int r = arc4random() % [[intervalArray objectAtIndex:1] intValue];
-				next_run = [[tmpDict objectForKey:@"nextrun"] doubleValue] + r;
-			}
-			else if ([[[intervalArray objectAtIndex:0] uppercaseString] isEqualToString:@"RECURRING"]) 
-			{
-				if ([[[intervalArray objectAtIndex:1] uppercaseString] isEqualToString:@"DAILY"]) 
-				{
-					next_run = [[NSDate addDayToInterval:[[tmpDict objectForKey:@"nextrun"] doubleValue]] timeIntervalSince1970];
-				}
-				else if ([[[intervalArray objectAtIndex:1] uppercaseString] isEqualToString:@"WEEKLY"]) 
-				{
-					next_run = [[NSDate addWeekToInterval:[[tmpDict objectForKey:@"nextrun"] doubleValue]] timeIntervalSince1970];
-				}
-				else if ([[[intervalArray objectAtIndex:1] uppercaseString] isEqualToString:@"MONTHLY"]) 
-				{
-					next_run = [[NSDate addMonthToInterval:[[tmpDict objectForKey:@"nextrun"] doubleValue]] timeIntervalSince1970];
-				}
-			}
-			else if ([[[intervalArray objectAtIndex:0] uppercaseString] isEqualToString:@"ONCE"]) 
-			{
-				next_run = [[tmpDict objectForKey:@"nextrun"] doubleValue]; // Leave the value as is
-				if ([[tmpDict objectForKey:@"nextrun"] doubleValue] < [[NSDate date] timeIntervalSince1970])
-				{
-					[tmpDict setObject:@"0" forKey:@"active"]; // Disable the task
-				}
-			}
-			
-			logit(lcl_vInfo,@"%@ next run at %@",[tmpDict objectForKey:@"name"],[[NSDate dateWithTimeIntervalSince1970:next_run] descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z"
-																																					  timeZone:[NSTimeZone localTimeZone]
-																																						locale:nil]);
-			[tmpDict setObject:[NSNumber numberWithDouble:next_run] forKey:@"nextrun"];
-			[[si g_Tasks] replaceObjectAtIndex:i withObject:[NSDictionary dictionaryWithDictionary:tmpDict]];
-			tmpDict = nil;
-			break;
-		}
-		tmpDict = nil;	 
-	}
-	
-	
-}
-
-- (void)updateMissedTaskRunAt:(NSString *)aTaskID
-{
-	NSMutableDictionary *tmpDict;
-	NSDate *d = [NSDate now];
-
-	int i = 0;
-	unsigned int x = (int)[d timeIntervalSince1970];
-	x = x + 30; // Add 30 seconds
-	for (i=0;i<[[si g_Tasks] count];i++)
-	{
-		tmpDict = [[NSMutableDictionary alloc] initWithDictionary:[[si g_Tasks] objectAtIndex:i]];
-		if ([[tmpDict objectForKey:@"id"] isEqualToString:aTaskID])
-		{
-			[tmpDict setObject:[NSNumber numberWithInt:x] forKey:@"nextrun"];
-			[[si g_Tasks] replaceObjectAtIndex:i withObject:[NSDictionary dictionaryWithDictionary:tmpDict]];
-			tmpDict = nil;
-			break;
-		}
-		tmpDict = nil;	 
-	}
 }
 
 # pragma mark Date Methods

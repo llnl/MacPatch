@@ -1,7 +1,7 @@
 //
 //  MPInv.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,7 +28,6 @@
 @interface MPInv : NSObject 
 {    
 	NSArray		*invResults;
-	NSString	*cUUID;
 }
 // Getters * Setters
 @property (nonatomic, strong) NSArray *invResults;
@@ -64,6 +63,7 @@
 - (NSArray *)parseLocalDiskInfo;
 - (NSArray *)parseLocalUsers;
 - (NSArray *)parseLocalGroups;
+- (NSArray *)parseLocalAdminAccounts;
 - (NSArray *)parseFileVaultInfo;
 - (NSArray *)parsePowerManagmentInfo;
 - (NSArray *)parseBatteryInfo;
@@ -75,7 +75,7 @@
 
 // Helpers for Directory Data from Daniel
 - (NSDictionary *)stringToDict:(NSString *)theString theDelimiter:(NSString *)theDelimiter;
-- (BOOL)sendResultsToWebService:(NSString *)aDataMgrXML;
+- (BOOL)sendResultsToWebService:(NSDictionary *)aDataMgrData;
 
 
 @end

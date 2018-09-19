@@ -2,7 +2,7 @@
 //  MPLoginAgent_Prefix.pch
 //  MPLoginAgent
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,22 +24,20 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#ifdef __OBJC__
-	#import <Cocoa/Cocoa.h>
-	#import "MacPatch.h"
+#import <Cocoa/Cocoa.h>
+#import "MacPatch.h"
 
-	// Define Logfile init's
-	#define FileLevelLogComponent lcl_cMain
+// Define Logfile init's
+#define FileLevelLogComponent lcl_cMain
 
-	#define log_err(_format, ...) \
-	lcl_log(FileLevelLogComponent, lcl_vError, _format, ##__VA_ARGS__);
+#define log_err(_format, ...) \
+lcl_log(FileLevelLogComponent, lcl_vError, _format, ##__VA_ARGS__);
 
-	#define log_info(_format, ...) \
-	lcl_log(FileLevelLogComponent, lcl_vInfo, _format, ##__VA_ARGS__);
+#define log_info(_format, ...) \
+lcl_log(FileLevelLogComponent, lcl_vInfo, _format, ##__VA_ARGS__);
 
-	#define log_debug(_format, ...) \
-	lcl_log(FileLevelLogComponent, lcl_vDebug, _format, ##__VA_ARGS__);
+#define log_debug(_format, ...) \
+lcl_log(FileLevelLogComponent, lcl_vDebug, _format, ##__VA_ARGS__);
 
-	#define logit(_level, _format, ...) \
-	lcl_log(FileLevelLogComponent, _level, _format, ##__VA_ARGS__);
-#endif
+#define logit(_level, _format, ...) \
+lcl_log(FileLevelLogComponent, _level, _format, ##__VA_ARGS__);

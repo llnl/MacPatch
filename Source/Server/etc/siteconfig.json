@@ -1,0 +1,68 @@
+{
+    "description" : "SiteConfig for new MPApi, pyhton flask web services.",
+    "settings" :
+    {
+        "services":
+        {
+            "console": false,
+            "wsapi": false
+        },
+        "paths":
+        {
+            "base":"/opt/MacPatch/Server",
+            "content":"/opt/MacPatch/Content/Web"
+        },
+        "server": {
+            "isMaster" : false,
+            "autoGenServerKeys": true,
+            "pubKey": "/opt/MacPatch/Server/conf/etc/certs/server_pub.pem",
+            "priKey": "/opt/MacPatch/Server/conf/etc/certs/server_pri.pem",
+            "inventory_dir": "/opt/MacPatch/Server/Data/Inventory",
+            "apiKey": "123456"
+        },
+        "users":
+        {
+            "admin": {
+                "enabled": true,
+                "name":"mpadmin",
+                "pass":"*mpadmin*"
+            }
+        },
+        "ldap":
+        {
+            "enabled": false,
+            "server":"SERVERNAME",
+            "searchbase":"SEARCH-BASE",
+            "attributes":"givenname,initials,sn,mail,memberOf,dn,samAccountName,userPrincipalName",
+            "port":"SERVER-PORT",
+            "secure":"AD-DOMAIN-SSL",
+            "useSSL": true,
+            "loginAttr":"LOGIN-ATTRIBUTE",
+            "loginUsrPrefix":"LOGIN-PREFIX",
+            "loginUsrSufix":"LOGIN-SUFFIX"
+        },
+        "ldap_filters":
+        [
+            {   "config_name":"DEMO_CONFIG",
+                "config_enabled": false,
+                "config_ldap": {
+                    "server": "SERVERNAME.COM",
+                    "port": 636,
+                    "secure": "1",
+                    "searchbase": "SEARCH-BASE",
+                    "attributes": "cn,name,dn,samAccountName,memberOf",
+                    "userDN": "USER DN PATH",
+                    "userPas": "USER PASSWORD"
+                }
+            }
+        ],
+        "mailserver":
+        {
+            "enabled": false,
+            "server":"127.0.0.1",
+            "port": 25,
+            "username":"exampleusername",
+            "password":"examplepassword"
+        }
+    }
+}

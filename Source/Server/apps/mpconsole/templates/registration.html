@@ -1,0 +1,437 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<style type="text/css">
+
+
+	</style>
+{%  endblock %}
+
+{% block pageHeader %}
+Agent Registration
+{%  endblock %}
+
+{% block bodyPanel %}
+	<!-- Tab panes -->
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs">
+		{% if session.role[0] == 1 %}
+		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#settings" data-toggle="tab">Settings</a></li>
+		<li {% if selectedTab == 2 %}class="active"{% endif %}><a href="#keys" data-toggle="tab">Keys</a></li>
+		<li {% if selectedTab == 3 %}class="active"{% endif %}><a href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		{% else %}
+		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		{% endif %}
+		{% if session.role[0] == 1 %}
+		<li {% if selectedTab == 4 %}class="active"{% endif %}><a href="#parkedClients" data-toggle="tab">Parked Clients</a></li>
+		{% endif %}
+	</ul>
+	<div class="tab-content">
+		{% if session.role[0] == 1 %}
+		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="settings">
+			<h4>Registration Settings</h4>
+			<form role="form" id="settingsForm">
+				<div class="form-group">
+					<div class="well">
+						<div class="row">
+						<div class="col-md-12">
+							<div class="row row-grid top10">
+								<div class="col-md-3">
+									<label>Auto Client Registration</label>
+								</div>
+								<div class="col-md-3">
+									<select class="form-control" name="autoreg">
+										<option value="0" {% if 0 == settings.autoreg %}selected{% endif %}>No</option>
+										<option value="1" {% if 1 == settings.autoreg %}selected{% endif %}>Yes</option>
+									</select>
+								</div>
+								<div class="col-md-4">
+									(If Auto Registration is on, no need to enable client parking.)
+								</div>
+							</div>
+							<div class="row row-grid top10">
+								<div class="col-md-3">
+									<label>Parked Clients</label>
+								</div>
+								<div class="col-md-3">
+									<select class="form-control" name="client_parking">
+										<option value="0" {% if 0 == settings.client_parking %}selected{% endif %}>No</option>
+										<option value="1" {% if 1 == settings.client_parking %}selected{% endif %}>Yes</option>
+									</select>
+								</div>
+								<div class="col-md-4">
+									(Parked Clients are clients waiting to be approved.)
+								</div>
+							</div>
+
+							<div class="row row-grid top10">
+								<div class="col-md-6 text-right">
+									<button type="button" class="btn btn-primary" id="settingsSaveButton">Save Settings</button>
+								</div>
+							</div>
+						</div>
+						</div>
+					</div>
+				</div>
+			</form>
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="keys">
+			<h4>Registration Keys</h4>
+			<table id="tableKeys" class="table" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
+				<div id="toolbarKeys">
+					<button id="addKeyButton" type="button" class="btn btn-default" title="Add Registration Key"><i class="glyphicon glyphicon-plus"></i></button>
+				</div>
+			</table>
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 3 %}in active{% endif %}" id="regClients">
+			<h4>Registred Clients</h4>
+			<table id="tableClients" class="table" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+				<div id="toolbarClients">
+				</div>
+			</table>
+		</div>
+		{% else %}
+		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="regClients">
+			<table id="tableClients" class="table" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+				<div id="toolbarClients">
+				</div>
+			</table>
+		</div>
+		{% endif %}
+		{% if session.role[0] == 1 %}
+		<div class="tab-pane fade {% if selectedTab == 4 %}in active{% endif %}" id="parkedClients">
+			<h4>Parked Clients</h4>
+			<table id="tableParkedClients" class="table" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
+			</table>
+		</div>
+		{% endif %}
+	</div>
+
+</div>
+{% endblock %}
+
+{% block jsPre %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/moment/min/moment.min.js') }}"></script>
+
+{% endblock %}
+
+{% block javascript %}
+	{{ super() }}
+
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+
+	<script>
+
+	var $ttRbutton = $('#ttRefreshbutton');
+
+	$( document ).ready(function()
+	{
+		$('#datetimepickerA').datetimepicker();
+		{% if session.role[0] == 1 %}
+		$('#tableKeys').bootstrapTable(
+		{
+			striped: true,
+			url: "/registration/keys",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			showRefresh: true,
+			columns: [
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: keyEvents,
+					formatter: keyFormatter,
+					visible: true
+				},
+				{% for col in keyCols %}
+					{
+						{% if col.name == 'rid' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col.name}}',
+						title: '{{col.label}}'
+					},
+				{% endfor %}
+			]
+		});
+		{% endif %}
+		$('#tableClients').bootstrapTable(
+		{
+			striped: true,
+			url: "/registration/clients",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			showRefresh: true,
+			idField: 'cuuid',
+			columns: [
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: eventsClients,
+					formatter: formatterClients,
+					visible: true
+				},
+				{% for col in regCols %}
+					{
+						{% if col.name == 'rid' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col.name}}',
+						title: '{{col.label}}',
+						{% if session.role[0] == 1 %}
+						{% if col.name == 'enabled' %}
+						editable: {
+							type: 'select',
+							url: '/registration/registered/client/state',
+							source: [
+								{value: 0, text: 'False'},
+								{value: 1, text: 'True'},
+							]
+						},
+						{% endif %}
+						{% endif %}
+					},
+				{% endfor %}
+			]
+		});
+		{% if session.role[0] == 1 %}
+		$('#tableParkedClients').bootstrapTable(
+		{
+			striped: true,
+			url: "/registration/parked",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			showRefresh: true,
+			columns: [
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: eventsParked,
+					formatter: formatterParked,
+					visible: true
+				},
+				{% for col in prkClientCols %}
+					{
+						{% if col.name == 'rid' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col.name}}',
+						title: '{{col.label}}'
+					},
+				{% endfor %}
+			]
+		});
+		{% endif %}
+	});
+
+	// Keys Tab
+	function keyFormatter(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<table><tr><td>')
+		htmlData.push('<a class="editKey" href="javascript:void(0)" title="Edit Key">');
+		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i>');
+		htmlData.push('</a>');
+		htmlData.push('</td>');
+		{% if session.role[0] == 1 %}
+		htmlData.push('<td><a class="removeKey" href="javascript:void(0)" title="Remove Key">');
+		htmlData.push('<i class="fa fa-trash-o"></i></a></td>');
+		{% endif %}
+		htmlData.push('</tr></table>');
+		return htmlData.join('');
+	}
+
+	window.keyEvents =
+	{
+		'click .editKey': function (e, value, row, index)
+		{
+			$.get("/registration/key/edit/" + row['rid']).done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add New Registration Key');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'400px'});
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$('#tableKeys').bootstrapTable('refresh');
+				});
+			});
+
+
+		},
+		'click .removeKey': function (e, value, row, index)
+		{
+		{% if session.role[0] == 1 %}
+			var result = confirm("Are you sure you want to delete this key?");
+			if (result) {
+				var _url = "/registration/key/edit/" + row['rid']
+				$.ajax({
+					url: _url,
+					cache: false,
+					type: 'DELETE',
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+						$('#tableKeys').bootstrapTable('refresh');
+					}
+				});
+			}
+		{% endif %}
+		}
+	};
+
+	// Registered Clients Tab
+	function formatterClients(value, row, index)
+	{
+	{% if session.role[0] == 1 %}
+		return [
+			'<div><a class="remove" href="javascript:void(0)" title="Remove Client">',
+			'<i class="fa fa-trash-o fa-lg" aria-hidden="true"></i>',
+			'</a>&nbsp;&nbsp;&nbsp;</div>'
+		].join('');
+	{% endif %}
+	}
+
+	window.eventsClients =
+	{
+		'click .remove': function (e, value, row, index)
+		{
+			var result = confirm("Are you sure you want to delete this client?");
+			if (result) {
+				var _url = "/registration/registered/client/" + row['cuuid'];
+				$.ajax({
+					url: _url,
+					cache: false,
+					type: 'DELETE',
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+						$('#tableClients').bootstrapTable('refresh');
+					}
+				});
+			}
+		}
+	};
+
+	// Parked Clients Tab
+	function formatterParked(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<table><tr><td>')
+		htmlData.push('<a class="editKey" href="javascript:void(0)" title="Approve Client">');
+		htmlData.push('<i class="fa fa-thumbs-o-up" aria-hidden="true"></i>');
+		htmlData.push('</a>');
+		htmlData.push('</td><td>');
+		htmlData.push('<a class="removeKey" href="javascript:void(0)" title="Remove Client">');
+		htmlData.push('<i class="fa fa-trash-o"></i></a>');
+		htmlData.push('</td></tr></table>');
+		return htmlData.join('');
+	}
+
+	window.eventsParked =
+	{
+		'click .assign': function (e, value, row, index)
+		{
+			$.get( "/clients/show/move/client/" + row['cuuid']).done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Move Client To Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalDialog').modal('show');
+			});
+		},
+		'click .dashboard': function (e, value, row, index)
+		{
+			$('#myContent').remove();
+			var _url = "/clients/dashboard/" + row['cuuid'];
+			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="true"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+			$('#modalTitle').html('Client Dashboard - ' + row['hostname']);
+			$('#modalSaveButton').remove();
+			$('#modalCancelButton').html('Close');
+			$('#modalBody').html(innerHTML);
+			$('#modalBody').css({'height':'88vh'});
+			$('#modalDialog').addClass("modal-wide");
+			$('#modalDialog').modal('show');
+		},
+	};
+
+
+	$('#settingsSaveButton').click(function ()
+	{
+		var data = {};
+		$('#settingsForm').serializeArray().map(function(x){data[x.name] = x.value;});
+
+		var _url = "/registration/settings";
+		$.ajax({
+			url: _url,
+			type: 'POST',
+			cache: false,
+			data: data,
+			error: function (request, status, error)
+			{
+				jsonValue = jQuery.parseJSON( request.responseText );
+				alert(jsonValue.errormsg);
+			},
+			success: function () {
+				alert("Settings saved successfully.");
+			}
+		});
+	});
+
+	$(function () {
+		$('#addKeyButton').click(function ()
+		{
+			$.get( "/registration/key/add").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add New Registration Key');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'400px'});
+				//$('#modalSaveButton').remove();
+				//$('#modalCancelButton').remove();
+				$('#modalDialog').modal('show');
+			});
+		});
+	});
+
+	</script>
+{% endblock %}

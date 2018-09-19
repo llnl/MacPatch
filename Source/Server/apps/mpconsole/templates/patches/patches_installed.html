@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+	{{pageTitle}}
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" class="table table-condensed" data-toolbar="#toolbar" data-show-export="true" data-sort-name="mdate" data-sort-order="desc">
+		<div id="toolbar"></div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable({
+			striped: true,
+			ajax: function loadMyRows(params)
+			{
+				if (params.data.search == '') {
+					params.data.search = undefined;
+				}
+				if (params.data.sort == '' || params.data.sort == undefined) {
+					params.data.sort = 'mdate';
+				}
+				if (params.data.order == '' || params.data.order == undefined) {
+					params.data.order = desc;
+				}
+
+				var _url = "/patches/installed/" + params.data.limit +"/"+ params.data.offset +"/"+ params.data.search +"/"+ params.data.sort +"/"+ params.data.order;
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							me: 'installed',
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			sidePagination: "server",
+			showRefresh: true,
+			exportTypes: ['csv', 'excel', 'json', 'xml', 'txt'],
+			columns: [
+				{% for col in columns %}
+					{
+
+						{% if col[2] == '0' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+
+					},
+				{% endfor %}
+			]
+		});
+	});
+
+	</script>
+{% endblock %}

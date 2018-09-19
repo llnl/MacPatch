@@ -1,7 +1,7 @@
 //
 //  MPSWDiskTaskOperation.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,9 +24,9 @@
  */
 
 #import "MPSWDistTaskOperation.h"
-#import "MPAgent.h"
 #import "MPSWTasks.h"
 #import "MPSWInstaller.h"
+#import "MPSettings.h"
 
 #define K_INSTALLED_FILE    @".installed.plist"
 
@@ -38,44 +38,46 @@
 @synthesize _timerInterval;
 @synthesize l_queue;
 @synthesize _swDiskTaskListHash;
-@synthesize mp_SOFTWARE_DATA_DIR;
+@synthesize sw_dir;
 
 - (id) init 
 {
-    if ((self = [super init])) 
+    self = [super init];
+    if (self)
     {
-        si = [MPAgent sharedInstance];
-        isExecuting = NO;
-        isFinished  = NO;
+        settings        = [MPSettings sharedInstance];
+        fm              = [NSFileManager defaultManager];
+        isExecuting     = NO;
+        isFinished      = NO;
+        
         [self set_fileHash:NULL];
-        mpc = [[MPCrypto alloc] init];
+        
+        mpc     = [[MPCrypto alloc] init];
         l_queue = [[NSOperationQueue alloc] init];
         [l_queue setMaxConcurrentOperationCount:1]; // Only do one install at a time
-        
+        sw_dir = [SOFTWARE_DATA_DIR stringByAppendingPathComponent:@"sw"];
         // Set Data Directory
-        fm = [NSFileManager defaultManager];
-        NSURL *appSupportDir = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSSystemDomainMask] objectAtIndex:0];
-        NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch"];
-        [self setMp_SOFTWARE_DATA_DIR:[appSupportMPDir URLByAppendingPathComponent:@"SW_Data"]];
-        if ([fm fileExistsAtPath:[mp_SOFTWARE_DATA_DIR path]] == NO) {
+        if ([fm fileExistsAtPath:SOFTWARE_DATA_DIR] == NO)
+        {
             NSError *err = nil;
             NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
-            [fm createDirectoryAtPath:[mp_SOFTWARE_DATA_DIR path] withIntermediateDirectories:YES attributes:attributes error:&err];
+            [fm createDirectoryAtPath:SOFTWARE_DATA_DIR withIntermediateDirectories:YES attributes:attributes error:&err];
             if (err) {
                 logit(lcl_vError,@"%@",[err description]);
             }
         }
-        if ([fm fileExistsAtPath:[[mp_SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] path]] == NO) {
+        if ([fm fileExistsAtPath:sw_dir] == NO)
+        {
             NSError *err = nil;
             NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
-            [fm createDirectoryAtPath:[[mp_SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] path] withIntermediateDirectories:YES attributes:attributes error:&err];
+            [fm createDirectoryAtPath:sw_dir withIntermediateDirectories:YES attributes:attributes error:&err];
             if (err) {
                 logit(lcl_vError,@"%@",[err description]);
             }
-            [[mp_SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
+            NSURL *furl = [NSURL URLWithString:sw_dir];
+            [furl setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
         }
     }
-    
     return self;
 }
 
@@ -131,21 +133,23 @@
 
 - (void)checkAndInstallMandatoryApplications
 {
-    MPSWTasks *sw = [[MPSWTasks alloc] init];
-    NSError *err = nil;
-    NSDictionary *_tasks = [sw getSWTasksForGroupFromServer:&err];
-    NSArray *mandatoryInstllTasks;
+    MPSWTasks   *sw     = [[MPSWTasks alloc] init];
+    NSError     *err    = nil;
+    NSArray     *_tasks = [sw getSoftwareTasksForGroup:&err];
+    NSArray     *mandatoryInstllTasks;
     if (err) {
         logit(lcl_vError,@"%@",[[err userInfo] objectForKey:@"NSLocalizedDescription"]);
         return;
     }
-    mandatoryInstllTasks = [self filterMandatorySoftwareContent:[_tasks objectForKey:@"Tasks"]];
+    mandatoryInstllTasks = [self filterMandatorySoftwareContent:_tasks];
     
     // Check to see if there is anything to install
-    if (mandatoryInstllTasks == nil || [mandatoryInstllTasks count] <= 0) {
+    if (mandatoryInstllTasks == nil || [mandatoryInstllTasks count] <= 0)
+    {
         logit(lcl_vInfo,@"No mandatory software tasks to install.");
         return;
     }
+    
     MPSWInstaller  *mpCatalogD;
     MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
     
@@ -157,52 +161,53 @@
         
         // Create Path to download software to
         NSString *swLoc = NULL;
-        NSString *swLocBase = [[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"sw"];
-        swLoc = [NSString pathWithComponents:[NSArray arrayWithObjects:swLocBase, [d objectForKey:@"id"], nil]];
+        swLoc = [sw_dir stringByAppendingPathComponent:d[@"id"]];
         
         // Verify Disk space requirements before downloading and installing
-        NSScanner* scanner = [NSScanner scannerWithString:[d valueForKeyPath:@"Software.sw_size"]];
+        NSScanner *scanner = [NSScanner scannerWithString:[d valueForKeyPath:@"Software.sw_size"]];
         long long stringToLong;
-        if(![scanner scanLongLong:&stringToLong]) {
+        if(![scanner scanLongLong:&stringToLong])
+        {
             logit(lcl_vError,@"Unable to convert size %@",[d valueForKeyPath:@"Software.sw_size"]);
             continue;
         }
         
         if ([mpd diskHasEnoughSpaceForPackage:stringToLong] == NO) 
         {
-            logit(lcl_vError,@"This system does not have enough free disk space to install the following software %@",[d objectForKey:@"name"]);
+            logit(lcl_vError,@"This system does not have enough free disk space to install the following software %@",d[@"name"]);
             continue;
         }
         
-        // Create Download URL
+        // Create Download URL Path
         NSString *_url = [NSString stringWithFormat:@"/mp-content%@",[d valueForKeyPath:@"Software.sw_url"]];
         logit(lcl_vInfo,@"Download software from: %@",_url);
         
         BOOL isDir;
         NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
-        if ([fm fileExistsAtPath:swLoc isDirectory:&isDir] == NO) {
+        if ([fm fileExistsAtPath:swLoc isDirectory:&isDir] == NO)
+        {
             [fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:attributes error:NULL];
-        } else {
-            if (isDir == NO) {
+        }
+        else
+        {
+            if (isDir == NO)
+            {
                 // Item is not a directory so we need to remove it and create our dir structure
                 [fm removeItemAtPath:swLoc error:NULL];
                 [fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:attributes error:NULL];
             }
         }
-
+        
+        // Download the software
         NSError *error = nil;
-        NSURLResponse *response;
-        MPNetConfig *mpnc = [[MPNetConfig alloc] init];
-        MPNetRequest *req = [[MPNetRequest alloc] initWithMPServerArray:[mpnc servers]];
-        NSURLRequest *urlReq = [req buildDownloadRequest:_url];
-        NSString *res = [req downloadFileRequest:urlReq returningResponse:&response error:&error];
+        NSString *file = [self downloadFile:swLoc error:&error];
         if (error)
         {
-            logit(lcl_vError,@"Error downloading software (%ld). No install will occure.",[error code]);
-            res = nil;
+            file = nil;
             continue;
         }
         
+        // Install the software
         logit(lcl_vDebug,@"Begin install for (%@).",[d objectForKey:@"name"]);
         int result = -1;
         int pResult = -1;
@@ -229,44 +234,28 @@
     }
 }
 
-/* Needs to be completed */
-- (BOOL)validateSoftwareDistListHashForGroup:(NSString *)aGroupName hash:(NSString *)aHash error:(NSError **)err
+- (NSString *)downloadFile:(NSString *)urlPath error:(NSError **)err
 {
-    BOOL result = NO;
-    /*
-    logit(lcl_vInfo,@"Requesting Client Scores.");
+    MPHTTPRequest *req;
+    NSString *dlResult;
+    NSError *dlerr = nil;
     
-    NSString *_urlString = [NSString stringWithFormat:@"%@?method=ValidateSoftwareGroupHash&GroupName=%@&GroupHash=%@",[self buildServerPath],K_DEFAULT_GROUP,aHash];
-	NSURL *_url = [NSURL URLWithString:_urlString];
-	logit(lcl_vDebug,@"Requesting URL: %@",_url);
-    
-    NSString *response;
-    ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:_url];
-    [request startSynchronous];
-    NSError *error = [request error];
-    if (!error) {
-        response = [request responseString];
-        NSError *err = nil;
-        NSDictionary *_dict = [response objectFromJSONStringWithParseOptions:JKParseOptionNone error:&err];
-        if (err) {
-            logit(lcl_vError,@"%@",[err description]);
-            return result;
-        }
-        if ([_dict hasKey:@"result"]) {
-            if ([[_dict objectForKey:@"result"] isEqualToString:@"Yes"]) {
-                result = YES;
-            }
-        }
+    req = [[MPHTTPRequest alloc] init];
+    dlResult = [req runSyncFileDownload:urlPath downloadDirectory:@"/tmp" error:&dlerr];
+    if (dlerr) {
+        if (err != NULL) *err = dlerr;
+        logit(lcl_vError,@"Error downloading %@",urlPath.lastPathComponent);
+        logit(lcl_vError,@"%@",dlerr.localizedDescription);
     }
-    */
-    return result;
+    
+    return dlResult;
 }
 
 #pragma mark Helpers Methods
 
 - (BOOL)softwareItemInstalled:(NSDictionary *)dict
 {
-    NSString *installFile = [[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:K_INSTALLED_FILE];
+    NSString *installFile = [SOFTWARE_DATA_DIR stringByAppendingPathComponent:K_INSTALLED_FILE];
     NSMutableDictionary *installData = [[NSMutableDictionary alloc] init];
     [installData setObject:[NSDate date] forKey:@"installDate"];
     [installData setObject:[dict objectForKey:@"id"] forKey:@"id"];
@@ -280,9 +269,9 @@
     if ([fm fileExistsAtPath:installFile]) {
         _data = [NSMutableArray arrayWithContentsOfFile:installFile];
     } else {
-        if (![fm fileExistsAtPath:[mp_SOFTWARE_DATA_DIR path]]) {
+        if (![fm fileExistsAtPath:sw_dir]) {
             NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
-            [fm createDirectoryAtPath:[mp_SOFTWARE_DATA_DIR path] withIntermediateDirectories:YES attributes:attributes error:NULL];
+            [fm createDirectoryAtPath:sw_dir withIntermediateDirectories:YES attributes:attributes error:NULL];
         }
         _data = [NSMutableArray array];
     }
@@ -302,8 +291,8 @@
     if (content) 
     {
         /* If there is content */
-        [NSKeyedArchiver archiveRootObject:content toFile:[[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"content.plist"]];
-        _a = [NSKeyedUnarchiver unarchiveObjectWithFile:[[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"content.plist"]];
+        [NSKeyedArchiver archiveRootObject:content toFile:[SOFTWARE_DATA_DIR stringByAppendingPathComponent:@"content.plist"]];
+        _a = [NSKeyedUnarchiver unarchiveObjectWithFile:[SOFTWARE_DATA_DIR stringByAppendingPathComponent:@"content.plist"]];
         for (id item in _a) 
         {
             d = [[NSMutableDictionary alloc] initWithDictionary:item];
@@ -386,7 +375,7 @@
 
 - (BOOL)softwareTaskInstalled:(NSString *)aTaskID
 {
-    NSString *installFile = [[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:K_INSTALLED_FILE];
+    NSString *installFile = [SOFTWARE_DATA_DIR stringByAppendingPathComponent:K_INSTALLED_FILE];
     if ([fm fileExistsAtPath:installFile]) {
         NSArray *a = [NSArray arrayWithContentsOfFile:installFile];
         for (int i = 0; i < [a count];i++) {

@@ -7,21 +7,21 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F382EE11FB624D300129063 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE21FB624D300129063 /* libMacPatch.a */; };
+		8F382EE41FB624E200129063 /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE31FB624E200129063 /* libicucore.tbd */; };
+		8F382EE61FB624EE00129063 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE51FB624ED00129063 /* libz.tbd */; };
+		8F382EF21FB6302500129063 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EEB1FB6254500129063 /* SystemConfiguration.framework */; };
+		8F382EF31FB6302D00129063 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EEC1FB6254D00129063 /* Security.framework */; };
+		8F382EF41FB6302F00129063 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EEA1FB6253600129063 /* IOKit.framework */; };
+		8F382EF51FB6303100129063 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE81FB6251F00129063 /* AppKit.framework */; };
+		8F382EF61FB6303300129063 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE71FB6251F00129063 /* Cocoa.framework */; };
+		8F382EF71FB6303900129063 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE91FB6251F00129063 /* CoreFoundation.framework */; };
 		8F530FB41B3E1DAA00B8D893 /* InstallAppleUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F530FB31B3E1DAA00B8D893 /* InstallAppleUpdate.m */; };
-		8F67E65A1B320E7900888EB9 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F67E6591B320E7900888EB9 /* libMacPatch.a */; };
-		8F67E65D1B320E9E00888EB9 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F67E65C1B320E9E00888EB9 /* CoreFoundation.framework */; };
-		8F67E65F1B320EAB00888EB9 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F67E65E1B320EAB00888EB9 /* IOKit.framework */; };
 		8F67E6751B32205F00888EB9 /* MPScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F67E6741B32205F00888EB9 /* MPScanner.m */; };
-		8F6E4FB61B31ED4A00D3911E /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F6E4FB51B31ED4A00D3911E /* libz.dylib */; };
-		8F6E4FB81B31ED6A00D3911E /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F6E4FB71B31ED6A00D3911E /* libicucore.dylib */; };
-		8F6E4FBC1B31EE5E00D3911E /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F6E4FBB1B31EE5E00D3911E /* SystemConfiguration.framework */; };
-		8F6E4FBE1B31EE7E00D3911E /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F6E4FBD1B31EE7E00D3911E /* Cocoa.framework */; };
 		8F752F1E1B34B8170001896F /* MPPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F752F1D1B34B8170001896F /* MPPanel.m */; };
 		8F7924531F06FCFC00440FBB /* MinScanAndPatchVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F7924511F06FCFC00440FBB /* MinScanAndPatchVC.m */; };
 		8F7924541F06FCFC00440FBB /* MinScanAndPatchVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F7924521F06FCFC00440FBB /* MinScanAndPatchVC.xib */; };
 		8F7924571F06FE8500440FBB /* MPAuthViewMin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F7924561F06FE8500440FBB /* MPAuthViewMin.m */; };
-		8F7EA63C209A58AB001E4B69 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7EA63B209A58AB001E4B69 /* Carbon.framework */; };
-		8F7EA63E209A5984001E4B69 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7EA63D209A5984001E4B69 /* CoreServices.framework */; };
 		8F9969F71B3B4F7000360709 /* InstallPackage.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9969F61B3B4F7000360709 /* InstallPackage.m */; };
 		8FA64D9F1B307D26006E9CB7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA64D9E1B307D26006E9CB7 /* AppDelegate.m */; };
 		8FA64DA21B307D26006E9CB7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA64DA11B307D26006E9CB7 /* main.m */; };
@@ -31,7 +31,6 @@
 		8FC495081B309A1D001222A2 /* MPAuthView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC495071B309A1D001222A2 /* MPAuthView.m */; };
 		8FC495211B31D3FA001222A2 /* ScanAndPatchVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC4951F1B31D3FA001222A2 /* ScanAndPatchVC.m */; };
 		8FC495221B31D3FA001222A2 /* ScanAndPatchVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */; };
-		8FC495331B31E3A4001222A2 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC495321B31E3A4001222A2 /* Security.framework */; };
 		8FE6B4B01B4C86F9000A0471 /* AppleLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A61B4C86F9000A0471 /* AppleLogo.png */; };
 		8FE6B4B11B4C86F9000A0471 /* AppleLogo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A71B4C86F9000A0471 /* AppleLogo@2x.png */; };
 		8FE6B4B21B4C86F9000A0471 /* Empty.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A81B4C86F9000A0471 /* Empty.png */; };
@@ -42,22 +41,25 @@
 		8FE6B4B71B4C86F9000A0471 /* Running.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AD1B4C86F9000A0471 /* Running.png */; };
 		8FE6B4B81B4C86F9000A0471 /* Success.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AE1B4C86F9000A0471 /* Success.png */; };
 		8FE6B4B91B4C86F9000A0471 /* Warning.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AF1B4C86F9000A0471 /* Warning.png */; };
+		8FF5B5061FC658B3006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5051FC658AD006F5FB2 /* Python.framework */; };
+		8FFD37E21FA391E900115F33 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FFD37E11FA391E900115F33 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8F382EDA1FB6247C00129063 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		8F382EE21FB624D300129063 /* libMacPatch.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMacPatch.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F382EE31FB624E200129063 /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
+		8F382EE51FB624ED00129063 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		8F382EE71FB6251F00129063 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		8F382EE81FB6251F00129063 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		8F382EE91FB6251F00129063 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		8F382EEA1FB6253600129063 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8F382EEB1FB6254500129063 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		8F382EEC1FB6254D00129063 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8F530FB21B3E1DAA00B8D893 /* InstallAppleUpdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstallAppleUpdate.h; sourceTree = "<group>"; };
 		8F530FB31B3E1DAA00B8D893 /* InstallAppleUpdate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstallAppleUpdate.m; sourceTree = "<group>"; };
-		8F67E6591B320E7900888EB9 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../../../Library/Developer/Xcode/DerivedData/MacPatch-dmdnkvvtxkjeudfvtjjkwxjanpso/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
-		8F67E65C1B320E9E00888EB9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		8F67E65E1B320EAB00888EB9 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
-		8F67E6601B320EB800888EB9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		8F67E6731B32205F00888EB9 /* MPScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPScanner.h; sourceTree = "<group>"; };
 		8F67E6741B32205F00888EB9 /* MPScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPScanner.m; sourceTree = "<group>"; };
-		8F6E4FB31B31ED3800D3911E /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
-		8F6E4FB51B31ED4A00D3911E /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		8F6E4FB71B31ED6A00D3911E /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
-		8F6E4FBB1B31EE5E00D3911E /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		8F6E4FBD1B31EE7E00D3911E /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8F752F1C1B34B8170001896F /* MPPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPPanel.h; sourceTree = "<group>"; };
 		8F752F1D1B34B8170001896F /* MPPanel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPPanel.m; sourceTree = "<group>"; };
 		8F7924501F06FCFC00440FBB /* MinScanAndPatchVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MinScanAndPatchVC.h; sourceTree = "<group>"; };
@@ -65,9 +67,6 @@
 		8F7924521F06FCFC00440FBB /* MinScanAndPatchVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = MinScanAndPatchVC.xib; sourceTree = "<group>"; };
 		8F7924551F06FE8500440FBB /* MPAuthViewMin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAuthViewMin.h; sourceTree = "<group>"; };
 		8F7924561F06FE8500440FBB /* MPAuthViewMin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAuthViewMin.m; sourceTree = "<group>"; };
-		8F7EA63B209A58AB001E4B69 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
-		8F7EA63D209A5984001E4B69 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
-		8F7EA63F209A59AA001E4B69 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		8F9969F51B3B4F7000360709 /* InstallPackage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstallPackage.h; sourceTree = "<group>"; };
 		8F9969F61B3B4F7000360709 /* InstallPackage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstallPackage.m; sourceTree = "<group>"; };
 		8FA64D9A1B307D26006E9CB7 /* MPLoginAgent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPLoginAgent.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -85,7 +84,6 @@
 		8FC4951F1B31D3FA001222A2 /* ScanAndPatchVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScanAndPatchVC.m; sourceTree = "<group>"; };
 		8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ScanAndPatchVC.xib; sourceTree = "<group>"; };
 		8FC495231B31DAA2001222A2 /* MPLoginAgent_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLoginAgent_Prefix.pch; sourceTree = "<group>"; };
-		8FC495321B31E3A4001222A2 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8FE6B4A61B4C86F9000A0471 /* AppleLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppleLogo.png; sourceTree = "<group>"; };
 		8FE6B4A71B4C86F9000A0471 /* AppleLogo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppleLogo@2x.png"; sourceTree = "<group>"; };
 		8FE6B4A81B4C86F9000A0471 /* Empty.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Empty.png; sourceTree = "<group>"; };
@@ -96,6 +94,8 @@
 		8FE6B4AD1B4C86F9000A0471 /* Running.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Running.png; sourceTree = "<group>"; };
 		8FE6B4AE1B4C86F9000A0471 /* Success.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Success.png; sourceTree = "<group>"; };
 		8FE6B4AF1B4C86F9000A0471 /* Warning.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Warning.png; sourceTree = "<group>"; };
+		8FF5B5051FC658AD006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
+		8FFD37E11FA391E900115F33 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,56 +103,29 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F67E65A1B320E7900888EB9 /* libMacPatch.a in Frameworks */,
-				8F6E4FB61B31ED4A00D3911E /* libz.dylib in Frameworks */,
-				8F6E4FB81B31ED6A00D3911E /* libicucore.dylib in Frameworks */,
-				8F6E4FBE1B31EE7E00D3911E /* Cocoa.framework in Frameworks */,
-				8F7EA63C209A58AB001E4B69 /* Carbon.framework in Frameworks */,
-				8FC495331B31E3A4001222A2 /* Security.framework in Frameworks */,
-				8F6E4FBC1B31EE5E00D3911E /* SystemConfiguration.framework in Frameworks */,
-				8F7EA63E209A5984001E4B69 /* CoreServices.framework in Frameworks */,
-				8F67E65F1B320EAB00888EB9 /* IOKit.framework in Frameworks */,
-				8F67E65D1B320E9E00888EB9 /* CoreFoundation.framework in Frameworks */,
+				8F382EE11FB624D300129063 /* libMacPatch.a in Frameworks */,
+				8F382EE61FB624EE00129063 /* libz.tbd in Frameworks */,
+				8F382EE41FB624E200129063 /* libicucore.tbd in Frameworks */,
+				8FFD37E21FA391E900115F33 /* libsqlite3.tbd in Frameworks */,
+				8F382EF21FB6302500129063 /* SystemConfiguration.framework in Frameworks */,
+				8F382EF31FB6302D00129063 /* Security.framework in Frameworks */,
+				8F382EF41FB6302F00129063 /* IOKit.framework in Frameworks */,
+				8F382EF51FB6303100129063 /* AppKit.framework in Frameworks */,
+				8F382EF61FB6303300129063 /* Cocoa.framework in Frameworks */,
+				8F382EF71FB6303900129063 /* CoreFoundation.framework in Frameworks */,
+				8FF5B5061FC658B3006F5FB2 /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		8F6E4FB21B31ED1B00D3911E /* Libraries */ = {
-			isa = PBXGroup;
-			children = (
-				8F67E6601B320EB800888EB9 /* AppKit.framework */,
-				8F67E65E1B320EAB00888EB9 /* IOKit.framework */,
-				8F67E65C1B320E9E00888EB9 /* CoreFoundation.framework */,
-				8F67E6591B320E7900888EB9 /* libMacPatch.a */,
-				8F6E4FB71B31ED6A00D3911E /* libicucore.dylib */,
-				8F6E4FB51B31ED4A00D3911E /* libz.dylib */,
-				8F6E4FB31B31ED3800D3911E /* libcrypto.dylib */,
-				8F6E4FBD1B31EE7E00D3911E /* Cocoa.framework */,
-				8F6E4FBB1B31EE5E00D3911E /* SystemConfiguration.framework */,
-				8FC495321B31E3A4001222A2 /* Security.framework */,
-			);
-			name = Libraries;
-			path = ..;
-			sourceTree = "<group>";
-		};
-		8F7EA63A209A58AB001E4B69 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				8F7EA63F209A59AA001E4B69 /* Foundation.framework */,
-				8F7EA63D209A5984001E4B69 /* CoreServices.framework */,
-				8F7EA63B209A58AB001E4B69 /* Carbon.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
 		8FA64D911B307D26006E9CB7 = {
 			isa = PBXGroup;
 			children = (
 				8FA64D9C1B307D26006E9CB7 /* MPLoginAgent */,
 				8FA64D9B1B307D26006E9CB7 /* Products */,
-				8F7EA63A209A58AB001E4B69 /* Frameworks */,
+				8FFD37E01FA391E800115F33 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -184,15 +157,13 @@
 				8F67E6741B32205F00888EB9 /* MPScanner.m */,
 				8FA64DA51B307D26006E9CB7 /* MainMenu.xib */,
 				8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */,
-				8FA64DA31B307D26006E9CB7 /* Assets.xcassets */,
-				8F6E4FB21B31ED1B00D3911E /* Libraries */,
-				8FA64DA01B307D26006E9CB7 /* Supporting Files */,
-				8FA64DB61B307FD9006E9CB7 /* MPLoginAgent-Bridging-Header.h */,
 				8F7924551F06FE8500440FBB /* MPAuthViewMin.h */,
 				8F7924561F06FE8500440FBB /* MPAuthViewMin.m */,
 				8F7924501F06FCFC00440FBB /* MinScanAndPatchVC.h */,
 				8F7924511F06FCFC00440FBB /* MinScanAndPatchVC.m */,
 				8F7924521F06FCFC00440FBB /* MinScanAndPatchVC.xib */,
+				8FA64DA31B307D26006E9CB7 /* Assets.xcassets */,
+				8FA64DA01B307D26006E9CB7 /* Supporting Files */,
 			);
 			path = MPLoginAgent;
 			sourceTree = "<group>";
@@ -203,6 +174,7 @@
 				8FE6B4A51B4C86F9000A0471 /* images */,
 				8FA64DA81B307D26006E9CB7 /* Info.plist */,
 				8FA64DB41B307D62006E9CB7 /* gov.llnl.MPLoginAgent.plist */,
+				8FA64DB61B307FD9006E9CB7 /* MPLoginAgent-Bridging-Header.h */,
 				8FC495231B31DAA2001222A2 /* MPLoginAgent_Prefix.pch */,
 			);
 			name = "Supporting Files";
@@ -223,6 +195,25 @@
 				8FE6B4AF1B4C86F9000A0471 /* Warning.png */,
 			);
 			path = images;
+			sourceTree = "<group>";
+		};
+		8FFD37E01FA391E800115F33 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8FF5B5051FC658AD006F5FB2 /* Python.framework */,
+				8F382EEC1FB6254D00129063 /* Security.framework */,
+				8F382EEB1FB6254500129063 /* SystemConfiguration.framework */,
+				8F382EEA1FB6253600129063 /* IOKit.framework */,
+				8F382EE81FB6251F00129063 /* AppKit.framework */,
+				8F382EE71FB6251F00129063 /* Cocoa.framework */,
+				8F382EE91FB6251F00129063 /* CoreFoundation.framework */,
+				8F382EE51FB624ED00129063 /* libz.tbd */,
+				8F382EE31FB624E200129063 /* libicucore.tbd */,
+				8F382EE21FB624D300129063 /* libMacPatch.a */,
+				8F382EDA1FB6247C00129063 /* libcrypto.dylib */,
+				8FFD37E11FA391E900115F33 /* libsqlite3.tbd */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -252,12 +243,11 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 1000;
 				ORGANIZATIONNAME = "Charles Heizer";
 				TargetAttributes = {
 					8FA64D991B307D26006E9CB7 = {
 						CreatedOnToolsVersion = 7.0;
-						ProvisioningStyle = Manual;
 					};
 				};
 			};
@@ -344,14 +334,22 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -374,7 +372,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -389,14 +387,22 @@
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -413,7 +419,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -427,7 +433,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
 				GCC_PREFIX_HEADER = MPLoginAgent/MPLoginAgent_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -435,14 +440,13 @@
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPLoginAgent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "MPLoginAgent/MPLoginAgent-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -458,7 +462,6 @@
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = "";
 				GCC_PREFIX_HEADER = MPLoginAgent/MPLoginAgent_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
@@ -466,14 +469,13 @@
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPLoginAgent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
 				SDKROOT = macosx;
 				SWIFT_OBJC_BRIDGING_HEADER = "MPLoginAgent/MPLoginAgent-Bridging-Header.h";
 				USER_HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/include/**";

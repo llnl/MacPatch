@@ -30,10 +30,41 @@
 import Foundation
 
 class HeaderView : NSView {
+	
+	var gradeTopColor: NSColor!
+	var gradeBotColor: NSColor!
+	
+	override init(frame frameRect: NSRect) {
+		super.init(frame:frameRect);
+	}
+	
+	required init?(coder: NSCoder) {
+		super.init(coder: coder)!
+		gradeTopColor = NSColor.black
+		gradeBotColor = NSColor.darkGray
+	}
+	
+	//or customized constructor/ init
+	init(frame frameRect: NSRect, otherInfo:Int) {
+		super.init(frame:frameRect);
+		// other code
+	}
+	
+	@IBInspectable var topGradeColor: NSColor? {
+		didSet {
+			gradeTopColor = topGradeColor
+		}
+	}
+	
+	@IBInspectable var botGradeColor: NSColor? {
+		didSet {
+			gradeBotColor = botGradeColor
+		}
+	}
     
     override func draw(_ dirtyRect: NSRect) {
-        
-        let gradient = NSGradient.init(starting: NSColor.darkGray, ending: NSColor.black)
-        gradient?.draw(from: NSMakePoint(0,0), to: NSMakePoint(0,self.frame.size.height), options: .drawsAfterEndingLocation)
+		// let blueColor: NSColor =
+        let gradient = NSGradient.init(starting: gradeBotColor, ending: gradeTopColor)
+        gradient?.draw(from: NSMakePoint(0,0), to: NSMakePoint(0,self.frame.size.height), options: NSGradient.DrawingOptions.drawsAfterEndingLocation)
     }
 }

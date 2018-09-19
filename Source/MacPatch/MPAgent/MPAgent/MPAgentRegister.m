@@ -3,7 +3,7 @@
 //  MPAgent
 //
 //  Created by Heizer, Charles on 8/8/14.
-//  Copyright (c) 2017 LLNL. All rights reserved.
+//  Copyright (c) 2018 LLNL. All rights reserved.
 //
 
 #import "MPAgentRegister.h"
@@ -19,6 +19,9 @@
 #define ql_component lcl_cMPAgentRegister
 
 @interface MPAgentRegister ()
+{
+    MPAgent *agent;
+}
 @end
 
 @implementation MPAgentRegister
@@ -27,17 +30,17 @@
 @synthesize registrationKey     = _registrationKey;
 @synthesize hostName            = _hostName;
 
-
+// CEH - Web Services
 - (id)init
 {
     self = [super init];
     if (self)
     {
+        agent = [MPAgent sharedInstance];
         self.hostName = (__bridge NSString *)SCDynamicStoreCopyLocalHostName(NULL);
         self.registrationKey = AUTO_REG_KEY;
         self.clientKey = [[NSProcessInfo processInfo] globallyUniqueString];
         self.overWriteKeyChainData = NO;
-        mpws = [[MPWebServices alloc] init];
     }
     return self;
 }
@@ -65,7 +68,8 @@
     }
     
     // Query WebService for answer
-    result = [mpws getAgentRegStatusWithKeyHash:keyHash error:&err];
+    MPRESTfull *mprest = [[MPRESTfull alloc] initWithClientID:agent.g_cuuid];
+    result = [mprest getAgentRegistrationStatusUsingKey:keyHash error:&err];
     if (err) {
         logit(lcl_vError,@"%@",err.localizedDescription);
         return FALSE;
@@ -106,10 +110,16 @@
 
 - (int)registerClient:(NSString *)aRegKey error:(NSError **)error
 {
+    if ([self clientIsRegistered]) {
+        qlwarning(@"Agent is already registered.");
+        return 1;
+    }
+    
     int res = 0;
     NSError *err = nil;
     
     NSDictionary *regDict = [self generateRegistrationData:&err];
+    qldebug(@"[regDict]: %@", regDict);
     if (err) {
         if (error != NULL) {
             *error = err;
@@ -140,6 +150,7 @@
 
 - (int)unregisterClient:(NSString *)aRegKey error:(NSError **)error
 {
+    // CEH - Needs to be implemented
     //NSError *err = nil;
     //NSString *res = [mpws getRegisterAgent:aRegKey hostName:hostName clientKey:clientKey error:&err];
     //NSLog(@"%@",res);
@@ -269,21 +280,48 @@
 
 - (NSDictionary *)generateRegistrationData:(NSError **)err
 {
-    NSError *error = nil;
     MPSimpleKeychain *skc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_KEYCHAIN_FILE];
+    
+    NSError *error = nil;
+    qldebug(@"Keychain: %@",MP_KEYCHAIN_FILE);
+    if ([[NSFileManager defaultManager] fileExistsAtPath:MP_KEYCHAIN_FILE]) {
+        [skc deleteKeyChain]; // Use Keychain tools to delete first
+        [NSThread sleepForTimeInterval:1.0];
+        [[NSFileManager defaultManager] removeItemAtPath:MP_KEYCHAIN_FILE error:NULL];
+        [NSThread sleepForTimeInterval:2.0];
+    }
+
+    OSStatus kcStatus = [skc createKeyChain:MP_KEYCHAIN_FILE];
+    if (kcStatus != noErr) {
+        if (err != NULL) {
+            *err = [skc errorForOSStatus:kcStatus];
+        }
+        return nil;
+    }
     
     // Add Server Public Key to Keychain, for simplicity
     // Get the Server Public Key from the Server Data
-    MPKeyItem *srvKeyItem = [skc retrieveKeyItemForService:kMPServerService error:NULL];
+    error = nil;
+    MPKeyItem *srvKeyItem = [skc retrieveKeyItemForService:kMPServerService error:&error];
+    if (error) {
+        qldebug(@"%@",error.localizedDescription);
+    }
+    
     if (!srvKeyItem) {
         // srvKeyItem will be nil if not found, so we add it
-        if ([[NSFileManager defaultManager] fileExistsAtPath:SRV_PUB_KEY]) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath:SRV_PUB_KEY])
+        {
+            error = nil;
             BOOL addServerKey = [self addServerPublicKeyFileToKeychain:SRV_PUB_KEY error:&error];
-            if (err != NULL) *err = error;
-            if (addServerKey == NO) {
+            
+            if (error)
+                if (err != NULL) *err = error;
+            
+            if (addServerKey == NO)
                 return nil;
-            }
-        } else {
+        }
+        else
+        {
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Public key was not found on file system."};
             if (err != NULL) *err = [NSError errorWithDomain:@"MPAgentRegistrationDomain" code:99999 userInfo:userInfo];
             return nil;
@@ -334,15 +372,18 @@
     }
     
     // Create the dictionary to send to Web service
-    @try {
-        MPAgent *agent = [MPAgent  sharedInstance];
-        NSDictionary *regInfo = @{ @"cuuid":        [agent g_cuuid],
-                                     @"cKey":       [encodedKey copy],
-                                     @"CPubKeyPem": clientKeyItem.publicKey,
-                                     @"CPubKeyDer": @"NA",
-                                     @"ClientHash": hashOfKey,
-                                     @"HostName":   [agent g_hostName],
-                                     @"SerialNo":   [agent g_serialNo]};
+    @try
+    {
+        MPClientInfo *ci = [[MPClientInfo alloc] init];
+        NSDictionary *regInfo = @{ @"cuuid":      [agent g_cuuid],
+                                   @"cKey":       [encodedKey copy],
+                                   @"CPubKeyPem": clientKeyItem.publicKey,
+                                   @"CPubKeyDer": @"NA",
+                                   @"ClientHash": hashOfKey,
+                                   @"HostName":   [agent g_hostName],
+                                   @"SerialNo":   [agent g_serialNo],
+                                   @"CheckIn":    [ci agentData]
+                                   };
         return regInfo;
     }
     @catch (NSException *exception) {
@@ -356,13 +397,14 @@
 
 - (BOOL)postRegistrationToServer:(NSDictionary *)aRegData regKey:(NSString *)regKey error:(NSError **)err
 {
+    BOOL result = NO;
     NSError *error = nil;
-    MPWebServices *xmpws = [[MPWebServices alloc] init];
-    [xmpws postAgentReister:aRegData regKey:regKey error:&error];
+    MPRESTfull *rest = [[MPRESTfull alloc] initWithClientID:agent.g_cuuid];
+    result = [rest postAgentRegistration:aRegData regKey:regKey error:&error];
     if (error) {
         if (err != NULL) *err = error;
         return NO;
     }
-    return YES;
+    return result;
 }
 @end

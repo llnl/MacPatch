@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -32,13 +32,15 @@
 #import "CHMenuViewController.h"
 #import "VDKQueue.h"
 #import "EventToSend.h"
-#include <unistd.h>
 
 NSString * const kMenuIconNorml		= @"mpmenubar_normal";
 NSString * const kMenuIconAlert		= @"mpmenubar_alert2";
 
 // Private Methods
 @interface MPClientStatusAppDelegate ()
+{
+	MPSettings *settings;
+}
 
 // Helper
 - (void)connect;
@@ -83,14 +85,12 @@ NSString *const kRebootRequiredNotification         = @"kRebootRequiredNotificat
 NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotification";
 
 #pragma mark Properties
-@synthesize vdkQueue;
 @synthesize window;
 @synthesize checkInStatusMenuItem;
 @synthesize checkPatchStatusMenuItem;
 @synthesize selfVersionInfoMenuItem;
 @synthesize MPVersionInfoMenuItem;
 @synthesize checkAgentAndUpdateMenuItem;
-@synthesize installCriticalUpdateMenuItem;
 
 @synthesize openASUS;
 @synthesize asusAlertOpen;
@@ -129,10 +129,13 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
 #pragma mark UI Events
 -(void)awakeFromNib
 {
+	settings = [MPSettings sharedInstance];
+	[settings refresh];
+	
     // Remove all notifications, will get re-added if needed.
     [[NSUserNotificationCenter defaultUserNotificationCenter] removeAllDeliveredNotifications];
-    criticalUpdates = [NSMutableArray new];
-	
+	criticalUpdates = [NSMutableArray new];
+    
     // Turn off Scheduled Software Updates
     [self setupWatchedFolder];
     [self setAsusAlertOpen:NO];
@@ -159,7 +162,6 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
                                                           object: nil];
 	
 	[self displayPatchDataMethod]; // Show needed patches
-	[installCriticalUpdateMenuItem setHidden:YES];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -188,7 +190,7 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
     
     // Watch for SoftwareUpdate Launches
     NSNotificationCenter *dc = [[NSWorkspace sharedWorkspace] notificationCenter];
-    [dc addObserver:self selector:@selector(notificationReceived:) name:NSWorkspaceWillLaunchApplicationNotification object:[NSWorkspace sharedWorkspace]];
+    //[dc addObserver:self selector:@selector(notificationReceived:) name:NSWorkspaceWillLaunchApplicationNotification object:[NSWorkspace sharedWorkspace]];
     
     // Setup App monitoring
     mpAppUsage = [[MPAppUsage alloc] init];
@@ -206,7 +208,11 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
     // Run Notification Timer
     [self runMPUserNotificationCenter];
     
-    [self setOpenASUS:NO];
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"allowSoftwareUpdate"]) {
+        [self setOpenASUS:[[NSUserDefaults standardUserDefaults] boolForKey:@"allowSoftwareUpdate"]];
+    } else {
+        [self setOpenASUS:NO];
+    }
     
     appRules = @{@"allow":@[],@"deny":@[]};
 }
@@ -221,7 +227,6 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
 
 - (void)updateMenu:(NSTimer *)timer
 {
-    
     static NSMenuItem *menuItem15 = nil;
     static NSMenuItem *menuItem16 = nil;
     static BOOL isShowing = YES;
@@ -234,7 +239,6 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
     
     NSMenu *menu = [timer userInfo];
     
-    
     if (!menuItem15 && !menuItem16) {
         // View Batch Jobs...
         //menuItem15 = [menu itemAtIndex:15];
@@ -243,12 +247,11 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
         menuItem16 = [menu itemAtIndex:([menu numberOfItems] -1)];
     }
     
-    if (!isShowing && optionKeyIsPressed) {
-        
-        NSInteger menuCount = [menu numberOfItems];
-        NSLog(@"menu COunt: %d",(int)menuCount);
-        
+    if (!isShowing && optionKeyIsPressed)
+	{
+		//NSInteger menuCount = [menu numberOfItems];
         //[menu insertItem:menuItem15 atIndex:([menu numberOfItems] - 2)];
+		
         [menu addItem:menuItem15];
         [menuItem15 setEnabled:YES];
         [menuItem15 setHidden:NO];
@@ -447,30 +450,61 @@ done:
 	return result;
 }
 
-- (int)runClientCheckinViaHelper
+- (NSDictionary *)getAgentCheckInDataViaProxy
 {
-	int result = -1;
+	NSDictionary *result = nil;
+	NSError *error = nil;
 	if (!proxy) {
-		[self connect];
-		if (!proxy) goto done;
+		[self connect:&error];
+		if (error) {
+			logit(lcl_vError,@"%@",error.localizedDescription);
+			goto done;
+		}
+		if (!proxy) {
+			logit(lcl_vError,@"Could not create proxy object.");
+			goto done;
+		}
 	}
 	
 	@try
 	{
-		if ([[NSFileManager defaultManager] fileExistsAtPath:@"/Library/MacPatch/Client/MPAgent"]) {
-			result = [proxy runCMD:@"/Library/MacPatch/Client/MPAgent" arguments:@[@"-c"]];
-		} else {
-			logit(lcl_vError,@"File missing /Library/MacPatch/Client/MPAgent.");
-			result = 2;
-		}
+		result = [proxy clientCheckInData];
 	}
 	@catch (NSException *e) {
-		logit(lcl_vError,@"Trying to run MPAgent client checkin.");
+		logit(lcl_vError,@"Colect client checkin data, %@", e);
 	}
 	
 done:
 	[self cleanup];
 	return result;
+}
+
+- (void)updateClientGroupSettingViaProxy:(NSDictionary *)settingsRevs
+{
+	NSError *error = nil;
+	if (!proxy) {
+		[self connect:&error];
+		if (error) {
+			logit(lcl_vError,@"%@",error.localizedDescription);
+			goto done;
+		}
+		if (!proxy) {
+			logit(lcl_vError,@"Could not create proxy object.");
+			goto done;
+		}
+	}
+	
+	@try
+	{
+		[proxy updateClientGroupSettingViaHelper:settingsRevs];
+	}
+	@catch (NSException *e) {
+		logit(lcl_vError,@"Update client group settings failed. %@", e);
+	}
+	
+done:
+	[self cleanup];
+	return;
 }
 
 #pragma mark -
@@ -491,6 +525,7 @@ done:
     [clientInfoTextField setFont:[NSFont fontWithName:@"Lucida Grande" size:11.0]];
     [clientInfoTextField setStringValue:verInfo];
     
+    /* Removed for MP 3.1
     NSMutableArray *data = [[NSMutableArray alloc] init];
     NSMutableDictionary *dict;
     NSDictionary *mpSwuadDict = [NSDictionary dictionaryWithContentsOfFile:AGENT_PREFS_PLIST];
@@ -506,7 +541,7 @@ done:
     [clientArrayController addObjects:data];
     [clientInfoTableView reloadData];
     [clientInfoTableView deselectAll:self];
-    
+    */
     
     [clientInfoWindow makeKeyAndOrderFront:sender];
     [clientInfoWindow center];
@@ -544,8 +579,8 @@ done:
 
 - (void)performClientCheckInThread
 {
-    @autoreleasepool {
-        
+    @autoreleasepool
+    {
         BOOL didRun = NO;
         didRun = [self performClientCheckInMethod];
         
@@ -568,190 +603,33 @@ done:
 // Performs a client checkin
 - (BOOL)performClientCheckInMethod
 {
-	BOOL result = NO;
-	int taskResult = 99;
-	taskResult = [self runClientCheckinViaHelper];
-	if (taskResult == 0) {
-		result = YES;
-	}
-	return result;
-}
-/*
-- (BOOL)performClientCheckInMethod
-{
-    int y = 0;
-    
-    NSString *_cuuid = [MPSystemInfo clientUUID];
-    NSDictionary *osDict = [[NSDictionary alloc] initWithDictionary:[self getOSInfo]];
-    
-    NSDictionary *consoleUserDict = [MPSystemInfo consoleUserData];
-    NSDictionary *hostNameDict = [MPSystemInfo hostAndComputerNames];
-    NSDictionary *clientVer = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
-    
-    NSMutableDictionary *agentDict = [[NSMutableDictionary alloc] init];
-    [agentDict setObject:_cuuid forKey:@"cuuid"];
-    [agentDict setObject:[self getHostSerialNumber] forKey:@"serialno" defaultObject:@"NA"];
-    [agentDict setObject:[hostNameDict objectForKey:@"localHostName"] forKey:@"hostname" defaultObject:@"localhost"];
-    [agentDict setObject:[hostNameDict objectForKey:@"localComputerName"] forKey:@"computername" defaultObject:@"localhost"];
-    [agentDict setObject:[consoleUserDict objectForKey:@"consoleUser"] forKey:@"consoleUser" defaultObject:@"NA"];
-    [agentDict setObject:[MPSystemInfo getIPAddress] forKey:@"ipaddr" defaultObject:@"127.0.0.1"];
-    [agentDict setObject:[MPSystemInfo getMacAddressForInterface:@"en0"] forKey:@"macaddr" defaultObject:@"00:00:00:00:00:00"];
-    [agentDict setObject:[osDict objectForKey:@"ProductVersion"] forKey:@"osver" defaultObject:@"10.0.0"];
-    [agentDict setObject:[osDict objectForKey:@"ProductName"] forKey:@"ostype" defaultObject:@"Mac OS X"];
-    [agentDict setObject:[clientVer objectForKey:@"version"] forKey:@"client_version" defaultObject:@"0"];
-    [agentDict setObject:@"false" forKey:@"needsreboot" defaultObject:@"false"];
-    
-    if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE]) {
-        [agentDict setObject:@"true" forKey:@"needsreboot"];
-    }
-    
-    
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    
-    NSError *err = nil;
-    BOOL postResult = NO;
-    NSString *uri;
-    NSData *reqData;
-    id postRes;
-    @try {
-        // Send Checkin Data
-        err = nil;
-        uri = [@"/api/v1/client/checkin" stringByAppendingPathComponent:_cuuid];
-        reqData = [mpws postRequestWithURIforREST:uri body:agentDict error:&err];
-        if (err) {
-            logit(lcl_vError,@"%@",[err localizedDescription]);
-        } else {
-            // Parse JSON result, if error code is not 0
-            err = nil;
-            postRes = [mpws returnRequestWithType:reqData resultType:@"string" error:&err];
-            logit(lcl_vDebug,@"%@",postRes);
-            if (err) {
-                logit(lcl_vError,@"%@",[err localizedDescription]);
-            } else {
-                postResult = YES;
-            }
-        }
-        
-        if (postResult) {
-            logit(lcl_vInfo,@"Running client base checkin, returned true.");
-        } else {
-            logit(lcl_vError,@"Running client base checkin, returned false.");
-        }
-    }
-    @catch (NSException * e) {
-        logit(lcl_vError,@"[NSException]: %@",e);
-    }
-    
-    // Read Client Plist Info, and post it...
-    @try
-    {
-        postResult = NO;
-        NSMutableDictionary *mpDefaults = [NSMutableDictionary dictionaryWithContentsOfFile:AGENT_PREFS_PLIST];
-        [mpDefaults setObject:_cuuid forKey:@"cuuid"];
-        logit(lcl_vDebug, @"Agent Plist: %@",mpDefaults);
-        
-        err = nil;
-        uri = [@"/api/v1/client/checkin/plist" stringByAppendingPathComponent:_cuuid];
-        reqData = [mpws postRequestWithURIforREST:uri body:mpDefaults error:&err];
-        if (err) {
-            logit(lcl_vError,@"%@",[err localizedDescription]);
-        } else {
-            // Parse JSON result, if error code is not 0
-            err = nil;
-            postRes = [mpws returnRequestWithType:reqData resultType:@"string" error:&err];
-            logit(lcl_vDebug,@"%@",postRes);
-            if (err) {
-                logit(lcl_vError,@"%@",[err localizedDescription]);
-            } else {
-                postResult = YES;
-            }
-        }
-        
-        if (postResult) {
-            logit(lcl_vInfo,@"Running client config checkin, returned true.");
-        } else {
-            logit(lcl_vError,@"Running client config checkin, returned false.");
-        }
-    }
-    @catch (NSException * e) {
-        logit(lcl_vError,@"[NSException]: %@",e);
-    }
-    
-    [self showLastCheckInMethod];
-    if (y==0) {
-        return YES;
-    } else {
-        return NO;
-    }
-}
- */
-
-- (NSDictionary *)systemVersionDictionary
-{
-    NSDictionary *sysVer;
-    
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10) {
-        NSOperatingSystemVersion os = [[NSProcessInfo processInfo] operatingSystemVersion];
-        sysVer = @{@"major":[NSNumber numberWithInt:(int)os.majorVersion],@"minor":[NSNumber numberWithInt:(int)os.minorVersion],@"revision":[NSNumber numberWithInt:(int)os.patchVersion]};
-    } else {
-        SInt32 OSmajor, OSminor, OSrevision;
-        OSErr err1 = Gestalt(gestaltSystemVersionMajor, &OSmajor);
-        OSErr err2 = Gestalt(gestaltSystemVersionMinor, &OSminor);
-        OSErr err3 = Gestalt(gestaltSystemVersionBugFix, &OSrevision);
-        if (!err1 && !err2 && !err3)
+	NSDictionary *agentData = [self getAgentCheckInDataViaProxy];
+    if (agentData) {
+        NSDictionary *revsDict;
+        NSError *wsError = nil;
+        MPRESTfull *rest = [[MPRESTfull alloc] init];
+        revsDict = [rest postClientCheckinData:agentData error:&wsError];
+        if (wsError)
         {
-            sysVer = @{@"major":[NSNumber numberWithInt:OSmajor],@"minor":[NSNumber numberWithInt:OSminor],@"revision":[NSNumber numberWithInt:OSrevision]};
+            logit(lcl_vError,@"Error posting client check in data.");
+            logit(lcl_vError,@"%@",wsError.localizedDescription);
+            return FALSE;
         }
+        
+        // CEH - Update Settings once implemented via mpworker
+		[self updateClientGroupSettingViaProxy:revsDict];
+        
+        // Update the UI info
+        [self showLastCheckInMethod];
     }
     
-    return sysVer;
-}
-
-- (NSDictionary *)getOSInfo
-{
-    NSFileManager *fm = [NSFileManager defaultManager];
-    NSDictionary *results = nil;
-    NSString *clientVerPath = @"/System/Library/CoreServices/SystemVersion.plist";
-    NSString *serverVerPath = @"/System/Library/CoreServices/ServerVersion.plist";
-    
-    if ([fm fileExistsAtPath:serverVerPath] == TRUE) {
-        results = [NSDictionary dictionaryWithContentsOfFile:serverVerPath];
-    } else {
-        if ([fm fileExistsAtPath:clientVerPath] == TRUE) {
-            results = [NSDictionary dictionaryWithContentsOfFile:clientVerPath];
-        }
-    }
-    
-    return results;
-}
-
-- (NSString *)getHostSerialNumber
-{
-    NSString *result = nil;
-    io_registry_entry_t rootEntry = IORegistryEntryFromPath( kIOMasterPortDefault, "IOService:/" );
-    CFTypeRef serialAsCFString = NULL;
-    serialAsCFString = IORegistryEntryCreateCFProperty( rootEntry,
-                                                       CFSTR(kIOPlatformSerialNumberKey),
-                                                       kCFAllocatorDefault,
-                                                       0);
-    
-    IOObjectRelease( rootEntry );
-    if (serialAsCFString == NULL) {
-        result = @"NA";
-    } else {
-        result = [NSString stringWithFormat:@"%@",(__bridge NSString *)serialAsCFString];
-    }
-    
-    if(serialAsCFString) {
-        CFRelease(serialAsCFString);
-    }
-    return result;
+    return TRUE;
 }
 
 #pragma mark Show Last CheckIn Menu
 - (void)showLastCheckIn
 {
-    double secondsToFire = 600.0;
+    double secondsToFire = 300.0;
     logit(lcl_vInfo, @"Start Last CheckIn Data Thread");
     logit(lcl_vInfo, @"Run every %f", secondsToFire);
     
@@ -778,28 +656,26 @@ done:
     @autoreleasepool
     {
         logit(lcl_vInfo, @"Running last agent check in date request.");
+        NSDictionary *result;
         NSError *wsErr = nil;
-        MPWebServices *mpws = [[MPWebServices alloc] init];
-        NSData *reqData;
-        id result;
+        MPRESTfull *rest = [[MPRESTfull alloc] init];
+        result = [rest getLastCheckinData:&wsErr];
         
-        NSString *uri = [@"/api/v1/client/checkin/info" stringByAppendingPathComponent:[MPSystemInfo clientUUID]];
-        reqData = [mpws getRequestWithURIforREST:uri error:&wsErr];
-        if (wsErr) {
-            logit(lcl_vError,@"%@",[wsErr localizedDescription]);
-        } else {
-            // Parse JSON result, if error code is not 0
-            wsErr = nil;
-            result = [mpws returnRequestWithType:reqData resultType:@"json" error:&wsErr];
-            logit(lcl_vDebug,@"%@",result);
-            if (wsErr) {
-                logit(lcl_vError,@"%@",wsErr.localizedDescription);
-            }
-            if ([result objectForKey:@"mdate1"]) {
-                [checkInStatusMenuItem setTitle:[NSString stringWithFormat:@"Last Checkin: %@",[result objectForKey:@"mdate1"]]];
-                [statusMenu update];
-            }
+        NSDictionary *data;
+        if ([result objectForKey:@"data"]) {
+            data = [result objectForKey:@"data"];
         }
+        
+        logit(lcl_vDebug,@"%@",result);
+        
+        if (wsErr) {
+            logit(lcl_vError,@"%@",wsErr.localizedDescription);
+        }
+        if ([data objectForKey:@"mdate1"]) {
+            [checkInStatusMenuItem setTitle:[NSString stringWithFormat:@"Last Checkin: %@",[data objectForKey:@"mdate1"]]];
+            [statusMenu update];
+        }
+        
     }
 }
 
@@ -814,7 +690,7 @@ done:
                                 modes:[NSArray arrayWithObject:NSRunLoopCommonModes]];
     
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-    double secondsToFire = 180.0;
+    double secondsToFire = 175.0;
     
     _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
         logit(lcl_vInfo, @"Start, Display Patch Data Info in menu.");
@@ -846,7 +722,8 @@ done:
         }
         
         // If No Patches ...
-        if (!data) {
+        if (!data)
+        {
             [self setPatchCount:0];
             [statusItem setImage:[NSImage imageNamed:kMenuIconNorml]];
             [checkPatchStatusMenuItem setTitle:@"Patches Needed: 0"];
@@ -871,15 +748,14 @@ done:
             
             [statusMenu update];
             return;
-            
-        } else if ([data count] <= 0) {
-            
+        }
+        else if ([data count] <= 0)
+        {
             [self setPatchCount:[data count]];
             [statusItem setImage:[NSImage imageNamed:kMenuIconNorml]];
             [checkPatchStatusMenuItem setTitle:@"Patches Needed: 0"];
             [checkPatchStatusMenuItem setSubmenu:NULL];
             [statusMenu update];
-            
             
             // Remove Notifications
             if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
@@ -897,8 +773,9 @@ done:
             }
             
             return;
-            
-        } else {
+        }
+        else
+        {
             [self setPatchCount:[data count]];
             [statusItem setImage:[NSImage imageNamed:kMenuIconAlert]];
         }
@@ -997,53 +874,40 @@ done:
 
 #pragma mark -
 #pragma mark Kill SoftwareUpdate GUI App
-- (void)notificationReceived:(NSNotification *)aNotification
+- (void)requestForLaunchingSoftwareUpdate:(NSNumber *)aPID
 {
+    [NSApp activateIgnoringOtherApps:YES];
+
+    [self killApplication:aPID];
+    if (asusAlertOpen == YES)
+        return;
     
-    if ([[[aNotification userInfo] objectForKey:@"NSApplicationPath"] isEqualToString:ASUS_APP_PATH]) {
-        [NSApp activateIgnoringOtherApps:YES];
-        if ([self openASUS] == NO)
-        {
-            [self killApplication:[[aNotification userInfo] objectForKey:@"NSApplicationProcessIdentifier"]];
-            
-            if (asusAlertOpen == YES)
-                return;
-            
-            NSAlert *alert;
-            if ([[NSUserDefaults standardUserDefaults] boolForKey:@"EnableASUS"]) {
-                alert = [NSAlert alertWithMessageText:@"Software Update"
-                                        defaultButton:@"Open Self Patch"
-                                      alternateButton:@"Open Software Update"
-                                          otherButton:@"Cancel"
-                            informativeTextWithFormat:@"To help ensure patch compatibility for this system, updates are now handled by the \"Self Patch\" application.\n\nWarning: Applying patches using Software Update can screw up your system if you have disk encryption installed."];
-            } else {
-                alert = [NSAlert alertWithMessageText:@"Software Update"
-                                        defaultButton:@"Open Self Patch"
-                                      alternateButton:nil
-                                          otherButton:@"Cancel"
-                            informativeTextWithFormat:@"To help ensure patch compatibility for this system, updates are now handled by the \"Self Patch\" application."];
-            }
-            
-            [self setAsusAlertOpen:YES];
-            NSInteger res = [alert runModal];
-            
-            if (res == NSAlertDefaultReturn) {
-                [self openSelfPatchApplications:nil];
-                [self setAsusAlertOpen:NO];
-            } else if (res == NSAlertAlternateReturn) {
-                [self setOpenASUS:YES];
-                [self openSoftwareUpdateApplication:nil];
-                [self setAsusAlertOpen:NO];
-            } else {
-                [self setAsusAlertOpen:NO];
-            }
-            
-        } else {
-            [self setOpenASUS:NO];
-        }
-        
+    NSAlert *alert;
+    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"allowSoftwareUpdate"]) {
+        alert = [NSAlert alertWithMessageText:@"Software Update"
+                                defaultButton:@"Open Self Patch"
+                              alternateButton:@"Open Software Update"
+                                  otherButton:@"Cancel"
+                    informativeTextWithFormat:@"To help ensure patch compatibility for this system, updates are now handled by the \"Self Patch\" application.\n\nWarning: Applying patches using Software Update can screw up your system if you have disk encryption installed."];
+    } else {
+        alert = [NSAlert alertWithMessageText:@"Software Update"
+                                defaultButton:@"Open Self Patch"
+                              alternateButton:nil
+                                  otherButton:@"Cancel"
+                    informativeTextWithFormat:@"To help ensure patch compatibility for this system, updates are now handled by the \"Self Patch\" application."];
     }
-    
+        
+    [self setAsusAlertOpen:YES];
+    NSInteger res = [alert runModal];
+    if (res == NSAlertDefaultReturn) {
+        [self openSelfPatchApplications:nil];
+        [self setAsusAlertOpen:NO];
+    } else if (res == NSAlertAlternateReturn) {
+        [self openSoftwareUpdateApplication:nil];
+        [self setAsusAlertOpen:NO];
+    } else {
+        [self setAsusAlertOpen:NO];
+    }
 }
 
 - (void)killApplication:(NSNumber *)aPID
@@ -1076,8 +940,15 @@ done:
 #pragma mark Record App Usage Info
 - (void)appLaunchNotificationReceived:(NSNotification *)aNotification
 {
-    if ([[aNotification userInfo] objectForKey:@"NSApplicationName"]) {
-        @try {
+    if ([[aNotification userInfo] objectForKey:@"NSApplicationName"])
+    {
+        @try
+        {
+            if ([[[aNotification userInfo] objectForKey:@"NSApplicationPath"] isEqualToString:ASUS_APP_PATH]) {
+                NSNumber *_pid = [[aNotification userInfo] objectForKey:@"NSApplicationProcessIdentifier"];
+                [self requestForLaunchingSoftwareUpdate:_pid];
+            }
+            
             NSBundle *b = [NSBundle bundleWithPath:[[aNotification userInfo] objectForKey:@"NSApplicationPath"]];
             NSMutableDictionary *userInfo = [NSMutableDictionary dictionaryWithDictionary:[aNotification userInfo]];
             [userInfo setObject:[[b infoDictionary] objectForKey:@"CFBundleShortVersionString"] forKey:@"CFBundleShortVersionString"];
@@ -1086,7 +957,8 @@ done:
             logit(lcl_vDebug,@"Application launched: %@ %@ %@",[alo appName],[alo appPath],[alo appVersion]);
             [mpAppUsage insertLaunchDataForApp:[alo appName] appPath:[alo appPath] appVersion:[alo appVersion]];
         }
-        @catch (NSException *exception) {
+        @catch (NSException *exception)
+        {
             logit(lcl_vError,@"%@",exception);
         }
     }
@@ -1188,16 +1060,6 @@ done:
 
 #pragma mark -
 #pragma mark Critical Patches Window
-- (void)setWindowPosition
-{
-	NSPoint pos;
-	NSRect mainScreenRect = [[NSScreen mainScreen] visibleFrame];
-	pos.x = mainScreenRect.origin.x + mainScreenRect.size.width - ([criticalWindow frame].size.width + 50);
-	pos.y = mainScreenRect.origin.y + mainScreenRect.size.height - ([criticalWindow frame].size.height + 50);
-	[criticalWindow setFrameOrigin : pos];
-}
-
-
 - (void)setupPopDownButton
 {
 	
@@ -1231,31 +1093,15 @@ done:
 
 - (void)readCriticalUpdatesFile
 {
-	logit(lcl_vInfo,@"Read Critical Updates File...");
 	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_CRITICAL_UPDATES_PLIST])
 	{
 		NSArray *updatesFromFile = [NSArray arrayWithContentsOfFile:MP_CRITICAL_UPDATES_PLIST];
 		[self.criticalUpdates removeAllObjects];
 		[self.criticalUpdates addObjectsFromArray:updatesFromFile];
 	}
-
-	__block NSMenuItem *mi;
-	
 	// No Timer is set, open window
 	if (self.criticalUpdates.count >= 1)
 	{
-		dispatch_async(dispatch_get_main_queue(), ^(void)
-		{
-			for (int x = 0; x < statusMenu.itemArray.count; x++)
-			{
-				if ([[statusMenu itemAtIndex:x] tag] == 17)
-				{
-					mi = [statusMenu itemAtIndex:x];
-					[mi setHidden:NO];
-				}
-			}
-		});
-		
 		if (!showCriticalWindowAtDate)
 		{
 			[self showCriticalWindow:nil];
@@ -1263,32 +1109,12 @@ done:
 	}
 	else
 	{
-		dispatch_async(dispatch_get_main_queue(), ^(void)
-		{
-			// Make sure we are not in a reboot scenario
-			if (criticalWinRebootButton.hidden && !criticalWinInstallButton.hidden )
-			{
-				[criticalWindow close];
-			}
-			
-			for (int x = 0; x < statusMenu.itemArray.count; x++)
-			{
-				if ([[statusMenu itemAtIndex:x] tag] == 17)
-				{
-					mi = [statusMenu itemAtIndex:x];
-					[mi setHidden:YES];
-				}
-			}
-		});
-		
 		if (criticalUpdatesTimer)
 		{
 			[criticalUpdatesTimer invalidate];
 			criticalUpdatesTimer = nil;
 		}
 	}
-	
-	[statusMenu update];
 }
 
 
@@ -1330,8 +1156,6 @@ done:
 					   self->criticalWinInstallButton.hidden = NO;
 					   self->criticalWinRebootButton.hidden = YES;
 				   });
-	
-	[self setWindowPosition];
 }
 
 // Not Now, will close the window and reschedule the notification
@@ -1371,13 +1195,10 @@ done:
 	
 	if ([alert runModal] == NSAlertFirstButtonReturn)
 	{
-		[self writeDataToFile:@"reboot" file:MP_AUTHRUN_FILE];
-		
 		// OK clicked, delete the record
 		[criticalWindow close];
 		OSStatus error = noErr;
-		error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-		//execve("killall loginwindow",0,0);
+		error = SendAppleEventToSystemProcess(kAERestart);
 		
 		if (error == noErr) {
 			logit(lcl_vInfo,@"Computer is going to restart now!");
@@ -1392,8 +1213,9 @@ done:
 - (IBAction)installPatch:(id)sender
 {
 	[self readCriticalUpdatesFile];
-	logit(lcl_vDebug,@"criticalUpdates: %@",criticalUpdates);
-
+	logit(lcl_vInfo,@"criticalUpdates: %@",criticalUpdates);
+	
+	
 	// Build array of patches to install
 	NSMutableArray *patchesToInstall = [NSMutableArray new];
 	for (NSDictionary *patch in criticalUpdates)
@@ -1404,27 +1226,29 @@ done:
 		[criticalWindow close];
 	}
 	
+	
 	GCDTask* asusTask;
+	
 	dispatch_async(dispatch_get_main_queue(), ^(void)
-	   {
-		   self->criticalWinBodyText.hidden = YES;
-		   self->criticalWinProgressText.hidden = NO;
-		   self->criticalWinProgressText.stringValue = @"Installing Critical Update...";
-		   
-		   self->criticalWinProgress.hidden = NO;
-		   self->criticalWinProgress.indeterminate = YES;
-		   self->criticalWinProgress.usesThreadedAnimation = YES;
-		   [self->criticalWinProgress startAnimation:nil];
-		   
-		   self->criticalWinPopUpDown.hidden = YES;
-		   self->criticalWinInstallButton.hidden = YES;
-		   
-		   self->criticalWinRebootButton.hidden = NO;
-		   self->criticalWinRebootButton.enabled = NO;
-		   self->criticalWinRebootButton.title = @"Installing";
-		   
-		   [self->criticalWinProgress display];
-	   });
+				   {
+					   self->criticalWinBodyText.hidden = YES;
+					   self->criticalWinProgressText.hidden = NO;
+					   self->criticalWinProgressText.stringValue = @"Installing Critical Update...";
+					   
+					   self->criticalWinProgress.hidden = NO;
+					   self->criticalWinProgress.indeterminate = YES;
+					   self->criticalWinProgress.usesThreadedAnimation = YES;
+					   [self->criticalWinProgress startAnimation:nil];
+					   
+					   self->criticalWinPopUpDown.hidden = YES;
+					   self->criticalWinInstallButton.hidden = YES;
+					   
+					   self->criticalWinRebootButton.hidden = NO;
+					   self->criticalWinRebootButton.enabled = NO;
+					   self->criticalWinRebootButton.title = @"Installing";
+					   
+					   [self->criticalWinProgress display];
+				   });
 	
 	// Must run scan first!
 	[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/softwareupdate" arguments:@[@"-l"]];
@@ -1502,20 +1326,35 @@ done:
 		
 		[self writeDataToFile:(NSArray*)newArray file:MP_CRITICAL_UPDATES_PLIST];
 	}
-
+	
 	return;
 }
 
 - (void)postPatchInstall:(NSString *)patch type:(NSString *)type
 {
-	MPWebServices *mpws = [[MPWebServices alloc] init];
-	NSError *wsErr = nil;
-	[mpws postPatchInstallResultsToWebService:patch patchType:@"apple" error:&wsErr];
+	[settings refresh];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch,@"apple",settings.ccuid];
 	logit(lcl_vInfo,@"Posting patch (%@) install to web service.",patch);
-	if (wsErr) {
-		logit(lcl_vError,@"%@", wsErr.localizedDescription);
+	
+	MPHTTPRequest *req;
+	MPWSResult *result;
+	
+	req = [[MPHTTPRequest alloc] init];
+	result = [req runSyncPOST:urlPath body:nil];
+	
+	if (result.statusCode >= 200 && result.statusCode <= 299)
+	{
+		logit(lcl_vInfo,@"[MPAgentExecController][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
+		logit(lcl_vDebug,@"Data Result: %@",result.result);
 	}
-	mpws = nil;
+	else
+	{
+		logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
+		logit(lcl_vDebug,@"%@",result.toDictionary);
+	}
+	
+	req = nil;
+	return;
 }
 
 #pragma mark -
@@ -1554,14 +1393,13 @@ done:
 {
 	if ([note.description isEqualTo:@"VDKQueueFileAttributesChangedNotification"] || [note.description isEqualTo:@"VDKQueueLinkCountChangedNotification"] || [note.description isEqualTo:@"VDKQueueFileDeletedNotification"])
 	{
-		[NSThread sleepForTimeInterval:1.0];
+		[NSThread sleepForTimeInterval:5.0];
+		//logit(lcl_vInfo,@"VDKQueueFileAttributesChangedNotification");
 		if ([fpath isEqualToString:MP_CRITICAL_UPDATES_PLIST])
 		{
 			logit(lcl_vInfo,@"readCriticalUpdatesFile: %@",MP_CRITICAL_UPDATES_PLIST);
 			[self readCriticalUpdatesFile];
 		}
-		
-		[NSThread detachNewThreadSelector:@selector(restartWatchFolder:) toTarget:self withObject:note.description];
 		return;
 	}
 	
@@ -1583,19 +1421,6 @@ done:
 		else
 		{
 			[self removeStatusFiles];
-		}
-	}
-}
-
-- (void)restartWatchFolder:(NSString *)action
-{
-	@autoreleasepool
-	{
-		if ([action isEqualTo:@"VDKQueueFileDeletedNotification"])
-		{
-			[NSThread sleepForTimeInterval:5.0];
-			vdkQueue = nil;
-			[self setupWatchedFolder];
 		}
 	}
 }
@@ -1800,8 +1625,6 @@ done:
         if ([notification.actionButtonTitle isEqualToString:@"Reboot"]) {
             [self logoutNow];
         }
-    } else {
-        //NSLog(@"Close");
     }
 }
 
@@ -1809,7 +1632,8 @@ done:
 {
     if ([notification.actionButtonTitle isEqualToString:@"Patch"]) {
         // Dont show patch info if reboot is required.
-        if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE]) {
+        if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
+		{
             [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notification];
         }
     }

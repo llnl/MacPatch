@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<style>
+		#chartDataTable > tbody > tr > td {
+			height:28px;
+			padding:4px;
+			border-top: 2px;
+		}
+	</style>
+{%  endblock %}
+
+{% block body %}
+	<div>
+		<table id="chartDataTable" data-toolbar="#chartDataToolbar" data-show-export="true" data-show-columns="true" class="table table-condensed">
+			<div id="chartDataToolbar"></div>
+		</table>
+	</div>
+	<div id="overlay">
+		<img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
+		<h1 style="text-align: center; color: white; ">Saving...</h1>
+	</div>
+{% endblock %}
+
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+
+	<script>
+	$( document ).ready(function()
+	{
+		$('#chartDataTable').bootstrapTable(
+		{
+			striped: true,
+			url: "/dashboard/data/{{chart}}/{{value}}",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			pagination: true,
+			sidePagination: "client",
+			showRefresh: true,
+			idField: 'cuuid',
+			columns: [
+				{% for col in columns %}
+				{
+					field: '{{col['name']}}',
+					title: '{{col['label']}}',
+					sortable: true
+				},
+				{% endfor %}
+			],
+			onPageChange: function(number, size) {
+				$('#chartDataTable').bootstrapTable('refresh');
+			},
+			onSort: function(name, order) {
+				$('#chartDataTable').bootstrapTable('refresh');
+			},
+		});
+	});
+
+	</script>
+{% endblock %}

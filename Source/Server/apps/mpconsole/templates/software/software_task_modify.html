@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+
+	{% endblock %}
+</head>
+
+<body>
+	{% block bodyPanel %}
+		<form role="form" id="myForm">
+			<div class="form-group">
+				<div class="well well-sm">
+					<label><h3>Task - Software Package Information</h3></label>
+
+					<div class="row">
+					<div class="col-md-12">
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Name</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="name" value="{{data['Task']['name'] or ''}}">
+							</div>
+						</div>
+						{% if type == 'edit' %}
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Software Task ID</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="tuuid" value="{{data['Task']['tuuid'] or ''}}" readonly>
+							</div>
+						</div>
+						{% elif type == 'new' %}
+							<input class="form-control" type="hidden" name="tuuid" value="{{data['NEWID']}}" readonly>
+						{% endif %}
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Primary Software Package</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="primary_suuid">
+									{% for s in data['SoftwareList'] %}
+									{% if s[0] == data['Task']['primary_suuid'] %}
+										<option value="{{s[0]}}" selected>{{s[1]}} - {{s[2]}}</option>
+									{% else %}
+										<option value="{{s[0]}}">{{s[1]}} - {{s[2]}}</option>
+									{% endif %}
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Task Type</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="sw_task_type">
+									<option value="o" {% if 'o' == data['Task']['sw_task_type'] %}selected{% endif %}>Optional</option>
+									<option value="om" {% if 'om' == data['Task']['sw_task_type'] %}selected{% endif %}>Optional-Mandatory</option>
+									<option value="m" {% if 'm' == data['Task']['sw_task_type'] %}selected{% endif %}>Mandatory</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Start Date</label>
+							</div>
+							<div class="col-md-5">
+								<div class='input-group date' id='sw_start_datetime'>
+									<input class="form-control" type="text" name="sw_start_datetime" value="{{data['Task']['sw_start_datetime'] or '' }}">
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</div>
+							<div class="col-md-4">
+								Valid From Date
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>End Date</label>
+							</div>
+							<div class="col-md-5">
+								<div class='input-group date' id='sw_end_datetime'>
+									<input class="form-control" type="text" name="sw_end_datetime" value="{{data['Task']['sw_end_datetime'] or '' }}">
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</div>
+							<div class="col-md-4">
+								Valid To Date
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Active</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="active">
+									<option value="1" {% if 1 == data['Task']['active'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['Task']['active'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/min/moment.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+
+	{% block javascript %}
+
+
+		<script type="text/javascript">
+			$(document).ready(function()
+			{
+				$('#sw_start_datetime').datetimepicker({
+					defaultDate: '{{data['Task']['sw_start_datetime'] or ''}}',
+					format: 'yyyy-mm-dd HH:ii:ss'
+				});
+				$('#sw_end_datetime').datetimepicker( {
+					defaultDate: '{{data['Task']['sw_end_datetime'] or '2050-01-01 12:00:00'}}',
+					format: 'yyyy-mm-dd HH:ii:ss'
+				});
+
+				$("#modalSaveButton").click(function()
+				{
+					var data = {};
+					$('#myForm').serializeArray().map(function(x){data[x.name] = x.value;});
+
+					var _url = "/software/task/save/{{data['Task']['tuuid'] or data['NEWID']}}";
+					$.ajax({
+						url: _url,
+						type: 'POST',
+						cache: false,
+						data: data,
+						error: function (request, status, error)
+						{
+							jsonValue = jQuery.parseJSON( request.responseText );
+							alert(jsonValue.error);
+						},
+						success: function () {
+							alert("Software task saved successfully.");
+							$('#modalDialog').modal('hide');
+						}
+					});
+
+					$('#myForm') = '';
+				});
+			});
+		</script>
+	{% endblock %}
+</body>
+
+</html>

@@ -2,7 +2,7 @@
 //  main.m
 //  MPWorker
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -29,7 +29,7 @@
 #import "WorkerConnectionMonitor.h"
 #import "MPWorker.h"
 
-static void setUpLogging();
+static void setUpLogging(void);
 
 int main(int argc, const char * argv[])
 {
@@ -38,7 +38,7 @@ int main(int argc, const char * argv[])
         NSPort *receivePort = nil;
         if (argc >= 2) {
 		if (strcmp(argv[1], "-v") == 0) {
-                printf("2.0.3\n");
+                printf("2.1.0\n");
 			return (0);
             }
         }
@@ -68,7 +68,7 @@ int main(int argc, const char * argv[])
     return 0;
 }
 
-static void setUpLogging ()
+static void setUpLogging (void)
 {
 	// Setup logging
 	BOOL enableDebug = NO;

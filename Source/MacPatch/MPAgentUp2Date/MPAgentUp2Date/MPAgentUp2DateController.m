@@ -1,7 +1,7 @@
 //
 //  MPAgentUp2DateController.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -52,11 +52,8 @@ NSInteger const TaskErrorTimedOut = 900001;
 - (void)taskTimeout:(NSNotification *)aNotification;
 
 - (BOOL)scanForMigrationConfig;
-- (MPNetServer *)migrationServerConfig;
+// - (MPNetServer *)migrationServerConfig;
 
-- (NSData *)getRequestWithURIforREST:(NSString *)aURI error:(NSError **)err;
-- (id)restGetRequestforURI:(NSString *)aURI resultType:(NSString *)resType error:(NSError **)err;
-- (id)returnRequestWithType:(NSData *)requestData resultType:(NSString *)resultType error:(NSError **)err;
 - (NSDictionary *)getAgentUpdates:(NSString *)curAppVersion build:(NSString *)curBuildVersion error:(NSError **)err;
 
 @end
@@ -110,28 +107,34 @@ NSInteger const TaskErrorTimedOut = 900001;
     NSDictionary *updateInfo;
 
     if (isMigration)
-    {
         logit(lcl_vInfo,@"Migration plist was found, using alt settings.");
-        updateInfo = [self getAgentUpdates:[_agentInfo objectForKey:@"agentVersion"] build:[_agentInfo objectForKey:@"agentBuild"] error:&wsErr];
-    } else {
-        MPWebServices *mpws = [[MPWebServices alloc] init];
-        updateInfo = [mpws getAgentUpdates:[_agentInfo objectForKey:@"agentVersion"] build:[_agentInfo objectForKey:@"agentBuild"] error:&wsErr];
-        if (wsErr) {
-            logit(lcl_vError,@"%@, error code %d (%@)",[wsErr localizedDescription], (int)[wsErr code], [wsErr domain]);
-            return 0;
-        }
+    
+    updateInfo = [self getAgentUpdates:[_agentInfo objectForKey:@"agentVersion"] build:[_agentInfo objectForKey:@"agentBuild"] error:&wsErr];
+    if (wsErr) {
+        logit(lcl_vError,@"%@, error code %d (%@)",[wsErr localizedDescription], (int)[wsErr code], [wsErr domain]);
+        return 0;
     }
+    
     if (![updateInfo isKindOfClass:[NSDictionary class]])
     {
         logit(lcl_vError,@"Agent updater info is not available.");
         return 0;
     }
-
-	logit(lcl_vDebug,@"WS Result: %@",updateInfo);
+	
+	NSDictionary *updateDataDict;
+	if (!updateInfo[@"data"]) {
+		logit(lcl_vError,@"Agent updater info data is not available.");
+		return 0;
+	} else {
+		updateDataDict = updateInfo[@"data"];
+	}
+	
+	
+	logit(lcl_vDebug,@"WS Result: %@",updateDataDict);
 	logit(lcl_vInfo,@"Evaluate local versions for updates.");
 	// See if the update is needed
 	int needsUpdate = 0;
-	if ([[updateInfo objectForKey:@"updateAvailable"] boolValue] == YES) {
+	if ([updateDataDict[@"updateAvailable"] boolValue] == YES) {
         needsUpdate++;
 	}
 	
@@ -141,7 +144,7 @@ NSInteger const TaskErrorTimedOut = 900001;
 		logit(lcl_vInfo,@"Client agent is up to date.");
 	}
 	
-	[self set_updateData:updateInfo];
+	[self set_updateData:updateDataDict];
 	return needsUpdate;
 }
 
@@ -221,10 +224,6 @@ NSInteger const TaskErrorTimedOut = 900001;
 	NSDictionary *_agentVersionInfo = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
 	NSDictionary *_agentFrameWorkInfo = [NSDictionary dictionaryWithContentsOfFile:AGENT_FRAMEWORK_PATH];
 	NSMutableDictionary *tmpDict = [[NSMutableDictionary alloc] init];
-	
-    //if ([_agentVersionInfo objectForKey:@"major"] && [_agentVersionInfo objectForKey:@"minor"] && [_agentVersionInfo objectForKey:@"bug"]) {
-    //    NSString *_ver = [NSString stringWithFormat:@"%@.%@.%@",[_agentVersionInfo objectForKey:@"major"], [_agentVersionInfo objectForKey:@"minor"],[_agentVersionInfo objectForKey:@"bug"]];
-   //     [tmpDict setObject:_ver forKey:@"agentVersion"];
     
     if ([_agentVersionInfo objectForKey:@"version"]) {
         [tmpDict setObject:[_agentVersionInfo objectForKey:@"version"] forKey:@"agentVersion"];
@@ -343,59 +342,24 @@ done:
 -(NSString *)downloadUpdate:(NSString *)aURL error:(NSError **)err
 {
     NSString *res = nil;
-    MPNetConfig *mpNetConfig;
-    BOOL isMigration = NO;
-    isMigration = [self scanForMigrationConfig];
-    
-    if (isMigration) {
-        MPNetServer *_server = [self migrationServerConfig];
-        if (!_server) {
-            qlerror(@"Migration server info is nil, no download can happen.");
-            return res;
-        }
-        mpNetConfig = [[MPNetConfig alloc] initWithServer:_server];
-    } else {
-        mpNetConfig = [[MPNetConfig alloc] init];
-    }
-    
-    NSArray *servers = [mpNetConfig servers];
-    NSURLResponse *response;
-    MPNetRequest *req;
-    NSURLRequest *urlReq;
-    NSError *error = nil;
-    
-    for (MPNetServer *srv in servers)
-    {
-        qlinfo(@"Trying Server %@",srv.host);
-        req = [[MPNetRequest alloc] initWithMPServer:srv];
-        urlReq = [req buildDownloadRequest:aURL];
-        error = nil;
-        if (urlReq)
-        {
-            res = [req downloadFileRequest:urlReq returningResponse:&response error:&error];
-            if (error) {
-                if (err != NULL) {
-                    *err = error;
-                }
-                qlerror(@"[%@][%d](%@ %d): %@",srv.host,(int)srv.port,error.domain,(int)error.code,error.localizedDescription);
-                continue;
-            }
-            // Make any previouse error pointers nil, now that we have a valid host/connection
-            if (err != NULL) {
-                *err = nil;
-            }
-            break;
-        } else {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"NSURLRequest was nil." forKey:NSLocalizedDescriptionKey];
-            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1001 userInfo:userInfo];
-            qlerror(@"%@",error.localizedDescription);
-            if (err != NULL) {
-                *err = error;
-            }
-            continue;
-        }
-    }
 
+	NSError *dlErr = nil;
+	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+	NSString *dlPath = [req runSyncFileDownload:aURL downloadDirectory:NSTemporaryDirectory() error:&dlErr];
+	
+	if (dlErr) {
+		logit(lcl_vError,@"Error[%d], trying to download file.",(int)[dlErr code]);
+		return res;
+	}
+	if (!dlPath) {
+		logit(lcl_vError,@"Error, downloaded file path is nil.");
+		logit(lcl_vError,@"No install will occure.");
+		return res;
+	} else {
+		logit(lcl_vDebug,@"Downloaded update file %@",dlPath);
+		res = dlPath;
+	}
+	
     return res;
 }
 
@@ -633,7 +597,8 @@ done:
     
     return NO;
 }
-
+/* CEH - Need new method
+ 
 - (MPNetServer *)migrationServerConfig
 {
     NSDictionary *_altConf = [NSDictionary dictionaryWithContentsOfFile:_migrationPlist];
@@ -655,6 +620,7 @@ done:
     logit(lcl_vError,@"Migration Plist was nil.");
     return nil;
 }
+*/
 
 - (BOOL)validateRemoteFingerprint:(NSString *)url
 {
@@ -668,143 +634,26 @@ done:
  These methods are for migration
 */
 
-- (NSData *)getRequestWithURIforREST:(NSString *)aURI error:(NSError **)err
-{
-    MPNetServer *server = [self migrationServerConfig];
-    if (!server) {
-        return nil;
-    }
-    
-    if (self.verifyFingerprint) {
-        NSString *url = [NSString stringWithFormat:@"https://%@:%d",server.host,(int)server.port];
-        BOOL isValidCert = [self validateRemoteFingerprint:url];
-        if (!isValidCert) {
-            qlerror(@"Remote Certificate finger print verify failed.");
-            return nil;
-        }
-    }
-
-    MPNetConfig *mpNetConfig = [[MPNetConfig alloc] initWithServer:server];
-    
-    NSError *error = nil;
-    NSURLResponse *response;
-    
-    MPNetRequest *req;
-    NSURLRequest *urlReq;
-    NSData *res = nil;
-    NSArray *servers = [mpNetConfig servers];
-    for (MPNetServer *srv in servers)
-    {
-        qlinfo(@"Trying Server %@",srv.host);
-        req = [[MPNetRequest alloc] initWithMPServer:srv];
-        error = nil;
-        urlReq =  [req buildJSONGETRequest:aURI error:&error];
-        if (error) {
-            if (err != NULL) {
-                *err = error;
-            }
-            qlerror(@"[%@][%d](%@ %d): %@",srv.host,(int)srv.port,error.domain,(int)error.code,error.localizedDescription);
-            continue;
-        }
-        error = nil;
-        if (urlReq)
-        {
-            res = nil;
-            res = [req sendSynchronousRequest:urlReq returningResponse:&response error:&error];
-            if (error) {
-                if (err != NULL) {
-                    *err = error;
-                }
-                qlerror(@"[%@][%d](%@ %d): %@",srv.host,(int)srv.port,error.domain,(int)error.code,error.localizedDescription);
-                continue;
-            }
-            // Make any previouse error pointers nil, now that we have a valid host/connection
-            if (err != NULL) {
-                *err = nil;
-            }
-            break;
-        } else {
-            NSDictionary *userInfo = [NSDictionary dictionaryWithObject:@"NSURLRequest was nil." forKey:NSLocalizedDescriptionKey];
-            error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-1001 userInfo:userInfo];
-            qlerror(@"%@",error.localizedDescription);
-            if (err != NULL) {
-                *err = error;
-            }
-            continue;
-        }
-    }
-    
-    return res;
-}
-
-- (id)restGetRequestforURI:(NSString *)aURI resultType:(NSString *)resType error:(NSError **)err
-{
-    NSError *wsErr = nil;
-    NSData *reqData;
-    id result;
-    
-    @try
-    {
-        reqData = [self getRequestWithURIforREST:aURI error:&wsErr];
-        if (wsErr) {
-            if (err != NULL) *err = wsErr;
-            logit(lcl_vError,@"%@",wsErr.localizedDescription);
-            return nil;
-        } else {
-            // Parse JSON result, if error code is not 0
-            wsErr = nil;
-            result = [self returnRequestWithType:reqData resultType:resType error:&wsErr];
-            if (wsErr) {
-                if (err != NULL) *err = wsErr;
-                logit(lcl_vError,@"%@",wsErr.localizedDescription);
-                return nil;
-            }
-            logit(lcl_vDebug,@"%@",result);
-            return result;
-        }
-        
-    }
-    @catch (NSException * e) {
-        logit(lcl_vError,@"[NSException]: %@",e);
-    }
-    // Should not get here
-    return nil;
-}
-
-// Parses Request Result using know reponse result type (json, string)
-- (id)returnRequestWithType:(NSData *)requestData resultType:(NSString *)resultType error:(NSError **)err
-{
-    MPJsonResult *jres = [[MPJsonResult alloc] init];
-    [jres setJsonData:requestData];
-    NSError *error = nil;
-    id result;
-    
-    if ([resultType isEqualToString:@"json"]) {
-        result = [jres returnJsonResult:&error];
-        qldebug(@"JSON Result: %@",result);
-    } else {
-        result = [jres returnResult:&error];
-    }
-    
-    if (error) {
-        if (err != NULL) {
-            *err = error;
-        } else {
-            qlerror(@"%@",error.localizedDescription);
-        }
-        return nil;
-    }
-    
-    return result;
-}
-
 - (NSDictionary *)getAgentUpdates:(NSString *)curAppVersion build:(NSString *)curBuildVersion error:(NSError **)err
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/update/%@/%@/%@",[MPSystemInfo clientUUID], curAppVersion, curBuildVersion];
-    result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
-    if (err != NULL) *err = error;
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/agent/update/%@/%@/%@",[MPSystemInfo clientUUID], curAppVersion, curBuildVersion];
+    result = [rest getDataFromWS:urlPath error:&error];
+    if (error)
+    {
+        if (err != NULL)
+        {
+            *err = error;
+        }
+        else
+        {
+            qlerror(@"%@",error.localizedDescription);
+        }
+    }
+    
     return result;
 }
 

@@ -1,7 +1,7 @@
 //
 //  MPTasks.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,25 +24,12 @@
  */
 
 #import <Foundation/Foundation.h>
-@class MPAgent;
 
-@interface MPTasks : NSObject 
-{
-    MPAgent *si;
-	NSString *_taskPlist;
-}
+@interface MPTasks : NSObject
 
-@property (nonatomic, strong) NSString *_taskPlist;
-
-- (int)validateTasksPlist;
-
-- (void)readAndSetTasksFromPlist;
-- (void)updateTasksPlist;
-- (void)loadTasks:(NSArray *)aTasks;
+- (NSArray *)setNextRunForTasks:(NSArray *)aTasks;
 - (NSDictionary *)genNextRunAt:(NSDictionary *)aTask;
 
-- (void)updateTaskRunAt:(NSString *)aTaskID;
-- (void)updateMissedTaskRunAt:(NSString *)aTaskID;
 - (NSInteger)weekDayFromDate:(NSDate *)aDate;
 - (NSDate *)weeklyNextRun:(NSDate *)startDate;
 

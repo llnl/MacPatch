@@ -19,12 +19,10 @@
 				8F68EAF31757D4D500982EF9 /* PBXTargetDependency */,
 				8F68EAE91757D4D500982EF9 /* PBXTargetDependency */,
 				8F68EAF71757D4D500982EF9 /* PBXTargetDependency */,
-				8F68EAF91757D4D500982EF9 /* PBXTargetDependency */,
 				8F530FB71B42040500B8D893 /* PBXTargetDependency */,
 				8F68EAE71757D4D500982EF9 /* PBXTargetDependency */,
 				8F68EAEB1757D4D500982EF9 /* PBXTargetDependency */,
 				8F68EAED1757D4D500982EF9 /* PBXTargetDependency */,
-				8F68EAF51757D4D500982EF9 /* PBXTargetDependency */,
 			);
 			name = AGENT_BUILD;
 			productName = AGENT_BUILD_DEBUG;
@@ -102,40 +100,12 @@
 			remoteGlobalIDString = 8FD88E1B16DFB40B00A870A3;
 			remoteInfo = MPAgentUp2Date;
 		};
-		8F68EAF61757D4D500982EF9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8FD88F5216DFD26C00A870A3 /* MPTaskEditor.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 8FD88F3116DFD26C00A870A3;
-			remoteInfo = MPTaskEditor;
-		};
 		8F68EAF81757D4D500982EF9 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8FA7063F1700AC0E00A1C57C /* GetCurrentConsoleUser.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 8DD76F960486AA7600D96B5E;
 			remoteInfo = ccusr;
-		};
-		8F68EAFA1757D4D500982EF9 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8F90C31D1700AF9D006E36D0 /* MPPrefMigrate.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 8F90C30B1700AF9D006E36D0;
-			remoteInfo = MPPrefMigrate;
-		};
-		8F7C91631DE63A0000BAF66B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8F4B1EFA16DD77BD00E15A9E /* MPAgent.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8F3665511DE4F90D00899BCC;
-			remoteInfo = MPAgent_signed_dev;
-		};
-		8F90C3211700AF9E006E36D0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8F90C31D1700AF9D006E36D0 /* MPPrefMigrate.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8F90C30C1700AF9D006E36D0;
-			remoteInfo = MPPrefMigrate;
 		};
 		8FA706431700AC0E00A1C57C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -157,13 +127,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = 8FD88EB116DFCD0A00A870A3;
 			remoteInfo = MPWorker;
-		};
-		8FD88F5616DFD26D00A870A3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8FD88F5216DFD26C00A870A3 /* MPTaskEditor.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8FD88F3216DFD26C00A870A3;
-			remoteInfo = MPTaskEditor;
 		};
 		8FD88FEB16DFDD9300A870A3 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -193,6 +156,27 @@
 			remoteGlobalIDString = 8FE560F416DE9A7A00BB7600;
 			remoteInfo = MPAgentExec;
 		};
+		8FE8A7F421137D4C00E8796E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8FD88FE716DFDD9200A870A3 /* MPCatalog.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8F8A73331FE1A0EB000CE581;
+			remoteInfo = MPCatalog_Signed;
+		};
+		8FE8A7F721137D4C00E8796E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8FD88EC216DFCD0A00A870A3 /* MPWorker.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8FE15D291FFEBD3F00F4A1CB;
+			remoteInfo = MPWorker_signed;
+		};
+		8FE8A7FA21137D4C00E8796E /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8FD890C716DFEDB700A870A3 /* Self Patch.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8FE15D4E1FFEE06C00F4A1CB;
+			remoteInfo = "Self Patch-Signed";
+		};
 		C5387B33179EE314001761D2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 8FE560B916DE70D900BB7600 /* MPLibrary.xcodeproj */;
@@ -212,11 +196,9 @@
 /* Begin PBXFileReference section */
 		8F4B1EFA16DD77BD00E15A9E /* MPAgent.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPAgent.xcodeproj; path = MPAgent/MPAgent.xcodeproj; sourceTree = "<group>"; };
 		8F67E6531B320E3B00888EB9 /* MPLoginAgent.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPLoginAgent.xcodeproj; path = MPLoginAgent/MPLoginAgent.xcodeproj; sourceTree = "<group>"; };
-		8F90C31D1700AF9D006E36D0 /* MPPrefMigrate.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPPrefMigrate.xcodeproj; path = MPPrefMigrate/MPPrefMigrate.xcodeproj; sourceTree = "<group>"; };
 		8FA7063F1700AC0E00A1C57C /* GetCurrentConsoleUser.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = GetCurrentConsoleUser.xcodeproj; path = CurrentConsoleUser/GetCurrentConsoleUser.xcodeproj; sourceTree = "<group>"; };
 		8FD88E2D16DFB40B00A870A3 /* MPAgentUp2Date.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPAgentUp2Date.xcodeproj; path = MPAgentUp2Date/MPAgentUp2Date.xcodeproj; sourceTree = "<group>"; };
 		8FD88EC216DFCD0A00A870A3 /* MPWorker.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPWorker.xcodeproj; path = MPWorker/MPWorker.xcodeproj; sourceTree = "<group>"; };
-		8FD88F5216DFD26C00A870A3 /* MPTaskEditor.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPTaskEditor.xcodeproj; path = MPTaskEditor/MPTaskEditor.xcodeproj; sourceTree = "<group>"; };
 		8FD88FE716DFDD9200A870A3 /* MPCatalog.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPCatalog.xcodeproj; path = MPCatalog/MPCatalog.xcodeproj; sourceTree = "<group>"; };
 		8FD8906716DFE84600A870A3 /* MPClientStatus.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPClientStatus.xcodeproj; path = MPClientStatus/MPClientStatus.xcodeproj; sourceTree = "<group>"; };
 		8FD890C716DFEDB700A870A3 /* Self Patch.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "Self Patch.xcodeproj"; path = "Self Patch/Self Patch.xcodeproj"; sourceTree = "<group>"; };
@@ -235,8 +217,6 @@
 				8FD88FE716DFDD9200A870A3 /* MPCatalog.xcodeproj */,
 				8FD8906716DFE84600A870A3 /* MPClientStatus.xcodeproj */,
 				8F67E6531B320E3B00888EB9 /* MPLoginAgent.xcodeproj */,
-				8F90C31D1700AF9D006E36D0 /* MPPrefMigrate.xcodeproj */,
-				8FD88F5216DFD26C00A870A3 /* MPTaskEditor.xcodeproj */,
 				8FD88EC216DFCD0A00A870A3 /* MPWorker.xcodeproj */,
 				8FD890C716DFEDB700A870A3 /* Self Patch.xcodeproj */,
 				8FE560B916DE70D900BB7600 /* MPLibrary.xcodeproj */,
@@ -247,7 +227,6 @@
 			isa = PBXGroup;
 			children = (
 				8F4B1EFF16DD77BE00E15A9E /* MPAgent */,
-				8F7C91641DE63A0000BAF66B /* MPAgent_signed_dev */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -256,14 +235,6 @@
 			isa = PBXGroup;
 			children = (
 				8F67E6581B320E3C00888EB9 /* MPLoginAgent.app */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		8F90C31E1700AF9D006E36D0 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				8F90C3221700AF9E006E36D0 /* MPPrefMigrate */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -288,14 +259,7 @@
 			isa = PBXGroup;
 			children = (
 				8FD88EC716DFCD0B00A870A3 /* MPWorker */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
-		8FD88F5316DFD26C00A870A3 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				8FD88F5716DFD26D00A870A3 /* MPTaskEditor.app */,
+				8FE8A7F821137D4C00E8796E /* MPWorker_signed */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -304,6 +268,7 @@
 			isa = PBXGroup;
 			children = (
 				8FD88FEC16DFDD9300A870A3 /* MPCatalog.app */,
+				8FE8A7F521137D4C00E8796E /* MPCatalog_Signed.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -320,6 +285,7 @@
 			isa = PBXGroup;
 			children = (
 				8FD890CC16DFEDB900A870A3 /* Self Patch.app */,
+				8FE8A7FB21137D4C00E8796E /* Self Patch-Signed.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -346,7 +312,7 @@
 		8F4B1ED016DD771300E15A9E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0810;
+				LastUpgradeCheck = 1000;
 			};
 			buildConfigurationList = 8F4B1ED316DD771300E15A9E /* Build configuration list for PBXProject "MacPatch" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -391,14 +357,6 @@
 					ProjectRef = 8F67E6531B320E3B00888EB9 /* MPLoginAgent.xcodeproj */;
 				},
 				{
-					ProductGroup = 8F90C31E1700AF9D006E36D0 /* Products */;
-					ProjectRef = 8F90C31D1700AF9D006E36D0 /* MPPrefMigrate.xcodeproj */;
-				},
-				{
-					ProductGroup = 8FD88F5316DFD26C00A870A3 /* Products */;
-					ProjectRef = 8FD88F5216DFD26C00A870A3 /* MPTaskEditor.xcodeproj */;
-				},
-				{
 					ProductGroup = 8FD88EC316DFCD0A00A870A3 /* Products */;
 					ProjectRef = 8FD88EC216DFCD0A00A870A3 /* MPWorker.xcodeproj */;
 				},
@@ -429,20 +387,6 @@
 			remoteRef = 8F67E6571B320E3C00888EB9 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		8F7C91641DE63A0000BAF66B /* MPAgent_signed_dev */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = MPAgent_signed_dev;
-			remoteRef = 8F7C91631DE63A0000BAF66B /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		8F90C3221700AF9E006E36D0 /* MPPrefMigrate */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = MPPrefMigrate;
-			remoteRef = 8F90C3211700AF9E006E36D0 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
 		8FA706441700AC0E00A1C57C /* GetCurrentConsoleUser */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
@@ -462,13 +406,6 @@
 			fileType = "compiled.mach-o.executable";
 			path = MPWorker;
 			remoteRef = 8FD88EC616DFCD0B00A870A3 /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		8FD88F5716DFD26D00A870A3 /* MPTaskEditor.app */ = {
-			isa = PBXReferenceProxy;
-			fileType = wrapper.application;
-			path = MPTaskEditor.app;
-			remoteRef = 8FD88F5616DFD26D00A870A3 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		8FD88FEC16DFDD9300A870A3 /* MPCatalog.app */ = {
@@ -497,6 +434,27 @@
 			fileType = "compiled.mach-o.executable";
 			path = MPAgentExec;
 			remoteRef = 8FE5610916DE9A7B00BB7600 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		8FE8A7F521137D4C00E8796E /* MPCatalog_Signed.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = MPCatalog_Signed.app;
+			remoteRef = 8FE8A7F421137D4C00E8796E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		8FE8A7F821137D4C00E8796E /* MPWorker_signed */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = MPWorker_signed;
+			remoteRef = 8FE8A7F721137D4C00E8796E /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		8FE8A7FB21137D4C00E8796E /* Self Patch-Signed.app */ = {
+			isa = PBXReferenceProxy;
+			fileType = wrapper.application;
+			path = "Self Patch-Signed.app";
+			remoteRef = 8FE8A7FA21137D4C00E8796E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 		C5387B34179EE314001761D2 /* libMacPatch.a */ = {
@@ -549,20 +507,10 @@
 			name = MPAgentUp2Date;
 			targetProxy = 8F68EAF41757D4D500982EF9 /* PBXContainerItemProxy */;
 		};
-		8F68EAF51757D4D500982EF9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = MPTaskEditor;
-			targetProxy = 8F68EAF61757D4D500982EF9 /* PBXContainerItemProxy */;
-		};
 		8F68EAF71757D4D500982EF9 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = ccusr;
 			targetProxy = 8F68EAF81757D4D500982EF9 /* PBXContainerItemProxy */;
-		};
-		8F68EAF91757D4D500982EF9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = MPPrefMigrate;
-			targetProxy = 8F68EAFA1757D4D500982EF9 /* PBXContainerItemProxy */;
 		};
 		C5387B36179EE346001761D2 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -575,12 +523,20 @@
 		8F4B1ED416DD771300E15A9E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -602,12 +558,20 @@
 		8F4B1ED516DD771300E15A9E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -627,6 +591,7 @@
 		8F68EAFC1757D4D500982EF9 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = AGENT_BUILD;
 				SDKROOT = macosx;
@@ -636,6 +601,7 @@
 		8F68EAFD1757D4D500982EF9 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_ENABLE_OBJC_WEAK = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				PRODUCT_NAME = AGENT_BUILD;
 				SDKROOT = macosx;

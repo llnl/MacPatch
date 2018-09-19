@@ -1,7 +1,7 @@
 //
 //  MPPatchScan.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,16 +24,23 @@
  */
 
 #import "MPPatchScan.h"
-#import "MPDefaults.h"
 #import "MPDataMgr.h"
 #import "MPOSCheck.h"
 #import "MPBundle.h"
 #import "MPFileCheck.h"
 #import "MPScript.h"
 #include <unistd.h>
+#import "MPSettings.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPPatchScan
+
+@interface MPPatchScan ()
+{
+    MPSettings *settings;
+}
+
+@end
 
 @implementation MPPatchScan
 
@@ -43,6 +50,7 @@
 {
     return useDistributedNotification;
 }
+
 - (void)setUseDistributedNotification:(BOOL)flag
 {
     useDistributedNotification = flag;
@@ -56,15 +64,16 @@
 	if (self)
     {
         [self setUseDistributedNotification:NO];
+        settings = [MPSettings sharedInstance];
     }
 	return self;
 }
 
 -(NSArray *)scanForPatches
 {
-	NSArray *resultArr = nil;
-	NSMutableArray *patchesNeeded = [[NSMutableArray alloc] init];
-	NSDictionary *notifyInfo;
+	NSArray         *resultArr = nil;
+	NSMutableArray  *patchesNeeded = [[NSMutableArray alloc] init];
+	NSDictionary    *notifyInfo;
 	notifyInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:0] forKey:@"patchesNeeded"];
 	
 	/*
@@ -77,18 +86,24 @@
 	NSDictionary *tmpDict;
 	NSArray *customPatches;
 	customPatches = [self retrieveCustomPatchScanList];
-	if ([customPatches count] == 0)
+    if ([customPatches count] == 0) {
+        qlwarning(@"Custom patch scan list is empty, no custom patches will be scaned for.");
 		return resultArr;
-	
+    }
 	// 2. Scan the host
 	NSMutableDictionary *patch;
 	BOOL result = NO;
 	int i = 0;
-	for(i=0;i<[customPatches count];i++) {
+    
+	for(i=0; i<[customPatches count]; i++)
+    {
 		tmpDict = [NSDictionary dictionaryWithDictionary:[customPatches objectAtIndex:i]];
+		qldebug(@"Patch Dict: %@",tmpDict);
 		qlinfo(@"*******************");
-		qlinfo(@"Scanning for %@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]);
-        [delegate patchScan:self didReciveStatusData:[NSString stringWithFormat:@"Scanning for %@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]]];
+		qlinfo(@"Scanning for %@(%@)",tmpDict[@"patch_name"], tmpDict[@"patch_ver"]);
+        
+        NSString *statusData = [@"Scanning for " stringByAppendingFormat:@"%@(%@)", tmpDict[@"patch_name"], tmpDict[@"patch_ver"]];
+        [delegate patchScan:self didReciveStatusData:statusData];
 		[self sendNotificationTo:@"ScanForNotification" userInfo:tmpDict];
 		
 		[NSThread sleepForTimeInterval:0.1];
@@ -96,42 +111,47 @@
 		result = [self scanHostForPatch:tmpDict];
 		if (result == YES) {
 			patch = [[NSMutableDictionary alloc] init];
-            @try {
-
-                [patch setObject:[tmpDict objectForKey:@"patch_name"] forKey:@"patch"];
-                [patch setObject:[tmpDict objectForKey:@"patch_ver"] forKey:@"version"];
+            @try
+            {
                 [patch setObject:@"Third" forKey:@"type"];
-                [patch setObject:[NSString stringWithFormat:@"%@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]] forKey:@"description"];
+                [patch setObject:tmpDict[@"patch_name"] forKey:@"patch"];
+                [patch setObject:tmpDict[@"patch_ver"] forKey:@"version"];
+                [patch setObject:[NSString stringWithFormat:@"%@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]] forKey:@"description"];
                 [patch setObject:@"0" forKey:@"size"];
                 [patch setObject:@"Y" forKey:@"recommended"];
-                [patch setObject:[tmpDict objectForKey:@"patch_reboot"] forKey:@"restart"];
-                [patch setObject:[tmpDict objectForKey:@"puuid"] forKey:@"patch_id"];
-                [patch setObject:[tmpDict objectForKey:@"bundle_id"] forKey:@"bundleID"];
+                [patch setObject:tmpDict[@"patch_reboot"] forKey:@"restart"];
+                [patch setObject:tmpDict[@"puuid"] forKey:@"patch_id"];
+                [patch setObject:tmpDict[@"bundle_id"] forKey:@"bundleID"];
                 [patchesNeeded addObject:patch];
             }
-            @catch (NSException *exception) {
+            @catch (NSException *exception)
+            {
                 qlerror("%@\n%@",exception,tmpDict);
             }
-			
 			patch = nil;
 		}
 	}
 	
     // 3. Post patches needed to web service
-    MPWebServices *mpws = [[MPWebServices alloc] init];
     NSError *wsErr = nil;
-    [mpws postClientScanDataWithType:(NSArray *)patchesNeeded type:1 error:&wsErr];
-    if (wsErr) {
-        qlerror(@"%@",wsErr.localizedDescription);
-    } else {
-        // Notify with completion result
-        notifyInfo = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:(int)[patchesNeeded count]] forKey:@"patchesNeeded"];
+    MPRESTfull *mprest = [[MPRESTfull alloc] init];
+    
+    NSString *urlPath = [@"/api/v1/client/patch/scan/2" stringByAppendingPathComponent:settings.ccuid];
+    BOOL rest_result = [mprest postDataToWS:urlPath data:@{@"rows":patchesNeeded} error:&wsErr];
+    if (rest_result)
+    {
+        logit(lcl_vInfo,@"[MPPatchScan][scanForPatches]: Data post to web service (%@), returned true.", urlPath);
+        logit(lcl_vDebug,@"Data post to web service (%@), returned true.", urlPath);
+        notifyInfo = @{@"patchesNeeded":[NSNumber numberWithInt:(int)[patchesNeeded count]]};
     }
-
+    else
+    {
+        logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
+    }
+    
 	[delegate patchScan:self didReciveStatusData:@"Custom patch scan completed."];
 	[self sendNotificationTo:@"ScanForNotificationFinished" userInfo:notifyInfo];
-	resultArr = [NSArray arrayWithArray:patchesNeeded];
-	return resultArr;
+	return [NSArray arrayWithArray:patchesNeeded];
 }
 
 -(NSArray *)scanForPatchesWithbundleID:(NSString *)aBundleID
@@ -149,10 +169,22 @@
 	
 	// 1. Get the list
 	NSDictionary *tmpDict;
-	NSArray *customPatches;
-	customPatches = [self retrieveCustomPatchScanList];
-	if ([customPatches count] == 0)
+	NSArray *customPatches = [NSArray array];
+	NSArray *customPatchesFull;
+	customPatchesFull = [self retrieveCustomPatchScanList];
+    if ([customPatchesFull count] == 0) {
+        qlwarning(@"Custom patch scan list is empty, no custom patches will be scaned for.");
+        return resultArr;
+    }
+	
+	// Filter Scan list for just the required bundle id
+	NSPredicate *fltr = [NSPredicate predicateWithFormat:@"(bundle_id == %@)", aBundleID];
+	customPatches = [customPatchesFull filteredArrayUsingPredicate:fltr];
+	
+	if ([customPatches count] == 0) {
+		qlwarning(@"Custom patch scan list is empty, no custom patches will be scaned for.");
 		return resultArr;
+	}
 	
 	// 2. Scan the host
 	NSMutableDictionary *patch;
@@ -163,29 +195,30 @@
     
 	for(i=0;i<[customPatches count];i++) {
 		tmpDict = [NSDictionary dictionaryWithDictionary:[customPatches objectAtIndex:i]];
-        if ([tmpDict hasKey:@"bundle_id"]) {
-            if ([[tmpDict objectForKey:@"bundle_id"] isEqualToString:aBundleID] == NO) {
+        if ([tmpDict hasKey:@"bundleID"]) {
+            if ([[tmpDict objectForKey:@"bundleID"] isEqualToString:aBundleID] == NO) {
                 continue;
             }
         }
 
 		qlinfo(@"*******************");
-		qlinfo(@"Scanning for %@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]);
-        [delegate patchScan:self didReciveStatusData:[NSString stringWithFormat:@"Scanning for %@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]]];
+		qldebug(@"Patch Data: %@",tmpDict);
+		qlinfo(@"Scanning for %@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]);
+        [delegate patchScan:self didReciveStatusData:[NSString stringWithFormat:@"Scanning for %@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]]];
 		[NSThread sleepForTimeInterval:0.1];
 		result = [self scanHostForPatch:tmpDict];
 		if (result == YES) {
 			patch = [[NSMutableDictionary alloc] init];
             @try {
-                [patch setObject:[tmpDict objectForKey:@"patch_name"] forKey:@"patch"];
-                [patch setObject:[tmpDict objectForKey:@"patch_ver"] forKey:@"version"];
+                [patch setObject:tmpDict[@"patch_name"] forKey:@"patch"];
+                [patch setObject:tmpDict[@"patch_ver"] forKey:@"version"];
                 [patch setObject:@"Third" forKey:@"type"];
-                [patch setObject:[NSString stringWithFormat:@"%@(%@)",[tmpDict objectForKey:@"patch_name"],[tmpDict objectForKey:@"patch_ver"]] forKey:@"description"];
+                [patch setObject:[NSString stringWithFormat:@"%@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]] forKey:@"description"];
                 [patch setObject:@"0" forKey:@"size"];
                 [patch setObject:@"Y" forKey:@"recommended"];
-                [patch setObject:[tmpDict objectForKey:@"patch_reboot"] forKey:@"restart"];
-                [patch setObject:[tmpDict objectForKey:@"puuid"] forKey:@"patch_id"];
-                [patch setObject:[tmpDict objectForKey:@"patch_reboot"] forKey:@"bundleID"];
+                [patch setObject:tmpDict[@"patch_reboot"] forKey:@"restart"];
+                [patch setObject:tmpDict[@"puuid"] forKey:@"patch_id"];
+                [patch setObject:tmpDict[@"bundle_id"] forKey:@"bundleID"];
                 [patchesNeeded addObject:patch];
             }
             @catch (NSException *exception) {
@@ -341,13 +374,13 @@ done:
 
 -(NSArray *)retrieveCustomPatchScanList
 {
-	NSArray  *scanListArray = NULL;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
     NSError *wsErr = nil;
-    scanListArray = [mpws getCustomPatchScanList:&wsErr];
+	NSArray  *scanListArray;
+    MPRESTfull *rest = [[MPRESTfull alloc] init];
+    scanListArray = [rest getCustomPatchScanListWithSeverity:nil error:&wsErr];
     if (wsErr) {
         qlerror(@"%@",[wsErr localizedDescription]);
-        return NULL;
+        return [NSArray array];
     }
     return scanListArray;
 }

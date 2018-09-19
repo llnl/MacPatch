@@ -1,0 +1,38 @@
+#!/bin/sh
+
+# ***************************************************************************************
+# PreFlight Script for MacPatch PlanB Installer
+# ver 1.0
+# Created By Charles Heizer
+# LLNL
+#
+#
+# ***************************************************************************************
+
+
+# ***************************************************************************************
+# Kill the running MP processes
+
+# Launch Daemons
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.planb.plist" ]; then	
+	/bin/launchctl remove gov.llnl.mp.planb
+	sleep 2
+	/bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.planb.plist
+	sleep 2
+	
+	rm /Library/LaunchDaemons/gov.llnl.mp.planb.plist
+fi
+
+# ***************************************************************************************
+# Pre-Deployment
+#
+		
+if [ -f "/usr/local/sbin/planb" ]; then
+	rm -f "/usr/local/sbin/planb"
+fi
+
+if [ -f "/usr/local/bin/mpPlanB" ]; then
+	rm -f "/usr/local/bin/mpPlanB"
+fi
+
+exit 0

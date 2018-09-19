@@ -1,7 +1,7 @@
 //
 //  NSDictionary+Helper
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -62,4 +62,30 @@ static NSString *urlEncode(id object)
 	}
 	return [parts componentsJoinedByString: @"&"];
 }
+
+
+- (id)objectForKey:(id)aKey default:(id)aDefault
+{
+	id ret = [self objectForKey: aKey];
+	if ( ret == nil ) {
+		return aDefault;
+	} else {
+		return ret;
+	}
+}
+
+- (BOOL)validKey:(NSString *)key
+{
+	BOOL success = NO;
+	id obj = self[key];
+	if ( obj != nil ) {
+		if ( obj != (id)[NSNull null] ) {
+			success = YES;
+		}
+	}
+	
+	return success;
+}
+
+
 @end

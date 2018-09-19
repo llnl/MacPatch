@@ -1,7 +1,7 @@
 //
 //  MPAsus.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -62,7 +62,7 @@
 
 - (NSArray *)scanForAppleUpdates;
 - (NSString *)getSizeFromDescription:(NSString *)aDesc;
-//- (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
+- (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
 
 - (void)scanAppleSoftwareUpdates:(NSArray *)approvedUpdates;
 - (void)installAppleSoftwareUpdates:(NSArray *)approvedUpdates;
@@ -70,7 +70,6 @@
 
 - (BOOL)downloadAppleUpdate:(NSString *)updateName;
 
-- (NSData *)installResultsToXML:(NSArray *)aInstalledPatches;
 - (NSArray *)installResultsToDictArray:(NSArray *)aInstalledPatches type:(NSString *)aType;
 
 // Third Party Updates Installs

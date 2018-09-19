@@ -1,7 +1,7 @@
 //
 //  MPAgentExecController.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,15 +25,19 @@
 
 #import "MPAgentExecController.h"
 #import "MacPatch.h"
+#import "MPSettings.h"
+
 #import <SystemConfiguration/SystemConfiguration.h>
-#import "MPAntiVirus.h"
 #include <sys/reboot.h>
 
-@interface MPAgentExecController (Private)
+@interface MPAgentExecController ()
+{
+    MPSettings *settings;
+}
 
-@property (nonatomic, readwrite, assign) int errorCode;
-@property (nonatomic, readwrite, retain) NSString *errorMsg;
-@property (nonatomic, readwrite, assign) int needsReboot;
+@property (nonatomic, assign, readwrite) int        errorCode;
+@property (nonatomic, strong, readwrite) NSString  *errorMsg;
+@property (nonatomic, assign, readwrite) int        needsReboot;
 
 // Web Services
 - (void)postInstallResults:(int)resultNo resultText:(NSString *)resultString task:(NSDictionary *)taskDict;
@@ -60,36 +64,27 @@
 @synthesize errorCode;
 @synthesize errorMsg;
 @synthesize needsReboot;
-@synthesize overrideRebootPatchInstalls;
 
-@synthesize _defaults;
-@synthesize _cuuid;
 @synthesize _appPid;
 @synthesize iLoadMode;
 @synthesize forceRun;
 @synthesize approvedPatches;
+
 @synthesize mp_SOFTWARE_DATA_DIR;
 
 - (id)init
 {
     self = [super init];
-    if (self) {
-        fm = [NSFileManager defaultManager];
-        MPDefaults *mpDefaults = [[MPDefaults alloc] init];
-        [self set_defaults:[mpDefaults defaults]];
-		[self set_cuuid:[MPSystemInfo clientUUID]];
-        mpAsus = [[MPAsus alloc] init];
-        mpDataMgr = [[MPDataMgr alloc] init];
+    if (self)
+    {
+        fm          = [NSFileManager defaultManager];
+        settings    = [MPSettings sharedInstance];
+        
+        mpAsus      = [[MPAsus alloc] init];
+        mpDataMgr   = [[MPDataMgr alloc] init];
+        
 		[self setILoadMode:NO];
 		[self setForceRun:NO];
-		[self setOverrideRebootPatchInstalls:NO];
-
-		// Add Debug Output
-		if ([_defaults hasKey:@"MPAgentExecDebug"]) {
-			if ([[_defaults objectForKey:@"MPAgentExecDebug"] isEqualTo:@"1"]) {
-				lcl_configure_by_name("*", lcl_vDebug);
-			}
-		}
     }
     return self;
 }
@@ -97,50 +92,37 @@
 - (id)initForBundleUpdate
 {
     self = [super init];
-    if (self) {
-        fm = [NSFileManager defaultManager];
-        MPDefaults *mpDefaults = [[MPDefaults alloc] init];
-        [self set_defaults:[mpDefaults defaults]];
-		[self set_cuuid:[MPSystemInfo clientUUID]];
-        mpAsus = [[MPAsus alloc] init];
-        mpDataMgr = [[MPDataMgr alloc] init];
+    if (self)
+    {
+        fm          = [NSFileManager defaultManager];
+        settings    = [MPSettings sharedInstance];
+        
+        mpAsus      = [[MPAsus alloc] init];
+        mpDataMgr   = [[MPDataMgr alloc] init];
+        
 		[self setILoadMode:NO];
 		[self setForceRun:NO];
         [self setErrorCode:-1];
         [self setErrorMsg:@""];
-		[self setOverrideRebootPatchInstalls:NO];
     }
     return self;
 }
 
--(void)overRideDefaults:(NSDictionary *)aDict
-{
-	NSMutableDictionary *_d = [NSMutableDictionary dictionaryWithDictionary:_defaults];
-	for (id key in [aDict allKeys]) {
-		[_d setObject:[aDict objectForKey:key] forKey:key];
-	}
-	[self set_defaults:(NSDictionary *)_d];
-}
-
-// Calls: scanForPatchesWithFilter:(int)aFilter
 - (void)scanForPatches
 {
 	[self scanForPatchesWithFilter:0 byPassRunning:NO];
 }
 
-// Calls: scanForPatchesWithFilter:(int)aFilter byPassRunning:BOOL
 - (void)scanForPatchesWithFilter:(int)aFilter
 {
     [self scanForPatchesWithFilter:aFilter byPassRunning:NO];
 }
 
-// Calls: canForPatchesWithFilterWaitAndForce:aFilter byPassRunning:BOOL
 - (void)scanForPatchesWithFilter:(int)aFilter byPassRunning:(BOOL)aByPass
 {
     [self scanForPatchesWithFilterWaitAndForce:aFilter byPassRunning:aByPass];
 }
 
-// Calls: scanForPatchesWithFilterWaitAndForceWithCritical:aFilter byPassRunning:BOOL critical:BOOL
 - (void)scanForPatchesWithFilterWaitAndForce:(int)aFilter byPassRunning:(BOOL)aByPass
 {
     [self scanForPatchesWithFilterWaitAndForceWithCritical:aFilter byPassRunning:aByPass critical:NO];
@@ -149,7 +131,8 @@
 - (void)scanForPatchesWithFilterWaitAndForceWithCritical:(int)aFilter byPassRunning:(BOOL)aByPass critical:(BOOL)aCritical
 {
     // Filter - 0 = All,  1 = Apple, 2 = Third
-    if (forceRun == NO) {
+    if (forceRun == NO)
+    {
         if (aByPass == YES) {
             int w = 0;
             while ([self isTaskRunning:kMPPatchSCAN] == YES) {
@@ -193,17 +176,16 @@
     BOOL exists = NO;
     
     // Get Patch Group Patches
-    MPWebServices *mpws = [[MPWebServices alloc] init];
     NSError       *rmErr = nil;
-    NSError       *wsErr = nil;
-    NSDictionary  *patchGroupPatches;
+    NSDictionary  *patchGroupPatches = nil;
     
-    if (aCritical == YES) {
-        patchGroupPatches = [mpws getCriticalPatchGroupContent:&wsErr];
+    if (aCritical == YES)
+    {
+        patchGroupPatches = [self wsCriticalPatchGroupContent];
     }
-	else
-	{
-        
+    else
+    {
+        /* CEH
         BOOL useLocalPatchesFile = NO;
         NSString *patchGroupRevLocal = [MPClientInfo patchGroupRev];
         if (![patchGroupRevLocal isEqualToString:@"-1"]) {
@@ -228,6 +210,9 @@
                 goto done;
             }
         }
+         */
+        
+        patchGroupPatches = [self wsPatchGroupContent];
     }
 
     if (!patchGroupPatches) {
@@ -235,11 +220,17 @@
         goto done;
     }
     
+    // Seperate patch arrays, based on filter settings
+    // 0 = All, 1 = Apple, 2 = Custom
     if ((aFilter == 0) || (aFilter == 1)) {
-        approvedApplePatches  = [patchGroupPatches objectForKey:@"AppleUpdates"];
+        approvedApplePatches = [patchGroupPatches objectForKey:@"AppleUpdates"];
+		logit(lcl_vInfo,@"Approved %d Apple Patches.",(int)approvedApplePatches.count);
+        logit(lcl_vDebug,@"approvedApplePatches: %@",approvedApplePatches);
     }
     if ((aFilter == 0) || (aFilter == 2)) {
         approvedCustomPatches = [patchGroupPatches objectForKey:@"CustomUpdates"];
+		logit(lcl_vInfo,@"Approved %d Custom Patches.",(int)approvedCustomPatches.count);
+        logit(lcl_vDebug,@"approvedCustomPatches: %@",approvedCustomPatches);
     }
     
     // Scan for Apple Patches
@@ -257,54 +248,50 @@
         applePatchesArray = nil;
         applePatchesArray = [mpAsus scanForAppleUpdates];
         
-        // post patches to web service
-        wsErr = nil;
-        [mpws postClientScanDataWithType:applePatchesArray type:0 error:&wsErr];
-        if (wsErr) {
-            logit(lcl_vError,@"Scan results posted to webservice returned false.");
-            logit(lcl_vError,@"%@",wsErr.localizedDescription);
-        } else {
-            logit(lcl_vInfo,@"Scan results posted to webservice.");
-        }
+        // post found apple patches to web service
         
+        if ([self wsPostPatchScanResults:applePatchesArray type:1]) {
+            logit(lcl_vInfo,@"Scan results posted to webservice.");
+        } else {
+            logit(lcl_vError,@"Scan results posted to webservice returned false.");
+        }
+		
         // Process patches
         if (!applePatchesArray)
-		{
+        {
             logit(lcl_vInfo,@"The scan results for ASUS scan were nil.");
         }
-		else
-		{
+        else
+        {
             // If no items in array, lets bail...
             if ([applePatchesArray count] == 0 )
-			{
+            {
                 logit(lcl_vInfo,@"No Apple updates found.");
                 sleep(1);
             }
-			else
-			{
+            else
+            {
                 // We have Apple patches, now add them to the array of approved patches
-                
                 // If no items in array, lets bail...
                 if ([approvedApplePatches count] == 0 )
-				{
-                    logit(lcl_vInfo,@"No apple updates found for \"%@\" patch group.",[_defaults objectForKey:@"PatchGroup"]);
+                {
+                    logit(lcl_vInfo,@"No apple updates have been approved.");
                 }
-				else
-				{
+                else
+                {
                     // Build Approved Patches
                     logit(lcl_vInfo,@"Building approved patch list...");
 					NSDictionary *_applePatch;
 					NSDictionary *_applePatchApproved;
+					
                     for (int i=0; i<[applePatchesArray count]; i++)
-					{
-						_applePatch = [applePatchesArray objectAtIndex:i];
-						
+                    {
+                        _applePatch = [applePatchesArray objectAtIndex:i];
                         for (int x=0;x < [approvedApplePatches count]; x++)
-						{
-							_applePatchApproved = [approvedApplePatches objectAtIndex:x];
-							
+                        {
+                            _applePatchApproved = [approvedApplePatches objectAtIndex:x];
                             if ([_applePatchApproved[@"name"] isEqualTo:_applePatch[@"patch"]])
-							{
+                            {
 								// Check to see if the approved apple patch requires a user
 								// to install the patch, right now this is for 10.13 os updates
 								if ([_applePatchApproved objectForKey:@"user_install"])
@@ -318,21 +305,23 @@
 									}
 								}
 								
-                                logit(lcl_vInfo,@"Approved update %@",[_applePatch objectForKey:@"patch"]);
-                                logit(lcl_vDebug,@"Approved: %@",_applePatchApproved);
 								
+                                logit(lcl_vInfo,@"Approved update %@",_applePatch[@"patch"]);
+                                logit(lcl_vDebug,@"Approved: %@",_applePatchApproved);
+                                
                                 tmpDict = [[NSMutableDictionary alloc] init];
-                                [tmpDict setObject:[_applePatch objectForKey:@"patch"] forKey:@"patch"];
-                                [tmpDict setObject:[_applePatch objectForKey:@"description"] forKey:@"description"];
-                                [tmpDict setObject:[_applePatch objectForKey:@"restart"] forKey:@"restart"];
-                                [tmpDict setObject:[_applePatch objectForKey:@"version"] forKey:@"version"];
-                                [tmpDict setObject:[_applePatchApproved objectForKey:@"severity"] forKey:@"severity"];
+                                
+                                [tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+                                [tmpDict setObject:_applePatch[@"description"] forKey:@"description"];
+                                [tmpDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+                                [tmpDict setObject:_applePatch[@"version"] forKey:@"version"];
+                                [tmpDict setObject:_applePatchApproved[@"severity"] forKey:@"severity"];
                                 
                                 if ([_applePatchApproved objectForKey:@"hasCriteria"])
-								{
+                                {
                                     [tmpDict setObject:[_applePatchApproved objectForKey:@"hasCriteria"] forKey:@"hasCriteria"];
-                                    if ([_applePatchApproved[@"hasCriteria"] boolValue] == YES)
-									{
+                                    if ([[_applePatchApproved objectForKey:@"hasCriteria"] boolValue] == YES)
+                                    {
                                         if (_applePatchApproved[@"criteria_pre"] && [_applePatchApproved[@"criteria_pre"] count] > 0)
 										{
                                             [tmpDict setObject:_applePatchApproved[@"criteria_pre"] forKey:@"criteria_pre"];
@@ -343,8 +332,10 @@
                                         }
                                     }
                                 }
+                                
                                 [tmpDict setObject:@"Apple" forKey:@"type"];
-                                [tmpDict setObject:[[approvedApplePatches objectAtIndex:i] objectForKey:@"patch_install_weight"] forKey:@"patch_install_weight"];
+                                [tmpDict setObject:_applePatchApproved[@"patch_install_weight"] forKey:@"patch_install_weight"];
+                                
                                 logit(lcl_vDebug,@"Apple Patch Dictionary Added: %@",tmpDict);
                                 [approvedUpdatesArray addObject:tmpDict];
                                 break;
@@ -360,33 +351,50 @@
     if ((aFilter == 0) || (aFilter == 2))
     {
         logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities...");
+        // scanForCustomUpdates posts results to web service
         customPatchesArray = (NSMutableArray *)[mpAsus scanForCustomUpdates];
         
-        logit(lcl_vDebug,@"Custom Patches Needed: %@",customPatchesArray);
-        logit(lcl_vDebug,@"Approved Custom Patches: %@",approvedCustomPatches);
+        // post found custom patches to web service
+        /*
+        if ([self wsPostPatchScanResults:customPatchesArray type:1]) {
+            logit(lcl_vInfo,@"Scan results posted to webservice.");
+        } else {
+            logit(lcl_vError,@"Scan results posted to webservice returned false.");
+        }
+        */
+        
+        logit(lcl_vInfo,@"Custom Patches Needed: %@",customPatchesArray);
+        logit(lcl_vInfo,@"Approved Custom Patches: %@",approvedCustomPatches);
         
         // Filter List of Patches containing only the approved patches
         logit(lcl_vInfo,@"Building approved patch list...");
-        for (int i=0; i<[customPatchesArray count]; i++) {
+        for (int i=0; i<[customPatchesArray count]; i++)
+        {
             customPatch	= [customPatchesArray objectAtIndex:i];
-            for (int x=0;x < [approvedCustomPatches count]; x++) {
-                approvedPatch	= [approvedCustomPatches objectAtIndex:x];
+            for (int x=0;x < [approvedCustomPatches count]; x++)
+            {
+                
+                approvedPatch = [approvedCustomPatches objectAtIndex:x];
+                
+                logit(lcl_vInfo,@"[approvedPatch]%@ = [customPatch]%@",approvedPatch,customPatch);
+                
                 if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]])
                 {
                     logit(lcl_vInfo,@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);
                     logit(lcl_vDebug,@"Approved [customPatch]: %@",customPatch);
                     logit(lcl_vDebug,@"Approved [approvedPatch]: %@",approvedPatch);
                     tmpDict = [[NSMutableDictionary alloc] init];
-                    [tmpDict setObject:[customPatch objectForKey:@"patch"] forKey:@"patch"];
-                    [tmpDict setObject:[customPatch objectForKey:@"description"] forKey:@"description"];
-                    [tmpDict setObject:[customPatch objectForKey:@"restart"] forKey:@"restart"];
-                    [tmpDict setObject:[customPatch objectForKey:@"version"] forKey:@"version"];
-                    [tmpDict setObject:[approvedPatch objectForKey:@"severity"] forKey:@"severity"];
-                    [tmpDict setObject:approvedPatch forKey:@"patches"];
-                    [tmpDict setObject:[customPatch objectForKey:@"patch_id"] forKey:@"patch_id"];
+                    
                     [tmpDict setObject:@"Third" forKey:@"type"];
-                    [tmpDict setObject:[customPatch objectForKey:@"bundleID"] forKey:@"bundleID"];
-                    [tmpDict setObject:[approvedPatch objectForKey:@"patch_install_weight"] forKey:@"patch_install_weight"];
+                    [tmpDict setObject:customPatch[@"patch"] forKey:@"patch"];
+                    [tmpDict setObject:customPatch[@"description"] forKey:@"description"];
+                    [tmpDict setObject:customPatch[@"restart"] forKey:@"restart"];
+                    [tmpDict setObject:customPatch[@"version"] forKey:@"version"];
+                    [tmpDict setObject:approvedPatch[@"severity"] forKey:@"severity"];
+                    [tmpDict setObject:approvedPatch forKey:@"patches"];
+                    [tmpDict setObject:customPatch[@"patch_id"] forKey:@"patch_id"];
+                    [tmpDict setObject:customPatch[@"bundleID"] forKey:@"bundleID"];
+                    [tmpDict setObject:approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
                     
                     logit(lcl_vDebug,@"Custom Patch Dictionary Added: %@",tmpDict);
                     [approvedUpdatesArray addObject:tmpDict];
@@ -422,8 +430,7 @@ done:
 	{
 		[userInstallApplePatches writeToFile:MP_CRITICAL_UPDATES_PLIST atomically:NO];
 	}
-	
-	
+    
     // Re-write file with new patch info
     if (approvedUpdatesArray && [approvedUpdatesArray count] > 0)
     {
@@ -435,16 +442,16 @@ done:
             [NSKeyedArchiver archiveRootObject:approvedUpdatesArray toFile:PATCHES_NEEDED_PLIST];
         }
     }
-	else
-	{
+    else
+    {
         if (aCritical == YES) {
             [NSKeyedArchiver archiveRootObject:[NSArray array] toFile:PATCHES_CRITICAL_PLIST];
         } else {
             [NSKeyedArchiver archiveRootObject:[NSArray array] toFile:PATCHES_NEEDED_PLIST];
         }
     }
-	
-    if ([_defaults objectForKey:@"PreStageUpdates"])
+    
+    if (settings.agent.preStagePatches)
     {
         logit(lcl_vInfo,@"PreStageUpdates is enabled.");
         if ([approvedUpdatesArray count] >= 1)
@@ -480,17 +487,21 @@ done:
                         exists = [fm fileExistsAtPath:stageDir isDirectory:&isDir];
                         if (exists)
                         {
-                            if (isDir) {
+                            if (isDir)
+                            {
                                 if ([fm fileExistsAtPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]]])
                                 {
                                     if ([[[_p objectForKey:@"hash"] uppercaseString] isEqualTo:[[crypto md5HashForFile:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]]] uppercaseString]])
                                     {
                                         qlinfo(@"Patch %@ has already been staged.",[_patch objectForKey:@"patch"]);
                                         continue;
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         dlErr = nil;
                                         [fm removeItemAtPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]] error:&dlErr];
-                                        if (dlErr) {
+                                        if (dlErr)
+                                        {
                                             qlerror(@"Unable to remove bad staged patch file %@",[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]]);
                                             qlerror(@"Can not stage %@",[_patch objectForKey:@"patch"]);
                                             continue;
@@ -498,21 +509,27 @@ done:
                                     }
                                     
                                 }
-                            } else {
+                            }
+                            else
+                            {
                                 // Is not a dir but is a file, just remove it. It's in our space
                                 dlErr = nil;
                                 [fm removeItemAtPath:stageDir error:&dlErr];
-                                if (dlErr) {
+                                if (dlErr)
+                                {
                                     qlerror(@"Unable to remove bad staged directory/file %@",stageDir);
                                     qlerror(@"Can not stage %@",[_patch objectForKey:@"patch"]);
                                     continue;
                                 }
                             }
-                        } else {
+                        }
+                        else
+                        {
                             // Stage dir does not exists, create it.
                             dlErr = nil;
                             [fm createDirectoryAtPath:stageDir withIntermediateDirectories:YES attributes:nil error:&dlErr];
-                            if (dlErr) {
+                            if (dlErr)
+                            {
                                 qlerror(@"%@",dlErr.localizedDescription);
                                 qlerror(@"Can not stage %@",[_patch objectForKey:@"patch"]);
                                 continue; // Error creating stage patch dir. Can not use it.
@@ -522,14 +539,16 @@ done:
                         qlinfo(@"Download patch from: %@",downloadURL);
                         dlErr = nil;
                         dlPatchLoc = [mpAsus downloadUpdate:downloadURL error:&dlErr];
-                        if (dlErr) {
+                        if (dlErr)
+                        {
                             qlerror(@"%@",dlErr.localizedDescription);
                         }
                         qldebug(@"Downloaded patch to %@",dlPatchLoc);
                         
                         dlErr = nil;
                         [fm moveItemAtPath:dlPatchLoc toPath:[stageDir stringByAppendingPathComponent:[[_p objectForKey:@"url"] lastPathComponent]] error:&dlErr];
-                        if (dlErr) {
+                        if (dlErr)
+                        {
                             qlerror(@"%@",dlErr.localizedDescription);
                             continue; // Error creating stage patch dir. Can not use it.
                         }
@@ -545,14 +564,14 @@ done:
     }
     
     //[approvedUpdatesArray writeToFile:@"/tmp/approvedUpdates.plist" atomically:NO];
-    
     // Added a global notification to update image icon of MPClientStatus
     if (aCritical == NO)
-	{
+    {
         // We only update notification if a normal scan has run
         [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRefreshStatusIconNotification" object:nil];
         [self setApprovedPatches:[NSArray arrayWithArray:approvedUpdatesArray]];
     }
+    
     [self removeTaskRunning:kMPPatchSCAN];
     logit(lcl_vInfo,@"Patch Scan Completed.");
 }
@@ -561,17 +580,13 @@ done:
 {
 	NSMutableArray      *approvedUpdatesArray = [[NSMutableArray alloc] init];
 	NSMutableDictionary *tmpDict;
-
+    NSDictionary        *patchGroupPatches;
+    
     // Get Patch Group Patches
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    NSError *wsErr = nil;
-    NSDictionary *patchGroupPatches = [mpws getPatchGroupContent:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"%@",wsErr.localizedDescription);
-		return;
-    }
-
-	if (!patchGroupPatches) {
+    patchGroupPatches = [self wsPatchGroupContent];
+    
+	if (!patchGroupPatches)
+    {
 		logit(lcl_vError,@"There was a issue getting the approved patches for the patch group, scan will exit.");
 		return;
 	}
@@ -595,14 +610,14 @@ done:
             if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]]) {
                 logit(lcl_vInfo,@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);
                 tmpDict = [[NSMutableDictionary alloc] init];
-                [tmpDict setObject:[customPatch objectForKey:@"patch"] forKey:@"patch"];
-                [tmpDict setObject:[customPatch objectForKey:@"description"] forKey:@"description"];
-                [tmpDict setObject:[customPatch objectForKey:@"restart"] forKey:@"restart"];
-                [tmpDict setObject:[customPatch objectForKey:@"version"] forKey:@"version"];
+                [tmpDict setObject:customPatch[@"patch"] forKey:@"patch"];
+                [tmpDict setObject:customPatch[@"description"] forKey:@"description"];
+                [tmpDict setObject:customPatch[@"restart"] forKey:@"restart"];
+                [tmpDict setObject:customPatch[@"version"] forKey:@"version"];
                 [tmpDict setObject:approvedPatch forKey:@"patches"];
-                [tmpDict setObject:[customPatch objectForKey:@"patch_id"] forKey:@"patch_id"];
-                [tmpDict setObject:@"Third" forKey:@"type"];
-                [tmpDict setObject:[customPatch objectForKey:@"bundleID"] forKey:@"bundleID"];
+                [tmpDict setObject:customPatch[@"patch_id"] forKey:@"patch_id"];
+                [tmpDict setObject:customPatch[@"bundleID"] forKey:@"bundleID"];
+				[tmpDict setObject:@"Third" forKey:@"type"];
 
                 logit(lcl_vDebug,@"Custom Patch Dictionary Added: %@",tmpDict);
                 [approvedUpdatesArray addObject:tmpDict];
@@ -616,6 +631,64 @@ done:
     logit(lcl_vInfo,@"Patch Scan Completed.");
 }
 
+- (void)scanForPatchUsingBundleIDAlt:(NSString *)aBundleID error:(NSError **)error
+{
+	NSMutableArray      *approvedUpdatesArray = [NSMutableArray new];
+	NSMutableDictionary *tmpDict;
+	
+	// Get Patch Data For BundleID
+	// Get patch data from web service based using bundle id
+	MPRESTfull *mprest = [[MPRESTfull alloc] init];
+	NSError *err = nil;
+	NSDictionary *patchForBundleID = [mprest getPatchForBundleID:aBundleID error:&err];
+	if (err) {
+		logit(lcl_vError,@"%@",err.localizedDescription);
+		*error = err;
+		return;
+	}
+	
+	if (!patchForBundleID) {
+		logit(lcl_vError,@"There was a issue getting the approved patch data for the bundle id, scan will exit.");
+		return;
+	}
+	
+	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities...");
+	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities for %@", aBundleID);
+	NSMutableArray *customPatchesFound = (NSMutableArray *)[mpAsus scanForCustomUpdateUsingBundleID:aBundleID];
+	
+	logit(lcl_vDebug,@"Custom Patches Needed: %@",customPatchesFound);
+	logit(lcl_vDebug,@"Approved Patches: %@",patchForBundleID);
+	
+	// Filter List of Patches containing only the approved patches
+	NSDictionary *customPatch, *approvedPatch;
+	logit(lcl_vInfo,@"Building approved patch list...");
+	for (int i=0; i < [customPatchesFound count]; i++)
+	{
+		customPatch	= [customPatchesFound objectAtIndex:i];
+		if ([customPatch[@"patch_id"] isEqualTo:patchForBundleID[@"puuid"]])
+		{
+			logit(lcl_vInfo,@"Patch %@ approved for update.",customPatch[@"patch"]);
+			tmpDict = [[NSMutableDictionary alloc] init];
+			[tmpDict setObject:customPatch[@"patch"] forKey:@"patch"];
+			[tmpDict setObject:customPatch[@"description"] forKey:@"description"];
+			[tmpDict setObject:customPatch[@"restart"] forKey:@"restart"];
+			[tmpDict setObject:customPatch[@"version"] forKey:@"version"];
+			[tmpDict setObject:customPatch[@"patch_id"] forKey:@"patch_id"];
+			[tmpDict setObject:customPatch[@"bundleID"] forKey:@"bundleID"];
+			[tmpDict setObject:patchForBundleID forKey:@"patchData"];
+			
+			[approvedUpdatesArray addObject:tmpDict];
+			tmpDict = nil;
+			break;
+		}
+
+	}
+	
+	logit(lcl_vDebug,@"Approved Updates %@",approvedUpdatesArray);
+	logit(lcl_vInfo,@"Patch Scan Completed.");
+	return;
+}
+
 -(void)scanForPatchesAndUpdate
 {
     [self scanForPatchesAndUpdateWithFilterCritical:0 critical:NO];
@@ -626,12 +699,7 @@ done:
     [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:NO];
 }
 
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical
-{
-	return [self scanForPatchesAndUpdateWithFilterCritical:aFilter critical:aCritical stayAliveForProvisioning:NO];
-}
-
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical stayAliveForProvisioning:(BOOL)stayAlive
+-(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
 {
 	if ([self isTaskRunning:kMPPatchUPDATE]) {
 		logit(lcl_vInfo,@"Scan and update patches is already running. Now exiting.");
@@ -639,56 +707,6 @@ done:
 	} else {
 		[self writeTaskRunning:kMPPatchUPDATE];
 	}
-<<<<<<< HEAD
-=======
-	
-	// Check for console user
-	logit(lcl_vInfo, @"Checking for any logged in users.");
-	BOOL hasConsoleUserLoggedIn = TRUE;
-	@try
-	{
-		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
-		if (!hasConsoleUserLoggedIn)
-		{
-			NSError *fileErr = nil;
-			[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
-			if (fileErr)
-			{
-				logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
-			}
-			else
-			{
-				// No need to continue, MPLoginAgent will perform the updates
-				// Since no user is logged in.
-				if (stayAlive == YES)
-				{
-					// Wait until system is logged out.
-					while ([self isLocalUserLoggedIn]) {
-						[NSThread sleepForTimeInterval:1.0];
-					}
-					
-					// Add a delay to allow MPLoginAgent to Launch
-					[NSThread sleepForTimeInterval:10.0];
-					
-					BOOL loginAgentIsRunning = YES;
-					while (loginAgentIsRunning == YES)
-					{
-						[NSThread sleepForTimeInterval:2.0];
-						if (![self isloginAgentRunning])
-						{
-							break;
-						}
-					}
-				}
-				
-				return;
-			}
-		}
-	}
-	@catch (NSException * e) {
-		logit(lcl_vInfo, @"Error getting console user status. %@",e);
-	}
->>>>>>> 43e4ce0cf71a0502ee6aa77e5011429052a3c07b
 
 	// Filter - 0 = All,  1 = Apple, 2 = Third
 	NSArray *updatesArray = nil;
@@ -701,9 +719,7 @@ done:
         // Critical
         // Critical updates are allways written to a file
         updateFilePath = [NSString stringWithString:PATCHES_CRITICAL_PLIST];
-    }
-	else
-	{
+    } else {
         // Non Critical
         if ([fm fileExistsAtPath:updateFilePath])
         {
@@ -757,19 +773,10 @@ done:
     logit(lcl_vInfo, @"OS Full Info: (%@)",[MPSystemInfo osVersionInfo]);
     logit(lcl_vInfo, @"OS Info: (%@)",_osType);
 	if ([_osType isEqualToString:@"Mac OS X"])
-	{
-		if ([_defaults objectForKey:@"AllowClient"])
-		{
-
-            NSNumber *AllowClientVal = [NSNumber numberWithInt:1];
-            if([[_defaults objectForKey:@"AllowClient"] isKindOfClass:[NSString class]])
-            {
-                AllowClientVal = [NSNumber numberWithInteger:[[_defaults objectForKey:@"AllowClient"] integerValue]];
-            } else if ([[_defaults objectForKey:@"AllowClient"] isKindOfClass:[NSNumber class]]) {
-                AllowClientVal = [_defaults objectForKey:@"AllowClient"];
-            }
-
-			if ([AllowClientVal isEqualToNumber:[NSNumber numberWithInt:0]]) {
+    {
+		if (settings.agent.patchClient)
+        {
+			if (settings.agent.patchClient == 0) {
 				logit(lcl_vInfo,@"Host is a Mac OS X Client and AllowClient property is set to false. No updates will be applied.");
 				[self removeTaskRunning:kMPPatchUPDATE];
                 return;
@@ -779,19 +786,10 @@ done:
 
 	logit(lcl_vInfo, @"Validating server install status.");
 	if ([_osType isEqualToString:@"Mac OS X Server"])
-	{
-		if ([_defaults objectForKey:@"AllowServer"])
-		{
-
-            NSNumber *AllowServerVal = [NSNumber numberWithInt:0];
-            if([[_defaults objectForKey:@"AllowServer"] isKindOfClass:[NSString class]])
-            {
-                AllowServerVal = [NSNumber numberWithInteger:[[_defaults objectForKey:@"AllowServer"] integerValue]];
-            } else if ([[_defaults objectForKey:@"AllowServer"] isKindOfClass:[NSNumber class]]) {
-                AllowServerVal = [_defaults objectForKey:@"AllowServer"];
-            }
-
-			if ([AllowServerVal isEqualToNumber:[NSNumber numberWithInt:0]]) {
+    {
+		if (settings.agent.patchServer)
+        {
+			if (settings.agent.patchServer == 0) {
 				logit(lcl_vInfo,@"Host is a Mac OS X Server and AllowServer property is set to false. No updates will be applied.");
 				[self removeTaskRunning:kMPPatchUPDATE];
                 return;
@@ -815,33 +813,25 @@ done:
 	BOOL hasConsoleUserLoggedIn = TRUE;
 	@try {
 		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
-		if (overrideRebootPatchInstalls == NO)
+		if (!hasConsoleUserLoggedIn)
 		{
-			if (!hasConsoleUserLoggedIn)
+			NSError *fileErr = nil;
+			[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+			if (fileErr)
 			{
-				NSError *fileErr = nil;
-				[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
-				if (fileErr)
-				{
-					logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
-				}
-				else
-				{
-					// No need to continue, MPLoginAgent will perform the updates
-					// Since no user is logged in.
-					return;
-				}
+				logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
 			}
-		}
-		else
-		{
-			logit(lcl_vInfo, @"Override reboot patch installs has been enabled. Updates will be applied by MPAgentExec.");
+			else
+			{
+				// No need to continue, MPLoginAgent will perform the updates
+				// Since no user is logged in.
+				return;
+			}
 		}
 	}
 	@catch (NSException * e) {
 		logit(lcl_vInfo, @"Error getting console user status. %@",e);
 	}
-	
 
     // -------------------------------------------
     // Begin Patching Process
@@ -853,9 +843,6 @@ done:
 	NSArray				*patchPatchesArray;
 	NSString			*downloadURL;
 	NSError				*err;
-	
-	MPCrypto 			*mpCrypto = [[MPCrypto alloc] init];
-	SecKeyRef			pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
     
     // Staging
     NSString *stageDir;
@@ -866,25 +853,21 @@ done:
 	int installedPatchesNeedingReboot = 0;
 
 	logit(lcl_vInfo, @"Begin installing patches.");
-    for (i = 0; i < [updatesArray count]; i++)
-	{
+    for (i = 0; i < [updatesArray count]; i++) {
 		// Create/Get Dictionary of Patch to install
 		patch = nil;
 		patch = [NSDictionary dictionaryWithDictionary:[updatesArray objectAtIndex:i]];
 
         qlinfo(@"Patch: %@",patch);
-		if (overrideRebootPatchInstalls == NO)
-		{
-			if (hasConsoleUserLoggedIn == YES)
-			{
-				// Check if patch needs a reboot
-				if ([[patch objectForKey:@"restart"] stringToBoolValue] == YES) {
-					logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
-					launchRebootWindow++;
-					continue;
-				}
-			}
-		}
+
+		if (hasConsoleUserLoggedIn == YES) {
+            // Check if patch needs a reboot
+            if ([[patch objectForKey:@"restart"] stringToBoolValue] == YES) {
+                logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
+                launchRebootWindow++;
+                continue;
+            }
+        }
         /* Not completed ...
          if ([self checkPatchPreAndPostForRebootRequired:patchPatchesArray]) {
          logit(lcl_vInfo,@"One or more of the pre & post installs requires a reboot, this patch will be installed on logout.");
@@ -897,36 +880,18 @@ done:
         // -------------------------------------------
         installResult = -1;
 
-        if ([patch[@"type"] isEqualTo:@"Third"] && (aFilter == 0 || aFilter == 2))
+        if ([[patch objectForKey:@"type"] isEqualTo:@"Third"] && (aFilter == 0 || aFilter == 2))
         {
-            logit(lcl_vInfo,@"Starting install for %@",patch[@"patch"]);
+            logit(lcl_vInfo,@"Starting install for %@",[patch objectForKey:@"patch"]);
 
 			if (iLoadMode == YES) {
-				printf("Begin: %s\n", [patch[@"patch"] cString]);
+				printf("Begin: %s\n", [[patch objectForKey:@"patch"] cString]);
 			}
             
             // Get all of the patches, main and subs
             // This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
-			NSDictionary *_curPatch = [patch objectForKey:@"patches"]; //Patch Install Dict
-            patchPatchesArray = [NSArray arrayWithArray:[patch[@"patches"] objectForKey:@"patches"]];
+            patchPatchesArray = [NSArray arrayWithArray:[[patch objectForKey:@"patches"] objectForKey:@"patches"]];
             logit(lcl_vDebug,@"Current patch has total patches associated with it %ld", ([patchPatchesArray count]-1));
-			
-			// Verify Patch Signature before proceeding
-			// Verify task Has SW Signature
-			/*
-			if (![_curPatch objectForKey:@"patch_sig"]) {
-				logit(lcl_vError,@"%@ patch has no signature, will not install.",patch[@"patch"]);
-				continue;
-			}
-			
-			// Verify Signature for patch
-			if (![self isValidPatch:_curPatch]) {
-				logit(lcl_vError,@"Unable to verify signature for patch, %@ will not install.",patch[@"patch"]);
-				continue;
-			} else {
-				logit(lcl_vInfo,@"Signature was verfied for %@.",patch[@"patch"]);
-			}
-			 */
 
             NSString *dlPatchLoc; //Download location Path
             int patchIndex = 0;
@@ -952,6 +917,7 @@ done:
                     // -------------------------------------------
                     // Check to see if the patch has been staged
                     // -------------------------------------------
+                    MPCrypto *mpCrypto = [[MPCrypto alloc] init];
                     stageDir = [NSString stringWithFormat:@"%@/Data/.stage/%@",MP_ROOT_CLIENT,[patch objectForKey:@"patch_id"]];
                     if ([fm fileExistsAtPath:[stageDir stringByAppendingPathComponent:[[currPatchToInstallDict objectForKey:@"url"] lastPathComponent]]])
                     {
@@ -1017,8 +983,7 @@ done:
 
                 // *****************************
                 // Run PreInstall Script
-                if ([[currPatchToInstallDict objectForKey:@"preinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"preinst"] isEqualTo:@"NA"] == NO)
-				{
+                if ([[currPatchToInstallDict objectForKey:@"preinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"preinst"] isEqualTo:@"NA"] == NO) {
                     logit(lcl_vInfo,@"Begin pre install script.");
                     NSString *preInstScript = [[currPatchToInstallDict objectForKey:@"preinst"] decodeBase64AsString];
                     logit(lcl_vDebug,@"preInstScript=%@",preInstScript);
@@ -1078,10 +1043,10 @@ done:
                     continue;
                 }
 
-                // *****************************
+                // **********************************************************
                 // Run PostInstall Script
-                if ([[currPatchToInstallDict objectForKey:@"postinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"postinst"] isEqualTo:@"NA"] == NO)
-				{
+                // **********************************************************
+                if ([[currPatchToInstallDict objectForKey:@"postinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"postinst"] isEqualTo:@"NA"] == NO) {
                     logit(lcl_vInfo,@"Begin post install script.");
                     NSString *postInstScript = [[currPatchToInstallDict objectForKey:@"postinst"] decodeBase64AsString];
                     logit(lcl_vDebug,@"postInstScript=%@",postInstScript);
@@ -1096,30 +1061,28 @@ done:
                     mpScript = nil;
                 }
 
-                // *****************************
-                // Instal is complete, post result to web service
-
+                // **********************************************************
+                // Install is complete, post result to web service
+                // **********************************************************
                 @try
-				{
-                    MPWebServices *mpws = [[MPWebServices alloc] init];
-                    NSError *wsErr = nil;
-                    [mpws postPatchInstallResultsToWebService:[patch objectForKey:@"patch_id"] patchType:@"third" error:&wsErr];
+                {
+                    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch[@"patch_id"],@"third",settings.ccuid];
                     logit(lcl_vInfo,@"Posting patch (%@) install to web service.",[patch objectForKey:@"patch_id"]);
-                    if (wsErr) {
-                        logit(lcl_vError,@"%@", wsErr.localizedDescription);
-                    }
+                    [self postDataToWS:urlPath data:nil];
                 }
-                @catch (NSException *e) {
+                @catch (NSException *e)
+                {
                     logit(lcl_vError,@"%@", e);
                 }
 
-				if (iLoadMode == YES) {
+				if (iLoadMode == YES)
+                {
 					fprintf(stdout, "Completed: %s\n", [[patch objectForKey:@"patch"] cString]);
 				}
                 
-                // -------------------------------------------
+                // **********************************************************
                 // If staged, remove staged patch dir
-                // -------------------------------------------
+                // **********************************************************
                 if (usingStagedPatch)
                 {
                     if ([fm fileExistsAtPath:stageDir])
@@ -1199,8 +1162,10 @@ done:
                     goto instResult;
                 }
 
-                if ([patch objectForKey:@"criteria_post"]) {
+                if ([patch objectForKey:@"criteria_post"])
+				{
                     logit(lcl_vInfo,@"Processing post-install criteria.");
+					
                     for (i=0;i<[[patch objectForKey:@"criteria_post"] count];i++)
                     {
                         criteriaDictPost = [[patch objectForKey:@"criteria_post"] objectAtIndex:i];
@@ -1239,13 +1204,9 @@ done:
             // Post the results to web service
             @try
             {
-                MPWebServices *mpws = [[MPWebServices alloc] init];
-                NSError *wsErr = nil;
-                [mpws postPatchInstallResultsToWebService:[patch objectForKey:@"patch"] patchType:@"apple" error:&wsErr];
-                logit(lcl_vInfo,@"Posting patch (%@) install to web service.",[patch objectForKey:@"patch"]);
-                if (wsErr) {
-                    logit(lcl_vError,@"%@", wsErr.localizedDescription);
-                }
+                NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch[@"patch"],@"apple",settings.ccuid];
+                logit(lcl_vInfo,@"Posting patch (%@) install to web service.",[patch objectForKey:@"patch_id"]);
+                [self postDataToWS:urlPath data:nil];
             }
             @catch (NSException *e)
             {
@@ -1277,27 +1238,30 @@ done:
     logit(lcl_vDebug,@"Number of installed patches needing a reboot %d.", installedPatchesNeedingReboot);
 	if (installedPatchesNeedingReboot > 0)
     {
-        if (iLoadMode == YES) {
-			//logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
-			logit(lcl_vInfo,@"Patches have been installed that require a reboot. System is now rebooting.");
-			[self removeTaskRunning:kMPPatchUPDATE];
-			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+        if (iLoadMode == YES)
+        {
+			logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
+			goto done;
 		}
 		if (hasConsoleUserLoggedIn == NO)
-		{
-			if ([_defaults objectForKey:@"Reboot"]) {
-				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
+        {
+			if (settings.agent.reboot)
+            {
+				if (settings.agent.reboot == 1)
+                {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					//int rb = 0;
-					//rb = reboot(RB_AUTOBOOT);
 					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
-				} else {
+				}
+                else
+                {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					goto done;
 				}
 
 			}
-		} else {
+		}
+        else
+        {
             logit(lcl_vDebug,@"Console user found.");
         }
 	}
@@ -1306,21 +1270,21 @@ done:
     {
 		logit(lcl_vInfo,@"Patches that require reboot need to be installed. Opening reboot dialog now.");
         // 10.9
-        NSString *_atFile = MP_AUTHRUN_FILE;
         NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
 		NSString *_rbText = @"reboot";
         // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
         NSDictionary *rebootPlist = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"reboot"];
         [rebootPlist writeToFile:_rbFile atomically:YES];
-        [_rbText writeToFile:_atFile atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        [_rbText writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
         NSDictionary *_fileAttr =  [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedLong:0777],@"NSFilePosixPermissions",nil];
 		[fm setAttributes:_fileAttr ofItemAtPath:_rbFile error:NULL];
-        [fm setAttributes:_fileAttr ofItemAtPath:_atFile error:NULL];
+        [fm setAttributes:_fileAttr ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
 	}
 
 done:
     // Added a global notification to update image icon of MPClientStatus
     [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRefreshStatusIconNotification" object:nil];
+    
 	[self removeTaskRunning:kMPPatchUPDATE];
 }
 
@@ -1394,9 +1358,12 @@ done:
 	logit(lcl_vInfo, @"Validating client install status.");
 	NSString *_osType = nil;
 	_osType = [[MPSystemInfo osVersionInfo] objectForKey:@"ProductName"];
-	if ([_osType isEqualToString:@"Mac OS X"]) {
-		if ([_defaults objectForKey:@"AllowClient"]) {
-			if (![[_defaults objectForKey:@"AllowClient"] isEqualToString:@"1"]) {
+	if ([_osType isEqualToString:@"Mac OS X"])
+    {
+		if (settings.agent.patchClient)
+        {
+			if (settings.agent.patchClient == 0)
+            {
 				logit(lcl_vInfo,@"Host is a Mac OS X Client and AllowClient property is set to false. No updates will be applied.");
 				[self removeTaskRunning:kMPPatchUPDATE];
                 [self setErrorCode:0];
@@ -1406,9 +1373,12 @@ done:
 	}
 
 	logit(lcl_vInfo, @"Validating server install status.");
-	if ([_osType isEqualToString:@"Mac OS X Server"]) {
-		if ([_defaults objectForKey:@"AllowServer"]) {
-			if (![[_defaults objectForKey:@"AllowServer"] isEqualToString:@"1"]) {
+	if ([_osType isEqualToString:@"Mac OS X Server"])
+    {
+		if (settings.agent.patchServer)
+        {
+			if (settings.agent.patchServer == 0)
+            {
 				logit(lcl_vInfo,@"Host is a Mac OS X Server and AllowServer property is set to false. No updates will be applied.");
 				[self removeTaskRunning:kMPPatchUPDATE];
                 [self setErrorCode:0];
@@ -1449,30 +1419,24 @@ done:
 	}
 
 	logit(lcl_vInfo, @"Begin installing patches.");
-    for (i = 0; i < [updatesArray count]; i++)
-	{
+    for (i = 0; i < [updatesArray count]; i++) {
 		// Create/Get Dictionary of Patch to install
 		patch = nil;
 		patch = [NSDictionary dictionaryWithDictionary:[updatesArray objectAtIndex:i]];
 
-		if (overrideRebootPatchInstalls == YES)
-		{
-			if (hasConsoleUserLoggedIn == YES)
-			{
-				// Check if patch needs a reboot
-				if ([[patch objectForKey:@"restart"] stringToBoolValue] == YES) {
-					logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
-					launchRebootWindow++;
-					continue;
-				}
-			}
-		}
+		if (hasConsoleUserLoggedIn == YES) {
+            // Check if patch needs a reboot
+            if ([[patch objectForKey:@"restart"] stringToBoolValue] == YES) {
+                logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
+                launchRebootWindow++;
+                continue;
+            }
+        }
 
         // Now proceed to the download and install
         installResult = -1;
 
-        if ([[patch objectForKey:@"type"] isEqualTo:@"Third"])
-		{
+        if ([[patch objectForKey:@"type"] isEqualTo:@"Third"]) {
             logit(lcl_vInfo,@"Starting install for %@",[patch objectForKey:@"patch"]);
 			[self postNotificationTo:@"MPPatchStatusNotification" info:[NSString stringWithFormat:@"Begin patching %@",[patch objectForKey:@"patch"]] isGlobal:YES];
 			if (iLoadMode == YES) {
@@ -1604,8 +1568,9 @@ done:
                     // We had an error, try the next one.
                     continue;
                 }
-                // *****************************
+                // **********************************************************
                 // Run PostInstall Script
+                // **********************************************************
                 if ([[currPatchToInstallDict objectForKey:@"postinst"] length] > 0 && [[currPatchToInstallDict objectForKey:@"postinst"] isEqualTo:@"NA"] == NO) {
                     logit(lcl_vInfo,@"Begin post install script.");
                     NSString *postInstScript = [[currPatchToInstallDict objectForKey:@"postinst"] decodeBase64AsString];
@@ -1620,16 +1585,14 @@ done:
                     }
                     mpScript = nil;
                 }
-                // *****************************
-                // Instal is complete, post result to web service
-                @try {
-                    MPWebServices *mpws = [[MPWebServices alloc] init];
-                    NSError *wsErr = nil;
+                // **********************************************************
+                // Install is complete, post result to web service
+                // **********************************************************
+                @try
+                {
+                    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch[@"patch_id"],@"third",settings.ccuid];
                     logit(lcl_vInfo,@"Posting patch (%@) install to web service.",[patch objectForKey:@"patch_id"]);
-                    [mpws postPatchInstallResultsToWebService:[patch objectForKey:@"patch_id"] patchType:@"third" error:&wsErr];
-                    if (wsErr) {
-                        logit(lcl_vError,@"%@", wsErr.localizedDescription);
-                    }
+                    [self postDataToWS:urlPath data:nil];
                 }
                 @catch (NSException *e) {
                     logit(lcl_vError,@"%@", e);
@@ -1652,18 +1615,20 @@ done:
               attributes:nil];
 
 	// Open the Reboot App
-
-
 	// If any patches that were installed needed a reboot
-	if (installedPatchesNeedingReboot > 0) {
-		if (hasConsoleUserLoggedIn == NO) {
-			if ([_defaults objectForKey:@"Reboot"]) {
-				if ([[_defaults objectForKey:@"Reboot"] isEqualTo:@"1"]) {
+	if (installedPatchesNeedingReboot > 0)
+    {
+		if (hasConsoleUserLoggedIn == NO)
+        {
+			if (settings.agent.reboot)
+            {
+				if (settings.agent.reboot == 1)
+                {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Rebooting system now.");
-					//int rb = 0;
-					//rb = reboot(RB_AUTOBOOT);
 					[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
-				} else {
+				}
+                else
+                {
 					logit(lcl_vInfo,@"Patches have been installed that require a reboot. Please reboot the systems as soon as possible.");
 					goto done;
 				}
@@ -1676,16 +1641,15 @@ done:
     {
 		logit(lcl_vInfo,@"Patches that require reboot need to be installed. Opening reboot dialog now.");
         // 10.9 support
-        NSString *_atFile = MP_AUTHRUN_FILE;
         NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
 		NSString *_rbText = @"reboot";
         // Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
         NSDictionary *rebootPlist = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:YES] forKey:@"reboot"];
         [rebootPlist writeToFile:_rbFile atomically:YES];
-        [_rbText writeToFile:_atFile atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        [_rbText writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
         NSDictionary *_fileAttr =  [NSDictionary dictionaryWithObjectsAndKeys:[NSNumber numberWithUnsignedLong:0777],@"NSFilePosixPermissions",nil];
 		[fm setAttributes:_fileAttr ofItemAtPath:_rbFile error:NULL];
-        [fm setAttributes:_fileAttr ofItemAtPath:_atFile error:NULL];
+        [fm setAttributes:_fileAttr ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
 	}
 
 done:
@@ -1745,40 +1709,6 @@ done:
 	}
 
 	return;
-}
-
--(void)scanForAVDefs
-{
-	if ([self isTaskRunning:kMPAVUpdate]) {
-		logit(lcl_vInfo,@"Scanning for av defs is already running. Now exiting.");
-		return;
-	} else {
-		[self writeTaskRunning:kMPAVUpdate];
-	}
-
-	logit(lcl_vInfo,@"Begin scan for AV defs.");
-	MPAntiVirus *mpav = [[MPAntiVirus alloc] init];
-	[mpav scanDefs];
-	mpav = nil;
-	logit(lcl_vInfo,@"Scan for AV defs complete.");
-	[self removeTaskRunning:kMPAVUpdate];
-}
-
--(void)scanForAVDefsAndUpdate
-{
-	if ([self isTaskRunning:kMPAVUpdate]) {
-		logit(lcl_vInfo,@"Updating av defs is already running. Now exiting.");
-		return;
-	} else {
-		[self writeTaskRunning:kMPAVUpdate];
-	}
-
-	logit(lcl_vInfo,@"Begin scan and update for AV defs.");
-	MPAntiVirus *mpav = [[MPAntiVirus alloc] init];
-	[mpav scanAndUpdateDefs];
-	mpav = nil;
-	logit(lcl_vInfo,@"Scan and update for AV defs complete.");
-	[self removeTaskRunning:kMPAVUpdate];
 }
 
 -(void)scanAndUpdateAgentUpdater
@@ -1924,14 +1854,9 @@ done:
 	}
 
 	// Check for updates
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    NSError *wsErr = nil;
-    NSDictionary *result = [mpws getAgentUpdaterUpdates:verString error:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"%@",wsErr);
-        return nil;
-    }
-    return result;
+    NSString *urlPath = [@"/api/v1/agent/updater" stringByAppendingFormat:@"/%@/%@",settings.ccuid,verString];
+    NSDictionary *result = [self getDataFromWS:urlPath];
+    return result[@"data"];
 }
 
 - (BOOL)isTaskRunning:(NSString *)aTaskName
@@ -2183,29 +2108,22 @@ done:
     [self setUpSWDistProperties];
     needsReboot = 0;
     int result = 1;
-
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    NSError *wsErr = nil;
-    id tasksRaw = [mpws getSWTasksForGroup:aGroupName error:&wsErr];
+    
     NSArray *tasks;
-    if ([tasksRaw objectForKey:@"Tasks"])
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",settings.ccuid, aGroupName];
+    NSDictionary *data = [self getDataFromWS:urlPath];
+    
+    if (data[@"data"])
     {
-        tasks = [tasksRaw objectForKey:@"Tasks"];
+        tasks = data[@"data"];
         if ([tasks count] <= 0) {
             qlerror(@"Group (%@) contains no tasks.",aGroupName);
             return 0;
         }
-    } else {
+    }
+    else
+    {
         qlerror(@"No tasks for group %@ were found.",aGroupName);
-        return result;
-    }
-    
-    if (wsErr) {
-        qlerror(@"There was an error getting software tasks for group %@.",aGroupName);
-        return result;
-    }
-    if (!tasks) {
-        qlerror(@"No tasks were found for group %@.",aGroupName);
         return result;
     }
 
@@ -2269,9 +2187,9 @@ done:
 
 - (BOOL)installSoftwareWithTask:(NSDictionary *)aTask error:(NSError **)err
 {
-	NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
     BOOL taskCanBeInstalled = [self softwareTaskCriteriaCheck:aTask];
     if (!taskCanBeInstalled) {
+        NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
         [errorDetail setValue:@"Software Task failed basic criteria check." forKey:NSLocalizedDescriptionKey];
         *err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1001 userInfo:errorDetail];
         return NO;
@@ -2282,28 +2200,6 @@ done:
     [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
     logit(lcl_vInfo,@"Installing %@ (%@).",[aTask objectForKey:@"name"],[aTask objectForKey:@"id"]);
     logit(lcl_vInfo,@"INFO: %@",[aTask valueForKeyPath:@"Software.sw_type"]);
-	
-	
-	// Verify task Has SW Signature
-	/*
-	if (![aTask objectForKey:@"sw_signature"]) {
-		logit(lcl_vError,@"%@ task has no signature, will not install task.",[aTask objectForKey:@"name"]);
-		[errorDetail setValue:@"Software Task failed, task has no signature." forKey:NSLocalizedDescriptionKey];
-		*err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1002 userInfo:errorDetail];
-		return NO;
-	}
-	
-	// Verify Signature for Software task
-	logit(lcl_vInfo,@"Verify signature for task %@",[aTask objectForKey:@"name"]);
-	if (![self isValidSoftwareTask:aTask[@"Software"] signature:aTask[@"sw_signature"]]) {
-		logit(lcl_vError,@"Unable to verify signature for task %@ task, will not install task.",aTask[@"name"]);
-		[errorDetail setValue:@"Unable to verify signature for software task." forKey:NSLocalizedDescriptionKey];
-		*err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1003 userInfo:errorDetail];
-		return NO;
-	} else {
-		logit(lcl_vInfo,@"Signature for %@ passed verification.",aTask[@"name"]);
-	}
-	 */
 
     // Create Path to download software to
     NSString *swLoc = NULL;
@@ -2327,14 +2223,13 @@ done:
     logit(lcl_vDebug,@"Download software from: %@",[aTask valueForKeyPath:@"Software.sw_type"]);
 
     NSError *dlErr = nil;
-    NSURLResponse *response;
-    MPNetConfig *mpnc = [[MPNetConfig alloc] init];
-    MPNetRequest *req = [[MPNetRequest alloc] initWithMPServerArrayAndController:self servers:[mpnc servers]];
-    NSURLRequest *urlReq = [req buildDownloadRequest:_url];
-    NSString *dlPath = [req downloadFileRequest:urlReq returningResponse:&response error:&dlErr];
-
+    
+    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+    NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:NSTemporaryDirectory() error:&dlErr];
+    
     if (dlErr) {
         logit(lcl_vError,@"Error[%d], trying to download file.",(int)[dlErr code]);
+        return NO;
     }
     if (!dlPath) {
         logit(lcl_vError,@"Error, downloaded file path is nil.");
@@ -2369,38 +2264,34 @@ done:
         return NO;
     }
 
-    logit(lcl_vDebug,@"returnCode: %d",[req errorCode]);
-    // Software was downloaded
-    if ([req errorCode] == 0)
+    logit(lcl_vInfo,@"Begin install for (%@).",[aTask objectForKey:@"name"]);
+    int result = -1;
+    int pResult = -1;
+
+    result = [self installSoftwareViaProxy:aTask];
+
+    if (result == 0)
     {
-        logit(lcl_vInfo,@"Begin install for (%@).",[aTask objectForKey:@"name"]);
-        int result = -1;
-        int pResult = -1;
-
-        result = [self installSoftwareViaProxy:aTask];
-
-        if (result == 0)
-        {
-            // Software has been installed, now flag for reboot
-            if ([[aTask valueForKeyPath:@"Software.reboot"] isEqualTo:@"1"]) {
-                needsReboot++;
-            }
-            if ([[aTask valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"]) {
-                [self postNotificationTo:noteName info:@"Auto Patching is enabled, begin patching..." isGlobal:YES];
-                pResult = [self patchSoftwareViaProxy:aTask];
-                [NSThread sleepForTimeInterval:5];
-            }
-
-            [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@ completed.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-            [self recordInstallSoftwareItem:aTask];
-
-            [self postInstallResults:result resultText:@"" task:aTask];
-            return YES;
-        } else {
-            [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Failed [taskid:%@]: %@ failed to install.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-            return NO;
+        // Software has been installed, now flag for reboot
+        if ([[aTask valueForKeyPath:@"Software.reboot"] isEqualTo:@"1"]) {
+            needsReboot++;
         }
+        if ([[aTask valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"]) {
+            [self postNotificationTo:noteName info:@"Auto Patching is enabled, begin patching..." isGlobal:YES];
+            pResult = [self patchSoftwareViaProxy:aTask];
+            [NSThread sleepForTimeInterval:5];
+        }
+
+        [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@ completed.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
+        [self recordInstallSoftwareItem:aTask];
+
+        [self postInstallResults:result resultText:@"" task:aTask];
+        return YES;
+    } else {
+        [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Failed [taskid:%@]: %@ failed to install.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
+        return NO;
     }
+    
 
     return NO;
 }
@@ -2450,19 +2341,23 @@ done:
     result = [swt postInstallResults:resultNo resultText:resultString task:taskDict];
     swt = nil;
 }
+
 // Private
 - (NSDictionary *)swTaskForID:(NSString *)aTaskID error:(NSError **)err
 {
-    NSError *wsErr = nil;
-    MPWebServices *mpws = [[MPWebServices alloc] init];
-    NSDictionary *task = [mpws getSWTaskForID:aTaskID error:&wsErr];
-    if (wsErr) {
-        logit(lcl_vError,@"%@", wsErr.localizedDescription);
-        return nil;
+    NSDictionary *task = nil;
+    NSDictionary *data = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/task/%@/%@",settings.ccuid, aTaskID];
+    data = [self getDataFromWS:urlPath];
+    if (data[@"data"])
+    {
+        task = data[@"data"];
     }
 
     return task;
 }
+
 // Private
 - (BOOL)softwareTaskCriteriaCheck:(NSDictionary *)aTask
 {
@@ -2498,75 +2393,96 @@ done:
     return YES;
 }
 
+#pragma mark - Web Service Requests
+
+- (BOOL)postDataToWS:(NSString *)urlPath data:(NSDictionary *)data
+{
+    MPHTTPRequest *req;
+    MPWSResult *result;
+    
+    req = [[MPHTTPRequest alloc] init];
+    result = [req runSyncPOST:urlPath body:data];
+    
+    if (result.statusCode >= 200 && result.statusCode <= 299) {
+        logit(lcl_vInfo,@"[MPAgentExecController][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
+        //logit(lcl_vDebug,@"Data post to web service (%@), returned true.", urlPath);
+        logit(lcl_vDebug,@"Data Result: %@",result.result);
+    } else {
+        logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
+        logit(lcl_vDebug,@"%@",result.toDictionary);
+        return NO;
+    }
+    
+    return YES;
+}
+
+- (NSDictionary *)getDataFromWS:(NSString *)urlPath
+{
+    NSDictionary *result = nil;
+    MPHTTPRequest *req;
+    MPWSResult *wsresult;
+    
+    req = [[MPHTTPRequest alloc] init];
+    wsresult = [req runSyncGET:urlPath];
+    
+    if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
+        logit(lcl_vDebug,@"Get Data from web service (%@) returned true.",urlPath);
+        logit(lcl_vDebug,@"Data Result: %@",wsresult.result);
+        result = wsresult.result;
+    } else {
+        logit(lcl_vError,@"Get Data from web service (%@), returned false.", urlPath);
+        logit(lcl_vDebug,@"%@",wsresult.toDictionary);
+    }
+    
+    return result;
+}
+
+#pragma mark Web Service Helper methods
+
+- (NSDictionary *)wsPatchGroupContent
+{
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/group/%@",settings.ccuid];
+    NSDictionary *result = [self getDataFromWS:urlPath];
+    if (!result)
+        return nil;
+    
+    return result[@"data"];
+}
+
+- (NSDictionary *)wsCriticalPatchGroupContent
+{
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/group/%@",settings.ccuid];
+    NSDictionary *result = [self getDataFromWS:urlPath];
+    if (!result)
+        return nil;
+    
+    return result[@"data"];
+}
+
+- (BOOL)wsPostPatchScanResults:(NSArray *)data type:(NSInteger)type
+{
+    NSString *urlPath;
+    // 1 = Apple, 2 = Third
+    if (type == 1) {
+        urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/1/%@",settings.ccuid];
+    } else if ( type == 2 ) {
+        urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/2/%@",settings.ccuid];
+    } else {
+        //Err
+        urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/3/%@",settings.ccuid];
+    }
+    
+    NSDictionary *_data;
+    if (data) {
+        _data = @{@"rows": data};
+    } else {
+        _data = @{@"rows": [NSArray array]};
+    }
+    
+    return [self postDataToWS:urlPath data:_data];
+}
+
 #pragma mark - Misc
-
-// Patch
-- (BOOL)isValidPatch:(NSDictionary *)patch
-{
-	return YES; //Disabled
-	/*
-	MPCrypto 	*mpCrypto = [[MPCrypto alloc] init];
-	SecKeyRef	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
-	
-	logit(lcl_vInfo,@"Checking signature for patch.");
-	BOOL res = NO;
-	NSString *strData = [self stringArrayToHash:patch[@"patches"]];
-	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:patch[@"patch_sig"] options:0];
-	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
-	sigData = nil;
-	return res;
-	 */
-}
-
-//Patch
-- (NSString *)stringArrayToHash:(NSArray *)patches
-{
-	NSMutableString *_stringToSign = [NSMutableString new];
-	NSArray *fields = @[@"baseline",@"env",@"hash",@"name",@"postinst",@"preinst",@"reboot",@"size",@"type",@"url"];
-	for (NSDictionary *p in patches)
-	{
-		for (NSString *k in fields)
-		{
-			if ([[p allKeys] containsObject:k]) {
-				[_stringToSign appendString:[p objectForKey:k]];
-			}
-		}
-	}
-	return (NSString *)_stringToSign;
-}
-
-// Software
-- (BOOL)isValidSoftwareTask:(NSDictionary *)task signature:(NSString *)signature
-{
-	return YES; //Disabled
-	
-	MPCrypto 	*mpCrypto = [[MPCrypto alloc] init];
-	SecKeyRef	pubKeyRef = [mpCrypto getKeyRef:[NSData dataWithContentsOfFile:MP_SERVER_PUB_KEY]];
-	
-	BOOL res = NO;
-	NSString *strData = [self stringDictionaryToHash:task];
-	NSData *sigData = [[NSData alloc] initWithBase64EncodedString:signature options:0];
-	res = [mpCrypto verifiedSignedData:strData signature:sigData pubKey:pubKeyRef];
-	sigData = nil;
-	return res;
-}
-
-// Software
-- (NSString *)stringDictionaryToHash:(NSDictionary *)task
-{
-	NSMutableString *_stringToSign = [NSMutableString new];
-	NSArray *fields = @[@"auto_patch",@"name",@"patch_bundle_id",@"reboot",@"sid",@"state",
-						@"sw_env_var",@"sw_hash",@"sw_post_install",@"sw_pre_install",@"sw_size",
-						@"sw_type",@"sw_uninstall",@"sw_url",@"vendor",@"vendorUrl",@"version"];
-	
-	for (NSString *k in fields)
-	{
-		if ([[task allKeys] containsObject:k]) {
-			[_stringToSign appendString:[task objectForKey:k]];
-		}
-	}
-	return (NSString *)_stringToSign;
-}
 
 - (void)cleanupPreStagePatches:(NSArray *)aApprovedPatches
 {
@@ -2619,18 +2535,6 @@ done:
 - (void)downloadError
 {
     logit(lcl_vError,@"Download Had An Error");
-}
-
-- (BOOL)isloginAgentRunning
-{
-	BOOL result = NO;
-	NSArray *procList = [MPSystemInfo bsdProcessList];
-	for (NSDictionary *p in procList) {
-		if ([[p objectForKey:@"processName"] isEqualToString:@"MPLoginAgent"]) {
-			result = YES;
-		}
-	}
-	return result;
 }
 
 #pragma mark - Proxy Methods

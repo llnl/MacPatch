@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+	{{pageTitle}}
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" class="table table-condensed" data-toolbar="#toolbar" data-show-export="true">
+		<div id="toolbar"></div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable({
+			striped: true,
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '20', '50', '100', 'All'],
+			search: true,
+			showRefresh: false,
+			resizable: true,
+			sortable: true,
+			showColumns: false,
+			detailView: false,
+			exportDataType: 'all',
+			exportTypes: ['json', 'csv', 'excel'],
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign',
+				export: 'glyphicon-export icon-share'
+			},
+
+			columns: [
+				{% for col in columns %}
+					{
+
+						{% if col[2] == '0' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+
+					},
+				{% endfor %}
+			],
+			data: [
+
+				{% for patch in data %}
+				{ {% for col in columns %}
+					{{col[0]}}: '{{patch[col[0]]}}',
+				{% endfor %}},
+				{% endfor %}
+
+			]
+		});
+	});
+
+	</script>
+{% endblock %}

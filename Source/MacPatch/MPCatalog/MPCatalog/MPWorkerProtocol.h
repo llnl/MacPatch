@@ -1,7 +1,7 @@
 //
 //  MPWorkerProtocol.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -23,7 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-// MacPatch MPWorkerProtocol.h version 1.7.2
+// MacPatch MPWorkerProtocol.h version 1.7.6
 
 #import <Foundation/Foundation.h>
 
@@ -78,17 +78,29 @@
 
 - (int)stagePatchWithBaseDirectory:(in bycopy NSDictionary *)aPatch directory:(in bycopy NSString *)path;
 
+- (int)runCMD:(in bycopy NSString *)binPath arguments:(in bycopy NSArray *)arguments;
+
 // Inventory Collection
 - (int)collectInventoryData;
+
+// Collect Client Checkin Data
+- (NSDictionary *)clientCheckInData;
+//
+- (void)updateClientGroupSettingViaHelper:(in bycopy NSDictionary *)settingsRevs;
 
 // Misc
 - (NSString *)createAppSupportDirectoryForDomain:(NSSearchPathDomainMask)aDomainMask directoryAttributes:(in bycopy NSDictionary *)attributes;
 
 - (BOOL)unzipFile:(in bycopy NSString *)file error:(NSError **)error;
 - (BOOL)removeStagedDirectory:(in bycopy NSString *)stagedDirectory;
+- (BOOL)removeFilesUsingExtensionsFromDirectory:(in bycopy NSString *)stagedDirectory types:(in bycopy NSArray *)types;
 
 // MPReboot
 - (int)cleanUpRebootFileViaHelper;
+
+// Diag Data
+- (int)collectAgentDiagnosticsDataViaHelper;
+
 
 
 @end

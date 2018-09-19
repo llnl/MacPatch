@@ -25,7 +25,7 @@
 
 #import "MPNetConfig.h"
 #import "MPNetServer.h"
-#import "MPDefaults.h"
+// #import "MPDefaults.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPNetConfig
@@ -67,6 +67,7 @@
         if (useMaster == YES)
         {
             MPNetServer *sns = [[MPNetServer alloc] init];
+            /*
             MPDefaults *d = [[MPDefaults alloc] init];
             NSDictionary *defaults = [d defaults];
             [sns setHost:[defaults objectForKey:@"MPServerAddress"]];
@@ -75,6 +76,7 @@
             [sns setUseTLSAuth:([[defaults objectForKey:@"MPClientAuth"] integerValue] ? YES : NO)];
             [sns setAllowSelfSigned:([[defaults objectForKey:@"MPServerAllowSelfSigned"] integerValue] ? YES : NO)];
             [sns setServerType:0];
+             */
             self.servers = [NSArray arrayWithObject:sns];
         }
 

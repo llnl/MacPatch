@@ -1,0 +1,103 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+	<style>
+		 .panel {
+			 width: 720px;
+		 }
+		 .well {
+			 width: 720px;
+			 height: 270px;
+		 }
+	</style>
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form role="form" id="myForm">
+		<div class="form-group">
+			<div class="well well-sm width2">
+
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="row row-grid top10">
+							<div class="col-sm-2">
+								<label>Name</label>
+							</div>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" name="pluginName" value="{{data['pluginName'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-2">
+								<label>Bundle ID</label>
+							</div>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" name="pluginBundleID" value="{{data['pluginBundleID'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-2">
+								<label>Version</label>
+							</div>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" name="pluginVersion" value="{{data['pluginVersion'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-2">
+								<label>Hash</label>
+							</div>
+							<div class="col-sm-8">
+								<input class="form-control" type="text" name="hash" value="{{data['hash'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-2">
+								<label>Active</label>
+							</div>
+							<div class="col-sm-8">
+								<select class="form-control" name="active">
+									<option value="1" {% if 1 == data['active'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['active'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<input type="hidden" name="rid" value="{{data['rid'] or ''}}">
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+		$("#modalSaveButton").click(function()
+		{
+			var formData = new FormData($('#myForm')[0]);
+
+			$.ajax({
+				type:'POST',
+				url: "/console/agent/plugins/update",
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				success: function(){
+					alert("Filter Updated Successfully");
+				},
+				error: function(jqXHR, textStatus, errorThrown){
+					alert("Filter Failed to Update");
+				}
+			});
+
+			$('#modalDialog').modal('hide');
+			$('#myForm') = '';
+		});
+	});
+</script>

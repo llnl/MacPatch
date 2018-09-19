@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+{%  endblock %}
+
+{% block pageHeader %}
+	Custom Patches
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed" data-show-export="true">
+		<div id="toolbar">
+			{% if session.role[0] == 1 %}
+			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
+            <button id="dupButton" type="button" class="btn btn-default" title="Duplicate Patch"><i class="glyphicon glyphicon-duplicate"></i></button>
+			<button id="delButton" type="button" class="btn btn-default" title="Delete Patch"><i class="glyphicon glyphicon-trash"></i></button>
+			{% endif %}
+		</div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+
+
+	<script>
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+			url: "/patches/custom/list",
+			striped: true,
+			pagination: true,
+			sidePagination: 'client',
+			showRefresh: true,
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			idField: 'puuid',
+			sortable: true,
+			detailFormatter: detailFormatter,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			columns: [
+			{% if session.role[0] == 1 %}
+			{
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+			},
+			{% endif %}
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter
+			},
+			{% for col in columnsAll %}
+
+				{% if col.name in columns %}
+					{
+						field: '{{col.name}}',
+						title: '{{col.info}}',
+						{% if col.name ==  'puuid' or col.name == 'pkg_path' or col.name == 'pkg_url' or col.name == 'description'%}
+						visible: false,
+						{% endif %}
+						sortable: true,
+
+						{% if col.name == 'active' and session.role[0] == 1 %}
+						editable: {
+							type: 'select',
+							url:  '/patches/custom/active',
+							source: [
+								{value: 0, text: 'False'},
+								{value: 1, text: 'True'},
+							]
+						},
+						{% endif %}
+						{% if col.name == 'patch_state' and session.role[0] == 1 %}
+						editable: {
+							type: 'select',
+							url:  '/patches/custom/state',
+							source: [
+								{value: 'Production', text: 'Production'},
+								{value: 'QA', text: 'QA'},
+								{value: 'Create', text: 'Create'},
+								{value: 'Disabled', text: 'Disabled'},
+								{value: 'AutoPKG', text: 'AutoPKG'},
+							]
+						},
+						{% endif %}
+					},
+				{% endif %}
+			{% endfor %}
+			]
+		});
+	});
+
+	function detailFormatter(index, row)
+	{
+		var html = [];
+		var re = /\\n/g;
+		var re2 = /\\t/g;
+		var re3 = /<style([\S\s]*?)>([\S\s]*?)<\/style>/ig;
+		var decodedData = window.atob(row['description64']);
+		var description = decodedData.replace("Data('"," ");
+		description = description.replace("')"," ");
+		description = description.replace(re," ");
+		description = description.replace(re2," ");
+		description = description.replace(re3," ");
+		if (description.trim() == "") {
+			description = '<p>No Description</p>'
+		}
+		html.push(description);
+		return html.join('');
+	}
+
+	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton'), $dupButton = $('#dupButton');
+	$(function ()
+	{
+		$delButton.click(function ()
+		{
+			confirm_str = "Are you sure you want to remove these patch(es)?";
+			if (confirm(confirm_str) == true)
+			{
+				var rows = $('#table').bootstrapTable('getAllSelections');
+				var rowsArr = [];
+				for (x in rows) {
+					var _patchID = rows[x]['puuid'];
+					rowsArr.push(_patchID);
+				}
+
+				var _url = "/patches/custom/delete";
+				$.ajax({
+					url: _url,
+					type: 'DELETE',
+					cache: false,
+					data: {'patches':rowsArr.toString()},
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+						$('#table').bootstrapTable('remove', {
+							field: 'puuid',
+							values: rowsArr
+						});
+						alert("Patch(es) removed successfully.");
+					}
+				});
+			}
+		});
+
+		$dupButton.click(function ()
+		{
+		    var rows = $('#table').bootstrapTable('getAllSelections');
+		    if (rows.length > 1) {
+		        alert("Duplicating multiple patches is not permitted. Please select only one patch at a time.");
+                return;
+            }
+
+			confirm_str = "Are you sure you want to duplicate this patch?";
+			if (confirm(confirm_str) == true)
+			{
+			    var rowsArr = [];
+				for (x in rows) {
+					var _patchID = rows[x]['puuid'];
+					rowsArr.push(_patchID);
+				}
+
+				var _url = "/patches/custom/duplicate/"+rowsArr[0];
+				$.ajax({
+					url: _url,
+					type: 'POST',
+					cache: false,
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.errormsg);
+					},
+					success: function () {
+					    $('#table').bootstrapTable('refresh');
+						//alert("Patch(es) removed successfully.");
+					}
+				});
+			}
+		});
+
+		$addButton.click(function ()
+		{
+			$('#myContent').remove();
+			var _url = "/patches/customPatchWizardAdd";
+			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="true"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+			$('#modalTitle').html("New Custom Patch");
+			$('#modalSaveButton').hide();
+			$('#modalCancelButton').hide();
+			$('#modalBody').html(innerHTML);
+			$('#modalBody').css({'height':'770px'});
+			$('#modalDialog').addClass("modal-wide");
+			$('#modalDialog').modal('show');
+		});
+	});
+
+	function operateFormatter(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<table><tr><td>')
+		{% if session.role[0] == 1 %}
+		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch">');
+		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
+		{% else %}
+		htmlData.push('<a class="edit" href="javascript:void(0)" title="Patch Data">');
+		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
+		{% endif %}
+		htmlData.push('</a>');
+		htmlData.push('</td><td>');
+		htmlData.push('<a class="download" href="/mp-content' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
+		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
+		htmlData.push('</td></tr></table>');
+		return htmlData.join('');
+	}
+
+	/* Function used to close Modal window from iframe */
+	function closeIFrame()
+	{
+		$('#modalDialog').modal('hide');
+	}
+
+	window.operateEvents = {
+		'click .edit': function (e, value, row, index)
+		{
+			$('#myContent').remove();
+
+			var _url = "/patches/customPatchWizard/" + row['puuid'];
+			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="true"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+			$('#modalTitle').html("Edit Custom Patch");
+			$('#modalSaveButton').hide();
+			$('#modalCancelButton').hide();
+			$('#modalBody').html(innerHTML);
+			$('#modalBody').css({'height':'770px'});
+			$('#modalDialog').addClass("modal-wide");
+			$('#modalDialog').modal('show');
+		},
+		'click .description': function (e, value, row, index) {
+			alert('You click description action, row: ' + JSON.stringify(row));
+		}
+	};
+	</script>
+{% endblock %}
