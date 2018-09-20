@@ -289,18 +289,22 @@ Client Group - {{group_name}}
 				{% endif %}
 			},
 			{% for col in columns %}
+			{% if col.name != 'rid' %}
 			{
 				field: '{{col.name}}',
 				title: '{{col.info}}',
 				{% if col.name == 'rid' or col.name == 'cuuid' or col.name == 'cdate' or col.name == 'ostype'
-                or col.name == 'SLAM' or col.name == 'macaddr' or col.name == 'ADDN' %}
+                or col.name == 'SLAM' or col.name == 'macaddr' or col.name == 'ADDN' or col.name == 'agent_version'
+                or col.name == 'agent_build' %}
 				visible: false,
 				{% elif col.name == 'needsreboot' %}
 				align: 'center',
 				formatter: rebootFormatter,
 				{% endif %}
 				sortable: true
+
 			},
+            {% endif %}
 			{% endfor %}
 			{
 				field: 'clientState',
@@ -312,7 +316,9 @@ Client Group - {{group_name}}
 			{% for c in data %}
 			{
 				{% for col in columns %}
-				{{col.name}}: '{{c[col.name]}}',
+				{% if col.name != 'rid' %}
+                {{col.name}}: '{{c[col.name]}}',
+                {% endif %}
 				{% endfor %}
 				'clientState': '{{c['clientState']}}',
 			},
