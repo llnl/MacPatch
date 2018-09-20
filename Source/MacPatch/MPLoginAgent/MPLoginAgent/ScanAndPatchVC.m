@@ -156,8 +156,8 @@ typedef NSUInteger MPInstallIconStatus;
     [progressText setStringValue:@""];
     [progressCountText setHidden:NO];
     [progressCountText setStringValue:@""];
-    [progressBarStatus setHidden:YES];
-    [progressBarStatus stopAnimation:nil];
+    [self->progressBarStatus setHidden:YES];
+    [self->progressBarStatus stopAnimation:nil];
     [progressBarProgress setHidden:YES];
     [progressBarProgress stopAnimation:nil];
     
@@ -951,21 +951,21 @@ typedef NSUInteger MPInstallIconStatus;
 
 - (void)toggleStatusProgress
 {
-    if ([progressBarStatus isHidden]) {
+    if ([self->progressBarStatus isHidden]) {
         
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                [progressBarStatus setUsesThreadedAnimation:YES];
-                [progressBarStatus setHidden:NO];
-                [progressBarStatus startAnimation:progressBarProgress];
-                [progressBarStatus performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
+                [self->progressBarStatus setUsesThreadedAnimation:YES];
+                [self->progressBarStatus setHidden:NO];
+				[self->progressBarStatus startAnimation:self->progressBarProgress];
+                [self->progressBarStatus performSelectorOnMainThread:@selector(display) withObject:nil waitUntilDone:NO];
             });
         });
 
     } else {
-        [progressBarStatus setHidden:YES];
-        [progressBarStatus stopAnimation:nil];
+        [self->progressBarStatus setHidden:YES];
+        [self->progressBarStatus stopAnimation:nil];
     }
 }
 

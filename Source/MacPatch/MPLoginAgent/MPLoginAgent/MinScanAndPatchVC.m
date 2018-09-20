@@ -103,7 +103,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
         mpScanner.delegate = self;
         cancelTask = FALSE;
         
-        [progressBar setUsesThreadedAnimation: YES];
+        [self->progressBar  setUsesThreadedAnimation: YES];
         
         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
         dispatch_queue_t main = dispatch_get_main_queue();
@@ -133,8 +133,8 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
     [progressText setStringValue:@""];
     [progressCountText setHidden:NO];
     [progressCountText setStringValue:@""];
-    [progressBar setHidden:YES];
-    [progressBar stopAnimation:nil];
+    [self->progressBar  setHidden:YES];
+    [self->progressBar  stopAnimation:nil];
     
     killTaskThread = NO;
     
@@ -210,9 +210,9 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
         }
         
         dispatch_async(dispatch_get_main_queue(), ^(void){
-            [progressBar setIndeterminate:NO];
-            [progressBar setDoubleValue:1.0];
-            [progressBar setMaxValue:progressCountTotal+1];
+            [self->progressBar  setIndeterminate:NO];
+            [self->progressBar  setDoubleValue:1.0];
+			[self->progressBar  setMaxValue:self->progressCountTotal+1];
         });
 
         // Begin Patching
@@ -242,7 +242,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
             [self updateNeededPatchesFile:patch];
             
             dispatch_async(dispatch_get_main_queue(), ^(void){
-                [progressBar setDoubleValue:([progressBar doubleValue]+1)];
+                [self->progressBar  setDoubleValue:([self->progressBar  doubleValue]+1)];
             });
         }
         
@@ -278,8 +278,8 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		}
 		dispatch_async(dispatch_get_global_queue(0, 0), ^{
 			dispatch_async(dispatch_get_main_queue(), ^{
-				cancelButton.title = @"Reboot";
-				cancelButton.hidden = NO;
+				self->cancelButton.title = @"Reboot";
+				self->cancelButton.hidden = NO;
 			});
 		});
 	}
@@ -307,20 +307,20 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 
 - (void)toggleStatusProgress
 {
-    if ([progressBar isHidden]) {
+    if ([self->progressBar  isHidden]) {
         
         dispatch_async(dispatch_get_global_queue(0, 0), ^{
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                [progressBar setUsesThreadedAnimation:YES];
-                [progressBar setHidden:NO];
-                [progressBar startAnimation:nil];
+                [self->progressBar  setUsesThreadedAnimation:YES];
+                [self->progressBar  setHidden:NO];
+                [self->progressBar  startAnimation:nil];
             });
         });
         
     } else {
-        [progressBar setHidden:YES];
-        [progressBar stopAnimation:nil];
+        [self->progressBar  setHidden:YES];
+        [self->progressBar  stopAnimation:nil];
     }
 }
 
@@ -1156,7 +1156,7 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
 - (void)progress:(NSString *)text
 {
     dispatch_async(dispatch_get_main_queue(), ^(void){
-        [progressText setStringValue:text];
+		[self->progressText setStringValue:text];
     });
 }
 

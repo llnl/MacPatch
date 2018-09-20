@@ -134,7 +134,7 @@ typedef NSUInteger MPPostDataType;
                     //foundDone = YES;
                 }
                 logit(lcl_vDebug,@"%@",output);
-                [_delegate installData:self data:output type:kMPInstallStatus];
+				[self->_delegate installData:self data:output type:kMPInstallStatus];
             } else {
                 logit(lcl_vDebug,@"%@",output);
             }

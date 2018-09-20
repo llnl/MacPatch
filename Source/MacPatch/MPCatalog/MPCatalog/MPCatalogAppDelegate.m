@@ -368,7 +368,7 @@
         [[mp_SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
     }
     
-    [progressBar setUsesThreadedAnimation:YES];
+    [self->progressBar setUsesThreadedAnimation:YES];
     [installButton setEnabled:NO];
     [removeButton  setEnabled:NO];
     [cancelButton  setEnabled:NO];
@@ -598,7 +598,7 @@
     int _needsReboot = 0;
     for (NSDictionary *d in mandatoryInstllTasks) 
     {
-        [statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
+        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
         logit(lcl_vInfo,@"Installing %@ (%@).",[d objectForKey:@"name"],[d objectForKey:@"id"]);
         logit(lcl_vInfo,@"INFO: %@",[d valueForKeyPath:@"Software.sw_type"]);
         
@@ -654,8 +654,8 @@
         // *****************************************
         // Download Software
         // *****************************************
-        dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar setDoubleValue:0.0];});
-        dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar setIndeterminate:NO];});
+		dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar setDoubleValue:0.0];});
+		dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar setIndeterminate:NO];});
         
         __block NSError *dlErr = nil;
         MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
@@ -663,7 +663,7 @@
         
         // Start download
         dispatch_async(dispatch_get_main_queue(), ^(void){
-            [statusTextStatus setStringValue:[NSString stringWithFormat:@"Downloading %@",[d objectForKey:@"name"]]];
+			[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Downloading %@",[d objectForKey:@"name"]]];
         });
         [req runDownloadRequest:urlPath downloadDirectory:dlPath progress:progressBar progressPercent:nil completion:^(NSString *fileName, NSString *filePath, NSError *error)
         {
@@ -675,7 +675,7 @@
             {
                 logit(lcl_vInfo,@"Successfully downloaded file to %@", fileName);
                 dispatch_async(dispatch_get_main_queue(), ^(void){
-                    [statusTextStatus setStringValue:[NSString stringWithFormat:@"Successfully downloaded %@",fileName]];
+                    [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Successfully downloaded %@",fileName]];
                 });
             }
         }];
@@ -710,9 +710,9 @@
             logit(lcl_vDebug,@"Begin install for (%@).",[d objectForKey:@"name"]);
             int result = -1;
             int pResult = -1;
-            [progressBar setIndeterminate:YES];
-            [progressBar startAnimation:nil];
-            [progressBar display];
+            [self->progressBar setIndeterminate:YES];
+            [self->progressBar startAnimation:nil];
+            [self->progressBar display];
             
             if ([self hasCanceledInstall:d]) break;
             
@@ -728,7 +728,7 @@
                 if ([[d valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"])
                 {
                     dispatch_async(dispatch_get_main_queue(), ^(void){
-                        [statusTextStatus setStringValue:@"Auto Patching is enabled, begin patching..."];
+                        [self->statusTextStatus setStringValue:@"Auto Patching is enabled, begin patching..."];
                     });
                     
                     pResult = [self patchSoftwareViaProxy:d];
@@ -736,7 +736,7 @@
                 }
                 
                 dispatch_async(dispatch_get_main_queue(), ^(void){
-                    [statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ completed.",[d objectForKey:@"name"]]];
+                    [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ completed.",[d objectForKey:@"name"]]];
                 });
 
                 [self installSoftwareItem:d];
@@ -746,8 +746,8 @@
             }
             
             [self postInstallResults:result resultText:@"" task:d];
-            [progressBar stopAnimation:nil];
-            [progressBar display];
+            [self->progressBar stopAnimation:nil];
+            [self->progressBar display];
         }
         
     }
@@ -947,7 +947,7 @@
             if ([d objectForKey:@"selected"]) {
                 if ([[d objectForKey:@"selected"] intValue] == 1)
                 {
-                    [statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
+                    [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
                     logit(lcl_vInfo,@"Installing %@ (%@).",[d objectForKey:@"name"],[d objectForKey:@"id"]);
                     logit(lcl_vInfo,@"INFO: %@",[d valueForKeyPath:@"Software.sw_type"]);
                     
@@ -982,8 +982,8 @@
                     NSString *urlPath = [NSString stringWithFormat:@"/mp-content%@",[d valueForKeyPath:@"Software.sw_url"]];
                     logit(lcl_vDebug,@"Download software from: %@",[d valueForKeyPath:@"Software.sw_type"]);
                     
-                    dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar setDoubleValue:0.0];});
-                    dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar setIndeterminate:NO];});
+                    dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar setDoubleValue:0.0];});
+                    dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar setIndeterminate:NO];});
                     
                     __block NSError *dlErr = nil;
                     MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
@@ -993,7 +993,7 @@
                     // Start download
                     // *****************************************
                     dispatch_async(dispatch_get_main_queue(), ^(void){
-                        [statusTextStatus setStringValue:[NSString stringWithFormat:@"Downloading %@",[d objectForKey:@"name"]]];
+                        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Downloading %@",[d objectForKey:@"name"]]];
                     });
 					
                     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
@@ -1007,7 +1007,7 @@
                          {
                              logit(lcl_vInfo,@"Successfully downloaded file to %@", fileName);
                              dispatch_async(dispatch_get_main_queue(), ^(void){
-                                 [statusTextStatus setStringValue:[NSString stringWithFormat:@"Successfully downloaded %@",fileName]];
+                                 [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Successfully downloaded %@",fileName]];
                              });
                          }
 						 dispatch_semaphore_signal(sem);
@@ -1062,9 +1062,9 @@
                         int result = -1;
                         int pResult = -1;
                         
-                        [progressBar setDoubleValue:0.0];
-                        [progressBar setIndeterminate:NO];
-                        [progressBar display];
+                        [self->progressBar setDoubleValue:0.0];
+                        [self->progressBar setIndeterminate:NO];
+                        [self->progressBar display];
                         
                         if ([self hasCanceledInstall:d]) break;
                         
@@ -1079,30 +1079,30 @@
                             }
                             if ([[d valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"]) {
                                 
-                                [progressBar setIndeterminate:YES];
-                                [progressBar startAnimation:nil];
-                                [progressBar display];
+                                [self->progressBar setIndeterminate:YES];
+                                [self->progressBar startAnimation:nil];
+                                [self->progressBar display];
                                 
-                                [statusTextStatus setStringValue:@"Auto Patching is enabled, begin patching..."];
+                                [self->statusTextStatus setStringValue:@"Auto Patching is enabled, begin patching..."];
                                 [statusTextStatus display];
                                 
                                 pResult = [self patchSoftwareViaProxy:d];
                                 [NSThread sleepForTimeInterval:5];
                             }
                             
-                            [statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ completed.",[d objectForKey:@"name"]]];
+                            [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ completed.",[d objectForKey:@"name"]]];
                             [statusTextStatus display];
                             
                             [self installSoftwareItem:d];
                             [self updateArrayControllerWithDictionary:d];
                         } else {
                             [self updateArrayControllerWithDictionary:d forActionType:@"error"];
-                            [progressBar setDoubleValue:0.0]; // Clears the progress bar, timing issue does not clear it otherwise.
+                            [self->progressBar setDoubleValue:0.0]; // Clears the progress bar, timing issue does not clear it otherwise.
                         }
                         
                         [self postInstallResults:result resultText:@"" task:d];
-                        [progressBar stopAnimation:nil];
-                        dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar display];});
+                        [self->progressBar stopAnimation:nil];
+                        dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar display];});
                     }
                     
                     // Clean up downloaded software
@@ -1197,9 +1197,9 @@
         [swDistGroupsButton setEnabled:NO];
         [self setTableColEdit:NO];
         
-        [progressBar setIndeterminate:YES];
-        [progressBar startAnimation:nil];
-        [progressBar display];
+        [self->progressBar setIndeterminate:YES];
+        [self->progressBar startAnimation:nil];
+        [self->progressBar display];
         
         int _result = 0;
         
@@ -1215,7 +1215,7 @@
 
                 if (([[d objectForKey:@"selected"] intValue] == 1) && ([[d objectForKey:@"installed"] intValue] == 1))
                 {
-                    [statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstalling %@ ...",[d objectForKey:@"name"]]];
+                    [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstalling %@ ...",[d objectForKey:@"name"]]];
                     uninstallScriptEnc = [d valueForKeyPath:@"Software.sw_uninstall"];
                     if ([uninstallScriptEnc length] > 0) {
                         uninstallScript = [uninstallScriptEnc decodeBase64AsString];
@@ -1226,18 +1226,18 @@
                     if (_result == 0) {
                         [self removeSoftwareInstallStatus:[d objectForKey:@"id"]];
                         [self updateArrayControllerWithDictionary:d forActionType:@"remove"];
-                        [statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstall completed."]];
+                        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstall completed."]];
                     } else {
                         [self updateArrayControllerWithDictionary:d forActionType:@"error"];
-                        [statusTextStatus setStringValue:[NSString stringWithFormat:@"Error uninstalling."]];
+                        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Error uninstalling."]];
                     }
                     [self postUnInstallResults:_result resultText:@"" task:curTaskDict];
                 }
             }
         }
         
-        [progressBar stopAnimation:nil];
-        [progressBar display];
+        [self->progressBar stopAnimation:nil];
+        [self->progressBar display];
         [refreshButton setEnabled:YES];
         [swDistGroupsButton setEnabled:YES];
         [self setTableColEdit:YES];
@@ -1247,8 +1247,8 @@
 #pragma mark MPDLWrapper Callbacks
 - (void)appendDownloadProgress:(double)aNumber
 {
-	[progressBar setDoubleValue:aNumber];
-    dispatch_async(dispatch_get_main_queue(), ^(void){[progressBar display];});
+	[self->progressBar setDoubleValue:aNumber];
+    dispatch_async(dispatch_get_main_queue(), ^(void){[self->progressBar display];});
 }
 
 - (void)appendDownloadProgressPercent:(NSString *)aPercent
@@ -1258,20 +1258,20 @@
 
 - (void)downloadStarted
 {
-	[statusTextStatus setStringValue:@"Downloading..."];
+	[self->statusTextStatus setStringValue:@"Downloading..."];
 }
 
 - (void)downloadFinished
 {
-    [statusTextStatus setStringValue:@"Download Complete"];
+    [self->statusTextStatus setStringValue:@"Download Complete"];
 	isDownloading = NO;
 }
 
 - (void)downloadError
 {
 	//[cancelButton setEnabled:YES];
-    [statusTextStatus setStringValue:@"Download Error"];
-	[progressBar setDoubleValue:0.0];
+    [self->statusTextStatus setStringValue:@"Download Error"];
+	[self->progressBar setDoubleValue:0.0];
 }
 
 #pragma mark IBActions
@@ -1335,7 +1335,7 @@
 
 - (IBAction)cancelSoftware:(id)sender
 {
-    [statusTextStatus setStringValue:@"Canceling software install task..."];
+    [self->statusTextStatus setStringValue:@"Canceling software install task..."];
 	[self setCancelInstalls:YES];
 }
 
@@ -1390,7 +1390,7 @@
                  [d setObject:[NSNumber numberWithBool:NO] forKey:@"selected"];
                  if ([dict hasKey:@"isReceipt"]) {
                      if ([[dict objectForKey:@"isReceipt"] isEqualToNumber:[NSNumber numberWithInt:1]]) {
-                         [arrayController removeObjects:[NSArray arrayWithObject:d]];
+						 [self->arrayController removeObjects:[NSArray arrayWithObject:d]];
                          *stop = YES;    // Stop enumerating
                          return;
                      }
@@ -1405,7 +1405,7 @@
                  [d setObject:[NSNumber numberWithInt:0] forKey:@"installed"];
              }
 
-             dispatch_async(dispatch_get_main_queue(), ^(void){[tableView display];});
+			 dispatch_async(dispatch_get_main_queue(), ^(void){[self->tableView display];});
          }
      }];
 }
@@ -1438,13 +1438,13 @@
     @autoreleasepool
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            [progressBar setHidden:NO];
-            [progressBar setIndeterminate:YES];
-            [progressBar startAnimation:self];
-            [progressBar display];
+            [self->progressBar setHidden:NO];
+            [self->progressBar setIndeterminate:YES];
+            [self->progressBar startAnimation:self];
+            [self->progressBar display];
         });
         
-        [statusTextStatus setStringValue:@"Downloading Software Distribution Content..."];
+        [self->statusTextStatus setStringValue:@"Downloading Software Distribution Content..."];
         [NSThread sleepForTimeInterval:2];
         
         MPSWTasks *sw = [[MPSWTasks alloc] init];
@@ -1456,21 +1456,21 @@
         NSError *err = nil;
         NSArray *tasks = [sw getSoftwareTasksForGroup:&err];
         if (err) {
-            [statusTextStatus setStringValue:err.localizedDescription];
+            [self->statusTextStatus setStringValue:err.localizedDescription];
             return;
         }
 
         window.title = [NSString stringWithFormat:@"MP - Software Catalog (%@)",[sw groupName]];
         
         if (err) {
-            [statusTextStatus setStringValue:err.localizedDescription];
+            [self->statusTextStatus setStringValue:err.localizedDescription];
         } else {
             [self filterSoftwareContent:tasks];
-            [statusTextStatus setStringValue:@"Done"];
+            [self->statusTextStatus setStringValue:@"Done"];
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            [progressBar stopAnimation:nil];
+            [self->progressBar stopAnimation:nil];
         });
         [self checkAndInstallMandatoryApplications];
     }
@@ -1613,14 +1613,14 @@
     NSLog(@"%@",_SoftwareArray);
     
     dispatch_async(dispatch_get_main_queue(), ^{
-        [arrayController removeObjects:[arrayController arrangedObjects]];
+		[self->arrayController removeObjects:[self->arrayController arrangedObjects]];
         if (_SoftwareArray && [_SoftwareArray count] > 0)
         {
 			NSSortDescriptor *sortBy;
 			sortBy = [NSSortDescriptor sortDescriptorWithKey:@"name" ascending:YES];
 			NSArray *sortDescriptors = [NSArray arrayWithObject:sortBy];
 			NSArray *sortedArray = [_SoftwareArray sortedArrayUsingDescriptors:sortDescriptors];
-            [arrayController addObjects:sortedArray];
+			[self->arrayController addObjects:sortedArray];
         }
     });
     
@@ -1658,12 +1658,12 @@
     if (cancelInstalls == YES) 
     {
         [cancelButton setEnabled:NO];
-        [statusTextStatus setStringValue:@"Cancel Install Tasks"];
+        [self->statusTextStatus setStringValue:@"Cancel Install Tasks"];
         logit(lcl_vInfo,@"Install task has been canceled");
         [self setCancelInstalls:NO];
         [self updateArrayControllerWithDictionary:task forActionType:@"cancel"];
-        [progressBar setHidden:YES];
-        [statusTextStatus setStringValue:@" "];
+        [self->progressBar setHidden:YES];
+        [self->statusTextStatus setStringValue:@" "];
         return YES;
     }
     
@@ -1907,7 +1907,7 @@ done:
 #pragma mark Client Callbacks
 - (void)statusData:(in bycopy NSString *)aData
 {
-    [statusTextStatus setStringValue:aData];
+    [self->statusTextStatus setStringValue:aData];
 }
 
 - (void)installData:(in bycopy NSString *)aData
@@ -1917,9 +1917,9 @@ done:
     strTxt = [strTxt replaceAll:@"installer:PHASE:" replaceString:@""];
     if ([aData containsString:@"installer:"]) {
         if ([strTxt containsString:@"installer:%"]) {
-            [progressBar setDoubleValue:[[[[strTxt replaceAll:@"installer:%" replaceString:@""] componentsSeparatedByString:@"."] objectAtIndex:0] floatValue]];
+            [self->progressBar setDoubleValue:[[[[strTxt replaceAll:@"installer:%" replaceString:@""] componentsSeparatedByString:@"."] objectAtIndex:0] floatValue]];
         } else {
-            [statusTextStatus setStringValue:strTxt];
+            [self->statusTextStatus setStringValue:strTxt];
         }
     }
 }

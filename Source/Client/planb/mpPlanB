@@ -30,6 +30,11 @@ import sys
 import plistlib
 import subprocess
 import urllib2
+import ssl
+
+ctx = ssl.create_default_context()
+ctx.check_hostname = False
+ctx.verify_mode = ssl.CERT_NONE
 
 from distutils.version import LooseVersion, StrictVersion
 from datetime import datetime, timedelta
@@ -49,9 +54,11 @@ handler.setFormatter(formatter)
 # add the handlers to the logger
 logger.addHandler(handler)
 
-
-MINAGENTVER="3.1.0.0.9"
+# Global Settings
+MINAGENTVER="3.1.0.0.12"
 DAYSRANGE=15
+IGNORE_SSL=True
+MPSERVER="localhost"
 
 def hasAgent():
 	if not os.path.exists('/Library/MacPatch/Client/MPAgent'):
@@ -70,7 +77,11 @@ def hasMinVersion():
 
 def hasCheckedIn(clientID):
 	result = False
-	response = urllib2.urlopen('https://mpprod01.llnl.gov:3600/api/v1/client/checkin/info/'+clientID)
+	if IGNORE_SSL:
+		response = urllib2.urlopen('https://'+MPSERVER+':3600/api/v1/client/checkin/info/'+clientID, context=ctx)
+	else:
+		response = urllib2.urlopen('https://'+MPSERVER+':3600/api/v1/client/checkin/info/'+clientID)
+
 	data = json.load(response)   
 	if 'result' in data:
 		mdate = data['result']['mdate2']

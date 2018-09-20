@@ -1,4 +1,4 @@
-from flask import render_template, session, request, current_app
+from flask import render_template, session, request, current_app, redirect, url_for
 from flask_security import login_required
 from sqlalchemy import text
 from datetime import datetime
@@ -61,7 +61,10 @@ def clientsListJSON():
 
 	for c in clients:
 		_dict = c[0].asDict
-		_dict['client_group'] = searchForGroup(c[1], _groups)
+		_dict['client_group'] = ''
+		_client_group = searchForGroup(c[1], _groups)
+		if _client_group is not None:
+			_dict['client_group'] = _client_group
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
@@ -74,7 +77,10 @@ def searchForGroup(group, list):
 	if group is None:
 		return "NA"
 	res = (item for item in list if item["group_id"] == group).next()
-	return res['group_name']
+	if res['group_name']:
+		return res['group_name']
+	else:
+		return None
 '''
 ----------------------------------------------------------------
 	Client - dashboard
@@ -347,6 +353,10 @@ def patchGroupUpdate(group_id):
 @clients.route('/group/<name>',methods=['GET','DELETE'])
 @login_required
 def clientGroup(name,tab=1):
+	_tab = request.args.get('tab')
+	if _tab is not None:
+		tab = int(_tab)
+
 	q_defaultGroup = MpClientGroups.query.filter(MpClientGroups.group_id == name, MpClientGroups.group_name == 'Default').first()
 
 	if request.method == 'DELETE':
@@ -424,6 +434,13 @@ def clientGroup(name,tab=1):
 						else:
 							_row[column] = value
 
+				for key in _row.keys():
+					if not isinstance(_row[key], (long, int)):
+						if _row[key]:
+							_row[key] = _row[key].replace('\n', '')
+						else:
+							_row[key] = ''
+
 				_results.append(_row)
 
 		_sortedCols = []
@@ -450,14 +467,14 @@ def clientGroup(name,tab=1):
 		_settings = getGroupSettings(name)
 		profileCols = [('profileID', 'Profile ID', '0'), ('gPolicyID', 'Policy Identifier', '0'), ('pName', 'Profile Name', '1'), ('title', 'Title', '1'),
 						('description', 'Description', '1'), ('enabled', 'Enabled', '1')]
-		'''
-		return render_template('client_group.html', data=_results, columns=sortedCols, group_name=_qcg.group_name, group_id=name,
-							tasks=_jData['mpTasks'], tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
-							profileCols=profileCols, readOnly=canEditGroup)
-		'''
+
+		swCols = [('rid', 'rid', '0'),('name', 'Name', '1'),('tuuid', 'Software Task ID', '1')]
+		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
+
 		return render_template('client_group.html', data=_results, columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
-							profileCols=profileCols, readOnly=canEditGroup, settings=_settings)
+							profileCols=profileCols, swCols=swCols, swData=[], provCols=provCols, provData=[],
+							readOnly=canEditGroup, settings=_settings)
 
 '''
 ********************************
@@ -759,6 +776,70 @@ def taskInterval(id):
 			revGroupTasks(id)
 
 	return clientGroup(id)
+
+'''
+********************************
+	Groups - > Software
+********************************
+'''
+@clients.route('/group/<group_id>/software', methods=['GET'])
+@login_required
+def groupSoftware(group_id):
+	sw = MpSoftwareTask.query.all()
+	swIDs = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == group_id).all()
+
+	_results = []
+	if swIDs is not None and len(swIDs) >= 1:
+		for sid in swIDs:
+			for s in sw:
+				if sid.tuuid == s.tuuid:
+					_row = s.__dict__.copy()
+					del _row['_sa_instance_state']
+					_row['rid'] = sid.rid
+					_results.append(_row)
+					break
+
+	print _results
+	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
+
+@clients.route('/group/<id>/sw/add',methods=['GET','POST'])
+@login_required
+def clientGroupSWAdd(id):
+	if request.method == 'GET':
+		sw = MpSoftwareTask.query.filter(MpSoftwareTask.active == 1).all()
+		return render_template('client_group_sw_add.html', data={'group_id':id}, swData=sw, type="add")
+
+	elif request.method == 'POST':
+		_form = request.form
+		_groupID = request.form.get('group_id')
+		_tuuid = request.form.get('tuuid')
+
+		hasSW = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == _groupID, MpClientGroupSoftware.tuuid == _tuuid).first()
+		if hasSW is None:
+			clientSW = MpClientGroupSoftware()
+			setattr(clientSW , 'group_id', _groupID)
+			setattr(clientSW , 'tuuid', _tuuid)
+			db.session.add(clientSW)
+			db.session.commit()
+
+		return redirect(url_for('.clientGroup',name=id,tab=5))
+		# return clientGroup(id, 5)
+
+@clients.route('/group/<id>/sw/remove',methods=['DELETE'])
+@login_required
+def clientGroupSWDel(id):
+
+	_group_id = id
+	_sw_ids = request.form.get('rids').split(",")
+	if _sw_ids is not None and len(_sw_ids) > 0:
+		for i in _sw_ids:
+			MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == _group_id,
+											   MpClientGroupSoftware.rid == i).delete()
+			db.session.commit()
+
+
+	return json.dumps({}), 200
+
 
 '''
 ********************************

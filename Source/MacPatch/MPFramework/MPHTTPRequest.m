@@ -497,7 +497,7 @@
                                         if (errorComp)
                                         {
                                             urlErr = errorComp;
-                                            qlerror(@"File download error %@", error.localizedDescription);
+											qlerror(@"File download error %@", self->error.localizedDescription);
                                             [weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
                                         }
                                         else

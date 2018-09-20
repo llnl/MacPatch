@@ -134,38 +134,38 @@ static BOOL gDone = false;
 
 -(void)handleColStateToggle:(NSNotification *)note
 {
-	NSTableColumn *column = [tableView tableColumnWithIdentifier:@"select"];
+	NSTableColumn *column = [self->tableView tableColumnWithIdentifier:@"select"];
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	if ([d boolForKey:@"colStateOnLaunch"] == YES) {
 		[column setHidden:NO];
 	} else {
 		[column setHidden:YES];
 	}
-	[tableView setNeedsDisplay:YES];
+	[self->tableView setNeedsDisplay:YES];
 }
 
 -(void)handleColSizeToggle:(NSNotification *)note
 {
-	NSTableColumn *column = [tableView tableColumnWithIdentifier:@"size"];
+	NSTableColumn *column = [self->tableView tableColumnWithIdentifier:@"size"];
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	if ([d boolForKey:@"colSizeOnLaunch"] == YES) {
 		[column setHidden:NO];
 	} else {
 		[column setHidden:YES];
 	}
-	[tableView setNeedsDisplay:YES];
+	[self->tableView setNeedsDisplay:YES];
 }
 
 -(void)handleColBaselineToggle:(NSNotification *)note
 {
-	NSTableColumn *column = [tableView tableColumnWithIdentifier:@"baseline"];
+	NSTableColumn *column = [self->tableView tableColumnWithIdentifier:@"baseline"];
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	if ([d boolForKey:@"colBaselineOnLaunch"] == YES) {
 		[column setHidden:NO];
 	} else {
 		[column setHidden:YES];
 	}
-	[tableView setNeedsDisplay:YES];
+	[self->tableView setNeedsDisplay:YES];
 }
 
 -(void)awakeFromNib 
@@ -857,8 +857,8 @@ done:
 	if ([[arrayController arrangedObjects] count] >= 1) {
 		[arrayController removeObjects:[arrayController arrangedObjects]];
         dispatch_async(dispatch_get_main_queue(), ^(void){
-            [tableView reloadData];
-            [tableView display];
+            [self->tableView reloadData];
+            [self->tableView display];
         });
 	}
 	
@@ -913,8 +913,8 @@ done:
         
         [arrayController removeObjects:[arrayController arrangedObjects]];
         dispatch_async(dispatch_get_main_queue(), ^(void){
-            [tableView reloadData];
-            [tableView display];
+            [self->tableView reloadData];
+            [self->tableView display];
         });
         
         [spUpdateButton setEnabled:NO];
@@ -1256,8 +1256,8 @@ done:
             [arrayController addObjects:approvedUpdatesArray];
             
             dispatch_async(dispatch_get_main_queue(), ^(void){
-                [tableView reloadData];
-                [tableView display];
+                [self->tableView reloadData];
+                [self->tableView display];
             });
         }
         else
@@ -1776,8 +1776,8 @@ done:
         [spStatusProgress stopAnimation:nil];
         
         dispatch_async(dispatch_get_main_queue(), ^(void){
-            [tableView reloadData];
-            [tableView display];
+            [self->tableView reloadData];
+            [self->tableView display];
         });
         
         // Open the Reboot App
@@ -1875,7 +1875,7 @@ done:
              if (aStatusImage == 3) {
                  [d setObject:[NSImage imageNamed:@"LogOutReq.tif"] forKey:@"statusImage"];
              }
-             dispatch_async(dispatch_get_main_queue(), ^(void){[tableView display];});
+             dispatch_async(dispatch_get_main_queue(), ^(void){[self->tableView display];});
              *stop = YES;
              return;
          }
