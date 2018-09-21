@@ -1708,6 +1708,7 @@ done:
     }
 	
 	@try {
+		logit(lcl_vDebug,@"Software Item to patch: %@",aInstallDict);
 		results = [proxy patchSoftwareViaHelper:aInstallDict];
     }
     @catch (NSException *e) {

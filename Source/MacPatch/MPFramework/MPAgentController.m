@@ -65,15 +65,7 @@
 		[self set_cuuid:[MPSystemInfo clientUUID]];
 		[self setILoadMode:NO];
 		[self setForceRun:NO];
-		
-		// Add Debug Output
-        /* CEH
-		if ([_defaults hasKey:@"MPAgentExecDebug"]) {
-			if ([[_defaults objectForKey:@"MPAgentExecDebug"] isEqualTo:@"1"]) {
-				lcl_configure_by_name("*", lcl_vDebug);
-			}	
-		}
-         */
+
     }
     return self;    
 }
@@ -84,8 +76,9 @@
     if (self) {
         fm = [NSFileManager defaultManager];
 		[self set_cuuid:[MPSystemInfo clientUUID]];
-        mpAsus = [[MPAsus alloc] init];
-        mpDataMgr = [[MPDataMgr alloc] init];
+        mpAsus		= [[MPAsus alloc] init];
+        mpDataMgr	= [[MPDataMgr alloc] init];
+		settings    = [MPSettings sharedInstance];
 		[self setILoadMode:NO];
 		[self setForceRun:NO];
         [self setErrorCode:-1];
@@ -870,6 +863,9 @@ done:
 	// Filter - 0 = All,  1 = Apple, 2 = Third
 	NSArray *updatesArray = nil;
     NSArray *updatesArrayRaw = nil;
+	// Make sure we have the latest agent settings
+	// MPSettings *_settings = [MPSettings sharedInstance];
+	//[_settings refresh];
     
     // Scan for Patches
     [self scanForPatchUsingBundleID:aPatchBundleID];
@@ -897,8 +893,10 @@ done:
 	NSString *_osType = nil;
 	_osType = [[MPSystemInfo osVersionInfo] objectForKey:@"ProductName"];
 	if ([_osType isEqualToString:@"Mac OS X"]) {
+		
 		if (settings.agent.patchClient == 0) {
-            logit(lcl_vInfo,@"Host is a Mac OS X Client and AllowClient property is set to false. No updates will be applied.");
+			logit(lcl_vDebug,@"Agent Settings: %@",settings.agent.toDictionary);
+            logit(lcl_vWarning,@"Host is a Mac OS X Client and AllowClient property is set to false. No updates will be applied.");
             [self removeTaskRunning:kMPPatchUPDATE];
             [self setErrorCode:0];
             return;
@@ -908,7 +906,8 @@ done:
 	logit(lcl_vInfo, @"Validating server install status.");
 	if ([_osType isEqualToString:@"Mac OS X Server"]) {
         if (settings.agent.patchServer == 0) {
-            logit(lcl_vInfo,@"Host is a Mac OS X Server and AllowServer property is set to false. No updates will be applied.");
+			logit(lcl_vDebug,@"Agent Settings: %@",settings.agent.toDictionary);
+            logit(lcl_vWarning,@"Host is a Mac OS X Server and AllowServer property is set to false. No updates will be applied.");
             [self removeTaskRunning:kMPPatchUPDATE];
             [self setErrorCode:0];
             return;

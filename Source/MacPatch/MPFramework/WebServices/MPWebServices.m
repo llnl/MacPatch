@@ -1204,7 +1204,7 @@
 {
     NSError *error = nil;
     NSDictionary *result = nil;
-    NSString *aURI = [NSString stringWithFormat:@"/api/v1/agent/updater/%@/%@",settings.ccuid, curAppVersion];
+    NSString *aURI = [NSString stringWithFormat:@"/api/v2/agent/updater/%@/%@",settings.ccuid, curAppVersion];
     result = [self restGetRequestforURI:aURI resultType:@"json" error:&error];
     if (err != NULL) *err = error;
     return result;
