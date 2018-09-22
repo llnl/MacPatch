@@ -463,7 +463,6 @@
 					// Loop and add values to new form data obj
 					for (var pair of formData.entries())
 					{
-						//console.log('Eval: '+pair[0]);
 						if (pair[0] == 'mainPackage' && $('#mainPackage').val() == '')
 						{
 							continue;
@@ -472,7 +471,6 @@
 						{
 							continue;
 						}
-						//console.log('Append: '+pair[0]);
 						formDataNew.append(pair[0], pair[1]);
 					}
 
