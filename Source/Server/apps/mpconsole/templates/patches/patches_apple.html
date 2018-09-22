@@ -157,7 +157,6 @@ Apple Patches
 	window.operateEvents = {
 		'click .edit': function (e, value, row, index)
 		{
-			console.log(row);
 			$.get( "/patches/applePatchWizard/" + row['akey']).done(function(data) {
 				$('#modalBody').html(data);
 				$('#modalSaveButton').hide();

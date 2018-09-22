@@ -399,7 +399,7 @@
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         qlinfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
-        if ((int)wsResult.statusCode == 200 || (int)wsResult.statusCode == 201) {
+        if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 299) {
             qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
@@ -422,7 +422,8 @@
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         qldebug(@"[runSyncPOST] URL: %@",url);
         wsResult = [self syncronusPOSTWithURL:url body:body];
-        if ((int)wsResult.statusCode == 200 || (int)wsResult.statusCode == 201) {
+		qldebug(@"[statusCode]: %d",(int)wsResult.statusCode);
+		if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 299) {
             qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
@@ -497,7 +498,7 @@
                                         if (errorComp)
                                         {
                                             urlErr = errorComp;
-                                            qlerror(@"File download error %@", error.localizedDescription);
+											qlerror(@"File download error %@", self->error.localizedDescription);
                                             [weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
                                         }
                                         else

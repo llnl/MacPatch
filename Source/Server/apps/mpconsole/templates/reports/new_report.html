@@ -175,8 +175,6 @@
 				$.get(_url, function(data, status) {
 					var jData = $.parseJSON(data);
 					table_filters = jData.data;
-					console.log("***");
-					console.log(table_filters);
 					// Populate Columns
 					$('#columns').empty();
 					$('#columns').append($('<option></option>').val("*").html("*"));

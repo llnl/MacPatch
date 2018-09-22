@@ -74,9 +74,8 @@ def clientsListJSON():
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):
-	if not group:
-		return None
-		
+	if group is None:
+		return "NA"
 	res = (item for item in list if item["group_id"] == group).next()
 	if res['group_name']:
 		return res['group_name']
@@ -266,15 +265,6 @@ def clientGroupAdd():
 	setattr(clientGroup, 'group_id', _group_id)
 	setattr(clientGroup, 'group_owner', _owner)
 
-	fileData = defaultTasks()
-	file_tasks = fileData['mpTasks']
-	for task in file_tasks:
-		task['group_id'] = _group_id
-		_t = MpClientTasks(**task)
-		db.session.add(_t)
-		db.session.commit()
-		_t = None
-
 	log("{} adding new group {}.".format(_owner, _group_id))
 	return render_template('update_client_group.html', data=clientGroup, type="add")
 
@@ -333,7 +323,7 @@ def clientGroupUserModify():
 	except:
 		log_Error("Error {}".format(sys.exc_info()[0]))
 
-	return clientGroup(id,7)
+	return clientGroup(id,5)
 
 @clients.route('/group/update/<group_id>',methods=['POST'])
 @login_required
@@ -424,7 +414,12 @@ def clientGroup(name,tab=1):
 		_admins = sorted(_admins, key=itemgetter('owner'), reverse=True)
 
 		# Run Query of all clients that contain the Client ID
-		sql = text("""select * From mp_clients;""")
+		# sql = text("""select * From mp_clients;""")
+		sql = text("""select c. *, mpa_distinguishedName as ADDN,
+					  SUBSTRING_INDEX(mpa_distinguishedName,",",-4) as ADOU,
+					  mpa_HasSLAM as SLAM
+					  from mp_clients c Left Join mpi_DirectoryServices d
+					  ON c.cuuid = d.cuuid""")
 		_q_result = db.engine.execute(sql)
 
 		_results = []
@@ -448,11 +443,19 @@ def clientGroup(name,tab=1):
 
 				_results.append(_row)
 
+		_sortedCols = []
+		for x in sortedCols:
+			_sortedCols.append({'name':x.name, 'info':x.info})
+
+		_sortedCols.append({'name':'ADDN', 'info':'ADDN'})
+		_sortedCols.append({'name': 'ADOU', 'info': 'ADOU'})
+		_sortedCols.append({'name': 'SLAM', 'info': 'SLAM'})
+
 		# Client Tasks Columns
 		_qTasksCols = MpClientTasks.__table__.columns
 
 		# Data in one dict
-		groupResult['Clients'] = {'data': _results, 'columns': sortedCols}
+		groupResult['Clients'] = {'data': _results, 'columns': _sortedCols}
 		groupResult['Group'] = {'name': _qcg.group_name, 'id':name}
 		groupResult['Software'] = {'catalogs':softwareCatalogs()}  # Used to populate UI for setting
 		groupResult['Patches'] = {'groups': patchGroups()}  # Used to populate UI for setting
@@ -468,8 +471,7 @@ def clientGroup(name,tab=1):
 		swCols = [('rid', 'rid', '0'),('name', 'Name', '1'),('tuuid', 'Software Task ID', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
-
-		return render_template('client_group.html', data=_results, columns=sortedCols, group_name=_qcg.group_name, group_id=name,
+		return render_template('client_group.html', data=_results, columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
 							profileCols=profileCols, swCols=swCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
