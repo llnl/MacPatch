@@ -2,8 +2,8 @@
 
 {% block styles %}
 	{{ super() }}
-    	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block pageHeader %}
@@ -20,7 +20,22 @@
 						</div>
 						<!-- /.panel-heading -->
 						<div class="panel-body">
-							<canvas id="model-bar-chart" />
+
+                            <ul class="nav nav-tabs" role="tablist" id="modelTab">
+                               <li><a href="#mTypes" data-toggle="tab">Types</a></li>
+                               <li><a href="#mBreakDown" data-toggle="tab">Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
+								<div class="tab-pane active" id="mBreakDown">
+									<br>
+									<canvas id="model-bar-chart" />
+								</div>
+                                <div class="tab-pane" id="mTypes">
+									<br>
+                                    <canvas id="model-pie-chart" />
+								</div>
+                            </div>
+
 						</div>
 						<!-- /.panel-body -->
 					</div>
@@ -33,7 +48,7 @@
 							Patches
 						</div>
                         <div class="panel-body">
-                            <ul class="nav nav-tabs">
+                            <ul class="nav nav-tabs" id="patchTab">
                                <li><a href="#pRequired" data-toggle="tab">Required</a></li>
                                <li><a href="#pReleased" data-toggle="tab">Released</a></li>
                                <li><a href="#pInstalled" data-toggle="tab">Installed</a></li>
@@ -76,11 +91,26 @@
 				<div class="col-lg-6">
 					<div class="panel panel-default">
 						<div class="panel-heading">
-							OS Version Breakdown
+							macOS Versions
 						</div>
 						<!-- /.panel-heading -->
                         <div class="panel-body">
-							<canvas id="osver-bar-chart" />
+
+                            <ul class="nav nav-tabs" role="tablist" id="osTab">
+                               <li><a href="#osMinor" data-toggle="tab">OS Version - Minor</a></li>
+                               <li><a href="#osAll" data-toggle="tab">OS Version - Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
+								<div class="tab-pane active" id="osMinor">
+									<br>
+									<canvas id="osminor-bar-chart" />
+								</div>
+                                <div class="tab-pane" id="osAll">
+									<br>
+                                    <canvas id="osver-bar-chart" />
+								</div>
+                            </div>
+
 						</div>
 						<!-- /.panel-body -->
 					</div>
@@ -154,7 +184,9 @@
 	<script>
 	$( document ).ready(function()
 	{
-	    //$('#pRequired a[href="#pRequired"]').tab('show');
+        $('#modelTab li:last-child a').tab('show');
+        $('#patchTab li:first-child a').tab('show');
+        $('#osTab li:first-child a').tab('show');
 	});
 
 	var ctxRebootStatus = document.getElementById("reboot-pie-chart");
@@ -223,6 +255,35 @@
 					}
 				}]
 			}
+		}
+	});
+
+	var ctxModelTypes = document.getElementById("model-pie-chart");
+	var modelTypesChart= new Chart(ctxModelTypes, {
+		type: 'pie',
+		data: {
+			labels: [
+				{% for item in modelTypeData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: '# of Votes',
+				data: [
+					{% for item in modelTypeData %}
+						{{item[1]}},
+					{% endfor %}
+				],
+                backgroundColor: [
+					{% for item in modelTypeData %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true
 		}
 	});
 
@@ -309,6 +370,46 @@
 		}
 	});
 
+	var ctxOSVerMinor = document.getElementById("osminor-bar-chart");
+	var myChartOsVerMinor = new Chart(ctxOSVerMinor, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in osMinor %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: "macOS Versions",
+				data: [
+					{% for item in osMinor %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in osMinor %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Custom Chart Title'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
 	var ctxPatchInstall = document.getElementById("patch-installed-bar-chart");
 	var patchInstallChart = new Chart(ctxPatchInstall, {
 		type: 'bar',
@@ -319,7 +420,7 @@
 				{% endfor %}
 			],
 			datasets: [{
-				
+
 				data: [
 					{% for item in patchInstalled %}
 						"{{item[1]}}",
@@ -360,18 +461,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/osver/"+label).done(function(data) {
-            $('#modalTitle').html("OS Version - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
-
-		//var url = "http://example.com/?label=" + label + "&value=" + value;
+        showDrillDownWindow('osver','OS Version',label,value);
 	};
 
 	ctxRebootStatus.onclick = function (evt)
@@ -382,16 +472,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/reboot/"+label).done(function(data) {
-            $('#modalTitle').html("Reboot Status - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
+        showDrillDownWindow('reboot','Reboot Status',label,value);
 	};
 
 	ctxModelType.onclick = function (evt)
@@ -402,16 +483,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/modelType/"+label).done(function(data) {
-            $('#modalTitle').html("Model Type - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
+        showDrillDownWindow('modelType','Model Type',label,value);
 	};
 
 	ctxRequiredPatches.onclick = function (evt)
@@ -422,16 +494,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/requiredPatches/"+label).done(function(data) {
-            $('#modalTitle').html("Required Patch - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
+		showDrillDownWindow('requiredPatches','Required Patch',label,value);
 	};
 
 	function graphClickEventOSVer(event)
@@ -483,16 +546,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/agentStatus/"+label).done(function(data) {
-            $('#modalTitle').html("Agent Status - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
+        showDrillDownWindow('agentStatus','Agent Status',label,value);
 	};
 
 	var ctxAgentVersion = document.getElementById("agents-pie-chart");
@@ -533,18 +587,24 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-
-        $.get( "/dashboard/drilldown/agentVersion/"+label).done(function(data) {
-            $('#modalTitle').html("Agent Version - " + label);
-            $('#modalBody').html(data);
-            $('#modalSaveButton').hide();
-            $('#modalCancelButton').hide();
-            $('#modalDialog').addClass("modal-wide");
-            $('#modalBody').css({'height':'80vh'});
-            $('#modalDialog').modal('show');
-        });
+		showDrillDownWindow('agentVersion','Agent Version',label,value);
 	};
 
+	function showDrillDownWindow(query, title, label, value)
+	{
+		var _url = "/dashboard/drilldown/"+query+"/"+label;
+		var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="false"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+        $('#modalTitle').html(title +" - " + label);
+        $('#modalSaveButton').remove();
+        $('#modalCancelButton').remove();
+        $('#modalBody').html(innerHTML);
+        $('#modalBody').css({'height':'80vh'});
+        $('#modalDialog').addClass("modal-wide");
+        $('#modalDialog').modal('show');
+	};
 
 	</script>
 
