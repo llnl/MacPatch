@@ -55,7 +55,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.1.0.0.12"
+MINAGENTVER="3.1.0.1.20"
 DAYSRANGE=15
 IGNORE_SSL=True
 MPSERVER="localhost"
@@ -103,9 +103,23 @@ def clientID():
 	plist_data = plistlib.readPlistFromString(plist_data_raw)
 	return plist_data[0]['IOPlatformUUID']
 
+def checkSettingsFile():
+	plistPath = '/Users/Shared/.mpPlanB.plist'
+	if os.path.exists(plistPath):
+		mpPlanbPlist = plistlib.readPlist(plistPath)
+		if 'minversion' in mpPlanbPlist:
+			MINAGENTVER = mpPlanbPlist['minversion']
+		if 'daysrange' in mpPlanbPlist:
+			DAYSRANGE = mpPlanbPlist['daysrange']
+		if 'mpserver' in mpPlanbPlist:
+			MPSERVER = mpPlanbPlist['mpserver']
+		if 'ignoressl' in mpPlanbPlist:
+			IGNORE_SSL = mpPlanbPlist['ignoressl']
+
 def main():
 	logger.info("Running MacPatch plan b checks.")
 	runPlanB = 0
+	checkSettingsFile()
 	cid = clientID()
 	if hasAgent() == False:
 		logger.error("Failed Agent Check")

@@ -1347,12 +1347,13 @@ done:
 
     @autoreleasepool
     {
-        [spScanAndPatchButton setEnabled:NO];
-        [spUpdateButton setEnabled:NO];
+		dispatch_async(dispatch_get_main_queue(), ^(void){
+			[self->spScanAndPatchButton setEnabled:NO];
+			[self->spUpdateButton setEnabled:NO];
+		});
         
         [self progress:@"Begin patching process."];
-        
-        
+		
         if ([self setCatalogURL] != 0) {
             logit(lcl_vError,@"There was a issue setting the CatalogURL, Apple updates will not occur.");
         }
@@ -1790,30 +1791,34 @@ done:
                 [ud setBool:YES forKey:@"reboot"];
                 ud = nil;
             }
+			
             [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil];
-            [self openRebootApp];
+			[self openRebootApp];
         }
         
         // Create a file to tell MPStatus to update is patch info...
         [fm createFileAtPath:[CLIENT_PATCH_STATUS_FILE stringByExpandingTildeInPath] 
                                                 contents:[@"update" dataUsingEncoding:NSASCIIStringEncoding] 
                                               attributes:nil];
-        
-        [spCancelButton setEnabled:NO];
+		
+		dispatch_async(dispatch_get_main_queue(), ^(void){
+			[self->spCancelButton setEnabled:NO];
+		});
     }
 }
 
 - (void)openRebootApp
 {
-    // Show Reboot Modal Window
-    NSAlert *rbAlert = [[NSAlert alloc] init];
-    [rbAlert setMessageText:@"Install and Restart"];
-    [rbAlert setInformativeText:@"MacPatch needs to finish installing updates that require a reboot. Please save your work and exit all applications before continuing.\n\n To finish the installation and restart your computer, click Restart."];
-    [rbAlert addButtonWithTitle:@"Restart"];
-    [rbAlert addButtonWithTitle:@"Cancel"];
-    [rbAlert setIcon:[NSImage imageNamed:@"MPAlert"]];
+	dispatch_sync(dispatch_get_main_queue(), ^(){
+		// Show Reboot Modal Window
+		NSAlert *rbAlert = [[NSAlert alloc] init];
+		[rbAlert setMessageText:@"Install and Restart"];
+		[rbAlert setInformativeText:@"MacPatch needs to finish installing updates that require a reboot. Please save your work and exit all applications before continuing.\n\n To finish the installation and restart your computer, click Restart."];
+		[rbAlert addButtonWithTitle:@"Restart"];
+		[rbAlert addButtonWithTitle:@"Cancel"];
+		[rbAlert setIcon:[NSImage imageNamed:@"MPAlert"]];
 
-    dispatch_sync(dispatch_get_main_queue(), ^(){
+	
         int choice = (int)[rbAlert runModal];
         switch (choice)
         {

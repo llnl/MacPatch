@@ -59,6 +59,12 @@ class AgentBase(MPResource):
 							setattr(client_obj, col, _args_Val)
 
 				setattr(client_obj, 'mdate', datetime.now())
+
+				if client_obj:
+					if "POST_CHECKIN_TO_SYSLOG" in current_app.config:
+						if current_app.config['POST_CHECKIN_TO_SYSLOG'] == True:
+							postClientDataToSysLog(client_obj)
+
 				db.session.commit()
 
 				_settings = self.getClientTasksSettingsRev(cuuid)
@@ -85,6 +91,12 @@ class AgentBase(MPResource):
 
 				setattr(client_object, 'mdate', datetime.now())
 				db.session.add(client_object)
+
+				if client_object:
+					if "POST_CHECKIN_TO_SYSLOG" in current_app.config:
+						if current_app.config['POST_CHECKIN_TO_SYSLOG'] == True:
+							postClientDataToSysLog(client_object)
+
 				db.session.commit()
 
 				_settings = self.getClientTasksSettingsRev(cuuid)
@@ -212,7 +224,7 @@ class AgentStatus(MPResource):
 			if client_obj:
 				if "POST_CHECKIN_TO_SYSLOG" in current_app.config:
 					if current_app.config['POST_CHECKIN_TO_SYSLOG'] == True:
-						self.postClientDataToSysLog(client_obj)
+						postClientDataToSysLog(client_obj)
 
 				_mdate = "{:%B %d, %Y %H:%M:%S}".format(client_obj.mdate)
 				_mdateAlt = "{:%m/%d/%Y %H:%M:%S}".format(client_obj.mdate)
@@ -230,18 +242,22 @@ class AgentStatus(MPResource):
 			log_Error('[AgentStatus][Get][Exception][Line: %d] client_id: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
 			return {'errorno': 500, 'errormsg': e.message, 'result': {'data': {}, 'type':'AgentStatus'}}, 500
 
-	def postClientDataToSysLog(self, client_obj):
-		# Collection for Syslog and Splunk
 
-		dataStr = "client_id: {}, hostname: {}, ip: {}, mac_address: {}, fileVault_status: {}, os_ver: {}, loggedin_user: {}".format(client_obj.cuuid,
-																																	 client_obj.hostname,
-																																	 client_obj.ipaddr,
-																																	 client_obj.macaddr,
-																																	 client_obj.fileVaultStatus,
-																																	 client_obj.osver,
-																																	 client_obj.consoleuser)
-		syslog.syslog(dataStr)
-		return
+# Post Data To Syslog, for Splunk
+def postClientDataToSysLog(client_obj):
+	# Collection for Syslog and Splunk
+	syslog.openlog(facility=syslog.LOG_DAEMON)
+	dataStr = "client_id: {}, hostname: {}, ip: {}, mac_address: {}, fileVault_status: {}, os_ver: {}, loggedin_user: {}".format(client_obj.cuuid,
+																															 client_obj.hostname,
+																															 client_obj.ipaddr,
+																															 client_obj.macaddr,
+																															 client_obj.fileVaultStatus,
+																															 client_obj.osver,
+																															 client_obj.consoleuser)
+	syslog.syslog(dataStr)
+	syslog.closelog()
+	log_Info("Wrote to syslog: " + dataStr)
+	return
 
 # Add Routes Resources
 checkin_2_api.add_resource(AgentBase,		'/client/checkin/<string:cuuid>')

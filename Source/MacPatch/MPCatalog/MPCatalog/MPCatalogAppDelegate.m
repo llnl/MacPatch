@@ -304,9 +304,6 @@
 	// Center the Window
 	[window center];
 	[self loadInitialContent];
-	[swDistGroupsButton addItemWithTitle:@"Bob"];
-	[swDistGroupsButton display];
-	[swDistGroupsButton setEnabled:YES];
 }
 
 - (void)awakeFromNib
@@ -1192,15 +1189,17 @@
 
 - (void)removeSoftwareThread
 {
-    @autoreleasepool {
-        [refreshButton setEnabled:NO];
-        [swDistGroupsButton setEnabled:NO];
-        [self setTableColEdit:NO];
-        
-        [self->progressBar setIndeterminate:YES];
-        [self->progressBar startAnimation:nil];
-        [self->progressBar display];
-        
+    @autoreleasepool
+	{
+		dispatch_async(dispatch_get_main_queue(), ^(void){
+			[self->refreshButton setEnabled:NO];
+			[self->swDistGroupsButton setEnabled:NO];
+			[self setTableColEdit:NO];
+
+			[self->progressBar setIndeterminate:YES];
+			[self->progressBar startAnimation:nil];
+			[self->progressBar display];
+        });
         int _result = 0;
         
         NSString *uninstallScriptEnc, *uninstallScript;
@@ -1215,7 +1214,9 @@
 
                 if (([[d objectForKey:@"selected"] intValue] == 1) && ([[d objectForKey:@"installed"] intValue] == 1))
                 {
-                    [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstalling %@ ...",[d objectForKey:@"name"]]];
+					dispatch_async(dispatch_get_main_queue(), ^(void){
+                    	[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstalling %@ ...",[d objectForKey:@"name"]]];
+					});
                     uninstallScriptEnc = [d valueForKeyPath:@"Software.sw_uninstall"];
                     if ([uninstallScriptEnc length] > 0) {
                         uninstallScript = [uninstallScriptEnc decodeBase64AsString];
@@ -1226,21 +1227,27 @@
                     if (_result == 0) {
                         [self removeSoftwareInstallStatus:[d objectForKey:@"id"]];
                         [self updateArrayControllerWithDictionary:d forActionType:@"remove"];
-                        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstall completed."]];
+						dispatch_async(dispatch_get_main_queue(), ^{
+							[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Uninstall completed."]];
+						});
                     } else {
                         [self updateArrayControllerWithDictionary:d forActionType:@"error"];
-                        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Error uninstalling."]];
+						dispatch_async(dispatch_get_main_queue(), ^{
+                        	[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Error uninstalling."]];
+						});
                     }
                     [self postUnInstallResults:_result resultText:@"" task:curTaskDict];
                 }
             }
         }
-        
-        [self->progressBar stopAnimation:nil];
-        [self->progressBar display];
-        [refreshButton setEnabled:YES];
-        [swDistGroupsButton setEnabled:YES];
-        [self setTableColEdit:YES];
+
+		dispatch_async(dispatch_get_main_queue(), ^(void){
+			[self->progressBar stopAnimation:nil];
+			[self->progressBar display];
+			[self->refreshButton setEnabled:YES];
+			[self->swDistGroupsButton setEnabled:YES];
+			[self setTableColEdit:YES];
+		});
     }
 }
 
@@ -1442,36 +1449,49 @@
             [self->progressBar setIndeterminate:YES];
             [self->progressBar startAnimation:self];
             [self->progressBar display];
+			
+			[self->statusTextStatus setStringValue:@"Downloading Software Distribution Content..."];
         });
-        
-        [self->statusTextStatus setStringValue:@"Downloading Software Distribution Content..."];
+
         [NSThread sleepForTimeInterval:2];
         
         MPSWTasks *sw = [[MPSWTasks alloc] init];
-        if ([swDistGroupsButton selectedItem])
-        {
-            [sw setGroupName:[[swDistGroupsButton selectedItem] title]];
-            [self setSwDistCurrentTitle:[[swDistGroupsButton selectedItem] title]];
-        }
+		
+		qlinfo(@"group: %@",[[self->swDistGroupsButton selectedItem] title]);
+		
+		if ([self->swDistGroupsButton selectedItem])
+		{
+			[sw setGroupName:[[self->swDistGroupsButton selectedItem] title]];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self setSwDistCurrentTitle:[[self->swDistGroupsButton selectedItem] title]];
+			});
+		}
+		
         NSError *err = nil;
         NSArray *tasks = [sw getSoftwareTasksForGroup:&err];
         if (err) {
-            [self->statusTextStatus setStringValue:err.localizedDescription];
+			dispatch_async(dispatch_get_main_queue(), ^{
+            	[self->statusTextStatus setStringValue:err.localizedDescription];
+			});
             return;
         }
 
-        window.title = [NSString stringWithFormat:@"MP - Software Catalog (%@)",[sw groupName]];
-        
-        if (err) {
-            [self->statusTextStatus setStringValue:err.localizedDescription];
-        } else {
-            [self filterSoftwareContent:tasks];
-            [self->statusTextStatus setStringValue:@"Done"];
-        }
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self->progressBar stopAnimation:nil];
-        });
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self->window.title = [NSString stringWithFormat:@"MP - Software Catalog (%@)",[sw groupName]];
+		});
+		
+		if (err) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->statusTextStatus setStringValue:err.localizedDescription];
+			});
+		} else {
+			[self filterSoftwareContent:tasks];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->statusTextStatus setStringValue:@"Done"];
+			});
+		}
+			
+		[self->progressBar stopAnimation:nil];
         [self checkAndInstallMandatoryApplications];
     }
 }
@@ -1609,8 +1629,12 @@
         }
     }
     
-    logit(lcl_vInfo,@"Approved/Installed Software tasks: %@",_SoftwareArray);
-    NSLog(@"%@",_SoftwareArray);
+    logit(lcl_vDebug,@"Approved Software tasks: %@",_SoftwareArray);
+	logit(lcl_vInfo,@"Approved Software tasks:");
+	for (NSDictionary *s in _SoftwareArray)
+	{
+		logit(lcl_vInfo,@"- %@",s[@"name"]);
+	}
     
     dispatch_async(dispatch_get_main_queue(), ^{
 		[self->arrayController removeObjects:[self->arrayController arrangedObjects]];

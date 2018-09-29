@@ -25,6 +25,17 @@ def index():
 	for row in result:
 		osVerData.append((str(row[0]), str(row[1])))
 
+	osVerMinorData = []
+	sql1b = text("""SELECT SUBSTRING_INDEX(osver, ".", 2) as os, Count(*) as Count
+					FROM mp_clients
+					Group By os 
+					Order By Count Desc""")
+
+	# Get OS Ver Minor Count
+	resultB = db.engine.execute(sql1b)
+	for row in resultB:
+		osVerMinorData.append((str(row[0]), str(row[1])))
+
 	# Get Reboot Count
 	rbData = []
 	sql2 = text("""SELECT needsReboot, Count(*) As Count
@@ -49,15 +60,30 @@ def index():
 	for row in mdl_result:
 		mdl_data.append((str(row[0]).title(), str(row[1])))
 
-	# Client Patch Status
+	# Get Model Type Counts
+	sql3b = text("""
+			SELECT hw.mpa_Model_Identifier AS ModelType, Count(hw.mpa_Model_Identifier) As Count
+			FROM mp_clients mpc
+			LEFT JOIN mpi_SPHardwareOverview hw ON hw.cuuid = mpc.cuuid
+			Group By hw.mpa_Model_Identifier
+			Order By Count Desc
+		""")
 
-	sql4 = text("""
-				Select 	patch, Count(*) As Clients
-				From 	client_patch_status_view
-				Group By patch
-				Order By Clients DESC
-				LIMIT 0, 10
-				""")
+	mdlt_book_count = 0
+	mdlt_desk_count = 0
+	mdlt_serv_count = 0
+	mdlt_result = db.engine.execute(sql3b)
+	for row in mdlt_result:
+		if "book" in str(row[0]).title().lower():
+			mdlt_book_count = mdlt_book_count + row[1]
+		elif "serve" in str(row[0]).title().lower():
+			mdlt_serv_count = mdlt_serv_count + row[1]
+		else:
+			mdlt_desk_count = mdlt_desk_count + row[1]
+
+	mdlt_data = [('Laptop',str(mdlt_book_count)),('Desktop',str(mdlt_desk_count)),('Server',str(mdlt_serv_count))]
+
+	# Client Patch Status
 	sql4a = text("""
 				select patch, COUNT(*) as total
 				from mp_client_patches_apple
@@ -68,6 +94,7 @@ def index():
 	sql4b = text("""
 				select patch, COUNT(*) as Total
 				from mp_client_patches_third
+				WHERE patch NOT LIKE 'mpi_%'
 				GROUP BY patch
 				ORDER BY Total Desc
 				Limit 0,10
@@ -145,8 +172,13 @@ def index():
 		agents_data.append((str(row[0]).title(), str(row[1])))
 
 
-	return render_template('dashboard/dashboard.html', clientCount=_client_count, osData=osVerData,
-						   rebootData=rbData, modelData=mdl_data, patchData=pch_data, clientStatus=status_data,
+
+
+
+
+
+	return render_template('dashboard/dashboard.html', clientCount=_client_count, osData=osVerData, osMinor=osVerMinorData,
+						   rebootData=rbData, modelData=mdl_data, modelTypeData=mdlt_data, patchData=pch_data, clientStatus=status_data,
 						   agentVers=agents_data, patchReleased=_patches_released, patchInstalled=install_data)
 
 
@@ -162,6 +194,7 @@ def drilldown(chart,value):
 		title = result[2]
 		cols = result[1]
 		data = result[0]
+
 
 	return render_template('dashboard/dashview.html', dataTitle=title, data=data, columns=cols, chart=chart, value=value)
 
@@ -363,7 +396,7 @@ def agentStatusCollection(state):
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
 				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
 				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
-				{'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'osver', 'label': 'OS Ver'}, {'name': 'mdate', 'label': 'Last Checkin'}]
 
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
@@ -398,6 +431,7 @@ def agentStatusCollection(state):
 # Filter - Agent Version
 def agentVersionCollection(version):
 	_results = []
+	_resultsN = []
 	colNames = []
 
 	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
@@ -418,6 +452,18 @@ def agentVersionCollection(version):
 
 	for row in clients:
 		_dict = row[0].asDict
+		_nDict = {}
+
+		_dict['addomain'] = row.mpa_ADDomain
+		_dict['addn'] = row.mpa_distinguishedName
+
+		_nDict['addomain'] = row.mpa_ADDomain
+		_nDict['addn'] = row.mpa_distinguishedName
+
+		for c in colNames:
+			if c['name'] in _dict.keys():
+				_nDict[c['name']] = _dict[c['name']]
+
 		_dict['addomain'] = row.mpa_ADDomain
 		_dict['addn'] = row.mpa_distinguishedName
 		if row.group_id and _client_Groups[row.group_id]:
@@ -426,8 +472,9 @@ def agentVersionCollection(version):
 			_dict['client_group'] = "NA"
 
 		_results.append(_dict)
+		_resultsN.append(_nDict)
 
-	return _results, colNames
+	return _resultsN, colNames
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""

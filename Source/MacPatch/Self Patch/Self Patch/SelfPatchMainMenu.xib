@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17B45a" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14313.18" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
-        <capability name="box content view" minToolsVersion="7.0"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14313.18"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -273,7 +272,7 @@
                         <rect key="frame" x="0.0" y="348" width="715" height="74"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMinY="YES"/>
                     </customView>
-                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="caM-nC-p6Z">
+                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" id="caM-nC-p6Z">
                         <rect key="frame" x="445" y="115" width="227" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="right" title="Allow Reboot Patch Installs Enabled" id="2T0-Pk-nhn">
@@ -287,7 +286,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="Warning" id="4pX-Z4-ufW"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="538">
+                    <textField verticalHuggingPriority="750" id="538">
                         <rect key="frame" x="10" y="5" width="441" height="11"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <textFieldCell key="cell" controlSize="small" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Note:  Once patching has been started, patches that require a reboot will be installed on logout." id="558">
@@ -296,7 +295,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="541">
+                    <textField wantsLayer="YES" verticalHuggingPriority="750" id="541">
                         <rect key="frame" x="66" y="357" width="159" height="34"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <shadow key="shadow">
@@ -319,7 +318,7 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="rYa-su-DbZ">
                             <rect key="frame" x="1" y="0.0" width="715" height="205"/>
-                            <autoresizingMask key="autoresizingMask"/>
+                            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" rowHeight="18" headerView="559" id="560">
                                     <rect key="frame" x="0.0" y="0.0" width="715" height="188"/>
@@ -329,7 +328,7 @@
                                     <tableViewGridLines key="gridStyleMask" vertical="YES"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn identifier="" editable="NO" width="33" minWidth="10" maxWidth="3.4028234663852886e+38" id="563">
+                                        <tableColumn editable="NO" width="33" minWidth="10" maxWidth="3.4028234663852886e+38" id="563">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -500,11 +499,11 @@
                         <rect key="frame" x="10" y="16" width="695" height="62"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxY="YES"/>
                         <view key="contentView" id="4EV-2d-Ozu">
-                            <rect key="frame" x="1" y="1" width="693" height="46"/>
+                            <rect key="frame" x="3" y="3" width="689" height="44"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <button verticalHuggingPriority="750" id="551">
-                                    <rect key="frame" x="603" y="12" width="72" height="25"/>
+                                    <rect key="frame" x="599" y="12" width="72" height="25"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="roundTextured" title="Scan" bezelStyle="texturedRounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="554">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -515,7 +514,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" id="550">
-                                    <rect key="frame" x="523" y="12" width="72" height="25"/>
+                                    <rect key="frame" x="519" y="12" width="72" height="25"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="roundTextured" title="Patch" bezelStyle="texturedRounded" alignment="center" enabled="NO" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="555">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -526,7 +525,7 @@
                                     </connections>
                                 </button>
                                 <button verticalHuggingPriority="750" id="549">
-                                    <rect key="frame" x="443" y="12" width="72" height="25"/>
+                                    <rect key="frame" x="439" y="12" width="72" height="25"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxY="YES"/>
                                     <buttonCell key="cell" type="roundTextured" title="Cancel" bezelStyle="texturedRounded" alignment="center" state="on" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="556">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -536,7 +535,7 @@
                                         <action selector="stopAndCloseSelfPatch:" target="494" id="590"/>
                                     </connections>
                                 </button>
-                                <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="612">
+                                <textField verticalHuggingPriority="750" id="612">
                                     <rect key="frame" x="15" y="14" width="86" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Patch Group:" id="613">
@@ -545,8 +544,8 @@
                                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="614">
-                                    <rect key="frame" x="103" y="14" width="218" height="17"/>
+                                <textField verticalHuggingPriority="750" id="614">
+                                    <rect key="frame" x="103" y="14" width="217" height="17"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" placeholderString="RecommendedPatches" id="615">
                                         <font key="font" metaFont="system"/>
@@ -561,11 +560,11 @@
                         <rect key="frame" x="10" y="69" width="695" height="59"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                         <view key="contentView" id="IJ2-MQ-GIO">
-                            <rect key="frame" x="1" y="1" width="693" height="43"/>
+                            <rect key="frame" x="3" y="3" width="689" height="41"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="546">
-                                    <rect key="frame" x="35" y="15" width="647" height="17"/>
+                                <textField verticalHuggingPriority="750" id="546">
+                                    <rect key="frame" x="35" y="15" width="643" height="17"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
                                     <textFieldCell key="cell" lineBreakMode="truncatingMiddle" sendsActionOnEndEditing="YES" placeholderString="Press the scan button to begin a scan." id="547">
                                         <font key="font" metaFont="system"/>
@@ -599,7 +598,7 @@
             </declaredKeys>
         </arrayController>
         <userDefaultsController id="621"/>
-        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="622" customClass="NSPanel">
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="622" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" utility="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="382" y="1102" width="368" height="182"/>
@@ -628,7 +627,7 @@
     </objects>
     <resources>
         <image name="MPSelfPatch" width="512" height="512"/>
-        <image name="NSAdvanced" width="32" height="32"/>
+        <image name="NSAdvanced" width="128" height="128"/>
         <image name="Warning" width="21" height="21"/>
     </resources>
 </document>

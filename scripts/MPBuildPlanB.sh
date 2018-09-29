@@ -1,28 +1,20 @@
 #!/bin/bash
 #
 # -------------------------------------------------------------
-# Script: MPBuildClient.sh
-# Version: 1.7
+# Script: MPBuildPlanB.sh
+# Version: 1.0
 #
-# Description:
-# This is a very simple script to demonstrate how to automate
-# the build process of the MacPatch Agent.
+# Description: Script to build MacPatch PlanB pkg
 #
 # History:
-#	1.1		Added Code Signbing Support
-#   1.2		Added ability to save CODESIGNIDENTITY
-#   1.4		Script No Longer is static location
-#	1.5		Changed Vars for MP 3.1
-#	1.6		Updated version numbers
-#	1.7		Add OS Query to agent install
+#	1.0		Initial Script		
 #
 # -------------------------------------------------------------
 
 SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
-#BUILDROOT="/private/tmp/MP/PlanB"
-BUILDROOT=`mktemp -d -t planb`
+BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX` || exit 1
 PKGVER="1.0.0"
 
 PKGSIGNIDENTITY="*"
@@ -84,6 +76,17 @@ find ${BUILDROOT} -name ".mpRM" -print | xargs -I{} rm -rf {}
 rm -r ${BUILDROOT}/Release
 
 mkdir ${BUILDROOT}/Packages
+
+echo
+echo
+read -p "Would you like to set the server address for PlanB, default is localhost. (Y/N)? [Y]: " MPPLANB_SRV
+MPPLANB_SRV=${MPPLANB_SRV:-Y}
+if [ "$MPPLANB_SRV" == "y" ] || [ "$MPPLANB_SRV" == "Y" ] ; then
+	echo
+	read -p "Server address: " MPPLANB_SRV_ADDR
+	MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-localhost}
+	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/mpPlanB/Files/usr/local/bin/mpPlanB"
+fi
 
 echo
 echo
