@@ -28,7 +28,7 @@ def index():
 	osVerMinorData = []
 	sql1b = text("""SELECT SUBSTRING_INDEX(osver, ".", 2) as os, Count(*) as Count
 					FROM mp_clients
-					Group By os
+					Group By os 
 					Order By Count Desc""")
 
 	# Get OS Ver Minor Count
@@ -194,6 +194,7 @@ def drilldown(chart,value):
 		title = result[2]
 		cols = result[1]
 		data = result[0]
+
 
 	return render_template('dashboard/dashview.html', dataTitle=title, data=data, columns=cols, chart=chart, value=value)
 
@@ -430,6 +431,7 @@ def agentStatusCollection(state):
 # Filter - Agent Version
 def agentVersionCollection(version):
 	_results = []
+	_resultsN = []
 	colNames = []
 
 	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
@@ -450,6 +452,18 @@ def agentVersionCollection(version):
 
 	for row in clients:
 		_dict = row[0].asDict
+		_nDict = {}
+
+		_dict['addomain'] = row.mpa_ADDomain
+		_dict['addn'] = row.mpa_distinguishedName
+
+		_nDict['addomain'] = row.mpa_ADDomain
+		_nDict['addn'] = row.mpa_distinguishedName
+
+		for c in colNames:
+			if c['name'] in _dict.keys():
+				_nDict[c['name']] = _dict[c['name']]
+
 		_dict['addomain'] = row.mpa_ADDomain
 		_dict['addn'] = row.mpa_distinguishedName
 		if row.group_id and _client_Groups[row.group_id]:
@@ -458,8 +472,9 @@ def agentVersionCollection(version):
 			_dict['client_group'] = "NA"
 
 		_results.append(_dict)
+		_resultsN.append(_nDict)
 
-	return _results, colNames
+	return _resultsN, colNames
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""
