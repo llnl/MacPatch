@@ -320,6 +320,16 @@ sleep 2
 kill $(ps ax | grep "MPWorker" | grep -v "grep" | awk '{print $1}')
 sleep 3
 
+
+# ******************************************************************
+# Launch PlanB		    ********************************************
+#
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.planb.plist" ]; then
+	
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.planb.plist
+	sleep 2
+fi
+
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************
 #
