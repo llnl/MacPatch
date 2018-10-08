@@ -12,7 +12,7 @@
 		<key>BundleOverwriteAction</key>
 		<string>upgrade</string>
 		<key>RootRelativeBundlePath</key>
-		<string>PrivilegedHelperTools/MPLoginAgent.app</string>
+		<string>Library/PrivilegedHelperTools/MPLoginAgent.app</string>
 	</dict>
 	<dict>
 		<key>BundleHasStrictIdentifier</key>
@@ -24,7 +24,7 @@
 		<key>BundleOverwriteAction</key>
 		<string>upgrade</string>
 		<key>RootRelativeBundlePath</key>
-		<string>MacPatch/Client/MPCatalog.app</string>
+		<string>Library/MacPatch/Client/MPCatalog.app</string>
 	</dict>
 	<dict>
 		<key>BundleHasStrictIdentifier</key>
@@ -36,7 +36,7 @@
 		<key>BundleOverwriteAction</key>
 		<string>upgrade</string>
 		<key>RootRelativeBundlePath</key>
-		<string>MacPatch/Client/MPClientStatus.app</string>
+		<string>Library/MacPatch/Client/MPClientStatus.app</string>
 	</dict>
 	<dict>
 		<key>BundleHasStrictIdentifier</key>
@@ -48,7 +48,7 @@
 		<key>BundleOverwriteAction</key>
 		<string>upgrade</string>
 		<key>RootRelativeBundlePath</key>
-		<string>MacPatch/Client/Self Patch.app</string>
+		<string>Library/MacPatch/Client/Self Patch.app</string>
 	</dict>
 </array>
 </plist>
