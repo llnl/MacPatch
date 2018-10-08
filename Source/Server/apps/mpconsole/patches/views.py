@@ -343,6 +343,7 @@ def customPatchWizardUpdate():
 				setattr(mpPatch, 'pkg_path', _fileData['filePath'])
 				setattr(mpPatch, 'pkg_url', _fileData['fileURL'])
 
+		setattr(mpPatch, 'mdate', datetime.now())
 		if newPatch:
 			db.session.add(mpPatch)
 
@@ -913,7 +914,7 @@ def patchGroupContent(group_id):
 					SELECT patch_id FROM mp_patch_group_patches
 					Where patch_group_id = '""" + group_id + """'
 				) p ON b.id = p.patch_id
-				WHERE b.patch_state IN (""" + _pType + """) 
+				WHERE b.patch_state IN (""" + _pType + """)
 				ORDER BY b.{} {};""".format(args['sort'], args['order'])
 			   )
 
