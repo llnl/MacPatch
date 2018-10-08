@@ -2,7 +2,7 @@
 #
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 1.7
+# Version: 1.8
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -15,6 +15,7 @@
 #	1.5		Changed Vars for MP 3.1
 #	1.6		Updated version numbers
 #	1.7		Add OS Query to agent install
+# 	1.8		Add PlanB support to base package as an option
 #
 # -------------------------------------------------------------
 
@@ -22,13 +23,18 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 BUILDROOT="/private/tmp/MP/Client31"
-BASEPKGVER="3.1.0.0"
-UPDTPKGVER="3.1.0.0"
+PLANB_BUILD_ROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
+
+BASEPKGVER="3.1.0.1"
+UPDTPKGVER="3.1.0.1"
 PKG_STATE=""
 CODESIGNIDENTITY="*"
 MIN_OS="10.9"
 INCOSQUERY=false
+INCPlanBSource=false
+MPPLANB_SRV_ADDR="localhost"
 BUILDPLIST="/Library/Preferences/mp.build.client31.plist"
+
 if [ -f "$BUILDPLIST" ]; then
 	CODESIGNIDENTITYALT=`defaults read ${BUILDPLIST} name`
 fi
@@ -39,7 +45,9 @@ else
 	mkdir -p ${BUILDROOT}
 fi
 
+# ------------------------------------------------------------
 # Set Client Version
+# ------------------------------------------------------------
 AGENT_VERS="1.0.0"
 if [ -f "$BUILDPLIST" ]; then
 	AGENT_VERS=`defaults read ${BUILDPLIST} client_version`
@@ -52,7 +60,9 @@ echo " - Set overall MacPatch Client version ( e.g. 2.9.0 ) "
 read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
 AGENT_VER=${AGENT_VER:-$AGENT_VERS}
 
+# ------------------------------------------------------------
 # Set Client Build Number
+# ------------------------------------------------------------
 AGENT_BUILDS="1"
 if [ -f "$BUILDPLIST" ]; then
 	AGENT_BUILDS=`defaults read ${BUILDPLIST} client_build`
@@ -78,7 +88,9 @@ if ! [[ $BUILD_NO =~ $re ]] ; then
    echo "Error: Build number is not a number" >&2; exit 1
 fi
 
+# ------------------------------------------------------------
 # Set Min OS Version
+# ------------------------------------------------------------
 MIN_OS_VAR=$MIN_OS
 if [ -f "$BUILDPLIST" ]; then
 	MIN_OS_VAR=`defaults read ${BUILDPLIST} min_os`
@@ -91,6 +103,10 @@ echo " - Set overall MacPatch Client minimum os version "
 read -p "Set MacPatch Client minimum os version [$MIN_OS_VAR]: " MIN_OS_VARS
 MIN_OS=${MIN_OS_VARS:-$MIN_OS_VAR}
 
+
+# ------------------------------------------------------------
+# Choose to include OS query as a package
+# ------------------------------------------------------------
 
 # Convert bool to string
 if $INCOSQUERY; then
@@ -108,17 +124,13 @@ if [ -f "$BUILDPLIST" ]; then
 		else
 			INC_OSQUERY_VAR="N"
 		fi
-
 	else
-	
 		if [[ $INC_OSQUERY_VAR == 1 ]]; then
 			INC_OSQUERY_VAR="Y"
 		else	
 			INC_OSQUERY_VAR="N"
 		fi
-
 	fi
-	
 fi
 
 echo
@@ -140,8 +152,70 @@ else
 	INCOSQUERY=false
 fi
 
+# ------------------------------------------------------------
+# Choose to include PlanB as part of base package
+# ------------------------------------------------------------
 
+# Convert bool to string
+if $INCPlanBSource; then
+	INC_PLANB_VAR="Y"
+else
+	INC_PLANB_VAR="N"
+fi
+
+# If There is a saved plist read it, and set string value
+if [ -f "$BUILDPLIST" ]; then
+	INC_PLANB_VAR=`defaults read ${BUILDPLIST} incPlanB`
+	if (($? > 0)); then
+		if $INCOSQUERY; then
+			INC_PLANB_VAR="Y"
+		else
+			INC_PLANB_VAR="N"
+		fi
+	else
+		if [[ $INC_PLANB_VAR == 1 ]]; then
+			INC_PLANB_VAR="Y"
+		else	
+			INC_PLANB_VAR="N"
+		fi
+	fi
+fi
+
+echo
+echo " - Include PlanB with MacPatch Installer "
+read -p "Would you like to include PlanB with MacPatch (Y/N)? [$INC_PLANB_VAR]: " INC_PLANB_IN
+INC_PLANB_TXT=${INC_OSQUERY_IN:-$INC_PLANB_VAR}
+INC_PLANB_TXT=`echo $INC_PLANB_TXT | awk '{print toupper($0)}'`
+if [ "$INC_PLANB_TXT" != "$INC_PLANB_VAR" ]; then
+	if [[ "$INC_PLANB_TXT" == "Y" ]]; then
+		defaults write ${BUILDPLIST} incPlanB -bool YES
+	else 
+		defaults write ${BUILDPLIST} incPlanB -bool NO
+	fi
+fi
+
+if [[ "$INC_PLANB_TXT" == "Y" ]]; then
+	INCPlanBSource=true
+else 
+	INCPlanBSource=false
+fi
+
+
+if $INCPlanBSource; then
+	echo
+	echo
+	read -p "Would you like to set the server address for PlanB, default is localhost. (Y/N)? [Y]: " MPPLANB_SRV
+	MPPLANB_SRV=${MPPLANB_SRV:-Y}
+	if [ "$MPPLANB_SRV" == "y" ] || [ "$MPPLANB_SRV" == "Y" ] ; then
+		echo
+		read -p "Server address: " MPPLANB_SRV_ADDR
+		MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-localhost}
+	fi
+fi
+
+# ------------------------------------------------------------
 # MacPatch Client Release Level
+# ------------------------------------------------------------
 echo
 read -p "Please choose the desired state (R[elease]/B[eta]/A[lpha])? [R]: " PKGSTATE
 PKGSTATE=${PKGSTATE:-R}
@@ -154,7 +228,9 @@ else
 	echo "Setting Package desired state to \"Release\""
 fi
 
-#statements
+# ------------------------------------------------------------
+# Sign all binaries?
+# ------------------------------------------------------------
 echo
 echo "A valid code siginging identidy is required."
 read -p "Would you like to code sign all binaries (Y/N)? [N]: " SIGNCODE
@@ -170,24 +246,34 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 			defaults write ${BUILDPLIST} name "${CODESIGNIDENTITY}"
 		fi
 
-		#if [ "${CODESIGNIDENTITY}" == "*" ]; then
-		#	read -p "Please enter you code sigining identity: " CODESIGNIDENTITY
-		#fi
 		xcodebuild clean build -configuration Release -project ${SRCROOT}/MacPatch/MacPatch.xcodeproj -target AGENT_BUILD SYMROOT=${BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}"
+
+		if $INCPlanBSource; then
+			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}"
+		fi
+
 	else
 		# Compile the agent components
 		xcodebuild clean build -configuration Release -project ${SRCROOT}/MacPatch/MacPatch.xcodeproj -target AGENT_BUILD SYMROOT=${BUILDROOT}
+
+		if $INCPlanBSource; then
+			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
+		fi
 	fi
 else
 	echo "Invalid entry, now exiting."
 	exit 1
 fi
 
+# ------------------------------------------------------------
 # Remove the build and symbol files
+# ------------------------------------------------------------
 find ${BUILDROOT} -name "*.build" -print | xargs -I{} rm -rf {}
 find ${BUILDROOT} -name "*.dSYM" -print | xargs -I{} rm -rf {}
 
+# ------------------------------------------------------------
 # Remove the static library and header files
+# ------------------------------------------------------------
 if [ -f "${BUILDROOT}/Release/libMacPatch.a" ]; then
 	rm ${BUILDROOT}/Release/libMacPatch.a
 fi
@@ -201,6 +287,10 @@ if [ -d "${BUILDROOT}/Release/usr" ]; then
 	rm -r ${BUILDROOT}/Release/usr
 fi
 
+# ------------------------------------------------------------
+# Copy files to package roots
+# ------------------------------------------------------------
+
 cp -R ${PKGROOT}/Base ${BUILDROOT}
 cp -R ${PKGROOT}/Updater ${BUILDROOT}
 cp -R ${PKGROOT}/Combined ${BUILDROOT}
@@ -210,7 +300,24 @@ mv ${BUILDROOT}/Release/MPAgentUp2Date ${BUILDROOT}/Updater/Files/Library/MacPat
 mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Base/Files/Library/PrivilegedHelperTools/
 cp -R ${BUILDROOT}/Release/* ${BUILDROOT}/Base/Files/Library/MacPatch/Client/
 
-# Get Versions
+# ------------------------------------------------------------
+# Copy PlanB files to base package root
+# ------------------------------------------------------------
+if $INCPlanBSource; then
+
+	mkdir -p ${BUILDROOT}/Base/Files/usr/local/bin/
+	mkdir -p ${BUILDROOT}/Base/Files/usr/local/sbin/
+
+	cp ${PLANB_BUILD_ROOT}/Release/planb ${BUILDROOT}/Base/Files/usr/local/sbin/
+	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Base/Files/usr/local/bin/
+	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Base/Files/Library/LaunchDaemons/
+
+	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Base/Files/usr/local/bin/mpPlanB"
+fi
+
+# ------------------------------------------------------------
+# Get Versions, set version info
+# ------------------------------------------------------------
 agent_ver=`${BUILDROOT}/Base/Files/Library/MacPatch/Client/MPAgent -v`
 update_ver=`${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/MPAgentUp2Date -v`
 
@@ -252,16 +359,20 @@ rm -r ${BUILDROOT}/Release
 
 mkdir ${BUILDROOT}/Combined/Packages
 
+# ------------------------------------------------------------
 # Create the Base Agent pkg
-pkgbuild --root ${BUILDROOT}/Base/Files/Library \
+# ------------------------------------------------------------
+pkgbuild --root ${BUILDROOT}/Base/Files \
 --component-plist ${BUILDROOT}/Base/Components.plist \
 --identifier gov.llnl.mp.agent.base \
---install-location /Library \
+--install-location / \
 --scripts ${BUILDROOT}/Base/Scripts \
 --version $BASEPKGVER \
 ${BUILDROOT}/Combined/Packages/Base.pkg
 
+# ------------------------------------------------------------
 # Create the Updater pkg
+# ------------------------------------------------------------
 pkgbuild --root ${BUILDROOT}/Updater/Files/Library \
 --identifier gov.llnl.mp.agent.updater \
 --install-location /Library \
