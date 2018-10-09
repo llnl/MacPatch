@@ -1,63 +1,63 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-     <loc>/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/server_install/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/client_build_install/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/user_accounts/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/apple_patches/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/custom_patches/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/patch_groups/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/sw_groups/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/sw_tasks/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/sw_packages/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/profiles/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc>None</loc>
+     <lastmod>2018-10-09</lastmod>
      <changefreq>daily</changefreq>
     </url>
     <url>
-     <loc>/about/license/index.html</loc>
-     <lastmod>2018-07-20</lastmod>
+     <loc></loc>
+     
      <changefreq>daily</changefreq>
     </url>
 </urlset>
