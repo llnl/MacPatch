@@ -397,6 +397,11 @@ if $USELINUX; then
 			fi
 		done
 	elif $USEUBUNTU; then
+		# Add additional Repo
+		apt-add-repository universe
+		apt-get update
+
+
 		# Add the Yarn repo
 		curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 		echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list

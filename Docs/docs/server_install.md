@@ -5,8 +5,8 @@
 	* [MySQL](#a2b)
 * [Download, Setup and Install](#a3)
 	* [Get Software](#a3a)
-	* [Setup Database](#a3b)
 	* [Install Server Software](#a3c)
+	* [Setup Database](#a3b)
 	* [Configure Server Software](#a3d)
 	* [Load and Populate Database](#a3f)
 * [Server Setup & Configuration](#a4)
@@ -77,6 +77,16 @@ Preliminary testing has been successful when removing the **ONLY\_FULL\_GROUP\_B
 		cd /opt
 		git clone https://github.com/LLNL/MacPatch.git
 
+
+##### Install Software <a name='a3c'></a>
+
+		cd /opt/MacPatch/Scripts
+		sudo ./MPBuildServer.sh
+
+**Note:** If your behind a SSL content inspector add the custom ca using
+
+		export PIP_CERT=/path/to/ca/cert.crt
+
 ##### Setup Database <a name='a3b'></a>
 
 The database setup script only creates the MacPatch database and the 2 database accounts needed to use the database. Tuning the MySQL server is out of scope for this document.
@@ -87,15 +97,6 @@ Please remeber the passwords for mpdbadm and mpdbro accounts while running this 
 		./MPDBSetup.sh (must be run on the MySQL server)
 
 **Note:** The MPDBSetup.sh ***can be/should be*** copied to another host if the database exists on a seperate server.
-
-##### Install Software <a name='a3c'></a>
-
-		cd /opt/MacPatch/Scripts
-		sudo ./MPBuildServer.sh
-
-**Note:** If your behind a SSL content inspector add the custom ca using
-
-		export PIP_CERT=/path/to/ca/cert.crt
 
 ##### Configure Server Software <a name='a3d'></a>
 
