@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>Server Install & Setup - MacPatch v3.1</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Server Install & Setup";
+    var mkdocs_page_input_path = "server_install.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="icon icon-home"> MacPatch v3.1</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="index.html">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Installation</span>
+    <ul class="subnav">
+                <li class=" current">
+                    
+    <a class="current" href="server_install.html">Server Install & Setup</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l3"><a href="#table-of-contents">Table of Contents</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l4" href="#prequisits-requirements">Prequisits &amp; Requirements</a></li>
+        
+            <li><a class="toctree-l4" href="#download-setup-and-install">Download, Setup and Install </a></li>
+        
+            <li><a class="toctree-l4" href="#server-setup-configuration">Server Setup &amp; Configuration </a></li>
+        
+            <li><a class="toctree-l4" href="#download-add-patch-content">Download &amp; Add Patch Content </a></li>
+        
+        </ul>
+    
+
+    </ul>
+                </li>
+                <li class="">
+                    
+    <a class="" href="client_build_install.html">Client Build & Upload</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Admin Console</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="user_accounts.html">User Accounts</a>
+                </li>
+                <li class="">
+                    
+    <span class="caption-text">Patching</span>
+    <ul class="subnav">
+                <li class="toctree-l3">
+                    
+    <a class="" href="apple_patches.html">Apple Patches</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="custom_patches.html">Custom Patches</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="patch_groups.html">Patch Groups</a>
+                </li>
+    </ul>
+                </li>
+                <li class="">
+                    
+    <span class="caption-text">Software</span>
+    <ul class="subnav">
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_groups.html">Groups</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_tasks.html">Tasks</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_packages.html">Packages</a>
+                </li>
+    </ul>
+                </li>
+                <li class="">
+                    
+    <span class="caption-text">OS Management</span>
+    <ul class="subnav">
+                <li class="toctree-l3">
+                    
+    <a class="" href="profiles.html">Profiles</a>
+                </li>
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">About</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="about/license.md">License</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MacPatch v3.1</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Installation &raquo;</li>
+        
+      
+    
+    <li>Server Install & Setup</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#a1">Required Software</a></li>
+<li><a href="#a2">Perquisites</a><ul>
+<li><a href="#a2a">Linux Packages</a></li>
+<li><a href="#a2b">MySQL</a></li>
+</ul>
+</li>
+<li><a href="#a3">Download, Setup and Install</a><ul>
+<li><a href="#a3a">Get Software</a></li>
+<li><a href="#a3c">Install Server Software</a></li>
+<li><a href="#a3b">Setup Database</a></li>
+<li><a href="#a3d">Configure Server Software</a></li>
+<li><a href="#a3f">Load and Populate Database</a></li>
+</ul>
+</li>
+<li><a href="#a4">Server Setup &amp; Configuration</a><ul>
+<li><a href="#a4a">First Login</a></li>
+<li><a href="#a4b">Server Configuration</a></li>
+<li><a href="#a4c">Default Patch Group Configuration</a></li>
+<li><a href="#a4d">Client Agent Configuration</a></li>
+</ul>
+</li>
+<li><a href="#a5">Download and Add Patch Content</a><ul>
+<li><a href="#a5a">Apple Patches</a></li>
+<li><a href="#a5b">Custom Patches</a></li>
+</ul>
+</li>
+</ul>
+<h3 id="prequisits-requirements">Prequisits &amp; Requirements</h3>
+<p>root or sudo access will be needed to perform these tasks.</p>
+<h4 id="requirements">Requirements <a name='a1'></a></h4>
+<ul>
+<li>Operating System:<ul>
+<li>macOS<ul>
+<li>Mac OS X 10.10 or higher</li>
+</ul>
+</li>
+<li>Linux<ul>
+<li>RHEL 7.x or CentOS 7.x</li>
+<li>Ubuntu Server 16.04</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>RAM: 4 Gig min</li>
+<li>MySQL (5.6.x is Recommended)<ul>
+<li>MySQL 8 not tested.</li>
+</ul>
+</li>
+</ul>
+<h4 id="perquisites">Perquisites <a name='a2'></a></h4>
+<ul>
+<li>Install MySQL 5.6.x (must have root password)</li>
+<li>If Installing on Mac OS X, <strong>Xcode and command line developer tools</strong> need to be installed <strong>AND</strong> the license agreement needs to have been accepted.</li>
+</ul>
+<h5 id="linux-packages">Linux Packages <a name='a2a'></a></h5>
+<p>The MacPatch server build script will attempt to install a number of required software packages there are a few packages that are recommended that be installed prior to running the build script.</p>
+<p><strong>RedHat &amp; CentOS</strong></p>
+<p>RedHat &amp; CentOS will require the "Development tools" group install. This group has a number of packages needed to build the MacPatch server.</p>
+<pre><code>yum groupinstall "Development tools"
+yum install epel-release
+</code></pre>
+<p><strong>Ubuntu</strong></p>
+<pre><code>apt-get install build-essential
+</code></pre>
+<h5 id="mysql">MySQL <a name='a2b'></a></h5>
+<p>While MySQL 5.6 is still the recommended database version. MySQL 5.7 has been out for some time now. MySQL changed the sql_mode settings in 5.7 which broke some queries in MacPatch. In order to use MacPatch with MySQL 5.7 the <strong>sql_mode</strong> setting will have to be changed.</p>
+<p>To view and set the config use</p>
+<pre><code>SELECT @@GLOBAL.sql_mode;
+SET GLOBAL sql_mode = 'modes';
+</code></pre>
+<p>The default SQL mode in MySQL 5.7 includes these modes:</p>
+<pre><code>ONLY_FULL_GROUP_BY, STRICT_TRANS_TABLES, NO_ZERO_IN_DATE, NO_ZERO_DATE, ERROR_FOR_DIVISION_BY_ZERO, NO_AUTO_CREATE_USER, and NO_ENGINE_SUBSTITUTION.
+</code></pre>
+<p>The default SQL mode in MySQL 5.6 includes this mode:</p>
+<pre><code>NO_ENGINE_SUBSTITUTION
+</code></pre>
+<p>Preliminary testing has been successful when removing the <strong>ONLY_FULL_GROUP_BY</strong> mode.</p>
+<h3 id="download-setup-and-install">Download, Setup and Install <a name='a3'></a></h3>
+<h5 id="get-software">Get Software <a name='a3a'></a></h5>
+<pre><code>    mkdir /opt (If Needed)
+    cd /opt
+    git clone https://github.com/LLNL/MacPatch.git
+</code></pre>
+<h5 id="install-software">Install Software <a name='a3c'></a></h5>
+<pre><code>    cd /opt/MacPatch/Scripts
+    sudo ./MPBuildServer.sh
+</code></pre>
+<p><strong>Note:</strong> If your behind a SSL content inspector add the custom ca using</p>
+<pre><code>    export PIP_CERT=/path/to/ca/cert.crt
+</code></pre>
+<h5 id="setup-database">Setup Database <a name='a3b'></a></h5>
+<p>The database setup script only creates the MacPatch database and the 2 database accounts needed to use the database. Tuning the MySQL server is out of scope for this document.</p>
+<p>Please remeber the passwords for mpdbadm and mpdbro accounts while running this script. They will be required during the SetupServer.py script database section.</p>
+<pre><code>    cd /opt/MacPatch/Server/conf/scripts/setup
+    ./MPDBSetup.sh (must be run on the MySQL server)
+</code></pre>
+<p><strong>Note:</strong> The MPDBSetup.sh <strong><em>can be/should be</em></strong> copied to another host if the database exists on a seperate server.</p>
+<h5 id="configure-server-software">Configure Server Software <a name='a3d'></a></h5>
+<pre><code>    cd /opt/MacPatch/Server/conf/scripts/setup
+    sudo ./ServerSetup.py --setup
+</code></pre>
+<h5 id="configure-macpatch-schema-populate-default-data">Configure MacPatch schema &amp; populate default data <a name='a3f'></a></h5>
+<pre><code>    cd /opt/MacPatch/Server/apps
+    source env/bin/activate
+    ./mpapi.py db upgrade head
+    ./mpapi.py populate_db
+    deactivate
+</code></pre>
+<p><strong>Note:</strong> If "mpapi.py db upgrade head" is done using a root shell. Please delete the "/opt/MacPatch/Server/logs/mpwsapi.log" file. It will be owned by root and the REST api will not launch.</p>
+<h5 id="start-services">Start Services</h5>
+<pre><code>    cd /opt/MacPatch/Server/conf/scripts/setup
+    sudo ./ServerSetup.py --load All
+</code></pre>
+<p>--</p>
+<h3 id="server-setup-configuration">Server Setup &amp; Configuration <a name='a4'></a></h3>
+<p>The MacPatch server software has now been installed and should be up and running. The server is almost ready for accepting clients. There are a few more server configuration settings which need to be configured.</p>
+<h4 id="first-login">First Login <a name='a4a'></a></h4>
+<p>The default user name is “mpadmin” and the password is “*mpadmin*”, Unless it was changed using the “ServerSetup.py” script. You will need to login for the first time with this account to do all of the setup tasks. Once these tasks are completed it’s recommended that this account be disabled. This can be done by editing the <strong>siteconfig.json</strong> file, which is located in /opt/MacPatch/Server/etc/.</p>
+<p><strong>From:</strong>
+<pre>
+<code>"users": {
+    "admin": {
+        "enabled": true,
+        "name": "mpadmin",
+        "pass": "*mpadmin*"
+    }
+}</code>
+</pre>
+<strong>To:</strong>
+<pre>
+<code>"users": {
+    "admin": {
+        "enabled": false,
+        "name": "mpadmin",
+        "pass": "*mpadmin*"
+    }
+}</code>
+</pre></p>
+<h4 id="server-configuration">Server Configuration <a name='a4b'></a></h4>
+<p>Each MacPatch server needs to be added to the environment. The master server is always added automatically.</p>
+<p>It is recommended that you login and verify the master server settings. It is common during install that the master server address will be added as localhost or 127.0.0.1. Please make sure that the correct hostname or IP address is set and that <strong>"active"</strong> is enabled.</p>
+<ul>
+<li>Go to “Admin -&gt; Server -&gt; MacPatch Servers”</li>
+<li>Double Click the row with your server or single click the row and click the “Pencil” button.</li>
+</ul>
+<h4 id="default-patch-group-configuration">Default Patch Group Configuration <a name='a4c'></a></h4>
+<p>A default patch group will be created during install. The name of the default patch group is “Default”. You may use it or create a new one.</p>
+<p>To edit the contents for the patch group simply click the “Pencil” icon next to the group name. To add patches click the check boxes to add or subtract patches from the group. When done click the “Save” icon. (Important Step)</p>
+<ul>
+<li>Go to “Patches -&gt; Patch Groups”</li>
+<li>Double Click the row with your server or single click the row and click the “Pencil” button.</li>
+</ul>
+<h4 id="client-agent-configuration">Client Agent Configuration <a name='a4d'></a></h4>
+<p>A default agent configuration is added during the install. Please verify the client agent configuration before the client agent is uploaded.</p>
+<p><strong>Recommended</strong></p>
+<ul>
+<li>Go to “Admin -&gt; Client Agents -&gt; Configure”</li>
+<li>Set the following 3 properties to be enforced<ul>
+<li>MPServerAddress</li>
+<li>MPServerPort</li>
+<li>MPServerSSL</li>
+</ul>
+</li>
+<li>Verify the “PatchGroup” setting. If you have changed it set it before you upload the client agent.</li>
+<li>Click the save button</li>
+<li>Click the icon in the “Default” column for the default configuration. (Important Step)</li>
+<li>Set MPServerAllowSelfSigned to 1 if your in a test environment and not using a valid SSL vertificate.</li>
+</ul>
+<p>Only the default agent configuration will get added to the client agent upon upload.</p>
+<p>--</p>
+<h3 id="download-add-patch-content">Download &amp; Add Patch Content <a name='a5'></a></h3>
+<p><strong>Apple Updates</strong> <a name='a5a'></a></p>
+<p>Apple patch content will download eventually on it’s own cycle, but for the first time it’s recommended to download it manually.</p>
+<p>The Apple Software Update content settings are stored in a json file (/opt/MacPatch/Server/etc/patchloader.json). By default, Apple patches for 10.9 through 10.12 will be processed and supported.</p>
+<p>Run the following command via the Terminal on the Master MacPatch server.</p>
+<p><strong>Linux</strong></p>
+<pre><code># sudo -u www-data /opt/MacPatch/Server/conf/scripts/MPSUSPatchSync.py
+</code></pre>
+<p><strong>Mac</strong></p>
+<pre><code># sudo -u _appserver /opt/MacPatch/Server/conf/scripts/MPSUSPatchSync.py
+</code></pre>
+<p><strong>Custom Updates</strong> <a name='a5b'></a></p>
+<p>To create your own custom patch content please read the "Custom Patch Content" <a href="http://macpatch.llnl.gov/docs/4_custom-patch-content/">docs</a>.</p>
+<p>To use "AutoPkg" to add patch content please read the "AutoPkg patch content" <a href="http://macpatch.llnl.gov/docs/7_packaging-autopkg/">docs</a>.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="client_build_install.html" class="btn btn-neutral float-right" title="Client Build & Upload">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="index.html" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="client_build_install.html" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+
+</body>
+</html>

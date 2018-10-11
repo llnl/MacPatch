@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="img/favicon.ico">
+  <title>Apple Patches - MacPatch v3.1</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css">
+  <link href="css/extra.css" rel="stylesheet">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Apple Patches";
+    var mkdocs_page_input_path = "apple_patches.md";
+    var mkdocs_page_url = null;
+  </script>
+  
+  <script src="js/jquery-2.1.1.min.js" defer></script>
+  <script src="js/modernizr-2.8.3.min.js" defer></script>
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href="index.html" class="icon icon-home"> MacPatch v3.1</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="index.html">Home</a>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Installation</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="server_install.html">Server Install & Setup</a>
+                </li>
+                <li class="">
+                    
+    <a class="" href="client_build_install.html">Client Build & Upload</a>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">Admin Console</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="user_accounts.html">User Accounts</a>
+                </li>
+                <li class=" current">
+                    
+    <span class="caption-text">Patching</span>
+    <ul class="subnav">
+                <li class="toctree-l3 current">
+                    
+    <a class="current" href="apple_patches.html">Apple Patches</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l4"><a href="#extending-an-apple-patch">Extending an Apple Patch </a></li>
+    
+
+    <li class="toctree-l4"><a href="#testing-patch-content">Testing Patch Content </a></li>
+    
+
+    </ul>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="custom_patches.html">Custom Patches</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="patch_groups.html">Patch Groups</a>
+                </li>
+    </ul>
+                </li>
+                <li class="">
+                    
+    <span class="caption-text">Software</span>
+    <ul class="subnav">
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_groups.html">Groups</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_tasks.html">Tasks</a>
+                </li>
+                <li class="toctree-l3">
+                    
+    <a class="" href="sw_packages.html">Packages</a>
+                </li>
+    </ul>
+                </li>
+                <li class="">
+                    
+    <span class="caption-text">OS Management</span>
+    <ul class="subnav">
+                <li class="toctree-l3">
+                    
+    <a class="" href="profiles.html">Profiles</a>
+                </li>
+    </ul>
+                </li>
+    </ul>
+	    </li>
+          
+            <li class="toctree-l1">
+		
+    <span class="caption-text">About</span>
+    <ul class="subnav">
+                <li class="">
+                    
+    <a class="" href="about/license.md">License</a>
+                </li>
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="index.html">MacPatch v3.1</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="index.html">Docs</a> &raquo;</li>
+    
+      
+        
+          <li>Patching &raquo;</li>
+        
+      
+        
+          <li>Admin Console &raquo;</li>
+        
+      
+    
+    <li>Apple Patches</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <p><a name='a1'></a>Apple patch content in MacPatch is collected from the Apple Software Update servers. Every patch apple offers is processed and posted to the MacPatch database via the <code>MPSUSPatchSync.py</code> script. This script is run on a 8 hour interval by default. By default all new apple patches will show up in the database with it's patch state set to "Create". In order for a patch to install it's state needs to be changed to "QA" or "Production".</p>
+<p><strong>Example - Apple patch in <code>Create</code> state</strong></p>
+<p><a href="images/content/apple1.png"><img alt="" src="images/content/apple1.png" /></a></p>
+<h4 id="extending-an-apple-patch">Extending an Apple Patch <a name='a2'></a></h4>
+<p>MacPatch offers the ability to enhance and extend apple supplied patches. MacPatch offers the ability to change the order in which the patch is installed. This is done with the "Patch Install Weight"; the lower the number the sooner the install. By default custom patches have an install weight of 30 and apple patches have an install weight of 60. You also have the ability to override the reboot setting as well. For example if you have an apple patch that does not require a reboot you can change it so it does and vice versa.</p>
+<p><a href="images/content/apple2.png"><img alt="" src="images/content/apple2.png" /></a></p>
+<p>The final option to extending an apple patch is being able to assign and pre and post install script.</p>
+<p><a href="images/content/apple3.png"><img alt="" src="images/content/apple3.png" /></a></p>
+<h3 id="testing-patch-content">Testing Patch Content <a name='a3'></a></h3>
+<p>The preferred method to testing new patches is once a patch has been created involves creating a new patch group and client group and changing the client setting for the new client group.</p>
+<ul>
+<li>Create new patch group, call it "QA"</li>
+<li>Create new client group, call it "QA"</li>
+<li>Edit the client group settings<ul>
+<li>Set "Patch Group" to "QA"</li>
+<li>Set "Patch State Patching" to "Production &amp; QA"</li>
+<li>Save the settings</li>
+</ul>
+</li>
+<li>Assign client to the "QA" client group</li>
+</ul>
+<p>With the groups and the settings created, and client(s) assigned. The next step will be to change the "Patch State" on the newly created patch to "QA".
+In this configuration any client assigned to the QA client group will now scan for the new patch, it will not patch it until the new patch has been added to the QA patch group and saved.</p>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="custom_patches.html" class="btn btn-neutral float-right" title="Custom Patches">Next <span class="icon icon-circle-arrow-right"></span></a>
+      
+      
+        <a href="user_accounts.html" class="btn btn-neutral" title="User Accounts"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+      
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href="user_accounts.html" style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+        <span style="margin-left: 15px"><a href="custom_patches.html" style="color: #fcfcfc">Next &raquo;</a></span>
+      
+    </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+
+</body>
+</html>

@@ -146,33 +146,6 @@ class TestUpload(MPResource):
 				exc_tb.tb_lineno, e.message))
 			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
 
-class TestSign(MPResource):
-
-	def __init__(self):
-		self.reqparse = reqparse.RequestParser()
-		super(TestSign, self).__init__()
-
-	def get(self):
-
-		try:
-			sig = signData("HelloWorld")
-			print "***************"
-			print sig
-
-			res = verifySignedData(sig,"HelloWorld")
-			print "++++++++++++++++"
-			print res
-
-			return {"result": '', "errorno": 0, "errormsg": ""}, 200
-		except OSError as err:
-			return {"result": '', "errorno": err.errno, "errormsg": format(err)}, 500
-		except IntegrityError, exc:
-			return {"result": '', "errorno": 500, "errormsg": ""}, 500
-		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			print e.message
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
-
 # Routes
 status_api.add_resource(ServerStatus,      '/server/status')
 status_api.add_resource(ServerStatusNoDB,  '/server/status/nodb')
@@ -180,5 +153,3 @@ status_api.add_resource(ServerStatusNoDB,  '/server/status/nodb')
 status_api.add_resource(TokenStatus,      '/token/valid/<string:token>')
 
 status_api.add_resource(TestUpload,      '/test/upload/<string:agent_id>/<string:token>')
-
-status_api.add_resource(TestSign,        '/test/sign')
