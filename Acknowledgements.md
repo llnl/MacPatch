@@ -1,4 +1,4 @@
-# ![MPLogo](/Docs/Images/MPLogo_64x64.png) MacPatch 3.1
+# ![MPLogo](./images/MPLogo_64x64.png) MacPatch 3.1
 
 ## Acknowledgements
 

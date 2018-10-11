@@ -1,4 +1,4 @@
-# ![MPLogo](/Docs/docs/Images/MPLogo_64x64.png) MacPatch 3.1
+# ![MPLogo](./images/MPLogo_64x64.png) MacPatch 3.1
 
 ## Overview
 MacPatch simplifies the act of patching and installing software on Mac OS X based systems. The client relies on using the built-in software update application for patching the Mac OS X system updates and it's own scan and patch engine for custom patches. 
@@ -29,9 +29,9 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 * MySQL version 5.1 or higher, MySQL 5.6.x is recommended.
 	* Note: MySQL 8 has not been tested. 	
 
-## Install and Setup
+## Documentation - [MacPatch Docs](https://macpatch-docs.llnl.gov)
 
-Mac & Linux QuickStart: [Server - Install & Setup](Docs/Server%20-%20Install%20&%20Setup.md)
+Install and Setup: [Server - Install & Setup](https://macpatch-docs.llnl.gov/server_install.html)
 
 ## Help
 For questions or help visit the [MacPatch](https://groups.google.com/d/forum/macpatch) group.
