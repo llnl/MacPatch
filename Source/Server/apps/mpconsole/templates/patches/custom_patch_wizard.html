@@ -165,6 +165,18 @@
 							<div class="col-md-2"></div>
 						</div>
 
+                        <!-- Use Table View to Update
+                        <div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Active</label>
+							</div>
+							<div class="col-md-7">
+                                <input type="checkbox" name="active" value="1" {% if (data.active or 0) == 1 %}checked="Yes"{% endif %}">
+							</div>
+							<div class="col-md-2"></div>
+						</div>
+						-->
+
 					</div>
 				</div>
 			</section>
@@ -336,7 +348,7 @@
 					</div>
 				</div>
 			</section>
-
+            <!--
 			<h1>Additional Patches &amp; Save</h1>
 			<section>
 				<h4>Additional Patches &amp; Save</h4>
@@ -365,6 +377,7 @@
 					</div>
 				</div>
 			</section>
+			-->
 		</div>
 		<input type="hidden" name="puuid" value="{{data.puuid}}">
 	</form>
