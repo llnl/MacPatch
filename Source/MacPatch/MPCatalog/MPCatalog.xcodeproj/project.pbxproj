@@ -89,7 +89,6 @@
 
 /* Begin PBXFileReference section */
 		8F8A73331FE1A0EB000CE581 /* MPCatalog_Signed.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPCatalog_Signed.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		8F8A73341FE1A0EB000CE581 /* MPCatalog copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "MPCatalog copy-Info.plist"; path = "/Users/heizer1/Code/MP/development-31/MacPatch/Source/MacPatch/MPCatalog/MPCatalog copy-Info.plist"; sourceTree = "<absolute>"; };
 		8F95C6B01C598A54008FA31D /* RebootWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RebootWindow.h; sourceTree = "<group>"; };
 		8F95C6B11C598A54008FA31D /* RebootWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RebootWindow.m; sourceTree = "<group>"; };
 		8F95C6B21C598A54008FA31D /* RebootWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = RebootWindow.xib; sourceTree = "<group>"; };
@@ -214,7 +213,6 @@
 				8FD88FD016DFDD9200A870A3 /* MPCatalog */,
 				8FD88FC916DFDD9200A870A3 /* Frameworks */,
 				8FD88FC816DFDD9200A870A3 /* Products */,
-				8F8A73341FE1A0EB000CE581 /* MPCatalog copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};

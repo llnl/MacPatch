@@ -660,7 +660,7 @@ done:
 	logit(lcl_vDebug,@"Approved Patches: %@",patchForBundleID);
 	
 	// Filter List of Patches containing only the approved patches
-	NSDictionary *customPatch, *approvedPatch;
+	NSDictionary *customPatch;
 	logit(lcl_vInfo,@"Building approved patch list...");
 	for (int i=0; i < [customPatchesFound count]; i++)
 	{
