@@ -149,7 +149,8 @@ NSString *const kRefreshStatusIconNotification      = @"kRefreshStatusIconNotifi
     // App Version Info
     [selfVersionInfoMenuItem setTitle:[NSString stringWithFormat:@"Status App Version: %@",[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"]]];
     NSDictionary *_mpVerDict = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
-    [MPVersionInfoMenuItem setTitle:[NSString stringWithFormat:@"MacPatch Version: %@",[_mpVerDict objectForKey:@"version"]]];
+	NSString *_versionStr = [NSString stringWithFormat:@"%@.%@.%@.%@",_mpVerDict[@"major"],_mpVerDict[@"minor"],_mpVerDict[@"bug"],_mpVerDict[@"build"]];
+    [MPVersionInfoMenuItem setTitle:[NSString stringWithFormat:@"MacPatch Version: %@",_versionStr]];
     
     
     [[NSDistributedNotificationCenter defaultCenter] addObserver: self
@@ -515,33 +516,16 @@ done:
     [clientInfoTableView reloadData];
     
     NSDictionary *mpVerDict = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
+	NSString *_versionStr = [NSString stringWithFormat:@"%@.%@.%@",mpVerDict[@"major"],mpVerDict[@"minor"],mpVerDict[@"bug"]];
     logit(lcl_vDebug,@"mpVerDict: %@", mpVerDict);
     
     NSString *verInfo = [NSString stringWithFormat:@"Version: %@\nBuild: %@\nClient ID: %@",
-                         [mpVerDict objectForKey:@"version"],
+                         _versionStr,
                          [mpVerDict objectForKey:@"build"],
                          [MPSystemInfo clientUUID]];
     
     [clientInfoTextField setFont:[NSFont fontWithName:@"Lucida Grande" size:11.0]];
     [clientInfoTextField setStringValue:verInfo];
-    
-    /* Removed for MP 3.1
-    NSMutableArray *data = [[NSMutableArray alloc] init];
-    NSMutableDictionary *dict;
-    NSDictionary *mpSwuadDict = [NSDictionary dictionaryWithContentsOfFile:AGENT_PREFS_PLIST];
-    int i = 0;
-    for (i=0;i < [[mpSwuadDict allKeys] count];i++) {
-        dict = [[NSMutableDictionary alloc] init];
-        [dict setObject:[[mpSwuadDict allKeys] objectAtIndex:i] forKey:@"property"];
-        [dict setObject:[[mpSwuadDict allValues] objectAtIndex:i] forKey:@"value"];
-        [data addObject:dict];
-        dict = nil;
-    }
-    
-    [clientArrayController addObjects:data];
-    [clientInfoTableView reloadData];
-    [clientInfoTableView deselectAll:self];
-    */
     
     [clientInfoWindow makeKeyAndOrderFront:sender];
     [clientInfoWindow center];
@@ -1529,7 +1513,7 @@ done:
         
     } else {
         logit(lcl_vInfo,@"floor(NSAppKitVersionNumber): %f",floor(NSAppKitVersionNumber));
-        logit(lcl_vInfo,@"NSAppKitVersionNumber10_9:    %d",NSAppKitVersionNumber10_9);
+		logit(lcl_vInfo,@"NSAppKitVersionNumber10_9:    %f",NSAppKitVersionNumber10_9);
         logit(lcl_vWarning,@"Current OS does not support NSUserNotification");
     }
 }
