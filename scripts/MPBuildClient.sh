@@ -382,6 +382,8 @@ ${BUILDROOT}/Combined/Packages/Updater.pkg
 
 
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
+AGENT_VER_BUILD="$AGENT_VER.$BUILD_NO"
+sed -i '' "s/\[AGENT_VER\]/$AGENT_VER_BUILD/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 sed -i '' "s/\[BUILD_NO\]/$BUILD_NO_STR/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 sed -i '' "s/\[STATE\]/$PKG_STATE/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 

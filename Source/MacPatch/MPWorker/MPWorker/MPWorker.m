@@ -898,6 +898,16 @@ done:
 
 - (BOOL)verifyFileHash:(NSString *)aPath knownHash:(NSString *)kHash type:(NSString *)hashType
 {
+	BOOL isDir;
+	if (![fm fileExistsAtPath:aPath isDirectory:&isDir]) {
+		logit(lcl_vError,@"%@ file not found.",[aPath lastPathComponent]);
+		return NO;
+	}
+	if (isDir) {
+		logit(lcl_vError,@"%@ is a directory, hash can not be calculated.",[aPath lastPathComponent]);
+		return NO;
+	}
+	
     MPCrypto *mpCrypto = [[MPCrypto alloc] init];
     NSString *fHash = [mpCrypto getHashForFileForType:aPath type:hashType];
     

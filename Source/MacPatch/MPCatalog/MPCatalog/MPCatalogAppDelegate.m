@@ -595,7 +595,9 @@
     int _needsReboot = 0;
     for (NSDictionary *d in mandatoryInstllTasks) 
     {
-        [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
+		dispatch_async(dispatch_get_main_queue(), ^{
+        	[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Installing %@ ...",[d objectForKey:@"name"]]];
+		});
         logit(lcl_vInfo,@"Installing %@ (%@).",[d objectForKey:@"name"],[d objectForKey:@"id"]);
         logit(lcl_vInfo,@"INFO: %@",[d valueForKeyPath:@"Software.sw_type"]);
         
@@ -662,11 +664,13 @@
         dispatch_async(dispatch_get_main_queue(), ^(void){
 			[self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Downloading %@",[d objectForKey:@"name"]]];
         });
+		dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
         [req runDownloadRequest:urlPath downloadDirectory:dlPath progress:progressBar progressPercent:nil completion:^(NSString *fileName, NSString *filePath, NSError *error)
         {
             if (error) {
                 logit(lcl_vError,@"%@", error.localizedDescription);
                 dlErr = error;
+				dispatch_semaphore_signal(semaphore);
             }
             else
             {
@@ -674,30 +678,38 @@
                 dispatch_async(dispatch_get_main_queue(), ^(void){
                     [self->statusTextStatus setStringValue:[NSString stringWithFormat:@"Successfully downloaded %@",fileName]];
                 });
+				dispatch_semaphore_signal(semaphore);
             }
         }];
 
+		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         [self updateArrayControllerWithDictionary:d forActionType:@"download"];
-
-        // *****************************************
-        // Create Destination Dir
-        // *****************************************
-        dlErr = nil;
-        if ([fm fileExistsAtPath:swLoc] == NO) {
-            [fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:nil error:&dlErr];
-            if (dlErr) {
-                logit(lcl_vError,@"Error[%d], trying to create destination directory. %@.",(int)[dlErr code],swLoc);
-            }
-        }
-        
-        // *****************************************
-        // Move Downloaded File to Destination
-        // *****************************************
-        dlErr = nil;
-        [fm moveItemAtPath:dlPath toPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]] error:&dlErr];
-        if (dlErr) {
-            logit(lcl_vError,@"Error[%d], trying to move downloaded file to %@.",(int)[dlErr code],swLoc);
-        }
+		
+		// *****************************************
+		// Create Destination Dir
+		// *****************************************
+		NSString *decodedName = [[urlPath lastPathComponent] stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+		// Remove the install sw location if exists
+		if ([fm fileExistsAtPath:swLoc]) {
+			[self removeDirectoryViaProxy:swLoc];
+		}
+		
+		// Create the directory where we will put the installer
+		dlErr = nil;
+		[fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:nil error:&dlErr];
+		if (dlErr) {
+			logit(lcl_vError,@"Error[%d], trying to create destination directory. %@.",(int)[dlErr code],swLoc);
+		}
+		
+		// *****************************************
+		// Move Downloaded File to Destination
+		// *****************************************
+		logit(lcl_vDebug,@"Moving downloaded file %@ to destination %@.",dlPath, [swLoc stringByAppendingPathComponent:decodedName]);
+		dlErr = nil;
+		[fm moveItemAtPath:[dlPath stringByAppendingPathComponent:decodedName] toPath:[swLoc stringByAppendingPathComponent:decodedName] error:&dlErr];
+		if (dlErr) {
+			logit(lcl_vError,@"Error[%d], trying to move downloaded file to %@.",(int)[dlErr code],swLoc);
+		}
 
         // *****************************************
         // Software was downloaded, start install
@@ -1457,14 +1469,19 @@
         
         MPSWTasks *sw = [[MPSWTasks alloc] init];
 		
-		qlinfo(@"group: %@",[[self->swDistGroupsButton selectedItem] title]);
+		dispatch_async(dispatch_get_main_queue(), ^{
+			qlinfo(@"group: %@",[[self->swDistGroupsButton selectedItem] title]);
+		});
 		
+		BOOL setName = NO;
+		dispatch_async(dispatch_get_main_queue(), ^{
 		if ([self->swDistGroupsButton selectedItem])
-		{
-			[sw setGroupName:[[self->swDistGroupsButton selectedItem] title]];
-			dispatch_async(dispatch_get_main_queue(), ^{
+			{
 				[self setSwDistCurrentTitle:[[self->swDistGroupsButton selectedItem] title]];
-			});
+			}
+		});
+		if (setName) {
+			[sw setGroupName:[[self->swDistGroupsButton selectedItem] title]];
 		}
 		
         NSError *err = nil;
@@ -1490,8 +1507,11 @@
 				[self->statusTextStatus setStringValue:@"Done"];
 			});
 		}
-			
-		[self->progressBar stopAnimation:nil];
+		
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self->progressBar stopAnimation:nil];
+		});
+		
         [self checkAndInstallMandatoryApplications];
     }
 }

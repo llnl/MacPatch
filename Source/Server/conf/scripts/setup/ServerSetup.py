@@ -27,7 +27,7 @@
   MacPatch Patch Loader Setup Script
   MacPatch Version 3.1.x
 
-  Script Version 2.2.1
+  Script Version 2.3.0
 '''
 
 import os
@@ -991,8 +991,6 @@ def main():
 
 		ldap = MPLdap()
 		ldap.configLdap()
-
-		srvconf.configAgentRequirements()
 
 		os.system('clear')
 		srvList = setupServices()

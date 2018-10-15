@@ -421,11 +421,11 @@ def savePatchFile(puuid, file):
 		os.makedirs(upload_dir)
 
 	if file is not None and len(file.filename) > 4:
-		result['fileName'] = file.filename
 		filename = secure_filename(file.filename)
 		_file_path = os.path.join(upload_dir, filename)
+		result['fileName'] = filename
 		result['filePath'] = _file_path
-		result['fileURL']  = os.path.join('/patches', puuid, file.filename)
+		result['fileURL']  = os.path.join('/patches', puuid, filename)
 
 		if os.path.exists(_file_path):
 			log_Info('Removing existing file (%s)' % (_file_path))
