@@ -388,7 +388,7 @@ sed -i '' "s/\[BUILD_NO\]/$BUILD_NO_STR/g" "${BUILDROOT}/Combined/Resources/Welc
 sed -i '' "s/\[STATE\]/$PKG_STATE/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 
 BUILD_FILE="${BUILDROOT}/Combined/MP-$BASEPKGVER-$BUILD_NO_STR$PKG_STATE"
-echo "MP-$BASEPKGVER-$BUILD_NO_STR$PKG_STATE" > "${BUILD_FILE}"
+echo "MP-$AGENT_VER_BUILD-$BUILD_NO_STR$PKG_STATE" > "${BUILD_FILE}"
 
 # Create the almost final package
 if $INCOSQUERY; then
