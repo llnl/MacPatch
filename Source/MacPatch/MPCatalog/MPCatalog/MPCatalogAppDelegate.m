@@ -681,7 +681,7 @@
 				dispatch_semaphore_signal(semaphore);
             }
         }];
-
+		
 		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
         [self updateArrayControllerWithDictionary:d forActionType:@"download"];
 		
@@ -1473,16 +1473,17 @@
 			qlinfo(@"group: %@",[[self->swDistGroupsButton selectedItem] title]);
 		});
 		
-		BOOL setName = NO;
+		__block NSString *catalogName = @"";
+		dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 		dispatch_async(dispatch_get_main_queue(), ^{
-		if ([self->swDistGroupsButton selectedItem])
-			{
-				[self setSwDistCurrentTitle:[[self->swDistGroupsButton selectedItem] title]];
-			}
+			catalogName = [[self->swDistGroupsButton selectedItem] title];
+			dispatch_semaphore_signal(semaphore);
 		});
-		if (setName) {
-			[sw setGroupName:[[self->swDistGroupsButton selectedItem] title]];
-		}
+
+		dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+		
+		[self setSwDistCurrentTitle:catalogName];
+		[sw setGroupName:catalogName];
 		
         NSError *err = nil;
         NSArray *tasks = [sw getSoftwareTasksForGroup:&err];
@@ -1497,18 +1498,10 @@
 			self->window.title = [NSString stringWithFormat:@"MP - Software Catalog (%@)",[sw groupName]];
 		});
 		
-		if (err) {
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self->statusTextStatus setStringValue:err.localizedDescription];
-			});
-		} else {
-			[self filterSoftwareContent:tasks];
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self->statusTextStatus setStringValue:@"Done"];
-			});
-		}
+		[self filterSoftwareContent:tasks];
 		
 		dispatch_async(dispatch_get_main_queue(), ^{
+			[self->statusTextStatus setStringValue:@"Done"];
 			[self->progressBar stopAnimation:nil];
 		});
 		

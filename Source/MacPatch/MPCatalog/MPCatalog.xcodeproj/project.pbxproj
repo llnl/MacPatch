@@ -490,7 +490,7 @@
 				GCC_PREFIX_HEADER = "MPCatalog/MPCatalog-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = "MPCatalog copy-Info.plist";
+				INFOPLIST_FILE = "MPCatalog/MPCatalog-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPCatalog;
@@ -513,7 +513,7 @@
 				GCC_PREFIX_HEADER = "MPCatalog/MPCatalog-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$(inherited)";
-				INFOPLIST_FILE = "MPCatalog copy-Info.plist";
+				INFOPLIST_FILE = "MPCatalog/MPCatalog-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPCatalog;
