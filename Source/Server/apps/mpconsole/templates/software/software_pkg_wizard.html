@@ -14,6 +14,8 @@
 
 	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
 
+    <link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
 	<style type="text/css" media="screen">
 		#spanLink {
 			cursor:pointer;
@@ -74,7 +76,7 @@
 					<div class="form-group">
 						<div class="row top-buffer">
 							<div class="col-md-2">
-								<label>Patch Name</label>
+								<label>Name</label>
 							</div>
 							<div class="col-md-7">
 								<input type="text" name="sName" SIZE="50" required="isReq" message="Error [software name]: Name is required." value="{{data['PKG'].sName or ''}}">
@@ -376,7 +378,7 @@
 					</div>
 				</div>
 			</section>
-            <!-- Not 100% Completed
+            <!--
 			<h1>Save</h1>
 			<section>
 				<h4>Install Requisites &amp; Save</h4>
@@ -408,6 +410,24 @@
 		</div>
 		<input type="hidden" name="suuid" value="{{data['SUUID']}}">
 	</form>
+</div>
+<div id="overlay">
+    <img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
+    <h1 style="text-align: center; color: white; ">Saving...</h1>
+    <table width="500" align="center">
+        <tr>
+            <td>
+                <div class="well">
+                <label for="exampleInputFile">Upload Progress</label>
+                <div id="progress" class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                      0%
+                    </div>
+                </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 </div>
 {%  endblock %}
 
@@ -465,6 +485,7 @@
 					// Loop and add values to new form data obj
 					for (var pair of formData.entries())
 					{
+						//console.log('Eval: '+pair[0]);
 						if (pair[0] == 'mainPackage' && $('#mainPackage').val() == '')
 						{
 							continue;
@@ -473,6 +494,7 @@
 						{
 							continue;
 						}
+						//console.log('Append: '+pair[0]);
 						formDataNew.append(pair[0], pair[1]);
 					}
 
@@ -481,7 +503,28 @@
 					formDataNew.append('sw_post_install_script', postinstall.getValue());
 					formDataNew.append('sw_uninstall_script', uninstall.getValue());
 
+					var res = true;
+                    $('#overlay').show();
+
 					$.ajax({
+                        xhr: function() {
+                            var xhr = new window.XMLHttpRequest();
+                            xhr.upload.addEventListener('progress',function(e)
+                            {
+                                if (e.lengthComputable)
+                                {
+                                    var percent = Math.round((e.loaded / e.total) * 100);
+                                    $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text(percent + '%');
+                                    if (percent == 100) {
+                                        document.getElementById('progress').className += ' progress-striped active';
+                                        $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text('Saving Uploaded Software');
+                                    }
+                                }
+                            });
+
+                            return xhr;
+                        },
+
 						type:'POST',
 						url: '/software/package/save',
 						data: formDataNew,
@@ -491,21 +534,26 @@
 						success: function(){
 							alert("Software Package Saved Successfully");
 							$('#modalDialog').modal('hide');
-							return true;
+							res = true;
+
+							$('#overlay').hide();
+							parent.closeModal();
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							alert("Software Package Failed to Save");
-							//$('#modalDialog').modal('hide');
-							return false;
+							res = false;
+							$('#overlay').hide();
 						}
 					});
-					return true;
+					return res;
 				},
 				onFinished: function (event, currentIndex)
 				{
 					//alert("Submitted!");
+                    /*
 					$('#modalDialog').modal('hide');
 					parent.closeModal();
+					*/
 				}
 			});
 

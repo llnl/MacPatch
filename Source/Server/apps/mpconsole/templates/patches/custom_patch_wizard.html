@@ -58,7 +58,7 @@
 {%  endblock %}
 
 {% block bodyPanel %}
-
+{% set ns = namespace() %}
 <div class="content">
 	<form id="customPatchForm" action="#">
 		<div id="wizard">
@@ -165,7 +165,7 @@
 							<div class="col-md-2"></div>
 						</div>
 
-                        <!-- Use Table View to Update
+                        <!-- Use Table View To Update
                         <div class="row top-buffer">
 							<div class="col-md-2">
 								<label>Active</label>
@@ -175,7 +175,7 @@
 							</div>
 							<div class="col-md-2"></div>
 						</div>
-						-->
+                        -->
 
 					</div>
 				</div>
@@ -213,10 +213,10 @@
 							<div class="col-md-7">
 								{% for cri in dataCrit %}
 								{% if cri.type == "OSVersion" %}
-									{% set osVerData = cri.type_data %}
+                                    {% set ns.osVerData = cri.type_data  %}
 								{% endif %}
 								{% endfor %}
-								<input type="text" name="req_os_ver" SIZE="50" required="Yes" message="Error [Required OS Version]: A OS version is required." value="{{osVerData or '*'}}">
+								<input type="text" name="req_os_ver" SIZE="50" required="Yes" message="Error [Required OS Version]: A OS version is required." value="{{ns.osVerData or '*'}}">
 							</div>
 							<div class="col-md-3">
 								<small>(e.g. "10.4.*,10.5.*")</small>
@@ -385,6 +385,20 @@
 <div id="overlay">
     <img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
     <h1 style="text-align: center; color: white; ">Saving...</h1>
+    <table width="500" align="center">
+        <tr>
+            <td>
+                <div class="well">
+                <label for="exampleInputFile">Upload Progress</label>
+                <div id="progress" class="progress">
+                    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+                      0%
+                    </div>
+                </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 </div>
 {%  endblock %}
 
@@ -470,6 +484,24 @@
 					var res = true;
                     $('#overlay').show();
 					$.ajax({
+                        xhr: function() {
+                            var xhr = new window.XMLHttpRequest();
+                            xhr.upload.addEventListener('progress',function(e)
+                            {
+                                if (e.lengthComputable)
+                                {
+                                    var percent = Math.round((e.loaded / e.total) * 100);
+                                    $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text(percent + '%');
+                                    if (percent == 100) {
+                                        document.getElementById('progress').className += ' progress-striped active';
+                                        $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text('Saving Uploaded Patch');
+                                    }
+                                }
+                            });
+
+                            return xhr;
+                        },
+
 						type:'POST',
 						url: '/patches/customPatchWizard/update',
 						data: formDataNew,
