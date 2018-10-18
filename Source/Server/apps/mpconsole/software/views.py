@@ -958,7 +958,7 @@ def saveSoftwareFile(suuid, file):
 		file.save(_file_path)
 
 		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read()).hexdigest()
-		result['fileSize'] = os.path.getsize(_file_path) / 1024
+		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
 
