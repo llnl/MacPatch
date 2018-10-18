@@ -52,6 +52,7 @@ class GunicornServer(Command):
 					'accesslog': '/opt/MacPatch/Server/logs/api_access.log',
 					'errorlog': '/opt/MacPatch/Server/logs/api_error.log',
 					'loglevel': 'info',
+					'timeout': 90,
 				}
 
 			def load(self):
