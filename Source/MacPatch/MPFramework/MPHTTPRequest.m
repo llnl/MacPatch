@@ -534,7 +534,7 @@
                                             }
                                         }
 
-                                        dispatch_semaphore_signal(sem);
+										dispatch_semaphore_signal(sem);
                                }];
     
     [downloadTask resume];

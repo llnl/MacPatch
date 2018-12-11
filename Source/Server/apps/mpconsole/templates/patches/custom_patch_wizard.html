@@ -547,7 +547,8 @@
 						x = {}
 						x['order'] = {{cri['type_order'] or 0}};
 						x['type'] = "{{cri['type'] or 'File'}}";
-						x['data'] = `{{cri['type_data']}}`;
+						x['data'] = `{{ cri['type_data'] }}`;
+						
 						var _instance = addRow(x['order'], x['type'], x['data']);
 						xeditors.push({ id: x['order'], instance: _instance });
 						document.getElementById('reqid').value = x['order'];
