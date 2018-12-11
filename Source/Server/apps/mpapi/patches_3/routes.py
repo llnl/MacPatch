@@ -4,7 +4,6 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 
 import json
-import base64
 
 from . import *
 from .. import db
@@ -17,13 +16,13 @@ from .. shared.patches import *
 parser = reqparse.RequestParser()
 
 # Get Patch Group Patches Fast & Dynamic
+
 class PatchGroupPatches(MPResource):
 
 	def __init__(self):
 		self.reqparse = reqparse.RequestParser()
 		super(PatchGroupPatches, self).__init__()
 
-	# @cache.cached(timeout=300)
 	def get(self, client_id):
 
 		wsResult = WSResult()
@@ -67,7 +66,9 @@ class PatchGroupPatches(MPResource):
 						# Parse Apple Patches
 						for aRow in _apple_all:
 							if row.patch_id == aRow.akey:
-								_apple_patches.append(self.getApplePatchData(aRow, _appMP_all))
+								xt, lst = self.getApplePatchData(aRow, _appMP_all)
+								_apple_patches.append(xt)
+								_appMP_all = lst
 								break
 						# Parse Custom Patches
 						for tRow in _third_all:
@@ -103,16 +104,17 @@ class PatchGroupPatches(MPResource):
 
 	@cache.cached(timeout=300, key_prefix='AppleMPCachedList')
 	def appleMPAdditions(self):
-		return ApplePatchAdditions.query.all()
+		result = []
+		query = ApplePatchAdditions.query.all()
+		for row in query:
+			result.append(row.asDict)
+
+		return result
 
 	@cache.cached(timeout=300, key_prefix='CustomCachedList')
 	def allCustomActiveContent(self):
 		return MpPatch.query.filter(MpPatch.active == 1).all()
 
-	# Need to add mac patch apple patch additions to the
-	# apple patch object, I'm are creating a model here
-	# thats usable :-)
-	@cache.cached(timeout=300, key_prefix='AppleCombCachedList')
 	def getApplePatchData(self, appleData, patchAdditions):
 		patch = {}
 
@@ -132,19 +134,23 @@ class PatchGroupPatches(MPResource):
 		patch['patch_state'] = 'Create'
 		patch['patch_install_weight'] = '60'
 
-		for row in patchAdditions:
-			if row.supatchname == appleData.supatchname:
-				patch['severity'] = row.severity
-				patch['severity_int'] = row.severity_int
-				patch['patch_state'] = row.patch_state
-				patch['patch_install_weight'] = row.patch_install_weight
-				if appleData.restartaction == 'NoRestart':
-					if row.patch_reboot == 1:
-						patch['restartaction'] = 'RequireRestart'
-						patch['patch_reboot'] = '1'
-				break
+		match = next(item for item in patchAdditions if item["supatchname"] == appleData.supatchname)
+		if match is not None:
+			patch['severity'] = match['severity']
+			patch['severity_int'] = match['severity_int']
+			patch['patch_state'] = match['patch_state']
+			patch['patch_install_weight'] = match['patch_install_weight']
+			if appleData.restartaction == 'NoRestart':
+				if match['patch_reboot'] == 1:
+					patch['restartaction'] = 'RequireRestart'
+					patch['patch_reboot'] = '1'
 
-		return patch
+			patchAdditions.remove(match)
+
+		# Return the patch data, also return the apple patch additions list with out
+		# the matching dictionary. The list will get smaller on each iteration thus
+		# speeding up the result
+		return patch, patchAdditions
 
 	# Get the patch group id for a client id
 	# returns group id or NA
@@ -212,79 +218,6 @@ class PatchScanList(MPResource):
 			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CCUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
 
-
-# Get Patch Data for BundleID
-class PatchForBundleID(MPResource):
-
-	def __init__(self):
-		self.reqparse = reqparse.RequestParser()
-		super(PatchForBundleID, self).__init__()
-
-	def get(self, client_id, bundle_id):
-
-		wsResult = WSResult()
-		wsData = WSData()
-		wsData.data = {}
-		wsData.type = 'PatchForBundleID'
-		wsResult.result = wsData
-
-		try:
-			if not isValidClientID(client_id):
-				log_Error('[PatchGroupPatches][Get]: Failed to verify ClientID (%s)' % (client_id))
-				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify ClientID'), 424
-
-			if not isValidSignature(self.req_signature, client_id, self.req_uri, self.req_ts):
-				log_Error('[PatchGroupPatches][Get]: Failed to verify Signature for client (%s)' % (client_id))
-				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify Signature'), 424
-
-			_data = {}
-			_data['Custom'] = []
-			_patches = []
-
-			# Query all sources needed
-			_sw = self.customContentUsingBundleID(bundle_id)
-			for row in _sw:
-				patch = row.asDict
-				# Remove un-needed attributes
-				del patch['pkg_path']
-				del patch['cve_id']
-				del patch['patch_severity']
-				del patch['cdate']
-				if row.pkg_preinstall is not None:
-					if row.pkg_preinstall != "":
-						patch['pkg_preinstall'] = base64.b64encode(row.pkg_preinstall)
-
-				if row.pkg_postinstall is not None:
-					if row.pkg_postinstall != "":
-						patch['pkg_postinstall'] = base64.b64encode(row.pkg_postinstall)
-
-				_patches.append(patch)
-
-			# Sort the results based on bundle id then version
-			_sorted = sorted(_patches, key=lambda elem: "%s %s" % (
-				elem['bundle_id'], (".".join([i.zfill(5) for i in elem['patch_ver'].split(".")]))), reverse=True)
-
-			# grab first item from the list, it's the latest version for the bundle id
-			wsData.data = _sorted[0]
-
-			wsResult.data = wsData.toDict()
-			return wsResult.resultNoSignature(), 200
-
-		except IntegrityError, exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
-		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
-
-	@cache.cached(timeout=300, key_prefix='CustomCachedList')
-	def customContentUsingBundleID(self, bundleID):
-		return MpPatch.query.filter(MpPatch.active == 1,
-									MpPatch.patch_state == "Production",
-									MpPatch.bundle_id == bundleID ).all()
-
 # --------------------------------------------------------------------
 # MP Agent 3.1
 # Add Routes Resources
@@ -294,5 +227,3 @@ patches_3_api.add_resource(PatchGroupPatches,		'/client/patch/group/<string:clie
 
 patches_3_api.add_resource(PatchScanList, 			'/client/patch/scan/list/all/<string:client_id>', endpoint='sevAll')
 patches_3_api.add_resource(PatchScanList, 			'/client/patch/scan/list/<string:severity>/<string:client_id>', endpoint='sevCustom')
-
-patches_3_api.add_resource(PatchForBundleID,		'/patch/bundleID/<string:bundle_id>/<string:client_id>')
