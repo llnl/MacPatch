@@ -47,6 +47,39 @@
 
 - (BOOL)clientIsRegistered
 {
+	BOOL result = FALSE;
+	NSError *err = nil;
+	
+	// Get Client Key
+	AgentData *agentData = [[AgentData alloc] init];
+	NSString *cKey = [agentData getClientKey];
+	if (!cKey) {
+		logit(lcl_vError,@"Agent key data not found.");
+		return FALSE;
+	}
+	
+	// Gen SHA1 Digest
+	err = nil;
+	MPCrypto *mpc = [[MPCrypto alloc] init];
+	NSString *keyHash = [mpc getHashFromStringForType:cKey type:@"SHA1"];
+	if (err) {
+		logit(lcl_vError,@"%@",err.localizedDescription);
+		return FALSE;
+	}
+	
+	// Query WebService for answer
+	MPRESTfull *mprest = [[MPRESTfull alloc] initWithClientID:agent.g_cuuid];
+	result = [mprest getAgentRegistrationStatusUsingKey:keyHash error:&err];
+	if (err) {
+		logit(lcl_vError,@"%@",err.localizedDescription);
+		return FALSE;
+	}
+	
+	return result;
+}
+
+- (BOOL)clientIsRegisteredOld
+{
     BOOL result = FALSE;
     NSError *err = nil;
     
@@ -78,7 +111,7 @@
     return result;
 }
 
-- (BOOL)clientIsRegisteredWithValidData
+- (BOOL)clientIsRegisteredWithValidDataOld
 {
     // This is Not Complete
     return FALSE;
@@ -103,9 +136,33 @@
     return TRUE;
 }
 
+- (BOOL)clientIsRegisteredWithValidData
+{
+	AgentData *agentData = [[AgentData alloc] init];
+	NSData *srvKey = [agentData getServerPublicKey];
+	if (!srvKey) {
+		printf("Error, missing server public key for agent.\n");
+		return FALSE;
+	}
+	NSData *pubKey = [agentData getAgentPublicKey];
+	NSData *priKey = [agentData getAgentPrivateKey];
+	if (!pubKey || !priKey) {
+		printf("Error, missing public or private key for agent.\n");
+		return FALSE;
+	}
+	
+	NSString *cKey = [agentData getClientKey];
+	if (!cKey) {
+		printf("Error, missing agent key data.\n");
+		return FALSE;
+	}
+	
+	return TRUE;
+}
+
 - (int)registerClient:(NSError **)error
 {
-    return [self registerClient:nil error:error];
+    return [self registerClient:@"NA" error:error];
 }
 
 - (int)registerClient:(NSString *)aRegKey error:(NSError **)error
@@ -278,7 +335,7 @@
     return [kItem copy];
 }
 
-- (NSDictionary *)generateRegistrationData:(NSError **)err
+- (NSDictionary *)generateRegistrationDataOld:(NSError **)err
 {
     MPSimpleKeychain *skc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_KEYCHAIN_FILE];
     
@@ -393,6 +450,84 @@
     
     // Should not get here
     return nil;
+}
+
+- (NSDictionary *)generateRegistrationData:(NSError **)err
+{
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSError *error = nil;
+	AgentData *agentData = [[AgentData alloc] init];
+
+	// Add Server Public Key to Keychain, for simplicity
+	// Get the Server Public Key from the Server Data
+	NSData *srvPubKey;
+	if ([fm fileExistsAtPath:SRV_PUB_KEY])
+	{
+		error = nil;
+		srvPubKey = [NSData dataWithContentsOfFile:SRV_PUB_KEY];
+		[agentData setServerPublicKey:srvPubKey];
+	}
+	else
+	{
+		NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Public key was not found on file system."};
+		if (err != NULL) *err = [NSError errorWithDomain:@"MPAgentRegistrationDomain" code:99999 userInfo:userInfo];
+		return nil;
+	}
+	
+	
+	// Create the Client Keys then add to Keychain
+	error = nil;
+	MPKeyItem *clientKeyItem = [self generateClientKeys:&error];
+	if (error) {
+		if (err != NULL) *err = error;
+		return nil;
+	}
+	
+	[agentData setAgentPublicKey:[clientKeyItem.publicKey dataUsingEncoding:NSUTF8StringEncoding]];
+	[agentData setAgentPrivateKey:[clientKeyItem.privateKey dataUsingEncoding:NSUTF8StringEncoding]];
+	[agentData setClientKey:clientKeyItem.secret];
+	
+	
+	// Encrypt the client key using the servers public key
+	// also, SHA1 encode the client key. This will be used to
+	// verify that we decoded the key properly and it matches.
+	error = nil;
+	MPCrypto *mpc = [[MPCrypto alloc] init];
+	NSString *encodedKey = [mpc encryptStringUsingKey:clientKeyItem.secret key:[mpc getKeyRef:srvPubKey] error:&error];
+	NSString *hashOfKey =[mpc getHashFromStringForType:clientKeyItem.secret type:@"SHA1"];
+	if (error) {
+		if (err != NULL) *err = error;
+		return nil;
+	}
+	error = nil;
+	[hashOfKey writeToFile:MP_AGENT_HASH atomically:NO encoding:NSUTF8StringEncoding error:&error];
+	if (error) {
+		if (err != NULL) *err = error;
+		return nil;
+	}
+	
+	// Create the dictionary to send to Web service
+	@try
+	{
+		MPClientInfo *ci = [[MPClientInfo alloc] init];
+		NSDictionary *regInfo = @{ @"cuuid":      [agent g_cuuid],
+								   @"cKey":       [encodedKey copy],
+								   @"CPubKeyPem": clientKeyItem.publicKey,
+								   @"CPubKeyDer": @"NA",
+								   @"ClientHash": hashOfKey,
+								   @"HostName":   [agent g_hostName],
+								   @"SerialNo":   [agent g_serialNo],
+								   @"CheckIn":    [ci agentData]
+								   };
+		return regInfo;
+	}
+	@catch (NSException *exception) {
+		if (err != NULL) *err = [NSError errorWithDomain:@"MPAgentRegistrationDomain" code:9998 userInfo:exception.userInfo];
+		return nil;
+	}
+	
+	// Should not get here
+	return nil;
 }
 
 - (BOOL)postRegistrationToServer:(NSDictionary *)aRegData regKey:(NSString *)regKey error:(NSError **)err
