@@ -62,11 +62,15 @@ class Registration(MPResource):
 			use_parking     = isClientParkingEnabled()
 			client_enabled  = 1
 			auto_reg        = isAutoRegEnabled()
+			auto_reg_rereg  = True
 
 			# Is Client Already Registered
 			if isClientRegistered(client_id):
 				log_Info('[Registration][Post]: Client (%s) already registered.' % (client_id))
-				return {"result": '', "errorno": 406, "errormsg": 'Failed to register client.'}, 406
+				if auto_reg is True and auto_reg_rereg is True:
+					log_Info('[Registration][Post]: Client (%s) will update its registration.' % (client_id))
+				else:
+					return {"result": '', "errorno": 406, "errormsg": 'Failed to register client.'}, 406
 
 			# AutoReg is disabled
 			if auto_reg is False:
@@ -165,13 +169,15 @@ class RegistrationStatus(MPResource):
 			if keyHash != 'NA':
 				if rec['enabled'] == 1 and verifyClientHash(rec['clientKey'], keyHash):
 					return {"result": {'data':True}, "errorno": 0, "errormsg": ""}, 200
+				else:
+					return {"result": {'data': False}, "errorno": 409, "errormsg": "Registration key mis-match. Suggest, re-registering client."}, 409
 			else:
 				if rec['enabled'] == 1:
 					return {"result": {'data':True}, "errorno": 0, "errormsg": ""}, 200
 
-			return {"result": {'data':False}, "errorno": 400, "errormsg": ""}, 400
+			return {"result": {'data':False}, "errorno": 400, "errormsg": "Error, validating registration."}, 400
 
-		return {"result": {'data':False}, "errorno": 204, "errormsg": ""}, 204
+		return {"result": {'data':False}, "errorno": 204, "errormsg": "Client not registered."}, 204
 
 ''' Private Methods '''
 def verifyClientHash(encodedKey, hash):
