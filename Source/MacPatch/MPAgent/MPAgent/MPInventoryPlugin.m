@@ -58,13 +58,16 @@
         Class principalClass = [pluginBundle principalClass];
         
         // Do a little sanity checking
+		
         if (![principalClass conformsToProtocol: @protocol(InventoryPluginProtocol)]) {
-            NSLog (@"plug-in principal class must conform to the BundlePrinterProtocol");
+            NSLog (@"plug-in principal class must conform to the InventoryPluginProtocol");
             continue;
         }
-        
+		
+		
         // Check to see if valid hash
         NSString *_pluginHash = [self getPluginHash:fullFilePath];
+		qldebug(@"Plugimn Hash: %@",_pluginHash);
         BOOL validPlugin = [self isValidPlugin:[[pluginBundle infoDictionary] valueForKey:@"CFBundleName"]
                                       bundleID:[[pluginBundle infoDictionary] valueForKey:@"CFBundleIdentifier"]
                                        version:[[pluginBundle infoDictionary] valueForKey:@"CFBundleShortVersionString"] pluginHash:_pluginHash];
