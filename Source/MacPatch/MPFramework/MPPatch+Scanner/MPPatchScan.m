@@ -331,10 +331,6 @@
 				goto done;	
 			}
 			
-			typeQuery		= [qryArr objectAtIndex:1];
-			typeQueryString = [qryArr objectAtIndex:2];
-			typeResult		= [qryArr objectAtIndex:3];
-			
 			if ([mpfile queryFile:typeQueryString action:typeQuery param:typeResult]) {
 				qlinfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;

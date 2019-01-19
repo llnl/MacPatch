@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.1.2.3"
+#define APPVERSION	@"3.1.2.5"
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
