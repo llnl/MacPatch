@@ -148,7 +148,9 @@ def profileSave(profile_id):
 			if _file_data and allowed_file(_file.filename):
 				# Gen Hash
 				profile__hash = hashlib.md5(_file_data).hexdigest()
-				setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
+				#setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
+				# commented, issue with encoding, using defaults 
+				setattr(profile, 'profileData', _file_data)
 				setattr(profile, 'profileHash', profile__hash)
 
 		# Save Profile Data
