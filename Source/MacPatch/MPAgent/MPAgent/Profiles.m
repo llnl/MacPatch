@@ -523,9 +523,6 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 	
 	// Loop vars
 	NSArray *qryArr;
-	NSString *typeQuery;
-	NSString *typeQueryString;
-	NSString *typeResult;
 	
 	int i = 0;
 	for (i=0; i < criteria.count; i++)

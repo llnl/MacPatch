@@ -804,35 +804,38 @@ done:
     // -------------------------------------------
     // iLoad
     // -------------------------------------------
-	if (iLoadMode == YES) {
+	BOOL hasConsoleUserLoggedIn = TRUE;
+	if (iLoadMode == YES)
+	{
 		printf("Updates to install: %d\n", (int)[updatesArray count]);
 	}
-	
-	// Check for console user
-	logit(lcl_vInfo, @"Checking for any logged in users.");
-	BOOL hasConsoleUserLoggedIn = TRUE;
-	@try {
-		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
-		if (!hasConsoleUserLoggedIn)
-		{
-			NSError *fileErr = nil;
-			[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
-			if (fileErr)
+	else
+	{
+		// Check for console user
+		logit(lcl_vInfo, @"Checking for any logged in users.");
+		
+		@try {
+			hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
+			if (!hasConsoleUserLoggedIn)
 			{
-				logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
-			}
-			else
-			{
-				// No need to continue, MPLoginAgent will perform the updates
-				// Since no user is logged in.
-				return;
+				NSError *fileErr = nil;
+				[@"patch" writeToFile:MP_AUTHRUN_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+				if (fileErr)
+				{
+					logit(lcl_vError, @"Error writing out %@ file. %@", MP_AUTHRUN_FILE, fileErr.localizedDescription);
+				}
+				else
+				{
+					// No need to continue, MPLoginAgent will perform the updates
+					// Since no user is logged in.
+					return;
+				}
 			}
 		}
+		@catch (NSException * e) {
+			logit(lcl_vInfo, @"Error getting console user status. %@",e);
+		}
 	}
-	@catch (NSException * e) {
-		logit(lcl_vInfo, @"Error getting console user status. %@",e);
-	}
-
     // -------------------------------------------
     // Begin Patching Process
     // -------------------------------------------

@@ -173,7 +173,8 @@
 	[task setLaunchPath: ASUS_BIN_PATH];
 	
 	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
-		[task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		//[task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	} else {
 		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	}

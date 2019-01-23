@@ -453,17 +453,23 @@
     
     // requestCount is the server index of the servers array
     // this gets incremented on failed attempts
-    if (self.requestCount == -1) {
+    if (self.requestCount == -1)
+	{
         self.requestCount++;
-    } else {
-        if (self.requestCount >= (self.serverArray.count - 1)) {
+    }
+	else
+	{
+        if (self.requestCount >= (self.serverArray.count - 1))
+		{
             NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
             NSError *srverr = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
             if (err != NULL) {
                 *err = srverr;
             }
             return nil;
-        } else {
+        }
+		else
+		{
             self.requestCount++;
         }
     }
@@ -475,7 +481,8 @@
     
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
     qlinfo(@"URL: %@",url);
-    
+	
+	__block NSInteger statusCode = 9999;
     __block __typeof(self) weakSelf = self;
     
     dispatch_semaphore_t    sem;
@@ -491,51 +498,58 @@
     sessionConfiguration.timeoutIntervalForResource = 3600.0;
     NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
     
-    downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:url]
-                                    completionHandler:^(NSURL *location, NSURLResponse *response, NSError *errorComp) {
-                                        
-										NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-                                        if (errorComp)
-                                        {
-                                            urlErr = errorComp;
-											qlerror(@"File download error %@", self->error.localizedDescription);
-                                            [weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
-                                        }
-                                        else
-                                        {
-                                            if (responsePtr != NULL) {
-                                                responsePtr = response;
-                                            }
+    downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:url] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *errorComp)
+	{
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+		statusCode = httpResponse.statusCode;
+		
+		
+		if (errorComp)
+		{
+			urlErr = errorComp;
+			qlerror(@"File download error %@", self->error.localizedDescription);
+			[weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
+		}
+		else
+		{
+			if (statusCode >= 400) {
+				qlerror(@"File download http error %ld, %@. Trying next server.",(long)statusCode, url);
+				[weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
+			}
+			
+			if (responsePtr != NULL) {
+				responsePtr = response;
+			}
 
-                                            qlinfo(@"dlFilePath, %@", dlFilePath);
-                                            qlinfo(@"location, %@", location.path);
-                                            
-                                            NSFileManager *fileManager = [NSFileManager defaultManager];
-                                            NSError *cperror;
-                                            BOOL fileOKToMove = YES;
-                                            if ([fileManager fileExistsAtPath:dlFilePath]) {
-                                                cperror = nil;
-                                                [fileManager removeItemAtPath:dlFilePath error:&cperror];
-                                                if (cperror) {
-                                                    fileOKToMove = NO;
-                                                    qlerror(@"Error removing old downloaded file.");
-                                                    qlerror(@"%@",cperror.localizedDescription);
-                                                }
-                                            }
-                                            
-                                            //moving the file from temp location to app's own directory
-                                            if (fileOKToMove)
-                                            {
-                                                cperror = nil;
-                                                [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
-                                                if (cperror) {
-                                                    qlinfo(@"cperror, %@", cperror.localizedDescription);
-                                                }
-                                            }
-                                        }
+			qlinfo(@"dlFilePath, %@", dlFilePath);
+			qlinfo(@"location, %@", location.path);
+			
+			NSFileManager *fileManager = [NSFileManager defaultManager];
+			NSError *cperror;
+			BOOL fileOKToMove = YES;
+			if ([fileManager fileExistsAtPath:dlFilePath]) {
+				cperror = nil;
+				[fileManager removeItemAtPath:dlFilePath error:&cperror];
+				if (cperror) {
+					fileOKToMove = NO;
+					qlerror(@"Error removing old downloaded file.");
+					qlerror(@"%@",cperror.localizedDescription);
+				}
+			}
+			
+			//moving the file from temp location to app's own directory
+			if (fileOKToMove)
+			{
+				cperror = nil;
+				[fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
+				if (cperror) {
+					qlinfo(@"cperror, %@", cperror.localizedDescription);
+				}
+			}
+		}
 
-										dispatch_semaphore_signal(sem);
-                               }];
+		dispatch_semaphore_signal(sem);
+	}];
     
     [downloadTask resume];
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
