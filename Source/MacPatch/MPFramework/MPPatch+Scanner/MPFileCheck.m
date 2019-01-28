@@ -83,6 +83,8 @@
 
 -(BOOL)queryFile:(NSString *)action param:(NSString *)aParam
 {
+	qldebug(@"Query File: action=%@, param=%@",action,aParam);
+	
 	BOOL result = FALSE;
 	NSString *theAction = [action uppercaseString];
 	
@@ -144,7 +146,7 @@
 	}
 	else 
 	{
-		qlerror(@"Error: unable to process action type.");
+		qlerror(@"Error: unable to process action type (%@).", theAction);
 		result = FALSE;
 		goto done;
 	}

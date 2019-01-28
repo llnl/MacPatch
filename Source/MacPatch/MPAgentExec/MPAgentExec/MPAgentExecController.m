@@ -373,11 +373,7 @@
             customPatch	= [customPatchesArray objectAtIndex:i];
             for (int x=0;x < [approvedCustomPatches count]; x++)
             {
-                
-                approvedPatch = [approvedCustomPatches objectAtIndex:x];
-                
-                logit(lcl_vInfo,@"[approvedPatch]%@ = [customPatch]%@",approvedPatch,customPatch);
-                
+                approvedPatch = [approvedCustomPatches objectAtIndex:x];   
                 if ([[customPatch objectForKey:@"patch_id"] isEqualTo:[approvedPatch objectForKey:@"patch_id"]])
                 {
                     logit(lcl_vInfo,@"Patch %@ approved for update.",[customPatch objectForKey:@"description"]);

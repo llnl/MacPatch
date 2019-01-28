@@ -263,9 +263,12 @@
 	
 	// Loop vars
 	NSArray *qryArr;
-	NSString *typeQuery;
-	NSString *typeQueryString;
-	NSString *typeResult;
+	
+	/*
+	 NSString *typeQuery		= [qryArr objectAtIndex:1];
+	 NSString *typeQueryString = [qryArr objectAtIndex:2];
+	 NSString *typeResult		= [qryArr objectAtIndex:3];
+	 */
 	
 	qldebug(@"scanHostForPatch: %@",aPatch);
 	
@@ -309,13 +312,7 @@
 				qlerror(@"Error, not enough args for patch query entry.");
 				goto done;
 			}
-			
-			/*
-			 typeQuery		= [qryArr objectAtIndex:1];
-			 typeQueryString = [qryArr objectAtIndex:2];
-			 typeResult		= [qryArr objectAtIndex:3];
-			 */
-			
+
 			if ([mpbndl queryBundleID:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] result:[qryArr objectAtIndex:3]]) {
 				qlinfo(@"BundleID=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
@@ -331,7 +328,7 @@
 				goto done;	
 			}
 			
-			if ([mpfile queryFile:typeQueryString action:typeQuery param:typeResult]) {
+			if ([mpfile queryFile:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] param:[qryArr objectAtIndex:3]]) {
 				qlinfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
