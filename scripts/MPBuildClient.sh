@@ -16,6 +16,7 @@
 #	1.6		Updated version numbers
 #	1.7		Add OS Query to agent install
 # 	1.8		Add PlanB support to base package as an option
+#	1.9		Update to PlanB syntax
 #
 # -------------------------------------------------------------
 
@@ -136,7 +137,8 @@ fi
 echo
 echo " - Include OSQuery with MacPatch Installer "
 read -p "Would you like to include OSQuery with MacPatch (Y/N)? [$INC_OSQUERY_VAR]: " INC_OSQUERY_IN
-INC_OSQUERY_TXT=${INC_OSQUERY_IN:-$INC_OSQUERY_VAR}
+#INC_OSQUERY_TXT=${INC_OSQUERY_IN:-$INC_OSQUERY_VAR}
+INC_OSQUERY_TXT=${INC_OSQUERY_VAR:-$INC_OSQUERY_IN}
 INC_OSQUERY_TXT=`echo $INC_OSQUERY_TXT | awk '{print toupper($0)}'`
 if [ "$INC_OSQUERY_TXT" != "$INC_OSQUERY_VAR" ]; then
 	if [[ "$INC_OSQUERY_TXT" == "Y" ]]; then
@@ -183,8 +185,8 @@ fi
 
 echo
 echo " - Include PlanB with MacPatch Installer "
-read -p "Would you like to include PlanB with MacPatch (Y/N)? [$INC_PLANB_VAR]: " INC_PLANB_IN
-INC_PLANB_TXT=${INC_OSQUERY_IN:-$INC_PLANB_VAR}
+read -p "Would you like to include PlanB with MacPatch (Y/N)? [$INC_PLANB_VAR]: " INC_PLANB_TXT
+INC_PLANB_TXT=${INC_PLANB_TXT:-${INC_PLANB_VAR}}
 INC_PLANB_TXT=`echo $INC_PLANB_TXT | awk '{print toupper($0)}'`
 if [ "$INC_PLANB_TXT" != "$INC_PLANB_VAR" ]; then
 	if [[ "$INC_PLANB_TXT" == "Y" ]]; then
@@ -206,7 +208,8 @@ if $INCPlanBSource; then
 	echo
 	read -p "Would you like to set the server address for PlanB, default is localhost. (Y/N)? [Y]: " MPPLANB_SRV
 	MPPLANB_SRV=${MPPLANB_SRV:-Y}
-	if [ "$MPPLANB_SRV" == "y" ] || [ "$MPPLANB_SRV" == "Y" ] ; then
+	MPPLANB_SRV=`echo $MPPLANB_SRV | awk '{print toupper($0)}'`
+	if [[ "$MPPLANB_SRV" == "Y" ]] ; then
 		echo
 		read -p "Server address: " MPPLANB_SRV_ADDR
 		MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-localhost}

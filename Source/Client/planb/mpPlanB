@@ -55,7 +55,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.1.0.1.20"
+MINAGENTVER="3.1.2.6"
 DAYSRANGE=15
 IGNORE_SSL=True
 MPSERVER="localhost"
@@ -76,7 +76,7 @@ def hasMinVersion():
 		return True
 
 def hasCheckedIn(clientID):
-	result = False
+	result = True
 	if IGNORE_SSL:
 		response = urllib2.urlopen('https://'+MPSERVER+':3600/api/v1/client/checkin/info/'+clientID, context=ctx)
 	else:
@@ -87,12 +87,15 @@ def hasCheckedIn(clientID):
 		mdate = data['result']['mdate2']
 		if mdate:
 			# 08/03/2018 14:34:35
-			datetime_object = datetime.strptime(mdate, '%m/%d/%Y %H:%M:%S')
+			mdateStr=mdate.split()[0] # split to 08/03/2018
+			datetime_object = datetime.strptime(mdateStr, '%m/%d/%Y')
 			now = datetime.now()
-			if now-timedelta(days=DAYSRANGE) <= datetime_object <= now:
+			if now-timedelta(days=DAYSRANGE) <= datetime_object:
 				result = True
 			else:
 				logger.error('Failed Checkin, lastdate=%s',mdate)
+				logger.error('Todays date=%s',mdate)
+				result = False
 
 	return result
 
@@ -117,7 +120,7 @@ def checkSettingsFile():
 			IGNORE_SSL = mpPlanbPlist['ignoressl']
 
 def main():
-	logger.info("Running MacPatch plan b checks.")
+	logger.info("Running MacPatch planb checks.")
 	runPlanB = 0
 	checkSettingsFile()
 	cid = clientID()
