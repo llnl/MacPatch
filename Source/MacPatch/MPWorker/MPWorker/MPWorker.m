@@ -1606,8 +1606,7 @@ done:
             qlinfo(@"%@ has been staged.",[aPatch objectForKey:@"patches"]);
         }
     }
-    
-    
+
     return 0;
 }
 

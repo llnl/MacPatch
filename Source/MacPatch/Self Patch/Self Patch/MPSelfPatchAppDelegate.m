@@ -738,7 +738,7 @@ done:
 
 - (BOOL)preStagePatch:(NSDictionary *)patch
 {
-    int result = -1;
+    int proxy_result = -1;
     if (!proxy) {
         [self connect];
         if (!proxy) goto done;
@@ -746,7 +746,8 @@ done:
     
     @try
     {
-        result = [proxy stagePatchWithBaseDirectory:patch directory:MP_ROOT_CLIENT];
+        proxy_result = [proxy stagePatchWithBaseDirectory:patch directory:MP_ROOT_CLIENT];
+		logit(lcl_vInfo,@"preStagePatch result=%@",(proxy_result == 0) ? @"Yes":@"No");
     }
     @catch (NSException *e) {
         logit(lcl_vError,@"Trying to stage patch %@",[patch objectForKey:@"patch"]);
@@ -754,7 +755,7 @@ done:
     
 done:
     [self cleanup];
-    return (result == 0) ? YES : NO;
+	return (proxy_result == 0) ? YES : NO;
 }
 
 - (BOOL)unzipViaProxy:(NSString *)file error:(NSError **)err
@@ -1762,7 +1763,7 @@ done:
                 logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",[patch objectForKey:@"patch"],[patch objectForKey:@"version"]);
                 //[self generateRebootPatchForDownload:patch];
                 if ([[NSUserDefaults standardUserDefaults] boolForKey:@"preStageRebootPatches"] == YES) {
-                    if ([self preStagePatch:patch]) {
+                    if (![self preStagePatch:patch]) {
                         qlerror(@"Pre staging for %@ failed.",[patch objectForKey:@"patch"]);
                     }
                 }
