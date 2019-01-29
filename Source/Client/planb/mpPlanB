@@ -55,7 +55,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.1.2.6"
+MINAGENTVER="3.1.2.8"
 DAYSRANGE=15
 IGNORE_SSL=True
 MPSERVER="localhost"
