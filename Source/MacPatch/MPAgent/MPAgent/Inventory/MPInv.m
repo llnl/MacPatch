@@ -434,8 +434,13 @@
 	}
 
 	// If File Exists then delete it
-	if ([fm fileExistsAtPath:spFileName isDirectory:NO]) {
-        [fm removeItemAtPath:spFileName error:NULL];
+	if ([fm fileExistsAtPath:spFileName isDirectory:&isDir]) {
+		if (!isDir) {
+        	[fm removeItemAtPath:spFileName error:NULL];
+		} else {
+			logit(lcl_vError, @"%@ is a directory. Can not contiune.",spFileName);
+			return nil;
+		}
 	}
 
     NSTask *task;

@@ -51,6 +51,7 @@ class GunicornServer(Command):
 					'accesslog': '/opt/MacPatch/Server/logs/console_access.log',
 					'errorlog': '/opt/MacPatch/Server/logs/console_error.log',
 					'loglevel': 'info',
+					'timeout': 300,
 				}
 
 			def load(self):

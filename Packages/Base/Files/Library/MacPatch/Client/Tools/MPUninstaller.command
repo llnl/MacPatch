@@ -1,6 +1,6 @@
 #!/bin/sh
 
-Version="2.0.2"
+Version="2.1.0"
 mpBaseDir="/Library/MacPatch"
 mpClientDir="${mpBaseDir}/Client"
 mpUpdateDir="${mpBaseDir}/Updater"
@@ -147,7 +147,10 @@ if [ -d $mpBaseDir ]; then
 	stopLaunchDItem "gov.llnl.mp.worker" "/Library/LaunchDaemons/gov.llnl.mp.worker.plist"
 	stopLaunchDItem "gov.llnl.mp.agent" "/Library/LaunchDaemons/gov.llnl.mp.agent.plist"
 	stopLaunchDItem "gov.llnl.mp.agentUpdater" "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist"
-	
+	stopLaunchDItem "gov.llnl.mp.planb" "/Library/LaunchDaemons/gov.llnl.mp.planb.plist"
+   stopLaunchDItem "gov.llnl.mp.osqueryd" "/Library/LaunchDaemons/gov.llnl.mp.osqueryd.plist"
+
+
 	# If there is a user logged in ...
 	if [ ! -z "$curUser" ]; then
 
@@ -190,9 +193,26 @@ if [ -d $mpBaseDir ]; then
 	# Delete Client Data
 	existsAndDelete "/Library/Application Support/MPClientStatus"
 	existsAndDelete "/Library/Application Support/MacPatch/SW_Data"
+   existsAndDelete "/Library/Application Support/MacPatch"
 
 	# Priv Helper Tool
 	existsAndDelete "/Library/PrivilegedHelperTools/MPLoginAgent.app"	
+
+   # Remove PlanB
+   existsAndDelete "/usr/local/sbin/planb"
+   existsAndDelete "/usr/local/bin/mpPlanB"
+   existsAndDelete "/Library/LaunchDaemons/gov.llnl.mp.planb.plist"
+
+   # Remove MP OSQuery 
+   if [ -f "/Library/LaunchDaemons/gov.llnl.mp.osqueryd.plist" ]; then
+      existsAndDelete "/private/var/log/osquery"
+      existsAndDelete "/private/var/osquery"
+      existsAndDelete "/usr/local/bin/osqueryd"
+      existsAndDelete "/usr/local/bin/osqueryctl"
+      existsAndDelete "/usr/local/bin/osqueryi"
+      existsAndDelete "/Library/LaunchDaemons/gov.llnl.mp.osqueryd.plist"
+      /usr/sbin/pkgutil --forget com.facebook.osquery 2>/dev/null
+   fi 
 	
 	# Delete Receipts Files
 	echo "Delete Receipts"
@@ -206,6 +226,7 @@ if [ -d $mpBaseDir ]; then
 	# Drop Packages
 	/usr/sbin/pkgutil --forget gov.llnl.macpatch.base 2>/dev/null
 	/usr/sbin/pkgutil --forget gov.llnl.macpatch.updater 2>/dev/null
+   /usr/sbin/pkgutil --forget gov.llnl.mp.planb 2>/dev/null
 	
 	echo "MacPatch Software has been fully removed!"
 	echo "Please reboot the system..."

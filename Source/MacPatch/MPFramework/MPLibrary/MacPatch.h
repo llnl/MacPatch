@@ -101,5 +101,6 @@
 #import "Suserver.h"
 #import "Task.h"
 
+#import "AgentData.h"
 // Inventory Plugin
 //#import "InventoryPlugin.h"

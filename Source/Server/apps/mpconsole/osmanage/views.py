@@ -114,6 +114,7 @@ def profileEdit(profile_id):
 	if len(stringlist) >= 1:
 		pData2 = stringlist[0]
 		pData2 = pData2.replace('\\n', '')  # Remove \n from string purely for formatting
+		pData2 = pData2.replace('\\t', '')
 		pretty_string = indent(pData2,indentation='    ')
 
 	return render_template('os_managment/os_profile_manager.html', profileData=profile, profileDataAlt=pData, profileCriteriaAlt=cri,
@@ -133,6 +134,7 @@ def allowed_file(filename):
 def profileSave(profile_id):
 	if adminRole() or localAdmin():
 		formDict = request.form.to_dict()
+		print formDict
 
 		isNewProfile=False
 		profile = MpOsConfigProfiles.query.filter(MpOsConfigProfiles.profileID == profile_id).first()
@@ -148,12 +150,14 @@ def profileSave(profile_id):
 			if _file_data and allowed_file(_file.filename):
 				# Gen Hash
 				profile__hash = hashlib.md5(_file_data).hexdigest()
-				setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
+				#setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
+				setattr(profile, 'profileData', _file_data)
 				setattr(profile, 'profileHash', profile__hash)
 
 		# Save Profile Data
 		setattr(profile, 'profileName', formDict['profileName'])
 		setattr(profile, 'profileDescription', formDict['profileDescription'])
+		setattr(profile, 'profileIdentifier', formDict['profileIdentifier'])
 		setattr(profile, 'enabled', formDict['enabled'])
 		setattr(profile, 'isglobal', formDict['isglobal'])
 		setattr(profile, 'uninstallOnRemove', formDict['uninstallOnRemove'])
@@ -407,6 +411,7 @@ def groupProfiles(group_id):
 @login_required
 def postProfile():
 	_formDict = dict(request.form)
+	print _formDict
 
 	groupID = request.form['groupID']
 	if groupID is None or len(groupID) <= 0:

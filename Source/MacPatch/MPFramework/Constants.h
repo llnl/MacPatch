@@ -38,6 +38,7 @@ extern NSString * const AGENT_PREFS_PLIST;
 extern NSString * const AGENT_FRAMEWORK_PATH;
 extern NSString * const AGENT_SERVERS_PLIST;
 extern NSString * const AGENT_SUS_SERVERS_PLIST;
+extern NSString * const AGENT_REG_FILE;
 extern NSString * const APP_PREFS_PLIST;
 extern NSString * const PATCHES_NEEDED_PLIST;
 extern NSString * const PATCHES_APPROVED_PLIST;

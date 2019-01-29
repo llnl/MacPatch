@@ -567,20 +567,25 @@ done:
     {
         BOOL didRun = NO;
         didRun = [self performClientCheckInMethod];
-        
-        NSAlert *alert = [[NSAlert alloc] init];
-        [alert addButtonWithTitle:@"OK"];
-        if (didRun == NO) {
-            [alert setMessageText:@"Error with check-in"];
-            [alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
-            [alert setAlertStyle:NSCriticalAlertStyle];
-        } else {
-            [alert setMessageText:@"Client check-in"];
-            [alert setInformativeText:@"Client check-in was successful."];
-            [alert setAlertStyle:NSInformationalAlertStyle];
-        }
-        
-        [alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:NO];
+		
+		
+		dispatch_sync(dispatch_get_main_queue(), ^(){
+		
+			NSAlert *alert = [[NSAlert alloc] init];
+			[alert addButtonWithTitle:@"OK"];
+			if (didRun == NO) {
+				[alert setMessageText:@"Error with check-in"];
+				[alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
+				[alert setAlertStyle:NSCriticalAlertStyle];
+			} else {
+				[alert setMessageText:@"Client check-in"];
+				[alert setInformativeText:@"Client check-in was successful."];
+				[alert setAlertStyle:NSInformationalAlertStyle];
+			}
+			
+			[alert runModal];
+		});
+        //[alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:NO];
     }
 }
 

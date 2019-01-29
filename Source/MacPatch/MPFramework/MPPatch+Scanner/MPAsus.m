@@ -170,6 +170,131 @@
 	NSArray *appleUpdates = nil;
 	
 	NSTask *task = [[NSTask alloc] init];
+	[task setLaunchPath: ASUS_BIN_PATH];
+	
+	if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
+		//[task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
+		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
+	} else {
+		[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
+	}
+	
+	NSPipe *pipe = [NSPipe pipe];
+	[task setStandardOutput: pipe];
+	[task setStandardError: pipe];
+	
+	NSFileHandle *file = [pipe fileHandleForReading];
+	
+	[task launch];
+	qlinfo(@"Starting Apple software update scan.");
+	[task waitUntilExit];
+	
+	int status = [task terminationStatus];
+	if (status != 0) {
+		qlinfo(@"Error: softwareupdate exit code = %d",status);
+		return appleUpdates;
+	} else {
+		qlinfo(@"Apple software update scan was completed.");
+	}
+	
+	
+	NSData *data = [file readDataToEndOfFile];
+	NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+	
+	qldebug(@"Apple software update full scan results\n%@",string);
+	
+	if (!([string rangeOfString:@"No new"].location == NSNotFound)) {
+		qlinfo(@"No new updates.");
+		return appleUpdates;
+	}
+	
+	// We have updates so we need to parse the results
+	NSArray *strArr = [NSArray arrayWithArray:[string componentsSeparatedByString:@"\n"]];
+	
+	NSMutableArray *tmpAppleUpdates = [[NSMutableArray alloc] init];
+	NSString *tmpStr, *line, *lineCleanStart;
+	NSMutableDictionary *tmpDict;
+	
+	for (int i=0; i<[strArr count]; i++) {
+		// Ignore empty lines
+		if ([[strArr objectAtIndex:i] length] != 0) {
+			
+			//Clear the tmpDict object before populating it
+			if (!([[strArr objectAtIndex:i] rangeOfString:@"Software Update Tool"].location == NSNotFound)) {
+				continue;
+			}
+			if (!([[strArr objectAtIndex:i] rangeOfString:@"Copyright"].location == NSNotFound)) {
+				continue;
+			}
+			
+			// Strip the White Space and any New line data
+			line = [strArr objectAtIndex:i];
+			tmpStr = [[strArr objectAtIndex:i] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+			if ([tmpStr hasPrefix:@"*"] || [tmpStr hasPrefix:@"!"])
+			{
+				@try
+				{					
+					lineCleanStart = [self cleanLine:line];
+					tmpDict = [[NSMutableDictionary alloc] init];
+					[tmpDict setObject:lineCleanStart forKey:@"patch"];
+					[tmpDict setObject:@"Apple" forKey:@"type"];
+					[tmpDict setObject:[[lineCleanStart componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
+					[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+					[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
+					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
+					
+					[tmpAppleUpdates addObject:[tmpDict copy]];
+					tmpDict = nil;
+				}
+				@catch (NSException *exception)
+				{
+					qlerror(@"Error create patch dict. %@",exception);
+				}
+			}
+		} // if / empty lines
+	} // for loop
+	appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
+	
+	qldebug(@"Apple Updates Found, %@",appleUpdates);
+	return appleUpdates;
+}
+
+- (NSString *)cleanLine:(NSString *)line
+{
+	// Removes the beginning of the line
+	NSString *component = @"*";
+	NSString *_lineTrimed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+	if ([_lineTrimed hasPrefix:@"*"])
+	{
+		component = @"* ";
+	}
+	else if ([_lineTrimed hasPrefix:@"!"])
+	{
+		component = @"! ";
+	}
+	
+	NSMutableArray *items = [[line componentsSeparatedByString:component] mutableCopy];
+	[items removeObjectAtIndex:0];
+	// With first item removed put it all back together
+	return  [items componentsJoinedByString:component];
+}
+
+- (NSString *)getSizeFromDescription:(NSString *)aDesc
+{
+	NSString *tmpStr = [[aDesc componentsSeparatedByString:@","] lastObject];
+	tmpStr = [[[tmpStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "] firstObject];
+	return tmpStr;
+}
+
+/*
+- (NSArray *)scanForAppleUpdates
+{
+	qlinfo(@"Scanning for Apple software updates.");
+	
+	NSArray *appleUpdates = nil;
+	
+	NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath: ASUS_BIN_PATH];
     [task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
 	
@@ -256,6 +381,7 @@
 	NSArray *tmpArr2 = [[[tmpArr1 objectAtIndex:1] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "];
 	return [[tmpArr2 objectAtIndex:0] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
 }
+ */
 
 - (NSString *)getRecommendedFromDescription:(NSString *)aDesc
 {

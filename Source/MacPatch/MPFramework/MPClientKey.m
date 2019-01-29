@@ -58,15 +58,14 @@ static MPClientKey *_instance;
 
 - (NSString *)clientKey
 {
-    NSError *err = nil;
-    MPSimpleKeychain *skc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_KEYCHAIN_FILE];
-    MPKeyItem *keyItem = [skc retrieveKeyItemForService:kMPClientService error:&err];
-    if (err) {
-        logit(lcl_vWarning,@"getClientKey: %@",err.localizedDescription);
-        return @"NA";
-    }
-    
-    return keyItem.secret;
+	AgentData *agentData = [[AgentData alloc] init];
+	NSString *cKey = [agentData getClientKey];
+	if (!cKey) {
+		logit(lcl_vWarning,@"Error getting agent key data.");
+		return @"NA";
+	}
+	
+	return cKey;
 }
 
 @end

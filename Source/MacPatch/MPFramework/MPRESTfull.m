@@ -349,7 +349,7 @@
     NSError *error = nil;
     
     NSString *urlPath;
-    if (!key) {
+	if (!key || [key isEqualToString:@"NA"]) {
         urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@",self.ccuid];
     } else {
         urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@/%@",self.ccuid,key];

@@ -35,7 +35,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.1.0.2"
+#define APPVERSION	@"3.1.2.8"
 #define APPNAME		@"MPAgent"
 
 void usage(void);
@@ -323,7 +323,6 @@ int main (int argc, char * argv[])
                 printf("\nAgent has been registered.\n");
             } else {
                 fprintf(stderr, "Agent registration has failed.\n");
-                //[[NSFileManager defaultManager] removeItemAtPath:MP_KEYCHAIN_FILE error:NULL];
                 exit(1);
             }
             

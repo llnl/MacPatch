@@ -97,6 +97,14 @@
 		8F5970BF1E9BEA3000DBBEF2 /* MPRemoteFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5970BD1E9BEA3000DBBEF2 /* MPRemoteFingerprint.m */; };
 		8F6580721F2116C3006B147C /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F6580701F2116C3006B147C /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F6580731F2116C3006B147C /* GCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F6580711F2116C3006B147C /* GCDTask.m */; };
+		8FA13AA021C980FB00124016 /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA13A9E21C980FB00124016 /* AgentData.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FA13AA121C980FB00124016 /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA13A9F21C980FB00124016 /* AgentData.m */; };
+		8FA13AA521C9813300124016 /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA13AA321C9813300124016 /* UAObfuscatedString.h */; };
+		8FA13AA621C9813300124016 /* UAObfuscatedString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA13AA421C9813300124016 /* UAObfuscatedString.m */; };
+		8FA13AAA21C9815F00124016 /* CocoaSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA13AA821C9815F00124016 /* CocoaSecurity.m */; };
+		8FA13AAB21C9815F00124016 /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA13AA921C9815F00124016 /* CocoaSecurity.h */; };
+		8FA13AAE21C9817000124016 /* Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA13AAC21C9817000124016 /* Base64.h */; };
+		8FA13AAF21C9817000124016 /* Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA13AAD21C9817000124016 /* Base64.m */; };
 		8FC1B5551E4E7894008844DF /* MPClientInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC1B5531E4E7894008844DF /* MPClientInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FC1B5561E4E7894008844DF /* MPClientInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC1B5541E4E7894008844DF /* MPClientInfo.m */; };
 		8FC444171D00921900EF328C /* NSString+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC444151D00921900EF328C /* NSString+Base64.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -219,6 +227,14 @@
 		8F87427216308AD2007BA7DB /* MPWebServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPWebServices.m; sourceTree = "<group>"; };
 		8F94627F16249D4E00969BCD /* MPNSTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPNSTask.h; sourceTree = "<group>"; };
 		8F94628016249D4E00969BCD /* MPNSTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPNSTask.m; sourceTree = "<group>"; };
+		8FA13A9E21C980FB00124016 /* AgentData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgentData.h; sourceTree = "<group>"; };
+		8FA13A9F21C980FB00124016 /* AgentData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AgentData.m; sourceTree = "<group>"; };
+		8FA13AA321C9813300124016 /* UAObfuscatedString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAObfuscatedString.h; sourceTree = "<group>"; };
+		8FA13AA421C9813300124016 /* UAObfuscatedString.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UAObfuscatedString.m; sourceTree = "<group>"; };
+		8FA13AA821C9815F00124016 /* CocoaSecurity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaSecurity.m; sourceTree = "<group>"; };
+		8FA13AA921C9815F00124016 /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
+		8FA13AAC21C9817000124016 /* Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Base64.h; sourceTree = "<group>"; };
+		8FA13AAD21C9817000124016 /* Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Base64.m; sourceTree = "<group>"; };
 		8FA7EA1C161DEF81001748EA /* MPNetworkUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPNetworkUtils.h; sourceTree = "<group>"; };
 		8FA7EA1D161DEF81001748EA /* MPNetworkUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPNetworkUtils.m; sourceTree = "<group>"; };
 		8FA7EA4A161E3B47001748EA /* MPSystemInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPSystemInfo.h; sourceTree = "<group>"; };
@@ -489,6 +505,26 @@
 			name = GCDTask;
 			sourceTree = "<group>";
 		};
+		8FA13AA221C9811D00124016 /* UAObfuscatedString */ = {
+			isa = PBXGroup;
+			children = (
+				8FA13AA321C9813300124016 /* UAObfuscatedString.h */,
+				8FA13AA421C9813300124016 /* UAObfuscatedString.m */,
+			);
+			path = UAObfuscatedString;
+			sourceTree = "<group>";
+		};
+		8FA13AA721C9814000124016 /* CocoaSecurity */ = {
+			isa = PBXGroup;
+			children = (
+				8FA13AA921C9815F00124016 /* CocoaSecurity.h */,
+				8FA13AA821C9815F00124016 /* CocoaSecurity.m */,
+				8FA13AAC21C9817000124016 /* Base64.h */,
+				8FA13AAD21C9817000124016 /* Base64.m */,
+			);
+			path = CocoaSecurity;
+			sourceTree = "<group>";
+		};
 		8FA6A76C1B90D6FE006A329B /* Inventory */ = {
 			isa = PBXGroup;
 			children = (
@@ -723,6 +759,8 @@
 		8FED881F1463165B00709F8E /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
+				8FA13AA721C9814000124016 /* CocoaSecurity */,
+				8FA13AA221C9811D00124016 /* UAObfuscatedString */,
 				8FDBABDE1F7490630025F0FF /* FMDB */,
 				8F65806F1F2116A5006B147C /* GCDTask */,
 				8FAEF668145F19AC006284B2 /* Base64 */,
@@ -737,6 +775,8 @@
 			children = (
 				8FF3167A1FBC01CA00CB2B18 /* MPPython.h */,
 				8FF316791FBC01C700CB2B18 /* MPPython.m */,
+				8FA13A9E21C980FB00124016 /* AgentData.h */,
+				8FA13A9F21C980FB00124016 /* AgentData.m */,
 			);
 			name = NEW;
 			sourceTree = "<group>";
@@ -781,6 +821,7 @@
 				8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */,
 				8F4B1EBE16DD5FB400E15A9E /* NSString+Hash.h in Headers */,
 				8F4B1EC416DD5FDD00E15A9E /* NSFileManager+Helper.h in Headers */,
+				8FA13AAB21C9815F00124016 /* CocoaSecurity.h in Headers */,
 				8F4B1F2B16DE639100E15A9E /* NSDate+Helper.h in Headers */,
 				8FDBAC101F74909A0025F0FF /* FMXDatabaseManager.h in Headers */,
 				8FDBAC091F74909A0025F0FF /* FMDBx.h in Headers */,
@@ -791,6 +832,8 @@
 				8FDBAC1A1F74909A0025F0FF /* FMXTableMap.h in Headers */,
 				8FDBAC161F74909A0025F0FF /* FMXModel.h in Headers */,
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
+				8FA13AAE21C9817000124016 /* Base64.h in Headers */,
+				8FA13AA521C9813300124016 /* UAObfuscatedString.h in Headers */,
 				8FDBAC181F74909A0025F0FF /* FMXQuery.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
 				8FC444171D00921900EF328C /* NSString+Base64.h in Headers */,
@@ -803,6 +846,7 @@
 				8F0011941F8947A8009F75EC /* Task.h in Headers */,
 				8F0011901F8947A8009F75EC /* Agent.h in Headers */,
 				8F057FA31F95310D006C1F10 /* MPClientKey.h in Headers */,
+				8FA13AA021C980FB00124016 /* AgentData.h in Headers */,
 				8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */,
 				8FCF55221FE8A1F8002E829A /* NSTask+Helper.h in Headers */,
 				8FDBABF01F7490740025F0FF /* FMDatabaseQueue.h in Headers */,
@@ -926,6 +970,7 @@
 				8FF831611DEF7ACF005DC5AD /* MPKeyItem.m in Sources */,
 				8F3D859D1F708E96001FBE8A /* STHTTPRequest.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
+				8FA13AA121C980FB00124016 /* AgentData.m in Sources */,
 				8F4B1E0616DD1D6400E15A9E /* NSString+Helper.m in Sources */,
 				8F4B1E0716DD1D6400E15A9E /* NSFileManager+DirectoryLocations.m in Sources */,
 				8F4B1E0816DD1D6400E15A9E /* NSDictionary+Helper.m in Sources */,
@@ -945,6 +990,7 @@
 				8F2E697C19229A85001BF9D6 /* MPFailedRequests.m in Sources */,
 				8FE560D816DE932900BB7600 /* MPAgentController.m in Sources */,
 				8F00CD0617610F1D008CC39E /* MPCodeSign.m in Sources */,
+				8FA13AA621C9813300124016 /* UAObfuscatedString.m in Sources */,
 				8FEC938817CBFEFB00AA9C1C /* MPApplePatch.m in Sources */,
 				8FEC938C17CBFF0F00AA9C1C /* MPCustomPatch.m in Sources */,
 				8FDBABDB1F7480B20025F0FF /* MPSettings.m in Sources */,
@@ -956,12 +1002,14 @@
 				8FDBABEF1F7490740025F0FF /* FMDatabasePool.m in Sources */,
 				8FDBAC0F1F74909A0025F0FF /* FMXDatabaseConfiguration.m in Sources */,
 				8FDBAC0D1F74909A0025F0FF /* FMXCsvTable.m in Sources */,
+				8FA13AAA21C9815F00124016 /* CocoaSecurity.m in Sources */,
 				8FDBAC1B1F74909A0025F0FF /* FMXTableMap.m in Sources */,
 				8FDBAC151F74909A0025F0FF /* FMXHelpers.m in Sources */,
 				8FDBABEB1F7490740025F0FF /* FMDatabase.m in Sources */,
 				8FDBABED1F7490740025F0FF /* FMDatabaseAdditions.m in Sources */,
 				8FDBAC171F74909A0025F0FF /* FMXModel.m in Sources */,
 				8FDBAC111F74909A0025F0FF /* FMXDatabaseManager.m in Sources */,
+				8FA13AAF21C9817000124016 /* Base64.m in Sources */,
 				8FDBAC131F74909A0025F0FF /* FMXDatabaseMigration.m in Sources */,
 				8FDBAC191F74909A0025F0FF /* FMXQuery.m in Sources */,
 				8FDBAC0B1F74909A0025F0FF /* FMXColumnMap.m in Sources */,
