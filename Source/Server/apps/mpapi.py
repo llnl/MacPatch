@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/opt/MacPatch/Server/apps/env/bin/python
 
 import os
 from flask_script import Manager, Command, Option, Server
