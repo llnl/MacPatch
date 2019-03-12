@@ -15,6 +15,7 @@ import os.path
 import hmac
 from ldap3 import Server, Connection, ALL, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
+from werkzeug.security import check_password_hash
 
 from cryptography.exceptions import *
 from cryptography.hazmat.backends import default_backend
@@ -196,8 +197,8 @@ def dbUserAuth(user, password):
 	try:
 		admUser = AdmUsers.query.filter(AdmUsers.user_id == user, AdmUsers.enabled == 1).first()
 		if admUser:
-			hash_pass = hashlib.md5(password).hexdigest()
-			if admUser.user_pass.lower() == hash_pass.lower():
+			res = check_password_hash(admUser.user_pass, password)
+			if res:
 				return True
 			else:
 				log_Error("Error with user name or password.")
