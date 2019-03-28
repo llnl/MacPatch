@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="html/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="html/bootstrap-table/bootstrap-table.css">
+    <script src="html/bootstrap-table/jquery.min.js"></script>
+    <script src="html/bootstrap/js/bootstrap.min.js"></script>
+    <script src="html/bootstrap-table/bootstrap-table.js"></script>
+    <style>
+        html, body {
+            min-width: 800px !important;
+        }
+    
+    .container { width:800px @container-desktop !important; }
+    
+    #mp dt {
+        //overflow: visible;
+        width: 160px !important;
+        margin-right: 20px;
+        padding-bottom: 10px;
+    }
+    </style>
+</head>
+    <body>
+    	<div class="container">
+	        <h1>Agent Tasks</h1>
+	        <table id="table" data-detail-view="true" data-detail-formatter="detailFormatter"></table>
+    	</div>
+    </body>
+
+    <script>
+	$( document ).ready(function()
+	{
+			$('#table').bootstrapTable({
+
+				striped: true,
+				search: true,
+				resizable: true,
+				sortable: true,
+				onExpandRow: function (index, row, $detail) {
+					$detail.hide().fadeIn('slow');
+				},
+				onCollapseRow: function (index, row, $detail) {
+					$(this).remove();
+				},
+				[JSON]
+			});
+	});
+	function detailFormatter(index, row) {
+        var html = [];
+        html.push('<div class="well"><dl class="dl-horizontal" id="mp">');
+        
+        $.each(row, function (key, value) {
+            html.push('<dt>' + key + '</dt><dd> ' + value + '</dd>');
+        });
+        html.push('</dl></div>');
+        return html.join('');
+    }
+	</script>
+</html>
+  

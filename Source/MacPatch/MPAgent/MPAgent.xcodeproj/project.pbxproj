@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F1B0805223707D3004D2ACF /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F1B0804223707D3004D2ACF /* libMPLibrary.a */; };
 		8F2D4F2C188EFFB50008853B /* Profiles.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2D4F2B188EFFB50008853B /* Profiles.m */; };
 		8F2E697F1922C330001BF9D6 /* PostFailedWSRequests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2E697E1922C330001BF9D6 /* PostFailedWSRequests.m */; };
 		8F2FC03E1E205523004710C7 /* MPFirmware.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2FC03D1E205523004710C7 /* MPFirmware.m */; };
@@ -53,7 +54,6 @@
 		8FE03DD11B600C5A005D39EE /* MPAgentUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */; };
 		8FE03DD61B60195A005D39EE /* AntiVirus.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD51B60195A005D39EE /* AntiVirus.m */; };
 		8FE03DD91B601AC6005D39EE /* AVSoftware.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD81B601AC6005D39EE /* AVSoftware.m */; };
-		8FE560CC16DE71A100BB7600 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560CB16DE71A100BB7600 /* libMacPatch.a */; };
 		8FE560DA16DE978B00BB7600 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560D916DE978B00BB7600 /* libz.dylib */; };
 		8FE560DE16DE979E00BB7600 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560DD16DE979E00BB7600 /* libicucore.dylib */; };
 		8FE560E016DE97A900BB7600 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560DF16DE97A900BB7600 /* Cocoa.framework */; };
@@ -81,6 +81,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8F1B0804223707D3004D2ACF /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F2D4F2A188EFFB50008853B /* Profiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Profiles.h; sourceTree = "<group>"; };
 		8F2D4F2B188EFFB50008853B /* Profiles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Profiles.m; sourceTree = "<group>"; };
 		8F2E697D1922C330001BF9D6 /* PostFailedWSRequests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostFailedWSRequests.h; sourceTree = "<group>"; };
@@ -188,9 +189,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F1B0805223707D3004D2ACF /* libMPLibrary.a in Frameworks */,
 				8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */,
 				8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */,
-				8FE560CC16DE71A100BB7600 /* libMacPatch.a in Frameworks */,
 				8F5310011B42EEE400B8D893 /* libsqlite3.dylib in Frameworks */,
 				8F530FEE1B42ED2B00B8D893 /* libxml2.dylib in Frameworks */,
 				8FE560DE16DE979E00BB7600 /* libicucore.dylib in Frameworks */,
@@ -233,6 +234,7 @@
 		8F4B1EEB16DD77BD00E15A9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F1B0804223707D3004D2ACF /* libMPLibrary.a */,
 				8F53E2091FDA18BB004D4C32 /* PCSC.framework */,
 				8FF5B50B1FC658EC006F5FB2 /* Python.framework */,
 				8F9C2B591DDA1D6B002A39D2 /* StoreFoundation.framework */,
@@ -450,7 +452,7 @@
 		8F4B1EE116DD77BD00E15A9E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = LLNL;
 				TargetAttributes = {
 					8F4B1EE816DD77BD00E15A9E = {
@@ -464,6 +466,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 8F4B1EE016DD77BD00E15A9E;
 			productRefGroup = 8F4B1EEA16DD77BD00E15A9E /* Products */;
@@ -566,7 +569,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -615,7 +618,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
 					"-framework",
 					Foundation,
@@ -646,15 +649,16 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$HOME/Developer/Xcode/MP32/include/**",
 					/usr/include/libxml2,
 					"$(SRCROOT)/MPAgent/PrivateHeaders/**",
-					"$HOME/Developer/Xcode/include/**",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
-					"-all_load",
 					"-ObjC",
+					"-all_load",
 					"-framework",
 					Foundation,
 					"-sectcreate",
@@ -662,6 +666,7 @@
 					__info_plist,
 					"MPAgent/MPAgent-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPAgent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";
@@ -686,15 +691,16 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$HOME/Developer/Xcode/MP32/include/**",
 					/usr/include/libxml2,
 					"$(SRCROOT)/MPAgent/PrivateHeaders/**",
-					"$HOME/Developer/Xcode/include/**",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
-					"-all_load",
 					"-ObjC",
+					"-all_load",
 					"-framework",
 					Foundation,
 					"-sectcreate",
@@ -702,6 +708,7 @@
 					__info_plist,
 					"MPAgent/MPAgent-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPAgent;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				USER_HEADER_SEARCH_PATHS = "";

@@ -1,10 +1,10 @@
-# ![MPLogo](./images/MPLogo_64x64.png) MacPatch 3.1
+# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.2
 
 ## Acknowledgements
 
 MacPatch uses a number of open source components. Without all of the hard work of the authors of these great projects MacPatch would'nt be a reality. Thank You!
 
-MacPatch 3.1.x makes use of the following open source components:
+MacPatch 3.2.x makes use of the following open source components:
 
 |Project|License|URL|
 |---|---|---|

@@ -1,0 +1,735 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8F2D4F2C188EFFB50008853B /* Profiles.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2D4F2B188EFFB50008853B /* Profiles.m */; };
+		8F2E697F1922C330001BF9D6 /* PostFailedWSRequests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2E697E1922C330001BF9D6 /* PostFailedWSRequests.m */; };
+		8F2FC03E1E205523004710C7 /* MPFirmware.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2FC03D1E205523004710C7 /* MPFirmware.m */; };
+		8F4B1EED16DD77BD00E15A9E /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4B1EEC16DD77BD00E15A9E /* Foundation.framework */; };
+		8F4B1EF016DD77BD00E15A9E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1EEF16DD77BD00E15A9E /* main.m */; };
+		8F4B1EF416DD77BD00E15A9E /* MPAgent.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8F4B1EF316DD77BD00E15A9E /* MPAgent.1 */; };
+		8F4B1F0616DD77FF00E15A9E /* MPAgent.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F0116DD77FF00E15A9E /* MPAgent.m */; };
+		8F4B1F0716DD77FF00E15A9E /* AgentController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F0316DD77FF00E15A9E /* AgentController.m */; };
+		8F4B1F1716DE634600E15A9E /* ClientCheckInOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F0C16DE634600E15A9E /* ClientCheckInOperation.m */; };
+		8F4B1F1816DE634600E15A9E /* AgentScanAndUpdateOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F0E16DE634600E15A9E /* AgentScanAndUpdateOperation.m */; };
+		8F4B1F1916DE634600E15A9E /* AntiVirusScanAndUpdateOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1016DE634600E15A9E /* AntiVirusScanAndUpdateOperation.m */; };
+		8F4B1F1A16DE634600E15A9E /* InventoryOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1216DE634600E15A9E /* InventoryOperation.m */; };
+		8F4B1F1B16DE634600E15A9E /* PatchScanAndUpdateOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1416DE634600E15A9E /* PatchScanAndUpdateOperation.m */; };
+		8F4B1F1C16DE634600E15A9E /* MPSWDistTaskOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1616DE634600E15A9E /* MPSWDistTaskOperation.m */; };
+		8F4B1F2316DE635200E15A9E /* MPTasks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1E16DE635200E15A9E /* MPTasks.m */; };
+		8F4B1F2516DE635200E15A9E /* MPTaskValidate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F2216DE635200E15A9E /* MPTaskValidate.m */; };
+		8F530FEE1B42ED2B00B8D893 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FED1B42ED2B00B8D893 /* libxml2.dylib */; };
+		8F530FF01B42ED5400B8D893 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FEF1B42ED5400B8D893 /* OpenDirectory.framework */; };
+		8F530FF21B42ED5D00B8D893 /* DiskArbitration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FF11B42ED5D00B8D893 /* DiskArbitration.framework */; };
+		8F530FF41B42ED7000B8D893 /* DirectoryService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FF31B42ED7000B8D893 /* DirectoryService.framework */; };
+		8F5310011B42EEE400B8D893 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F5310001B42EEE400B8D893 /* libsqlite3.dylib */; };
+		8F53E2051FDA077F004D4C32 /* LocalAdminAccounts.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F53E2041FDA077F004D4C32 /* LocalAdminAccounts.m */; };
+		8F53E2081FDA0E4A004D4C32 /* SmartCardReaderList.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */; };
+		8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F53E2091FDA18BB004D4C32 /* PCSC.framework */; };
+		8F6D32461CD3C34E006B1094 /* MPOSUpgrade.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */; };
+		8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9C2B521DDA1D0E002A39D2 /* MPAppStore.m */; };
+		8F9C2B561DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9C2B551DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m */; };
+		8F9C2B581DDA1D4A002A39D2 /* CommerceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F9C2B571DDA1D4A002A39D2 /* CommerceKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		8F9C2B5A1DDA1D6B002A39D2 /* StoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F9C2B591DDA1D6B002A39D2 /* StoreFoundation.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
+		8F9C2B5D1DDA1E33002A39D2 /* AppStoreOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9C2B5C1DDA1E33002A39D2 /* AppStoreOperation.m */; };
+		8FA6A8771B9621BF006A329B /* BatteryInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8601B9621BF006A329B /* BatteryInfo.m */; };
+		8FA6A8781B9621BF006A329B /* CHDisk.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8621B9621BF006A329B /* CHDisk.m */; };
+		8FA6A8791B9621BF006A329B /* CHDiskInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8641B9621BF006A329B /* CHDiskInfo.m */; };
+		8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */; };
+		8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */; };
+		8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */; };
+		8FA6A87D1B9621BF006A329B /* MPInv.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86C1B9621BF006A329B /* MPInv.m */; };
+		8FA6A87E1B9621BF006A329B /* MPServerEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86E1B9621BF006A329B /* MPServerEntry.m */; };
+		8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8701B9621BF006A329B /* MPUsersAndGroups.m */; };
+		8FA6A8801B9621BF006A329B /* NSDirectoryServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8721B9621BF006A329B /* NSDirectoryServices.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		8FA6A8811B9621BF006A329B /* NSMetadataQuery+Synchronous.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8741B9621BF006A329B /* NSMetadataQuery+Synchronous.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		8FA6A8821B9621BF006A329B /* PowerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8761B9621BF006A329B /* PowerProfile.m */; };
+		8FA6A8861B96230C006A329B /* MPInventoryPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */; };
+		8FE03DD11B600C5A005D39EE /* MPAgentUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */; };
+		8FE03DD61B60195A005D39EE /* AntiVirus.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD51B60195A005D39EE /* AntiVirus.m */; };
+		8FE03DD91B601AC6005D39EE /* AVSoftware.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD81B601AC6005D39EE /* AVSoftware.m */; };
+		8FE560CC16DE71A100BB7600 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560CB16DE71A100BB7600 /* libMacPatch.a */; };
+		8FE560DA16DE978B00BB7600 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560D916DE978B00BB7600 /* libz.dylib */; };
+		8FE560DE16DE979E00BB7600 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560DD16DE979E00BB7600 /* libicucore.dylib */; };
+		8FE560E016DE97A900BB7600 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560DF16DE97A900BB7600 /* Cocoa.framework */; };
+		8FE560E216DE97B500BB7600 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E116DE97B500BB7600 /* CoreFoundation.framework */; };
+		8FE560E416DE97BE00BB7600 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E316DE97BE00BB7600 /* IOKit.framework */; };
+		8FE560E616DE97C700BB7600 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E516DE97C700BB7600 /* CoreServices.framework */; };
+		8FE560E816DE97CF00BB7600 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E716DE97CF00BB7600 /* SystemConfiguration.framework */; };
+		8FE560EA16DE97DD00BB7600 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E916DE97DD00BB7600 /* Security.framework */; };
+		8FE8A7F22112564500E8796E /* Software.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF7E9CF210A558B00678B93 /* Software.m */; };
+		8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50B1FC658EC006F5FB2 /* Python.framework */; };
+		8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF93F9219959206005A4EEB /* MPAgentRegister.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F4B1EE716DD77BD00E15A9E /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+				8F4B1EF416DD77BD00E15A9E /* MPAgent.1 in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8F2D4F2A188EFFB50008853B /* Profiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Profiles.h; sourceTree = "<group>"; };
+		8F2D4F2B188EFFB50008853B /* Profiles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Profiles.m; sourceTree = "<group>"; };
+		8F2E697D1922C330001BF9D6 /* PostFailedWSRequests.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PostFailedWSRequests.h; sourceTree = "<group>"; };
+		8F2E697E1922C330001BF9D6 /* PostFailedWSRequests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PostFailedWSRequests.m; sourceTree = "<group>"; };
+		8F2FC03C1E205523004710C7 /* MPFirmware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFirmware.h; sourceTree = "<group>"; };
+		8F2FC03D1E205523004710C7 /* MPFirmware.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFirmware.m; sourceTree = "<group>"; };
+		8F4B1EE916DD77BD00E15A9E /* MPAgent */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MPAgent; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F4B1EEC16DD77BD00E15A9E /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		8F4B1EEF16DD77BD00E15A9E /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		8F4B1EF216DD77BD00E15A9E /* MPAgent-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPAgent-Prefix.pch"; sourceTree = "<group>"; };
+		8F4B1EF316DD77BD00E15A9E /* MPAgent.1 */ = {isa = PBXFileReference; lastKnownFileType = text.man; path = MPAgent.1; sourceTree = "<group>"; };
+		8F4B1F0016DD77FF00E15A9E /* MPAgent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgent.h; sourceTree = "<group>"; };
+		8F4B1F0116DD77FF00E15A9E /* MPAgent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgent.m; sourceTree = "<group>"; };
+		8F4B1F0216DD77FF00E15A9E /* AgentController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgentController.h; sourceTree = "<group>"; };
+		8F4B1F0316DD77FF00E15A9E /* AgentController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AgentController.m; sourceTree = "<group>"; };
+		8F4B1F0B16DE634600E15A9E /* ClientCheckInOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ClientCheckInOperation.h; sourceTree = "<group>"; };
+		8F4B1F0C16DE634600E15A9E /* ClientCheckInOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ClientCheckInOperation.m; sourceTree = "<group>"; };
+		8F4B1F0D16DE634600E15A9E /* AgentScanAndUpdateOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgentScanAndUpdateOperation.h; sourceTree = "<group>"; };
+		8F4B1F0E16DE634600E15A9E /* AgentScanAndUpdateOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AgentScanAndUpdateOperation.m; sourceTree = "<group>"; };
+		8F4B1F0F16DE634600E15A9E /* AntiVirusScanAndUpdateOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AntiVirusScanAndUpdateOperation.h; sourceTree = "<group>"; };
+		8F4B1F1016DE634600E15A9E /* AntiVirusScanAndUpdateOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AntiVirusScanAndUpdateOperation.m; sourceTree = "<group>"; };
+		8F4B1F1116DE634600E15A9E /* InventoryOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InventoryOperation.h; sourceTree = "<group>"; };
+		8F4B1F1216DE634600E15A9E /* InventoryOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InventoryOperation.m; sourceTree = "<group>"; };
+		8F4B1F1316DE634600E15A9E /* PatchScanAndUpdateOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PatchScanAndUpdateOperation.h; sourceTree = "<group>"; };
+		8F4B1F1416DE634600E15A9E /* PatchScanAndUpdateOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PatchScanAndUpdateOperation.m; sourceTree = "<group>"; };
+		8F4B1F1516DE634600E15A9E /* MPSWDistTaskOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPSWDistTaskOperation.h; sourceTree = "<group>"; };
+		8F4B1F1616DE634600E15A9E /* MPSWDistTaskOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPSWDistTaskOperation.m; sourceTree = "<group>"; };
+		8F4B1F1D16DE635200E15A9E /* MPTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPTasks.h; sourceTree = "<group>"; };
+		8F4B1F1E16DE635200E15A9E /* MPTasks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPTasks.m; sourceTree = "<group>"; };
+		8F4B1F2116DE635200E15A9E /* MPTaskValidate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPTaskValidate.h; sourceTree = "<group>"; };
+		8F4B1F2216DE635200E15A9E /* MPTaskValidate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPTaskValidate.m; sourceTree = "<group>"; };
+		8F4B1F3216DE63F200E15A9E /* MPAgent-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPAgent-Info.plist"; sourceTree = "<group>"; };
+		8F530FED1B42ED2B00B8D893 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
+		8F530FEF1B42ED5400B8D893 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
+		8F530FF11B42ED5D00B8D893 /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
+		8F530FF31B42ED7000B8D893 /* DirectoryService.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DirectoryService.framework; path = System/Library/Frameworks/DirectoryService.framework; sourceTree = SDKROOT; };
+		8F5310001B42EEE400B8D893 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
+		8F53E2031FDA077F004D4C32 /* LocalAdminAccounts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LocalAdminAccounts.h; sourceTree = "<group>"; };
+		8F53E2041FDA077F004D4C32 /* LocalAdminAccounts.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LocalAdminAccounts.m; sourceTree = "<group>"; };
+		8F53E2061FDA0E4A004D4C32 /* SmartCardReaderList.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SmartCardReaderList.h; sourceTree = "<group>"; };
+		8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SmartCardReaderList.m; sourceTree = "<group>"; };
+		8F53E2091FDA18BB004D4C32 /* PCSC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PCSC.framework; path = System/Library/Frameworks/PCSC.framework; sourceTree = SDKROOT; };
+		8F6D32441CD3C34E006B1094 /* MPOSUpgrade.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPOSUpgrade.h; sourceTree = "<group>"; };
+		8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPOSUpgrade.m; sourceTree = "<group>"; };
+		8F9C2B511DDA1D0E002A39D2 /* MPAppStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAppStore.h; sourceTree = "<group>"; };
+		8F9C2B521DDA1D0E002A39D2 /* MPAppStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAppStore.m; sourceTree = "<group>"; };
+		8F9C2B541DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CKSoftwareProduct+ASProduct.h"; sourceTree = "<group>"; };
+		8F9C2B551DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CKSoftwareProduct+ASProduct.m"; sourceTree = "<group>"; };
+		8F9C2B571DDA1D4A002A39D2 /* CommerceKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CommerceKit.framework; path = ../../../../../../System/Library/PrivateFrameworks/CommerceKit.framework; sourceTree = "<group>"; };
+		8F9C2B591DDA1D6B002A39D2 /* StoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreFoundation.framework; path = ../../../../../../System/Library/PrivateFrameworks/StoreFoundation.framework; sourceTree = "<group>"; };
+		8F9C2B5B1DDA1E33002A39D2 /* AppStoreOperation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppStoreOperation.h; sourceTree = "<group>"; };
+		8F9C2B5C1DDA1E33002A39D2 /* AppStoreOperation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppStoreOperation.m; sourceTree = "<group>"; };
+		8FA6A85F1B9621BF006A329B /* BatteryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BatteryInfo.h; sourceTree = "<group>"; };
+		8FA6A8601B9621BF006A329B /* BatteryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BatteryInfo.m; sourceTree = "<group>"; };
+		8FA6A8611B9621BF006A329B /* CHDisk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHDisk.h; sourceTree = "<group>"; };
+		8FA6A8621B9621BF006A329B /* CHDisk.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHDisk.m; sourceTree = "<group>"; };
+		8FA6A8631B9621BF006A329B /* CHDiskInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHDiskInfo.h; sourceTree = "<group>"; };
+		8FA6A8641B9621BF006A329B /* CHDiskInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHDiskInfo.m; sourceTree = "<group>"; };
+		8FA6A8651B9621BF006A329B /* MacAppStoreDataItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacAppStoreDataItem.h; sourceTree = "<group>"; };
+		8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MacAppStoreDataItem.m; sourceTree = "<group>"; };
+		8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDirectoryServices.h; sourceTree = "<group>"; };
+		8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDirectoryServices.m; sourceTree = "<group>"; };
+		8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
+		8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
+		8FA6A86B1B9621BF006A329B /* MPInv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInv.h; sourceTree = "<group>"; };
+		8FA6A86C1B9621BF006A329B /* MPInv.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInv.m; sourceTree = "<group>"; };
+		8FA6A86D1B9621BF006A329B /* MPServerEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPServerEntry.h; sourceTree = "<group>"; };
+		8FA6A86E1B9621BF006A329B /* MPServerEntry.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPServerEntry.m; sourceTree = "<group>"; };
+		8FA6A86F1B9621BF006A329B /* MPUsersAndGroups.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPUsersAndGroups.h; sourceTree = "<group>"; };
+		8FA6A8701B9621BF006A329B /* MPUsersAndGroups.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPUsersAndGroups.m; sourceTree = "<group>"; };
+		8FA6A8711B9621BF006A329B /* NSDirectoryServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = NSDirectoryServices.h; sourceTree = "<group>"; };
+		8FA6A8721B9621BF006A329B /* NSDirectoryServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NSDirectoryServices.m; sourceTree = "<group>"; };
+		8FA6A8731B9621BF006A329B /* NSMetadataQuery+Synchronous.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSMetadataQuery+Synchronous.h"; sourceTree = "<group>"; };
+		8FA6A8741B9621BF006A329B /* NSMetadataQuery+Synchronous.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSMetadataQuery+Synchronous.m"; sourceTree = "<group>"; };
+		8FA6A8751B9621BF006A329B /* PowerProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PowerProfile.h; sourceTree = "<group>"; };
+		8FA6A8761B9621BF006A329B /* PowerProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PowerProfile.m; sourceTree = "<group>"; };
+		8FA6A8831B9621DB006A329B /* InventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InventoryPlugin.h; sourceTree = "<group>"; };
+		8FA6A8841B96230C006A329B /* MPInventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInventoryPlugin.h; sourceTree = "<group>"; };
+		8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInventoryPlugin.m; sourceTree = "<group>"; };
+		8FE03DCF1B600C5A005D39EE /* MPAgentUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentUpdater.h; sourceTree = "<group>"; };
+		8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentUpdater.m; sourceTree = "<group>"; };
+		8FE03DD41B60195A005D39EE /* AntiVirus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AntiVirus.h; sourceTree = "<group>"; };
+		8FE03DD51B60195A005D39EE /* AntiVirus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AntiVirus.m; sourceTree = "<group>"; };
+		8FE03DD71B601AC6005D39EE /* AVSoftware.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AVSoftware.h; sourceTree = "<group>"; };
+		8FE03DD81B601AC6005D39EE /* AVSoftware.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AVSoftware.m; sourceTree = "<group>"; };
+		8FE560CB16DE71A100BB7600 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../Developer/Xcode/DerivedData/MacPatch-gcqqukpepnyosjeqfffypdzoyyfx/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
+		8FE560D916DE978B00BB7600 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
+		8FE560DB16DE979500BB7600 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		8FE560DD16DE979E00BB7600 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
+		8FE560DF16DE97A900BB7600 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		8FE560E116DE97B500BB7600 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		8FE560E316DE97BE00BB7600 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8FE560E516DE97C700BB7600 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		8FE560E716DE97CF00BB7600 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		8FE560E916DE97DD00BB7600 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		8FF5B50B1FC658EC006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
+		8FF7E9CE210A558B00678B93 /* Software.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Software.h; sourceTree = "<group>"; };
+		8FF7E9CF210A558B00678B93 /* Software.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Software.m; sourceTree = "<group>"; };
+		8FF93F9119959206005A4EEB /* MPAgentRegister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentRegister.h; sourceTree = "<group>"; };
+		8FF93F9219959206005A4EEB /* MPAgentRegister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentRegister.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8F4B1EE616DD77BD00E15A9E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */,
+				8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */,
+				8FE560CC16DE71A100BB7600 /* libMacPatch.a in Frameworks */,
+				8F5310011B42EEE400B8D893 /* libsqlite3.dylib in Frameworks */,
+				8F530FEE1B42ED2B00B8D893 /* libxml2.dylib in Frameworks */,
+				8FE560DE16DE979E00BB7600 /* libicucore.dylib in Frameworks */,
+				8FE560DA16DE978B00BB7600 /* libz.dylib in Frameworks */,
+				8F530FF41B42ED7000B8D893 /* DirectoryService.framework in Frameworks */,
+				8F530FF21B42ED5D00B8D893 /* DiskArbitration.framework in Frameworks */,
+				8F530FF01B42ED5400B8D893 /* OpenDirectory.framework in Frameworks */,
+				8FE560E016DE97A900BB7600 /* Cocoa.framework in Frameworks */,
+				8FE560E216DE97B500BB7600 /* CoreFoundation.framework in Frameworks */,
+				8FE560E416DE97BE00BB7600 /* IOKit.framework in Frameworks */,
+				8FE560E616DE97C700BB7600 /* CoreServices.framework in Frameworks */,
+				8FE560EA16DE97DD00BB7600 /* Security.framework in Frameworks */,
+				8FE560E816DE97CF00BB7600 /* SystemConfiguration.framework in Frameworks */,
+				8F4B1EED16DD77BD00E15A9E /* Foundation.framework in Frameworks */,
+				8F9C2B581DDA1D4A002A39D2 /* CommerceKit.framework in Frameworks */,
+				8F9C2B5A1DDA1D6B002A39D2 /* StoreFoundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8F4B1EE016DD77BD00E15A9E = {
+			isa = PBXGroup;
+			children = (
+				8F4B1EEE16DD77BD00E15A9E /* MPAgent */,
+				8F4B1EEB16DD77BD00E15A9E /* Frameworks */,
+				8F4B1EEA16DD77BD00E15A9E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		8F4B1EEA16DD77BD00E15A9E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8F4B1EE916DD77BD00E15A9E /* MPAgent */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8F4B1EEB16DD77BD00E15A9E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8F53E2091FDA18BB004D4C32 /* PCSC.framework */,
+				8FF5B50B1FC658EC006F5FB2 /* Python.framework */,
+				8F9C2B591DDA1D6B002A39D2 /* StoreFoundation.framework */,
+				8F9C2B571DDA1D4A002A39D2 /* CommerceKit.framework */,
+				8F5310001B42EEE400B8D893 /* libsqlite3.dylib */,
+				8F530FF31B42ED7000B8D893 /* DirectoryService.framework */,
+				8F530FF11B42ED5D00B8D893 /* DiskArbitration.framework */,
+				8F530FEF1B42ED5400B8D893 /* OpenDirectory.framework */,
+				8F530FED1B42ED2B00B8D893 /* libxml2.dylib */,
+				8FE560E916DE97DD00BB7600 /* Security.framework */,
+				8FE560E716DE97CF00BB7600 /* SystemConfiguration.framework */,
+				8FE560E516DE97C700BB7600 /* CoreServices.framework */,
+				8FE560E316DE97BE00BB7600 /* IOKit.framework */,
+				8FE560E116DE97B500BB7600 /* CoreFoundation.framework */,
+				8F4B1EEC16DD77BD00E15A9E /* Foundation.framework */,
+				8FE560DF16DE97A900BB7600 /* Cocoa.framework */,
+				8FE560DD16DE979E00BB7600 /* libicucore.dylib */,
+				8FE560DB16DE979500BB7600 /* libcrypto.dylib */,
+				8FE560D916DE978B00BB7600 /* libz.dylib */,
+				8FE560CB16DE71A100BB7600 /* libMacPatch.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		8F4B1EEE16DD77BD00E15A9E /* MPAgent */ = {
+			isa = PBXGroup;
+			children = (
+				8F4B1EEF16DD77BD00E15A9E /* main.m */,
+				8F4B1F0216DD77FF00E15A9E /* AgentController.h */,
+				8F4B1F0316DD77FF00E15A9E /* AgentController.m */,
+				8F4B1F0016DD77FF00E15A9E /* MPAgent.h */,
+				8F4B1F0116DD77FF00E15A9E /* MPAgent.m */,
+				8FF93F9119959206005A4EEB /* MPAgentRegister.h */,
+				8FF93F9219959206005A4EEB /* MPAgentRegister.m */,
+				8FA6A8841B96230C006A329B /* MPInventoryPlugin.h */,
+				8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */,
+				8F6D32441CD3C34E006B1094 /* MPOSUpgrade.h */,
+				8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */,
+				8F4B1F0916DE633200E15A9E /* MPTasks */,
+				8FE03DD21B601926005D39EE /* Classes */,
+				8F530FFC1B42EEAC00B8D893 /* Third Party Classes */,
+				8F4B1EF116DD77BD00E15A9E /* Supporting Files */,
+			);
+			path = MPAgent;
+			sourceTree = "<group>";
+		};
+		8F4B1EF116DD77BD00E15A9E /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				8F4B1EF216DD77BD00E15A9E /* MPAgent-Prefix.pch */,
+				8F4B1F3216DE63F200E15A9E /* MPAgent-Info.plist */,
+				8F4B1EF316DD77BD00E15A9E /* MPAgent.1 */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		8F4B1F0916DE633200E15A9E /* MPTasks */ = {
+			isa = PBXGroup;
+			children = (
+				8F4B1F1D16DE635200E15A9E /* MPTasks.h */,
+				8F4B1F1E16DE635200E15A9E /* MPTasks.m */,
+				8F4B1F2116DE635200E15A9E /* MPTaskValidate.h */,
+				8F4B1F2216DE635200E15A9E /* MPTaskValidate.m */,
+				8F4B1F0A16DE633B00E15A9E /* Operations */,
+			);
+			name = MPTasks;
+			sourceTree = "<group>";
+		};
+		8F4B1F0A16DE633B00E15A9E /* Operations */ = {
+			isa = PBXGroup;
+			children = (
+				8F4B1F0D16DE634600E15A9E /* AgentScanAndUpdateOperation.h */,
+				8F4B1F0E16DE634600E15A9E /* AgentScanAndUpdateOperation.m */,
+				8F4B1F0F16DE634600E15A9E /* AntiVirusScanAndUpdateOperation.h */,
+				8F4B1F1016DE634600E15A9E /* AntiVirusScanAndUpdateOperation.m */,
+				8F9C2B5B1DDA1E33002A39D2 /* AppStoreOperation.h */,
+				8F9C2B5C1DDA1E33002A39D2 /* AppStoreOperation.m */,
+				8F4B1F0B16DE634600E15A9E /* ClientCheckInOperation.h */,
+				8F4B1F0C16DE634600E15A9E /* ClientCheckInOperation.m */,
+				8F4B1F1116DE634600E15A9E /* InventoryOperation.h */,
+				8F4B1F1216DE634600E15A9E /* InventoryOperation.m */,
+				8F4B1F1516DE634600E15A9E /* MPSWDistTaskOperation.h */,
+				8F4B1F1616DE634600E15A9E /* MPSWDistTaskOperation.m */,
+				8F4B1F1316DE634600E15A9E /* PatchScanAndUpdateOperation.h */,
+				8F4B1F1416DE634600E15A9E /* PatchScanAndUpdateOperation.m */,
+				8F2D4F2A188EFFB50008853B /* Profiles.h */,
+				8F2D4F2B188EFFB50008853B /* Profiles.m */,
+				8F2E697D1922C330001BF9D6 /* PostFailedWSRequests.h */,
+				8F2E697E1922C330001BF9D6 /* PostFailedWSRequests.m */,
+			);
+			name = Operations;
+			sourceTree = "<group>";
+		};
+		8F530FFC1B42EEAC00B8D893 /* Third Party Classes */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = "Third Party Classes";
+			path = ../../MPAgentExec/MPAgentExec;
+			sourceTree = "<group>";
+		};
+		8FA6A85E1B9621BF006A329B /* Inventory */ = {
+			isa = PBXGroup;
+			children = (
+				8FA6A8831B9621DB006A329B /* InventoryPlugin.h */,
+				8FA6A86B1B9621BF006A329B /* MPInv.h */,
+				8FA6A86C1B9621BF006A329B /* MPInv.m */,
+				8FA6A85F1B9621BF006A329B /* BatteryInfo.h */,
+				8FA6A8601B9621BF006A329B /* BatteryInfo.m */,
+				8FA6A8611B9621BF006A329B /* CHDisk.h */,
+				8FA6A8621B9621BF006A329B /* CHDisk.m */,
+				8FA6A8631B9621BF006A329B /* CHDiskInfo.h */,
+				8FA6A8641B9621BF006A329B /* CHDiskInfo.m */,
+				8FA6A8651B9621BF006A329B /* MacAppStoreDataItem.h */,
+				8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */,
+				8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */,
+				8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */,
+				8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */,
+				8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */,
+				8FA6A86D1B9621BF006A329B /* MPServerEntry.h */,
+				8FA6A86E1B9621BF006A329B /* MPServerEntry.m */,
+				8FA6A86F1B9621BF006A329B /* MPUsersAndGroups.h */,
+				8FA6A8701B9621BF006A329B /* MPUsersAndGroups.m */,
+				8F53E2031FDA077F004D4C32 /* LocalAdminAccounts.h */,
+				8F53E2041FDA077F004D4C32 /* LocalAdminAccounts.m */,
+				8FA6A8711B9621BF006A329B /* NSDirectoryServices.h */,
+				8FA6A8721B9621BF006A329B /* NSDirectoryServices.m */,
+				8FA6A8731B9621BF006A329B /* NSMetadataQuery+Synchronous.h */,
+				8FA6A8741B9621BF006A329B /* NSMetadataQuery+Synchronous.m */,
+				8FA6A8751B9621BF006A329B /* PowerProfile.h */,
+				8FA6A8761B9621BF006A329B /* PowerProfile.m */,
+				8F9C2B511DDA1D0E002A39D2 /* MPAppStore.h */,
+				8F9C2B521DDA1D0E002A39D2 /* MPAppStore.m */,
+				8F9C2B541DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.h */,
+				8F9C2B551DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m */,
+				8F2FC03C1E205523004710C7 /* MPFirmware.h */,
+				8F2FC03D1E205523004710C7 /* MPFirmware.m */,
+				8F53E2061FDA0E4A004D4C32 /* SmartCardReaderList.h */,
+				8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */,
+			);
+			path = Inventory;
+			sourceTree = "<group>";
+		};
+		8FE03DCE1B600C26005D39EE /* AgentUpdater */ = {
+			isa = PBXGroup;
+			children = (
+				8FE03DCF1B600C5A005D39EE /* MPAgentUpdater.h */,
+				8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */,
+			);
+			name = AgentUpdater;
+			sourceTree = "<group>";
+		};
+		8FE03DD21B601926005D39EE /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				8FF7E9CD210A557300678B93 /* Software */,
+				8FE03DD31B601938005D39EE /* AntiVirus */,
+				8FE03DCE1B600C26005D39EE /* AgentUpdater */,
+				8FA6A85E1B9621BF006A329B /* Inventory */,
+			);
+			name = Classes;
+			sourceTree = "<group>";
+		};
+		8FE03DD31B601938005D39EE /* AntiVirus */ = {
+			isa = PBXGroup;
+			children = (
+				8FE03DDA1B601ACA005D39EE /* Model */,
+				8FE03DD41B60195A005D39EE /* AntiVirus.h */,
+				8FE03DD51B60195A005D39EE /* AntiVirus.m */,
+			);
+			name = AntiVirus;
+			sourceTree = "<group>";
+		};
+		8FE03DDA1B601ACA005D39EE /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				8FE03DD71B601AC6005D39EE /* AVSoftware.h */,
+				8FE03DD81B601AC6005D39EE /* AVSoftware.m */,
+			);
+			name = Model;
+			sourceTree = "<group>";
+		};
+		8FF7E9CD210A557300678B93 /* Software */ = {
+			isa = PBXGroup;
+			children = (
+				8FF7E9CE210A558B00678B93 /* Software.h */,
+				8FF7E9CF210A558B00678B93 /* Software.m */,
+			);
+			name = Software;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8F4B1EE816DD77BD00E15A9E /* MPAgent */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F4B1EF716DD77BD00E15A9E /* Build configuration list for PBXNativeTarget "MPAgent" */;
+			buildPhases = (
+				8F4B1EE516DD77BD00E15A9E /* Sources */,
+				8F4B1EE616DD77BD00E15A9E /* Frameworks */,
+				8F4B1EE716DD77BD00E15A9E /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MPAgent;
+			productName = MPAgent;
+			productReference = 8F4B1EE916DD77BD00E15A9E /* MPAgent */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8F4B1EE116DD77BD00E15A9E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1000;
+				ORGANIZATIONNAME = LLNL;
+				TargetAttributes = {
+					8F4B1EE816DD77BD00E15A9E = {
+						DevelopmentTeam = BLZUAP2L36;
+					};
+				};
+			};
+			buildConfigurationList = 8F4B1EE416DD77BD00E15A9E /* Build configuration list for PBXProject "MPAgent" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 8F4B1EE016DD77BD00E15A9E;
+			productRefGroup = 8F4B1EEA16DD77BD00E15A9E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8F4B1EE816DD77BD00E15A9E /* MPAgent */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8F4B1EE516DD77BD00E15A9E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FE03DD11B600C5A005D39EE /* MPAgentUpdater.m in Sources */,
+				8FA6A8791B9621BF006A329B /* CHDiskInfo.m in Sources */,
+				8F4B1EF016DD77BD00E15A9E /* main.m in Sources */,
+				8F53E2051FDA077F004D4C32 /* LocalAdminAccounts.m in Sources */,
+				8F2FC03E1E205523004710C7 /* MPFirmware.m in Sources */,
+				8FE03DD91B601AC6005D39EE /* AVSoftware.m in Sources */,
+				8F4B1F0616DD77FF00E15A9E /* MPAgent.m in Sources */,
+				8FA6A8821B9621BF006A329B /* PowerProfile.m in Sources */,
+				8F6D32461CD3C34E006B1094 /* MPOSUpgrade.m in Sources */,
+				8FA6A87D1B9621BF006A329B /* MPInv.m in Sources */,
+				8FE03DD61B60195A005D39EE /* AntiVirus.m in Sources */,
+				8F9C2B5D1DDA1E33002A39D2 /* AppStoreOperation.m in Sources */,
+				8F2E697F1922C330001BF9D6 /* PostFailedWSRequests.m in Sources */,
+				8FA6A8861B96230C006A329B /* MPInventoryPlugin.m in Sources */,
+				8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */,
+				8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */,
+				8F4B1F0716DD77FF00E15A9E /* AgentController.m in Sources */,
+				8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */,
+				8FE8A7F22112564500E8796E /* Software.m in Sources */,
+				8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */,
+				8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */,
+				8FA6A8801B9621BF006A329B /* NSDirectoryServices.m in Sources */,
+				8F4B1F1716DE634600E15A9E /* ClientCheckInOperation.m in Sources */,
+				8F4B1F1816DE634600E15A9E /* AgentScanAndUpdateOperation.m in Sources */,
+				8F9C2B561DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m in Sources */,
+				8FA6A87E1B9621BF006A329B /* MPServerEntry.m in Sources */,
+				8FA6A8771B9621BF006A329B /* BatteryInfo.m in Sources */,
+				8F4B1F1916DE634600E15A9E /* AntiVirusScanAndUpdateOperation.m in Sources */,
+				8FA6A8781B9621BF006A329B /* CHDisk.m in Sources */,
+				8F4B1F1A16DE634600E15A9E /* InventoryOperation.m in Sources */,
+				8F53E2081FDA0E4A004D4C32 /* SmartCardReaderList.m in Sources */,
+				8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */,
+				8F4B1F1B16DE634600E15A9E /* PatchScanAndUpdateOperation.m in Sources */,
+				8F4B1F1C16DE634600E15A9E /* MPSWDistTaskOperation.m in Sources */,
+				8F4B1F2316DE635200E15A9E /* MPTasks.m in Sources */,
+				8F4B1F2516DE635200E15A9E /* MPTaskValidate.m in Sources */,
+				8FA6A8811B9621BF006A329B /* NSMetadataQuery+Synchronous.m in Sources */,
+				8F2D4F2C188EFFB50008853B /* Profiles.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		8F4B1EF516DD77BD00E15A9E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPAgent/MPAgent-Info.plist",
+				);
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8F4B1EF616DD77BD00E15A9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OTHER_LDFLAGS = (
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPAgent/MPAgent-Info.plist",
+				);
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8F4B1EF816DD77BD00E15A9E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_INT_CONVERSION = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MPAgent/MPAgent-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/include/libxml2,
+					"$(SRCROOT)/MPAgent/PrivateHeaders/**",
+					"$HOME/Developer/Xcode/include/**",
+				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-ObjC",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPAgent/MPAgent-Info.plist",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Debug;
+		};
+		8F4B1EF916DD77BD00E15A9E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_INT_CONVERSION = NO;
+				CODE_SIGN_IDENTITY = "";
+				DEVELOPMENT_TEAM = "";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MPAgent/MPAgent-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					/usr/include/libxml2,
+					"$(SRCROOT)/MPAgent/PrivateHeaders/**",
+					"$HOME/Developer/Xcode/include/**",
+				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				OTHER_LDFLAGS = (
+					"-all_load",
+					"-ObjC",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPAgent/MPAgent-Info.plist",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				USER_HEADER_SEARCH_PATHS = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8F4B1EE416DD77BD00E15A9E /* Build configuration list for PBXProject "MPAgent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F4B1EF516DD77BD00E15A9E /* Debug */,
+				8F4B1EF616DD77BD00E15A9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F4B1EF716DD77BD00E15A9E /* Build configuration list for PBXNativeTarget "MPAgent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F4B1EF816DD77BD00E15A9E /* Debug */,
+				8F4B1EF916DD77BD00E15A9E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8F4B1EE116DD77BD00E15A9E /* Project object */;
+}

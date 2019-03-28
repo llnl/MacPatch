@@ -24,9 +24,6 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
-#define	APP_VER_SHORT	@"1.2.0"
-#define	APP_VER_LONG	@"1.2.0.0.0"
-
 #ifdef __OBJC__
     #import <Foundation/Foundation.h>
     #import "MacPatch.h"

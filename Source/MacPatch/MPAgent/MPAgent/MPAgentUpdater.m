@@ -105,17 +105,24 @@
     NSError *err = nil;
     NSString *downloadURL;
     NSString *downloadFileLoc;
-    MPAsus *mpa = [[MPAsus alloc] init];
-    
+	
+	
+	
+	
+	
     // *****************************
     // First we need to download the update
-    @try {
+    @try
+	{
         logit(lcl_vInfo,@"Start download for patch from %@",[self.agentUpdateData objectForKey:@"pkg_url"]);
         //Pre Proxy Config
         downloadURL = [self.agentUpdateData objectForKey:@"pkg_url"];
         logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
         err = nil;
-        downloadFileLoc = [mpa downloadUpdate:downloadURL error:&err];
+        
+		MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+		NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+		downloadFileLoc = [req runSyncFileDownload:downloadURL downloadDirectory:dlDir error:&err];
         if (err) {
             logit(lcl_vError,@"Error downloading update %@. Err Message: %@",[downloadURL lastPathComponent],[err localizedDescription]);
             return result;
@@ -146,7 +153,8 @@
     logit(lcl_vInfo,@"Uncompressing patch, to begin install.");
     logit(lcl_vInfo,@"Begin decompression of file, %@",downloadFileLoc);
     err = nil;
-    [mpa unzip:downloadFileLoc error:&err];
+	MPFileUtils *fu = [MPFileUtils new];
+    [fu unzip:downloadFileLoc error:&err];
     if (err) {
         logit(lcl_vError,@"Error decompressing a update %@. Err Message:%@",[downloadURL lastPathComponent],[err localizedDescription]);
         return result;

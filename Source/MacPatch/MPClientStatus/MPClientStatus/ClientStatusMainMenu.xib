@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="17G65" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.68" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.68"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -56,16 +56,10 @@
                         <action selector="showCheckinWindow:" target="494" id="637"/>
                     </connections>
                 </menuItem>
-                <menuItem title="Open Self Patch" id="540">
+                <menuItem title="Open MacPatch" id="540">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="openSelfPatchApplications:" target="494" id="643"/>
-                    </connections>
-                </menuItem>
-                <menuItem title="Open Software Catalog" id="639">
-                    <modifierMask key="keyEquivalentModifierMask"/>
-                    <connections>
-                        <action selector="openSoftwareCatalogApplications:" target="494" id="642"/>
+                        <action selector="openMacPatchApplication:" target="-1" id="Bvd-A5-far"/>
                     </connections>
                 </menuItem>
                 <menuItem title="Tasks" hidden="YES" id="543">
@@ -106,7 +100,7 @@
                     </connections>
                 </menuItem>
             </items>
-            <point key="canvasLocation" x="-153" y="7"/>
+            <point key="canvasLocation" x="-244" y="-387"/>
         </menu>
         <menu title="AMainMenu" systemMenu="main" id="29">
             <items>
@@ -753,7 +747,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="360" height="166"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="589">
+                    <textField verticalHuggingPriority="750" id="589">
                         <rect key="frame" x="17" y="45" width="326" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="594">
@@ -762,7 +756,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="590">
+                    <textField verticalHuggingPriority="750" id="590">
                         <rect key="frame" x="17" y="20" width="326" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="593">
@@ -785,11 +779,11 @@
             <rect key="contentRect" x="1042" y="676" width="480" height="131"/>
             <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
             <value key="minSize" type="size" width="480" height="131"/>
-            <view key="contentView" misplaced="YES" id="557">
+            <view key="contentView" id="557">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="131"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="561">
+                    <textField verticalHuggingPriority="750" id="561">
                         <rect key="frame" x="105" y="92" width="290" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="MacPatch Client Information" id="562">
@@ -803,7 +797,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="axesIndependently" image="MPBaseRoundIcon" id="564"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="560">
+                    <textField verticalHuggingPriority="750" id="560">
                         <rect key="frame" x="105" y="34" width="358" height="50"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" title="Multiline Label" id="563">
@@ -816,17 +810,17 @@
                         <rect key="frame" x="20" y="22" width="440" height="0.0"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="sa6-VY-FkX">
-                            <rect key="frame" x="1" y="0.0" width="423" height="0.0"/>
+                            <rect key="frame" x="1" y="0.0" width="438" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="568" id="567">
-                                    <rect key="frame" x="0.0" y="0.0" width="423" height="19"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="438" height="19"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <size key="intercellSpacing" width="3" height="2"/>
                                     <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="gridColor" name="gridColor" catalog="System" colorSpace="catalog"/>
                                     <tableColumns>
-                                        <tableColumn identifier="" editable="NO" width="142" minWidth="40" maxWidth="1000" id="569">
+                                        <tableColumn editable="NO" width="142" minWidth="40" maxWidth="1000" id="569">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Property">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -846,7 +840,7 @@
                                                 </binding>
                                             </connections>
                                         </tableColumn>
-                                        <tableColumn identifier="" editable="NO" width="275" minWidth="40" maxWidth="1000" id="570">
+                                        <tableColumn editable="NO" width="290" minWidth="40" maxWidth="1000" id="570">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Value">
                                                 <font key="font" metaFont="smallSystem"/>
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
@@ -874,12 +868,12 @@
                                 </tableView>
                             </subviews>
                         </clipView>
-                        <scroller key="horizontalScroller" hidden="YES" verticalHuggingPriority="750" horizontal="YES" id="566">
+                        <scroller key="horizontalScroller" hidden="YES" wantsLayer="YES" verticalHuggingPriority="750" horizontal="YES" id="566">
                             <rect key="frame" x="1" y="154" width="387" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="565">
-                            <rect key="frame" x="424" y="0.0" width="15" height="0.0"/>
+                        <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="565">
+                            <rect key="frame" x="423" y="0.0" width="16" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                         <tableHeaderView key="headerView" id="568">
@@ -938,7 +932,7 @@
                 <rect key="frame" x="0.0" y="0.0" width="574" height="178"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="iMy-tp-ciN">
+                    <textField verticalHuggingPriority="750" id="iMy-tp-ciN">
                         <rect key="frame" x="117" y="56" width="439" height="68"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="iB1-7Y-D6B">
@@ -950,7 +944,7 @@ To finish the installation and restart your computer, click Restart.            
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="mwm-Oi-5Fq">
+                    <textField verticalHuggingPriority="750" id="mwm-Oi-5Fq">
                         <rect key="frame" x="117" y="132" width="439" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Install and Restart" allowsEditingTextAttributes="YES" id="fs5-Fp-grJ">
@@ -962,7 +956,7 @@ To finish the installation and restart your computer, click Restart.            
                     <imageView id="VlH-FL-IZe">
                         <rect key="frame" x="20" y="86" width="72" height="72"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="MPBaseRoundIcon" id="8ZL-yw-aEM"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="8ZL-yw-aEM"/>
                     </imageView>
                     <imageView id="KVr-Ot-uVq">
                         <rect key="frame" x="56" y="76" width="48" height="48"/>
@@ -1014,7 +1008,7 @@ DQ
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="MPBaseRoundIcon" id="RVq-mc-dLv"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" allowsCharacterPickerTouchBarItem="NO" id="pHy-dd-CQ6">
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" id="pHy-dd-CQ6">
                         <rect key="frame" x="106" y="17" width="334" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="cNh-We-GGs">
@@ -1024,7 +1018,7 @@ DQ
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" id="E1e-8g-oUC">
+                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="E1e-8g-oUC">
                         <rect key="frame" x="106" y="105" width="339" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="MacPatch - Critical Patch Install" id="fDw-Ub-7mO">
@@ -1037,7 +1031,7 @@ DQ
                         <rect key="frame" x="108" y="56" width="330" height="20"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </progressIndicator>
-                    <textField hidden="YES" canDrawConcurrently="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" textCompletion="NO" id="oeB-bz-QPU">
+                    <textField hidden="YES" canDrawConcurrently="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" textCompletion="NO" id="oeB-bz-QPU">
                         <rect key="frame" x="106" y="70" width="329" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="truncatingTail" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="Label" id="3RU-vq-apI">
@@ -1100,6 +1094,7 @@ LQAyADcAQQBHAFAAVwBcAGQAeQB7AH0AfwCBAIsAkgCXAKIApQCnAKkAqwCwALsAxADMAM8A2ADdAOoA
     </objects>
     <resources>
         <image name="MPBaseRoundIcon" width="512" height="512"/>
+        <image name="appImage" width="64" height="64"/>
         <image name="warn" width="600" height="500"/>
     </resources>
 </document>

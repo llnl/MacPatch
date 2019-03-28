@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="bootstrap-table/bootstrap-table.css">
+    <script src="bootstrap-table/jquery.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="bootstrap-table/bootstrap-table.js"></script>
+</head>
+    <body>
+    	<div class="container">
+	        <h1>Detail View</h1>
+	        <p>Use <code>detailView</code> and <code>detailFormatter</code> options to show detail view.</p>
+	        <table id="table"
+	               data-height="460"
+	               data-detail-view="true"
+	               data-detail-formatter="detailFormatter"
+	               data-url="json/data1.json">
+	            <thead>
+	            <tr>
+	                <th data-field="id">ID</th>
+	                <th data-field="name">Item Name</th>
+	                <th data-field="price">Item Price</th>
+	            </tr>
+	            </thead>
+	        </table>
+    	</div>
+    	<script>
+		    function detailFormatter(index, row) {
+		        var html = [];
+		        $.each(row, function (key, value) {
+		            html.push('<p><b>' + key + ':</b> ' + value + '</p>');
+		        });
+		        return html.join('');
+		    }
+		    $(function () {
+		        $('#table').bootstrapTable({
+		          onExpandRow: function (index, row, $detail) {
+		            $detail.hide().fadeIn('slow');
+		          },
+		          onCollapseRow: function (index, row, $detail) {
+		            $detail.clone().insertAfter($detail).fadeOut('slow', function () {
+		                $(this).remove();
+		            })
+		          }
+		        })
+		    })
+		</script>
+    </body>
+</html>
+  

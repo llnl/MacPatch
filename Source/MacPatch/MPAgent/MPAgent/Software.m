@@ -193,7 +193,8 @@
 		}
 		
 		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
-		[mpa unzip:zipFile error:&err];
+		MPFileUtils *fu = [MPFileUtils new];
+		[fu unzip:zipFile error:&err];
 		if (err) {
 			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
@@ -233,7 +234,8 @@
 		}
 		
 		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
-		[mpa unzip:zipFile error:&err];
+		MPFileUtils *fu = [MPFileUtils new];
+		[fu unzip:zipFile error:&err];
 		if (err) {
 			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
@@ -268,7 +270,8 @@
 		}
 
 		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
-		[mpa unzip:zipFile error:&err];
+		MPFileUtils *fu = [MPFileUtils new];
+		[fu unzip:zipFile error:&err];
 		if (err) {
 			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
@@ -390,6 +393,8 @@
 {
 	[settings refresh];
 	NSString *cGroupID = settings.agent.groupId;
+	// CEH
+	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
 	
 	NSMutableArray *array = reqPlist[@"requiredSoftware"];
@@ -406,6 +411,7 @@
 	}
 	
 	[reqPlist writeToFile:SOFTWARE_REQUIRED_PLIST atomically:NO];
+	 */
 	return YES;
 }
 
@@ -413,7 +419,8 @@
 {
 	[settings refresh];
 	NSString *cGroupID = settings.agent.groupId;
-	
+	// CEH
+	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
 	NSMutableArray *array = reqPlist[@"requiredSoftware"];
 	
@@ -429,6 +436,7 @@
 	}
 	
 	[reqPlist writeToFile:SOFTWARE_REQUIRED_PLIST atomically:NO];
+	 */
 	return YES;
 }
 
@@ -436,6 +444,8 @@
 {
 	[settings refresh];
 	NSString *cGroupID = settings.agent.groupId;
+	// CEH
+	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
 	NSArray *array = reqPlist[@"requiredSoftware"];
 
@@ -452,7 +462,7 @@
 			}
 		}
 	}
-
+	*/
 	return NO;
 }
 
@@ -1019,8 +1029,10 @@ done:
 	
 	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities...");
 	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities for %@", aBundleID);
-	MPAsus *mpAsus = [[MPAsus alloc] init];
-	NSMutableArray *customPatchesFound = (NSMutableArray *)[mpAsus scanForCustomUpdateUsingBundleID:aBundleID];
+	
+	MPPatching *patching = [MPPatching new];
+	NSMutableArray *customPatchesFound = [[patching scanForPatchUsingBundleID:aBundleID] mutableCopy];
+	//NSMutableArray *customPatchesFound = (NSMutableArray *)[mpAsus scanForCustomUpdateUsingBundleID:aBundleID];
 	
 	logit(lcl_vDebug,@"Custom Patches Needed: %@",customPatchesFound);
 	logit(lcl_vDebug,@"Approved Patches: %@",patchForBundleID);
@@ -1139,7 +1151,10 @@ done:
 			dlURL = [NSString stringWithFormat:@"/mp-content%@",patchData[@"pkg_url"]];
 			logit(lcl_vInfo,@"Download patch from: %@",dlURL);
 			err = nil;
-			dlPatchLoc = [mpAsus downloadUpdate:dlURL error:&err];
+			
+			MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+			NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
+			dlPatchLoc = [req runSyncFileDownload:dlURL downloadDirectory:dlDir error:&err];
 			if (err) {
 				logit(lcl_vError,@"Error downloading a patch, skipping %@. Err Message: %@",patch[@"patch"],err.localizedDescription);
 				return;
@@ -1171,7 +1186,8 @@ done:
 		logit(lcl_vInfo,@"Uncompressing patch, to begin install.");
 		logit(lcl_vInfo,@"Begin decompression of file, %@",dlPatchLoc);
 		err = nil;
-		[mpAsus unzip:dlPatchLoc error:&err];
+		MPFileUtils *fu = [MPFileUtils new];
+		[fu unzip:dlPatchLoc error:&err];
 		if (err) {
 			logit(lcl_vError,@"Error decompressing a patch, skipping %@. Err Message:%@",patch[@"patch"],err.localizedDescription);
 			return;

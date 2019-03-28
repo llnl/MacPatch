@@ -79,10 +79,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 	var profiles_list: [String: Any] = [:]
     
     
-    override func viewDidLoad() {
+    override func viewDidLoad()
+	{
         super.viewDidLoad()
         self.uploadButton.isEnabled = false
-        
+
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleLoggingLevel(notification:)), name: Notification.Name("LogLevel"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleAgentUpload(notification:)), name: Notification.Name("AgentUpload"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.setLogLevel(notification:)), name: Notification.Name("setLogLevel"), object: nil)
@@ -92,8 +93,6 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         self.headerView.wantsLayer = true
         headerViewVersionLabel.stringValue = "Version " + (Bundle.main.infoDictionary!["CFBundleShortVersionString"] as! String)
         self.mpServerHost.placeholderString = "MacPatch Server"
-        //self.mpServerPort.stringValue = "3600"
-        //self.mpServerPort.placeholderString = "3600"
         self.resetUI()
     }
 
@@ -104,7 +103,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     }
 
     lazy var authViewController: AuthViewController = {
-        return self.storyboard!.instantiateController(withIdentifier: NSStoryboard.SceneIdentifier(rawValue: "AuthViewController"))
+        return self.storyboard!.instantiateController(withIdentifier: "AuthViewController")
             as! AuthViewController
     }()
     
@@ -114,12 +113,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         authViewController.x_mpServer = self.mpServerHost.stringValue
         authViewController.x_mpPort = self.mpServerPort.stringValue
         authViewController.x_useSSL = self.useSSL.state.rawValue
-        self.presentViewControllerAsSheet(authViewController)
+        self.presentAsSheet(authViewController)
     }
     
     func displayMigrationPlistSheet()
     {
-        print("Yes")
         let openPanel = NSOpenPanel()
         openPanel.message = "Please select the migration plist file."
         openPanel.allowsMultipleSelection = false
@@ -160,6 +158,8 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 self.agentPackage.stringValue = (openPanel.url?.path)!
                 self.uploadButton.isEnabled = true
 				log.info("choosePackage: \(String(describing: openPanel.url?.path))")
+				self.defaults.set(self.agentPackage.stringValue, forKey: "package")
+				self.defaults.synchronize()
             }
         }
     }
@@ -176,8 +176,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         openPanel.begin { (result) -> Void in
             if result.rawValue == NSFileHandlingPanelOKButton {
                 self.pluginsPath.stringValue = (openPanel.url?.path)!
+				self.defaults.set(self.pluginsPath.stringValue, forKey: "pluginsFolder")
+				self.defaults.synchronize()
             }
         }
+		
     }
 	
 	@IBAction func chooseProfilesFolder(sender: AnyObject)
@@ -192,11 +195,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 		openPanel.begin { (result) -> Void in
 			if result.rawValue == NSFileHandlingPanelOKButton {
 				self.profilesPath.stringValue = (openPanel.url?.path)!
+				self.defaults.set(self.profilesPath.stringValue, forKey: "profiles")
+				self.defaults.synchronize()
 			}
 		}
 	}
-	
-	
 	
 	
 	@objc func resetAuthToken(notification: NSNotification)
@@ -249,21 +252,31 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 // MARK: - Methods
     func processAgentPackage()
     {
+		var _signButton: NSButton!
+		var _signIdent: NSTextField!
+		
+		DispatchQueue.main.async {
+			_signButton = self.signPackageButton
+			_signIdent = self.signingIdentity
+		}
+		
         DispatchQueue.global(qos: .background).async
         {
             log.info("****************************************************************")
-            log.info("****************************************************************")
             log.info("Begin Processing Agent Packages")
             // If Signing is turned on check for signature value
-            if (self.signPackageButton.state == .on) {
-                if (self.signingIdentity.stringValue.count <= 0) {
-                    log.error("Property signingIdentity is selected but value is not set.")
-                    DispatchQueue.main.async {
-                        _ = self.alertWithOK(title: "Missing Identity", infoText: "You have choosen to sign the packages but did not enter an identity name. Please enter an identity name and try again.")
-                    }
-                    return;
-                }
-            }
+	
+			if (_signButton?.state == .on)
+			{
+				if ((_signIdent?.stringValue.count)! <= 0)
+				{
+					log.error("Property signingIdentity is selected but value is not set.")
+					DispatchQueue.main.async {
+						_ = self.alertWithOK(title: "Missing Identity", infoText: "You have choosen to sign the packages but did not enter an identity name. Please enter an identity name and try again.")
+					}
+					return;
+				}
+			}
             
             // UI Changes
             self.resetUI()
@@ -273,19 +286,22 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             // Download Agent Configuration Data
             // ---------------------------------
             log.info("Download Agent Configuration Data")
-            self.agentConfigImage.image = NSImage.init(named: NSImage.Name.removeTemplate)
+			DispatchQueue.main.async {
+				self.agentConfigImage.image = NSImage.init(named: NSImage.removeTemplateName)
+			}
+			
             let res = self.getAgentConfigurationData(token: self.api_token)
             if (res == nil || (res?.isEmpty)!) {
                 log.error("Error getting agent configuration.")
                 DispatchQueue.main.async {
-                    self.agentConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.agentConfigImage.image = NSImage.init(named: "RedDot")
                     self.agentConfigStatus.stringValue = "Error getting agent configuration."
                     self.toggleUIEnd()
                 }
                 return;
             } else {
                 DispatchQueue.main.async {
-                    self.agentConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+                    self.agentConfigImage.image = NSImage.init(named: "GreenDot")
                 }
             }
             let agent_config = res?["plist"] as? String
@@ -294,15 +310,15 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             // Unzip and extract packages
             // ---------------------------------
             log.info("Unzip and extract package")
-            self.extractAgentImage.image = NSImage.init(named: NSImage.Name.removeTemplate)
+            self.extractAgentImage.image = NSImage.init(named: NSImage.removeTemplateName)
             if (self.extractAgentPKG(package: self.agentPackage.stringValue)) {
                 DispatchQueue.main.async {
-                    self.extractAgentImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+                    self.extractAgentImage.image = NSImage.init(named: "GreenDot")
                 }
             } else {
                 log.error("Error unarchiving and extracting package.")
                 DispatchQueue.main.async {
-                    self.extractAgentImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.extractAgentImage.image = NSImage.init(named: "RedDot")
                     self.extractStatus.stringValue = "Error unarchiving and extracting package."
                     self.toggleUIEnd()
                 }
@@ -313,27 +329,28 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             // Write config to packages
             // ---------------------------------
             log.info("Write config data to packages.")
-            self.writeConfigImage.image = NSImage.init(named: NSImage.Name.removeTemplate)
+            self.writeConfigImage.image = NSImage.init(named: NSImage.removeTemplateName)
             
             // Get an array of packages
-            let base_dir = self.pkg_tmp_dir.stringByAppendingPathComponent(path: "MPClientInstall")
+            let base_dir = self.pkg_tmp_dir.stringByAppendingPathComponent(path: "MacPatch")
             log.debug("Working directory is \(base_dir)")
 
             var packages: [String] = self.getPackagesFromArchiveDir(path: base_dir)!
             if (packages.isEmpty) {
                 log.error("Error no packages in archive.")
                 DispatchQueue.main.async {
-                    self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.writeConfigImage.image = NSImage.init(named: "RedDot")
                     self.writeConfigStatus.stringValue = "Error no pkgs in archive"
                 }
             }
             
             // Write Server Public Key to Base.pkg
             log.info("Write Server Public Key to Base.pkg")
-            if (!self.writeServerPubKeyToPackage(packages: packages, pubKey: res?["pubKey"] as! String, keyHash: res?["pubKeyHash"] as! String)) {
+            if (!self.writeServerPubKeyToPackage(packages: packages, pubKey: res?["pubKey"] as! String, keyHash: res?["pubKeyHash"] as! String))
+			{
                 log.error("Error writing server keys.")
                 DispatchQueue.main.async {
-                    self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.writeConfigImage.image = NSImage.init(named: "RedDot")
                     self.writeConfigStatus.stringValue = "Error writing server keys."
                     self.toggleUIEnd()
                 }
@@ -341,10 +358,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             }
             // Write config plist to packages
             log.info("Write config plist to packages")
-            if (!self.writePlistToPackage(packages: packages, plist: agent_config!)) {
+			if (!self.writePlistToPackage(packages: packages, plist: agent_config!))
+			{
                 log.error("Error writing config plist to package.")
                 DispatchQueue.main.async {
-                    self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.writeConfigImage.image = NSImage.init(named: "RedDot")
                     self.writeConfigStatus.stringValue = "Error writing config plist to package."
                     self.toggleUIEnd()
                 }
@@ -357,7 +375,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 if (!self.writePluginsToPackage(packages: packages, plugins_directory: self.pluginsPath.stringValue)) {
                     log.error("Error writing plugins to package.")
                     DispatchQueue.main.async {
-                        self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                        self.writeConfigImage.image = NSImage.init(named: "RedDot")
                         self.writeConfigStatus.stringValue = "Error writing plugins to package."
                         self.toggleUIEnd()
                     }
@@ -371,7 +389,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 				if (!self.writeProfilesToPackage(packages: packages, profiles_directory: self.profilesPath.stringValue)) {
 					log.error("Error writing profiles to package.")
 					DispatchQueue.main.async {
-						self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+						self.writeConfigImage.image = NSImage.init(named: "RedDot")
 						self.writeConfigStatus.stringValue = "Error writing plugins to package."
 						self.toggleUIEnd()
 					}
@@ -386,7 +404,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 if (!self.writeVersionInfoToPackage(package: pkg, version_file: ver_info)) {
                     log.error("Error writing version info to packages.")
                     DispatchQueue.main.async {
-                        self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                        self.writeConfigImage.image = NSImage.init(named: "RedDot")
                         self.writeConfigStatus.stringValue = "Error writing version info to packages."
                         self.toggleUIEnd()
                     }
@@ -400,7 +418,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 if (!self.writeRegKeyToPackage(packages: packages, regKey: self.registrationKey.stringValue)) {
                     log.error("Error writing registration key to packages.")
                     DispatchQueue.main.async {
-                        self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                        self.writeConfigImage.image = NSImage.init(named: "RedDot")
                         self.writeConfigStatus.stringValue = "Error writing registration key to packages."
                         self.toggleUIEnd()
                     }
@@ -418,14 +436,14 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             }
             
             DispatchQueue.main.async {
-                self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+                self.writeConfigImage.image = NSImage.init(named: "GreenDot")
             }
             
             // ---------------------------------
             // Flatten Packages
             // ---------------------------------
             log.info("Flatten Packages")
-            self.flattenPackageImage.image = NSImage.init(named: NSImage.Name.removeTemplate)
+            self.flattenPackageImage.image = NSImage.init(named: NSImage.removeTemplateName)
             
             var flattend_packages: [String] = []
             packages.append(base_dir) // Add the Combined Package to flatten
@@ -433,14 +451,14 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             if (flattend_packages.count <= 0) {
                 log.error("Error flattening packages.")
                 DispatchQueue.main.async {
-                    self.flattenPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                    self.flattenPackageImage.image = NSImage.init(named: "RedDot")
                     self.flattenPackageStatus.stringValue = "Error flattening packages."
                     self.toggleUIEnd()
                 }
                 return
             } else {
                 DispatchQueue.main.async {
-                    self.flattenPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+                    self.flattenPackageImage.image = NSImage.init(named: "GreenDot")
                 }
             }
             
@@ -448,7 +466,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             // Compress Packages
             // ---------------------------------
             log.info("Compress Packages")
-            self.compressPackageImage.image = NSImage.init(named: NSImage.Name.removeTemplate)
+            self.compressPackageImage.image = NSImage.init(named: NSImage.removeTemplateName)
             for fpkg in flattend_packages {
                 
                 var xFpkg = fpkg
@@ -461,14 +479,14 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 if (!self.compressPackage(package: xFpkg)){
                     log.error("Error archiving package.")
                     DispatchQueue.main.async {
-                        self.compressPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                        self.compressPackageImage.image = NSImage.init(named: "RedDot")
                         self.compressPackageStatus.stringValue = "Error archiving package."
                         self.toggleUIEnd()
                     }
                     return
                 }
             }
-            self.compressPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+            self.compressPackageImage.image = NSImage.init(named: "GreenDot")
             
             // ---------------------------------
             // Post Packages
@@ -489,7 +507,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 if(!self.uploadPackagesToServer(packages: xp, formData: fdata)) {
                     log.error("Error posting packages.")
                     DispatchQueue.main.async {
-                        self.postPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "RedDot"))
+                        self.postPackageImage.image = NSImage.init(named: "RedDot")
                         self.postPackageStatus.stringValue = "Error posting packages."
                         self.toggleUIEnd()
                     }
@@ -497,7 +515,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 }
                 
                 DispatchQueue.main.async {
-                    self.postPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "GreenDot"))
+                    self.postPackageImage.image = NSImage.init(named: "GreenDot")
                 }
             } else {
                 log.debug("Upload is disabled, opening working dir.")
@@ -509,7 +527,8 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 
 // MARK: - Helper Methods
     
-    func toggleUIBegin() {
+    func toggleUIBegin()
+	{
         DispatchQueue.main.async
         {
             self.uploadButton.isEnabled = false
@@ -520,7 +539,8 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     }
     
     
-    func toggleUIEnd() {
+    func toggleUIEnd()
+	{
         DispatchQueue.main.async
         {
             self.uploadButton.isEnabled = true
@@ -533,22 +553,35 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     {
         DispatchQueue.main.async
         {
-            self.agentConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.agentConfigImage.image = NSImage.init(named: "ClearDot")
             self.agentConfigStatus.stringValue = ""
-            self.extractAgentImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.extractAgentImage.image = NSImage.init(named: "ClearDot")
             self.extractStatus.stringValue = ""
-            self.writeConfigImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.writeConfigImage.image = NSImage.init(named: "ClearDot")
             self.writeConfigStatus.stringValue = ""
-            self.flattenPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.flattenPackageImage.image = NSImage.init(named: "ClearDot")
             self.flattenPackageStatus.stringValue = ""
-            self.compressPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.compressPackageImage.image = NSImage.init(named: "ClearDot")
             self.compressPackageStatus.stringValue = ""
-            self.postPackageImage.image = NSImage.init(named: NSImage.Name(rawValue: "ClearDot"))
+            self.postPackageImage.image = NSImage.init(named: "ClearDot")
             if (self.defaults.bool(forKey: "doNotUpload")) {
                 self.postPackageStatus.stringValue = "Upload is disabled for testing. Will open folder."
             } else {
                 self.postPackageStatus.stringValue = ""
             }
+			
+			// If package is a valid path, enable upload button
+			if (self.agentPackage.stringValue.count > 6)
+			{
+				if (FileManager.default.fileExists(atPath: self.agentPackage.stringValue))
+				{
+					self.uploadButton.isEnabled = true
+				}
+				else
+				{
+					log.error("\(self.agentPackage.stringValue) does not exist. Will not enable upload button")
+				}
+			}
         }
     }
     
@@ -691,7 +724,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         
         
         let pkgName = tmpDir.stringByAppendingPathComponent(path: package.lastPathComponent).stringByDeletingPathExtension
-        let expandedPkgDir = tmpDir.stringByAppendingPathComponent(path: "MPClientInstall")
+        let expandedPkgDir = tmpDir.stringByAppendingPathComponent(path: "MacPatch")
         
         // Expand Package
         do {
@@ -724,15 +757,18 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             return false
         }
         
-        for p in packages {
-            if (p.lastPathComponent == "Base.pkg") {
-                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts")) {
+        for p in packages
+		{
+            if (p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg")
+			{
+                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts"))
+				{
                     let keyFile = p.stringByAppendingPathComponent(path: "Scripts/ServerPub.pem")
                     log.debug("Write public key to \(keyFile)")
                     try! pubKey.write(toFile: keyFile, atomically: false, encoding: String.Encoding.utf8)
                     let mpc = MPCrypto.init()
                     let fHash = mpc.md5Hash(forFile: keyFile)
-                    log.debug("\(fHash?.lowercased()) = \(keyHash.lowercased())")
+					log.debug("\(fHash?.lowercased() ?? "Err") = \(keyHash.lowercased())")
                     if (fHash?.lowercased() == keyHash.lowercased()) {
                         return true
                     } else {
@@ -761,8 +797,10 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             return false
         }
         
-        for p in packages {
-            if (p.lastPathComponent == "Base.pkg") {
+        for p in packages
+		{
+            if ( p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg" )
+			{
                 if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts")) {
                     let plistFile = p.stringByAppendingPathComponent(path: "Scripts/gov.llnl.mpagent.plist")
                     log.debug("Write plist to \(plistFile)")
@@ -781,8 +819,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                         return false
                     }
                 }
-            } else if (p.lastPathComponent == "Updater.pkg") {
-                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts")) {
+            }
+			else if (p.lastPathComponent == "Updater.pkg")
+			{
+                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts"))
+				{
                     if (migration_plist != "") {
                         let fm = FileManager.default
                         let plistFile = p.stringByAppendingPathComponent(path: "Scripts/migration.plist")
@@ -819,7 +860,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         
         for p in packages
 		{
-            if (p.lastPathComponent == "Base.pkg")
+            if (p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg")
 			{
                 let plugins_dir = p.stringByAppendingPathComponent(path: "Scripts/Plugins")
                 
@@ -862,8 +903,10 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 			return false
 		}
 		
-		for p in packages {
-			if (p.lastPathComponent == "Base.pkg") {
+		for p in packages
+		{
+			if (p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg")
+			{
 				let profiles_dir = p.stringByAppendingPathComponent(path: "Scripts/profiles")
 				
 				if (!fm.fileExists(atPath: profiles_dir)) {
@@ -1027,9 +1070,12 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             return true
         }
         
-        for p in packages {
-            if (p.lastPathComponent == "Base.pkg") {
-                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts")) {
+        for p in packages
+		{
+            if (p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg")
+			{
+                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts"))
+				{
                     let regFile = p.stringByAppendingPathComponent(path: "Scripts/.mpreg.key")
                     do {
                         try regKey.write(toFile: regFile, atomically: false, encoding: String.Encoding.utf8)
@@ -1225,11 +1271,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 			fileData = try! NSData.init(contentsOfFile: p)
 			let d: [String: Any]
 			
-			if (p.lastPathComponent.contains("Base.pkg"))
+			if (p.lastPathComponent.contains("Base.pkg") || p.lastPathComponent.contains("Client.pkg"))
 			{
 				d = ["name": "fBase", "fileName": p.lastPathComponent, "data": fileData as Data]
 			}
-			else if (p.lastPathComponent.contains("MPClientInstall.pkg"))
+			else if (p.lastPathComponent.contains("MacPatch.pkg"))
 			{
 				d = ["name": "fComplete", "fileName": p.lastPathComponent, "data": fileData as Data]
 			}
@@ -1248,7 +1294,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 		let semaphore = DispatchSemaphore(value: 0)
 		
 		let jstring = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
-		log.info("JSON Data: \(jstring)")
+		log.info("JSON Data: \(jstring ?? "{}")")
 		
 		Alamofire.upload(multipartFormData: { multipartFormData in
 			

@@ -1,8 +1,8 @@
 #!/bin/bash
-#
+
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 1.8
+# Version: 2.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -17,142 +17,44 @@
 #	1.7		Add OS Query to agent install
 # 	1.8		Add PlanB support to base package as an option
 #	1.9		Update to PlanB syntax
+#   2.0		Updated to support new 3.2 agent and package name
 #
 # -------------------------------------------------------------
 
 SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
-BUILDROOT="/private/tmp/MP/Client31"
-PLANB_BUILD_ROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
+DATETIME=`date "+%Y%m%d-%H%M%S"`
+BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
+PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 
-BASEPKGVER="3.1.0.1"
-UPDTPKGVER="3.1.0.1"
+AGENTVER="3.2.0.1"
+UPDATEVER="3.2.0.1"
+
 PKG_STATE=""
 CODESIGNIDENTITY="*"
-MIN_OS="10.9"
-INCOSQUERY=false
+MIN_OS="10.12"
 INCPlanBSource=false
 MPPLANB_SRV_ADDR="localhost"
-BUILDPLIST="/Library/Preferences/mp.build.client31.plist"
+BUILDPLIST="/Library/Preferences/mp.build.client32.plist"
+
 
 if [ -f "$BUILDPLIST" ]; then
-	CODESIGNIDENTITYALT=`defaults read ${BUILDPLIST} name`
+	CODESIGNIDENTITYALT=`defaults read ${BUILDPLIST} name 2> /dev/null`
 fi
 
 if [ -d "$BUILDROOT" ]; then
 	rm -rf ${BUILDROOT}
 else
 	mkdir -p ${BUILDROOT}
+	mkdir -p ${BUILDROOT}/logs
 fi
 
-# ------------------------------------------------------------
-# Set Client Version
-# ------------------------------------------------------------
-AGENT_VERS="1.0.0"
-if [ -f "$BUILDPLIST" ]; then
-	AGENT_VERS=`defaults read ${BUILDPLIST} client_version`
-	if (($? > 0)); then
-		AGENT_VERS="1.0.0"
-	fi
-fi
+clear
+echo " ------------------------------------------------------------"
+echo "  Building MacPatch Client"
+echo " ------------------------------------------------------------"
 echo
-echo " - Set overall MacPatch Client version ( e.g. 2.9.0 ) "
-read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
-AGENT_VER=${AGENT_VER:-$AGENT_VERS}
-
-# ------------------------------------------------------------
-# Set Client Build Number
-# ------------------------------------------------------------
-AGENT_BUILDS="1"
-if [ -f "$BUILDPLIST" ]; then
-	AGENT_BUILDS=`defaults read ${BUILDPLIST} client_build`
-	if (($? > 0)); then
-		AGENT_BUILDS=1
-	fi
-fi
-echo
-echo " - Set overall MacPatch Client build number "
-echo " use \"i\" to increment or type in a number "
-read -p "Set MacPatch Client build number (current $AGENT_BUILDS),  [i]: " AGENT_BUILD
-AGENT_BUILD=${AGENT_BUILD:-$AGENT_BUILDS}
-
-BUILD_NO=0
-if [ "$AGENT_BUILD" == "i" ] || [ "$AGENT_BUILD" == "I" ]; then
-	let "BUILD_NO=AGENT_BUILDS+1"
-else
-	BUILD_NO=$AGENT_BUILD
-fi
-
-re='^[0-9]+$'
-if ! [[ $BUILD_NO =~ $re ]] ; then
-   echo "Error: Build number is not a number" >&2; exit 1
-fi
-
-# ------------------------------------------------------------
-# Set Min OS Version
-# ------------------------------------------------------------
-MIN_OS_VAR=$MIN_OS
-if [ -f "$BUILDPLIST" ]; then
-	MIN_OS_VAR=`defaults read ${BUILDPLIST} min_os`
-	if (($? > 0)); then
-		MIN_OS_VAR=$MIN_OS
-	fi
-fi
-echo
-echo " - Set overall MacPatch Client minimum os version "
-read -p "Set MacPatch Client minimum os version [$MIN_OS_VAR]: " MIN_OS_VARS
-MIN_OS=${MIN_OS_VARS:-$MIN_OS_VAR}
-
-
-# ------------------------------------------------------------
-# Choose to include OS query as a package
-# ------------------------------------------------------------
-
-# Convert bool to string
-if $INCOSQUERY; then
-	INC_OSQUERY_VAR="Y"
-else
-	INC_OSQUERY_VAR="N"
-fi
-
-# If There is a saved plist read it, and set string value
-if [ -f "$BUILDPLIST" ]; then
-	INC_OSQUERY_VAR=`defaults read ${BUILDPLIST} incOSQuery`
-	if (($? > 0)); then
-		if $INCOSQUERY; then
-			INC_OSQUERY_VAR="Y"
-		else
-			INC_OSQUERY_VAR="N"
-		fi
-	else
-		if [[ $INC_OSQUERY_VAR == 1 ]]; then
-			INC_OSQUERY_VAR="Y"
-		else	
-			INC_OSQUERY_VAR="N"
-		fi
-	fi
-fi
-
-echo
-echo " - Include OSQuery with MacPatch Installer "
-read -p "Would you like to include OSQuery with MacPatch (Y/N)? [$INC_OSQUERY_VAR]: " INC_OSQUERY_IN
-#INC_OSQUERY_TXT=${INC_OSQUERY_IN:-$INC_OSQUERY_VAR}
-INC_OSQUERY_TXT=${INC_OSQUERY_VAR:-$INC_OSQUERY_IN}
-INC_OSQUERY_TXT=`echo $INC_OSQUERY_TXT | awk '{print toupper($0)}'`
-if [ "$INC_OSQUERY_TXT" != "$INC_OSQUERY_VAR" ]; then
-	if [[ "$INC_OSQUERY_TXT" == "Y" ]]; then
-		defaults write ${BUILDPLIST} incOSQuery -bool YES
-	else 
-		defaults write ${BUILDPLIST} incOSQuery -bool NO
-	fi
-fi
-
-if [[ "$INC_OSQUERY_TXT" == "Y" ]]; then
-	INCOSQUERY=true
-else 
-	INCOSQUERY=false
-fi
 
 # ------------------------------------------------------------
 # Choose to include PlanB as part of base package
@@ -167,7 +69,7 @@ fi
 
 # If There is a saved plist read it, and set string value
 if [ -f "$BUILDPLIST" ]; then
-	INC_PLANB_VAR=`defaults read ${BUILDPLIST} incPlanB`
+	INC_PLANB_VAR=`defaults read ${BUILDPLIST} incPlanB 2> /dev/null`
 	if (($? > 0)); then
 		if $INCOSQUERY; then
 			INC_PLANB_VAR="Y"
@@ -217,12 +119,67 @@ if $INCPlanBSource; then
 fi
 
 # ------------------------------------------------------------
+# Set Client Version
+# ------------------------------------------------------------
+AGENT_VERS="3.2.0"
+if [ -f "$BUILDPLIST" ]; then
+	AGENT_VERS=`defaults read ${BUILDPLIST} client_version 2> /dev/null`
+	if (($? > 0)); then
+		AGENT_VERS="3.2.0"
+	fi
+fi
+echo
+echo " - Set overall MacPatch Client version ( e.g. 3.2.0 ) "
+read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
+AGENT_VER=${AGENT_VER:-$AGENT_VERS}
+defaults write ${BUILDPLIST} client_version "${AGENT_VER}"
+
+# ------------------------------------------------------------
+# Set Client Build Number
+# ------------------------------------------------------------
+AGENT_BUILDS="1"
+if [ -f "$BUILDPLIST" ]; then
+	AGENT_BUILDS=`defaults read ${BUILDPLIST} client_build 2> /dev/null`
+	if (($? > 0)); then
+		AGENT_BUILDS=1
+	fi
+fi
+echo
+echo " - Set overall MacPatch Client build number "
+echo " use \"i\" to increment or type in a number "
+read -p "Set MacPatch Client build number (current $AGENT_BUILDS),  [i]: " AGENT_BUILD
+AGENT_BUILD=${AGENT_BUILD:-$AGENT_BUILDS}
+
+BUILD_NO=0
+if [ "$AGENT_BUILD" == "i" ] || [ "$AGENT_BUILD" == "I" ]; then
+	let "BUILD_NO=AGENT_BUILDS+1"
+else
+	BUILD_NO=$AGENT_BUILD
+fi
+
+re='^[0-9]+$'
+if ! [[ $BUILD_NO =~ $re ]] ; then
+   echo "Error: Build number is not a number" >&2; exit 1
+fi
+defaults write ${BUILDPLIST} client_build "${BUILD_NO}"
+
+# ------------------------------------------------------------
 # MacPatch Client Release Level
 # ------------------------------------------------------------
+PKGSTATES="R"
+if [ -f "$BUILDPLIST" ]; then
+	PKGSTATES=`defaults read ${BUILDPLIST} package_state 2> /dev/null`
+	if (($? > 0)); then
+		PKGSTATES="R"
+	fi
+fi
+
 echo
-read -p "Please choose the desired state (R[elease]/B[eta]/A[lpha])? [R]: " PKGSTATE
-PKGSTATE=${PKGSTATE:-R}
+read -p "Please choose the desired state (R[elease]/B[eta]/A[lpha])? [$PKGSTATES]: " PKGSTATE
+PKGSTATE=${PKGSTATE:-$PKGSTATES}
+#PKGSTATE=${PKGSTATE:-R}
 PKGSTATE=`echo $PKGSTATE | awk '{print toupper($0)}'`
+defaults write ${BUILDPLIST} package_state "${PKGSTATE}"
 if [ "$PKGSTATE" == "B" ]; then
 	PKG_STATE="- (Beta)"
 elif [ "$PKGSTATE" == "A" ]; then
@@ -234,11 +191,21 @@ fi
 # ------------------------------------------------------------
 # Sign all binaries?
 # ------------------------------------------------------------
+SIGNCODES="Y"
+if [ -f "$BUILDPLIST" ]; then
+	SIGNCODES=`defaults read ${BUILDPLIST} code_sign 2> /dev/null`
+	if (($? > 0)); then
+		SIGNCODES="Y"
+	fi
+fi
+
 echo
-echo "A valid code siginging identidy is required."
-read -p "Would you like to code sign all binaries (Y/N)? [N]: " SIGNCODE
-SIGNCODE=${SIGNCODE:-N}
+echo " - Code Signing"
+read -p "Would you like to code sign all binaries (Y/N)? [$SIGNCODES]: " SIGNCODE
+#SIGNCODE=${SIGNCODE:-Y}
+SIGNCODE=${SIGNCODE:-$SIGNCODES}
 SIGNCODE=`echo $SIGNCODE | awk '{print toupper($0)}'`
+defaults write ${BUILDPLIST} code_sign $SIGNCODE
 if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 
 	if [ "$SIGNCODE" == "Y" ] ; then
@@ -248,16 +215,42 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		if [ "$CODESIGNIDENTITY" != "$CODESIGNIDENTITYALT" ]; then
 			defaults write ${BUILDPLIST} name "${CODESIGNIDENTITY}"
 		fi
-
-		xcodebuild clean build -configuration Release -project ${SRCROOT}/MacPatch/MacPatch.xcodeproj -target AGENT_BUILD SYMROOT=${BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}"
+		echo
+		echo "------------------------------------------------------------"
+		echo "Compiling MacPatch Client Components"
+		echo "------------------------------------------------------------"
+		echo
+		echo " - Compiling MacPatch"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling gov.llnl.mp.helper"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling MPClientStatus"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling MPAgentExec"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling MPAgent"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling MPLoginAgent"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		echo " - Compiling MPUpdater"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 
 		if $INCPlanBSource; then
-			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}"
+			echo " - Compiling Plan B"
+			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		fi
-
+		echo
+		echo "Compiling completed."
+		echo
 	else
 		# Compile the agent components
-		xcodebuild clean build -configuration Release -project ${SRCROOT}/MacPatch/MacPatch.xcodeproj -target AGENT_BUILD SYMROOT=${BUILDROOT}
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release 
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
 
 		if $INCPlanBSource; then
 			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
@@ -294,84 +287,85 @@ fi
 # Copy files to package roots
 # ------------------------------------------------------------
 
-cp -R ${PKGROOT}/Base ${BUILDROOT}
+cp -R ${PKGROOT}/Client ${BUILDROOT}
 cp -R ${PKGROOT}/Updater ${BUILDROOT}
 cp -R ${PKGROOT}/Combined ${BUILDROOT}
 
-mv ${BUILDROOT}/Release/ccusr ${BUILDROOT}/Base/Scripts/ccusr
-mv ${BUILDROOT}/Release/MPAgentUp2Date ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
-mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Base/Files/Library/PrivilegedHelperTools/
-cp -R ${BUILDROOT}/Release/* ${BUILDROOT}/Base/Files/Library/MacPatch/Client/
+mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications
+mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
+mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
+
+mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
 
 # ------------------------------------------------------------
 # Copy PlanB files to base package root
 # ------------------------------------------------------------
 if $INCPlanBSource; then
 
-	mkdir -p ${BUILDROOT}/Base/Files/usr/local/bin/
-	mkdir -p ${BUILDROOT}/Base/Files/usr/local/sbin/
+	mkdir -p ${BUILDROOT}/Client/Files/usr/local/bin/
+	mkdir -p ${BUILDROOT}/Client/Files/usr/local/sbin/
 
-	cp ${PLANB_BUILD_ROOT}/Release/planb ${BUILDROOT}/Base/Files/usr/local/sbin/
-	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Base/Files/usr/local/bin/
-	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Base/Files/Library/LaunchDaemons/
+	cp ${PLANB_BUILDROOT}/Release/planb ${BUILDROOT}/Client/Files/usr/local/sbin/
+	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
+	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
 
-	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Base/Files/usr/local/bin/mpPlanB"
+	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
 fi
 
 # ------------------------------------------------------------
 # Get Versions, set version info
 # ------------------------------------------------------------
-agent_ver=`${BUILDROOT}/Base/Files/Library/MacPatch/Client/MPAgent -v`
-update_ver=`${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/MPAgentUp2Date -v`
+agent_ver=`${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent -v`
+update_ver=`${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/MPUpdater -v`
+
+sleep 5
 
 # Agent
 # @AGENTVER@
-sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
-sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 # @APPVER@
-sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
-sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 # @AMINOS@
-sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
-sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 # @ABUILD@
-sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
-sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 
 # Updater
 # @UPDATEVER@
-sed -i '' "s/@UPDATEVER@/$update_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
 sed -i '' "s/@UPDATEVER@/$update_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @APPVER@
-sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
 sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @UMINOS@
-sed -i '' "s/@UMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
 sed -i '' "s/@UMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @UBUILD@
-sed -i '' "s/@UBUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.ini"
 sed -i '' "s/@UBUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
-
 
 # Find and remove .mpRM files, these are here as place holders so that GIT will keep the
 # directory structure
 find ${BUILDROOT} -name ".mpRM" -print | xargs -I{} rm -rf {}
 
 # Remove the compiled Release directory now that all of the files have been copied
-rm -r ${BUILDROOT}/Release
+# rm -r ${BUILDROOT}/Release
 
 mkdir ${BUILDROOT}/Combined/Packages
 
+# Remove the compiled Release directory now that all of the files have been copied
+# rm -r ${BUILDROOT}/Release
+# --sign "Developer ID Installer: Charles Heizer" \
+
 # ------------------------------------------------------------
-# Create the Base Agent pkg
+# Create the Client pkg
 # ------------------------------------------------------------
-pkgbuild --root ${BUILDROOT}/Base/Files \
---component-plist ${BUILDROOT}/Base/Components.plist \
---identifier gov.llnl.mp.agent.base \
+pkgbuild --root ${BUILDROOT}/Client/Files \
+--component-plist ${BUILDROOT}/Client/Components.plist \
+--identifier gov.llnl.mp.agent.client \
 --install-location / \
---scripts ${BUILDROOT}/Base/Scripts \
---version $BASEPKGVER \
-${BUILDROOT}/Combined/Packages/Base.pkg
+--scripts ${BUILDROOT}/Client/Scripts \
+--version $AGENTVER \
+${BUILDROOT}/Combined/Packages/Client.pkg
 
 # ------------------------------------------------------------
 # Create the Updater pkg
@@ -380,12 +374,14 @@ pkgbuild --root ${BUILDROOT}/Updater/Files/Library \
 --identifier gov.llnl.mp.agent.updater \
 --install-location /Library \
 --scripts ${BUILDROOT}/Updater/Scripts \
---version $UPDTPKGVER \
+--version $UPDATEVER \
 ${BUILDROOT}/Combined/Packages/Updater.pkg
 
-
+# ------------------------------------------------------------
+# Set Version Info in text files
+# ------------------------------------------------------------
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
-AGENT_VER_BUILD="$AGENT_VER.$BUILD_NO"
+AGENT_VER_BUILD="$AGENTVER"
 sed -i '' "s/\[AGENT_VER\]/$AGENT_VER_BUILD/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 sed -i '' "s/\[BUILD_NO\]/$BUILD_NO_STR/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 sed -i '' "s/\[STATE\]/$PKG_STATE/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
@@ -393,45 +389,34 @@ sed -i '' "s/\[STATE\]/$PKG_STATE/g" "${BUILDROOT}/Combined/Resources/Welcome.rt
 BUILD_FILE="${BUILDROOT}/Combined/MP-$BASEPKGVER-$BUILD_NO_STR$PKG_STATE"
 echo "MP-$AGENT_VER_BUILD-$BUILD_NO_STR$PKG_STATE" > "${BUILD_FILE}"
 
+# ------------------------------------------------------------
 # Create the almost final package
-if $INCOSQUERY; then
-	cp ${SRCROOT}/client/osquery-3.2.6.pkg ${BUILDROOT}/Combined/Packages/
-	productbuild --distribution ${BUILDROOT}/Combined/Distribution_osquery \
-	--resources ${BUILDROOT}/Combined/Resources \
-	--package-path ${BUILDROOT}/Combined/Packages \
-	${BUILDROOT}/Combined/MPClientInstall.pkg
-else
-	productbuild --distribution ${BUILDROOT}/Combined/Distribution \
-	--resources ${BUILDROOT}/Combined/Resources \
-	--package-path ${BUILDROOT}/Combined/Packages \
-	${BUILDROOT}/Combined/MPClientInstall.pkg
-fi
+# --sign "Developer ID Installer: Charles Heizer" \
+# ------------------------------------------------------------
+productbuild --distribution ${BUILDROOT}/Combined/Distribution \
+--resources ${BUILDROOT}/Combined/Resources \
+--package-path ${BUILDROOT}/Combined/Packages \
+${BUILDROOT}/Combined/MacPatchDist.pkg
+
 
 # Expand the newly created package so we can add the nessasary files
-pkgutil --expand ${BUILDROOT}/Combined/MPClientInstall.pkg ${BUILDROOT}/Combined/.MPClientInstall
+pkgutil --expand ${BUILDROOT}/Combined/MacPatchDist.pkg ${BUILDROOT}/Combined/.MacPatchPKG
 
-# Backup Original Package
-mv ${BUILDROOT}/Combined/MPClientInstall.pkg ${BUILDROOT}/Combined/.MPClientInstall.pkg
 
 # Copy MacPatch Package Info file for the web service
-cp ${BUILDROOT}/Combined/Resources/mpInfo.ini ${BUILDROOT}/Combined/.MPClientInstall/Resources/mpInfo.ini
-cp ${BUILDROOT}/Combined/Resources/mpInfo.plist ${BUILDROOT}/Combined/.MPClientInstall/Resources/mpInfo.plist
-cp ${BUILDROOT}/Combined/Resources/Background_done.png ${BUILDROOT}/Combined/.MPClientInstall/Resources/Background_done.png
+cp ${BUILDROOT}/Combined/Resources/mpInfo.ini ${BUILDROOT}/Combined/.MacPatchPKG/Resources/mpInfo.ini
+cp ${BUILDROOT}/Combined/Resources/mpInfo.plist ${BUILDROOT}/Combined/.MacPatchPKG/Resources/mpInfo.plist
+cp ${BUILDROOT}/Combined/Resources/Background_done.png ${BUILDROOT}/Combined/.MacPatchPKG/Resources/Background_done.png
 
 # Re-compress expanded package
-pkgutil --flatten ${BUILDROOT}/Combined/.MPClientInstall ${BUILDROOT}/Combined/MPClientInstall.pkg
+pkgutil --flatten ${BUILDROOT}/Combined/.MacPatchPKG ${BUILDROOT}/Combined/MacPatch.pkg
 
 # Clean Up
-rm -rf ${BUILDROOT}/Combined/.MPClientInstall
-#rm -rf ${BUILDROOT}/Combined/.MPClientInstall.pkg
+rm -rf ${BUILDROOT}/Combined/.MacPatchPKG
+#rm -rf ${BUILDROOT}/Combined/MacPatchDist.pkg
 
 # Compress for upload
-ditto -c -k ${BUILDROOT}/Combined/MPClientInstall.pkg ${BUILDROOT}/Combined/MPClientInstall.pkg.zip
-
-# Write Version info to plist
-defaults write ${BUILDPLIST} client_version "$AGENT_VER"
-defaults write ${BUILDPLIST} client_build "$BUILD_NO"
-defaults write ${BUILDPLIST} min_os "$MIN_OS"
+ditto -c -k ${BUILDROOT}/Combined/MacPatch.pkg ${BUILDROOT}/Combined/MacPatch.pkg.zip
 
 echo
 read -p "Would you like to copy the installer to repo location for a pull request? (Y/N)? [N]: " COPYINSTALLPKG
@@ -440,7 +425,7 @@ COPYINSTALLPKG=`echo $COPYINSTALLPKG | awk '{print toupper($0)}'`
 if [ "$COPYINSTALLPKG" == "Y" ]; then
 	rm -rf "${SRCROOT}/Agent"
 	mkdir "${SRCROOT}/Agent"
-	cp "${BUILDROOT}/Combined/MPClientInstall.pkg.zip" "${SRCROOT}/Agent/"
+	cp "${BUILDROOT}/Combined/MacPatch.pkg.zip" "${SRCROOT}/Agent/"
 	cp "$BUILD_FILE" "${SRCROOT}/Agent/InstallerBuildInfo.txt"
 fi
 

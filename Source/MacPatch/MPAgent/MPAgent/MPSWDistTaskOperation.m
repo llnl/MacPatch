@@ -25,7 +25,7 @@
 
 #import "MPSWDistTaskOperation.h"
 #import "MPSWTasks.h"
-#import "MPSWInstaller.h"
+//#import "MPSWInstaller.h"
 #import "MPSettings.h"
 
 #define K_INSTALLED_FILE    @".installed.plist"
@@ -149,8 +149,8 @@
         logit(lcl_vInfo,@"No mandatory software tasks to install.");
         return;
     }
-    
-    MPSWInstaller  *mpCatalogD;
+
+    //MPSWInstaller  *mpCatalogD;
     MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
     
     // Install the mandatory software 
@@ -211,26 +211,31 @@
         logit(lcl_vDebug,@"Begin install for (%@).",[d objectForKey:@"name"]);
         int result = -1;
         int pResult = -1;
-        
-        mpCatalogD = [[MPSWInstaller alloc] init];
-        result = [mpCatalogD installSoftware:d];
+		
+		MPSoftware *software = [MPSoftware new];
+		result = [software installSoftwareTask:d];
         if (result == 0) 
         {
             if ([[d valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"]) 
             {
                 logit(lcl_vDebug,@"Auto Patching is enabled, begin patching...");
-                pResult = [mpCatalogD patchSoftware:d];
-                if (pResult == 0) {
-                    logit(lcl_vDebug,@"Auto Patching is complete...");
-                }
-                sleep(5); // Dont remeber why I'm doing this :-P
+				MPPatching *patching = [MPPatching new];
+				if (![d[@"patch_bundle_id"] isEqualToString:@""])
+				{
+					NSArray *patches = [patching scanForPatchUsingBundleID:d[@"patch_bundle_id"]];
+					if (patches.count >= 1)
+					{
+						pResult = [patching installPatchesUsingTypeFilter:patches typeFilter:kCustomPatches];
+						if (pResult == 0) {
+							logit(lcl_vDebug,@"Auto Patching is complete...");
+						}
+					}
+				}
             }
             // Register Installed Item for Catalog
             [self softwareItemInstalled:d];
             [self postInstallResults:result resultText:@"" task:d];
         }
-        mpCatalogD = nil;
-
     }
 }
 

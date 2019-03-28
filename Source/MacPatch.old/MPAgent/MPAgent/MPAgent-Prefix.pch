@@ -1,0 +1,70 @@
+//
+// Prefix header for all source files of the 'MPAgent' target in the 'MPAgent' project
+//
+/*
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
+
+#define	APP_VER_SHORT	@"1.2.0"
+#define	APP_VER_LONG	@"1.2.0.0.0"
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+    #import "MacPatch.h"
+    #import "MPAgent.h"
+
+    // App Store
+    #import <StoreFoundation/ISStoreAccount.h>
+
+    #import <CommerceKit/CKAccountStore.h>
+    #import <CommerceKit/CKDownloadQueue.h>
+    #import <CommerceKit/CKPurchaseController.h>
+    #import <CommerceKit/CKSoftwareMap.h>
+    #import <CommerceKit/CKUpdateController.h>
+
+    #import <StoreFoundation/CKUpdate.h>
+    #import <StoreFoundation/SSDownload.h>
+    #import <StoreFoundation/SSDownloadMetadata.h>
+    #import <StoreFoundation/SSDownloadPhase.h>
+    #import <StoreFoundation/SSDownloadStatus.h>
+    #import <StoreFoundation/SSPurchaseResponse.h>
+    #import <StoreFoundation/ISStoreClient.h>
+    #import <StoreFoundation/ISAuthenticationContext.h>
+    #import <StoreFoundation/ISServiceRemoteObject-Protocol.h>
+    #import <StoreFoundation/ISAccountService-Protocol.h>
+    #import <StoreFoundation/ISServiceProxy.h>
+
+    // Logging
+    #define FileLevelLogComponent lcl_cMain
+    #define log_err(_format, ...) \
+    lcl_log(FileLevelLogComponent, lcl_vError, _format, ##__VA_ARGS__);
+
+    #define log_info(_format, ...) \
+    lcl_log(FileLevelLogComponent, lcl_vInfo, _format, ##__VA_ARGS__);
+
+    #define log_debug(_format, ...) \
+    lcl_log(FileLevelLogComponent, lcl_vDebug, _format, ##__VA_ARGS__);
+
+    #define logit(_level, _format, ...) \
+    lcl_log(FileLevelLogComponent, _level, _format, ##__VA_ARGS__);
+
+#endif

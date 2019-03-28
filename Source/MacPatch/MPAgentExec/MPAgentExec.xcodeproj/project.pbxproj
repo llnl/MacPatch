@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F1B07BE222F36A9004D2ACF /* ExecFoo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F1B07BD222F36A9004D2ACF /* ExecFoo.m */; };
 		8F5F91EE171C6342001C77D1 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F5F91ED171C6342001C77D1 /* libxml2.dylib */; };
 		8FD88E6916DFC16400A870A3 /* DirectoryService.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD88E6716DFC16300A870A3 /* DirectoryService.framework */; };
 		8FD88E6A16DFC16400A870A3 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD88E6816DFC16400A870A3 /* OpenDirectory.framework */; };
@@ -15,7 +16,6 @@
 		8FE560F816DE9A7A00BB7600 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560F716DE9A7A00BB7600 /* Foundation.framework */; };
 		8FE560FB16DE9A7A00BB7600 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE560FA16DE9A7A00BB7600 /* main.m */; };
 		8FE560FF16DE9A7A00BB7600 /* MPAgentExec.1 in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8FE560FE16DE9A7A00BB7600 /* MPAgentExec.1 */; };
-		8FE5611216DE9CB900BB7600 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE5611116DE9CB900BB7600 /* libMacPatch.a */; };
 		8FE561AB16DEB8EF00BB7600 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE561A216DEB8EF00BB7600 /* Cocoa.framework */; };
 		8FE561AC16DEB8EF00BB7600 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE561A316DEB8EF00BB7600 /* CoreFoundation.framework */; };
 		8FE561AD16DEB8EF00BB7600 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE561A416DEB8EF00BB7600 /* IOKit.framework */; };
@@ -25,8 +25,19 @@
 		8FE561B116DEB8EF00BB7600 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE561A816DEB8EF00BB7600 /* libz.dylib */; };
 		8FE561B316DEB8EF00BB7600 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE561AA16DEB8EF00BB7600 /* libicucore.dylib */; };
 		8FE561B616DEB99600BB7600 /* MPAgentExecController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE561B516DEB99500BB7600 /* MPAgentExecController.m */; };
+		8FE663F5222788E300F12AC8 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE663F4222788E300F12AC8 /* libMPLibrary.a */; };
 		8FF5B50E1FC6599A006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50A1FC658E1006F5FB2 /* Python.framework */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		8F60AD41224400DB00FDFBCA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 8F60AD2E2243F67C00FDFBCA;
+			remoteInfo = MPUpdater;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		8FE560F216DE9A7A00BB7600 /* CopyFiles */ = {
@@ -42,8 +53,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8F4825F21958A40F008FFDB4 /* MPWorkerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWorkerProtocol.h; sourceTree = "<group>"; };
+		8F1B07BC222F36A9004D2ACF /* ExecFoo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExecFoo.h; sourceTree = "<group>"; };
+		8F1B07BD222F36A9004D2ACF /* ExecFoo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExecFoo.m; sourceTree = "<group>"; };
 		8F5F91ED171C6342001C77D1 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
+		8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPUpdater.xcodeproj; path = ../MPUpdater/MPUpdater.xcodeproj; sourceTree = "<group>"; };
 		8FD88E6716DFC16300A870A3 /* DirectoryService.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DirectoryService.framework; path = System/Library/Frameworks/DirectoryService.framework; sourceTree = SDKROOT; };
 		8FD88E6816DFC16400A870A3 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
 		8FD88E6B16DFC31C00A870A3 /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
@@ -66,6 +79,7 @@
 		8FE561AA16DEB8EF00BB7600 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
 		8FE561B416DEB99500BB7600 /* MPAgentExecController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentExecController.h; sourceTree = "<group>"; };
 		8FE561B516DEB99500BB7600 /* MPAgentExecController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentExecController.m; sourceTree = "<group>"; };
+		8FE663F4222788E300F12AC8 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF5B50A1FC658E1006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -75,7 +89,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8FF5B50E1FC6599A006F5FB2 /* Python.framework in Frameworks */,
-				8FE5611216DE9CB900BB7600 /* libMacPatch.a in Frameworks */,
+				8FE663F5222788E300F12AC8 /* libMPLibrary.a in Frameworks */,
 				8F5F91EE171C6342001C77D1 /* libxml2.dylib in Frameworks */,
 				8FD88E6E16DFC33600A870A3 /* libsqlite3.dylib in Frameworks */,
 				8FE561B116DEB8EF00BB7600 /* libz.dylib in Frameworks */,
@@ -96,6 +110,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		8F60AD3E224400DA00FDFBCA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8F60AD42224400DB00FDFBCA /* MPUpdater */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		8FD88E5C16DFC0D900A870A3 /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
@@ -106,6 +128,7 @@
 		8FE560EB16DE9A7A00BB7600 = {
 			isa = PBXGroup;
 			children = (
+				8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */,
 				8FE560F916DE9A7A00BB7600 /* MPAgentExec */,
 				8FE560F616DE9A7A00BB7600 /* Frameworks */,
 				8FE560F516DE9A7A00BB7600 /* Products */,
@@ -124,6 +147,7 @@
 			isa = PBXGroup;
 			children = (
 				8FF5B50A1FC658E1006F5FB2 /* Python.framework */,
+				8FE663F4222788E300F12AC8 /* libMPLibrary.a */,
 				8FE5611116DE9CB900BB7600 /* libMacPatch.a */,
 				8FD88E6B16DFC31C00A870A3 /* DiskArbitration.framework */,
 				8FD88E6716DFC16300A870A3 /* DirectoryService.framework */,
@@ -147,8 +171,9 @@
 		8FE560F916DE9A7A00BB7600 /* MPAgentExec */ = {
 			isa = PBXGroup;
 			children = (
-				8F4825F21958A40F008FFDB4 /* MPWorkerProtocol.h */,
 				8FE560FA16DE9A7A00BB7600 /* main.m */,
+				8F1B07BC222F36A9004D2ACF /* ExecFoo.h */,
+				8F1B07BD222F36A9004D2ACF /* ExecFoo.m */,
 				8FE561B416DEB99500BB7600 /* MPAgentExecController.h */,
 				8FE561B516DEB99500BB7600 /* MPAgentExecController.m */,
 				8FD88E5C16DFC0D900A870A3 /* Third Party Classes */,
@@ -193,7 +218,7 @@
 		8FE560EC16DE9A7A00BB7600 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = LLNL;
 			};
 			buildConfigurationList = 8FE560EF16DE9A7A00BB7600 /* Build configuration list for PBXProject "MPAgentExec" */;
@@ -201,11 +226,19 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
+				Base,
 			);
 			mainGroup = 8FE560EB16DE9A7A00BB7600;
 			productRefGroup = 8FE560F516DE9A7A00BB7600 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 8F60AD3E224400DA00FDFBCA /* Products */;
+					ProjectRef = 8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				8FE560F316DE9A7A00BB7600 /* MPAgentExec */,
@@ -213,12 +246,23 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXReferenceProxy section */
+		8F60AD42224400DB00FDFBCA /* MPUpdater */ = {
+			isa = PBXReferenceProxy;
+			fileType = "compiled.mach-o.executable";
+			path = MPUpdater;
+			remoteRef = 8F60AD41224400DB00FDFBCA /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
 /* Begin PBXSourcesBuildPhase section */
 		8FE560F016DE9A7A00BB7600 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				8FE560FB16DE9A7A00BB7600 /* main.m in Sources */,
+				8F1B07BE222F36A9004D2ACF /* ExecFoo.m in Sources */,
 				8FE561B616DEB99600BB7600 /* MPAgentExecController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -268,7 +312,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -309,7 +353,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -324,10 +368,11 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
 					/usr/include/libxml2,
-					"$HOME/Developer/Xcode/include/**",
+					"$HOME/Developer/Xcode/MP32/include/**",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPAgentExec/MPAgentExec-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -338,6 +383,7 @@
 					__info_plist,
 					"MPAgentExec/MPAgentExec-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPAgentExec;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -352,10 +398,11 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = (
 					/usr/include/libxml2,
-					"$HOME/Developer/Xcode/include/**",
+					"$HOME/Developer/Xcode/MP32/include/**",
 				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPAgentExec/MPAgentExec-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -366,6 +413,7 @@
 					__info_plist,
 					"MPAgentExec/MPAgentExec-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.MPAgentExec;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;

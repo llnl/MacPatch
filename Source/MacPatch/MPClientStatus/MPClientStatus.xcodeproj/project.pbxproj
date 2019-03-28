@@ -7,21 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */; };
+		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
+		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
 		8FC36B3D1B45C0850099D214 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC36B3C1B45C0850099D214 /* Carbon.framework */; };
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
 		8FCCBA7119AFD1BB001F4C3B /* CHMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */; };
 		8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */; };
-		8FCCBA7519AFD40A001F4C3B /* RestartReq.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7319AFD40A001F4C3B /* RestartReq.tif */; };
-		8FCCBA7619AFD40A001F4C3B /* empty.tif in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7419AFD40A001F4C3B /* empty.tif */; };
 		8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904A16DFE84600A870A3 /* Cocoa.framework */; };
 		8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8905316DFE84600A870A3 /* InfoPlist.strings */; };
 		8FD8905716DFE84600A870A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8905616DFE84600A870A3 /* main.m */; };
 		8FD8907116DFE8B200A870A3 /* MPClientStatusAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */; };
 		8FD8907216DFE8B200A870A3 /* MPAppUsage.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8907016DFE8B200A870A3 /* MPAppUsage.m */; };
-		8FD8907816DFE8D000A870A3 /* mpmenubar_alert2.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8907416DFE8D000A870A3 /* mpmenubar_alert2.png */; };
-		8FD8907916DFE8D000A870A3 /* mpmenubar_normal.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8907516DFE8D000A870A3 /* mpmenubar_normal.png */; };
-		8FD8907A16DFE8D000A870A3 /* MPClientStatus.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8907616DFE8D000A870A3 /* MPClientStatus.icns */; };
 		8FD8907B16DFE8D000A870A3 /* ClientStatusMainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8907716DFE8D000A870A3 /* ClientStatusMainMenu.xib */; };
 		8FD8908516DFE92C00A870A3 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8907C16DFE92C00A870A3 /* Security.framework */; };
 		8FD8908616DFE92C00A870A3 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8907D16DFE92C00A870A3 /* SystemConfiguration.framework */; };
@@ -30,18 +28,18 @@
 		8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908016DFE92C00A870A3 /* CoreFoundation.framework */; };
 		8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908116DFE92C00A870A3 /* libicucore.dylib */; };
 		8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908316DFE92C00A870A3 /* libz.dylib */; };
-		8FD8908D16DFE92C00A870A3 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908416DFE92C00A870A3 /* libMacPatch.a */; };
 		8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */; };
-		8FD8909D16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */; };
 		8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */; };
 		8FE6B4831B4C79A1000A0471 /* warn.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4821B4C79A1000A0471 /* warn.png */; };
 		8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */; };
 		8FE9DE5E2091002D0079B794 /* CriticalWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE9DE5D2091002D0079B794 /* CriticalWindow.m */; };
 		8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5071FC658C4006F5FB2 /* Python.framework */; };
-		8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF66A8D19BF5774002379BF /* VDKQueue.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
+		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 		8FA9ADFC177225950055506B /* MPWorkerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWorkerProtocol.h; sourceTree = "<group>"; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
 		8FC36B3A1B45BF1F0099D214 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EventToSend.c; sourceTree = "<group>"; };
@@ -51,8 +49,6 @@
 		8FCCBA6E19AFD1BB001F4C3B /* CHMenuViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHMenuViewController.h; sourceTree = "<group>"; };
 		8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMenuViewController.m; sourceTree = "<group>"; };
 		8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHMenuViewController.xib; sourceTree = "<group>"; };
-		8FCCBA7319AFD40A001F4C3B /* RestartReq.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = RestartReq.tif; sourceTree = "<group>"; };
-		8FCCBA7419AFD40A001F4C3B /* empty.tif */ = {isa = PBXFileReference; lastKnownFileType = image.tiff; path = empty.tif; sourceTree = "<group>"; };
 		8FD8904716DFE84600A870A3 /* MPClientStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPClientStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FD8904A16DFE84600A870A3 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8FD8904D16DFE84600A870A3 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -65,9 +61,6 @@
 		8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPClientStatusAppDelegate.m; sourceTree = "<group>"; };
 		8FD8906F16DFE8B200A870A3 /* MPAppUsage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAppUsage.h; sourceTree = "<group>"; };
 		8FD8907016DFE8B200A870A3 /* MPAppUsage.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAppUsage.m; sourceTree = "<group>"; };
-		8FD8907416DFE8D000A870A3 /* mpmenubar_alert2.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mpmenubar_alert2.png; sourceTree = "<group>"; };
-		8FD8907516DFE8D000A870A3 /* mpmenubar_normal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = mpmenubar_normal.png; sourceTree = "<group>"; };
-		8FD8907616DFE8D000A870A3 /* MPClientStatus.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = MPClientStatus.icns; sourceTree = "<group>"; };
 		8FD8907716DFE8D000A870A3 /* ClientStatusMainMenu.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ClientStatusMainMenu.xib; sourceTree = "<group>"; };
 		8FD8907C16DFE92C00A870A3 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8FD8907D16DFE92C00A870A3 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
@@ -80,15 +73,12 @@
 		8FD8908416DFE92C00A870A3 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../Developer/Xcode/DerivedData/MacPatch-gcqqukpepnyosjeqfffypdzoyyfx/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
 		8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		8FD8909A16DFEC0700A870A3 /* MPClientStatus-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPClientStatus-Info.plist"; sourceTree = "<group>"; };
-		8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MacPatchInstalleArtBlack.png; sourceTree = "<group>"; };
 		8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MPBaseRoundIcon.png; sourceTree = "<group>"; };
 		8FE6B4821B4C79A1000A0471 /* warn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn.png; sourceTree = "<group>"; };
 		8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = MPDiagCollector.sh; sourceTree = "<group>"; };
 		8FE9DE5C2091002D0079B794 /* CriticalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CriticalWindow.h; sourceTree = "<group>"; };
 		8FE9DE5D2091002D0079B794 /* CriticalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CriticalWindow.m; sourceTree = "<group>"; };
 		8FF5B5071FC658C4006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
-		8FF66A8C19BF5774002379BF /* VDKQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VDKQueue.h; sourceTree = "<group>"; };
-		8FF66A8D19BF5774002379BF /* VDKQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VDKQueue.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -96,8 +86,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
+				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
 				8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */,
-				8FD8908D16DFE92C00A870A3 /* libMacPatch.a in Frameworks */,
 				8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */,
 				8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */,
 				8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */,
@@ -134,6 +125,7 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */,
 				8FF5B5071FC658C4006F5FB2 /* Python.framework */,
 				8FC36B3C1B45C0850099D214 /* Carbon.framework */,
 				8FD8907C16DFE92C00A870A3 /* Security.framework */,
@@ -165,6 +157,7 @@
 		8FD8905016DFE84600A870A3 /* MPClientStatus */ = {
 			isa = PBXGroup;
 			children = (
+				8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */,
 				8FA9ADFC177225950055506B /* MPWorkerProtocol.h */,
 				8FD8906D16DFE8B200A870A3 /* MPClientStatusAppDelegate.h */,
 				8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */,
@@ -175,8 +168,6 @@
 				8FCCBA6E19AFD1BB001F4C3B /* CHMenuViewController.h */,
 				8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */,
 				8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */,
-				8FF66A8C19BF5774002379BF /* VDKQueue.h */,
-				8FF66A8D19BF5774002379BF /* VDKQueue.m */,
 				8FC36B391B45BF1F0099D214 /* EventToSend.h */,
 				8FC36B3A1B45BF1F0099D214 /* EventToSend.c */,
 				8FE9DE5C2091002D0079B794 /* CriticalWindow.h */,
@@ -203,14 +194,9 @@
 			isa = PBXGroup;
 			children = (
 				8FE6B4821B4C79A1000A0471 /* warn.png */,
-				8FCCBA7319AFD40A001F4C3B /* RestartReq.tif */,
-				8FCCBA7419AFD40A001F4C3B /* empty.tif */,
-				8FD8907416DFE8D000A870A3 /* mpmenubar_alert2.png */,
-				8FD8907516DFE8D000A870A3 /* mpmenubar_normal.png */,
-				8FD8909C16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png */,
 				8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */,
-				8FD8907616DFE8D000A870A3 /* MPClientStatus.icns */,
 				8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */,
+				8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -255,6 +241,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 8FD8903E16DFE84600A870A3;
 			productRefGroup = 8FD8904816DFE84600A870A3 /* Products */;
@@ -272,16 +259,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				8FE6B4831B4C79A1000A0471 /* warn.png in Resources */,
-				8FCCBA7519AFD40A001F4C3B /* RestartReq.tif in Resources */,
 				8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */,
 				8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */,
-				8FD8907816DFE8D000A870A3 /* mpmenubar_alert2.png in Resources */,
-				8FD8907916DFE8D000A870A3 /* mpmenubar_normal.png in Resources */,
-				8FD8907A16DFE8D000A870A3 /* MPClientStatus.icns in Resources */,
 				8FD8907B16DFE8D000A870A3 /* ClientStatusMainMenu.xib in Resources */,
 				8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */,
-				8FCCBA7619AFD40A001F4C3B /* empty.tif in Resources */,
-				8FD8909D16DFEC3100A870A3 /* MacPatchInstalleArtBlack.png in Resources */,
+				8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */,
 				8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -300,7 +282,6 @@
 				8FD8907216DFE8B200A870A3 /* MPAppUsage.m in Sources */,
 				8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */,
 				8FE9DE5E2091002D0079B794 /* CriticalWindow.m in Sources */,
-				8FF66A8E19BF5774002379BF /* VDKQueue.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -361,8 +342,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/include/**";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -409,8 +390,8 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/include/**";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -424,6 +405,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -431,10 +413,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPClientStatus/MPClientStatus-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/include/**";
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -447,6 +429,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CODE_SIGN_IDENTITY = "";
 				COMBINE_HIDPI_IMAGES = YES;
@@ -454,10 +437,10 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPClientStatus/MPClientStatus-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
-				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/include/**";
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

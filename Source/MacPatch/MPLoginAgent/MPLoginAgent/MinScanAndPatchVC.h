@@ -26,38 +26,25 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MPScanner.h"
-#import "MPPatchScan.h"
-#import "InstallAppleUpdate.h"
+#import "MPPatching.h"
 
-@interface MinScanAndPatchVC : NSViewController <NSTableViewDelegate,MPScannerDelegate,MPPatchScanDelegate,InstallAppleUpdateDelegate>
+@interface MinScanAndPatchVC : NSViewController <NSTableViewDelegate,MPPatchingDelegate>
 {
     NSFileManager                   *fm;
-    MPScanner                       *mpScanner;
     
     // Main Window
     IBOutlet NSImageView            *logoImageView;
     IBOutlet NSButton               *cancelButton;
-    
-    NSThread                        *taskThread;
-    BOOL                            killTaskThread;
     
     // Status
     IBOutlet NSTextField            *progressText;
     IBOutlet NSTextField            *progressCountText;
     IBOutlet NSProgressIndicator    *progressBar;
     IBOutlet NSTextField            *installStatusText;
-    
-    int                             progressCount;
-    int                             progressCountTotal;
-    
 }
 
 @property (nonatomic, strong) NSThread *taskThread;
 @property (nonatomic, assign) BOOL killTaskThread;
 @property (nonatomic, assign) BOOL cancelTask;
-
-@property (nonatomic, assign) int progressCount;
-@property (nonatomic, assign) int progressCountTotal;
 
 @end

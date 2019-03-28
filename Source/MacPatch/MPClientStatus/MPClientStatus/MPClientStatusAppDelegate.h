@@ -25,11 +25,10 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MPWorkerProtocol.h"
-#import "VDKQueue.h"
 
 @class MPAsus, MPAppUsage;
 
-@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,VDKQueueDelegate,NSUserNotificationCenterDelegate>
+@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,NSUserNotificationCenterDelegate>
 {
 	NSWindow *__unsafe_unretained window;
     
@@ -44,8 +43,7 @@
 	IBOutlet NSMenuItem *__unsafe_unretained selfVersionInfoMenuItem;
 	IBOutlet NSMenuItem *__unsafe_unretained MPVersionInfoMenuItem;
 	IBOutlet NSMenuItem *__unsafe_unretained checkAgentAndUpdateMenuItem;
-	BOOL	openASUS;
-	BOOL	asusAlertOpen;
+	
 	
 	// Client Info
 	NSWindow *__unsafe_unretained clientInfoWindow;
@@ -85,7 +83,6 @@
 @private
     
 	MPAppUsage *mpAppUsage;
-    VDKQueue *vdkQueue;
 }
 
 @property (unsafe_unretained) IBOutlet NSWindow *window;
@@ -94,7 +91,6 @@
 @property (unsafe_unretained) IBOutlet NSMenuItem *selfVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *MPVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkAgentAndUpdateMenuItem;
-@property (nonatomic, assign) BOOL openASUS;
 @property (nonatomic, assign) BOOL asusAlertOpen;
 
 // Client Info
@@ -149,18 +145,11 @@
 - (void)showLastCheckIn;
 - (void)showLastCheckInMethod;
 
-- (IBAction)openSelfPatchApplications:(id)sender;
-- (IBAction)openSoftwareCatalogApplications:(id)sender;
-
 // Kill SoftwareUpdate GUI App
 - (void)killApplication:(NSNumber *)aPID;
-- (void)openSoftwareUpdateApplication:(id)sender;
 
 // App Usage Info
 - (void)appLaunchNotificationReceived:(NSNotification *)aNotification;
-
-- (void)turnOffSoftwareUpdateSchedule;
-- (void)checkAgentStatus:(id)sender;
 
 @end
 

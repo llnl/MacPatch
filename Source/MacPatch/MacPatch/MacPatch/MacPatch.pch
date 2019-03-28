@@ -1,0 +1,15 @@
+//
+//  MacPatch.pch
+//  MacPatch
+//
+//  Created by Heizer, Charles on 12/16/14.
+//  Copyright (c) 2014 Heizer, Charles. All rights reserved.
+//
+
+#import "MacPatch.h"
+#import "MPHelperProtocol.h"
+#import "NSDate+Helper.h"
+
+
+#define kRefreshSoftwareTable @"swTableRefresh"
+

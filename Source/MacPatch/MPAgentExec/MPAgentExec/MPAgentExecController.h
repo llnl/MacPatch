@@ -25,27 +25,14 @@
 
 #import <Foundation/Foundation.h>
 #import "MacPatch.h"
-#import "MPWorkerProtocol.h"
 
-@class MPAsus;
-@class MPDataMgr;
-
-@interface MPAgentExecController : NSObject <MPWorkerClient>
-{
-    MPAsus          *mpAsus;
-    MPDataMgr       *mpDataMgr;
-    NSFileManager   *fm;
-
-    // Helper
-	id              proxy;
-}
+@interface MPAgentExecController : NSObject
 
 @property (nonatomic, strong)           NSString    *_appPid;
-
+//OK
 @property (nonatomic, assign)           BOOL        iLoadMode;
-@property (nonatomic, assign)           BOOL        forceRun;
-
-@property (nonatomic, strong)           NSArray     *approvedPatches;
+//OK
+@property (nonatomic, assign)           BOOL        forceTaskRun;
 
 @property (nonatomic, assign, readonly) int         errorCode;
 @property (nonatomic, strong, readonly) NSString    *errorMsg;
@@ -53,30 +40,21 @@
 
 @property (nonatomic, strong)           NSURL       *mp_SOFTWARE_DATA_DIR;
 
--(id)initForBundleUpdate;
+// Scan for Patches
+- (void)scanForPatches:(MPPatchContentType)contentType forceRun:(BOOL)forceRun;
 
--(void)scanForPatches;
--(void)scanForPatchesWithFilter:(int)aFilter;
--(void)scanForPatchesWithFilter:(int)aFilter byPassRunning:(BOOL)aByPass;
--(void)scanForPatchesWithFilterWaitAndForce:(int)aFilter byPassRunning:(BOOL)aByPass;
--(void)scanForPatchesWithFilterWaitAndForceWithCritical:(int)aFilter byPassRunning:(BOOL)aByPass critical:(BOOL)aCritical;
--(void)scanForPatchUsingBundleID:(NSString *)aBundleID;
-// TEST
-- (void)scanForPatchUsingBundleIDAlt:(NSString *)aBundleID error:(NSError **)error;
+// Scan for a Patch using a bundleID, used for patching software installs
+- (void)scanForPatchUsingBundleID:(NSString *)aBundleID;
 
--(void)scanForPatchesAndUpdate;
--(void)scanForPatchesAndUpdateWithFilter:(int)aFilter;
--(void)scanForPatchesAndUpdateWithFilterCritical:(int)aFilter critical:(BOOL)aCritical;
--(void)scanAndUpdateCustomWithPatchBundleID:(NSString *)aPatchBundleID;
+// Scan and patch system
+// Use bundleID when targeting a single custom patch, otherwise use NULL
+- (void)patchScanAndUpdate:(MPPatchContentType)contentType bundleID:(NSString *)bundleID;
+
 
 -(BOOL)checkPatchPreAndPostForRebootRequired:(NSArray *)aDictArray;
 -(void)removeInstalledPatchFromCacheFile:(NSString *)aPatchName;
 -(void)scanAndUpdateAgentUpdater;
 -(NSDictionary *)getAgentUpdaterInfo;
-
--(BOOL)isTaskRunning:(NSString *)aTaskName;
--(void)writeTaskRunning:(NSString *)aTaskName;
--(void)removeTaskRunning:(NSString *)aTaskName;
 
 -(BOOL)isLocalUserLoggedIn;
 -(void)postNotificationTo:(NSString *)aName info:(NSString *)info isGlobal:(BOOL)glb;

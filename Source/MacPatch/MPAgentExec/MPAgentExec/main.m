@@ -31,7 +31,9 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.1.2.8"
+#import "ExecFoo.h"
+
+#define APPVERSION	@"3.2.0.1"
 #define APPNAME		@"MPAgentExec"
 
 void usage(void);
@@ -45,7 +47,7 @@ int main (int argc, char * argv[])
         BOOL verboseLogging = NO;
         BOOL isILoadMode = NO;
         BOOL forceRunTask = NO;
-        int _UpdateType = 0; // 0 All, 1 = Apple, 2 = Third
+        MPPatchContentType updateType = kAllPatches;
         NSString *_updateBundle = nil;
 
         // Inventory
@@ -62,8 +64,6 @@ int main (int argc, char * argv[])
                 {"Update"				,no_argument	    ,0, 'u'},
                 {"UpdateFilter"			,required_argument	,0, 'f'},
                 {"UpdateBundle"			,required_argument	,0, 'B'},
-				
-				{"UpdateBundleAlt"		,required_argument	,0, 'b'},
 				
                 {"Critial"				,no_argument	    ,0, 'x'},
                 {"AgentUpdate"			,no_argument		,0, 'G'},
@@ -85,7 +85,7 @@ int main (int argc, char * argv[])
             };
             // getopt_long stores the option index here.
             int option_index = 0;
-            c = getopt_long (argc, argv, "Dsuf:B:b:GCSiFcg:d:P:eVvh", long_options, &option_index);
+            c = getopt_long (argc, argv, "Dsuf:B:GCSiFcg:d:P:eVvh", long_options, &option_index);
 
             // Detect the end of the options.
             if (c == -1) {
@@ -103,20 +103,18 @@ int main (int argc, char * argv[])
                         a_Type = 10;
                         break;
                     case 'f':
-                        if ([[NSString stringWithUTF8String:optarg] isEqualTo:@"Apple"]) {
-                            _UpdateType = 1;
-                        } else if ([[NSString stringWithUTF8String:optarg] isEqualTo:@"Custom"] || [[NSString stringWithUTF8String:optarg] isEqualTo:@"Third"]) {
-                            _UpdateType = 2;
-                        }
+                        if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"apple"]) {
+                            updateType = kApplePatches;
+                        } else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"custom"] || [[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"third"]) {
+							updateType = kCustomPatches;
+                        } else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"critical"]) {
+							updateType = kCriticalPatches;
+						}
                         break;
                     case 'B':
                         a_Type = 2;
                         _updateBundle = [NSString stringWithUTF8String:optarg];
                         break;
-					case 'b':
-						a_Type = 11;
-						_updateBundle = [NSString stringWithUTF8String:optarg];
-						break;
                     case 'G':
                         a_Type = 5;
                         break;
@@ -124,6 +122,7 @@ int main (int argc, char * argv[])
                         //_defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowClient"];
                         break;
                     case 'S':
+						a_Type = 1000;
                         //_defaultsOverride = [NSDictionary dictionaryWithObject:@"1" forKey:@"AllowServer"];
                         break;
                     case 'c':
@@ -138,7 +137,7 @@ int main (int argc, char * argv[])
                     case 'i':
                         isILoadMode = YES;
                         a_Type = 2;
-                        _UpdateType = 0;
+                        updateType = kAllPatches;
                         break;
                     case 'g':
                         argType = [NSString stringWithUTF8String:optarg];
@@ -192,8 +191,8 @@ int main (int argc, char * argv[])
         }
         
         // Setup Logging
-        NSString *_logFile = [NSString stringWithFormat:@"%@/Logs/MPAgentExec.log",MP_ROOT_CLIENT];
-        [MPLog setupLogging:_logFile level:lcl_vDebug];
+        NSString *_logFile = @"/Library/Logs/MPAgentExec.log";
+        [MPLog setupLogging:_logFile level:lcl_vInfo];
         if (verboseLogging) {
             lcl_configure_by_name("*", lcl_vDebug);
             [LCLLogFile setMirrorsToStdErr:YES];
@@ -208,34 +207,26 @@ int main (int argc, char * argv[])
 
         // Run Functions
         MPAgentExecController *controller = [[MPAgentExecController alloc] init];
-        if (forceRunTask == YES) {
-            [controller setForceRun:YES];
-        }
-
+		ExecFoo *ae = [ExecFoo new];
+		
         int result = NO;
-        switch (a_Type) {
+        switch (a_Type)
+		{
             case 1:
-                if (_UpdateType >= 1) {
-                    [controller scanForPatchesWithFilter:_UpdateType];
-                } else {
-                    [controller scanForPatches];
-                }
+				[controller scanForPatches:updateType forceRun:forceRunTask];
                 break;
             case 2:
                 if (isILoadMode == YES) {
                     [controller setILoadMode:YES];
                 }
                 if (_updateBundle) {
-                    [controller scanAndUpdateCustomWithPatchBundleID:_updateBundle];
+                    //[controller patchScanAndUpdateUsingPatchBundleID:_updateBundle];
                 } else {
-                    [controller scanForPatchesAndUpdateWithFilter:_UpdateType];
+					//[controller patchScanAndUpdateUsingTypeFilter:updateType];
                 }
                 break;
             case 5:
                 [controller scanAndUpdateAgentUpdater];
-                break;
-            case 6:
-                // Inventory has been moved to MPAgent
                 break;
             case 7:
                 // Install Using SW Group Name ID
@@ -251,13 +242,11 @@ int main (int argc, char * argv[])
                 break;
             case 10:
                 // Scan for and install critical updates
-                [controller scanForPatchesAndUpdateWithFilterCritical:_UpdateType critical:YES];
+                //[controller patchScanAndUpdateUsingTypeFilter:updateType];
                 break;
-			case 11:
-				if (_updateBundle) {
-					NSError *_err = nil;
-					[controller scanForPatchUsingBundleIDAlt:_updateBundle error:&_err];
-				}
+			case 1000:
+				
+				[ae scanForatches];
 				break;
             default:
                 logit(lcl_vError, @"should never have gotten here!");
@@ -274,21 +263,26 @@ void usage(void) {
 	printf("%s\n",[APPNAME UTF8String]);
 	printf("Version: %s\n\n",[APPVERSION UTF8String]);
 	printf("Usage: %s [OPTION]\n\n",[APPNAME UTF8String]);
-    // Scan & Update
+	
+	// Scan & Update
 	printf(" -s \tScan for patches.\n");
 	printf(" -u \tScan & Update approved patches.\n");
     printf(" -x \tScan & Update critical patches only.\n");
-    printf("\n    \tOverrides configuration which prevents client from being updated.\n");
+	
+	printf("\n    \tOverrides configuration which prevents client from being updated.\n");
     printf(" -C \tAllowClient override.\n");
     printf(" -S \tAllowServer override.\n\n");
-    // Agent Updates
+	
+	// Agent Updates
     printf(" -G \tScan for Agent updates and update if needed.\n");
 	printf(" -i \tScan & Update approved patches in iLoad output mode.\n\n");
-    // Software Dist
+	
+	// Software Dist
     printf(" -g \t[Software Group Name] Install Software in group.\n");
     printf(" -d \tInstall software using TaskID\n");
     printf(" -P \t[Software Plist] Install software using plist.\n\n");
-    // Misc
+	
+	// Misc
 	printf(" -e \tEcho logging data to console.\n");
 	printf(" -V \tVerbose logging.\n");
 	printf(" -v \tDisplay version info. \n");

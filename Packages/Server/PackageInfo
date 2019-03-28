@@ -1,8 +1,0 @@
-<pkg-info format-version="2" identifier="gov.llnl.mp.server" version="1.0" install-location="/Library" auth="root">
-    <payload installKBytes="8740" numberOfFiles="219"/>
-    <scripts>
-        <preinstall file="./preinstall"/>
-        <postinstall file="./postinstall"/>
-    </scripts>
-</pkg-info>
-

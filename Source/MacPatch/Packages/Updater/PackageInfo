@@ -1,0 +1,7 @@
+<pkg-info format-version="2" identifier="gov.llnl.mp.agent.updater" version="1.0" install-location="/Library" auth="root">
+    <payload installKBytes="8740" numberOfFiles="15"/>
+    <scripts>
+        <preinstall file="./preinstall"/>
+        <postinstall file="./postinstall"/>
+    </scripts>
+</pkg-info>
