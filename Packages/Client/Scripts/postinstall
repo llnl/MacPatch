@@ -8,39 +8,32 @@
 # ***************************************************************************************
 
 MP_ROOT="/Library/MacPatch"
-MP_ROOT_CLIENT="/Library/MacPatch/Client"
+MP_ROOT_CLIENT="${MP_ROOT}/Client"
 
 # Script Parent Dir Path
-SRC=$(cd $(dirname "$0"); pwd)
+SRC="$(dirname "$0")"
 
-# System Version Info
-sysVersion=$(uname -r)
-sysMajorVersion=${sysVersion%%.*}
-tempMinorVersion=${sysVersion#*.}
-sysMinorVersion=${tempMinorVersion%%.*}
 # Current logged in User ID
 # consoleUserID at login window is 0
 consoleUserID=$(stat -f%u /dev/console)
 
-function setOwner
-{
+setOwner() {
 	if [ -f "$1" ]; then
-		/usr/sbin/chown -R root:wheel $1
+		/usr/sbin/chown -R root:wheel "$1"
 	fi
 }
 
-function setOwnerAndPerms
-{
+setOwnerAndPerms() {
 	if [ -f "$1" ]; then
-		/usr/sbin/chown root:wheel $1
-		/bin/chmod 0644 $1
+		/usr/sbin/chown root:wheel "$1"
+		/bin/chmod 0644 "$1"
 	fi
 }
 
 # ******************************************************************
 # Copy in client version info
 if [ -e "${SRC}/.mpVersion.plist" ]; then
-	cp "${SRC}/.mpVersion.plist" "/Library/MacPatch/Client/.mpVersion.plist"
+	cp "${SRC}/.mpVersion.plist" "${MP_ROOT_CLIENT}/.mpVersion.plist"
 fi
 
 # ******************************************************************
