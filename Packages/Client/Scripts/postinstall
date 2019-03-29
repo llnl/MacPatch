@@ -59,8 +59,8 @@ setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************
 #
-	su -l $usrID -c 'launchctl load -wF /Library/LaunchAgents/gov.llnl.mp.status.plist'
 if [ "$consoleUserID" != "0" ]; then
+  /bin/launchctl bootstrap gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
 fi
 
 # Kill the ClientStatus app, launchctl does not restart the app only the service

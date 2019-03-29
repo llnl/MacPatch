@@ -25,8 +25,8 @@ consoleUserID=$(stat -f%u /dev/console)
 
 # Launch Agents
 if [ -f "/Library/LaunchAgents/gov.llnl.mp.status.plist" ]; then
-		chroot -u $usrID / /bin/launchctl unload /Library/LaunchAgents/gov.llnl.mp.status.plist
 	if [ "$consoleUserID" != "0" ]; then
+    /bin/launchctl bootout gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
 	fi
 	
 	rm /Library/LaunchAgents/gov.llnl.mp.status.plist
