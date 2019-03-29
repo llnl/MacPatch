@@ -16,18 +16,17 @@ buildVer=`echo $systemVersion | cut -d . -f 3`
 
 # Script Parent Dir Path
 SRC=$(cd $(dirname "$0"); pwd)
-usrID=$(stat -f%Su /dev/console)
-if [ $? -ne 0 ]; then
-usrID="NULL"
-fi
+# Current logged in User ID
+# consoleUserID at login window is 0
+consoleUserID=$(stat -f%u /dev/console)
 
 # ***************************************************************************************
 # Kill the running MP processes
 
 # Launch Agents
 if [ -f "/Library/LaunchAgents/gov.llnl.mp.status.plist" ]; then
-	if [ "$usrID" != "NULL" ]; then
 		chroot -u $usrID / /bin/launchctl unload /Library/LaunchAgents/gov.llnl.mp.status.plist
+	if [ "$consoleUserID" != "0" ]; then
 	fi
 	
 	rm /Library/LaunchAgents/gov.llnl.mp.status.plist

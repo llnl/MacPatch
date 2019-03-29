@@ -18,12 +18,9 @@ sysVersion=$(uname -r)
 sysMajorVersion=${sysVersion%%.*}
 tempMinorVersion=${sysVersion#*.}
 sysMinorVersion=${tempMinorVersion%%.*}
-
-# Current Logged in user info
-usrID=$(stat -f%Su /dev/console)
-if [ $? -ne 0 ]; then
-usrID="NULL"
-fi
+# Current logged in User ID
+# consoleUserID at login window is 0
+consoleUserID=$(stat -f%u /dev/console)
 
 function setOwner
 {
@@ -62,8 +59,8 @@ setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************
 #
-if [ "$usrID" != "null" ]; then
 	su -l $usrID -c 'launchctl load -wF /Library/LaunchAgents/gov.llnl.mp.status.plist'
+if [ "$consoleUserID" != "0" ]; then
 fi
 
 # Kill the ClientStatus app, launchctl does not restart the app only the service
