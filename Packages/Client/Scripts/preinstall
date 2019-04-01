@@ -15,65 +15,61 @@ minorVer=`echo $systemVersion | cut -d . -f 2`
 buildVer=`echo $systemVersion | cut -d . -f 3`
 
 # Script Parent Dir Path
-SRC=$(cd $(dirname "$0"); pwd)
-usrID=$(stat -f%Su /dev/console)
-if [ $? -ne 0 ]; then
-usrID="NULL"
-fi
+SRC="$(dirname "$0")"
+
+# Current logged in User ID
+# consoleUserID at login window is 0
+consoleUserID=$(stat -f%u /dev/console)
 
 # ***************************************************************************************
 # Kill the running MP processes
 
 # Launch Agents
 if [ -f "/Library/LaunchAgents/gov.llnl.mp.status.plist" ]; then
-	if [ "$usrID" != "NULL" ]; then
-		chroot -u $usrID / /bin/launchctl unload /Library/LaunchAgents/gov.llnl.mp.status.plist
+	if [ "$consoleUserID" != "0" ]; then
+    /bin/launchctl bootout gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
 	fi
-	
-	rm /Library/LaunchAgents/gov.llnl.mp.status.plist
+
+	rm -f /Library/LaunchAgents/gov.llnl.mp.status.plist
 fi
 
 # Launch Daemons
-if [ -f "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" ]; then	
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" ]; then
 	/bin/launchctl remove gov.llnl.mp.helper
 	sleep 2
 	/bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 	sleep 2
-	
-	rm /Library/LaunchDaemons/gov.llnl.mp.helper.plist
-	rm /Library/Logs/gov.llnl.mp.helper.log
+
+	rm -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+	rm -f /Library/Logs/gov.llnl.mp.helper.log
 fi
 
 # ***************************************************************************************
 # MacPatch Pre-Deployment
 #
 
-if [ -f /Library/PrivilegedHelperTools/gov.llnl.mp.helper ]; then
-	rm -f /Library/PrivilegedHelperTools/gov.llnl.mp.helper
-fi
-
-if [ -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist ]; then
-	rm -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+if [ -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper" ]; then
+	rm -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper"
 fi
 
 if [ -d "/Library/MacPatch/Client/MacPatch.app" ]; then
-	rm -rf /Library/MacPatch/Client/MacPatch.app
+	rm -rf "/Library/MacPatch/Client/MacPatch.app"
 fi
 
 if [ -d "/Applications/MacPatch.app" ]; then
-	rm -rf /Applications/MacPatch.app
+	rm -rf "/Applications/MacPatch.app"
 fi
 
 if [ -d "/Library/MacPatch/Client/MPCatalog.app" ]; then
-	rm -rf /Library/MacPatch/Client/MPCatalog.app
+	rm -rf "/Library/MacPatch/Client/MPCatalog.app"
 fi
 
 if [ -d "/Library/MacPatch/Client/Self Patch.app" ]; then
-	rm -rf /Library/MacPatch/Client/Self\ Patch.app
+	rm -rf "/Library/MacPatch/Client/Self Patch.app"
 fi
 
 if [ -f "/Library/MacPatch/Client/MPAgentExec" ]; then
-	rm -rf /Library/MacPatch/Client/MPAgentExec
+	rm -f "/Library/MacPatch/Client/MPAgentExec"
 fi
 
 exit 0
