@@ -65,6 +65,7 @@
 		8FE8A7F22112564500E8796E /* Software.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF7E9CF210A558B00678B93 /* Software.m */; };
 		8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50B1FC658EC006F5FB2 /* Python.framework */; };
 		8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF93F9219959206005A4EEB /* MPAgentRegister.m */; };
+		8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -182,6 +183,8 @@
 		8FF7E9CF210A558B00678B93 /* Software.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Software.m; sourceTree = "<group>"; };
 		8FF93F9119959206005A4EEB /* MPAgentRegister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentRegister.h; sourceTree = "<group>"; };
 		8FF93F9219959206005A4EEB /* MPAgentRegister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentRegister.m; sourceTree = "<group>"; };
+		8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SysInfoCacheGen.h; sourceTree = "<group>"; };
+		8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SysInfoCacheGen.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -374,6 +377,8 @@
 				8F2FC03D1E205523004710C7 /* MPFirmware.m */,
 				8F53E2061FDA0E4A004D4C32 /* SmartCardReaderList.h */,
 				8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */,
+				8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */,
+				8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */,
 			);
 			path = Inventory;
 			sourceTree = "<group>";
@@ -465,6 +470,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -516,6 +522,7 @@
 				8F53E2081FDA0E4A004D4C32 /* SmartCardReaderList.m in Sources */,
 				8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */,
 				8F4B1F1B16DE634600E15A9E /* PatchScanAndUpdateOperation.m in Sources */,
+				8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */,
 				8F4B1F1C16DE634600E15A9E /* MPSWDistTaskOperation.m in Sources */,
 				8F4B1F2316DE635200E15A9E /* MPTasks.m in Sources */,
 				8F4B1F2516DE635200E15A9E /* MPTaskValidate.m in Sources */,

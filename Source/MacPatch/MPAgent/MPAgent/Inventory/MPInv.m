@@ -43,11 +43,12 @@
 #import "MPFirmware.h"
 #import "LocalAdminAccounts.h"
 #import "SmartCardReaderList.h"
+#import "SysInfoCacheGen.h"
 
 
 #define kSP_DATA_Dir			@"/private/tmp/.mpData"
 #define kSP_APP                 @"/usr/sbin/system_profiler"
-#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,SINetworkInfo,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders"
+#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders,SINetworkInfo,SIHardDrive,SIPCIBus,SIRAM,SIUSB"
 #define kTasksPlist             @"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist"
 #define kInvHashData            @"/Library/MacPatch/Client/Data/.gov.llnl.mp.inv.data.plist"
 
@@ -150,49 +151,94 @@
 	NSMutableDictionary *result;
 	NSError *err = nil;
 	NSString *filePath = NULL;
-    NSString *invType;
 	int i = 0;
-	for (i=0;i<[invColTypes count];i++)
+	
+	// Gen Sys Info Cache Data
+	SysInfoCacheGen *sig;
+	for (NSString *t in invColTypes) {
+		if ([t hasPrefix:@"SI"]) {
+			sig = [SysInfoCacheGen new];
+			break;
+		}
+	}
+	
+	
+	for (NSString *invType in invColTypes)
 	{
         // Multiple Types, PREFIX of SP is system profiler and SI sysinfocachegen
-		logit(lcl_vInfo,@"Collecting inventory for type %@",[invColTypes objectAtIndex:i]);
-        invType = [invColTypes objectAtIndex:i];
-        if ([invType hasPrefix:@"SI"] == NO)
+		logit(lcl_vInfo,@"Collecting inventory for type %@",invType);
+        if (![invType hasPrefix:@"SI"])
         {
             err = nil;
-            filePath = [self getProfileData:[invColTypes objectAtIndex:i] error:&err];
-            if (err) {
-                logit(lcl_vError,@"Gathering inventory for data type %@",[invColTypes objectAtIndex:i]);
+            filePath = [self getProfileData:invType error:&err];
+            if (err)
+			{
+                logit(lcl_vError,@"Gathering inventory for data type %@",invType);
                 continue;
-            } else {
+            }
+			else
+			{
                 result = [[NSMutableDictionary alloc] init];
                 [result setObject:filePath forKey:@"file"];
-                [result setObject:[invColTypes objectAtIndex:i] forKey:@"type"];
+                [result setObject:invType forKey:@"type"];
 
                 // This needs to be cleaned up in the next release,
 
-                if ([[invColTypes objectAtIndex:i] isEqual:@"SPSoftwareDataType"]) {
+                if ([invType isEqual:@"SPSoftwareDataType"])
+				{
                     [result setObject:@"SPSystemOverview" forKey:@"wstype"];
-                } else if ([[invColTypes objectAtIndex:i] isEqual:@"SPHardwareDataType"]) {
+                }
+				else if ([invType isEqual:@"SPHardwareDataType"])
+				{
                     [result setObject:@"SPHardwareOverview" forKey:@"wstype"];
-                } else {
-                    [result setObject:[[invColTypes objectAtIndex:i] replace:@"DataType" replaceString:@""] forKey:@"wstype"];
+                }
+				else
+				{
+                    [result setObject:[invType replace:@"DataType" replaceString:@""] forKey:@"wstype"];
                 }
                 
                 [resultsArray addObject:result];
                 result = nil;
             }
-        } else if ([invType hasPrefix:@"SI"]) {
-            if ([invType isEqualToString:@"SINetworkInfo"]) {
-                NSArray *networkDataArray = [self getSysInfoGenDataForType:@"Mac_NetworkInterfaceElement" error:NULL];
-                result = [[NSMutableDictionary alloc] init];
-                [result setObject:[kSP_DATA_Dir stringByAppendingPathComponent:@"sysInfoGen.plist"] forKey:@"file"];
-                [result setObject:networkDataArray forKey:@"data"];
-                [result setObject:invType forKey:@"type"];
-                [result setObject:@"SINetworkInfo" forKey:@"wstype"];
+        }
+		else if ([invType hasPrefix:@"SI"])
+		{
+			NSDictionary *result;
+            if ([invType isEqualToString:@"SINetworkInfo"])
+			{
+				result = @{@"data":[self parseSysInfoNetworkData:sig],
+						   @"type":invType,
+						   @"wstype":invType };
                 [resultsArray addObject:result];
-                result = nil;
             }
+			else if ([invType isEqualToString:@"SIHardDrive"])
+			{
+				result = @{@"data":[self parseSysInfoNetworkData:sig],
+						   @"type":invType,
+						   @"wstype":invType };
+				[resultsArray addObject:result];
+			}
+			else if ([invType isEqualToString:@"SIPCIBus"])
+			{
+				result = @{@"data":[self parseSysInfoNetworkData:sig],
+						   @"type":invType,
+						   @"wstype":invType };
+				[resultsArray addObject:result];
+			}
+			else if ([invType isEqualToString:@"SIRAM"])
+			{
+				result = @{@"data":[self parseSysInfoNetworkData:sig],
+						   @"type":invType,
+						   @"wstype":invType};
+				[resultsArray addObject:result];
+			}
+			else if ([invType isEqualToString:@"SIUSB"])
+			{
+				result = @{@"data":[self parseSysInfoNetworkData:sig],
+						   @"type":invType,
+						   @"wstype":invType };
+				[resultsArray addObject:result];
+			}
         }
 	}
 	
@@ -203,64 +249,87 @@
 	for (i=0;i<[resultsArray count];i++)
 	{
 		item = [NSDictionary dictionaryWithDictionary:[resultsArray objectAtIndex:i]];
-		if ([fm fileExistsAtPath:[item objectForKey:@"file"]])
-        {
-			// Get Array Object, then gen DataMgr String
-			if ([[item objectForKey:@"type"] isEqual:@"SPHardwareDataType"] ) {
-				tmpArr = [self parseHardwareOverview:[item objectForKey:@"file"]];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SPSoftwareDataType"]) {
-				tmpArr = [self parseSystemOverviewData:[item objectForKey:@"file"]];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SPNetworkDataType"]) {
-				tmpArr = [self parseNetworkData:[item objectForKey:@"file"]];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SPApplicationsDataType"]) {
-				tmpArr = [self parseApplicationsDataFromXML:[item objectForKey:@"file"]];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SPFrameworksDataType"]) {
-				tmpArr = [self parseFrameworksDataFromXML:[item objectForKey:@"file"]];	
-			} else if ([[item objectForKey:@"type"] isEqual:@"DirectoryServices"]) {	
-				tmpArr = [self parseDirectoryServicesData];
-			} else if ([[item objectForKey:@"type"] isEqual:@"InternetPlugins"]) {	
-				tmpArr = [self parseInternetPlugins];
-			} else if ([[item objectForKey:@"type"] isEqual:@"AppUsage"]) {	
-				tmpArr = [self parseAppUsageData];
-			} else if ([[item objectForKey:@"type"] isEqual:@"ClientTasks"]) {	
-				tmpArr = [self parseLocalClientTasks];
-			} else if ([[item objectForKey:@"type"] isEqual:@"DiskInfo"]) {	
-				tmpArr = [self parseLocalDiskInfo];
-			} else if ([[item objectForKey:@"type"] isEqual:@"Users"]) {	
-				tmpArr = [self parseLocalUsers];
-			} else if ([[item objectForKey:@"type"] isEqual:@"Groups"]) {
-				tmpArr = [self parseLocalGroups];
-			} else if ([[item objectForKey:@"type"] isEqual:@"FileVault"]) {
-				tmpArr = [self parseFileVaultInfo];
-			} else if ([[item objectForKey:@"type"] isEqual:@"PowerManagment"]) {
-				tmpArr = [self parsePowerManagmentInfo];
-			} else if ([[item objectForKey:@"type"] isEqual:@"BatteryInfo"]) {
-				tmpArr = [self parseBatteryInfo];
-			} else if ([[item objectForKey:@"type"] isEqual:@"ConfigProfiles"]) {
-				tmpArr = [self parseConfigProfilesInfo];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SINetworkInfo"]) {
-				tmpArr = [self parseSysInfoNetworkData:[item objectForKey:@"data"]];
-			} else if ([[item objectForKey:@"type"] isEqual:@"AppStoreApps"]) {
-                if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_10) {
-                    tmpArr = [self parseAppStoreData];
-                }
-            } else if ([[item objectForKey:@"type"] isEqual:@"MPServerList"]) {
-                tmpArr = [self parseAgentServerList];
-            } else if ([[item objectForKey:@"type"] isEqual:@"MPServerListInfo"]) {
-                tmpArr = [self parseAgentServerInfo];
-            } else if ([[item objectForKey:@"type"] isEqual:@"FirmwarePasswordInfo"]) {
-                tmpArr = [self parseFirmwarePasswordData];
-			} else if ([[item objectForKey:@"type"] isEqual:@"LocalAdminAccounts"]) {
-				tmpArr = [self parseLocalAdminAccounts];
-			} else if ([[item objectForKey:@"type"] isEqual:@"SmartCardReaders"]) {
-				tmpArr = [self parseSmartCardReaders];
-			}
+		if ([item objectForKey:@"file"])
+		{
+			if ([fm fileExistsAtPath:[item objectForKey:@"file"]])
+			{
+				// Get Array Object, then gen DataMgr String
+				if ([[item objectForKey:@"type"] isEqual:@"SPHardwareDataType"] ) {
+					tmpArr = [self parseHardwareOverview:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPSoftwareDataType"]) {
+					tmpArr = [self parseSystemOverviewData:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPNetworkDataType"]) {
+					tmpArr = [self parseNetworkData:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPApplicationsDataType"]) {
+					tmpArr = [self parseApplicationsDataFromXML:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPFrameworksDataType"]) {
+					tmpArr = [self parseFrameworksDataFromXML:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"DirectoryServices"]) {
+					tmpArr = [self parseDirectoryServicesData];
+				} else if ([[item objectForKey:@"type"] isEqual:@"InternetPlugins"]) {
+					tmpArr = [self parseInternetPlugins];
+				} else if ([[item objectForKey:@"type"] isEqual:@"AppUsage"]) {
+					tmpArr = [self parseAppUsageData];
+				} else if ([[item objectForKey:@"type"] isEqual:@"ClientTasks"]) {
+					tmpArr = [self parseLocalClientTasks];
+				} else if ([[item objectForKey:@"type"] isEqual:@"DiskInfo"]) {
+					tmpArr = [self parseLocalDiskInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"Users"]) {
+					tmpArr = [self parseLocalUsers];
+				} else if ([[item objectForKey:@"type"] isEqual:@"Groups"]) {
+					tmpArr = [self parseLocalGroups];
+				} else if ([[item objectForKey:@"type"] isEqual:@"FileVault"]) {
+					tmpArr = [self parseFileVaultInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"PowerManagment"]) {
+					tmpArr = [self parsePowerManagmentInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"BatteryInfo"]) {
+					tmpArr = [self parseBatteryInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"ConfigProfiles"]) {
+					tmpArr = [self parseConfigProfilesInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"AppStoreApps"]) {
+					if (NSAppKitVersionNumber >= NSAppKitVersionNumber10_10) {
+						tmpArr = [self parseAppStoreData];
+					}
+				} else if ([[item objectForKey:@"type"] isEqual:@"MPServerList"]) {
+					tmpArr = [self parseAgentServerList];
+				} else if ([[item objectForKey:@"type"] isEqual:@"MPServerListInfo"]) {
+					tmpArr = [self parseAgentServerInfo];
+				} else if ([[item objectForKey:@"type"] isEqual:@"FirmwarePasswordInfo"]) {
+					tmpArr = [self parseFirmwarePasswordData];
+				} else if ([[item objectForKey:@"type"] isEqual:@"LocalAdminAccounts"]) {
+					tmpArr = [self parseLocalAdminAccounts];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SmartCardReaders"]) {
+					tmpArr = [self parseSmartCardReaders];
+				}
 
-			if (tmpArr) {
-                //
-                // Generate Datamgr JSON object and post results
-                //
-                [self processInventoryData:tmpArr inventoryNode:item];
+				if (tmpArr) {
+					//
+					// Generate Datamgr JSON object and post results
+					//
+					[self processInventoryData:tmpArr inventoryNode:item];
+				}
+			}
+		}
+		else
+		{
+			if ([item[@"type"] isEqual:@"SINetworkInfo"]) {
+				tmpArr = item[@"data"];
+			} else if ([item[@"type"] isEqual:@"SIHardDrive"]) {
+				tmpArr = item[@"data"];
+			} else if ([item[@"type"] isEqual:@"SIPCIBus"]) {
+				tmpArr = item[@"data"];
+			} else if ([item[@"type"] isEqual:@"SIRAM"]) {
+				tmpArr = item[@"data"];
+			} else if ([item[@"type"] isEqual:@"SIUSB"]) {
+				tmpArr = item[@"data"];
+			}
+			
+			if (tmpArr)
+			{
+				//
+				// Generate Datamgr JSON object and post results
+				//
+				[self processInventoryData:tmpArr inventoryNode:item];
 			}
 		}
 	}
@@ -1606,39 +1675,79 @@ done:
     return [NSArray arrayWithArray:profiles];
 }
 
-- (NSArray *)parseSysInfoNetworkData:(NSArray *)networkData
+// SYSInfoCacheGen
+- (NSArray *)parseSysInfoNetworkData:(SysInfoCacheGen *)sig
 {
-    NSArray *netKeys = [NSArray arrayWithObjects:@"HardwareAddress",@"IsPrimary",@"InterfaceName",@"PrimaryIPAddress",
-                        @"ConfigurationType",@"AllDNSServers",@"PrimaryDNSServer",@"IsActive",@"RouterAddress",
-                        @"ConfigurationName",@"DomainName",@"AllIPAddresses", nil];
+	NSError *err = nil;
+	NSArray *result = [NSArray array];
+	result = [sig getNetworkData:&err];
+	if (err) {
+		qlerror(@"Error getting network connection data.");
+		qlerror(@"%@",err.localizedDescription);
+		result = [NSArray array];
+	}
+	
+	return result;
+}
 
-    NSMutableDictionary *netDict = [[NSMutableDictionary alloc] init];
-    for (NSString *key in netKeys) {
-        [netDict setObject:@"NA" forKey:key];
-    }
+// SYSInfoCacheGen
+- (NSArray *)parseSysInfoHardDriveData:(SysInfoCacheGen *)sig
+{
+	NSError *err = nil;
+	NSArray *result = [NSArray array];
+	result = [sig getHardDriveData:&err];
+	if (err) {
+		qlerror(@"Error getting network connection data.");
+		qlerror(@"%@",err.localizedDescription);
+		result = [NSArray array];
+	}
+	
+	return result;
+}
 
-    NSDictionary *item;
-    NSMutableDictionary *result;
-    NSMutableArray *items = [[NSMutableArray alloc] init];
-    for (int i = 0; i < [networkData count]; i++)
-    {
-        item = [networkData objectAtIndex:i];
-        result = [[NSMutableDictionary alloc] initWithDictionary:netDict];
-        for (NSString *akey in netKeys)
-        {
-            if ([item objectForKey:akey]) {
-                if ([[item objectForKey:akey] isKindOfClass:[NSNumber class]]) {
-                    [result setObject:[[item objectForKey:akey] stringValue] forKey:akey];
-                }
-                if ([[item objectForKey:akey] isKindOfClass:[NSString class]]) {
-                    [result setObject:[item objectForKey:akey] forKey:akey];
-                }
-            }
-        }
-        [items addObject:result];
-    }
+// SYSInfoCacheGen
+- (NSArray *)parseSysInfoPCIData:(SysInfoCacheGen *)sig
+{
+	NSError *err = nil;
+	NSArray *result = [NSArray array];
+	result = [sig getPCIData:&err];
+	if (err) {
+		qlerror(@"Error getting network connection data.");
+		qlerror(@"%@",err.localizedDescription);
+		result = [NSArray array];
+	}
+	
+	return result;
+}
 
-    return [NSArray arrayWithArray:items];
+// SYSInfoCacheGen
+- (NSArray *)parseSysInfoRAMData:(SysInfoCacheGen *)sig
+{
+	NSError *err = nil;
+	NSArray *result = [NSArray array];
+	result = [sig getRAMData:&err];
+	if (err) {
+		qlerror(@"Error getting network connection data.");
+		qlerror(@"%@",err.localizedDescription);
+		result = [NSArray array];
+	}
+	
+	return result;
+}
+
+// SYSInfoCacheGen
+- (NSArray *)parseSysInfoUSBData:(SysInfoCacheGen *)sig
+{
+	NSError *err = nil;
+	NSArray *result = [NSArray array];
+	result = [sig getUSBData:&err];
+	if (err) {
+		qlerror(@"Error getting network connection data.");
+		qlerror(@"%@",err.localizedDescription);
+		result = [NSArray array];
+	}
+	
+	return result;
 }
 
 - (NSArray *)parseAppStoreData

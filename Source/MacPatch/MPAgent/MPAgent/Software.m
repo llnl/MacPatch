@@ -172,7 +172,6 @@
 	NSString *pkgType = [[swTaskDict valueForKeyPath:@"Software.sw_type"] uppercaseString];
 	MPCrypto *mpCrypto = [[MPCrypto alloc] init];
 	NSString *fHash;
-	MPAsus *mpa = [[MPAsus alloc] init];
 	NSArray *pathComp;
 	NSString *zipFileName;
 	NSString *dmgFile;

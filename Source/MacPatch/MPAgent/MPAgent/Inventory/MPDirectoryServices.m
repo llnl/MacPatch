@@ -1,6 +1,6 @@
 //
 //  MPDirectoryServices.m
-//  MPAgentExec
+//  MPAgent
 //
 /*
  Copyright (c) 2018, Lawrence Livermore National Security, LLC.
