@@ -465,6 +465,9 @@ def customDuplicate(patch_id):
 		setattr(qGet1, 'pkg_path', _pkg_path.replace(patch_id, _new_puuid))
 		setattr(qGet1, 'pkg_url', _pkg_url.replace(patch_id, _new_puuid))
 
+		setattr(qGet1, 'cdate', datetime.now())
+		setattr(qGet1, 'mdate', datetime.now())
+
 		db.session.add(qGet1)
 
 		# Duplicate patch criteria
