@@ -469,9 +469,8 @@ static const CGFloat RHPreferencesWindowControllerResizeAnimationDurationPer100P
 
 #pragma mark - NSToolbarDelegate
 
--(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag{
-	NSLog(@"Yo");
-	
+-(NSToolbarItem *)toolbar:(NSToolbar *)toolbar itemForItemIdentifier:(NSString *)itemIdentifier willBeInsertedIntoToolbar:(BOOL)flag
+{	
    return [self toolbarItemWithItemIdentifier:itemIdentifier];
 }
 

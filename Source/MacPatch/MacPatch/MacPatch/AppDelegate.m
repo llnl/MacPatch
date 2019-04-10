@@ -7,13 +7,11 @@
 //
 
 #import "AppDelegate.h"
-
 #import "SoftwareViewController.h"
 #import "UpdatesVC.h"
 #import "HistoryViewController.h"
 #import "AgentVC.h"
-
-
+#import "EventToSend.h"
 
 // Prefs
 #import "PrefsGeneralViewController.h"
@@ -45,6 +43,18 @@
 @implementation AppDelegate
 
 @synthesize preferencesWindowController=_preferencesWindowController;
+
++ (void)initialize
+{
+	NSMutableDictionary *defaultValues = [NSMutableDictionary dictionary];
+	
+	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableDebugLogging"];
+	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableScanOnLaunch"];
+	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
+	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
+	
+	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
+}
 
 - (id)init
 {
@@ -243,6 +253,40 @@
 	[[NSWorkspace sharedWorkspace] openFile:@"/Library/Logs/gov.llnl.mp.helper.log" withApplication:@"Console"];
 }
 
+- (void)showRebootWindow
+{
+	[self.rebootWindow makeKeyAndOrderFront:self];
+}
+
+- (IBAction)logoutAndPatch:(id)sender
+{
+	if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
+		NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
+		[ud setBool:NO forKey:@"patch"];
+		[ud setBool:NO forKey:@"reboot"];
+		ud = nil;
+	}
+	
+	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
+	{
+		[@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+		[[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
+	}
+	
+	/* reboot the system using Apple supplied code
+	 error = SendAppleEventToSystemProcess(kAERestart);
+	 error = SendAppleEventToSystemProcess(kAELogOut);
+	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+	 */
+	
+	OSStatus error = noErr;
+#ifdef DEBUG
+	error = SendAppleEventToSystemProcess(kAELogOut);
+#else
+	error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+#endif
+}
+
 #pragma mark - DockTile
 
 - (void)setDefaultPatchCount:(NSInteger)pCount
@@ -293,7 +337,6 @@
 			self.worker.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.worker = nil;
-				NSLog(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop

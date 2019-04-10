@@ -7,8 +7,10 @@
 // prefix in order to avoid duplicate symbols in the global class namespace.
 #ifndef LCLLogFile
 #define LCLLogFile                                                             \
-    MPFrameworkLCLLogFile
+	MPLibraryLCLLogFile
 #endif
+// Old Name
+// MPFrameworkLCLLogFile
 
 // Tell LCLLogFile the path of the log file.
 #define _LCLLogFile_LogFilePath /* (NSString *) */                             \

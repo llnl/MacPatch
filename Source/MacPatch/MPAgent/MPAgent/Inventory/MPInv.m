@@ -209,35 +209,35 @@
 				result = @{@"data":[self parseSysInfoNetworkData:sig],
 						   @"type":invType,
 						   @"wstype":invType };
-                [resultsArray addObject:result];
+                [resultsArray addObject:result.copy];
             }
 			else if ([invType isEqualToString:@"SIHardDrive"])
 			{
-				result = @{@"data":[self parseSysInfoNetworkData:sig],
+				result = @{@"data":[self parseSysInfoHardDriveData:sig],
 						   @"type":invType,
 						   @"wstype":invType };
-				[resultsArray addObject:result];
+				[resultsArray addObject:result.copy];
 			}
 			else if ([invType isEqualToString:@"SIPCIBus"])
 			{
-				result = @{@"data":[self parseSysInfoNetworkData:sig],
+				result = @{@"data":[self parseSysInfoPCIData:sig],
 						   @"type":invType,
 						   @"wstype":invType };
-				[resultsArray addObject:result];
+				[resultsArray addObject:result.copy];
 			}
 			else if ([invType isEqualToString:@"SIRAM"])
 			{
-				result = @{@"data":[self parseSysInfoNetworkData:sig],
+				result = @{@"data":[self parseSysInfoRAMData:sig],
 						   @"type":invType,
 						   @"wstype":invType};
-				[resultsArray addObject:result];
+				[resultsArray addObject:result.copy];
 			}
 			else if ([invType isEqualToString:@"SIUSB"])
 			{
-				result = @{@"data":[self parseSysInfoNetworkData:sig],
+				result = @{@"data":[self parseSysInfoUSBData:sig],
 						   @"type":invType,
 						   @"wstype":invType };
-				[resultsArray addObject:result];
+				[resultsArray addObject:result.copy];
 			}
         }
 	}

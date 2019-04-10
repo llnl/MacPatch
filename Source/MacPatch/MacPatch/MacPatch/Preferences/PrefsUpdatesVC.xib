@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.64"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefsUpdatesVC">
             <connections>
+                <outlet property="allowInstallRebootPatchesCheckBox" destination="xFi-8d-Uei" id="XLj-gS-eMK"/>
+                <outlet property="preStageRebootPatchesBox" destination="I19-Dk-aer" id="HNK-To-bmY"/>
+                <outlet property="scanOnLaunchCheckBox" destination="Ei2-Rz-hzL" id="oeX-al-nEp"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
             </connections>
         </customObject>
@@ -24,6 +27,9 @@
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <connections>
+                        <action selector="changeScanOnLaunch:" target="-2" id="FKy-o9-n6w"/>
+                    </connections>
                 </button>
                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="I19-Dk-aer">
                     <rect key="frame" x="18" y="214" width="356" height="18"/>
@@ -32,6 +38,9 @@
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                         <font key="font" metaFont="system"/>
                     </buttonCell>
+                    <connections>
+                        <action selector="changePreStageRebootPatches:" target="-2" id="Jv8-l7-Fds"/>
+                    </connections>
                 </button>
                 <box autoresizesSubviews="NO" fixedFrame="YES" borderType="line" title="Reboot Patches" translatesAutoresizingMaskIntoConstraints="NO" id="Wxa-VK-4zf">
                     <rect key="frame" x="17" y="83" width="406" height="100"/>
@@ -47,6 +56,9 @@
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
                                     <font key="font" metaFont="system"/>
                                 </buttonCell>
+                                <connections>
+                                    <action selector="changeAllowInstallOfRebootPatches:" target="-2" id="2e4-09-lB7"/>
+                                </connections>
                             </button>
                             <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" setsMaxLayoutWidthAtFirstLayout="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kUg-8N-CQI">
                                 <rect key="frame" x="10" y="12" width="385" height="38"/>

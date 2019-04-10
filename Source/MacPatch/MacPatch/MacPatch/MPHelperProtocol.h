@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.6
+// Rev 2.7
 
 #import <Foundation/Foundation.h>
 
@@ -92,6 +92,7 @@ enum {
 
 // Patching
 - (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
+- (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
 // ----------------------------------------
@@ -116,6 +117,11 @@ enum {
 // ----------------------------------------
 - (void)unzip:(NSString *_Nonnull)aFile withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
+
+// ----------------------------------------
+// Client Checkin     ---------------------
+// ----------------------------------------
+- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary *result))reply;
 
 // ----------------------------------------
 // MacPatch Client Database      ----------
@@ -154,6 +160,7 @@ enum {
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
 
 @end
+
 
 
 

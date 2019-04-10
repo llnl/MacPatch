@@ -12,5 +12,6 @@
 @interface PrefsGeneralViewController : NSViewController <RHPreferencesViewControllerProtocol>
 
 @property (nonatomic, readonly, retain) NSString *windowTitle;
+@property (nonatomic, retain) IBOutlet NSButton *enableDebugLogCheckBox;
 
 @end

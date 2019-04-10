@@ -8,6 +8,7 @@
 
 #import "UpdatesVC.h"
 #import "UpdatesCellView.h"
+#import "AppDelegate.h"
 
 @interface UpdatesVC ()
 
@@ -49,50 +50,7 @@
 		[self->_mainScanStatusText setStringValue:@""];
 	});
 }
-// CEH
-/*
-- (void)getData
-{
-	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
-		if (connectError != nil) {
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
-			//[self willChangeValueForKey:@"userInfo"];
-			//self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
-			//[self didChangeValueForKey:@"userInfo"];
-			//dispatch_semaphore_signal(sem);
-		} else {
-			
-			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				NSLog(@"%@",proxyError);
-				//dispatch_semaphore_signal(sem);
-			}] scanForPatchesUsingFile:^(NSError * _Nullable error, NSData * _Nullable patches) {
-				if (error) {
-					NSLog(@"%@",error.localizedDescription);
-				}
-				NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithData:patches];
-				NSMutableArray *myArr = [[NSMutableArray alloc] init];
-				
-				for (NSDictionary *p in [patchDict objectForKey:@"custom"])
-				{
-					NSLog(@"%@",p);
-					//NSDictionary *d = @{@"patchName":p[@"patch"], @"patchSize":p[@"size"]};
-					[myArr addObject:p];
-				}
-				
-				if (myArr && [myArr count] > 0)
-				{
-					[self->_content removeAllObjects];
-					[self->_content addObjectsFromArray:myArr];
-				}
-				
-				NSLog(@"Complete");
-				//dispatch_semaphore_signal(sem);
-			}];
-			
-		}
-	}];
-}
-*/
+
 - (IBAction)scanForPatches:(id)sender
 {
 	
@@ -104,17 +62,17 @@
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			NSLog(@"%@",connectError);
+			qlerror(@"%@",connectError);
 			[self stopScan];
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				NSLog(@"%@",proxyError);
+				qlerror(@"%@",proxyError);
 				[self stopScan];
 			}] scanForPatchesUsingFilter:kAllPatches withReply:^(NSError *error, NSData *patches,
 																 NSData *patchGroupData) {
 				
 				if (error) {
-					NSLog(@"error: %@",error.localizedDescription);
+					qlerror(@"error: %@",error.localizedDescription);
 				}
 				
 				NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithData:patches];
@@ -152,6 +110,10 @@
 			}];
 		}
 	}];
+}
+
+- (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification {
+	return YES;
 }
 
 #pragma mark - Private Methods
@@ -231,7 +193,6 @@
 	if ([identifier isEqualToString:@"MainCell"])
 	{
 		NSDictionary *d = _content[row];
-		NSLog(@"%@",d);
 		UpdatesCellView* cell = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
 		// Set some defaults
 		cell.updateButton.title = @"Install";
@@ -297,7 +258,6 @@
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				NSLog(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop
@@ -322,14 +282,14 @@
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
-	// NSLog(@"status: %@",status);
-	if (type == kMPPatchProcessStatus) {
-		
+	if (type == kMPPatchProcessStatus)
+	{
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_mainScanStatusText setStringValue:status];
 		});
-	} else if (type == kMPProcessStatus) {
-		
+	}
+	else if (type == kMPProcessStatus)
+	{
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_mainScanStatusText setStringValue:status];
 		});
@@ -339,7 +299,7 @@
 #pragma mark - Post to Server
 - (void)postPatchesFound:(NSArray *)aPatches
 {
-	NSLog(@"Patches: %@",aPatches);
+	qlinfo(@"Patches: %@",aPatches);
 }
 
 - (void)postPatchInstall:(NSDictionary *)aPatch sucess:(BOOL)sucess

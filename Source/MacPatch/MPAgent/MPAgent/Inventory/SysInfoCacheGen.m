@@ -160,6 +160,10 @@
 				{
 					[result setObject:[d[k] stringValue] forKey:k];
 				}
+				if ([d[k] isKindOfClass:[NSDate class]])
+				{
+					[result setObject:d[k] forKey:k];
+				}
 				else if ([d[k] boolValue])
 				{
 					BOOL _value = [d[k] boolValue];
@@ -174,7 +178,7 @@
 		}
 		[items addObject:result];
 	}
-	return nil;
+	return [NSArray arrayWithArray:items];
 }
 					 
 - (NSArray *)getRAMData:(NSError **)error
@@ -224,7 +228,7 @@
 		}
 		[items addObject:result];
 	}
-	return nil;
+	return [NSArray arrayWithArray:items];
 }
 
 - (NSArray *)getPCIData:(NSError **)error
@@ -274,7 +278,7 @@
 		}
 		[items addObject:result];
 	}
-	return nil;
+	return [NSArray arrayWithArray:items];
 }
 
 - (NSArray *)getUSBData:(NSError **)error
@@ -324,7 +328,7 @@
 		}
 		[items addObject:result];
 	}
-	return nil;
+	return [NSArray arrayWithArray:items];
 }
 
 

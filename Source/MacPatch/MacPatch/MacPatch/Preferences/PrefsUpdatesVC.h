@@ -13,4 +13,10 @@
 
 @property (nonatomic, readonly, retain) NSString *windowTitle;
 
+
+
+@property (nonatomic, retain) IBOutlet NSButton *scanOnLaunchCheckBox;
+@property (nonatomic, retain) IBOutlet NSButton *preStageRebootPatchesBox;
+@property (nonatomic, retain) IBOutlet NSButton *allowInstallRebootPatchesCheckBox;
+
 @end

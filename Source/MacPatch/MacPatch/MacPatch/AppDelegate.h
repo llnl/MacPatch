@@ -20,6 +20,7 @@
 
 @property (retain) RHPreferencesWindowController *preferencesWindowController;
 @property (weak) IBOutlet NSToolbar *toolBar;
+@property (unsafe_unretained) IBOutlet NSWindow *rebootWindow;
 
 - (IBAction)changeView:(id)sender;
 - (IBAction)showPreferences:(id)sender;
@@ -27,6 +28,8 @@
 - (IBAction)ShowSoftwareView:(id)sender;
 - (IBAction)ShowHistoryView:(id)sender;
 - (IBAction)showUpdatesView:(id)sender;
+
+- (void)showRebootWindow;
 
 @end
 

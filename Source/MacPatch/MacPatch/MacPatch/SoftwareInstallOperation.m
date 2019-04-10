@@ -165,12 +165,14 @@
 				} else {
 					qlerror(@"Error installing %@",self->swTask[@"Software"][@"name"]);
 					if (error) {
-						qlerror(@"%@",error.localizedDescription);
+						qlerror(@"Error: %@",error.localizedDescription);
 					}
 					// Set Error info
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = @{@"status":@"", @"error":error};
 					[self didChangeValueForKey:@"userInfo"];
+					
+					qlerror(@"Error userInfo: %@",self->userInfo);
 				}
 				
 				// CEH - Post Install Result
@@ -248,6 +250,7 @@
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
+	qlinfo(@"postStopHasError called %@",arg2);
 	NSError *err = nil;
 	if (arg1) {
 		err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];

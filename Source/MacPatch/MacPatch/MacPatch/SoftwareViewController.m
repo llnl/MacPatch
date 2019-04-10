@@ -303,7 +303,7 @@
 		NSArray *tasks = [sw getSoftwareTasksForGroup:&err];
 		if (err) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				NSLog(@"%@",err.localizedDescription);
+				qlerror(@"%@",err.localizedDescription);
 				self->_swNetworkStatusImage.hidden = NO;
 				[self->_swNetworkStatusText setStringValue:err.localizedDescription];
 			});
@@ -346,7 +346,6 @@
 		}
 	}];
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-	NSLog(@"Installed: %@",installedItems);
 }
 
 // GOOD
@@ -550,7 +549,7 @@
     }
     @catch (NSException *exception)
     {
-        NSLog(@"%@",exception);
+        qlerror(@"%@",exception);
         return NO;
     }
     return YES;
@@ -565,7 +564,7 @@
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			NSLog(@"%@",connectError);
+			qlerror(@"%@",connectError);
 			[NSThread sleepForTimeInterval:3.0];
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[hud removeFromSuperview];
@@ -577,7 +576,6 @@
 					[hud removeFromSuperview];
 				});
 			}] getTestWithReply:^(NSString *aString) {
-				NSLog(@"Done, %@",aString);
 				[NSThread sleepForTimeInterval:3.0];
 				dispatch_async(dispatch_get_main_queue(), ^{
 					[hud removeFromSuperview];
@@ -593,7 +591,6 @@
 {
 	[[NSNotificationCenter defaultCenter] addObserverForName:kRefreshSoftwareTable object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 NSLog(@"Called kRefreshSoftwareTable");
 		 [self getInstalledSoftwareTasks];
 		 //NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
@@ -607,7 +604,6 @@
 
 - (void)workerStatusText:(NSString *)aStatus
 {
-    // NSLog(@"Status: %@",aStatus);
     _swNetworkStatusText.stringValue = aStatus;
 }
 
@@ -694,7 +690,7 @@
 #pragma mark - Search
 - (IBAction)searchString:(id)sender
 {
-    NSLog(@"%@",[_searchField stringValue]);
+    //NSLog(@"%@",[_searchField stringValue]);
 }
 
 - (void)controlTextDidChange:(NSNotification *)aNotification
@@ -715,9 +711,6 @@
     
     NSPredicate *predicate = [NSCompoundPredicate orPredicateWithSubpredicates:preds];
     NSArray *aNames = [swTasks filteredArrayUsingPredicate:predicate];
-    
-    //BOOL success = aNames.count > 0;
-    //NSLog(@"%@",success? @"Yes":@"No");
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self->filteredSwTasks removeAllObjects];
@@ -803,7 +796,7 @@
 
 - (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation
 {
-	NSLog(@"didCommitNavigation");
+	//NSLog(@"didCommitNavigation");
 }
 
 - (void)webView:(WKWebView *)webView

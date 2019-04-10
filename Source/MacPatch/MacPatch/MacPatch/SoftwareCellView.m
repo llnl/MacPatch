@@ -314,8 +314,6 @@
 
 - (void)stopInstallWithError:(BOOL)hadError errorString:(NSString *)errStr
 {
-	NSLog(@"stopInstallWithError");
-
 	BOOL isUninstall = NO;
 	if ([self.actionButton.title containsString:@"Uninstall"]) {
 		isUninstall = YES;
@@ -386,8 +384,6 @@
 
 - (void)stopUninstallWithError:(BOOL)hadError errorString:(NSString *)errStr
 {
-	NSLog(@"stopUninstallWithError");
-	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
 		self->_swActionStatusText.stringValue = @" ";

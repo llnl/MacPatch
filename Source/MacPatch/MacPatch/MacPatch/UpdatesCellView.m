@@ -9,6 +9,7 @@
 #import "UpdatesCellView.h"
 #import "GlobalQueueManager.h"
 #import "UpdateInstallOperation.h"
+#import "AppDelegate.h"
 
 @interface UpdatesCellView ()
 {
@@ -105,9 +106,20 @@
 		}
 	});
 	
-	UpdateInstallOperation *inst = [[UpdateInstallOperation alloc] init];
-	inst.patch = [self.rowData copy];
-	[q.globalQueue addOperation:inst];
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];
+	
+	if (needsReboot && !allowInstall)
+	{
+		[self stopCellInstallIsRebootPatch];
+	}
+	else
+	{
+		UpdateInstallOperation *inst = [[UpdateInstallOperation alloc] init];
+		inst.patch = [self.rowData copy];
+		[q.globalQueue addOperation:inst];
+	}
 	
 }
 
@@ -263,25 +275,31 @@
 			 }
 		}];
 	}
-	/*
-	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
-		if (connectError != nil)
-		{
-			qlerror(@"connectError: %@",connectError.localizedDescription);
-		}
-		else
-		{
-			
-			[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError.localizedDescription);
-			}] recordSoftwareInstallAdd:self->_rowData withReply:^(NSInteger result) {
-				qlinfo(@"Code %ld",(long)result);
-				[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
-			}]
-		}
-	}];
-	*/
+
 	[self removeNotificationObserver];
-	
 }
+
+- (void)stopCellInstallIsRebootPatch
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		// Reset Progressbar and text
+		self->_patchStatus.stringValue = @" ";
+		[self->_patchProgressBar setIndeterminate:YES];
+		[self->_patchProgressBar setHidden:YES];
+		[self->_patchProgressBar display];
+
+		[self.updateButton setTitle:@"On Reboot"];
+		self->_patchCompletionIcon.hidden = NO;
+		self->_patchCompletionIcon.image = [NSImage imageNamed:@"RebootImage"];
+	});
+	
+	[self removeNotificationObserver];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
+	
+	
+	AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+	[appDelegate showRebootWindow];
+	//[appDel <Your method>];
+}
+
 @end

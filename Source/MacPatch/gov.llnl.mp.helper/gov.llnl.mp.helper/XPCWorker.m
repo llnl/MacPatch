@@ -359,6 +359,35 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	reply(nil,result);
 }
 
+- (void)installPatch:(NSDictionary *)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply
+{
+	NSInteger result = 0;
+	qlinfo(@"Install Patch: %@",patch[@"patch"]);
+	qldebug(@"Patch: %@",patch);
+	
+	MPPatching *patching = [MPPatching new];
+	[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
+	if (installRebootPatch == 1) {
+		[patching setInstallRebootPatchesWhileLoggedIn:YES];
+	}
+	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
+	
+	if (patchResult[@"patchInstallErrors"]) {
+		qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
+		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
+		{
+			qlerror(@"Error installing %@",patch[@"patch"]);
+			result = 1;
+		}
+	} else {
+		result = 9999;
+	}
+	
+	qlinfo(@"result = %d",result);
+	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
+	reply(nil,result);
+}
+
 // Private
 - (BOOL)postDataToWS:(NSString *)urlPath data:(NSDictionary *)data
 {
@@ -1351,6 +1380,49 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     NSError *err = nil;
     res = [fu unzip:aFile error:&err];
     reply(err,res);
+}
+
+
+#pragma mark • Client Checkin
+
+- (void)runCheckInWithReply:(void(^)(NSError *error, NSDictionary *result))reply
+{
+	// Collect Agent Checkin Data
+	MPClientInfo *ci = [[MPClientInfo alloc] init];
+	NSDictionary *agentData = [ci agentData];
+	if (!agentData)
+	{
+		logit(lcl_vError,@"Agent data is nil, can not post client checkin data.");
+		return;
+	}
+	
+	// Post Client Checkin Data to WS
+	NSError *error = nil;
+	NSDictionary *revsDict;
+	MPRESTfull *rest = [[MPRESTfull alloc] init];
+	revsDict = [rest postClientCheckinData:agentData error:&error];
+	if (error) {
+		logit(lcl_vError,@"Running client check in had an error.");
+		logit(lcl_vError,@"%@", error.localizedDescription);
+	}
+	else
+	{
+		[self updateGroupSettings:revsDict];
+	}
+	
+	logit(lcl_vInfo,@"Running client check in completed.");
+	reply(error,revsDict);
+}
+
+- (void)updateGroupSettings:(NSDictionary *)settingRevisions
+{
+	// Query for Revisions
+	// Call MPSettings to update if nessasary
+	logit(lcl_vInfo,@"Check and Update Agent Settings.");
+	logit(lcl_vDebug,@"Setting Revisions from server: %@", settingRevisions);
+	MPSettings *set = [MPSettings sharedInstance];
+	[set compareAndUpdateSettings:settingRevisions];
+	return;
 }
 
 

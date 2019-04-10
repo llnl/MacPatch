@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F0174D0225D60270035A703 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0174CF225D60270035A703 /* UserNotifications.framework */; };
 		8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
@@ -37,10 +38,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8F0174CF225D60270035A703 /* UserNotifications.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UserNotifications.framework; path = System/Library/Frameworks/UserNotifications.framework; sourceTree = SDKROOT; };
 		8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
 		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
-		8FA9ADFC177225950055506B /* MPWorkerProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWorkerProtocol.h; sourceTree = "<group>"; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
 		8FC36B3A1B45BF1F0099D214 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EventToSend.c; sourceTree = "<group>"; };
 		8FC36B3C1B45C0850099D214 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -86,6 +87,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F0174D0225D60270035A703 /* UserNotifications.framework in Frameworks */,
 				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
 				8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */,
@@ -125,6 +127,7 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F0174CF225D60270035A703 /* UserNotifications.framework */,
 				8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */,
 				8FF5B5071FC658C4006F5FB2 /* Python.framework */,
 				8FC36B3C1B45C0850099D214 /* Carbon.framework */,
@@ -158,7 +161,6 @@
 			isa = PBXGroup;
 			children = (
 				8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */,
-				8FA9ADFC177225950055506B /* MPWorkerProtocol.h */,
 				8FD8906D16DFE8B200A870A3 /* MPClientStatusAppDelegate.h */,
 				8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */,
 				8FD8906F16DFE8B200A870A3 /* MPAppUsage.h */,
@@ -240,6 +242,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);

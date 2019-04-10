@@ -16,11 +16,14 @@
 
 @implementation PrefsGeneralViewController
 
+@synthesize enableDebugLogCheckBox;
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do view setup here.
 	//self.title = @"Foo";
 	self.windowTitle = @"MacPatch Preferences";
+	[enableDebugLogCheckBox setState:[self debugLogging]];
 }
 
 #pragma mark - RHPreferencesViewControllerProtocol
@@ -46,4 +49,25 @@
     return self.view;
 }
 
+- (IBAction)changeEnableDebugLog:(id)sender
+{
+	int state = (int)[enableDebugLogCheckBox state];
+	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+	[d setBool:state forKey:@"enableDebugLogging"];
+	
+	if ([self debugLogging]) {
+		lcl_configure_by_name("*", lcl_vDebug);
+		qldebug(@"Log level set to debug.");
+	} else {
+		lcl_configure_by_name("*", lcl_vInfo);
+		qlinfo(@"Log level set to info.");
+	}
+	[d synchronize];
+}
+
+- (BOOL)debugLogging
+{
+	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+	return [d boolForKey:@"enableDebugLogging"];
+}
 @end

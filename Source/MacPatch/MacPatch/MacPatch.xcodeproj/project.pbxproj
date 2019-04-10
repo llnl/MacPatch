@@ -27,6 +27,8 @@
 		8F2486C81A41EE7B003E24C9 /* RHPreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486C61A41EE7B003E24C9 /* RHPreferencesWindowController.m */; };
 		8F2486CD1A41FFD0003E24C9 /* PrefsGeneralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486CB1A41FFD0003E24C9 /* PrefsGeneralViewController.m */; };
 		8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */; };
+		8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4AD1A7225E975600698096 /* Carbon.framework */; };
+		8F4AD1AB225E990300698096 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F4AD1A9225E990300698096 /* EventToSend.c */; };
 		8F60AD742249960E00FDFBCA /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD732249960E00FDFBCA /* MBProgressHUD.m */; };
 		8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AEB1E4D461B0011C256 /* Cocoa.framework */; };
 		8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AEC1E4D461B0011C256 /* CoreFoundation.framework */; };
@@ -43,7 +45,6 @@
 		8FB201F81A3F90C60013C622 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB201F71A3F90C60013C622 /* AppDelegate.m */; };
 		8FB201FA1A3F90C60013C622 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB201F91A3F90C60013C622 /* main.m */; };
 		8FB201FF1A3F90C60013C622 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FB201FD1A3F90C60013C622 /* MainMenu.xib */; };
-		8FB2020B1A3F90C60013C622 /* MacPatchTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB2020A1A3F90C60013C622 /* MacPatchTests.m */; };
 		8FB202171A3FA6390013C622 /* SoftwareViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FB202141A3FA6390013C622 /* SoftwareViewController.xib */; };
 		8FB202181A3FA6390013C622 /* SoftwareViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB202161A3FA6390013C622 /* SoftwareViewController.m */; };
 		8FB39E581E53955E0034ED78 /* PressedButton.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FB39E561E53955E0034ED78 /* PressedButton.png */; };
@@ -65,13 +66,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 8F0D48A3220B847D00500A78;
 			remoteInfo = MacPatchTile;
-		};
-		8FB202051A3F90C60013C622 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8FB201E91A3F90C60013C622 /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 8FB201F01A3F90C60013C622;
-			remoteInfo = MacPatch;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -113,6 +107,9 @@
 		8F2486CA1A41FFD0003E24C9 /* PrefsGeneralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsGeneralViewController.h; sourceTree = "<group>"; };
 		8F2486CB1A41FFD0003E24C9 /* PrefsGeneralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsGeneralViewController.m; sourceTree = "<group>"; };
 		8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PrefsGeneralViewController.xib; sourceTree = "<group>"; };
+		8F4AD1A7225E975600698096 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
+		8F4AD1A9225E990300698096 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EventToSend.c; path = MacPatch/EventToSend.c; sourceTree = SOURCE_ROOT; };
+		8F4AD1AA225E990300698096 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventToSend.h; path = MacPatch/EventToSend.h; sourceTree = SOURCE_ROOT; };
 		8F60AD722249960E00FDFBCA /* MBProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBProgressHUD.h; sourceTree = "<group>"; };
 		8F60AD732249960E00FDFBCA /* MBProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBProgressHUD.m; sourceTree = "<group>"; };
 		8F771AE91E4D454D0011C256 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../../../../../../../Library/Developer/Xcode/DerivedData/MacPatch-gxkmkynletpxzdaprzqsylnshysq/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
@@ -135,7 +132,6 @@
 		8FB201F71A3F90C60013C622 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		8FB201F91A3F90C60013C622 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		8FB201FE1A3F90C60013C622 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.xib; name = Base; path = Base.lproj/MainMenu.xib; sourceTree = "<group>"; };
-		8FB202041A3F90C60013C622 /* MacPatchTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacPatchTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FB202091A3F90C60013C622 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8FB2020A1A3F90C60013C622 /* MacPatchTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MacPatchTests.m; sourceTree = "<group>"; };
 		8FB202141A3FA6390013C622 /* SoftwareViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = SoftwareViewController.xib; sourceTree = "<group>"; };
@@ -170,11 +166,12 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */,
+				8F771AF61E4D461B0011C256 /* CoreServices.framework in Frameworks */,
 				8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */,
 				8F83530D217E87950034FEFB /* Python.framework in Frameworks */,
 				8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */,
 				8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */,
-				8F771AF61E4D461B0011C256 /* CoreServices.framework in Frameworks */,
 				8F771AF71E4D461B0011C256 /* Foundation.framework in Frameworks */,
 				8F771AF81E4D461B0011C256 /* IOKit.framework in Frameworks */,
 				8F771AF91E4D461B0011C256 /* libicucore.tbd in Frameworks */,
@@ -183,13 +180,6 @@
 				8F771AFC1E4D461B0011C256 /* SystemConfiguration.framework in Frameworks */,
 				8FF3D74021701B5600059ACD /* libMPLibrary.a in Frameworks */,
 				8F2486A21A40DF48003E24C9 /* libsqlite3.dylib in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8FB202011A3F90C60013C622 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,6 +223,8 @@
 		8F2486851A40A5C6003E24C9 /* ThridParty */ = {
 			isa = PBXGroup;
 			children = (
+				8F4AD1AA225E990300698096 /* EventToSend.h */,
+				8F4AD1A9225E990300698096 /* EventToSend.c */,
 				8F60AD71224995DA00FDFBCA /* MBProgressHUD */,
 				8F2486C21A41EE7B003E24C9 /* RHPreferences */,
 			);
@@ -242,6 +234,7 @@
 		8F2486A31A40DF61003E24C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F4AD1A7225E975600698096 /* Carbon.framework */,
 				8FA13A5F21B99DFD00124016 /* WebKit.framework */,
 				8F83530C217E87950034FEFB /* Python.framework */,
 				8F771AEB1E4D461B0011C256 /* Cocoa.framework */,
@@ -334,7 +327,6 @@
 			isa = PBXGroup;
 			children = (
 				8FB201F11A3F90C60013C622 /* MacPatch.app */,
-				8FB202041A3F90C60013C622 /* MacPatchTests.xctest */,
 				8F0D48A4220B847D00500A78 /* MacPatchTile.docktileplugin */,
 			);
 			name = Products;
@@ -457,24 +449,6 @@
 			productReference = 8FB201F11A3F90C60013C622 /* MacPatch.app */;
 			productType = "com.apple.product-type.application";
 		};
-		8FB202031A3F90C60013C622 /* MacPatchTests */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 8FB202111A3F90C60013C622 /* Build configuration list for PBXNativeTarget "MacPatchTests" */;
-			buildPhases = (
-				8FB202001A3F90C60013C622 /* Sources */,
-				8FB202011A3F90C60013C622 /* Frameworks */,
-				8FB202021A3F90C60013C622 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				8FB202061A3F90C60013C622 /* PBXTargetDependency */,
-			);
-			name = MacPatchTests;
-			productName = MacPatchTests;
-			productReference = 8FB202041A3F90C60013C622 /* MacPatchTests.xctest */;
-			productType = "com.apple.product-type.bundle.unit-test";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -491,10 +465,6 @@
 					8FB201F01A3F90C60013C622 = {
 						CreatedOnToolsVersion = 6.1.1;
 						ProvisioningStyle = Manual;
-					};
-					8FB202031A3F90C60013C622 = {
-						CreatedOnToolsVersion = 6.1.1;
-						TestTargetID = 8FB201F01A3F90C60013C622;
 					};
 				};
 			};
@@ -513,7 +483,6 @@
 			projectRoot = "";
 			targets = (
 				8FB201F01A3F90C60013C622 /* MacPatch */,
-				8FB202031A3F90C60013C622 /* MacPatchTests */,
 				8F0D48A3220B847D00500A78 /* MacPatchTile */,
 			);
 		};
@@ -544,13 +513,6 @@
 				8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */,
 				8FB201FF1A3F90C60013C622 /* MainMenu.xib in Resources */,
 				8FB39E5A1E5395B80034ED78 /* UnPressedButton.png in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8FB202021A3F90C60013C622 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -588,16 +550,9 @@
 				8F2486AA1A410C35003E24C9 /* SWInstallItem.m in Sources */,
 				8F2486831A40A369003E24C9 /* HistoryViewController.m in Sources */,
 				8F1A0C1E1A43FFD6001C1147 /* SoftwareCellView.m in Sources */,
+				8F4AD1AB225E990300698096 /* EventToSend.c in Sources */,
 				8F130BA5219E3B6B0036C8DD /* UpdatesVC.m in Sources */,
 				8FB201F81A3F90C60013C622 /* AppDelegate.m in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		8FB202001A3F90C60013C622 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				8FB2020B1A3F90C60013C622 /* MacPatchTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -608,11 +563,6 @@
 			isa = PBXTargetDependency;
 			target = 8F0D48A3220B847D00500A78 /* MacPatchTile */;
 			targetProxy = 8F0D48AD220B88E800500A78 /* PBXContainerItemProxy */;
-		};
-		8FB202061A3F90C60013C622 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 8FB201F01A3F90C60013C622 /* MacPatch */;
-			targetProxy = 8FB202051A3F90C60013C622 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -864,44 +814,6 @@
 			};
 			name = Release;
 		};
-		8FB202121A3F90C60013C622 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = MacPatchTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacPatch.app/Contents/MacOS/MacPatch";
-			};
-			name = Debug;
-		};
-		8FB202131A3F90C60013C622 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				BUNDLE_LOADER = "$(TEST_HOST)";
-				COMBINE_HIDPI_IMAGES = YES;
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(DEVELOPER_FRAMEWORKS_DIR)",
-					"$(inherited)",
-				);
-				INFOPLIST_FILE = MacPatchTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.$(PRODUCT_NAME:rfc1034identifier)";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/MacPatch.app/Contents/MacOS/MacPatch";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -928,15 +840,6 @@
 			buildConfigurations = (
 				8FB2020F1A3F90C60013C622 /* Debug */,
 				8FB202101A3F90C60013C622 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		8FB202111A3F90C60013C622 /* Build configuration list for PBXNativeTarget "MacPatchTests" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				8FB202121A3F90C60013C622 /* Debug */,
-				8FB202131A3F90C60013C622 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

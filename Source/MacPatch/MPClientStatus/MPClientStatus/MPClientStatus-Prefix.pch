@@ -27,6 +27,7 @@
 #ifdef __OBJC__
     #import <Cocoa/Cocoa.h>
     #import "MacPatch.h"
+	#import "MPHelperProtocol.h"
 
     #define FileLevelLogComponent lcl_cMain
     #define log_err(_format, ...) \

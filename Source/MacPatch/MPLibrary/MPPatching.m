@@ -430,6 +430,7 @@ typedef enum {
 			qlinfo(@"Current patch has total patches associated with it %ld", patchPatchesArray.count);
 			qlinfo(@"patchPatchesArray: %@", patchPatchesArray);
 			
+			MPFileUtils *fu;
 			NSString *dlPatchLoc; //Download location Path
 			int patchIndex = 0;
 			for (patchIndex=0; patchIndex < patchPatchesArray.count; patchIndex++)
@@ -473,7 +474,13 @@ typedef enum {
 					{
 						downloadPatch = NO;
 						validHash = [self doesHashMatch:dlPatchLoc knownHash:currPatchToInstallDict[@"hash"]];
-						if (!validHash) downloadPatch = YES;
+						if (!validHash)
+						{
+							// Invalid hash, remove staged files
+							fu = [MPFileUtils new];
+							[fu removeContentsOfDirectory:stageDir];
+							downloadPatch = YES;
+						}
 					}
 					
 					// -------------------------------------------
@@ -499,6 +506,10 @@ typedef enum {
 						if (![self doesHashMatch:dlPatchLoc knownHash:currPatchToInstallDict[@"pkg_hash"]])
 						{
 							qlerror(@"The downloaded file did not pass the file hash validation. No install will occur.");
+							
+							fu = [MPFileUtils new];
+							[fu removeContentsOfDirectory:dlPatchLoc.stringByDeletingLastPathComponent];
+							
 							continue;
 						}
 					}
@@ -514,7 +525,7 @@ typedef enum {
 				qlinfo(@"Uncompressing patch, to begin install.");
 				qlinfo(@"Begin decompression of file, %@",dlPatchLoc);
 				err = nil;
-				MPFileUtils *fu = [MPFileUtils new];
+				fu = [MPFileUtils new];
 				[fu unzip:dlPatchLoc error:&err];
 				if (err)
 				{
@@ -597,6 +608,11 @@ typedef enum {
 						patchInstallErrors++;
 						[failedPatches addObject:_patch];
 					}
+					
+					// Install Complteded Remove downloaded and uncompressed files
+					fu = [MPFileUtils new];
+					[fu removeContentsOfDirectory:pkgBaseDir];
+					
 				}
 				@catch (NSException *e)
 				{

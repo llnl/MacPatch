@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -22,6 +22,7 @@
                 <outlet property="SoftwareToolbarItem" destination="if1-Ae-Y3T" id="0Da-Sx-rDK"/>
                 <outlet property="UpdatesToolbarButton" destination="iDf-c4-K8s" id="kDk-Ag-UTv"/>
                 <outlet property="UpdatesToolbarItem" destination="mLr-eq-T4a" id="JTh-Bj-N7c"/>
+                <outlet property="rebootWindow" destination="RL9-pv-Gy5" id="dhK-4W-afn"/>
                 <outlet property="viewHolder" destination="BoI-Qm-Tfv" id="Mkn-v4-mx4"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -412,11 +413,81 @@
         <menuItem title="Item" id="nvf-ED-KLt">
             <modifierMask key="keyEquivalentModifierMask"/>
         </menuItem>
+        <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="RL9-pv-Gy5">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+            <rect key="contentRect" x="283" y="305" width="553" height="194"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <view key="contentView" id="oIZ-6f-v09">
+                <rect key="frame" x="0.0" y="0.0" width="553" height="194"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" id="erI-kd-avi">
+                        <rect key="frame" x="116" y="152" width="439" height="22"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Install and Restart" allowsEditingTextAttributes="YES" id="joL-LX-gfe">
+                            <font key="font" metaFont="systemBold" size="17"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView id="eYX-wR-iZf">
+                        <rect key="frame" x="20" y="102" width="72" height="72"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="appImage" id="e0R-D7-KvE"/>
+                    </imageView>
+                    <imageView id="DCk-MD-MsS">
+                        <rect key="frame" x="56" y="92" width="48" height="48"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="alertImage" id="n02-ik-yQE"/>
+                    </imageView>
+                    <button verticalHuggingPriority="750" id="8Jy-PP-3bc">
+                        <rect key="frame" x="443" y="13" width="96" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Restart" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Krc-w1-MDu">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="logoutAndPatch:" target="Voe-Tx-rLC" id="t7o-2j-AUm"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" id="Xmf-Xg-vVi">
+                        <rect key="frame" x="347" y="13" width="96" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="qgz-FJ-XiG">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="RL9-pv-Gy5" id="twE-fK-XkZ"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" id="19f-0n-iK0">
+                        <rect key="frame" x="116" y="59" width="418" height="85"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="TOX-dD-6LD">
+                            <font key="font" metaFont="system"/>
+                            <string key="title">MacPatch needs to reboot this system, to finish installing updates that require a reboot. Please save your work and exit all applications before continuing.
+
+Click cancel to reboot at another time or click restart to reboot now.</string>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="-785.5" y="-79"/>
+        </window>
     </objects>
     <resources>
         <image name="HistoryTemplate" width="64" height="64"/>
         <image name="MacPatchTemplate" width="64" height="64"/>
         <image name="UpdatesTemplate" width="64" height="64"/>
+        <image name="alertImage" width="64" height="53"/>
+        <image name="appImage" width="128" height="128"/>
         <image name="appstoreTemplate" width="64" height="64"/>
     </resources>
 </document>

@@ -25,7 +25,6 @@
     self = [super init];
     if (self)
     {
-		NSLog(@"_globalQueue");
         _globalQueue = [[NSOperationQueue alloc] init];
         [_globalQueue setMaxConcurrentOperationCount:1];
     }

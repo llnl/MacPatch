@@ -6,15 +6,9 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.5
+// Rev 2.7
 
 #import <Foundation/Foundation.h>
-
-typedef enum {
-	kApplePatches = 1,
-	kCustomPathces,
-	kAllPatches
-} MPPatchContentType;
 
 enum {
 	kMPInstallStatus = 0,
@@ -30,18 +24,6 @@ enum {
 	kMPMoveFile = 1
 };
 typedef NSUInteger MPFileMoveAction;
-
-enum {
-	kMPSoftwareType = 0,
-	kMPPatchType = 1
-};
-typedef NSUInteger DBHistoryType;
-
-enum {
-	kMPInstallAction = 0,
-	kMPUnInstallAction = 1
-};
-typedef NSUInteger DBHistoryAction;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -91,7 +73,7 @@ enum {
 // an AuthorizationExternalForm embedded in an NSData.
 
 @optional
-- (void)getVersionWithReply:(nullable void(^)(NSData * _Nullable verData))reply;
+- (void)getVersionWithReply:(nullable void(^)(NSString * _Nullable verData))reply;
 - (void)getTestWithReply:(nullable void(^)(NSString * _Nullable aString))reply;
 - (void)getProfilesWithReply:(nullable void(^)(NSString * _Nullable aString, NSData * _Nullable aData))reply;
 
@@ -99,20 +81,18 @@ enum {
 // Patching -------------------------------
 // ----------------------------------------
 
-// ASUS
-- (void)setCatalogURL:(nullable void(^)(NSError * _Nullable error))reply;
-- (void)unSetCatalogURL:(nullable void(^)(NSError * _Nullable error))reply;
-- (void)disableSoftwareUpdateSchedule:(nullable void(^)(NSError * _Nullable error))reply;
 
-// Scans
-- (void)scanForPatchesUsingFile:(nullable void(^)(NSError * _Nullable error, NSData * _Nullable patches))reply; // Test Function
-
+/**
+ Scan host for patches
+ 
+ @param patchType - filter scan based on type All, Apple, Custom
+ @param reply foundPatches, patchGroupData
+ */
 - (void)scanForPatchesUsingFilter:(MPPatchContentType)patchType withReply:(nullable void(^)(NSError * _Nullable error, NSData * _Nullable patches, NSData * _Nullable patchGroupData))reply;
 
-- (void)scanForPatches:(nullable NSString *)patchGroup patchFilter:(MPPatchContentType)patchType withReply:(nullable void(^)(NSError * _Nullable error, NSData * _Nullable patches))reply;
-
 // Patching
-- (void)installPatch:(nonnull NSDictionary *)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
+- (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
+- (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
 // ----------------------------------------
@@ -139,6 +119,11 @@ enum {
 
 
 // ----------------------------------------
+// Client Checkin     ---------------------
+// ----------------------------------------
+- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary *result))reply;
+
+// ----------------------------------------
 // MacPatch Client Database      ----------
 // ----------------------------------------
 - (void)createAndUpdateDatabase:(nullable void(^)(BOOL result))reply;
@@ -156,7 +141,10 @@ enum {
 					 errorMsg:(NSString * _Nullable)aErrMsg
 					withReply:(nullable void(^)(BOOL result))reply;
 
-- (void)retrieveInstalledSoftwareTasksWithReply:(nonnull void(^)(NSData * _Nonnull result))reply;
+- (void)retrieveInstalledSoftwareTasksWithReply:(nullable void(^)(NSData * _Nullable result))reply;
+
+- (void)addRequiredPatch:(NSData *_Nonnull)patch withReply:(nullable void(^)(BOOL result))reply;
+- (void)removeRequiredPatch:(NSString *_Nonnull)type patchID:(NSString *_Nonnull)patchID patch:(NSString *_Nonnull)patch withReply:(nullable void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // OS Config Profiles	         ----------

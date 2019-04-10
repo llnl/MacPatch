@@ -31,13 +31,11 @@
 #import "AppLaunchObject.h"
 #import "CHMenuViewController.h"
 #import "EventToSend.h"
+#import <UserNotifications/UserNotifications.h>
 
 
 NSString * const kMenuIconNorml		= @"mp3Image";
 NSString * const kMenuIconAlert		= @"mp3ImageAlert";
-//NSString * const kMenuIconNorml		= @"mpmenubar_normal";
-//NSString * const kMenuIconAlert		= @"mpmenubar_alert2";
-
 
 // Private Methods
 @interface MPClientStatusAppDelegate ()
@@ -46,10 +44,11 @@ NSString * const kMenuIconAlert		= @"mp3ImageAlert";
 }
 
 // Helper
-- (void)connect;
-- (int)connect:(NSError **)err;
-- (void)cleanup;
-- (void)connectionDown:(NSNotification *)notification;
+// XPC Connection
+@property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
+
+- (void)connectToHelperTool;
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
 
 // Watch Patch Status/Needed
 @property (nonatomic, strong) NSDate *lastPatchStatusUpdate;
@@ -160,6 +159,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 														  object: nil];
 	
 	[self displayPatchDataMethod]; // Show needed patches
+	[self wakeMeUp];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -252,167 +252,50 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [menu update];
 }
 
-#pragma mark -
-#pragma mark MPWorker
-- (void)connect
-{
-    // Use mach ports for communication, since we're local.
-    NSConnection *connection = [NSConnection connectionWithRegisteredName:kMPWorkerPortName host:nil];
-    
-    [connection setRequestTimeout: 60.0];
-    [connection setReplyTimeout: 1800.0]; //30 min to install
-    
-    @try {
-        proxy = [connection rootProxy];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(connectionDown:) name:NSConnectionDidDieNotification object:connection];
-        
-        [proxy setProtocolForProxy: @protocol(MPWorkerServer)];
-        BOOL successful;
-        for (int i = 0; i < 3; i++)
-        {
-            successful = [proxy registerClient:self];
-            if (!successful) {
-                if (i == 3) {
-                    NSAlert *alert = [NSAlert alertWithMessageText:@"Error"
-                                                     defaultButton:@"OK" alternateButton:nil
-                                                       otherButton:nil
-                                         informativeTextWithFormat:@"Unable to connect to helper application. Please try logging out and logging back in to resolve the issue."];
-                    
-                    [[NSRunningApplication currentApplication] activateWithOptions:NSApplicationActivateIgnoringOtherApps];
-                    [alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:NO];
-                }
-                [self cleanup];
-            } else {
-                break;
-            }
-        }
-    }
-    @catch (NSException *e) {
-        logit(lcl_vError,@"Could not connect to MPHelper: %@", e);
-        [self cleanup];
-    }
-}
+#pragma mark - Helper
 
-- (int)connect:(NSError **)err
+- (void)connectToHelperTool
+// Ensures that we're connected to our helper tool.
 {
-    // Use mach ports for communication, since we're local.
-    NSConnection *connection = [NSConnection connectionWithRegisteredName:kMPWorkerPortName host:nil];
-    
-    [connection setRequestTimeout: 60.0];
-    [connection setReplyTimeout: 1800.0]; //30 min to install
-    
-    @try {
-        proxy = [connection rootProxy];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(connectionDown:) name:NSConnectionDidDieNotification object:connection];
-        
-        [proxy setProtocolForProxy: @protocol(MPWorkerServer)];
-        BOOL successful;
-        for (int i = 0; i < 3; i++)
-        {
-            successful = [proxy registerClient:self];
-            if (!successful) {
-                if (i == 3) {
-                    NSAlert *alert = [NSAlert alertWithMessageText:@"Error"
-                                                     defaultButton:@"OK" alternateButton:nil
-                                                       otherButton:nil
-                                         informativeTextWithFormat:@"Unable to connect to helper application. Please try logging out and logging back in to resolve the issue."];
-                    
-                    [[NSRunningApplication currentApplication] activateWithOptions:NSApplicationActivateIgnoringOtherApps];
-                    [alert performSelectorOnMainThread:@selector(runModal) withObject:nil waitUntilDone:NO];
-                    
-                    NSMutableDictionary *details = [NSMutableDictionary dictionary];
-                    [details setValue:@"Unable to connect to helper application. Please try logging out and logging back in to resolve the issue." forKey:NSLocalizedDescriptionKey];
-                    if (err != NULL)  *err = [NSError errorWithDomain:@"world" code:1 userInfo:details];
-                }
-                [self cleanup];
-            } else {
-                break;
-            }
-        }
-    }
-    @catch (NSException *e) {
-        logit(lcl_vError,@"Could not connect to MPHelper: %@", e);
-        [self cleanup];
-    }
-    
-    return 0;
-}
-
-- (void)cleanup
-{
-    if (proxy)
-    {
-        NSConnection *connection = [proxy connectionForProxy];
-        [connection invalidate];
-        proxy = nil;
-    }
-    
-}
-
-- (void)connectionDown:(NSNotification *)notification
-{
-    logit(lcl_vTrace,@"MPWorker connection down");
-    [self cleanup];
-}
-
-#pragma mark - Worker Methods
-
-- (NSDictionary *)getAgentCheckInDataViaProxy
-{
-	NSDictionary *result = nil;
-	NSError *error = nil;
-	if (!proxy) {
-		[self connect:&error];
-		if (error) {
-			logit(lcl_vError,@"%@",error.localizedDescription);
-			goto done;
-		}
-		if (!proxy) {
-			logit(lcl_vError,@"Could not create proxy object.");
-			goto done;
-		}
+	if (self.workerConnection == nil) {
+		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
+		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
+		
+		// Register Progress Messeges From Helper
+		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
+		self.workerConnection.exportedObject = self;
+		
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+		// We can ignore the retain cycle warning because a) the retain taken by the
+		// invalidation handler block is released by us setting it to nil when the block
+		// actually runs, and b) the retain taken by the block passed to -addOperationWithBlock:
+		// will be released when that operation completes and the operation itself is deallocated
+		// (notably self does not have a reference to the NSBlockOperation).
+		self.workerConnection.invalidationHandler = ^{
+			// If the connection gets invalidated then, on the main thread, nil out our
+			// reference to it.  This ensures that we attempt to rebuild it the next time around.
+			self.workerConnection.invalidationHandler = nil;
+			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+				self.workerConnection = nil;
+			}];
+		};
+#pragma clang diagnostic pop
+		[self.workerConnection resume];
 	}
+}
+
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock
+// Connects to the helper tool and then executes the supplied command block on the
+// main thread, passing it an error indicating if the connection was successful.
+{	
+	// Ensure that there's a helper tool connection in place.
+	self.workerConnection = nil;
+	[self connectToHelperTool];
 	
-	@try
-	{
-		result = [proxy clientCheckInData];
-	}
-	@catch (NSException *e) {
-		logit(lcl_vError,@"Colect client checkin data, %@", e);
-	}
-	
-done:
-	[self cleanup];
-	return result;
+	commandBlock(nil);
 }
 
-- (void)updateClientGroupSettingViaProxy:(NSDictionary *)settingsRevs
-{
-	NSError *error = nil;
-	if (!proxy) {
-		[self connect:&error];
-		if (error) {
-			logit(lcl_vError,@"%@",error.localizedDescription);
-			goto done;
-		}
-		if (!proxy) {
-			logit(lcl_vError,@"Could not create proxy object.");
-			goto done;
-		}
-	}
-	
-	@try
-	{
-		[proxy updateClientGroupSettingViaHelper:settingsRevs];
-	}
-	@catch (NSException *e) {
-		logit(lcl_vError,@"Update client group settings failed. %@", e);
-	}
-	
-done:
-	[self cleanup];
-	return;
-}
 
 #pragma mark -
 #pragma mark Client Info
@@ -460,15 +343,47 @@ done:
 #pragma mark Checkin
 - (IBAction)showCheckinWindow:(id)sender
 {
-    [NSThread detachNewThreadSelector:@selector(performClientCheckInThread) toTarget:self withObject:nil];
+    //[NSThread detachNewThreadSelector:@selector(performClientCheckInThread) toTarget:self withObject:nil];
+	[self connectAndExecuteCommandBlock:^(NSError * connectError)
+	 {
+		 if (connectError != nil)
+		 {
+			 qlerror(@"connectError: %@",connectError.localizedDescription);
+		 }
+		 else
+		 {
+			 [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+			 }] runCheckInWithReply:^(NSError *err, NSDictionary *result) {
+				dispatch_sync(dispatch_get_main_queue(), ^()
+				   {
+					   NSAlert *alert = [[NSAlert alloc] init];
+					   [alert addButtonWithTitle:@"OK"];
+					   if (err) {
+						   [alert setMessageText:@"Error with check-in"];
+						   [alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
+						   [alert setAlertStyle:NSCriticalAlertStyle];
+					   } else {
+						   [alert setMessageText:@"Client check-in"];
+						   [alert setInformativeText:@"Client check-in was successful."];
+						   [alert setAlertStyle:NSInformationalAlertStyle];
+					   }
+					   
+					   [alert runModal];
+				   });
+			 }];
+		 }
+	 }];
+	
+	
 }
 
+// CEH
 - (void)performClientCheckInThread
 {
     @autoreleasepool
     {
         BOOL didRun = NO;
-        didRun = [self performClientCheckInMethod];
 		
 		dispatch_sync(dispatch_get_main_queue(), ^()
 		{
@@ -487,32 +402,6 @@ done:
 			[alert runModal];
 		});
     }
-}
-
-// Performs a client checkin
-- (BOOL)performClientCheckInMethod
-{
-	NSDictionary *agentData = [self getAgentCheckInDataViaProxy];
-    if (agentData) {
-        NSDictionary *revsDict;
-        NSError *wsError = nil;
-        MPRESTfull *rest = [[MPRESTfull alloc] init];
-        revsDict = [rest postClientCheckinData:agentData error:&wsError];
-        if (wsError)
-        {
-            logit(lcl_vError,@"Error posting client check in data.");
-            logit(lcl_vError,@"%@",wsError.localizedDescription);
-            return FALSE;
-        }
-        
-        // CEH - Update Settings once implemented via mpworker
-		[self updateClientGroupSettingViaProxy:revsDict];
-        
-        // Update the UI info
-        [self showLastCheckInMethod];
-    }
-    
-    return TRUE;
 }
 
 #pragma mark Show Last CheckIn Menu
@@ -538,6 +427,20 @@ done:
                             waitUntilDone:NO
                                     modes:@[NSRunLoopCommonModes]];
     });
+}
+
+- (void)wakeMeUp
+{
+	[self userNotificationReceived:nil];
+	
+	// Call this method again using GCD
+	// DISPATCH_QUEUE_PRIORITY_BACKGROUND
+	dispatch_queue_t q_background = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
+	double delayInSeconds = 3.0;
+	dispatch_time_t popTime = dispatch_time(DISPATCH_TIME_NOW, delayInSeconds * NSEC_PER_SEC);
+	dispatch_after(popTime, q_background, ^(void){
+		[self wakeMeUp];
+	});
 }
 
 - (void)showLastCheckInMethod
@@ -992,12 +895,18 @@ done:
 
 - (void)postUserNotificationForReboot
 {
+	qlinfo(@"postUserNotificationForReboot");
 	// Look to see if we have posted already, if we have, no need to do it again
+	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
 	{
-		if ([deliveredNote.title isEqualToString:@"Reboot Patches Required"]) return;
+		if ([deliveredNote.title isEqualToString:@"Reboot Patches Required"]) {
+			NSLog(@"Already posted");
+			return;
+		}
 	}
-    
+	
+	
     NSUserNotification *userNote = [[NSUserNotification alloc] init];
     userNote.title = @"Reboot Patches Required";
     userNote.informativeText = @"This system requires patches that require a reboot.";
@@ -1005,9 +914,11 @@ done:
     userNote.hasActionButton = YES;
     userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };
     [userNote setValue:@YES forKey:@"_showsButtons"];
-	
+
     [[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
+	qlinfo(@"postUserNotificationForReboot deliverNotification");
+	
 }
 
 - (void)postUserNotificationForPatchesWithCount:(NSString *)aCount
@@ -1078,7 +989,8 @@ done:
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)notification
 {
-    if ([notification.actionButtonTitle isEqualToString:@"Patch"]) {
+    if ([notification.actionButtonTitle isEqualToString:@"Patch"])
+	{
         // Dont show patch info if reboot is required.
 		/*
         if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])

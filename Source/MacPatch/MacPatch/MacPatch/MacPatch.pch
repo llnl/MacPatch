@@ -6,10 +6,14 @@
 //  Copyright (c) 2014 Heizer, Charles. All rights reserved.
 //
 
+#ifdef __OBJC__
+
 #import "MacPatch.h"
 #import "MPHelperProtocol.h"
 #import "NSDate+Helper.h"
 
 
 #define kRefreshSoftwareTable @"swTableRefresh"
+
+#endif
 

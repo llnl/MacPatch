@@ -1,8 +1,7 @@
 //
-//  MPFileUtils.h
-//  MPLibrary
+// EventToSend.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,16 +23,9 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#include <stdio.h>
+#include <CoreServices/CoreServices.h>
+#include <Carbon/Carbon.h>
 
-#import <Foundation/Foundation.h>
 
-@interface MPFileUtils : NSObject
-
--(int)unzip:(NSString *)aZipFilePath error:(NSError **)err;
--(int)unzip:(NSString *)aZipFilePath targetPath:(NSString *)aTargetPath error:(NSError **)err;
-
-- (void)setOwnership:(NSString *)aPath owner:(NSString *)aOwner group:(NSString *)aGroup error:(NSError **)err;
-
-- (BOOL)removeContentsOfDirectory:(NSString *)dirPath;
-
-@end
+OSStatus SendAppleEventToSystemProcess(AEEventID EventToSend);

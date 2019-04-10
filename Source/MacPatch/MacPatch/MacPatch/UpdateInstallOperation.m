@@ -139,11 +139,13 @@
 			[self didChangeValueForKey:@"userInfo"];
 			dispatch_semaphore_signal(sem);
 		} else {
+
+			int aRebPtch = [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? 1 : 0;
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				NSLog(@"%@",proxyError);
+				qlerror(@"%@",proxyError);
 				dispatch_semaphore_signal(sem);
-			}] installPatch:self->patch withReply:^(NSError *error, NSInteger resultCode) {
+			}] installPatch:self->patch userInstallRebootPatch:aRebPtch withReply:^(NSError *error, NSInteger resultCode) {
 				
 				qlerror(@"installPatch:self->patch withReply");
 				qlerror(@"resultCode: %ld",resultCode);

@@ -118,6 +118,28 @@
 	
 }
 
+- (BOOL)removeContentsOfDirectory:(NSString *)dirPath
+{
+	BOOL res = NO;
+	NSFileManager *fm = [NSFileManager defaultManager];
+	NSDirectoryEnumerator *enumerator = [fm enumeratorAtPath:dirPath];
+	NSString *file;
+
+	int errors = 0;
+	
+	while (file = [enumerator nextObject])
+	{
+		NSError *error = nil;
+		BOOL result = [fm removeItemAtPath:[dirPath stringByAppendingPathComponent:file] error:&error];
+		if (!result && error) {
+			qlerror(@"Error: %@", error);
+			errors++;
+		}
+	}
+	
+	if (errors == 0) res = YES;
+	return res;
+}
 
 #pragma mark - Private
 

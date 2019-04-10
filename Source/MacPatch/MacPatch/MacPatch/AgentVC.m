@@ -226,8 +226,6 @@
 	NSArray *lines = [[NSArray alloc] initWithArray:[res componentsSeparatedByString:@"\n"]];
 	for (NSString *l in lines)
 	{
-		NSLog(@"(%@)",l);
-		
 		if ([l containsString:@"fdesetup: "]) {
 			dev = [l stringByReplacingOccurrencesOfString:@"fdesetup: device path = " withString:@""];
 		}
@@ -283,10 +281,10 @@
 {
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			NSLog(@"connectError: %@",connectError);
+			qlerror(@"connectError: %@",connectError);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				NSLog(@"proxyError: %@",proxyError);
+				qlerror(@"proxyError: %@",proxyError);
 			}] getInstalledConfigProfilesWithReply:^(NSString * _Nullable aString, NSData * _Nullable aProfilesData) {
 				
 				if (!aProfilesData) {
@@ -365,7 +363,6 @@
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				NSLog(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop
