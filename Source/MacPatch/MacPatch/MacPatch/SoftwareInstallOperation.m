@@ -163,13 +163,17 @@
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
 				} else {
-					qlerror(@"Error installing %@",self->swTask[@"Software"][@"name"]);
+					qlerror(@"Error installing software task %@",self->swTask[@"Software"][@"name"]);
 					if (error) {
 						qlerror(@"Error: %@",error.localizedDescription);
+					} else {
+						error = [NSError errorWithDomain:@"InstallError"
+																 code:1
+															 userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Failed to install software task.", nil)}];
 					}
 					// Set Error info
 					[self willChangeValueForKey:@"userInfo"];
-					self->userInfo = @{@"status":@"", @"error":error};
+					self->userInfo = @{@"status":@"Failed to install software task.", @"error":error};
 					[self didChangeValueForKey:@"userInfo"];
 					
 					qlerror(@"Error userInfo: %@",self->userInfo);

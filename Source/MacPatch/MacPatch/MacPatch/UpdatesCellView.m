@@ -297,6 +297,23 @@
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
 	
 	
+	
+	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
+		 if (connectError != nil)
+		 {
+			 qlerror(@"connectError: %@",connectError.localizedDescription);
+		 }
+		 else
+		 {
+			 [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+			 }] setPatchOnLogoutWithReply:^(BOOL result) {
+				 qldebug(@"setPatchOnLogoutWithReply: returned=%@",result ? @"YES":@"NO");
+			 }];
+		 }
+	 }];
+	
+	
 	AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
 	[appDelegate showRebootWindow];
 	//[appDel <Your method>];

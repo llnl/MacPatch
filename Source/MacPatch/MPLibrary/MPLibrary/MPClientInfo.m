@@ -98,17 +98,20 @@
         agentDict = [[NSMutableDictionary alloc] init];
         [agentDict setObject:[settings ccuid] forKey:@"cuuid"];
         [agentDict setObject:[settings serialno] forKey:@"serialno"];
-        [agentDict setObject:[hostNameDict objectForKey:@"localHostName"] forKey:@"hostname"];
-        [agentDict setObject:[hostNameDict objectForKey:@"localComputerName"] forKey:@"computername"];
-        [agentDict setObject:[consoleUserDict objectForKey:@"consoleUser"] forKey:@"consoleuser"];
+        [agentDict setObject:hostNameDict[@"localHostName"] forKey:@"hostname"];
+        [agentDict setObject:hostNameDict[@"localComputerName"] forKey:@"computername"];
+        [agentDict setObject:consoleUserDict[@"consoleUser"] forKey:@"consoleuser"];
         [agentDict setObject:[MPSystemInfo getIPAddress] forKey:@"ipaddr"];
         [agentDict setObject:[MPSystemInfo getMacAddressForInterface:@"en0"] forKey:@"macaddr"];
         [agentDict setObject:[settings osver] forKey:@"osver"];
         [agentDict setObject:[settings ostype] forKey:@"ostype"];
         [agentDict setObject:@"0" forKey:@"agent_version"];
-        [agentDict setObject:[agentVer objectForKey:@"build"] forKey:@"agent_build"];
-        NSString *cVer = [NSString stringWithFormat:@"%@.%@.%@",[agentVer objectForKey:@"major"],[agentVer objectForKey:@"minor"],[agentVer objectForKey:@"bug"]];
-        [agentDict setObject:cVer forKey:@"agent_version"];
+        [agentDict setObject:agentVer[@"build"] forKey:@"agent_build"];
+		[agentDict setObject:@"0" forKey:@"client_version"];
+        NSString *aVer = [NSString stringWithFormat:@"%@.%@.%@",agentVer[@"major"],agentVer[@"minor"],agentVer[@"bug"]];
+		NSString *cVer = [NSString stringWithFormat:@"%@.%@.%@.%@",agentVer[@"major"],agentVer[@"minor"],agentVer[@"bug"],agentVer[@"build"]];
+        [agentDict setObject:aVer forKey:@"agent_version"];
+		[agentDict setObject:cVer forKey:@"client_version"];
         [agentDict setObject:@"false" forKey:@"needsreboot"];
 		[agentDict setObject:[self fileVaultStatus] forKey:@"fileVault"];
         

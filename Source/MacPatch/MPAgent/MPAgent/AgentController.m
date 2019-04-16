@@ -213,10 +213,16 @@
 {
     @autoreleasepool
     {
-        logit(lcl_vInfo,@"Starting tasks...");
+		qlinfo(@"Waiting for tasks...");
+		while (self.tasksArray.count <= 0)
+		{
+			[NSThread sleepForTimeInterval:1.0];
+		}
+		
+        qlinfo(@"Starting tasks...");
         NSDate *d;
         MPTaskValidate *taskValid = [[MPTaskValidate alloc] init];
-        
+		BOOL firstRun = YES;
         BOOL keepRunning = YES;
         while (keepRunning)
         {
@@ -226,26 +232,26 @@
                 {
                     
                     NSDictionary *taskDict;
-                    NSTimeInterval _n = 0;
+                    NSTimeInterval _now = 0;
                     // Need to begin loop for tasks
                     for (taskDict in self.tasksArray)
                     {
-                        // For Debug
-                        if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPCheckIn"])
-                            logit(lcl_vTrace,@"%@ - %@",[taskDict objectForKey:@"cmd"],[taskDict objectForKey:@"interval"]);
-                        
                         // If task is Active
                         if ([[taskDict objectForKey:@"active"] isEqualToString:@"1"])
                         {
-                            _n = [[NSDate now] timeIntervalSince1970];
-                            logit(lcl_vTrace,@"taskDict: %0.0f",_n);
-                            logit(lcl_vTrace,@"taskDict: %0.0f >: %0.0f", _n, [[NSDate shortDateFromString:[taskDict objectForKey:@"startdate"]] timeIntervalSince1970]);
-                            logit(lcl_vTrace,@"taskDict %0.0f <: %0.0f", _n, [[NSDate shortDateFromString:[taskDict objectForKey:@"enddate"]] timeIntervalSince1970]);
-                            if ( _n > [[NSDate shortDateFromString:[taskDict objectForKey:@"startdate"]] timeIntervalSince1970] && _n < [[NSDate shortDateFromString:[taskDict objectForKey:@"enddate"]] timeIntervalSince1970])
+                            _now = [[NSDate now] timeIntervalSince1970];
+                            qltrace(@"taskDict now: %0.0f",_now);
+							qltrace(@"taskDict next: %0.0f",[taskDict[@"nextrun"] doubleValue]);
+                            qltrace(@"taskDict: %0.0f >: %0.0f", _now, [[NSDate shortDateFromString:taskDict[@"startdate"]] timeIntervalSince1970]);
+                            qltrace(@"taskDict %0.0f <: %0.0f", _now, [[NSDate shortDateFromString:taskDict[@"enddate"]] timeIntervalSince1970]);
+                            if ( _now > [[NSDate shortDateFromString:taskDict[@"startdate"]] timeIntervalSince1970]
+								&& _now < [[NSDate shortDateFromString:taskDict[@"enddate"]] timeIntervalSince1970])
                             {
                                 // Check if task is valid
                                 int isValid = [taskValid validateTask:taskDict];
-                                if (isValid != 0) {
+                                if (isValid != 0)
+								{
+									qlinfo(@"isValid != 0");
                                     //	1 = Error, replace with default cmd
                                     //	2 = Invalid Interval, we will reset startdate and endate as well
                                     //	3 = End Date has to be updated, due to bug in 10.8 NSDate. NSDate cant be older than 3512-12-31
@@ -261,68 +267,99 @@
                                 
                                 d = [[NSDate alloc] init]; // Get current date/time
                                 // Compare as long value, thus removing the floating point.
-                                if ([[taskDict objectForKey:@"nextrun"] longValue] == (long)[d timeIntervalSince1970])
+								if (firstRun)
+								{
+									// Reschedule, we missed out date
+									// Schedule for 30 seconds out
+									logit(lcl_vInfo,@"Scheduling first run of task (%@) to run in 30 seconds.",taskDict[@"cmd"]);
+									[self updateNextRunForTask:taskDict missedTask:YES];
+								}
+                                else if ([taskDict[@"nextrun"] longValue] == (long)[d timeIntervalSince1970])
                                 {
-                                    logit(lcl_vInfo,@"Run task (%@) via queue (%lu).",[taskDict objectForKey:@"cmd"],[queue.operations count]);
-                                    if ([queue.operations count] >= 20) {
+                                    logit(lcl_vInfo,@"Run task (%@) via queue (%lu).",taskDict[@"cmd"],[queue.operations count]);
+                                    if ([queue.operations count] >= 20)
+									{
                                         logit(lcl_vError,@"Queue appears to be stuck with %lu waiting in queue. Purging queue now.",[queue.operations count]);
                                         [queue cancelAllOperations];
                                         [queue waitUntilAllOperationsAreFinished];
                                     }
                                     
-                                    if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPCheckIn"]) {
+                                    if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"])
+									{
                                         clientOp = [[ClientCheckInOperation alloc] init];
                                         [queue addOperation:clientOp];
                                         clientOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"])
+									{
                                         agentOp = [[AgentScanAndUpdateOperation alloc] init];
                                         [queue addOperation:agentOp];
                                         agentOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPAVInfo"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
+									{
                                         avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
                                         [avOp setScanType:0];
                                         [queue addOperation:avOp];
                                         avOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPAVCheck"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVCheck"])
+									{
                                         avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
                                         [avOp setScanType:1];
                                         [queue addOperation:avOp];
                                         avOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPInvScan"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPInvScan"])
+									{
                                         @autoreleasepool {
                                             InventoryOperation __autoreleasing *invOps = [[InventoryOperation alloc] init];
                                             invOps.queuePriority = NSOperationQueuePriorityLow;
-                                            if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10) {
+                                            if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10)
+											{
                                                 NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
-                                                if (version.minorVersion >= 10) {
+                                                if (version.minorVersion >= 10)
+												{
                                                     invOps.qualityOfService = NSOperationQualityOfServiceBackground;
                                                 }
                                             }
                                             [queue addOperation:invOps];
                                             invOps = nil;
                                         }
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPVulScan"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulScan"])
+									{
                                         patchOp = [[PatchScanAndUpdateOperation alloc] init];
                                         [queue addOperation:patchOp];
                                         patchOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPVulUpdate"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"])
+									{
                                         patchOp = [[PatchScanAndUpdateOperation alloc] init];
                                         [patchOp setScanType:1];
                                         [queue addOperation:patchOp];
                                         patchOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPSWDistMan"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPSWDistMan"])
+									{
                                         swDistOp = [[MPSWDistTaskOperation alloc] init];
                                         [queue addOperation:swDistOp];
                                         swDistOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPProfiles"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPProfiles"])
+									{
                                         profilesOp = [[Profiles alloc] init];
                                         [queue addOperation:profilesOp];
                                         profilesOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPWSPost"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPWSPost"])
+									{
                                         postFailedWSRequestsOp = [[PostFailedWSRequests alloc] init];
                                         [queue addOperation:postFailedWSRequestsOp];
                                         postFailedWSRequestsOp = nil;
-                                    } else if ([[taskDict objectForKey:@"cmd"] isEqualToString:@"kMPPatchCrit"]) {
+                                    }
+									else if ([taskDict[@"cmd"] isEqualToString:@"kMPPatchCrit"])
+									{
                                         patchOp = [[PatchScanAndUpdateOperation alloc] init];
                                         [patchOp setScanType:1];
                                         [queue addOperation:patchOp];
@@ -332,16 +369,19 @@
                                     // Set Next Run Date Time
                                     [self updateNextRunForTask:taskDict missedTask:NO];
                                     
-                                } else if ([[taskDict objectForKey:@"nextrun"] doubleValue] < [d timeIntervalSince1970]) {
+                                }
+								else if ([taskDict[@"nextrun"] doubleValue] < [d timeIntervalSince1970])
+								{
                                     // Reschedule, we missed out date
                                     // Schedule for 30 seconds out
-                                    logit(lcl_vInfo,@"We missed our task (%@), rescheduled to run in 30 seconds.",[taskDict objectForKey:@"cmd"]);
+                                    logit(lcl_vInfo,@"We missed our task (%@), rescheduled to run in 30 seconds.",taskDict[@"cmd"]);
                                     [self updateNextRunForTask:taskDict missedTask:YES];
                                 }
                                 d = nil;
                             }
                         }
                     }
+					if (firstRun) firstRun = NO;
                 }
                 @catch (NSException *exception) {
                     qlerror(@"%@",exception);

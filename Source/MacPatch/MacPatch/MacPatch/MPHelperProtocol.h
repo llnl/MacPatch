@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.7
+// Rev 2.8
 
 #import <Foundation/Foundation.h>
 
@@ -94,6 +94,7 @@ enum {
 - (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+- (void)setPatchOnLogoutWithReply:(void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // Software -------------------------------
@@ -160,7 +161,6 @@ enum {
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
 
 @end
-
 
 
 

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment version="101200" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -96,11 +96,6 @@
                                                 <rect key="frame" x="1" y="1" width="995" height="90"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
-                                                    <imageView hidden="YES" id="7vg-3a-n6f">
-                                                        <rect key="frame" x="861" y="35" width="24" height="24"/>
-                                                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
-                                                        <imageCell key="cell" controlSize="mini" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="ErrorImage" id="94y-Bu-WeP"/>
-                                                    </imageView>
                                                     <imageView id="81">
                                                         <rect key="frame" x="11" y="34" width="48" height="48"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -191,7 +186,7 @@
                                                                 <color key="value" red="0.36852371690000002" green="0.55646556619999998" blue="0.78075867889999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             </userDefinedRuntimeAttribute>
                                                             <userDefinedRuntimeAttribute type="color" keyPath="backgroundHighlightColor">
-                                                                <color key="value" red="0.29803922770000002" green="0.29803922770000002" blue="0.29803922770000002" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                                                <color key="value" red="0.36852371690000002" green="0.55646556619999998" blue="0.78075867889999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             </userDefinedRuntimeAttribute>
                                                             <userDefinedRuntimeAttribute type="color" keyPath="titleNormalColor">
                                                                 <color key="value" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
@@ -215,8 +210,9 @@
                                                                 <color key="value" red="0.57414853570000002" green="0.57416242360000003" blue="0.57415497299999996" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             </userDefinedRuntimeAttribute>
                                                             <userDefinedRuntimeAttribute type="color" keyPath="pressColor">
-                                                                <color key="value" red="0.33661167510000001" green="0.33661167510000001" blue="0.33661167510000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                                                <color key="value" red="0.36852371690000002" green="0.55646556619999998" blue="0.78075867889999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                                                             </userDefinedRuntimeAttribute>
+                                                            <userDefinedRuntimeAttribute type="boolean" keyPath="momentary" value="YES"/>
                                                         </userDefinedRuntimeAttributes>
                                                         <connections>
                                                             <action selector="runInstall:" target="67" id="jbo-tb-hyz"/>
@@ -239,7 +235,6 @@
                                                 </subviews>
                                                 <connections>
                                                     <outlet property="actionButton" destination="Dj9-bU-yB5" id="0oN-1I-frP"/>
-                                                    <outlet property="errorImage" destination="7vg-3a-n6f" id="Gki-Za-p5G"/>
                                                     <outlet property="installedStateImage" destination="88" id="108"/>
                                                     <outlet property="progressBar" destination="89" id="107"/>
                                                     <outlet property="swActionStatusText" destination="90" id="109"/>
@@ -365,7 +360,6 @@
         </window>
     </objects>
     <resources>
-        <image name="ErrorImage" width="32" height="32"/>
         <image name="NSAdvanced" width="32" height="32"/>
         <image name="NSApplicationIcon" width="32" height="32"/>
         <image name="NSRefreshTemplate" width="11" height="15"/>

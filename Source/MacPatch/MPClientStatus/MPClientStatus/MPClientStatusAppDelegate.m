@@ -367,6 +367,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 						   [alert setMessageText:@"Client check-in"];
 						   [alert setInformativeText:@"Client check-in was successful."];
 						   [alert setAlertStyle:NSInformationalAlertStyle];
+						   
+						   [self performSelectorOnMainThread:@selector(showLastCheckInMethod)
+												  withObject:nil waitUntilDone:NO modes:@[NSRunLoopCommonModes]];
 					   }
 					   
 					   [alert runModal];
@@ -376,32 +379,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	 }];
 	
 	
-}
-
-// CEH
-- (void)performClientCheckInThread
-{
-    @autoreleasepool
-    {
-        BOOL didRun = NO;
-		
-		dispatch_sync(dispatch_get_main_queue(), ^()
-		{
-			NSAlert *alert = [[NSAlert alloc] init];
-			[alert addButtonWithTitle:@"OK"];
-			if (didRun == NO) {
-				[alert setMessageText:@"Error with check-in"];
-				[alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
-				[alert setAlertStyle:NSCriticalAlertStyle];
-			} else {
-				[alert setMessageText:@"Client check-in"];
-				[alert setInformativeText:@"Client check-in was successful."];
-				[alert setAlertStyle:NSInformationalAlertStyle];
-			}
-			
-			[alert runModal];
-		});
-    }
 }
 
 #pragma mark Show Last CheckIn Menu

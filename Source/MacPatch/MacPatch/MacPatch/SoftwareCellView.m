@@ -321,7 +321,6 @@
 
     dispatch_async(dispatch_get_main_queue(), ^{
         // Reset Progressbar and text
-        self->_swActionStatusText.stringValue = @" ";
         [self->_progressBar setIndeterminate:YES];
         [self->_progressBar setHidden:YES];
         [self->_progressBar display];
@@ -333,12 +332,13 @@
             	[self.actionButton setTitle:@"Uninstall"];
 			} else {
 				[self.actionButton setTitle:@"Install"];
-				self->_installedStateImage.image = [NSImage imageNamed:@"EmptyImage"];
+				self->_installedStateImage.image = [NSImage imageNamed:@"ErrorImage"];
 			}
 			if (errStr) self->_swActionStatusText.stringValue = errStr;
         }
 		else
 		{
+			self->_swActionStatusText.stringValue = @" ";
 			if (isUninstall) {
             	[self.actionButton setTitle:@"Install"];
 			} else {
@@ -347,7 +347,10 @@
 			}
         }
 		
+		//NSLog(@"%ld",(long)self.actionButton.state);
 		[self.actionButton setNextState];
+		[self.actionButton setNextState];
+		//[self.actionButton setState:NSControlStateValueOn];
         [self.actionButton setEnabled:YES];
         [self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
     });
@@ -362,12 +365,22 @@
 		{
 			if (!isUninstall)
 			{
-				[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-					qlerror(@"proxyError: %@",proxyError.localizedDescription);
-				}] recordSoftwareInstallAdd:self->_rowData withReply:^(NSInteger result) {
-					qlinfo(@"Code %ld",(long)result);
-					[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
-				}];
+				if (hadError)
+				{
+					[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+						qlerror(@"proxyError: %@",proxyError.localizedDescription);
+					}] recordHistoryWithType:kMPSoftwareType name:self->_rowData[@"name"] uuid:self->_rowData[@"id"] action:kMPInstallAction result:1 errorMsg:@"" withReply:^(BOOL result) {
+						//[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
+					}];
+				}
+				else
+				{
+					[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+						qlerror(@"proxyError: %@",proxyError.localizedDescription);
+					}] recordSoftwareInstallAdd:self->_rowData withReply:^(NSInteger result) {
+						//[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
+					}];
+				}
 			}
 			
 		}
@@ -420,8 +433,8 @@
 			[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 				qlerror(@"proxyError: %@",proxyError.localizedDescription);
 			}] recordSoftwareInstallRemove:self->_rowData[@"name"] taskID:self->_rowData[@"id"] withReply:^(BOOL result) {
-				qlinfo(@"Code %ld",(long)result);
-				[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
+				//qlinfo(@"Code %ld",(long)result);
+				//[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
 			}];
 		}
 	}];

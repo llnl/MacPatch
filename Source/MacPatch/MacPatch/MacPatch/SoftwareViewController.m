@@ -310,8 +310,8 @@
 			return;
 		} else {
 			[self->swTasks removeAllObjects];
-			[self->swTasks addObjectsFromArray:tasks];
-			[self filterSoftwareTasks:tasks];
+			[self->swTasks addObjectsFromArray:[self filterSoftwareTasks:tasks]];
+			//[self filterSoftwareTasks:tasks];
 		}
 		
 		// Send Notification for Mandatory Installs
@@ -349,7 +349,7 @@
 }
 
 // GOOD
-- (void)filterSoftwareTasks:(NSArray *)swTasks
+- (NSArray *)filterSoftwareTasks:(NSArray *)swTasks
 {
 	NSArray *_a;
 	int c = 0;
@@ -367,7 +367,7 @@
 			[fm createDirectoryAtPath:[SOFTWARE_DATA_DIR path] withIntermediateDirectories:YES attributes:nil error:&err];
 			if (err) {
 				qlerror(@"%@",[err localizedDescription]);
-				return;
+				return [NSArray array];
 			}
 		}
 		
@@ -511,6 +511,8 @@
 	if ([_MandatorySoftware count] >= 1) {
 		qlinfo(@"Need to install mandatory apps");
 	}
+	
+	return [_SoftwareArray copy];
 }
 
 - (BOOL)parseSoftwareItems:(NSDictionary *)swItems
@@ -636,12 +638,15 @@
 		if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
 			MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 			NSString *imgURL = sw[@"Software"][@"sw_img_path"];
-			NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-			if (imgData) {
-				NSImage *image = [[NSImage alloc] initWithData:imgData];
-				[cellView.swIcon setImage:image];
-			} else {
-				[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+			if (imgURL.length > 2)
+			{
+				NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
+				if (imgData) {
+					NSImage *image = [[NSImage alloc] initWithData:imgData];
+					[cellView.swIcon setImage:image];
+				} else {
+					[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+				}
 			}
 		} else {
 			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
@@ -649,13 +654,14 @@
 		
         
         [cellView.swTitle setStringValue:sw[@"name"]];
-        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
+		[cellView.swCompany setStringValue:@""];
+		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
         [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
-        //[cellView.swSize setStringValue:[NSString stringWithFormat:@"Size %@(kb)",sw[@"Software"][@"sw_size"]]];
 		
 		long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
 		NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
 		[cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
+		[cellView.swDescription setStringValue:@""];
         [cellView.swDescription setStringValue:sw[@"Software"][@"description"]];
         
         if ([sw[@"sw_task_type"] isEqualToString:@"om"]) {

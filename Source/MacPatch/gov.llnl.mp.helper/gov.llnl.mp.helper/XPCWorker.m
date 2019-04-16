@@ -573,6 +573,28 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     reply(err,1);
 }
 
+- (void)setPatchOnLogoutWithReply:(void(^)(BOOL result))reply
+{
+	BOOL res = YES;
+	NSError *err = nil;
+	NSString *_atFile = @"/private/tmp/.MPAuthRun";
+	NSString *_rbText = @"reboot";
+	// Mac OS X 10.9 Support, now using /private/tmp/.MPAuthRun
+	[_rbText writeToFile:_atFile atomically:YES encoding:NSUTF8StringEncoding error:&err];
+	if (err)
+	{
+		qlerror(@"Error setting patch on logout file.");
+		qlerror(@"%@",err.localizedDescription);
+		res = NO;
+	}
+	else
+	{
+		NSDictionary *_fileAttr = @{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]};
+		[fm setAttributes:_fileAttr ofItemAtPath:_atFile error:NULL];
+	}
+	reply(res);
+}
+
 #pragma mark Patching Delegate methods
 - (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr
 {
@@ -1503,10 +1525,10 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         if ([[tmpStr trim] length] != 0)
         {
             if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
-                qltrace(@"%@",tmpStr);
+                qlinfo(@"%@",tmpStr);
                 //[self postDataToClient:tmpStr type:kMPInstallStatus];
             } else {
-                qldebug(@"%@",tmpStr);
+                qlinfo(@"%@",tmpStr);
             }
         }
         
