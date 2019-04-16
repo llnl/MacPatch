@@ -29,16 +29,6 @@
 		8FF5B50E1FC6599A006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50A1FC658E1006F5FB2 /* Python.framework */; };
 /* End PBXBuildFile section */
 
-/* Begin PBXContainerItemProxy section */
-		8F60AD41224400DB00FDFBCA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 8F60AD2E2243F67C00FDFBCA;
-			remoteInfo = MPUpdater;
-		};
-/* End PBXContainerItemProxy section */
-
 /* Begin PBXCopyFilesBuildPhase section */
 		8FE560F216DE9A7A00BB7600 /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
@@ -56,7 +46,6 @@
 		8F1B07BC222F36A9004D2ACF /* ExecFoo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ExecFoo.h; sourceTree = "<group>"; };
 		8F1B07BD222F36A9004D2ACF /* ExecFoo.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ExecFoo.m; sourceTree = "<group>"; };
 		8F5F91ED171C6342001C77D1 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
-		8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = MPUpdater.xcodeproj; path = ../MPUpdater/MPUpdater.xcodeproj; sourceTree = "<group>"; };
 		8FD88E6716DFC16300A870A3 /* DirectoryService.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DirectoryService.framework; path = System/Library/Frameworks/DirectoryService.framework; sourceTree = SDKROOT; };
 		8FD88E6816DFC16400A870A3 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
 		8FD88E6B16DFC31C00A870A3 /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
@@ -110,14 +99,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		8F60AD3E224400DA00FDFBCA /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				8F60AD42224400DB00FDFBCA /* MPUpdater */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		8FD88E5C16DFC0D900A870A3 /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,7 +109,6 @@
 		8FE560EB16DE9A7A00BB7600 = {
 			isa = PBXGroup;
 			children = (
-				8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */,
 				8FE560F916DE9A7A00BB7600 /* MPAgentExec */,
 				8FE560F616DE9A7A00BB7600 /* Frameworks */,
 				8FE560F516DE9A7A00BB7600 /* Products */,
@@ -233,28 +213,12 @@
 			mainGroup = 8FE560EB16DE9A7A00BB7600;
 			productRefGroup = 8FE560F516DE9A7A00BB7600 /* Products */;
 			projectDirPath = "";
-			projectReferences = (
-				{
-					ProductGroup = 8F60AD3E224400DA00FDFBCA /* Products */;
-					ProjectRef = 8F60AD3D224400DA00FDFBCA /* MPUpdater.xcodeproj */;
-				},
-			);
 			projectRoot = "";
 			targets = (
 				8FE560F316DE9A7A00BB7600 /* MPAgentExec */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXReferenceProxy section */
-		8F60AD42224400DB00FDFBCA /* MPUpdater */ = {
-			isa = PBXReferenceProxy;
-			fileType = "compiled.mach-o.executable";
-			path = MPUpdater;
-			remoteRef = 8F60AD41224400DB00FDFBCA /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8FE560F016DE9A7A00BB7600 /* Sources */ = {

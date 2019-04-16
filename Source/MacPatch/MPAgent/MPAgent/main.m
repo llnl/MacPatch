@@ -246,7 +246,7 @@ int main (int argc, char * argv[])
         [[MPAgent sharedInstance] setG_agentVer:APPVERSION];
         [[MPAgent sharedInstance] setG_agentPid:[NSString stringWithFormat:@"%d",[[NSProcessInfo processInfo] processIdentifier]]];
         NSString *_logFile = [NSString stringWithFormat:@"%@/Logs/MPAgent.log",MP_ROOT_CLIENT];
-		[MPLog setupLogging:_logFile level:lcl_vDebug];
+		[MPLog setupLogging:_logFile level:lcl_vInfo];
 		
 		if (verboseLogging || debugLogging) {
 			lcl_configure_by_name("*", lcl_vDebug);
