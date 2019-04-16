@@ -148,16 +148,21 @@
 
 	function operateFormatter(value, row, index)
 	{
-		return [
-			{% if session.role[0] == 1 %}
-			'<a class="edit" href="javascript:void(0)" title="Edit Profile">',
-			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
-			{% else %}
-			'<a class="edit" href="javascript:void(0)" title="Profile Data">',
-			'<i class="fa fa-search fa-lg" aria-hidden="true"></i>',
-			{% endif %}
-			'</a>&nbsp;'
-		].join('');
+		var htmlData = [];
+		htmlData.push('<table><tr><td>')
+		{% if session.role[0] == 1 %}
+		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Profile">');
+		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
+		{% else %}
+		htmlData.push('<a class="edit" href="javascript:void(0)" title="Profile Data">');
+		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
+		{% endif %}
+		htmlData.push('</a>');
+		htmlData.push('</td><td>');
+		htmlData.push('<a class="download" href="javascript:void(0)" title="Download Profile">');
+		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
+		htmlData.push('</td></tr></table>');
+		return htmlData.join('');
 	}
 
 	window.operateEvents = {
@@ -178,6 +183,21 @@
 		},
 		'click .description': function (e, value, row, index) {
 			alert('You click description action, row: ' + JSON.stringify(row));
+		},
+        'click .download': function (e, value, row, index) {
+            var _fileName = row['profileName'].replace(/\s/g,'') + '.mobileconfig';
+			var _url = '/osmanage/profile/download/' + row['profileID'];
+			var req = new XMLHttpRequest();
+            req.open("GET", _url, true);
+            req.responseType = "blob";
+            req.onload = function (event) {
+                var blob = req.response;
+                var link=document.createElement('a');
+                link.href=window.URL.createObjectURL(blob);
+                link.download=_fileName;
+                link.click();
+            };
+            req.send();
 		}
 	};
 	</script>

@@ -70,7 +70,7 @@ class ProfilesForClient(MPResource):
 	def evaluateCriteriaForProfile(self, clientID, clientGroupID, profileID, isGlobal):
 		_groupID = None
 		if isGlobal:
-			_groupID = 0
+			_groupID = "0"
 		else:
 			_groupID = clientGroupID
 
@@ -81,7 +81,7 @@ class ProfilesForClient(MPResource):
 		if q_result is not None:
 			# Get the criteria policy id for the profile for the client
 			res =  self.policyCriteriaTest(clientID,q_result.gPolicyID)
-			if res[0] == 1:
+			if res[0] == 0:
 				return (True, res[1])
 
 		return (False, [])
@@ -97,10 +97,13 @@ class ProfilesForClient(MPResource):
 			c_resultHW = MPISPHardwareOverview.query.filter(MPISPHardwareOverview.cuuid == clientID).first()
 
 			# Replace the comma in model name, so a list can use a comma
-			_model = c_resultHW.mpa_Model_Name.replace(",",".")
-			_type = "Desktop"
-			if "book".upper() in _model.upper():
-				_type = "Laptop"
+			_model = "*" # Default all models
+			_type = "top" # top is in both desktop and laptop
+			if c_resultHW is not None:
+				_model = c_resultHW.mpa_Model_Name.replace(",",".")
+				_type = "Desktop"
+				if "book".upper() in _model.upper():
+					_type = "Laptop"
 
 			for row in q_result:
 				if row.type == "SYSType":
@@ -118,7 +121,7 @@ class ProfilesForClient(MPResource):
 					if row.type_data == "*":
 						continue
 					else:
-						if not self.versionCheck(row.type_data, c_result.osver):
+						if not self.versionCheck(row.type_data, c_result.ostype):
 							result = result + 1
 						continue
 
@@ -136,6 +139,7 @@ class ProfilesForClient(MPResource):
 					else:
 						if not self.versionCheck(row.type_data, c_result.osver):
 							result = result + 1
+
 						continue
 				else:
 					criteria.append({'type':row.type,'type_data':base64.b64encode(row.type_data)})
@@ -233,3 +237,4 @@ class Profile(object):
 
 # Add Routes Resources
 mac_profiles_2_api.add_resource(ProfilesForClient,     '/client/profiles/<string:cuuid>')
+

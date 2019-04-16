@@ -1,4 +1,4 @@
-from flask import render_template, request
+from flask import render_template, request, send_file
 from flask_security import login_required
 from datetime import *
 import json
@@ -7,6 +7,7 @@ import uuid
 import re
 from yattag import indent
 import hashlib
+from io import BytesIO
 
 from . import osmanage
 from .. import login_manager
@@ -297,6 +298,25 @@ def profileDelete():
 	else:
 		log_Error("{} does not have permission to delete config profile.".format(session.get('user')))
 		return json.dumps({'error': 0}), 403
+
+''' AJAX Request '''
+@osmanage.route('/profile/download/<profile_id>',methods=['GET'])
+@login_required
+def profileDownload(profile_id):
+	if request.method == 'GET':
+		profile = MpOsConfigProfiles.query.filter(MpOsConfigProfiles.profileID == profile_id).first()
+		if profile is not None:
+			fileName = profile.profileName.replace(" ","") + ".mobileconfig"
+			file = send_file(BytesIO(profile.profileData),attachment_filename=fileName)
+			# ,filename=fileName
+			return file
+			#print "file:"+fileName
+
+		else:
+			log_Error("Unable to find profile id {}".format(profile_id))
+
+	return json.dumps({'error': 0}), 200
+
 
 '''
 	-------------------------------------------
