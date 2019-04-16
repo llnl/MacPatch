@@ -654,14 +654,14 @@
 		
         
         [cellView.swTitle setStringValue:sw[@"name"]];
-		[cellView.swCompany setStringValue:@""];
+		[cellView.swCompany setPlaceholderString:@""];
 		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
         [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
 		
 		long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
 		NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
 		[cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
-		[cellView.swDescription setStringValue:@""];
+		[cellView.swDescription setPlaceholderString:@""];
         [cellView.swDescription setStringValue:sw[@"Software"][@"description"]];
         
         if ([sw[@"sw_task_type"] isEqualToString:@"om"]) {
@@ -670,7 +670,7 @@
         } else {
             [cellView.swInstallBy setStringValue:@""];
         }
-        if (sw[@"reboot"] == 0) {
+        if ([sw[@"Software"][@"reboot"] isEqualToString:@"0"]) {
             [cellView.swRebootTextFlag setStringValue:@""];
             [cellView.installedStateImage setImage:[NSImage imageNamed:@"EmptyImage"]];
         } else {
