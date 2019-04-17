@@ -72,4 +72,21 @@ if [ -f "/Library/MacPatch/Client/MPAgentExec" ]; then
 	rm -f "/Library/MacPatch/Client/MPAgentExec"
 fi
 
+if [ -f "/Library/MacPatch/Client/MPWorker" ]; then
+	rm -f "/Library/MacPatch/Client/MPWorker"
+fi
+
+if [ -f "/Library/MacPatch/Client/MPAgent" ]; then
+	rm -f "/Library/MacPatch/Client/MPAgent"
+fi
+
+if [ -d "/Library/Application Support/MacPatch/SW_Data" ]; then
+	rm -rf "/Library/Application Support/MacPatch/SW_Data/*"
+fi
+
+rm -rf "/Library/MacPatch/Client/Logs"
+rm -rf "/Library/MacPatch/Client/Lib"
+rm -rf "/Library/MacPatch/Client/Data"
+rm -rf "/Library/MacPatch/Client/Tools"
+
 exit 0
