@@ -1269,7 +1269,10 @@ def installedListPaged(limit,offset,search,sort,order):
 
 	colsForQuery = ['cuuid', 'patch', 'patch_name', 'type', 'mdate']
 	qResult = installedQuery(search, int(offset), int(limit), sort, order, getNewTotal)
-	query = qResult[0]
+	if qResult is not None:
+		query = qResult[0]
+	else:
+		query = []
 
 	session['my_search_name'] = 'installedList'
 
@@ -1313,14 +1316,14 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 	if filterStr == 'undefined' or len(filterStr) <= 0:
 		query = MpInstalledPatch.query.join(MpClient, MpClient.cuuid == MpInstalledPatch.cuuid).add_columns(
-			MpClient.hostname, MpClient.osver, MpClient.ipaddr).order_by(order_by_str)
+			MpClient.hostname, MpClient.osver, MpClient.ipaddr).order_by(text(order_by_str))
 	else:
 		query = MpInstalledPatch.query.join(MpClient, MpClient.cuuid == MpInstalledPatch.cuuid).add_columns(
 			MpClient.hostname, MpClient.osver, MpClient.ipaddr).filter(or_(MpInstalledPatch.patch.contains(filterStr),
 																		MpInstalledPatch.patch_name.contains(filterStr),
 																		MpInstalledPatch.type.contains(filterStr),
 																		MpClient.hostname.contains(filterStr),
-																		MpClient.ipaddr.contains(filterStr))).order_by(order_by_str)
+																		MpClient.ipaddr.contains(filterStr))).order_by(text(order_by_str))
 
 	# count of rows
 	if getCount:
