@@ -26,6 +26,10 @@
 
 #import "MPClientInfo.h"
 #import "MPSettings.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/sysctl.h>
 
 #undef  ql_component
 #define ql_component lcl_cMPClientInfo
@@ -114,6 +118,7 @@
 		[agentDict setObject:cVer forKey:@"client_version"];
         [agentDict setObject:@"false" forKey:@"needsreboot"];
 		[agentDict setObject:[self fileVaultStatus] forKey:@"fileVault"];
+		[agentDict setObject:[self hwModel] forKey:@"model"];
         
         if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
             [agentDict setObject:@"true" forKey:@"needsreboot"];
@@ -150,4 +155,20 @@
 	}
 }
 
+- (NSString *)hwModel
+{
+	size_t len = 0;
+	sysctlbyname("hw.model", NULL, &len, NULL, 0);
+	
+	if (len)
+	{
+		char *model = malloc(len*sizeof(char));
+		sysctlbyname("hw.model", model, &len, NULL, 0);
+		NSString *model_ns = [NSString stringWithUTF8String:model];
+		free(model);
+		return model_ns;
+	}
+	
+	return @"Macintosh"; //incase model name can't be read
+}
 @end
