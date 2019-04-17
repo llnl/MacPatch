@@ -119,6 +119,7 @@
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypePrimaryGroupID] forKey:@"GroupID"];
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypeNFSHomeDirectory] forKey:@"HomeDir"];
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypeUserShell] forKey:@"UserShell"];
+		
         [result addObject:[NSDictionary dictionaryWithDictionary:d]];
         d = nil;
     }
@@ -154,6 +155,8 @@
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypePrimaryGroupID] forKey:@"GroupID"];
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypeGroupMembers] forKey:@"GroupMembers"];
         [d setObject:[self valueForODAttribute:record attribute:kODAttributeTypeGroupMembership] forKey:@"GroupMembership"];
+		[d setObject:[self valueForODAttribute:record attribute:kODAttributeTypeNestedGroups] forKey:@"NestedGroups"];
+		
         [result addObject:[NSDictionary dictionaryWithDictionary:d]];
         d = nil;
     }
