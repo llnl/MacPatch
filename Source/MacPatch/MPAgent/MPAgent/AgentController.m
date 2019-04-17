@@ -372,10 +372,15 @@
                                 }
 								else if ([taskDict[@"nextrun"] doubleValue] < [d timeIntervalSince1970])
 								{
-                                    // Reschedule, we missed out date
-                                    // Schedule for 30 seconds out
-                                    logit(lcl_vInfo,@"We missed our task (%@), rescheduled to run in 30 seconds.",taskDict[@"cmd"]);
-                                    [self updateNextRunForTask:taskDict missedTask:YES];
+									if (![taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"])
+									{
+										// Reschedule, we missed out date
+										// Schedule for 30 seconds out
+										logit(lcl_vInfo,@"We missed our task (%@), rescheduled to run in 30 seconds.",taskDict[@"cmd"]);
+										[self updateNextRunForTask:taskDict missedTask:YES];
+									} else {
+										[self updateNextRunForTask:taskDict missedTask:NO];
+									}
                                 }
                                 d = nil;
                             }
