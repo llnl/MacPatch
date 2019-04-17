@@ -248,37 +248,73 @@
 		return [NSArray array];
 	}
 	
-	NSArray *dataArray = sysData[@"Mac_PCIBusElement"];
+	
 	
 	NSMutableDictionary *result;
 	NSMutableArray *items = [NSMutableArray new];
-	
-	for (NSDictionary *d in dataArray)
+	id pciData = sysData[@"Mac_PCIBusElement"];
+	@try
 	{
-		result = [[NSMutableDictionary alloc] initWithDictionary:d];
-		for (NSString *k in result.allKeys)
+		if ([pciData isKindOfClass:[NSArray class]])
 		{
-			if (d[k])
+			for (NSDictionary *d in pciData)
 			{
-				if ([d[k] isKindOfClass:[NSNumber class]])
+				result = [[NSMutableDictionary alloc] initWithDictionary:d];
+				for (NSString *k in result.allKeys)
 				{
-					[result setObject:[d[k] stringValue] forKey:k];
+					if (d[k])
+					{
+						if ([d[k] isKindOfClass:[NSNumber class]])
+						{
+							[result setObject:[d[k] stringValue] forKey:k];
+						}
+						else if ([d[k] boolValue])
+						{
+							BOOL _value = [d[k] boolValue];
+							NSString *_strVal = _value ? @"YES" : @"NO";
+							[result setObject:_strVal forKey:k];
+						}
+						else
+						{
+							[result setObject:d[k] forKey:k];
+						}
+					}
 				}
-				else if ([d[k] boolValue])
-				{
-					BOOL _value = [d[k] boolValue];
-					NSString *_strVal = _value ? @"YES" : @"NO";
-					[result setObject:_strVal forKey:k];
-				}
-				else
-				{
-					[result setObject:d[k] forKey:k];
-				}
+				[items addObject:result];
 			}
 		}
-		[items addObject:result];
+		else if ([pciData isKindOfClass:[NSArray class]])
+		{
+			result = [[NSMutableDictionary alloc] initWithDictionary:pciData];
+			for (NSString *k in result.allKeys)
+			{
+				if (pciData[k])
+				{
+					if ([pciData[k] isKindOfClass:[NSNumber class]])
+					{
+						[result setObject:[pciData[k] stringValue] forKey:k];
+					}
+					else if ([pciData[k] boolValue])
+					{
+						BOOL _value = [pciData[k] boolValue];
+						NSString *_strVal = _value ? @"YES" : @"NO";
+						[result setObject:_strVal forKey:k];
+					}
+					else
+					{
+						[result setObject:pciData[k] forKey:k];
+					}
+				}
+			}
+			[items addObject:result];
+		}
+		return [NSArray arrayWithArray:items];
+	} @catch (NSException *exception) {
+		qlerror(@"%@",exception);
+		qlerror(@"Mac_PCIBusElement: %@",sysData[@"Mac_PCIBusElement"]);
 	}
-	return [NSArray arrayWithArray:items];
+	
+	return (NSArray*)items;
 }
 
 - (NSArray *)getUSBData:(NSError **)error

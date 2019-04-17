@@ -224,7 +224,7 @@
                                                         <imageCell key="cell" controlSize="mini" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="NSAdvanced" id="96"/>
                                                     </imageView>
                                                     <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="91">
-                                                        <rect key="frame" x="895" y="3" width="77" height="11"/>
+                                                        <rect key="frame" x="895" y="4" width="84" height="13"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                         <textFieldCell key="cell" controlSize="mini" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Reboot Required" placeholderString="" id="94">
                                                             <font key="font" metaFont="miniSystem"/>

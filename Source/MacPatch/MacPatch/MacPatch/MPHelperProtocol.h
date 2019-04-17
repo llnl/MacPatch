@@ -94,7 +94,7 @@ enum {
 - (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
-- (void)setPatchOnLogoutWithReply:(void(^)(BOOL result))reply;
+- (void)setPatchOnLogoutWithReply:(nullable void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // Software -------------------------------
@@ -122,7 +122,7 @@ enum {
 // ----------------------------------------
 // Client Checkin     ---------------------
 // ----------------------------------------
-- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary *result))reply;
+- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nonnull result))reply;
 
 // ----------------------------------------
 // MacPatch Client Database      ----------

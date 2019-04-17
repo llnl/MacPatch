@@ -202,8 +202,9 @@
 		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
 		self.workerConnection.exportedObject = self;
 		
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Warc-retain-cycles"
+		#pragma clang diagnostic push
+		#pragma clang diagnostic ignored "-Warc-retain-cycles"
+		
 		// We can ignore the retain cycle warning because a) the retain taken by the
 		// invalidation handler block is released by us setting it to nil when the block
 		// actually runs, and b) the retain taken by the block passed to -addOperationWithBlock:
@@ -218,7 +219,7 @@
 				qlerror(@"connection invalidated");
 			}];
 		};
-#pragma clang diagnostic pop
+		#pragma clang diagnostic pop
 		[self.workerConnection resume];
 	}
 }
