@@ -36,6 +36,34 @@ setOwnerAndPerms() {
 	fi
 }
 
+existsAndDelete ()
+{
+	if [ -f "$1" ]; then
+		echo "Removing (rm -f) file $1"
+		rm -f "$1" 2>/dev/null
+	elif [ -d "$1" ]; then
+		echo "Removing (rm -rf) directory $1"
+		rm -rf "$1" 2>/dev/null
+	fi
+}
+
+function runClientActions
+{
+	# Check in
+	/Library/MacPatch/Client/MPAgent -c
+	sleep 1
+
+	# Run Profile Installs
+	/Library/MacPatch/Client/MPAgent -p
+}
+
+function removeOldRegFiles
+{
+	existsAndDelete "/Library/Application Support/MacPatch/MacPatch.keychain"
+	existsAndDelete "/Library/Application Support/MacPatch/.keyHash"
+	existsAndDelete "/Library/Application Support/MacPatch/.MacPatch.keychain"
+	existsAndDelete "/Library/Application Support/MacPatch/gov.llnl.mp.plist"
+}
 # ******************************************************************
 # Set Up Python Virtualenv
 
@@ -258,6 +286,8 @@ fi
 # ******************************************************************
 # Launch the Helper service  ***************************************
 #
+/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+/bin/sleep 2
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 /bin/sleep 2
 
@@ -266,6 +296,7 @@ fi
 #
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.agent.plist
 /bin/sleep 2
+killall MPAgent
 
 # ******************************************************************
 # Launch PlanB		    ********************************************
@@ -280,8 +311,12 @@ fi
 # Start LaunchAgent Apps *******************************************
 #
 if [ "$consoleUserID" != "0" ]; then
-  /bin/launchctl bootstrap gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
+	/bin/launchctl bootstrap gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
 fi
+
+# Without this, may have a hard time upgrading
+pkgutil --forget gov.llnl.mp.agent.base
+pkgutil --forget gov.llnl.macpatch.base
 
 # ******************************************************************
 # Install Included Profiles - With POST prefix 	********************
