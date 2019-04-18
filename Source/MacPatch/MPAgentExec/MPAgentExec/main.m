@@ -234,7 +234,7 @@ int main (int argc, char * argv[])
                 break;
             case 8:
                 // Install Using SW Task ID
-                result = [controller installSoftwareTasks:argType];
+                result = [controller installSoftwareTask:argType];
                 break;
             case 9:
                 // Install Using PLIST of SW Task ID's

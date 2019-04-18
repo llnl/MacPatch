@@ -68,29 +68,34 @@
 	MPCrypto *mpCrypto = [[MPCrypto alloc] init];
 	NSString *fHash;
 	MPFileUtils *fUtils;
-	NSString *fileName;
+	
+	NSString *fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
+	NSString *dlSoftwareFile = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"],fileName]];
+	
 	if ([pkgType isEqualToString:@"SCRIPTZIP"])
 	{
-		fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
-		NSString *zipFile = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"],fileName]];
+		if (![fm fileExistsAtPath:dlSoftwareFile]) {
+			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+		}
 		
 		qlinfo(@"Verify %@ (%@)",swTask[@"name"],fileName);
-		fHash = [mpCrypto md5HashForFile:zipFile];
-		qlinfo(@"%@: %@",zipFile,fHash);
+		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+		qlinfo(@"%@: %@",dlSoftwareFile,fHash);
 		qlinfo(@"== %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
+			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
 			return 1;
 		}
 
-		[self postStatusToDelegate:@"Unzipping file %@.",[zipFile lastPathComponent]];
-		qlinfo(@"Unzipping file %@.",zipFile);
+		[self postStatusToDelegate:@"Unzipping file %@.",[dlSoftwareFile lastPathComponent]];
+		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
-		[fUtils unzip:zipFile error:&err];
+		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err)
 		{
-			qlerror(@"Error unzipping file %@. %@",zipFile,[err description]);
+			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
 			return 1;
 		}
 		
@@ -122,25 +127,26 @@
 	}
 	else if ([pkgType isEqualToString:@"PACKAGEZIP"])
 	{
-		fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
-		NSString *zipParent = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"]]];
-		NSString *zipFile = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"],fileName]];
+		if (![fm fileExistsAtPath:dlSoftwareFile]) {
+			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+		}
 		
-		fHash = [mpCrypto md5HashForFile:zipFile];
-		qlinfo(@"Check file: %@.",[zipFile lastPathComponent]);
+		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+		qlinfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
 		qlinfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
+			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
 			return 1;
 		}
 		
 		[self postStatusToDelegate:@"Unzipping file %@.",fileName];
-		qlinfo(@"Unzipping file %@.",zipFile);
+		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
-		[fUtils unzip:zipFile error:&err];
+		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err) {
-			qlerror(@"Error unzipping file %@. %@",zipFile,[err description]);
+			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
 			return 1;
 		}
 		// Run Pre Install Script
@@ -150,7 +156,7 @@
 		}
 		
 		MPInstaller *installer = [MPInstaller new];
-		result = [installer installPkgFromPath:zipParent environment:swTask[@"pkgEnv"]];
+		result = [installer installPkgFromPath:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swTask[@"pkgEnv"]];
 		// Run Post Install Script, if copy was good
 		if (result == 0)
 		{
@@ -162,11 +168,12 @@
 	}
 	else if ([pkgType isEqualToString:@"APPZIP"])
 	{
-		fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
-		NSString *zipParent = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"]]];
-		NSString *zipFile = [NSString pathWithComponents:@[zipParent,fileName]];
+		if (![fm fileExistsAtPath:dlSoftwareFile]) {
+			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+		}
 		
-		fHash = [mpCrypto md5HashForFile:zipFile];
+		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
 			qlerror(@"Error unable to verify software hash for file %@.",fileName);
@@ -174,12 +181,12 @@
 		}
 		
 		[self postStatusToDelegate:@"Unzipping file %@.",fileName];
-		qlinfo(@"Unzipping file %@.",zipFile);
+		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
-		[fUtils unzip:zipFile error:&err];
+		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err)
 		{
-			qlerror(@"Error unzipping file %@. %@",zipFile, err.localizedDescription);
+			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile, err.localizedDescription);
 			return 1;
 		}
 		
@@ -209,11 +216,13 @@
 	}
 	else if ([pkgType isEqualToString:@"PACKAGEDMG"])
 	{
-		fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
-		NSString *dmgParent = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"]]];
-		NSString *dmgFile = [NSString pathWithComponents:@[dmgParent,fileName]];
-		fHash = [mpCrypto md5HashForFile:dmgFile];
-		qldebug(@"(DL File Hash)%@: %@",dmgFile,fHash);
+		if (![fm fileExistsAtPath:dlSoftwareFile]) {
+			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+		}
+		
+		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+		qldebug(@"(DL File Hash)%@: %@",dlSoftwareFile,fHash);
 		qlinfo(@"(Known File Hash) %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]]) {
 			qlerror(@"Error unable to verify software hash for file %@.",fileName);
@@ -229,7 +238,7 @@
 		}
 		
 		MPInstaller *installer = [MPInstaller new];
-		result = [installer installPkgFromDMG:dmgFile environment:[swTask valueForKeyPath:@"Software.sw_env_var"]];
+		result = [installer installPkgFromDMG:dlSoftwareFile environment:[swTask valueForKeyPath:@"Software.sw_env_var"]];
 		
 		// Run Post Install Script
 		if (result == 0)
@@ -242,15 +251,17 @@
 	}
 	else if ([pkgType isEqualToString:@"APPDMG"])
 	{
-		fileName = [[swTask valueForKeyPath:@"Software.sw_url"] lastPathComponent];
-		NSString *dmgParent = [NSString pathWithComponents:@[SW_DATA_DIR_PATH,@"sw",swTask[@"id"]]];
-		NSString *dmgFile = [NSString pathWithComponents:@[dmgParent,fileName]];
-		fHash = [mpCrypto md5HashForFile:dmgFile];
+		if (![fm fileExistsAtPath:dlSoftwareFile]) {
+			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+		}
+		
+		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
 		
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[dmgFile lastPathComponent]);
-			qlerror(@"%@: %@ (%@)",dmgFile,fHash,[swTask valueForKeyPath:@"Software.sw_hash"]);
+			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+			qlerror(@"%@: %@ (%@)",dlSoftwareFile,fHash,[swTask valueForKeyPath:@"Software.sw_hash"]);
 			return 1;
 		}
 		
@@ -263,7 +274,7 @@
 		}
 		
 		MPInstaller *installer = [MPInstaller new];
-		result = [installer installDotAppFromDMG:dmgFile];
+		result = [installer installDotAppFromDMG:dlSoftwareFile];
 		
 		// Run Post Install Script
 		if (result == 0)
@@ -297,6 +308,23 @@
 
 #pragma mark - Private
 
+- (BOOL)downloadSoftware:(NSDictionary *)swTask toDestination:(NSString *)toPath
+{
+	NSString *_url = [NSString stringWithFormat:@"/mp-content%@",[swTask valueForKeyPath:@"Software.sw_url"]];
+	NSError *dlErr = nil;
+	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+	NSString *dlPath = [req runSyncFileDownloadAlt:_url downloadDirectory:toPath error:&dlErr];
+	qldebug(@"Downloaded software to %@",dlPath);
+	return YES;
+}
+
+
+#pragma mark - Delegate Methods
+
+- (void)downloadProgress:(NSString *)progressStr
+{
+	// [self postStatus:progressStr];
+}
 
 /**
  Create Software Data Directory

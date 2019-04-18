@@ -23,6 +23,7 @@
                 <outlet property="UpdatesToolbarButton" destination="iDf-c4-K8s" id="kDk-Ag-UTv"/>
                 <outlet property="UpdatesToolbarItem" destination="mLr-eq-T4a" id="JTh-Bj-N7c"/>
                 <outlet property="rebootWindow" destination="RL9-pv-Gy5" id="dhK-4W-afn"/>
+                <outlet property="swRebootWindow" destination="drb-ry-WMH" id="ZYu-ky-nGP"/>
                 <outlet property="viewHolder" destination="BoI-Qm-Tfv" id="Mkn-v4-mx4"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -479,7 +480,65 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                     </textField>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-785.5" y="-79"/>
+            <point key="canvasLocation" x="-1623" y="-295"/>
+        </window>
+        <window title="Restart - Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="drb-ry-WMH">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="283" y="843" width="495" height="197"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <view key="contentView" id="yKt-cR-dGt">
+                <rect key="frame" x="0.0" y="0.0" width="495" height="197"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" id="BF8-Tk-kHv">
+                        <rect key="frame" x="128" y="143" width="349" height="34"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Restart Required" id="n9P-wc-BmK">
+                            <font key="font" metaFont="systemBold" size="28"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <textField verticalHuggingPriority="750" id="6Ap-5p-yk8">
+                        <rect key="frame" x="128" y="49" width="349" height="76"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Software has been installed that requires a reboot. Please save all of your work and reboot this system as soon as possible." id="CIN-Z8-Y3q">
+                            <font key="font" metaFont="system"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView id="5bY-BD-AY7">
+                        <rect key="frame" x="20" y="75" width="102" height="102"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="m5G-gK-8ck"/>
+                    </imageView>
+                    <button verticalHuggingPriority="750" tag="99" id="Cwl-a0-BC4">
+                        <rect key="frame" x="396" y="13" width="85" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Restart" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Mz2-DS-XtI">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="rebootSystem:" target="Voe-Tx-rLC" id="aZa-z4-IGb"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" tag="98" id="zy6-kV-FGP">
+                        <rect key="frame" x="318" y="13" width="75" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="Close" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Kx3-od-iec">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="performClose:" target="drb-ry-WMH" id="uSn-b5-R5Q"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="-1662" y="-595"/>
         </window>
     </objects>
     <resources>

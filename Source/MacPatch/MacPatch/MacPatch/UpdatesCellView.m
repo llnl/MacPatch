@@ -312,11 +312,9 @@
 			 }];
 		 }
 	 }];
-	
-	
+
 	AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
 	[appDelegate showRebootWindow];
-	//[appDel <Your method>];
 }
 
 @end

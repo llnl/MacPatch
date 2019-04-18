@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8F03FC372267EF0100820EC6 /* MPOProgressBar.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F03FC362267EF0100820EC6 /* MPOProgressBar.m */; };
 		8F0D48AC220B856000500A78 /* MacPatchTile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F0D48AB220B856000500A78 /* MacPatchTile.m */; };
 		8F1305C1219B4B000036C8DD /* SoftwareUninstallOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F1305C0219B4B000036C8DD /* SoftwareUninstallOperation.m */; };
 		8F130B83219BFAAF0036C8DD /* html in Resources */ = {isa = PBXBuildFile; fileRef = 8F130B82219BFAAF0036C8DD /* html */; };
@@ -70,6 +71,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		8F03FC352267EF0100820EC6 /* MPOProgressBar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPOProgressBar.h; sourceTree = "<group>"; };
+		8F03FC362267EF0100820EC6 /* MPOProgressBar.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPOProgressBar.m; sourceTree = "<group>"; };
 		8F0D48A4220B847D00500A78 /* MacPatchTile.docktileplugin */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MacPatchTile.docktileplugin; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F0D48A6220B847D00500A78 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8F0D48AA220B856000500A78 /* MacPatchTile.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MacPatchTile.h; sourceTree = "<group>"; };
@@ -225,6 +228,8 @@
 			children = (
 				8F4AD1AA225E990300698096 /* EventToSend.h */,
 				8F4AD1A9225E990300698096 /* EventToSend.c */,
+				8F03FC352267EF0100820EC6 /* MPOProgressBar.h */,
+				8F03FC362267EF0100820EC6 /* MPOProgressBar.m */,
 				8F60AD71224995DA00FDFBCA /* MBProgressHUD */,
 				8F2486C21A41EE7B003E24C9 /* RHPreferences */,
 			);
@@ -534,6 +539,7 @@
 				8F130BAC21A5C7880036C8DD /* UpdateInstallOperation.m in Sources */,
 				8F130B88219BFB5D0036C8DD /* AgentVC.m in Sources */,
 				8FB201FA1A3F90C60013C622 /* main.m in Sources */,
+				8F03FC372267EF0100820EC6 /* MPOProgressBar.m in Sources */,
 				8FA28E14219102E8005D5E92 /* SoftwareInstallOperation.m in Sources */,
 				8F2486CD1A41FFD0003E24C9 /* PrefsGeneralViewController.m in Sources */,
 				8FE663EB222721E500F12AC8 /* PrefsSoftwareVC.m in Sources */,

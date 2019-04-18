@@ -59,7 +59,7 @@
 -(BOOL)isLocalUserLoggedIn;
 -(void)postNotificationTo:(NSString *)aName info:(NSString *)info isGlobal:(BOOL)glb;
 
--(int)installSoftwareTasks:(NSString *)aTasks;
+-(int)installSoftwareTask:(NSString *)aTask;
 -(int)installSoftwareTasksForGroup:(NSString *)aGroupName;
 -(int)installSoftwareTasksUsingPLIST:(NSString *)aPlist;
 

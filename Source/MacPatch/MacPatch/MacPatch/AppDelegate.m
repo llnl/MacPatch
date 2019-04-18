@@ -258,6 +258,11 @@
 	[self.rebootWindow makeKeyAndOrderFront:self];
 }
 
+- (void)showSWRebootWindow
+{
+	[self.swRebootWindow makeKeyAndOrderFront:self];
+}
+
 - (IBAction)logoutAndPatch:(id)sender
 {
 	if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
@@ -285,6 +290,18 @@
 #else
 	error = SendAppleEventToSystemProcess(kAEReallyLogOut);
 #endif
+}
+
+- (IBAction)rebootSystem:(id)sender
+{
+	/* reboot the system using Apple supplied code
+	 error = SendAppleEventToSystemProcess(kAERestart);
+	 error = SendAppleEventToSystemProcess(kAELogOut);
+	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+	 */
+	
+	OSStatus error = noErr;
+	error = SendAppleEventToSystemProcess(kAERestart);
 }
 
 #pragma mark - DockTile

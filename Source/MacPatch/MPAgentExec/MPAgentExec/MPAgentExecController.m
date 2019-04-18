@@ -636,125 +636,50 @@
     return result;
 }
 
-/*
-- (BOOL)installSoftwareWithTask:(NSDictionary *)aTask error:(NSError **)err
-{
-    BOOL taskCanBeInstalled = [self softwareTaskCriteriaCheck:aTask];
-    if (!taskCanBeInstalled) {
-        NSMutableDictionary *errorDetail = [NSMutableDictionary dictionary];
-        [errorDetail setValue:@"Software Task failed basic criteria check." forKey:NSLocalizedDescriptionKey];
-        *err = [NSError errorWithDomain:@"gov.llnl.mp.sw.install" code:1001 userInfo:errorDetail];
-        return NO;
-    }
-    
-    NSString *noteName = @"MPSWInstallStatus";
-    NSString *tID = [aTask objectForKey:@"id"];
-    [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-    qlinfo(@"Installing %@ (%@).",[aTask objectForKey:@"name"],[aTask objectForKey:@"id"]);
-    qlinfo(@"INFO: %@",[aTask valueForKeyPath:@"Software.sw_type"]);
 
-    // Create Path to download software to
-    NSString *swLoc = NULL;
-    NSString *swLocBase = [[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"sw"];
-    swLoc = [NSString pathWithComponents:[NSArray arrayWithObjects:swLocBase, [aTask objectForKey:@"id"], nil]];
+/**
+ Install software tasks using a plist. Plist must contain "tasks" key
+ of the type array. Each task id is a string.
 
-    // Verify Disk space requirements before downloading and installing
-    long long stringToLong = 0;
-    stringToLong = [[aTask valueForKeyPath:@"Software.sw_size"] longLongValue];
-
-    MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
-    if ([mpd diskHasEnoughSpaceForPackage:stringToLong] == NO)
-    {
-        qlerror(@"This system does not have enough free disk space to install the following software %@",[aTask objectForKey:@"name"]);
-        return NO;
-    }
-
-    // Create Download URL
-    [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Downloading [taskid:%@]: %@",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-    NSString *_url = [@"/mp-content" stringByAppendingPathComponent:[aTask valueForKeyPath:@"Software.sw_url"]];
-    qldebug(@"Download software from: %@",[aTask valueForKeyPath:@"Software.sw_type"]);
-
-    NSError *dlErr = nil;
-    
-    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-    NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:NSTemporaryDirectory() error:&dlErr];
-    
-    if (dlErr) {
-        qlerror(@"Error[%d], trying to download file.",(int)[dlErr code]);
-        return NO;
-    }
-    if (!dlPath) {
-        qlerror(@"Error, downloaded file path is nil.");
-        qlerror(@"No install will occure.");
-        return NO;
-    }
-
-    // Create Destination Dir
-    dlErr = nil;
-    if ([fm fileExistsAtPath:swLoc] == NO) {
-        [fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:nil error:&dlErr];
-        if (dlErr) {
-            qlerror(@"Error[%d], trying to create destination directory. %@.",(int)[dlErr code],swLoc);
-        }
-    }
-
-    // Move Downloaded File to Destination
-    if ([fm fileExistsAtPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]]]) {
-        // File Exists, remove it first
-        dlErr = nil;
-        [fm removeItemAtPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]] error:&dlErr];
-        if (dlErr) {
-            qlerror(@"%@",dlErr.localizedDescription);
-            return NO;
-        }
-    }
-    dlErr = nil;
-    [fm moveItemAtPath:dlPath toPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]] error:&dlErr];
-    if (dlErr) {
-        qlerror(@"Error[%d], trying to move downloaded file to %@.",(int)[dlErr code],swLoc);
-        qlerror(@"No install will occure.");
-        return NO;
-    }
-
-    qlinfo(@"Begin install for (%@).",[aTask objectForKey:@"name"]);
-    int result = -1;
-    int pResult = -1;
-
-	MPSoftware *installer = [MPSoftware new];
-	result = [installer installSoftwareTask:aTask];
-
-    if (result == 0)
-    {
-        // Software has been installed, now flag for reboot
-        if ([[aTask valueForKeyPath:@"Software.reboot"] isEqualTo:@"1"]) {
-            needsReboot++;
-        }
-		
-        if ([[aTask valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"])
-		{
-            [self postNotificationTo:noteName info:@"Auto Patching is enabled, begin patching..." isGlobal:YES];
-			MPPatching *patching = [MPPatching new];
-			NSArray *patchNeeded = [patching scanForPatchUsingBundleID:[aTask valueForKeyPath:@"Software.patch_bundle_id"]];
-			if (patchNeeded.count >= 1) {
-				NSDictionary *patchResult = nil;
-				patchResult = [patching installPatchesUsingTypeFilter:patchNeeded typeFilter:kCustomPatches];
-			}
-        }
-
-        [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Installing [taskid:%@]: %@ completed.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-        [self recordInstallSoftwareItem:aTask];
-
-        [self postInstallResults:result resultText:@"" task:aTask];
-        return YES;
-    } else {
-        [self postNotificationTo:noteName info:[NSString stringWithFormat:@"Failed [taskid:%@]: %@ failed to install.",tID,[aTask objectForKey:@"name"]] isGlobal:YES];
-        return NO;
-    }
-    
-
-    return NO;
-}
+ @param aPlist file path to the plist
+ @return int 0 = ok
  */
+- (int)installSoftwareTasksUsingPLIST:(NSString *)aPlist
+{
+	needsReboot = 0;
+	int result = 0;
+	
+	if ([fm fileExistsAtPath:aPlist] == NO)
+	{
+		logit(lcl_vError,@"No installs will occure. Plist %@ was not found.",aPlist);
+		return 1;
+	}
+	
+	NSDictionary *pData = [NSDictionary dictionaryWithContentsOfFile:aPlist];
+	if (![pData objectForKey:@"tasks"])
+	{
+		logit(lcl_vError,@"No installs will occure. No tasks found.");
+		return 1;
+	}
+	
+	NSArray *pTasks = pData[@"tasks"];
+	for (NSString *aTask in pTasks)
+	{
+		if (![self installSoftwareTask:aTask])
+		{
+			qlerror(@"Software has been installed that requires a reboot.");
+			result++;
+		}
+	}
+	
+	if (needsReboot >= 1)
+	{
+		qlerror(@"Software has been installed that requires a reboot.");
+		return 2;
+	}
+	
+	return result;
+}
 
 /**
  Private Method
@@ -763,10 +688,10 @@
  @param swTaskID software task ID
  @return BOOL
  */
-- (BOOL)installSoftwareTask:(NSString *)swTaskID
+- (BOOL)installSoftwareTask:(NSString *)aTask
 {
 	BOOL result = NO;
-    NSDictionary *task = [self getSoftwareTaskForID:swTaskID];
+    NSDictionary *task = [self getSoftwareTaskForID:aTask];
     if (!task) {
         return NO;
     }

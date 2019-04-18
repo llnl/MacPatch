@@ -318,7 +318,7 @@
                     </connections>
                 </searchField>
             </subviews>
-            <point key="canvasLocation" x="-475" y="-524.5"/>
+            <point key="canvasLocation" x="-647" y="-770"/>
         </customView>
         <userDefaultsController representsSharedInstance="YES" id="40"/>
         <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="tHu-ib-dvr">

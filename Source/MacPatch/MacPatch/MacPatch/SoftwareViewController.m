@@ -600,6 +600,20 @@
 			 [self->_tableView display];
 		 });
 	 }];
+	
+	[[NSNotificationCenter defaultCenter] addObserverForName:@"disableSWCatalogMenu" object:nil queue:nil usingBlock:^(NSNotification *note)
+	 {
+		 dispatch_async(dispatch_get_main_queue(), ^{
+			 [self.swDistGroupsButton setEnabled:NO];
+		 });
+	 }];
+	
+	[[NSNotificationCenter defaultCenter] addObserverForName:@"enableSWCatalogMenu" object:nil queue:nil usingBlock:^(NSNotification *note)
+	 {
+		 dispatch_async(dispatch_get_main_queue(), ^{
+			 [self.swDistGroupsButton setEnabled:YES];
+		 });
+	 }];
 }
 
 #pragma mark - XPC Methods

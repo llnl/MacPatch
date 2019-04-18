@@ -11,6 +11,9 @@
 #import "MacPatch.h"
 #import "SoftwareInstallOperation.h"
 #import "SoftwareUninstallOperation.h"
+#import "AppDelegate.h"
+
+#import "MPOProgressBar.h"
 
 @interface SoftwareCellView ()
 {
@@ -18,6 +21,7 @@
 }
 
 @property (atomic, strong, readwrite) NSXPCConnection *worker;
+@property (nonatomic, strong) MPOProgressBar *progressBarNew;
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
@@ -32,6 +36,16 @@
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
+	
+	_progressBarNew = [[MPOProgressBar alloc] init];
+	_progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
+	_progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
+	[self.layer addSublayer:_progressBarNew];
+	
+
+	NSRect pbar = _progressBar.frame;
+	_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+	[_progressBarNew setHidden:YES];
 	
 	if (_isAppInstalled) {
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -267,7 +281,6 @@
 		[self->_progressBar display];
 		
 		[self.errorImage setHidden:YES];
-		//[self.actionButton setTitle:@"Install"];
 		[self.actionButton setEnabled:YES];
 		[self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
 	});
@@ -278,8 +291,13 @@
     dispatch_async(dispatch_get_main_queue(), ^{
 		[self->_errorImage setHidden:YES];
 		[self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
-        [self->_progressBar setHidden:NO];
-        [self->_progressBar startAnimation:nil];
+        //[self->_progressBar setHidden:NO];
+        //[self->_progressBar startAnimation:nil];
+		
+		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+		[self.progressBarNew startAnimation];
+		[self.progressBarNew setHidden:NO];
+		[self.progressBarNew display];
         
         [self->_swActionStatusText setHidden:NO];
         self->_swActionStatusText.stringValue = @"Starting install...";
@@ -287,6 +305,8 @@
         
         [self.actionButton setTitle:@"Installing"];
         [self.actionButton setEnabled:NO];
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"disableSWCatalogMenu" object:nil userInfo:@{}];
     });
 }
 
@@ -295,8 +315,13 @@
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self->_errorImage setHidden:YES];
 		[self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
-		[self->_progressBar setHidden:NO];
-		[self->_progressBar startAnimation:nil];
+		//[self->_progressBar setHidden:NO];
+		//[self->_progressBar startAnimation:nil];
+		
+		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+		[self.progressBarNew startAnimation];
+		[self.progressBarNew setHidden:NO];
+		[self.progressBarNew display];
 		
 		[self->_swActionStatusText setHidden:NO];
 		self->_swActionStatusText.stringValue = @"Starting uninstall...";
@@ -304,6 +329,8 @@
 		
 		[self.actionButton setTitle:@"Uninstalling"];
 		[self.actionButton setEnabled:NO];
+		
+		[[NSNotificationCenter defaultCenter] postNotificationName:@"disableSWCatalogMenu" object:nil userInfo:@{}];
 	});
 }
 
@@ -324,6 +351,9 @@
         [self->_progressBar setIndeterminate:YES];
         [self->_progressBar setHidden:YES];
         [self->_progressBar display];
+		
+		[self.progressBarNew stopAnimation];
+		[self.progressBarNew setHidden:YES];
         
         if (hadError)
 		{
@@ -344,13 +374,15 @@
 			} else {
 				[self.actionButton setTitle:@"Uninstall"];
 				self->_installedStateImage.image = [NSImage imageNamed:@"GoodImage"];
+				
+				if ([self->_rowData[@"Software"][@"reboot"] isEqualToString:@"1"])
+				{
+					AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+					[appDelegate showSWRebootWindow];
+				}
 			}
         }
 		
-		//NSLog(@"%ld",(long)self.actionButton.state);
-		[self.actionButton setNextState];
-		[self.actionButton setNextState];
-		//[self.actionButton setState:NSControlStateValueOn];
         [self.actionButton setEnabled:YES];
         [self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
     });
@@ -386,8 +418,8 @@
 		}
 	}];
 	
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"enableSWCatalogMenu" object:nil userInfo:@{}];
 	[self removeNotificationObserver];
-	
 }
 
 - (void)stopUninstallWithError:(BOOL)hadError
@@ -403,6 +435,9 @@
 		[self->_progressBar setIndeterminate:YES];
 		[self->_progressBar setHidden:YES];
 		[self->_progressBar display];
+		
+		[self.progressBarNew stopAnimation];
+		[self.progressBarNew setHidden:YES];
 		
 		if (hadError)
 		{
@@ -439,6 +474,7 @@
 		}
 	}];
 	
+	[[NSNotificationCenter defaultCenter] postNotificationName:@"enableSWCatalogMenu" object:nil userInfo:@{}];
 	[self removeUninstallNotificationObserver];
 }
 @end
