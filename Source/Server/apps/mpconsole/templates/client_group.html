@@ -256,6 +256,7 @@ Client Group - {{group_name}}
 	{
 		$('#table').bootstrapTable(
 		{
+            url: "/clients/group/{{group_id}}/clients",
 			striped: true,
 			pagination: true,
 			sidePagination: 'client',
@@ -311,18 +312,6 @@ Client Group - {{group_name}}
 				title: 'clientState',
 				visible: false
 			},
-			],
-			data: [
-			{% for c in data %}
-			{
-				{% for col in columns %}
-				{% if col.name != 'rid' %}
-                {{col.name}}: '{{c[col.name]}}',
-                {% endif %}
-				{% endfor %}
-				'clientState': '{{c['clientState']}}',
-			},
-			{% endfor %}
 			]
 		});
 

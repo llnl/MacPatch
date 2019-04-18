@@ -398,8 +398,6 @@ def clientGroup(name,tab=1):
 
 		# Get All Client IDs in with in our group
 		_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == name).with_entities(MpClientGroups.group_name).first()
-		_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).with_entities(MpClientGroupMembers.cuuid).all()
-		_cuuids = [r for r, in _res]
 
 		# Get All Client Group Admins
 		_admins = []
@@ -413,36 +411,6 @@ def clientGroup(name,tab=1):
 		_admins.append({'user_id':_owner.group_owner,'owner': 'True'})
 		_admins = sorted(_admins, key=itemgetter('owner'), reverse=True)
 
-		# Run Query of all clients that contain the Client ID
-		# sql = text("""select * From mp_clients;""")
-		sql = text("""select c. *, mpa_distinguishedName as ADDN,
-					  SUBSTRING_INDEX(mpa_distinguishedName,",",-4) as ADOU,
-					  mpa_HasSLAM as SLAM
-					  from mp_clients c Left Join mpi_DirectoryServices d
-					  ON c.cuuid = d.cuuid""")
-		_q_result = db.engine.execute(sql)
-
-		_results = []
-		for v in _q_result:
-			if v.cuuid in _cuuids:
-				_row = {}
-				for column, value in v.items():
-					if column != "cdate":
-						if column == "mdate":
-							_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
-							_row['clientState'] = clientStatusFromDate(value)
-						else:
-							_row[column] = value
-
-				for key in _row.keys():
-					if not isinstance(_row[key], (long, int)):
-						if _row[key]:
-							_row[key] = _row[key].replace('\n', '')
-						else:
-							_row[key] = ''
-
-				_results.append(_row)
-
 		_sortedCols = []
 		for x in sortedCols:
 			_sortedCols.append({'name':x.name, 'info':x.info})
@@ -455,7 +423,7 @@ def clientGroup(name,tab=1):
 		_qTasksCols = MpClientTasks.__table__.columns
 
 		# Data in one dict
-		groupResult['Clients'] = {'data': _results, 'columns': _sortedCols}
+		groupResult['Clients'] = {'data': [], 'columns': _sortedCols} # Data comes from ajax request
 		groupResult['Group'] = {'name': _qcg.group_name, 'id':name}
 		groupResult['Software'] = {'catalogs':softwareCatalogs()}  # Used to populate UI for setting
 		groupResult['Patches'] = {'groups': patchGroups()}  # Used to populate UI for setting
@@ -471,7 +439,7 @@ def clientGroup(name,tab=1):
 		swCols = [('rid', 'rid', '0'),('name', 'Name', '1'),('tuuid', 'Software Task ID', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
-		return render_template('client_group.html', data=_results, columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
+		return render_template('client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
 							profileCols=profileCols, swCols=swCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
@@ -481,31 +449,43 @@ def clientGroup(name,tab=1):
 	Groups - > Clients
 ********************************
 '''
-# Not working yet, will add in future, right now clients
-# list is gathered durning clientGroup request
-@clients.route('/group/<name>/clients')
-def clientGroupClients(name):
 
+@clients.route('/group/<group_id>/clients')
+def clientGroupClients(group_id):
 	# Get All Client IDs in with in our group
-	_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).with_entities(MpClientGroupMembers.cuuid).all()
+	_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).with_entities(MpClientGroups.group_name).first()
+	_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == group_id).with_entities(MpClientGroupMembers.cuuid).all()
 	_cuuids = [r for r, in _res]
 
 	# Run Query of all clients that contain the Client ID
-	sql = text("""select * From mp_clients Where cuuid in ('""" + '\',\''.join(_cuuids) + """')""")
+	# sql = text("""select * From mp_clients;""")
+	sql = text("""select c. *, mpa_distinguishedName as ADDN,
+				  SUBSTRING_INDEX(mpa_distinguishedName,",",-4) as ADOU,
+				  mpa_HasSLAM as SLAM
+				  from mp_clients c Left Join mpi_DirectoryServices d
+				  ON c.cuuid = d.cuuid""")
 	_q_result = db.engine.execute(sql)
 
 	_results = []
 	for v in _q_result:
-		_row = {}
-		for column, value in v.items():
-			if column != "cdate":
-				if column == "mdate":
-					_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
-					_row['clientState'] = clientStatusFromDate(value)
-				else:
-					_row[column] = value
+		if v.cuuid in _cuuids:
+			_row = {}
+			for column, value in v.items():
+				if column != "cdate":
+					if column == "mdate":
+						_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
+						_row['clientState'] = clientStatusFromDate(value)
+					else:
+						_row[column] = value
 
-		_results.append(_row)
+			for key in _row.keys():
+				if not isinstance(_row[key], (long, int)):
+					if _row[key]:
+						_row[key] = _row[key].replace('\n', '')
+					else:
+						_row[key] = ''
+
+			_results.append(_row)
 
 	jResult = json.dumps(_results)
 	return jResult, 200
