@@ -150,7 +150,7 @@ static id _sharedManager = nil;
 
 - (NSURLSession *)backgroundSession
 {
-	NSString *bgSessionID 					= [NSString stringWithFormat:@"mp.download.session"];
+	NSString *bgSessionID 					= [NSString stringWithFormat:@"mp.download.session.%@",[[NSUUID UUID] UUIDString]];
 	NSURLSessionConfiguration *config 		= [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:bgSessionID];
 	config.HTTPMaximumConnectionsPerHost	= kSessionMaxConnection;
 	qldebug(@"Setting timeoutIntervalForResource to %f",self.resourceTimeout);
