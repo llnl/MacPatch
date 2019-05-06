@@ -321,12 +321,13 @@ typedef enum {
 					[tmpDict setObject:_customPatch[@"description"] forKey:@"description"];
 					[tmpDict setObject:_customPatch[@"restart"] forKey:@"restart"];
 					[tmpDict setObject:_customPatch[@"version"] forKey:@"version"];
+					[tmpDict setObject:_customPatch[@"patchData"] forKey:@"patchData"];
 					// CEH - This needs to be fixed, but it will take a lot of refactoring
 					[tmpDict setObject:@[_approvedPatch] forKey:@"patches"];
 					[tmpDict setObject:_customPatch[@"patch_id"] forKey:@"patch_id"];
 					[tmpDict setObject:_customPatch[@"bundleID"] forKey:@"bundleID"];
 					[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
-					
+
 					qldebug(@"Custom Patch Dictionary Added: %@",tmpDict);
 					[approvedUpdatesArray addObject:[tmpDict copy]];
 					tmpDict = nil;
