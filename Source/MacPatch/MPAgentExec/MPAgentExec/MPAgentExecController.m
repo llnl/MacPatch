@@ -692,14 +692,21 @@
 {
 	BOOL result = NO;
     NSDictionary *task = [self getSoftwareTaskForID:aTask];
+	
     if (!task) {
         return NO;
     }
 	MPSoftware *software = [MPSoftware new];
+	[self iLoadStatus:@"Begin: %@\n", task[@"name"]];
 	if ([software installSoftwareTask:task])
 	{
 		result = YES;
 		if ([self softwareTaskRequiresReboot:task]) needsReboot++;
+		//[self iLoadStatus:@"Installing: %@\n Succeeded.", task[@"name"]];
+		[self iLoadStatus:@"Completed: %@\n", task[@"name"]];
+	} else {
+		//[self iLoadStatus:@"Installing: %@\n Failed.", task[@"name"]];
+		[self iLoadStatus:@"Completed: %@\n Failed.", task[@"name"]];
 	}
     return result;
 }
