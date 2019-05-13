@@ -131,17 +131,14 @@
         NSNumber *freeFileSystemSizeInBytes = [dictionary objectForKey:NSFileSystemFreeSize];
         totalSpace = [fileSystemSizeInBytes floatValue];
         totalFreeSpace = [freeFileSystemSizeInBytes floatValue];
-        //NSLog(@"Memory Capacity of %.fMB with %.fMB Free memory available.", ((totalSpace/1000.0f)/1000.0f), ((totalFreeSpace/1000.0f)/1000.0f));
 		logit(lcl_vDebug,@"Memory Capacity of %.fMB with %.fMB Free memory available.", ((totalSpace/1000.0f)/1000.0f), ((totalFreeSpace/1000.0f)/1000.0f));
     } else {  
 		logit(lcl_vError,@"Error Obtaining System Memory Info: Domain = %@, Code = %d", [error domain], (int)[error code]);  
     }  
     
     [d setObject:aPath forKey:@"VolumePath"];
-    //[d setObject:[NSString stringWithFormat:@"%d",(int)(totalSpace/1000)] forKey:@"totalSpaceRaw"];
     [d setObject:[NSString stringWithFormat:@"%llu",(long long)totalSpace] forKey:@"totalSpaceRaw"]; // Using Bytes for RAW Value
     [d setObject:[NSString stringWithFormat:@"%d",(int)((totalSpace/1000)/1000)] forKey:@"totalSpaceMB"];
-    //[d setObject:[NSString stringWithFormat:@"%d",(int)(totalFreeSpace/1000)]  forKey:@"totalFreeSpaceRaw"];
     [d setObject:[NSString stringWithFormat:@"%llu",(long long)totalFreeSpace]  forKey:@"totalFreeSpaceRaw"]; // Using Bytes for RAW Value
     [d setObject:[NSString stringWithFormat:@"%d",(int)((totalFreeSpace/1000)/1000)] forKey:@"totalFreeSpaceMB"];
     logit(lcl_vDebug,@"volumeSizeInfo: %@",d);

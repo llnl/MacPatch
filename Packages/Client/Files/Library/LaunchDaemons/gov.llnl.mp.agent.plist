@@ -9,7 +9,6 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/Library/MacPatch/Client/MPAgent</string>
-		<string>-q</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

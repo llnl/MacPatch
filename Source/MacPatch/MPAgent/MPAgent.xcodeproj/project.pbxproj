@@ -33,6 +33,8 @@
 		8F53E2081FDA0E4A004D4C32 /* SmartCardReaderList.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */; };
 		8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F53E2091FDA18BB004D4C32 /* PCSC.framework */; };
 		8F6D32461CD3C34E006B1094 /* MPOSUpgrade.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */; };
+		8F8019F72284DF3E006E6BC5 /* MPOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F62284DF3E006E6BC5 /* MPOperation.m */; };
+		8F8019FA2284FE07006E6BC5 /* SoftwareController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F92284FE07006E6BC5 /* SoftwareController.m */; };
 		8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9C2B521DDA1D0E002A39D2 /* MPAppStore.m */; };
 		8F9C2B561DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9C2B551DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m */; };
 		8F9C2B581DDA1D4A002A39D2 /* CommerceKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F9C2B571DDA1D4A002A39D2 /* CommerceKit.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
@@ -127,6 +129,10 @@
 		8F53E2091FDA18BB004D4C32 /* PCSC.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = PCSC.framework; path = System/Library/Frameworks/PCSC.framework; sourceTree = SDKROOT; };
 		8F6D32441CD3C34E006B1094 /* MPOSUpgrade.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPOSUpgrade.h; sourceTree = "<group>"; };
 		8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPOSUpgrade.m; sourceTree = "<group>"; };
+		8F8019F52284DF3E006E6BC5 /* MPOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPOperation.h; sourceTree = "<group>"; };
+		8F8019F62284DF3E006E6BC5 /* MPOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPOperation.m; sourceTree = "<group>"; };
+		8F8019F82284FE07006E6BC5 /* SoftwareController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoftwareController.h; sourceTree = "<group>"; };
+		8F8019F92284FE07006E6BC5 /* SoftwareController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SoftwareController.m; sourceTree = "<group>"; };
 		8F9C2B511DDA1D0E002A39D2 /* MPAppStore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAppStore.h; sourceTree = "<group>"; };
 		8F9C2B521DDA1D0E002A39D2 /* MPAppStore.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAppStore.m; sourceTree = "<group>"; };
 		8F9C2B541DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CKSoftwareProduct+ASProduct.h"; sourceTree = "<group>"; };
@@ -268,6 +274,8 @@
 				8F4B1EEF16DD77BD00E15A9E /* main.m */,
 				8F4B1F0216DD77FF00E15A9E /* AgentController.h */,
 				8F4B1F0316DD77FF00E15A9E /* AgentController.m */,
+				8F8019F82284FE07006E6BC5 /* SoftwareController.h */,
+				8F8019F92284FE07006E6BC5 /* SoftwareController.m */,
 				8F4B1F0016DD77FF00E15A9E /* MPAgent.h */,
 				8F4B1F0116DD77FF00E15A9E /* MPAgent.m */,
 				8FF93F9119959206005A4EEB /* MPAgentRegister.h */,
@@ -309,6 +317,8 @@
 		8F4B1F0A16DE633B00E15A9E /* Operations */ = {
 			isa = PBXGroup;
 			children = (
+				8F8019F52284DF3E006E6BC5 /* MPOperation.h */,
+				8F8019F62284DF3E006E6BC5 /* MPOperation.m */,
 				8F4B1F0D16DE634600E15A9E /* AgentScanAndUpdateOperation.h */,
 				8F4B1F0E16DE634600E15A9E /* AgentScanAndUpdateOperation.m */,
 				8F4B1F0F16DE634600E15A9E /* AntiVirusScanAndUpdateOperation.h */,
@@ -520,6 +530,7 @@
 				8FA6A8781B9621BF006A329B /* CHDisk.m in Sources */,
 				8F4B1F1A16DE634600E15A9E /* InventoryOperation.m in Sources */,
 				8F53E2081FDA0E4A004D4C32 /* SmartCardReaderList.m in Sources */,
+				8F8019FA2284FE07006E6BC5 /* SoftwareController.m in Sources */,
 				8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */,
 				8F4B1F1B16DE634600E15A9E /* PatchScanAndUpdateOperation.m in Sources */,
 				8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */,
@@ -527,6 +538,7 @@
 				8F4B1F2316DE635200E15A9E /* MPTasks.m in Sources */,
 				8F4B1F2516DE635200E15A9E /* MPTaskValidate.m in Sources */,
 				8FA6A8811B9621BF006A329B /* NSMetadataQuery+Synchronous.m in Sources */,
+				8F8019F72284DF3E006E6BC5 /* MPOperation.m in Sources */,
 				8F2D4F2C188EFFB50008853B /* Profiles.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

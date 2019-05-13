@@ -138,7 +138,7 @@
                           NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Have you tried turning it off and on again?", nil)};
             *error = [NSError errorWithDomain:@"gov.llnl.py.error" code:10002 userInfo:userInfo];
         }
-        NSLog(@"Function (%@) does not exist.",@"xaudit");
+        qlinfo(@"Function (%@) does not exist.",@"xaudit");
         Py_Finalize();
         return result;
     }
@@ -170,7 +170,7 @@
     if (py_value != NULL) {
         if (PyDict_Check(py_value)) {
             result = [self dictionaryFromPyObject:py_value];
-            NSLog(@"%@",result);
+            qlerror(@"%@",result);
         } else if (PyString_Check(py_value)) {
             result = [self stringFromPyObject:py_value];
         }
@@ -222,7 +222,7 @@
     // Convert PyObject to NSObject id type
     result = [self idFromPyObject:py_result];
     if (!result) {
-        NSLog(@"Failed converting PyObject to id object.");
+        qlerror(@"Failed converting PyObject to id object.");
         if (error != NULL) {
             userInfo = @{ NSLocalizedDescriptionKey: NSLocalizedString(@"Operation was unsuccessful.", nil),
                           NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Failed converting PyObject to id object.", nil),
@@ -272,7 +272,7 @@
         result = [self arrayFromPyObject:pyObj];
     }
     else {
-        NSLog(@"Warning, idFromPyObject failed.");
+        qlerror(@"Warning, idFromPyObject failed.");
         result = nil;
     }
     

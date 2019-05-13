@@ -26,19 +26,27 @@
 #import "Agent.h"
 
 NSString *const kAgentDescriptionField  = @"Description";
-NSString *const kAgentClientGroup       = @"clientGroup";
-NSString *const kAgentGroupId           = @"group_id";
-NSString *const kAgentPatchClient       = @"allow_client";
-NSString *const kAgentPatchGroup        = @"patch_group";
-NSString *const kAgentPatchServer       = @"allow_server";
-NSString *const kAgentPatchState        = @"patch_state";
-NSString *const kAgentReboot            = @"allow_reboot";
-NSString *const kAgentSwDistGroup       = @"software_group";
-NSString *const kAgentSwDistGroupAdd    = @"swDistGroupAdd";
-NSString *const kAgentSwDistGroupAddID  = @"swDistGroupAddID";
-NSString *const kAgentSwDistGroupID     = @"software_group_id";
-NSString *const kAgentVerifySignatures  = @"verify_signatures";
-NSString *const kAgentPreStagePatches   = @"pre_stage_patches";
+
+NSString *const kAgentClientGroup       = @"client_group";
+NSString *const kAgentGroupId           = @"client_group_id";
+NSString *const kAgentClientGroupOld    = @"clientGroup";
+NSString *const kAgentGroupIdOld        = @"group_id";
+
+NSString *const kAgentPatchClient       = @"allow_client";		//*
+NSString *const kAgentPatchGroup        = @"patch_group";		//*
+NSString *const kAgentPatchServer       = @"allow_server";		//*
+NSString *const kAgentPatchState        = @"patch_state";		//*
+NSString *const kAgentReboot            = @"allow_reboot";		//*
+NSString *const kAgentSwDistGroup       = @"software_group";	//*
+
+NSString *const kAgentSwDistGroupAdd   		= @"inherited_software_group";
+NSString *const kAgentSwDistGroupAddID  	= @"inherited_software_group_id";
+NSString *const kAgentSwDistGroupAddOld   	= @"swDistGroupAdd";
+NSString *const kAgentSwDistGroupAddIDOld 	= @"swDistGroupAddID";
+
+NSString *const kAgentSwDistGroupID     = @"software_group_id";	//*
+NSString *const kAgentVerifySignatures  = @"verify_signatures";	//*
+NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 
 @interface Agent ()
 @end
@@ -50,16 +58,24 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";
  */
 
 -(instancetype)initWithDictionary:(NSDictionary *)dictionary
-{
+{	
 	self = [super init];
 	if(![dictionary[kAgentDescriptionField] isKindOfClass:[NSNull class]]){
 		self.descriptionField = dictionary[kAgentDescriptionField];
 	}
 
+	if(![dictionary[kAgentClientGroupOld] isKindOfClass:[NSNull class]]){
+		self.clientGroup = dictionary[kAgentClientGroupOld];
+	}
+	
 	if(![dictionary[kAgentClientGroup] isKindOfClass:[NSNull class]]){
 		self.clientGroup = dictionary[kAgentClientGroup];
 	}
 
+	if(![dictionary[kAgentGroupIdOld] isKindOfClass:[NSNull class]]){
+		self.groupId = dictionary[kAgentGroupIdOld];
+	}
+	
 	if(![dictionary[kAgentGroupId] isKindOfClass:[NSNull class]]){
 		self.groupId = dictionary[kAgentGroupId];
 	}
@@ -88,10 +104,18 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";
 		self.swDistGroup = dictionary[kAgentSwDistGroup];
 	}
 
+	if(![dictionary[kAgentSwDistGroupAddOld] isKindOfClass:[NSNull class]]){
+		self.swDistGroupAdd = dictionary[kAgentSwDistGroupAddOld];
+	}
+	
 	if(![dictionary[kAgentSwDistGroupAdd] isKindOfClass:[NSNull class]]){
 		self.swDistGroupAdd = dictionary[kAgentSwDistGroupAdd];
 	}
 
+	if(![dictionary[kAgentSwDistGroupAddIDOld] isKindOfClass:[NSNull class]]){
+		self.swDistGroupAddID = dictionary[kAgentSwDistGroupAddIDOld];
+	}
+	
 	if(![dictionary[kAgentSwDistGroupAddID] isKindOfClass:[NSNull class]]){
 		self.swDistGroupAddID = dictionary[kAgentSwDistGroupAddID];
 	}

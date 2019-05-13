@@ -85,10 +85,10 @@
 	NSFileManager *fm = [NSFileManager defaultManager];
 	
 	if (![fm fileExistsAtPath:profileStorePath]) {
-		NSLog(@"Could not find/read profile data from %@",profileStorePath);
+		qlerror(@"Could not find/read profile data from %@",profileStorePath);
 		return nil;
 	} else {
-		NSLog(@"Reading profiles file %@",profileStorePath);
+		qldebug(@"Reading profiles file %@",profileStorePath);
 	}
 	
 	self.profileData = [NSDictionary dictionaryWithContentsOfFile:profileStorePath];
@@ -102,7 +102,7 @@
 			[profiles addObject:[cp copy]];
 		}
 	} else {
-		NSLog(@"No computerlevel profiles.");
+		qlinfo(@"No computerlevel profiles.");
 		return nil;
 	}
 	

@@ -120,7 +120,6 @@ static NSString *kVOLTAGE_MV = @"Voltage_mV";
     // read out properties
     result = IORegistryEntryCreateCFProperties(ioRegistryRoot, &properties, kCFAllocatorDefault,0);
     if (result != 0) {
-        //NSLog(@"Error reading batter info.");
         return;
     } else {
         self.hasBatteryInstalled = YES;

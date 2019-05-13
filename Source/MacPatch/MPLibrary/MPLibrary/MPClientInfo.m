@@ -150,7 +150,6 @@
 		NSData *data = [file readDataToEndOfFile];
 		NSString *string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 		
-		NSLog (@"%@", string); // FileVault is Off/On.
 		return string;
 	}
 }

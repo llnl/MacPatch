@@ -344,7 +344,7 @@ done:
     //err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, kNilOptions, NULL, &imported);
     err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, NULL, NULL, &imported);
     if (err != 0) {
-        NSLog(@"SecItemImport[importPublicKey]: %@ ERROR: %@", self.class, [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil]);
+        qlerror(@"SecItemImport[importPublicKey]: %@ ERROR: %@", self.class, [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil]);
     }
     
     assert(err == errSecSuccess);
@@ -436,7 +436,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        NSLog(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     
@@ -453,7 +453,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        NSLog(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     
@@ -489,7 +489,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        NSLog(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     
@@ -505,7 +505,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        NSLog(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     

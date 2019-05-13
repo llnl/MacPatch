@@ -122,15 +122,15 @@
 	[task setStandardOutput:aPipe];
 	[task setStandardError:aPipe];
 	if (aEnv != NULL) {
+		qldebug(@"[task][environment]: %@",aEnv);
 		[task setEnvironment:aEnv];
 	}
 	
 	// CEH - Debug
-	qlinfo(@"[task][environment]: %@",aEnv);
 	[task setLaunchPath:aBinPath];
-	qlinfo(@"[task][setLaunchPath]: %@",aBinPath);
+	qldebug(@"[task][setLaunchPath]: %@",aBinPath);
 	[task setArguments:aArgs];
-	qlinfo(@"[task][setArguments]: %@",aArgs);
+	qldebug(@"[task][setArguments]: %@",aArgs);
 	
 		
 	// Get a NSFileHandle from the pipe. This NSFileHandle will provide the stdout buffer
@@ -148,7 +148,7 @@
 	// And finally launch the task, asynchronously
 	// If timeout is set start it ...
 	if (taskTimeoutValue != 0) {
-		[NSThread detachNewThreadSelector:@selector(taskTimeoutThread) toTarget:self withObject:nil];
+		//[NSThread detachNewThreadSelector:@selector(taskTimeoutThread) toTarget:self withObject:nil];
 	}
 	
 	[task launch];
@@ -188,115 +188,7 @@
 	
 	[notification.object waitForDataInBackgroundAndNotify];
 }
-/*
-- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err
-{
-	[self setTaskIsRunning:YES];
-	[self setTaskTimedOut:NO];
-	
-	NSString *result = @"";
-	int taskResult = -1;
-	
-	if (task) {
-		task = nil;
-	}
-	task = [[NSTask alloc] init];
-	NSPipe *aPipe = [NSPipe pipe];
-	
-	[task setStandardOutput:aPipe];
-	[task setStandardError:aPipe];
-	if (aEnv != NULL) {
-		[task setEnvironment:aEnv];
-	}
-	
-	// CEH - Debug
-	qlinfo(@"[task][environment]: %@",aEnv);
-	[task setLaunchPath:aBinPath];
-	qlinfo(@"[task][setLaunchPath]: %@",aBinPath);
-	[task setArguments:aArgs];
-	qlinfo(@"[task][setArguments]: %@",aArgs);
-	
-	// Launch The NSTask
-	@try {
-		// If timeout is set start it ...
-		if (taskTimeoutValue != 0) {
-			[NSThread detachNewThreadSelector:@selector(taskTimeoutThread) toTarget:self withObject:nil];
-		}
-		
-		[task launch];
-	}
-	@catch (NSException *e)
-	{
-		qlerror(@"Install returned error. %@\n%@",[e reason],[e userInfo]);
-		taskResult = 1;
- 
-		 if(taskTimeoutTimer) {
-		 [taskTimeoutTimer invalidate];
-		 }
- 
-		[self setTaskIsRunning:NO];
-		return result;
-	}
-	
-	NSString		*tmpStr;
-	NSMutableData	*data = [[NSMutableData alloc] init];
-	NSData			*dataChunk = nil;
-	NSException		*error = nil;
-	
-	while(!taskTimedOut && ((dataChunk = [[aPipe fileHandleForReading] availableDataOrError:&error]) && [dataChunk length] && error == nil))
-	{
-		// If the data is not null, then post the data back to the client and log it locally
-		tmpStr = [[NSString alloc] initWithData:dataChunk encoding:NSUTF8StringEncoding];
-		if ([[tmpStr trim] length] != 0)
-		{
-			qlinfo(@"INCR: %@",tmpStr);
-		}
-		[data appendData:dataChunk];
-		tmpStr = nil;
-	}
-	
-	[[aPipe fileHandleForReading] closeFile];
-	
-	if (taskTimedOut)
-	{
-		qlerror(@"Task was terminated due to timeout.");
-		[NSThread sleepForTimeInterval:2.0];
-		taskResult = 1;
- 
-		 if(taskTimeoutTimer) {
-		 [taskTimeoutTimer invalidate];
-		 }
- 
-		[self setTaskIsRunning:NO];
-		
-		tmpStr = [[NSString alloc] initWithData:dataChunk encoding:NSUTF8StringEncoding];
-		return tmpStr;
-	}
-	
-	if([data length] && error == nil)
-	{
-		if ([task terminationStatus] == 0) {
-			taskResult = 0;
-		} else {
-			taskResult = 1;
-		}
-	} else {
-		qlerror(@"Install returned error. Code:[%d]",[task terminationStatus]);
-		taskResult = 1;
-	}
-	
-	qlinfo(@"Task termination status code: %d",[task terminationStatus]);
- 
-	 if(taskTimeoutTimer) {
-	 [taskTimeoutTimer invalidate];
-	 }
- 
-	[self setTaskIsRunning:NO];
-	
-	tmpStr = [[NSString alloc] initWithData:dataChunk encoding:NSUTF8StringEncoding];
-	return tmpStr;
-}
-*/
+
 #pragma mark - Private
 
 - (void)taskTimeoutThread

@@ -27,6 +27,7 @@
 #import "MPAgent.h"
 #import "MPTasks.h"
 #import "MPTaskValidate.h"
+#import "MPOperation.h"
 
 // Operations
 #import "ClientCheckInOperation.h"
@@ -62,19 +63,29 @@
 
 @implementation AgentController
 
+@synthesize iLoadMode;
+@synthesize forceRun;
+
 - (id)init 
 {
     self = [super init];
     if (self)
     {
         queue = [[NSOperationQueue alloc] init];
-        [queue setMaxConcurrentOperationCount:2];
+        [queue setMaxConcurrentOperationCount:1];
         settings = [MPSettings sharedInstance];
+		iLoadMode = NO;
+		forceRun = NO;
     }
     return self;
 }
 
 - (void)runWithType:(int)aArg
+{
+	[self runWithType:aArg typeInput:NULL];
+}
+
+- (void)runWithType:(int)aArg typeInput:(NSString *)typeData
 {
     switch (aArg)
     {
@@ -228,8 +239,8 @@
         {
             @autoreleasepool
             {
-                @try
-                {
+                //@try
+                //{
                     
                     NSDictionary *taskDict;
                     NSTimeInterval _now = 0;
@@ -283,91 +294,121 @@
                                         [queue cancelAllOperations];
                                         [queue waitUntilAllOperationsAreFinished];
                                     }
-                                    
-                                    if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"])
+									
+									//qlinfo(@"operations: %@",queue.operations);
+									BOOL taskInQueue = NO;
+									for (MPOperation *o in queue.operations)
 									{
-                                        clientOp = [[ClientCheckInOperation alloc] init];
-                                        [queue addOperation:clientOp];
-                                        clientOp = nil;
-                                    }
+										if ([o.taskName isEqualToString:taskDict[@"cmd"]]) {
+											qlinfo(@"Task %@ already waiting in queue.",o.taskName);
+											taskInQueue = YES;
+											break;
+										}
+									}
+									
+									
+                                    if (taskInQueue)
+									{
+										continue;
+									}
+										
+									if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"])
+									{
+										clientOp = [[ClientCheckInOperation alloc] init];
+										clientOp.taskName = @"kMPCheckIn";
+										[queue addOperation:clientOp];
+										clientOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"])
 									{
-                                        agentOp = [[AgentScanAndUpdateOperation alloc] init];
-                                        [queue addOperation:agentOp];
-                                        agentOp = nil;
-                                    }
+										agentOp = [[AgentScanAndUpdateOperation alloc] init];
+										agentOp.taskName = @"kMPAgentCheck";
+										[queue addOperation:agentOp];
+										agentOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
 									{
-                                        avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-                                        [avOp setScanType:0];
-                                        [queue addOperation:avOp];
-                                        avOp = nil;
-                                    }
+										avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
+										avOp.taskName = @"kMPAVInfo";
+										[avOp setScanType:0];
+										[queue addOperation:avOp];
+										avOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVCheck"])
 									{
-                                        avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-                                        [avOp setScanType:1];
-                                        [queue addOperation:avOp];
-                                        avOp = nil;
-                                    }
+										avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
+										avOp.taskName = @"kMPAVCheck";
+										[avOp setScanType:1];
+										[queue addOperation:avOp];
+										avOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPInvScan"])
 									{
-                                        @autoreleasepool {
-                                            InventoryOperation __autoreleasing *invOps = [[InventoryOperation alloc] init];
-                                            invOps.queuePriority = NSOperationQueuePriorityLow;
-                                            if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10)
+										@autoreleasepool
+										{
+											InventoryOperation __autoreleasing *invOps = [[InventoryOperation alloc] init];
+											invOps.queuePriority = NSOperationQueuePriorityLow;
+											if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_10)
 											{
-                                                NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
-                                                if (version.minorVersion >= 10)
+												NSOperatingSystemVersion version = [[NSProcessInfo processInfo] operatingSystemVersion];
+												if (version.minorVersion >= 10)
 												{
-                                                    invOps.qualityOfService = NSOperationQualityOfServiceBackground;
-                                                }
-                                            }
-                                            [queue addOperation:invOps];
-                                            invOps = nil;
-                                        }
-                                    }
+													invOps.qualityOfService = NSOperationQualityOfServiceBackground;
+												}
+											}
+											invOps.taskName = @"kMPInvScan";
+											[queue addOperation:invOps];
+											invOps = nil;
+										}
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulScan"])
 									{
-                                        patchOp = [[PatchScanAndUpdateOperation alloc] init];
-                                        [queue addOperation:patchOp];
-                                        patchOp = nil;
-                                    }
+										patchOp = [[PatchScanAndUpdateOperation alloc] init];
+										patchOp.taskName = @"kMPVulScan";
+										[queue addOperation:patchOp];
+										patchOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"])
 									{
-                                        patchOp = [[PatchScanAndUpdateOperation alloc] init];
-                                        [patchOp setScanType:1];
-                                        [queue addOperation:patchOp];
-                                        patchOp = nil;
-                                    }
+										patchOp = [[PatchScanAndUpdateOperation alloc] init];
+										patchOp.taskName = @"kMPVulUpdate";
+										[patchOp setScanType:1];
+										[queue addOperation:patchOp];
+										patchOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPSWDistMan"])
 									{
-                                        swDistOp = [[MPSWDistTaskOperation alloc] init];
-                                        [queue addOperation:swDistOp];
-                                        swDistOp = nil;
-                                    }
+										swDistOp = [[MPSWDistTaskOperation alloc] init];
+										swDistOp.taskName = @"kMPSWDistMan";
+										[queue addOperation:swDistOp];
+										swDistOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPProfiles"])
 									{
-                                        profilesOp = [[Profiles alloc] init];
-                                        [queue addOperation:profilesOp];
-                                        profilesOp = nil;
-                                    }
+										profilesOp = [[Profiles alloc] init];
+										profilesOp.taskName = @"kMPProfiles";
+										[queue addOperation:profilesOp];
+										profilesOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPWSPost"])
 									{
-                                        postFailedWSRequestsOp = [[PostFailedWSRequests alloc] init];
-                                        [queue addOperation:postFailedWSRequestsOp];
-                                        postFailedWSRequestsOp = nil;
-                                    }
+										postFailedWSRequestsOp = [[PostFailedWSRequests alloc] init];
+										postFailedWSRequestsOp.taskName = @"kMPWSPost";
+										[queue addOperation:postFailedWSRequestsOp];
+										postFailedWSRequestsOp = nil;
+									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPPatchCrit"])
 									{
-                                        patchOp = [[PatchScanAndUpdateOperation alloc] init];
-                                        [patchOp setScanType:1];
-                                        [queue addOperation:patchOp];
-                                        patchOp = nil;
-                                    }
-                                    
-                                    // Set Next Run Date Time
-                                    [self updateNextRunForTask:taskDict missedTask:NO];
+										patchOp = [[PatchScanAndUpdateOperation alloc] init];
+										patchOp.taskName = @"kMPPatchCrit";
+										[patchOp setScanType:1];
+										[queue addOperation:patchOp];
+										patchOp = nil;
+									}
+									
+									// Set Next Run Date Time
+									[self updateNextRunForTask:taskDict missedTask:NO];
+									
                                     
                                 }
 								else if ([taskDict[@"nextrun"] doubleValue] < [d timeIntervalSince1970])
@@ -387,10 +428,10 @@
                         }
                     }
 					if (firstRun) firstRun = NO;
-                }
-                @catch (NSException *exception) {
-                    qlerror(@"%@",exception);
-                }
+               // }
+               // @catch (NSException *exception) {
+               //     qlerror(@"%@",exception);
+               // }
             }
             sleep(1);
         }
@@ -508,36 +549,54 @@
 
 -(void)runPatchScan
 {
-    patchOp = [[PatchScanAndUpdateOperation alloc] init];
-    [queue addOperation:patchOp];
-    patchOp = nil;
-    
-    if ([NSThread isMainThread]) {
-        while ([[queue operations] count] > 0) {
-            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-        }
-    } else {
-        [queue waitUntilAllOperationsAreFinished];
-    }
-    
+	return [self runPatchScan:kAllPatches forceRun:NO];
+}
+
+- (void)runPatchScan:(MPPatchContentType)contentType forceRun:(BOOL)aForceRun
+{
+	patchOp = [[PatchScanAndUpdateOperation alloc] init];
+	[patchOp setScanType:0];
+	[patchOp setPatchFilter:contentType];
+	[patchOp setForceRun:aForceRun];
+	if (iLoadMode) [patchOp setILoadMode:iLoadMode];
+	[queue addOperation:patchOp];
+	patchOp = nil;
+	
+	if ([NSThread isMainThread]) {
+		while ([[queue operations] count] > 0) {
+			[[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+		}
+	} else {
+		[queue waitUntilAllOperationsAreFinished];
+	}
+	
 	exit(0);
 }
 
 - (void)runPatchScanAndUpdate
 {
-    patchOp = [[PatchScanAndUpdateOperation alloc] init];
-    [patchOp setScanType:1];
-    [queue addOperation:patchOp];
-    patchOp = nil;
-    
-    if ([NSThread isMainThread]) {
-        while ([[queue operations] count] > 0) {
-            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-        }
-    } else {
-        [queue waitUntilAllOperationsAreFinished];
-    }
-    
+	return [self runPatchScanAndUpdate:kAllPatches bundleID:NULL];
+}
+
+- (void)runPatchScanAndUpdate:(MPPatchContentType)contentType bundleID:(NSString *)bundleID
+{
+	patchOp = [[PatchScanAndUpdateOperation alloc] init];
+	[patchOp setScanType:1];
+	[patchOp setPatchFilter:contentType];
+	[patchOp setBundleID:bundleID];
+	[patchOp setForceRun:forceRun];
+	if (iLoadMode) [patchOp setILoadMode:iLoadMode];
+	[queue addOperation:patchOp];
+	patchOp = nil;
+	
+	if ([NSThread isMainThread]) {
+		while ([[queue operations] count] > 0) {
+			[[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
+		}
+	} else {
+		[queue waitUntilAllOperationsAreFinished];
+	}
+	
 	exit(0);
 }
 

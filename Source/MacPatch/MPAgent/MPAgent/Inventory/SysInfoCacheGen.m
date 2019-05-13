@@ -413,8 +413,7 @@
 	NSString *string;
 	string = [[NSString alloc] initWithData:tData encoding: NSUTF8StringEncoding];
 	qlinfo(@"Completed running sysinfocachegen, %@",string);
-	
-	NSLog(@"Writing result to %@",spFileName);
+
 	NSDictionary *ddata = [NSDictionary dictionaryWithContentsOfFile:spFileName];
 	if (ddata[@"Objects"])
 	{

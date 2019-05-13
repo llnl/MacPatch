@@ -177,14 +177,12 @@
             
             NSData *sha1 = ((__bridge NSData *)certData).sha1Digest;
             self.remoteFingerPrint = [sha1 hexStringValue];
-            //NSLog(@"sha1, %@", [sha1 hexStringValue]);
-            
             CFRelease(certData);
             
             // compare by sha1 strings.
             if ([[[sha1 hexStringValue] uppercaseString] isEqualToString:[self.fingerPrint uppercaseString]]) {
                 self.certVerify = YES;
-                //NSLog(@"success!");
+                //success
                 [[challenge sender] useCredential:[NSURLCredential credentialForTrust:trustRef] forAuthenticationChallenge:challenge];
                 return;
             }

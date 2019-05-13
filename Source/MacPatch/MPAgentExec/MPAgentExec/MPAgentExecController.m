@@ -396,7 +396,7 @@
 	}
 }
 
-#pragma mark - Agent Updater(MPAgentUp2Date)
+#pragma mark - Agent Updater(MPUpdater)
 /**
  Scan for, and update the agent updater
  */
@@ -900,7 +900,24 @@
     }
 }
 
-
+- (BOOL)isLocalUserLoggedIn
+{
+	BOOL result = YES;
+	
+	SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, (CFStringRef)@"LocalUserLoggedIn", NULL, NULL);
+	CFStringRef consoleUserName;
+	consoleUserName = SCDynamicStoreCopyConsoleUser(store, NULL, NULL);
+	
+	if (consoleUserName != NULL)
+	{
+		logit(lcl_vInfo,@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
+		CFRelease(consoleUserName);
+	} else {
+		result = NO;
+	}
+	
+	return result;
+}
 /**
  Echo status to stdout for iLoad. Will only echo if iLoadMode is true
 

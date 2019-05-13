@@ -32,8 +32,6 @@
 
 @implementation MPSWDistTaskOperation
 
-@synthesize isExecuting;
-@synthesize isFinished;
 @synthesize _fileHash;
 @synthesize _timerInterval;
 @synthesize l_queue;
@@ -47,8 +45,8 @@
     {
         settings        = [MPSettings sharedInstance];
         fm              = [NSFileManager defaultManager];
-        isExecuting     = NO;
-        isFinished      = NO;
+        self.isExecuting     = NO;
+        self.isFinished      = NO;
         
         [self set_fileHash:NULL];
         
@@ -95,8 +93,8 @@
 {
     [self willChangeValueForKey:@"isFinished"];
     [self willChangeValueForKey:@"isExecuting"];
-    isExecuting = NO;
-    isFinished = YES;
+    self.isExecuting = NO;
+    self.isFinished = YES;
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 }
@@ -105,14 +103,14 @@
 {
     if ([self isCancelled]) {
         [self willChangeValueForKey:@"isFinished"];
-        isFinished = YES;
+        self.isFinished = YES;
         [self didChangeValueForKey:@"isFinished"];
     } else {
         [self willChangeValueForKey:@"isExecuting"];
         [self performSelectorOnMainThread:@selector(main) 
                                withObject:nil 
                             waitUntilDone:NO];
-        isExecuting = YES;
+        self.isExecuting = YES;
         [self didChangeValueForKey:@"isExecuting"];
     }
 }

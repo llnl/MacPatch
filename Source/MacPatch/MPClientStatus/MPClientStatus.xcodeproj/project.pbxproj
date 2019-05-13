@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8F0174D0225D60270035A703 /* UserNotifications.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0174CF225D60270035A703 /* UserNotifications.framework */; };
 		8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
@@ -87,7 +86,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F0174D0225D60270035A703 /* UserNotifications.framework in Frameworks */,
 				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
 				8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */,

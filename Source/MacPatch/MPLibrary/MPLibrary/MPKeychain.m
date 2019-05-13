@@ -86,22 +86,15 @@
         result = SecKeychainCreate([aKeychainFilePath fileSystemRepresentation], (UInt32)strlen(uuid), uuid, FALSE, NULL, &aKeychainItem);
         keychainItem = aKeychainItem;
     } else {
-        /*
-        result = SecKeychainSetUserInteractionAllowed(FALSE);
-        if ( result ) {
-            logit(lcl_vError,@"[SecKeychainSetUserInteractionAllowed] %@",[self errorForOSStatus:result].localizedDescription);
-            return result;
-        }
-         */
         result = SecKeychainOpen([aKeychainFilePath fileSystemRepresentation], &keychainItem);
         if (result != 0) {
             logit(lcl_vError,@"[SecKeychainOpen] %@",[self errorForOSStatus:result].localizedDescription);
-            NSLog(@"%@",[self errorForOSStatus:result].localizedDescription);
+            qlerror(@"%@",[self errorForOSStatus:result].localizedDescription);
         }
         result = SecKeychainUnlock(keychainItem, (UInt32)strlen(uuid), uuid, TRUE);
         if (result != 0) {
             logit(lcl_vError,@"[SecKeychainUnlock] %@",[self errorForOSStatus:result].localizedDescription);
-            NSLog(@"%@",[self errorForOSStatus:result].localizedDescription);
+            qlerror(@"%@",[self errorForOSStatus:result].localizedDescription);
         }
     }
     
@@ -222,7 +215,7 @@
         if (aReplace) {
             [self deleteFromKeychainWithKey:aKey];
         } else {
-            NSLog(@"Item already exists in keychain. Item will not be replaced.");
+            qlerror(@"Item already exists in keychain. Item will not be replaced.");
             return errSecDuplicateItem;
         }
     }
@@ -268,11 +261,11 @@
         NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
         return storedDictionary;
     } else if (osStatus == errSecItemNotFound) {
-        NSLog(@"%@",[self errorForOSStatus:osStatus].localizedDescription);
+        qlerror(@"%@",[self errorForOSStatus:osStatus].localizedDescription);
         return nil;
     } else {
         if (err != NULL) {
-            NSLog(@"%@",[self errorForOSStatus:osStatus].localizedDescription);
+            qlerror(@"%@",[self errorForOSStatus:osStatus].localizedDescription);
             *err = [self errorForOSStatus:osStatus];
         }
         return nil;
@@ -296,7 +289,6 @@
         [query setObject:secItemClass forKey:(__bridge id)kSecClass];
         CFTypeRef result = NULL;
         err = SecItemCopyMatching((__bridge CFDictionaryRef)query, &result);
-        //NSLog(@"%@", (__bridge id)result);
         if (result != NULL) CFRelease(result);
     }
     
@@ -425,7 +417,6 @@
     OSStatus result;
     SecTrustedApplicationRef me;
     SecTrustedApplicationRef MPAgent = NULL;
-    SecTrustedApplicationRef MPAgentExec = NULL;
     SecTrustedApplicationRef MPWorker = NULL;
     SecTrustedApplicationRef MPCatalog = NULL;
     SecTrustedApplicationRef SelfPatch = NULL;
@@ -434,7 +425,6 @@
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgentExec", &MPAgentExec);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPCatalog.app", &MPCatalog);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/Self Patch.app", &SelfPatch);
@@ -442,7 +432,7 @@
     result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
     
     NSArray *trustedApplications = [NSArray arrayWithObjects:(__bridge_transfer id)me, (__bridge_transfer id)MPAgent,
-                                    (__bridge_transfer id)MPAgentExec, (__bridge_transfer id)MPWorker,(__bridge_transfer id)MPCatalog,
+                                    (__bridge_transfer id)MPWorker,(__bridge_transfer id)MPCatalog,
                                     (__bridge_transfer id)SelfPatch,(__bridge_transfer id)MPClientStatus,(__bridge_transfer id)MPLoginAgent,nil];
     
     SecAccessRef accessObj = NULL;
@@ -489,7 +479,7 @@
     OSStatus itemStatus = 0;
     BOOL res = [self itemInKeychain:aKey status:itemStatus];
     if (res) {
-        NSLog(@"OSStatus: %@",[self errorForOSStatus:itemStatus]);
+        qldebug(@"OSStatus: %@",[self errorForOSStatus:itemStatus]);
     }
     
     OSStatus    osStatus;
@@ -503,7 +493,7 @@
     
     osStatus = SecItemDelete((CFDictionaryRef)deletableItemsQuery);
     if (osStatus != noErr) {
-        NSLog(@"deleteFromKeychainWithKey :%d",osStatus);
+        qlinfo(@"deleteFromKeychainWithKey :%d",osStatus);
     }
     
     return osStatus;

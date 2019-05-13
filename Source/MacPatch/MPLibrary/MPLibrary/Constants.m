@@ -31,7 +31,6 @@ NSString * const MP_ROOT_SERVER				= @"/Library/MacPatch/Server";
 NSString * const MP_ROOT_UPDATE             = @"/Library/MacPatch/Updater";
 
 NSString * const AGENT                      = @"/Library/MacPatch/Client/MPAgent";
-NSString * const AGENT_EXEC                 = @"/Library/MacPatch/Client/MPAgentExec";
 NSString * const AGENT_WORKER               = @"/Library/MacPatch/Client/MPWorker";
 NSString * const AGENT_VER_PLIST			= @"/Library/MacPatch/Client/.mpVersion.plist";
 NSString * const AGENT_PREFS_PLIST			= @"/Library/Preferences/gov.llnl.mpagent.plist";

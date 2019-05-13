@@ -47,6 +47,10 @@
 		8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6A22494D8600FDFBCA /* Base64.m */; };
 		8F60AD6F22494D8600FDFBCA /* CocoaSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */; };
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; };
+		8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019EC22848A29006E6BC5 /* MPGCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F8019EF22848A29006E6BC5 /* MPGCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019ED22848A29006E6BC5 /* MPGCDTask.m */; };
+		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F222848A5C006E6BC5 /* GCDTask.m */; };
 		8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */; };
 		8F90F638221342E8008E820C /* DBRequiredPatches.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F90F636221342E8008E820C /* DBRequiredPatches.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -250,6 +254,10 @@
 		8F60AD6A22494D8600FDFBCA /* Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Base64.m; sourceTree = "<group>"; };
 		8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaSecurity.m; sourceTree = "<group>"; };
 		8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
+		8F8019EC22848A29006E6BC5 /* MPGCDTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPGCDTask.h; sourceTree = "<group>"; };
+		8F8019ED22848A29006E6BC5 /* MPGCDTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGCDTask.m; sourceTree = "<group>"; };
+		8F8019F122848A5B006E6BC5 /* GCDTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDTask.h; sourceTree = "<group>"; };
+		8F8019F222848A5C006E6BC5 /* GCDTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDTask.m; sourceTree = "<group>"; };
 		8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+MPHelper.h"; sourceTree = "<group>"; };
 		8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+MPHelper.m"; sourceTree = "<group>"; };
 		8F87427116308AD2007BA7DB /* MPWebServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWebServices.h; sourceTree = "<group>"; };
@@ -631,6 +639,15 @@
 			name = "MacPatch+SWDist";
 			sourceTree = "<group>";
 		};
+		8F8019F022848A3A006E6BC5 /* GCDTask */ = {
+			isa = PBXGroup;
+			children = (
+				8F8019F122848A5B006E6BC5 /* GCDTask.h */,
+				8F8019F222848A5C006E6BC5 /* GCDTask.m */,
+			);
+			path = GCDTask;
+			sourceTree = "<group>";
+		};
 		8F83530E217E8B230034FEFB /* NSDate-Category */ = {
 			isa = PBXGroup;
 			children = (
@@ -968,6 +985,7 @@
 		8FED881F1463165B00709F8E /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
+				8F8019F022848A3A006E6BC5 /* GCDTask */,
 				8FE7E9B422372E7C000FAA6A /* UAObfuscatedString */,
 				8FE7E9AB22372E28000FAA6A /* CocoaSecurity */,
 				8FC0A8E621811678006C7FCB /* SSZipArchive */,
@@ -1002,6 +1020,8 @@
 				8FE66400222887BB00F12AC8 /* MPFileUtils.m */,
 				8FE66407222DBD8600F12AC8 /* MPClientDatabase.h */,
 				8FE66408222DBD8600F12AC8 /* MPClientDatabase.m */,
+				8F8019EC22848A29006E6BC5 /* MPGCDTask.h */,
+				8F8019ED22848A29006E6BC5 /* MPGCDTask.m */,
 			);
 			name = NEW;
 			sourceTree = "<group>";
@@ -1032,6 +1052,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */,
 				8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */,
 				8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */,
 				8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */,
@@ -1121,6 +1142,7 @@
 				8FC0A91E21811679006C7FCB /* ioapi_buf.h in Headers */,
 				8FC0A92421811679006C7FCB /* pwd2key.h in Headers */,
 				8FC0A93321811679006C7FCB /* SSZipArchive.h in Headers */,
+				8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */,
 				8FC0A91421811678006C7FCB /* minishared.h in Headers */,
 				8FC0A93121811679006C7FCB /* sha1.h in Headers */,
 				8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */,
@@ -1221,6 +1243,7 @@
 				8FA28EF921939EF8005D5E92 /* FMXCsvTable.m in Sources */,
 				8FF3D69B2170127D00059ACD /* Task.m in Sources */,
 				8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */,
+				8F8019EF22848A29006E6BC5 /* MPGCDTask.m in Sources */,
 				8FC0A92F21811679006C7FCB /* pwd2key.c in Sources */,
 				8FF3D67C217011E700059ACD /* MPRESTfull.m in Sources */,
 				8FF3D679217011E700059ACD /* MPHTTPRequest.m in Sources */,
@@ -1312,6 +1335,7 @@
 				8FC0A92121811679006C7FCB /* aeskey.c in Sources */,
 				8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */,
 				8FF3D6832170123900059ACD /* STHTTPRequest.m in Sources */,
+				8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */,
 				8FF3D6A02170129B00059ACD /* MPCrypto.m in Sources */,
 				8FA28EDC21939EE2005D5E92 /* FMDatabasePool.m in Sources */,
 			);

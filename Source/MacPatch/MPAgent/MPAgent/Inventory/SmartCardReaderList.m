@@ -76,7 +76,7 @@
 			readerName = NULL;
 		}
 		@catch (NSException *exception) {
-			NSLog(@"%@",exception);
+			qlerror(@"%@",exception);
 		}
 		
 		while (mszReaders[++i] != 0) ;

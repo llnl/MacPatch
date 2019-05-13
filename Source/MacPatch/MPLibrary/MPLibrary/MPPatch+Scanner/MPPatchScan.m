@@ -53,19 +53,6 @@
 
 @synthesize delegate;
 
-// CEH
-/*
-- (BOOL)useDistributedNotification
-{
-    return useDistributedNotification;
-}
-
-- (void)setUseDistributedNotification:(BOOL)flag
-{
-    useDistributedNotification = flag;
-}
-*/
-
 #pragma mark -
 
 - (id)init;

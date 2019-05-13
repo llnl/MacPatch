@@ -497,7 +497,6 @@
     downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:url] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
 	{
 		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-		NSLog(@"response status code: %ld", (long)[httpResponse statusCode]);
 		qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
 		if (dlerr || [httpResponse statusCode] == 404)
 		{
@@ -948,7 +947,7 @@
 
 -(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
-	NSLog(@"completed; error: %@", error);
+	qlerror(@"completed; error: %@", error);
 }
 
 

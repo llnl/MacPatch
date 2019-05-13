@@ -36,14 +36,12 @@
 
 @implementation InventoryOperation
 
-@synthesize isExecuting;
-@synthesize isFinished;
-
 - (id)init
 {
-	if ((self = [super init])) {
-		isExecuting = NO;
-        isFinished  = NO;
+	self = [super init];
+	if (self) {
+		self.isExecuting = NO;
+        self.isFinished  = NO;
 		si	= [MPAgent sharedInstance];
 		fm	= [NSFileManager defaultManager];
 	}	
@@ -65,8 +63,8 @@
 {
     [self willChangeValueForKey:@"isFinished"];
     [self willChangeValueForKey:@"isExecuting"];
-    isExecuting = NO;
-    isFinished = YES;
+    self.isExecuting = NO;
+    self.isFinished = YES;
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 }
@@ -75,12 +73,12 @@
 {
     if ([self isCancelled]) {
         [self willChangeValueForKey:@"isFinished"];
-        isFinished = YES;
+        self.isFinished = YES;
         [self didChangeValueForKey:@"isFinished"];
     } else {
         [self willChangeValueForKey:@"isExecuting"];
 		[self performSelectorInBackground:@selector(main) withObject:nil];
-        isExecuting = YES;
+        self.isExecuting = YES;
         [self didChangeValueForKey:@"isExecuting"];
     }
 }

@@ -24,13 +24,11 @@
  */
 
 #import <Cocoa/Cocoa.h>
-
+#import "MPOperation.h"
 @class MPSettings;
 
-@interface ClientCheckInOperation : NSOperation 
+@interface ClientCheckInOperation : MPOperation
 {
-	BOOL isExecuting;
-	BOOL isFinished;
 	
 @private
 	
@@ -38,7 +36,5 @@
 	NSFileManager *fm;
 }
 
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

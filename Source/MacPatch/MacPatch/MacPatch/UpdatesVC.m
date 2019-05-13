@@ -193,6 +193,7 @@
 	if ([identifier isEqualToString:@"MainCell"])
 	{
 		NSDictionary *d = _content[row];
+		qlinfo(@"ROW: %@",d);
 		UpdatesCellView* cell = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
 		// Set some defaults
 		cell.updateButton.title = @"Install";

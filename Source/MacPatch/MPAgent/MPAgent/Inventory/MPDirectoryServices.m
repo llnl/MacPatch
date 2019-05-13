@@ -50,7 +50,7 @@
         [self setMyOdNode:searchNodeName];
         odNode = [ODNode nodeWithSession:odSession name:searchNodeName error:&err];
         if (err) {
-            NSLog(@"Error initializing OpenDirectory node %@. Error returned %@", searchNodeName, err);
+            qlerror(@"Error initializing OpenDirectory node %@. Error returned %@", searchNodeName, err);
         }
     }
     return self;
@@ -74,7 +74,7 @@
         }
     }
     if (err) {
-        NSLog(@"Error initializing new OpenDirectory node %@. Error returned is %@", nodeName, err);
+        qlerror(@"Error initializing new OpenDirectory node %@. Error returned is %@", nodeName, err);
     }
 }
 
@@ -97,7 +97,7 @@
     error = nil;
     NSArray *qResults = [odQuery resultsAllowingPartial:NO error:&error];
     if (error) {
-        NSLog(@"Error on getting results. %@",error.localizedDescription);
+        qlerror(@"Error on getting results. %@",error.localizedDescription);
         return nil;
     }
 
@@ -116,7 +116,7 @@
             }
         }
     } else {
-        NSLog(@"No results found!");
+        qlinfo(@"No results found!");
     }
 
     return (NSDictionary *)_result;

@@ -24,20 +24,17 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "MPOperation.h"
 
 @class MPAgent;
 
-@interface AgentScanAndUpdateOperation : NSOperation 
+@interface AgentScanAndUpdateOperation : MPOperation
 {
-	BOOL isExecuting;
-	BOOL isFinished;
 	
 @private	
 	MPAgent *si;
 	NSFileManager *fm;
 }
 
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

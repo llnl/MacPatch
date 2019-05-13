@@ -27,6 +27,7 @@
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SystemConfiguration.h>
 #import "AgentController.h"
+#import "SoftwareController.h"
 #import "MPAgentRegister.h"
 #import "MPInv.h"
 #import "MPOSUpgrade.h"
@@ -37,6 +38,9 @@
 
 #define APPVERSION	@"3.2.0.1"
 #define APPNAME		@"MPAgent"
+// This Define will be modified durning MPClientBuild script
+#define APPBUILD	@"[BUILD]"
+
 
 void usage(void);
 const char * consoleUser(void);
@@ -50,17 +54,25 @@ int main (int argc, char * argv[])
 		BOOL debugLogging       = NO;
 		BOOL traceLogging       = NO;
 		BOOL verboseLogging     = NO;
+		BOOL isILoadMode 		= NO;
+		BOOL forceRun			= NO;
         
         // Registration
         BOOL doRegistration     = NO;
         BOOL readRegInfo        = NO;
-        BOOL runZetaTest        = NO;
         NSString *regKeyArg     = @"999999999";
         NSString *regKeyHash    = @"999999999";
         
         // Inventory
         NSString *invArg        = NULL;
-        
+		
+		// Patching
+		MPPatchContentType updateType = kAllPatches;
+		NSString 	   *updateBundle = nil;
+		
+		// Software
+		NSString *swArg			= NULL;
+		
         // OS Migration
         BOOL osMigration        = NO;
         NSString *osMigAction   = NULL;
@@ -73,43 +85,69 @@ int main (int argc, char * argv[])
 		{
 			static struct option long_options[] =
 			{
-				{"Daemon"			,no_argument	    ,0, 'd'},
-				{"Queue"			,no_argument	    ,0, 'q'},
-				{"Debug"			,no_argument	    ,0, 'D'},
-				{"Trace"			,no_argument	    ,0, 'T'},
-				{"CheckIn"			,no_argument	    ,0, 'c'},
-				{"Scan"				,no_argument	    ,0, 's'},
-				{"Update"			,no_argument	    ,0, 'u'},
-				{"Inventory"		,no_argument	    ,0, 'i'},
-				{"AVScan"			,no_argument	    ,0, 'a'},
-				{"AVUpdate"			,no_argument	    ,0, 'U'},
-				{"AgentUpdater"		,no_argument	    ,0, 'G'},
-                {"SWScanUpdate" 	,no_argument	    ,0, 'S'},
-                {"Profile"          ,no_argument	    ,0, 'p'},
-                {"WebServicePost"   ,no_argument	    ,0, 'w'},
-				{"Echo"				,no_argument		,0, 'e'},
-				{"Verbose"			,no_argument		,0, 'V'},
-				{"version"			,no_argument		,0, 'v'},
-				{"help"				,no_argument		,0, 'h'},
-                {"register"		    ,optional_argument	,0, 'r'},
-                {"regInfo"		    ,optional_argument  ,0, 'R'},
-                // Inventory, not documented yet
-                {"type"                 ,required_argument	,0, 't'},
-                {"Audit"                ,no_argument		,0, 'A'},
-                {"cuuid"                ,no_argument		,0, 'C'},
-                // OS Migration
-                {"OSUpgrade"            ,required_argument	,0, 'k'},
-                {"OSLabel"              ,required_argument	,0, 'l'},
-                {"OSUpgradeID"          ,required_argument	,0, 'm'},
-                // Current Console User
-                {"consoleUser"          ,no_argument		,0, 'x'},
-                // TEST
-                {"zeta"                 ,no_argument        ,0, 'Z'},
+				// Stdout & Logging
+				{"Echo"					,no_argument		,0, 'e'},
+				{"Debug"				,no_argument	    ,0, 'D'},
+				{"Trace"				,no_argument	    ,0, 'T'},
+				{"Verbose"				,no_argument		,0, 'V'},
+				
+				// Client Check-in
+				{"CheckIn"				,no_argument	    ,0, 'c'},
+				{"iLoad"				,no_argument	    ,0, 'i'},
+				
+				// Patching
+				{"Scan"					,no_argument	    ,0, 's'},
+				{"Update"				,no_argument	    ,0, 'u'},
+				//{"Critial"			,no_argument	    ,0, 'x'},
+				// Patching Filters
+				{"UpdateFilter"			,required_argument	,0, 'f'},
+				{"UpdateBundle"			,required_argument	,0, 'B'},
+				{"FORCERUN"				,no_argument		,0, 'F'},
+				
+				// Inventory
+				{"type"             	,required_argument	,0, 't'},
+				{"Audit"            	,no_argument		,0, 'A'},
+				{"cuuid"            	,no_argument		,0, 'C'},
+				
+				// AV
+				{"AVScan"				,no_argument	    ,0, 'a'},
+				{"AVUpdate"				,no_argument	    ,0, 'U'},
+				
+				// Agent Updater
+				{"AgentUpdater"			,no_argument	    ,0, 'G'},
+				
+				// Mandatory Software Tasks for Client group
+                {"SWScanUpdate" 		,no_argument	    ,0, 'S'},
+				
+				// Software Dist
+				{"installSWUsingGRP"    ,required_argument	,0, 'g'},
+				{"installSWUsingSID"    ,required_argument	,0, 'd'},
+				{"installSWUsingPLIST"  ,required_argument	,0, 'P'},
+				
+				// Profiles
+                {"Profile"          	,no_argument	    ,0, 'p'},
+
+				// Client Registration
+				{"register"		    	,optional_argument	,0, 'r'},
+				{"regInfo"		    	,optional_argument  ,0, 'R'},
+				
+				// OS Migration
+				{"OSUpgrade"        	,required_argument	,0, 'k'},
+				{"OSLabel"          	,required_argument	,0, 'l'},
+				{"OSUpgradeID"      	,required_argument	,0, 'm'},
+				
+				// Version Info
+				{"version"				,no_argument		,0, 'v'},
+				{"build"				,no_argument		,0, 'b'},
+				{"help"					,no_argument		,0, 'h'},
+
+				
+
 				{0, 0, 0, 0}
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "dqDTcsuiaUGSpweVvhr::R::t:ACk:l:m:xZ", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVcisufB:Ft:ACaUGSg:d:P:pr:R:k:l:m:vbh", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -117,24 +155,61 @@ int main (int argc, char * argv[])
 			
 			switch (c)
 			{
-				case 'd':
-					a_Type = 99;
+				case 'e':
+					echoToConsole = YES;
 					break;
-				case 'q':
-					a_Type = 99;
+				case 'D':
+					debugLogging = YES;
+					break;
+				case 'T':
+					traceLogging = YES;
+					break;
+				case 'V':
+					verboseLogging = YES;
 					break;
 				case 'c':
 					a_Type = 1;
 					break;
 				case 'i':
-					a_Type = 2;
+					isILoadMode = YES;
+					a_Type = 10;
+					updateType = kAllPatches;
 					break;
-                case 's':
+				case 's':
 					a_Type = 3;
 					break;
 				case 'u':
 					a_Type = 4;
 					break;
+				case 'f':
+					a_Type = 50;
+					if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"apple"]) {
+						updateType = kApplePatches;
+					} else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"custom"] || [[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"third"]) {
+						updateType = kCustomPatches;
+					} else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"critical"]) {
+						updateType = kCriticalPatches;
+					}
+					break;
+				case 'B':
+					a_Type = 60;
+					updateBundle = [NSString stringWithUTF8String:optarg];
+					break;
+					// Inventory
+				case 'F':
+					forceRun = YES;
+					break;
+				case 't':
+					invArg = [NSString stringWithUTF8String:optarg];
+					a_Type = 12;
+					break;
+				case 'A':
+					invArg = @"Custom";
+					a_Type = 12;
+					break;
+				case 'C':
+					printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
+					return 0;
 				case 'a':
 					a_Type = 5;
 					break;
@@ -144,28 +219,40 @@ int main (int argc, char * argv[])
 				case 'G':
 					a_Type = 7;
 					break;
-                case 'S':
+				case 'S':
 					a_Type = 8;
+					break;
+				case 'g':
+					swArg = [NSString stringWithUTF8String:optarg];
+					a_Type = 13;
+					break;
+				case 'd':
+					swArg = [NSString stringWithUTF8String:optarg];
+					a_Type = 14;
+					break;
+				case 'P':
+					swArg = [NSString stringWithUTF8String:optarg];
+					a_Type = 15;
 					break;
                 case 'p':
 					a_Type = 9;
 					break;
-                case 'w':
-					a_Type = 11;
+				case 'r':
+					a_Type = 16;
+					doRegistration = YES;
+					if (optarg) {
+						regKeyArg = [NSString stringWithUTF8String:optarg];
+					}
 					break;
-                // Inventory
-                case 't':
-                    invArg = [NSString stringWithUTF8String:optarg];
-                    a_Type = 12;
-                    break;
-                case 'A':
-                    invArg = @"Custom";
-                    a_Type = 12;
-                    break;
-                case 'C':
-                    printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
-                    return 0;
+				case 'R':
+					a_Type = 17;
+					readRegInfo = YES;
+					if (optarg) {
+						regKeyHash = [NSString stringWithUTF8String:optarg];
+					}
+					break;
                 case 'k':
+					a_Type = 10;
                     if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"start"]) {
                         osMigAction = @"start";
                         osMigration = YES;
@@ -184,39 +271,13 @@ int main (int argc, char * argv[])
                 case 'm':
                     osMigID = [NSString stringWithUTF8String:optarg];
                     break;
-				case 'V':
-					verboseLogging = YES;
-					break;
-				case 'D':
-					debugLogging = YES;
-					break;
-				case 'T':
-					traceLogging = YES;
-					break;
-				case 'e':
-					echoToConsole = YES;
-					break;
-                case 'x':
-                    printf("%s\n",consoleUser());
-                    return 0;
+				
 				case 'v':
 					printf("%s\n",[APPVERSION UTF8String]);
 					return 0;
-                case 'r':
-                    doRegistration = YES;
-                    if (optarg) {
-                        regKeyArg = [NSString stringWithUTF8String:optarg];
-                    }
-					break;
-                case 'R':
-                    readRegInfo = YES;
-                    if (optarg) {
-                        regKeyHash = [NSString stringWithUTF8String:optarg];
-                    }
-                    break;
-                case 'Z':
-                    runZetaTest = YES;
-                    break;
+				case 'b':
+					printf("%s\n",[APPBUILD UTF8String]);
+					return 0;
 				case 'h':
 				case '?':
 				default:
@@ -224,7 +285,8 @@ int main (int argc, char * argv[])
 			}
 		}
 
-        if (optind < argc) {
+        if (optind < argc)
+		{
             while (optind < argc) {
                 printf ("Invalid argument %s ", argv[optind++]);
             }
@@ -233,7 +295,8 @@ int main (int argc, char * argv[])
         }
 
 		// Make sure the user is root or is using sudo
-		if (getuid()) {
+		if (getuid())
+		{
 			printf("You must be root to run this app. Try using sudo.\n");
 #if DEBUG
 			printf("Running as debug...\n");
@@ -268,130 +331,190 @@ int main (int argc, char * argv[])
 			}
 			logit(lcl_vInfo,@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
 		}
-        
-        // Zeta Test
-        if (runZetaTest)
-        {
-            /*
-            MPHTTPRequest *ch = [MPHTTPRequest new];
-            NSDictionary *data = [ch agentData];
-            MPWSResult *result;
-            result = [ch runSyncPOST:[@"/api/v1/client/checkin" stringByAppendingPathComponent:[data objectForKey:@"cuuid"]] body:data];
-            if (!result) {
-                NSLog(@"Error running sync POST");
-            } else {
-                NSLog(@"Status: %d",(int)result.statusCode);
-                NSLog(@"Result: %@",result.toDictionary);
-            }
-            */
-            exit(0);
-             
-        }
-        
-        // Process Inventory
-        if (invArg !=NULL)
-        {
-            int x = 0;
-            MPInv *inv = [[MPInv alloc] init];
-            if ([invArg isEqual:@"Custom"]) {
-                x = [inv collectAuditTypeData];
-            } else if ([invArg isEqual:@"All"]) {
-                x = [inv collectInventoryData];
-            } else {
-                x = [inv collectInventoryDataForType:invArg];
-            }
-            return x;
-        }
-        
-        // Client Registration
-        if (doRegistration)
-        {
-            int regResult = -1;
-            NSError *regErr = nil;
-            MPAgentRegister *mpar = [[MPAgentRegister alloc] init];
-        
-            if (![regKeyArg isEqualToString:@"999999999"]) {
-                regResult = [mpar registerClient:regKeyArg error:&regErr];
-            } else {
-                regResult = [mpar registerClient:&regErr];
-            }
-            
-            if (regErr) {
-                NSLog(@"%@",regErr.localizedDescription);
-            }
-            
-            if (regResult == 0) {
-                printf("\nAgent has been registered.\n");
-            } else {
-                fprintf(stderr, "Agent registration has failed.\n");
-                exit(1);
-            }
-            
-            exit(0);
-            
-        // Verify Registration
-        }
-        else if (readRegInfo)
-        {
-            MPAgentRegister *mpar = [[MPAgentRegister alloc] init];
-            
-            if (![regKeyHash isEqualToString:@"999999999"]) {
-                if ([mpar clientIsRegistered]) {
-                    printf("\nAgent is registered.\n");
-                    exit(0);
-                } else {
-                    printf("Warning: Agent is not registered.\n");
-                    exit(1);
-                }
-            } else {
-                // Will add additional check
-                if ([mpar clientIsRegistered]) {
-                    printf("\nAgent is registered.\n");
-                    exit(0);
-                } else {
-                    printf("Warning: Agent is not registered.\n");
-                    exit(1);
-                }
-            }
-
-        // Post OS Migration Info
-        }
-        else if (osMigration)
-        {
-            NSString *uID;
-            MPOSUpgrade *mposu = [[MPOSUpgrade alloc] init];
-            if ([[osMigID lowercaseString] isEqualTo:@"auto"]) {
-                if ([[osMigAction lowercaseString] isEqualTo:@"stop"]) {
-                    uID = [mposu  migrationIDFromFile:OS_MIGRATION_STATUS];
-                } else {
-                    uID = [[NSUUID UUID] UUIDString];
-                }
-            } else {
-                uID = osMigID;
-            }
-            NSError *err = nil;
-            int res = [mposu postOSUpgradeStatus:osMigAction label:osMigLabel upgradeID:uID error:&err];
-            if (err) {
-                logit(lcl_vError,@"%@",err.localizedDescription);
-                fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
-                exit(1);
-            }
-            if (res != 0) {
-                fprintf(stderr, "Post OS Upgrade status failed.\n");
-                exit(1);
-            }
-            
-            exit(0);
-            
-        }
-        else
-        {
-            AgentController *mpac = [[AgentController alloc] init];
-            [mpac runWithType:a_Type];
-            
-            [[NSRunLoop currentRunLoop] run];
-        }
 		
+		MPInv *inv;
+		AgentController *mpac;
+		SoftwareController *swc;
+		NSString *uID;
+		MPOSUpgrade *mposu;
+		NSError *err = nil;
+		MPAgentRegister *mpar;
+        
+		int result = 1;
+		switch (a_Type)
+		{
+			case 1:
+				// Client Checkin
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 3:
+				// Patch Scan
+				mpac = [[AgentController alloc] init];
+				[mpac setILoadMode:isILoadMode];
+				[mpac runPatchScan:updateType forceRun:forceRun];
+				return 0;
+				break;
+			case 4:
+				// Patch Updates
+				mpac = [[AgentController alloc] init];
+				[mpac setILoadMode:isILoadMode];
+				[mpac setForceRun:forceRun];
+				[mpac runPatchScanAndUpdate:updateType bundleID:updateBundle];
+				return 0;
+				break;
+			case 5:
+				// AV Scan
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 6:
+				// AV Update
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 7:
+				// Update MPUpdate
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 8:
+				// Mandatory Software Tasks for Client group
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 9:
+				// Scan and install Mac OS Profiles
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				return 0;
+				break;
+			case 10:
+				// OS Migration
+				mposu = [[MPOSUpgrade alloc] init];
+				if ([[osMigID lowercaseString] isEqualTo:@"auto"]) {
+					if ([[osMigAction lowercaseString] isEqualTo:@"stop"]) {
+						uID = [mposu  migrationIDFromFile:OS_MIGRATION_STATUS];
+					} else {
+						uID = [[NSUUID UUID] UUIDString];
+					}
+				} else {
+					uID = osMigID;
+				}
+				err = nil;
+				result = [mposu postOSUpgradeStatus:osMigAction label:osMigLabel upgradeID:uID error:&err];
+				if (err) {
+					logit(lcl_vError,@"%@",err.localizedDescription);
+					fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
+					exit(1);
+				}
+				if (result != 0) {
+					fprintf(stderr, "Post OS Upgrade status failed.\n");
+					exit(1);
+				}
+				return 0;
+				break;
+			case 11:
+				// Hold
+				break;
+			case 12:
+				// Inventory
+				inv = [[MPInv alloc] init];
+				if (invArg != NULL)
+				{
+					if ([invArg isEqual:@"Custom"]) {
+						result = [inv collectAuditTypeData];
+					} else if ([invArg isEqual:@"All"]) {
+						result = [inv collectInventoryData];
+					} else {
+						result = [inv collectInventoryDataForType:invArg];
+					}
+				}
+				return result;
+				break;
+			case 13:
+				// Software - Install Group
+				swc = [SoftwareController new];
+				result = [swc installSoftwareTasksForGroup:swArg];
+				return result;
+				break;
+			case 14:
+				// Software - Install SW Task
+				// Arg is SW Task ID
+				swc = [SoftwareController new];
+				result = [swc installSoftwareTask:swArg];
+				return result;
+				break;
+			case 15:
+				// Software - Install SW Using Plist
+				swc = [SoftwareController new];
+				result = [swc installSoftwareTasksUsingPLIST:swArg];
+				return result;
+				break;
+			case 16:
+				// Register
+				mpar = [[MPAgentRegister alloc] init];
+				if (![regKeyArg isEqualToString:@"999999999"]) {
+					result = [mpar registerClient:regKeyArg error:&err];
+				} else {
+					result = [mpar registerClient:&err];
+				}
+				
+				if (err) {
+					NSLog(@"%@",err.localizedDescription);
+				}
+				
+				if (result == 0) {
+					printf("\nAgent has been registered.\n");
+				} else {
+					fprintf(stderr, "Agent registration has failed.\n");
+					exit(1);
+				}
+				
+				exit(0);
+				break;
+			case 17:
+				// Check Registration
+				mpar = [[MPAgentRegister alloc] init];
+				if (![regKeyHash isEqualToString:@"999999999"]) {
+					if ([mpar clientIsRegistered]) {
+						printf("\nAgent is registered.\n");
+						exit(0);
+					} else {
+						printf("Warning: Agent is not registered.\n");
+						exit(1);
+					}
+				} else {
+					// Will add additional check
+					if ([mpar clientIsRegistered]) {
+						printf("\nAgent is registered.\n");
+						exit(0);
+					} else {
+						printf("Warning: Agent is not registered.\n");
+						exit(1);
+					}
+				}
+				exit(0);
+				break;
+			case 50:
+				break;
+			case 60:
+				break;
+			case 99:
+				// DEFAULT Daemon Mode
+				mpac = [[AgentController alloc] init];
+				[mpac runWithType:a_Type];
+				[[NSRunLoop currentRunLoop] run];
+				break;
+			default:
+				printf("Unknown arg type. Now exiting.\n");
+				return 0;
+		}
     }
     return 0;
 }
@@ -402,24 +525,39 @@ void usage(void)
 	printf("%s: MacPatch Agent\n",[APPNAME UTF8String]);
 	printf("Version %s\n\n",[APPVERSION UTF8String]);
 	printf("Usage: %s [OPTIONS]\n\n",[APPNAME UTF8String]);
-	printf(" -d \tRun as background daemon.\n");
-    printf(" -q \tRun as background daemon using operation queues.\n");
-	printf(" -c \t --CheckIn \t\tRun client checkin.\n");
-    printf(" -w \t --WebServicePost \tRe-post failed post attempts.\n\n");
-    printf("OS Profiles \n\n");
+	printf(" -c \t --CheckIn \t\tRun client checkin.\n\n");
+	// Agent Registration
+	printf("Agent Registration \n");
+	printf(" -r \t --register \tRegister Agent [ RegKey (Optional) ] based on configuration.\n");
+	printf(" -R \t --regInfo \tDisplays if client is registered.\n\n");
+	// Scan & Update
+	printf("Patching \n");
+	printf(" -s \t --Scan \tScan for patches.\n");
+	printf(" -u \t --Update \tScan & Update approved patches.\n\n");
+	// printf(" -x \tScan & Update critical patches only.\n");
+	
+	// Software Dist
+	printf("Software \n");
+	printf(" -g \t[Software Group Name] Install Software in group.\n");
+	printf(" -d \tInstall software using TaskID\n");
+	printf(" -P \t[Software Plist] Install software using plist.\n\n");
+	
+	// Mac OS Profiles
+    printf("OS Profiles \n");
     printf(" -p \t --Profile \tScan & Install macOS profiles.\n\n");
-    printf("Agent Updater \n\n");
+	// Agent Updater
+	printf("Agent Updater \n");
     printf(" -G \t --AgentUpdater \tUpdate the MacPatch agent updater agent.\n\n");
-    printf("Agent Registration \n\n");
-    printf(" -r \t --register \tRegister Agent [ RegKey (Optional) ] based on configuration.\n");
-    printf(" -R \t --regInfo \tDisplays if client is registered.\n\n");
-    printf("OS Migration \n\n");
+	// OS Migration - iLoad etc.
+    printf("OS Migration \n");
     printf(" -k \t --OSUpgrade \tOS Migration/Upgrade action state (Start/Stop)\n");
     printf(" -l \t --OSLabel \tOS Migration/Upgrade label\n");
     printf(" -m \t --OSUpgradeID \tA Unique Migration/Upgrade ID (Optional Will Auto Gen by default)\n\n");
-	printf("Antivirus (Symantec) \n\n");
+	// Anti-Virus
+	printf("Antivirus (Symantec) \n");
 	printf(" -a \t --AVScan \tCollects Antivirus data installed on system.\n");
 	printf(" -U \t --AVUpdate \tUpdates antivirus defs.\n\n");
+	// Inventory
     printf("Inventory \n");
     printf("Option: -t [ALL] or [SPType]\n\n");
     printf(" -t\tInventory type, All is default.\n");

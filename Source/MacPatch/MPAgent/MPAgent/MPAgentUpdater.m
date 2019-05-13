@@ -48,7 +48,7 @@
 {
     self = [super init];
     if (self) {
-        self.agentUpdaterPath = [MP_ROOT stringByAppendingPathComponent:@"Updater/MPAgentUp2Date"];
+        self.agentUpdaterPath = [MP_ROOT stringByAppendingPathComponent:@"Updater/MPUpdater"];
         fm = [NSFileManager defaultManager];
         settings = [MPSettings sharedInstance];
     }

@@ -24,13 +24,11 @@
  */
 
 #import <Foundation/Foundation.h>
-
+#import "MPOperation.h"
 @class MPSettings;
 
-@interface MPSWDistTaskOperation : NSOperation
+@interface MPSWDistTaskOperation : MPOperation
 {
-    BOOL isExecuting;
-    BOOL isFinished;
     
 @private
     MPSettings          *settings;
@@ -40,8 +38,6 @@
     NSString            *_swDiskTaskListHash;
 }
 
-@property (nonatomic, readonly) BOOL                isExecuting;
-@property (nonatomic, readonly) BOOL                isFinished;
 @property (nonatomic, strong) NSString              *_fileHash;
 @property (nonatomic, assign) NSTimeInterval        _timerInterval;
 @property (nonatomic, strong) NSOperationQueue      *l_queue;

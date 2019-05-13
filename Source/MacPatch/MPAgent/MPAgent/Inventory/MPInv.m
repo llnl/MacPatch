@@ -421,10 +421,10 @@
     result = [req runSyncPOST:urlPath body:aDataMgrData];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"AppStore Data post, returned true.");
-        logit(lcl_vDebug,@"AppStore Data Result: %@",result.result);
+        logit(lcl_vInfo,@"Data post, returned true.");
+        logit(lcl_vDebug,@"Data Result: %@",result.result);
     } else {
-        logit(lcl_vError,@"AppStore Data post, returned false.");
+        logit(lcl_vError,@"Data post, returned false.");
         logit(lcl_vDebug,@"%@",result.toDictionary);
         return NO;
     }

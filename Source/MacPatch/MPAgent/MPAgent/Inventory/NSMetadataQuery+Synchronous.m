@@ -54,7 +54,7 @@
 		return [self results];
 	} else {
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSMetadataQueryDidFinishGatheringNotification object:nil];
-		NSLog(@"query failed to start: %@", searchString);
+		qlerror(@"query failed to start: %@", searchString);
 	}
 	return nil;
 }

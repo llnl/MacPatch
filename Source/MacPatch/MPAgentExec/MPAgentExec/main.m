@@ -60,19 +60,20 @@ int main (int argc, char * argv[])
             static struct option long_options[] =
             {
                 {"Debug"				,no_argument	    ,0, 'D'},
-                {"Scan"					,no_argument	    ,0, 's'},
-                {"Update"				,no_argument	    ,0, 'u'},
                 {"UpdateFilter"			,required_argument	,0, 'f'},
                 {"UpdateBundle"			,required_argument	,0, 'B'},
 				
                 {"Critial"				,no_argument	    ,0, 'x'},
-                {"AgentUpdate"			,no_argument		,0, 'G'},
+				
+				{"AgentUpdate"			,no_argument		,0, 'G'},
+				
                 {"AllowClient"			,no_argument	    ,0, 'C'},
                 {"AllowServer"			,no_argument	    ,0, 'S'},
                 {"iload"				,no_argument	    ,0, 'i'},
                 {"FORCERUN"				,no_argument		,0, 'F'},
                 {"cuuid"                ,no_argument		,0, 'c'},
-                // Software Dist
+				
+				// Software Dist
                 {"installSWUsingGRP"    ,required_argument	,0, 'g'},
                 {"installSWUsingSID"    ,required_argument	,0, 'd'},
                 {"installSWUsingPLIST"  ,required_argument	,0, 'P'},
@@ -85,7 +86,7 @@ int main (int argc, char * argv[])
             };
             // getopt_long stores the option index here.
             int option_index = 0;
-            c = getopt_long (argc, argv, "Dsuf:B:GCSiFcg:d:P:eVvh", long_options, &option_index);
+            c = getopt_long (argc, argv, "Df:B:GCSiFcg:d:P:eVvh", long_options, &option_index);
 
             // Detect the end of the options.
             if (c == -1) {
@@ -93,12 +94,6 @@ int main (int argc, char * argv[])
             }
             switch (c)
             {
-                    case 's':
-                        a_Type = 1;
-                        break;
-                    case 'u':
-                        a_Type = 2;
-                        break;
                     case 'x':
                         a_Type = 10;
                         break;
@@ -220,9 +215,9 @@ int main (int argc, char * argv[])
                     [controller setILoadMode:YES];
                 }
                 if (_updateBundle) {
-                    //[controller patchScanAndUpdateUsingPatchBundleID:_updateBundle];
+					[controller patchScanAndUpdate:kCustomPatches bundleID:_updateBundle];
                 } else {
-					//[controller patchScanAndUpdateUsingTypeFilter:updateType];
+					[controller patchScanAndUpdate:updateType bundleID:NULL];
                 }
                 break;
             case 5:
@@ -242,7 +237,7 @@ int main (int argc, char * argv[])
                 break;
             case 10:
                 // Scan for and install critical updates
-                //[controller patchScanAndUpdateUsingTypeFilter:updateType];
+				[controller patchScanAndUpdate:kCriticalPatches bundleID:NULL];
                 break;
 			case 1000:
 				

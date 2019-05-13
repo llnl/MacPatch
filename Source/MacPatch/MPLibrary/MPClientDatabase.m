@@ -259,7 +259,7 @@ Record the install of a software task.
 	BOOL result = NO;
 	@try
 	{
-		qlinfo(@"addRequiredPatch: %@",patch);
+		qldebug(@"[FMDB] addRequiredPatch: %@",patch);
 		
 		NSNumber *patchReboot = @(0);
 		NSString *patchVersion = @"0";
@@ -274,15 +274,10 @@ Record the install of a software task.
 		[db open];
 		
 		DBRequiredPatches *rp = [[DBRequiredPatches alloc] init];
-		qlinfo(@"rp.type = %@;",patch[@"type"]);
 		rp.type = patch[@"type"];
-		qlinfo(@"rp.patchID = %@;",patchID);
 		rp.patch_id = patchID;
-		qlinfo(@"rp.patch = %@;",patch[@"patch"]);
 		rp.patch = patch[@"patch"];
-		qlinfo(@"rp.patchVersion = %@;",patchVersion);
 		rp.patch_version = patchVersion;
-		qlinfo(@"rp.patchReboot = %d;",(int)patchReboot);
 		rp.patch_reboot = patchReboot;
 		rp.patch_data = [NSKeyedArchiver archivedDataWithRootObject:patch];
 		rp.patch_scandate = [NSDate date];

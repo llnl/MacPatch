@@ -36,13 +36,14 @@
 
 @synthesize isExecuting;
 @synthesize isFinished;
+@synthesize taskName;
 
 - (id)init
 {
     self = [super init];
 	if (self) {
-		isExecuting = NO;
-        isFinished  = NO;
+		self.isExecuting = NO;
+        self.isFinished  = NO;
 		fm          = [NSFileManager defaultManager];
 	}
 	return self;
@@ -62,8 +63,8 @@
 {
     [self willChangeValueForKey:@"isFinished"];
     [self willChangeValueForKey:@"isExecuting"];
-    isExecuting = NO;
-    isFinished = YES;
+    self.isExecuting = NO;
+    self.isFinished = YES;
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 }
@@ -72,12 +73,12 @@
 {
     if ([self isCancelled]) {
         [self willChangeValueForKey:@"isFinished"];
-        isFinished = YES;
+        self.isFinished = YES;
         [self didChangeValueForKey:@"isFinished"];
     } else {
         [self willChangeValueForKey:@"isExecuting"];
 		[self performSelectorInBackground:@selector(main) withObject:nil];
-        isExecuting = YES;
+        self.isExecuting = YES;
         [self didChangeValueForKey:@"isExecuting"];
     }
 }

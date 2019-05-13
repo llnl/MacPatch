@@ -241,12 +241,12 @@ typedef enum {
 							}
 							
 							qlinfo(@"Approved update %@",_applePatch[@"patch"]);
-							qldebug(@"Approved: %@",_approvedPatch);
 							tmpDict = [[NSMutableDictionary alloc] init];
 							[tmpDict setObject:@"Apple" forKey:@"type"];
 							[tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
 							[tmpDict setObject:_applePatch[@"description"] forKey:@"description"];
 							[tmpDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+							[tmpDict setObject:_applePatch[@"size"] forKey:@"size"];
 							[tmpDict setObject:_applePatch[@"version"] forKey:@"version"];
 							[tmpDict setObject:_approvedPatch[@"severity"] forKey:@"severity"];
 							[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];

@@ -27,14 +27,24 @@
 
 @interface AgentController : NSObject
 
+@property (nonatomic, assign) BOOL iLoadMode;
+@property (nonatomic, assign) BOOL forceRun;
+
 - (void)runWithType:(int)aArg;
+- (void)runWithType:(int)aArg typeInput:(NSString *)typeData;
+
 - (void)runAsDaemon;
 - (void)runTasksLoop;
 
 - (void)runClientCheckIn;
 - (void)runInventoryCollection;
+
 - (void)runPatchScan;
+- (void)runPatchScan:(MPPatchContentType)contentType forceRun:(BOOL)aForceRun;
+
 - (void)runPatchScanAndUpdate;
+- (void)runPatchScanAndUpdate:(MPPatchContentType)contentType bundleID:(NSString *)bundleID;
+
 - (void)runAVInfoScan;
 - (void)runAVInfoScanAndDefsUpdate;
 - (void)scanAndUpdateAgentUpdater;

@@ -31,7 +31,7 @@
 #import "AppLaunchObject.h"
 #import "CHMenuViewController.h"
 #import "EventToSend.h"
-#import <UserNotifications/UserNotifications.h>
+//#import <UserNotifications/UserNotifications.h>
 
 
 NSString * const kMenuIconNorml		= @"mp3Image";
@@ -536,13 +536,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         CHMenuViewController *vc;
         for (NSDictionary *d in patches)
         {
-			NSLog(@"d: %@",d);
             newMenuItem = [[NSMenuItem alloc] initWithTitle:@"" action:nil keyEquivalent:@""];
             vc = [[CHMenuViewController alloc] init];
             [vc addTitle:d[@"name"] version:d[@"version"]];
             if ([d[@"reboot"] isEqualToString:@"Y"])
             {
-				NSLog(@"Add reboot image");
                 vc.ximage = [NSImage imageNamed:@"rebootImage"];
             } else {
                 vc.ximage = [NSImage imageNamed:@"emptyImage"];
@@ -878,7 +876,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
 	{
 		if ([deliveredNote.title isEqualToString:@"Reboot Patches Required"]) {
-			NSLog(@"Already posted");
 			return;
 		}
 	}

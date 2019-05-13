@@ -27,6 +27,7 @@ PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
 BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
+BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
 AGENTVER="3.2.0.1"
 UPDATEVER="3.2.0.1"
@@ -226,10 +227,12 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPClientStatus"
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
-		echo " - Compiling MPAgentExec"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		#echo " - Compiling MPAgentExec"
+		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPAgent"
+        sed -i '' "s/\[BUILD\]/$BUILD_NO_STR/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+        sed -i '' "s/$BUILD_NO_STR/\[BUILD\]/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
 		echo " - Compiling MPLoginAgent"
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPUpdater"
@@ -247,7 +250,7 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release 
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
+		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
@@ -294,7 +297,7 @@ cp -R ${PKGROOT}/Combined ${BUILDROOT}
 mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications
 mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
-mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+#mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 
@@ -380,7 +383,6 @@ ${BUILDROOT}/Combined/Packages/Updater.pkg
 # ------------------------------------------------------------
 # Set Version Info in text files
 # ------------------------------------------------------------
-BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 AGENT_VER_BUILD="$AGENTVER"
 sed -i '' "s/\[AGENT_VER\]/$AGENT_VER_BUILD/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
 sed -i '' "s/\[BUILD_NO\]/$BUILD_NO_STR/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"

@@ -65,18 +65,11 @@
             keyChainFile = [aKeyChainFile copy];
             OSStatus unlockResult = [self unlockKeyChain:aKeyChainFile];
             if (unlockResult != noErr) {
-                NSLog(@"Unlock Keychain error: %d",unlockResult);
+                qlerror(@"Unlock Keychain error: %d",unlockResult);
                 return nil;
             }
         } else {
             keyChainFile = [aKeyChainFile copy];
-            /*
-            OSStatus result = [self createKeyChain:aKeyChainFile];
-            if (result != noErr) {
-                NSLog(@"Create Keychain error: %d",result);
-                return nil;
-            }
-             */
         }
     }
     return self;
@@ -292,7 +285,7 @@
     OSStatus err = SecKeychainGetStatus(xKeychain, &keychainStatus);
     
     if (err != errSecSuccess) {
-        NSLog(@"Error getting Keychain status.");
+        qlerror(@"Error getting Keychain status.");
         return NO;
     }
     
@@ -315,7 +308,6 @@
     OSStatus result;
     SecTrustedApplicationRef me;
     SecTrustedApplicationRef MPAgent = NULL;
-    SecTrustedApplicationRef MPAgentExec = NULL;
     SecTrustedApplicationRef MPWorker = NULL;
     SecTrustedApplicationRef MPCatalog = NULL;
     SecTrustedApplicationRef SelfPatch = NULL;
@@ -325,16 +317,15 @@
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgentExec", &MPAgentExec);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPCatalog.app", &MPCatalog);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/Self Patch.app", &SelfPatch);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
     result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPAgentUp2Date", &MPUpdateAgent);
+    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
     
     NSArray *trustedApplications = [NSArray arrayWithObjects:(__bridge_transfer id)me, (__bridge_transfer id)MPAgent,
-                                    (__bridge_transfer id)MPAgentExec, (__bridge_transfer id)MPWorker, (__bridge_transfer id)MPCatalog,
+                                    (__bridge_transfer id)MPWorker, (__bridge_transfer id)MPCatalog,
                                     (__bridge_transfer id)SelfPatch, (__bridge_transfer id)MPClientStatus, (__bridge_transfer id)MPLoginAgent,
                                     (__bridge_transfer id)MPUpdateAgent, nil];
     

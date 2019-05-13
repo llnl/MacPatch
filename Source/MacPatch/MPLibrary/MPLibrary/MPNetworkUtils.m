@@ -156,8 +156,6 @@ static int isalive(struct sockaddr_in scanaddr)
 
 - (BOOL)isURLValid:(NSString *)aURL returnCode:(int)aReturnCode
 {
-	qlinfo(@"Testing URL (%@)",aURL);
-	
 	BOOL result = 0;
 	NSURL *theURL = [NSURL URLWithString:aURL];
 	NSURLRequest *request = [NSURLRequest requestWithURL:theURL];
@@ -171,14 +169,11 @@ static int isalive(struct sockaddr_in scanaddr)
 	
 	
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-	qlinfo(@"response status code: %ld", (long)[httpResponse statusCode]);
-	
 	int statusCode = (int)[((NSHTTPURLResponse *)response) statusCode];
-	// CEH
-	qlinfo(@"isURLValid[statusCode]: %d",statusCode);
 	if (statusCode == aReturnCode) {
 		result = YES;
 	} else {
+		qlerror(@"isURLValid[statusCode]: %d",statusCode);
 		result = NO;
 	}
 	

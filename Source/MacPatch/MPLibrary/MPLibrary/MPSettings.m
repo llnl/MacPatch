@@ -183,9 +183,12 @@ static MPSettings *_instance;
 
 - (BOOL)compareAndUpdateSettings:(NSDictionary *)remoteSettingsRevs
 {
+	[self refresh];
+	
     NSDictionary *local = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
     NSDictionary *localRevs = local[@"revs"];
 	NSString *localID = self.agent.groupId;
+	NSString *remoteID = @"";
 	
     if ([localRevs isEqualToDictionary:remoteSettingsRevs])
 	{
@@ -194,14 +197,21 @@ static MPSettings *_instance;
     } else {
         qlinfo(@"Setting Revisions did not match. Updating settings.");
         NSDictionary *remoteSettings = [self allSettingsFromServer:NO];
-		if (![localID isEqualToString:remoteSettingsRevs[@"id"]])
+		
+		if (!remoteSettingsRevs[@"id"]) {
+			remoteID = remoteSettings[@"settings"][@"agent"][@"data"][@"client_group_id"];
+		} else {
+			remoteID = remoteSettingsRevs[@"id"];
+		}
+		
+		if (![localID isEqualToString:remoteID])
 		{
 			// Update all, group id does not match
 			qlinfo(@"Client group has been changed. Update all settings.");
 			localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0};
 		}
 		
-        if ([remoteSettingsRevs objectForKey:@"agent"] != [localRevs objectForKey:@"agent"]) {
+        if ([[remoteSettingsRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
             // Usdate Agent Settings
             qlinfo(@"Update Agent Settings, settings did not match.");
             [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];

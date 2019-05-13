@@ -17,9 +17,6 @@
       location = "group:MPAgent/MPAgent.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:MPAgentExec/MPAgentExec.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:MPUpdater/MPUpdater.xcodeproj">
    </FileRef>
    <FileRef

@@ -24,13 +24,11 @@
  */
 
 #import <Cocoa/Cocoa.h>
+#import "MPOperation.h"
 
-@interface PatchScanAndUpdateOperation : NSOperation 
+@interface PatchScanAndUpdateOperation : MPOperation 
 {
-	int scanType;
     int taskPID;
-	BOOL isExecuting;
-	BOOL isFinished;
 	NSString *taskFile;
     
 @private
@@ -38,11 +36,14 @@
 	NSFileManager *fm;
 }
 
-@property (nonatomic, assign) int scanType;
-@property (nonatomic, assign) int taskPID;
-@property (nonatomic) NSString *taskFile;
+@property (nonatomic, assign) BOOL				 iLoadMode;
+@property (nonatomic, assign) int				 taskPID;
+@property (nonatomic) 		  NSString 			 *taskFile;
 
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
+
+@property (nonatomic, assign) MPPatchContentType patchFilter;
+@property (nonatomic, assign) int 				 scanType;
+@property (nonatomic) 		  NSString 			 *bundleID;
+@property (nonatomic, assign) BOOL				 forceRun;
 
 @end
