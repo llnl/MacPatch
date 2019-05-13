@@ -363,8 +363,8 @@ typedef enum {
 
 - (NSDictionary *)installPatchesUsingTypeFilter:(NSArray *)approvedPatches typeFilter:(MPPatchContentType)contentType
 {
-	qlinfo(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
-	qlinfo(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
+	//qlinfo(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
+	//qlinfo(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
 	
 	BOOL hasUserLoggedIn = [MPSystemInfo isUserLoggedIn];
 	BOOL canInstallRebootPatches = NO;

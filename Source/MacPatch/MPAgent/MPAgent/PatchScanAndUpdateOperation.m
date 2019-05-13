@@ -294,8 +294,8 @@
 	qlinfo( @"Checking system patching requirments.");
 	NSDictionary *systeInfo = [MPSystemInfo osVersionInfo];
 	NSString *_osType = systeInfo[@"ProductName"];
-	qlinfo( @"OS Full Info: (%@)",systeInfo);
-	qlinfo( @"OS Info: (%@)",_osType);
+	//qlinfo( @"OS Full Info: (%@)",systeInfo);
+	//qlinfo( @"OS Info: (%@)",_osType);
 	if ([_osType.lowercaseString isEqualToString:@"mac os x"] || [_osType.lowercaseString isEqualToString:@"macos"])
 	{
 		if (settings.agent.patchClient)
