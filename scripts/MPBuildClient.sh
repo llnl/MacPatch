@@ -163,6 +163,7 @@ if ! [[ $BUILD_NO =~ $re ]] ; then
    echo "Error: Build number is not a number" >&2; exit 1
 fi
 defaults write ${BUILDPLIST} client_build "${BUILD_NO}"
+AGENTVER="${AGENT_VER}.${BUILD_NO}"
 
 # ------------------------------------------------------------
 # MacPatch Client Release Level
