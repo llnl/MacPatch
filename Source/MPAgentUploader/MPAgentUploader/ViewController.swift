@@ -1008,9 +1008,9 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         var base_dict: [String:Any] = [:]
         let ver_dict: NSDictionary
         let info_dict: NSDictionary = NSDictionary.init(contentsOfFile: version_file)!
-        
+
         let x_type: String
-        if (type == "Base") {
+        if (type == "Base" || type == "Client") {
             ver_dict = info_dict.object(forKey: "Agent") as! NSDictionary
             x_type = "app"
         } else {
