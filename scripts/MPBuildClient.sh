@@ -51,7 +51,7 @@ else
 	mkdir -p ${BUILDROOT}/logs
 fi
 
-clear
+#clear
 echo " ------------------------------------------------------------"
 echo "  Building MacPatch Client"
 echo " ------------------------------------------------------------"
@@ -311,12 +311,16 @@ if $INCPlanBSource; then
 
 	mkdir -p ${BUILDROOT}/Client/Files/usr/local/bin/
 	mkdir -p ${BUILDROOT}/Client/Files/usr/local/sbin/
+    mkdir -p ${BUILDROOT}/Client/Files/Library/Preferences/
 
 	cp ${PLANB_BUILDROOT}/Release/planb ${BUILDROOT}/Client/Files/usr/local/sbin/
 	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
 	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
+    cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
 
+    agentHash=`md5 -q ${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent`
 	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
+    sed -i '' "s/MPHASH=\"0\"/MPHASH=\"${agentHash}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
 fi
 
 # ------------------------------------------------------------
@@ -330,12 +334,16 @@ sleep 5
 # Agent
 # @AGENTVER@
 sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @APPVER@
 sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @AMINOS@
 sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 # @ABUILD@
 sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
 
 # Updater
 # @UPDATEVER@
@@ -369,7 +377,7 @@ pkgbuild --root ${BUILDROOT}/Client/Files \
 --install-location / \
 --scripts ${BUILDROOT}/Client/Scripts \
 --version $AGENTVER \
-${BUILDROOT}/Combined/Packages/Client.pkg
+${BUILDROOT}/Combined/Packages/Base.pkg
 
 # ------------------------------------------------------------
 # Create the Updater pkg
