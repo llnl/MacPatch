@@ -136,6 +136,7 @@ function setupPyVirtEnv
 # ******************************************************************
 # Copy in client version info
 if [ -e "${SRC}/.mpVersion.plist" ]; then
+    rm -f "${MP_ROOT_CLIENT}/.mpVersion.plist"
 	cp "${SRC}/.mpVersion.plist" "${MP_ROOT_CLIENT}/.mpVersion.plist"
 fi
 

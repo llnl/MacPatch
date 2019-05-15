@@ -98,7 +98,8 @@ int main (int argc, char * argv[])
 				// Patching
 				{"Scan"					,no_argument	    ,0, 's'},
 				{"Update"				,no_argument	    ,0, 'u'},
-				//{"Critial"			,no_argument	    ,0, 'x'},
+				{"Critial"				,no_argument	    ,0, 'x'},
+				
 				// Patching Filters
 				{"UpdateFilter"			,required_argument	,0, 'f'},
 				{"UpdateBundle"			,required_argument	,0, 'B'},
@@ -147,7 +148,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVcisufB:Ft:ACaUGSg:d:P:pr:R:k:l:m:vbh", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr:R:k:l:m:vbh", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -179,6 +180,9 @@ int main (int argc, char * argv[])
 					a_Type = 3;
 					break;
 				case 'u':
+					a_Type = 4;
+					break;
+				case 'x':
 					a_Type = 4;
 					break;
 				case 'f':
@@ -521,7 +525,6 @@ int main (int argc, char * argv[])
 
 void usage(void)
 {
-    
 	printf("%s: MacPatch Agent\n",[APPNAME UTF8String]);
 	printf("Version %s\n\n",[APPVERSION UTF8String]);
 	printf("Usage: %s [OPTIONS]\n\n",[APPNAME UTF8String]);
@@ -541,6 +544,7 @@ void usage(void)
 	printf(" -g \t[Software Group Name] Install Software in group.\n");
 	printf(" -d \tInstall software using TaskID\n");
 	printf(" -P \t[Software Plist] Install software using plist.\n\n");
+	printf(" -S \tInstall client group mandatory software.\n\n");
 	
 	// Mac OS Profiles
     printf("OS Profiles \n");

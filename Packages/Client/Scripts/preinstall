@@ -44,6 +44,16 @@ if [ -f "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" ]; then
 	rm -f /Library/Logs/gov.llnl.mp.helper.log
 fi
 
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.agent.plist" ]; then
+    /bin/launchctl remove gov.llnl.mp.agent
+    sleep 2
+    /bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+    sleep 2
+
+    rm -f /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+fi
+
+
 # ***************************************************************************************
 # MacPatch Pre-Deployment
 #

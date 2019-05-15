@@ -27,6 +27,6 @@
     <choice id="Updater" title="Updater">
         <pkg-ref id="gov.llnl.mp.agent.updater"/>
     </choice>
-    <pkg-ref id="gov.llnl.mp.agent.client" version="1.0" auth="Root">#Client.pkg</pkg-ref>
+    <pkg-ref id="gov.llnl.mp.agent.client" version="1.0" auth="Root">#Base.pkg</pkg-ref>
     <pkg-ref id="gov.llnl.mp.agent.updater" version="1.0" auth="Root">#Updater.pkg</pkg-ref>
 </installer-gui-script>

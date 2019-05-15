@@ -343,7 +343,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 #pragma mark Checkin
 - (IBAction)showCheckinWindow:(id)sender
 {
-    //[NSThread detachNewThreadSelector:@selector(performClientCheckInThread) toTarget:self withObject:nil];
 	[self connectAndExecuteCommandBlock:^(NSError * connectError)
 	 {
 		 if (connectError != nil)
@@ -785,6 +784,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (IBAction)logoutAndPatch:(id)sender
 {
+	[self.rebootWindow close];
+	
     if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
         NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
         [ud setBool:NO forKey:@"patch"];

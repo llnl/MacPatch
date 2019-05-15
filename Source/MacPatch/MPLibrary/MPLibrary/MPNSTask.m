@@ -180,7 +180,7 @@
 		if ([[tmpStr trim] length] != 0)
 		{
 			[self postStatusToDelegate:tmpStr];
-			qlinfo(@"INCR: %@",tmpStr);
+			qlinfo(@"%@",[tmpStr trim]);
 		}
 		[_data appendData:newData];
 		_taskData = (NSData *)[_data copy];

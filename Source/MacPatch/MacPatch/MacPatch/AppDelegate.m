@@ -265,7 +265,10 @@
 
 - (IBAction)logoutAndPatch:(id)sender
 {
-	if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
+	[self.rebootWindow close];
+	
+	if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
+	{
 		NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 		[ud setBool:NO forKey:@"patch"];
 		[ud setBool:NO forKey:@"reboot"];
