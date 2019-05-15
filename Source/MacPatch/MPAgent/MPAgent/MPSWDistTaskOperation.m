@@ -198,7 +198,7 @@
         
         // Download the software
         NSError *error = nil;
-        NSString *file = [self downloadFile:swLoc error:&error];
+        NSString *file = [self downloadFile:_url error:&error];
         if (error)
         {
             file = nil;
