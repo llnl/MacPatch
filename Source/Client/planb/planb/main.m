@@ -26,14 +26,20 @@ static NSString * const kBaseURL = @"https://mpprod01.llnl.gov/mp-content/planb"
 static NSString * const kMachineInfo = @"/Library/Preferences/gov.llnl.planb.plist";
 static NSString * const kMachineInfoKey = @"ConfigurationTrack";
 static NSString * const kAssertionName = @"planb";
+static NSString * const kPackagesKey = @"Packages";
 
 /**
   Return the list of packages to install, along with their receipt names.
 */
-NSArray* Packages() {
-  return @[
-      @[ @"MacPatch31", @"gov.llnl.mp.base" ]
-  ];
+NSArray* Packages()
+{
+	NSArray *packages;
+	NSArray *result =  @[ @[ @"MacPatch31", @"gov.llnl.mp.base" ] ];
+	
+	NSDictionary *planbPlistDictionary = [NSDictionary dictionaryWithContentsOfFile:kMachineInfo];
+	packages = planbPlistDictionary[kPackagesKey];
+	if (packages) result = packages;
+	return result;
 }
 
 /**
@@ -46,7 +52,8 @@ NSArray* Packages() {
   E.g. using the default parameters above with the parameter 'pkg1/sample' the URL would be:
   https://mac.internal.megacorp.com/pkgbase/pkg1/sample-stable.dmg
 */
-NSURL* URLForPackagePath(NSString *pkg) {
+NSURL* URLForPackagePath(NSString *pkg)
+{
   static dispatch_once_t onceToken;
   static NSString *track;
 
