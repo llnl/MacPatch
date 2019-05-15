@@ -140,6 +140,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		
 		// Scan host for patches
 		approvedUpdates = [patching scanForPatchesUsingTypeFilter:kAllPatches forceRun:YES];
+		qlinfo(@"approvedUpdates: %@",approvedUpdates);
 		if (approvedUpdates.count <= 0)
 		{
 			[self progress:@"No patches found..."];
@@ -147,6 +148,12 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			[self rebootOrLogout:1]; // Exit app, no reboot.
 			return;
 		}
+		
+		// Sort approved pacthes by install weight
+		NSMutableArray *approvedUpdatesArray = [[NSMutableArray alloc] initWithArray:approvedUpdates];
+		NSSortDescriptor *desc = [NSSortDescriptor sortDescriptorWithKey:@"patch_install_weight" ascending:YES];
+		[approvedUpdatesArray sortUsingDescriptors:[NSArray arrayWithObject:desc]];
+		approvedUpdates = [approvedUpdatesArray copy];
 		
 		// Install required patches
 		dispatch_async(dispatch_get_main_queue(), ^(void)
