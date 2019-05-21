@@ -573,6 +573,7 @@ void usage(void)
     printf(" \t\tSINetworkInfo\n");
     printf(" \t\tSPApplicationsDataType\n");
     printf(" \t\tSPFrameworksDataType\n");
+	printf(" \t\tSPExtensionsDataType\n");
     printf(" \t\tDirectoryServices\n");
     printf(" \t\tInternetPlugins\n");
     printf(" \t\tAppUsage\n");

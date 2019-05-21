@@ -48,7 +48,7 @@
 
 #define kSP_DATA_Dir			@"/private/tmp/.mpData"
 #define kSP_APP                 @"/usr/sbin/system_profiler"
-#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders,SINetworkInfo,SIHardDrive,SIPCIBus,SIRAM,SIUSB"
+#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,SPExtensionsDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders,SINetworkInfo,SIHardDrive,SIPCIBus,SIRAM,SIUSB"
 #define kTasksPlist             @"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist"
 #define kInvHashData            @"/Library/MacPatch/Client/Data/.gov.llnl.mp.inv.data.plist"
 
@@ -264,6 +264,8 @@
 					tmpArr = [self parseApplicationsDataFromXML:[item objectForKey:@"file"]];
 				} else if ([[item objectForKey:@"type"] isEqual:@"SPFrameworksDataType"]) {
 					tmpArr = [self parseFrameworksDataFromXML:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPExtensionsDataType"]) {
+					tmpArr = [self parseExtensionsDataFromXML:[item objectForKey:@"file"]];
 				} else if ([[item objectForKey:@"type"] isEqual:@"DirectoryServices"]) {
 					tmpArr = [self parseDirectoryServicesData];
 				} else if ([[item objectForKey:@"type"] isEqual:@"InternetPlugins"]) {
@@ -443,7 +445,8 @@
     [spTask setLaunchPath: kSP_APP];
 	
 	// Should it be XML or Text
-	if ([profileType isEqualToString:@"SPApplicationsDataType"] || [profileType isEqualToString:@"SPFrameworksDataType"]) {
+	if ([profileType isEqualToString:@"SPApplicationsDataType"] || [profileType isEqualToString:@"SPFrameworksDataType"]
+		|| [profileType isEqualToString:@"SPExtensionsDataType"]) {
 		[spTask setArguments:[NSArray arrayWithObjects:profileType,@"-xml",nil]];
 		spFileName = [NSString stringWithFormat:@"%@.plist",profileType];
 	} else {
@@ -481,7 +484,6 @@
     NSString *string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 	logit(lcl_vInfo,@"Writing result to %@",[kSP_DATA_Dir stringByAppendingPathComponent:spFileName]);
 	[string writeToFile:[kSP_DATA_Dir stringByAppendingPathComponent:spFileName] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-	
 	
 	return [kSP_DATA_Dir stringByAppendingPathComponent:spFileName];
 }
@@ -909,8 +911,8 @@
 	NSDictionary *rootDict = [spX objectAtIndex:0];
  	NSArray *itemsArray = [rootDict objectForKey:@"_items"];
 	
-	NSArray *tmpKeys = [NSArray arrayWithObjects:@"Version",@"Last_Modified",@"Kind",@"Get_Info_String",@"Location",nil];
-	NSArray *tmpObj = [NSArray arrayWithObjects:@"NA",@"NA",@"NA",@"NA",@"NA",nil];
+	NSArray *tmpKeys = [NSArray arrayWithObjects:@"Version",@"Last_Modified",@"Kind",@"Get_Info_String",@"Location",@"Is64Bit",nil];
+	NSArray *tmpObj = [NSArray arrayWithObjects:@"NA",@"NA",@"NA",@"NA",@"NA", @"NA", nil];
 	NSDictionary *tmpDict = [NSDictionary dictionaryWithObjects:tmpObj forKeys:tmpKeys];
 	
 	NSMutableArray *newItemsArray = [[NSMutableArray alloc] init];
@@ -936,8 +938,11 @@
 		}	
 		if ([[curItem allKeys] containsObject:@"path"]) {
 			[rec setObject:[curItem objectForKey:@"path"] forKey:@"Location"];
-		}	
-		
+		}
+		if ([[curItem allKeys] containsObject:@"has64BitIntelCode"]) {
+			[rec setObject:[curItem objectForKey:@"has64BitIntelCode"] forKey:@"Is64Bit"];
+		}
+	
 		[newItemsArray addObject:rec];
 		rec = nil;
 	}
@@ -1014,6 +1019,73 @@
 	result = [NSArray arrayWithArray:newItemsArray];
 	
 	return result;	
+}
+
+- (NSArray *)parseExtensionsDataFromXML:(NSString *)xmlFileToParse
+{
+	NSArray *result = nil;
+	NSFileManager *dm = [NSFileManager defaultManager];
+	if ([dm fileExistsAtPath:xmlFileToParse] == NO)
+	{
+		logit(lcl_vError,@"Inventory cache file was not found. Data will not be parsed.");
+		return result;
+	}
+	
+	NSArray *spX = [NSArray arrayWithContentsOfFile:xmlFileToParse];
+	NSDictionary *rootDict = [spX objectAtIndex:0];
+	NSArray *itemsArray = [rootDict objectForKey:@"_items"];
+	
+	//NSArray *tmpKeys = @[@"Name", @"BundleID", @"Version", @"Kext_Version", @"lastModified", @"Location", @"Obtained_From", @"Loadable", @"Loaded", @"Signed_By", @"Is64Bit"];
+	//NSArray *dictKeys = @[@"_name", @"spext_bundleid", @"version", @"spext_version", @"spext_lastModified", @"spext_path", @"spext_obtained_from", @"spext_loadable", @"spext_loaded", @"spext_signed_by",@"spext_has64BitIntelCode"];
+	
+	NSArray *arr = @[
+					 @{@"name":@"Name",@"spKey":@"_name"},
+					 @{@"name":@"BundleID",@"spKey":@"spext_bundleid"},
+					 @{@"name":@"Version",@"spKey":@"version"},
+					 @{@"name":@"Kext_Version",@"spKey":@"spext_version"},
+					 @{@"name":@"lastModified",@"spKey":@"spext_lastModified"},
+					 @{@"name":@"Location",@"spKey":@"spext_path"},
+					 @{@"name":@"Obtained_From",@"spKey":@"spext_obtained_from"},
+					 @{@"name":@"Loadable",@"spKey":@"spext_loadable"},
+					 @{@"name":@"Loaded",@"spKey":@"spext_loaded"},
+					 @{@"name":@"Signed_By",@"spKey":@"spext_signed_by"},
+					 @{@"name":@"Is64Bit",@"spKey":@"spext_has64BitIntelCode"}
+					 ];
+	
+	NSMutableDictionary *defaultRow = [NSMutableDictionary new];
+	for (NSDictionary *d in arr)
+	{
+		[defaultRow setObject:@"NA" forKey:d[@"name"]];
+	}
+	
+	NSMutableArray *newItemsArray = [[NSMutableArray alloc] init];
+	NSMutableDictionary *rec;
+	
+	for (NSDictionary *row in itemsArray)
+	{
+		// row is spx dict
+		rec = [[NSMutableDictionary alloc] initWithDictionary:defaultRow];
+		for (NSString *rowKey in row.allKeys)
+		{
+			// Loop through key pairs
+			for (NSDictionary *kp in arr)
+			{
+				if ( [kp[@"spKey"] isEqualToString:rowKey] )
+				{
+					if ([row[rowKey] isKindOfClass:[NSString class]]) {
+						[rec setObject:[row[rowKey] stringByReplacingOccurrencesOfString:@"spext_" withString:@""] forKey:kp[@"name"]];
+					} else {
+						[rec setObject:row[rowKey] forKey:kp[@"name"]];
+					}
+				}
+			}
+		}
+		[newItemsArray addObject:[rec copy]];
+		rec = nil;
+	}
+	
+	result = [NSArray arrayWithArray:newItemsArray];
+	return result;
 }
 
 - (NSArray *)parseApplicationsData:(NSString *)fileToParse
@@ -1776,7 +1848,7 @@ done:
     NSArray *mpServerInfo = nil;
     NSMutableDictionary *mpServerListInfo;
     NSFileManager *fm = [NSFileManager defaultManager];
-    /* Needs to be completed */
+    
     if ([fm fileExistsAtPath:AGENT_SERVERS_PLIST])
     {
         NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:AGENT_SERVERS_PLIST];
