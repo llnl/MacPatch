@@ -709,7 +709,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Run Download Script
 		// ------------------------------------------------
-		[self postStatus:@"Running pre-install script..."];
+		[self postStatus:@"Running script..."];
 		err = nil;
 		mpScript = [[MPScript alloc] init];
 		if (![mpScript runScriptsFromDirectory:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err]) {
@@ -719,6 +719,8 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 			}
 			reply(err,1,installResultData);
 			return;
+		} else {
+			result = 0;
 		}
 		
 		// ------------------------------------------------
@@ -974,10 +976,15 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 			err = nil;
 			// Install Pathes If Enabled
 			[self postStatus:@"Patching %@",swItem[@"name"]];
-			// CEH
-			//MPAgentController *swAutoUp = [[MPAgentController alloc] initForBundleUpdate];
-			//[swAutoUp scanAndUpdateCustomWithPatchBundleID:[swItem valueForKeyPath:@"Software.patch_bundle_id"]];
-			//result = [swAutoUp errorCode];
+			MPPatching *p = [MPPatching new];
+			NSArray *foundPatches = [p scanForPatchUsingBundleID:[swItem valueForKeyPath:@"Software.patch_bundle_id"]];
+			if (foundPatches)
+			{
+				if (foundPatches.count >= 1)
+				{
+					[p installPatchesUsingTypeFilter:foundPatches typeFilter:kCustomPatches];
+				}
+			}
 		}
 	}
 	
