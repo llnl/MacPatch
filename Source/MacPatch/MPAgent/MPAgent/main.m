@@ -130,7 +130,7 @@ int main (int argc, char * argv[])
 
 				// Client Registration
 				{"register"		    	,optional_argument	,0, 'r'},
-				{"regInfo"		    	,optional_argument  ,0, 'R'},
+				{"regInfo"		    	,optional_argument  ,NULL, 'R'},
 				
 				// OS Migration
 				{"OSUpgrade"        	,required_argument	,0, 'k'},
@@ -148,7 +148,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr:R:k:l:m:vbh", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr::R::k:l:m:vbh:", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
