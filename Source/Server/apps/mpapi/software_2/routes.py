@@ -67,7 +67,7 @@ class SoftwareTasksForGroup(MPResource):
 					if q_sw_group_alt_data is not None and q_sw_group_alt_data.gData is not None:
 						_group_alt_data = json.loads(q_sw_group_alt_data.gData) # Parse the JSON Data
 						_merge_list = _group_data['result']['Tasks'] + _group_alt_data['result']['Tasks'] # Merge Both Tasks Lists
-						_new_tasks = {v['id']:v for v in _merge_list}.values() # Filter out any duplicates
+						_new_tasks = list({v['id']:v for v in _merge_list}.values()) # Filter out any duplicates
 
 						# Replace old tasks list with new merged list
 						_group_data['result']['Tasks'] = _new_tasks
@@ -105,7 +105,7 @@ class SoftwareTasksForGroup(MPResource):
 				log_Error('[SoftwareTasksForGroup][Get][%s] Group (%s) Not Found' % (cuuid, groupName))
 				return wsResult.resultNoSignature(errorno=1, errormsg='No Data for Group'), 202
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 
@@ -166,7 +166,7 @@ class SoftwareTaskForTaskID(MPResource):
 				_task = SWTask()
 				_task_data = _task.struct()
 
-				for t in _task.keys():
+				for t in list(_task.keys()):
 					if t in q_task.__dict__:
 						t_Val = eval("q_task." + t)
 						if type(t_Val) is not datetime:
@@ -188,7 +188,7 @@ class SoftwareTaskForTaskID(MPResource):
 			if q_software is not None:
 				_sw = Software()
 				_sw_data = _sw.struct()
-				for s in _sw.keys():
+				for s in list(_sw.keys()):
 					if s in q_software.__dict__:
 						s_Val = eval("q_software." + s)
 						if type(s_Val) is not datetime:
@@ -199,7 +199,7 @@ class SoftwareTaskForTaskID(MPResource):
 						else:
 							_sw_data[s] = s_Val.strftime("%Y-%m-%d %H:%M:%S")
 					else:
-						print s
+						print(s)
 						if s == "vendorUrl":
 							_sw_data['vendorUrl'] = eval("q_software.sVendorURL")
 
@@ -259,7 +259,7 @@ class SoftwareTaskForTaskID(MPResource):
 			wsResult.data = wsData.toDict()
 			return wsResult.resultWithSignature(), 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error(
 				'[SoftwareTaskForTaskID][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
@@ -318,7 +318,7 @@ class SoftwareGroups(MPResource):
 				log_Error('[SoftwareDistributionGroups][Get][%s]: Not groups found.' % (cuuid))
 				return wsResult.resultNoSignature(), 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareDistributionGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 		except Exception as e:
@@ -358,7 +358,7 @@ class SoftwareForClientGroup(MPResource):
 			return {"result": {'data': res, 'type':'RequiredSoftware'}, "errorno": 0, "errormsg": 'none'}, 200
 
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentStatus][Get][IntegrityError]: client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -411,7 +411,7 @@ class Software(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 class SWTask(object):
 	def __init__(self):
@@ -432,7 +432,7 @@ class SWTask(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 class SoftwareCritera(object):
 	def __init__(self):
@@ -444,7 +444,7 @@ class SoftwareCritera(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 # Add Routes Resources
 software_2_api.add_resource(SoftwareTasksForGroup,		'/sw/tasks/<string:cuuid>/<string:groupName>', endpoint='swTasks')

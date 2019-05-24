@@ -82,7 +82,7 @@ class SoftwareTasksForGroup(MPResource):
 				log_Error('[SoftwareTasksForGroup][Get][%s] Group (%s) Not Found' % (cuuid, groupName))
 				return {'errorno': 0, 'errormsg': 'No Data for Group', 'result': {}}, 202
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -130,12 +130,12 @@ class SaveSoftwareTasksForGroup(MPResource):
 				setattr(q_sw_group_data, 'gData', jData)
 				db.session.commit()
 				return {"result": {}, "errorno": 0, "errormsg": ''}, 201
-			except IntegrityError, exc:
+			except IntegrityError as exc:
 				log_Error('[SaveSoftwareTasksForGroup][Get][IntegrityError][SAVE] CUUID: %s Message: %s' % (cuuid, exc.message))
 				db.session.rollback()
 
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SaveSoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -181,7 +181,7 @@ class SoftwareTaskForTaskID(MPResource):
 				_task = SWTask()
 				_task_data = _task.struct()
 
-				for t in _task.keys():
+				for t in list(_task.keys()):
 					if t in q_task.__dict__:
 						t_Val = eval("q_task." + t)
 						if type(t_Val) is not datetime:
@@ -203,7 +203,7 @@ class SoftwareTaskForTaskID(MPResource):
 			if q_software is not None:
 				_sw = Software()
 				_sw_data = _sw.struct()
-				for s in _sw.keys():
+				for s in list(_sw.keys()):
 					if s in q_software.__dict__:
 						s_Val = eval("q_software." + s)
 						if type(s_Val) is not datetime:
@@ -214,7 +214,7 @@ class SoftwareTaskForTaskID(MPResource):
 						else:
 							_sw_data[s] = s_Val.strftime("%Y-%m-%d %H:%M:%S")
 					else:
-						print s
+						print(s)
 						if s == "vendorUrl":
 							_sw_data['vendorUrl'] = eval("q_software.sVendorURL")
 
@@ -268,7 +268,7 @@ class SoftwareTaskForTaskID(MPResource):
 
 			return {"result": task, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareTaskForTaskID][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -316,7 +316,7 @@ class SoftwareDistributionGroups(MPResource):
 				log_Error('[SoftwareDistributionGroups][Get][%s]: Not groups found.' % (cuuid))
 				return {"result": '', "errorno": 0, "errormsg": ''}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareDistributionGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -357,7 +357,7 @@ class SoftwareInstallResult(MPResource):
 				try:
 					db.session.add(sw_install)
 					db.session.commit()
-				except IntegrityError, exc:
+				except IntegrityError as exc:
 					db.session.rollback()
 			else:
 				log_Error('[SoftwareInstallResult][Post][%s]:jData=%s' % (cuuid, jData))
@@ -366,7 +366,7 @@ class SoftwareInstallResult(MPResource):
 
 			return {'errorno': 0, "errormsg": "", "result": ""}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SoftwareInstallResult][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -403,7 +403,7 @@ class Software(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 class SWTask(object):
 	def __init__(self):
@@ -424,7 +424,7 @@ class SWTask(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 class SoftwareCritera(object):
 	def __init__(self):
@@ -436,7 +436,7 @@ class SoftwareCritera(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 # Add Routes Resources
 software_api.add_resource(SoftwareTasksForGroup,         '/sw/tasks/<string:cuuid>/<string:groupName>', endpoint='swTasks')

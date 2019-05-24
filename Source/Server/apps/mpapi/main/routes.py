@@ -14,7 +14,7 @@ class mainIndex(MPResource):
         super(mainIndex, self).__init__()
 
     def get(self, file):
-        print current_app.config['WEB_CONTENT_DIR'] + "/" + file
+        print(current_app.config['WEB_CONTENT_DIR'] + "/" + file)
         return send_from_directory(current_app.config['WEB_CONTENT_DIR'], file, as_attachment=True)
 
 

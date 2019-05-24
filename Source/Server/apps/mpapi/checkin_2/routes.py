@@ -52,7 +52,7 @@ class AgentBase(MPResource):
 							continue
 						else:
 							_args_Val = args[col]
-							if not isinstance(_args_Val, (long, int)):
+							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
 								_args_Val = _args_Val.replace('\n', '')
 
@@ -83,7 +83,7 @@ class AgentBase(MPResource):
 							continue
 						else:
 							_args_Val = args[col]
-							if not isinstance(_args_Val, (long, int)):
+							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
 								_args_Val = _args_Val.replace('\n', '')
 
@@ -102,7 +102,7 @@ class AgentBase(MPResource):
 				_settings = self.getClientTasksSettingsRev(cuuid)
 				return {"errorno": 0, "errormsg": 'none', "result": _settings}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentBase][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"errorno": 500, "errormsg": exc.message, "result": {}}, 500
 		except Exception as e:
@@ -171,7 +171,7 @@ class AgentBase(MPResource):
 
 			return res
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentBase_v2][softwareTasksForClientGroup][IntegrityError]: client_id: %s Message: %s' % (
 			client_id, exc.message))
 			return []
@@ -234,7 +234,7 @@ class AgentStatus(MPResource):
 				log_Error('[AgentStatus][Get]: Client (%s) not found' % (client_id))
 				return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 404, "errormsg": 'Client not found.'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentStatus][Get][IntegrityError]: client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

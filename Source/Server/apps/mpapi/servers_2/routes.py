@@ -41,7 +41,7 @@ class SUServers(MPResource):
 			log_Debug('[SUServerList][Get] CUUID: %s Result: %s' % (cuuid, _serverObj))
 			return {'errorno': 0, 'errormsg': '', 'result': _serverObj}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SUServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
@@ -84,7 +84,7 @@ class SUServersVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SUSListVersion][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
@@ -122,7 +122,7 @@ class Servers(MPResource):
 			log_Error('[ServerList][Get][%s]: Server List Not Found for id (%d)' % (cuuid, list_id))
 			return {'errorno': 404, 'errormsg': 'Server List Not Found', 'result': {}}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': 0}, 500
 
@@ -165,7 +165,7 @@ class ServersVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ServerListVersion][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
@@ -305,7 +305,7 @@ class Server(object):
 		return (self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 	def importFromRowReturnDictionary(self, row):
 		_my_keys = ['host', 'port', 'useHTTPS', 'allowSelfSigned', 'useTLSAuth']

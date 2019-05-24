@@ -93,7 +93,7 @@ def read_siteconfig_server_data(app):
 			return
 
 	else:
-		print("Error, could not open file " + app.config['SITECONFIG_FILE'].strip())
+		print(("Error, could not open file " + app.config['SITECONFIG_FILE'].strip()))
 		return
 
 	if "settings" in data:

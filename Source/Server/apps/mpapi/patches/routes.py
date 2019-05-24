@@ -47,7 +47,7 @@ class ClientPatchStatus(MPResource):
 			log_Debug('[ClientPatchStatus][Get]: Result: %s' % (res))
 			return {"result": res, "errorno": 0, "errormsg": 'none'}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ClientPatchStatus][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -82,7 +82,7 @@ class PatchScanList(MPResource):
 				log_Error('[PatchScanList][Get]: Failed to get a scan list for client %s' % (cuuid))
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchScanList][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -119,7 +119,7 @@ class PatchScanListFilterOS(MPResource):
 				log_Error('[PatchScanListFilterOS][Get]: Failed to get a scan list for client %s' % (cuuid))
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchScanListFilterOS][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -179,7 +179,7 @@ class PatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (cuuid, patchGroup))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -222,7 +222,7 @@ class PatchGroupPatchesRev(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (cuuid, patchGroup))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -281,7 +281,7 @@ class PatchScanData(MPResource):
 							log_Debug('[PatchScanData][Post][%s]: Adding Apple: %s' % (cuuid, apple_object.asDict))
 							db.session.add(apple_object)
 							db.session.commit()
-						except IntegrityError, exc:
+						except IntegrityError as exc:
 							db.session.rollback()
 							log_Error('[PatchScanData][Post][%s]: Error adding apple record. %s' % (cuuid, exc.message))
 							return {"result": {}, "errorno": 0, "errormsg": exc.message}, 406
@@ -313,7 +313,7 @@ class PatchScanData(MPResource):
 							log_Debug('[PatchScanData][Post][%s]: Adding Custom: %s' % (cuuid, third_object.asDict))
 							db.session.add(third_object)
 							db.session.commit()
-						except IntegrityError, exc:
+						except IntegrityError as exc:
 							db.session.rollback()
 							log_Error('[PatchScanData][Post][%s]: Error adding custom record. %s' % (cuuid, exc.message))
 							return {"result": {}, "errorno": 0, "errormsg": exc.message}, 406
@@ -324,7 +324,7 @@ class PatchScanData(MPResource):
 				log_Error('[PatchScanData][Post][%s]: Type (%s) not found' % (cuuid, patch_type))
 				return {"result": {}, "errorno": 404, "errormsg": "Type not found"}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchScanData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -364,7 +364,7 @@ class PatchScanData(MPResource):
 					db.session.add(patch)
 					db.session.commit()
 				return
-			except IntegrityError, exc:
+			except IntegrityError as exc:
 				db.session.rollback()
 				log_Error('[PatchScanData][addClientPatch][%s]: Error adding apple record. %s' % (cuuid, exc.message))
 				return
@@ -438,7 +438,7 @@ class PatchInstallData(MPResource):
 
 			return {"result": '', "errorno": 0, "errormsg": ''}, 202
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			db.session.rollback()
 			log_Error('[PatchInstallData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
@@ -489,7 +489,7 @@ class SavePatchGroupPatches(MPResource):
 							setattr(q_data, 'data', json.dumps(_res_data))
 							db.session.commit()
 							return {"result": {}, "errorno": 0, "errormsg": ''}, 201
-						except IntegrityError, exc:
+						except IntegrityError as exc:
 							log_Error('[SavePatchGroupPatches][Get][IntegrityError][SAVE]: Message: %s' % (exc.message))
 							db.session.rollback()
 
@@ -499,7 +499,7 @@ class SavePatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get]: No patch group (%s) found.' % (groupID))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError]: Message: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

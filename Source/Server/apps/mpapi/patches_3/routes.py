@@ -90,7 +90,7 @@ class PatchGroupPatches(MPResource):
 			wsResult.data = wsData.toDict()
 			return wsResult.resultNoSignature(), 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 
@@ -120,7 +120,7 @@ class PatchGroupPatches(MPResource):
 		for row_number, row in enumerate(q_data):
 			results_pre.append({})
 			for column_number, value in enumerate(row):
-				results_pre[row_number][row.keys()[column_number]] = value
+				results_pre[row_number][list(row.keys())[column_number]] = value
 
 		# set the reboot override
 		results = []
@@ -205,7 +205,7 @@ class PatchScanList(MPResource):
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CCUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 

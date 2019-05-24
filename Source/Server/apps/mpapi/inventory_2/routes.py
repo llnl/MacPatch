@@ -97,7 +97,7 @@ class InventoryState(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': {'data': _result}}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[InventoryState][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {'result': {'data': False}, 'errorno': 500, 'errormsg': exc.message}, 500
 		except Exception as e:
@@ -129,12 +129,12 @@ class InventoryState(MPResource):
 
 				return {'errorno': '0', 'errormsg': '', 'result': {'data': True}}, 200
 
-			except IntegrityError, exc:
+			except IntegrityError as exc:
 				db.engine.rollback()
 				log_Error('[except] client_id: %s Message: %s' % (client_id, exc.message))
 				return {'errorno': 500, 'errormsg': exc.message, 'result': {'data': False}}, 500
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[InventoryState][Post][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': {'data': False}}, 500
 

@@ -37,7 +37,7 @@ class GetAuthToken(MPResource):
 			log_Debug('[GetAuthToken][Get]: Token (%s) issued for user (%s) and password.' % (_token, _body['authUser']))
 			return {"result": {'token': _token}, "errorno": 0, "errormsg": 'none'}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[GetAuthToken][Get][except]: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -67,7 +67,7 @@ class GetAuthToken(MPResource):
 			log_Debug('[GetAuthToken][Post]: Token (%s) issued for user (%s) and password.' % (_token, _body['authUser']))
 			return {"result": {'token': _token}, "errorno": 0, "errormsg": 'none'}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[GetAuthToken][Post][except]: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
