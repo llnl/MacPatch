@@ -99,4 +99,9 @@ rm -rf "/Library/MacPatch/Client/Lib"
 rm -rf "/Library/MacPatch/Client/Data"
 rm -rf "/Library/MacPatch/Client/Tools"
 
+# ***************************************************************************************
+# Clear Softwareupdate catalog url, prevents incorrect url's from being maintained.
+#
+/usr/sbin/softwareupdate --clear-catalog
+
 exit 0
