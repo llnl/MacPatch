@@ -48,7 +48,7 @@ class ProfilesForClient(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _profiles}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ProfilesForClient][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': []}, 500
 		except Exception as e:
@@ -104,7 +104,7 @@ class Profile(object):
 		return(self.__dict__)
 
 	def keys(self):
-		return self.__dict__.keys()
+		return list(self.__dict__.keys())
 
 # Add Routes Resources
 mac_profiles_api.add_resource(ProfilesForClient,     '/client/profiles/<string:cuuid>')

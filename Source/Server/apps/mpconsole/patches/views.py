@@ -101,7 +101,7 @@ def applePatchWizard(akey):
 
 	cList = ApplePatch.query.filter(ApplePatch.akey == akey).first()
 	# Base64 Encoded Description needs to be decoded and cleaned up
-	desc = base64.b64decode(cList.description64)
+	desc = base64.b64decode(cList.description64).decode('utf-8')
 	if "<!DOCTYPE" in desc or "<HTML>" in desc:
 		desc = desc.replace("Data('","")
 		desc = desc.replace("\\n", "")
@@ -488,7 +488,7 @@ def customDuplicate(patch_id):
 			else:
 				log("{}, unable to duplicate custom patch {}({}). Directory does not exist".format(session.get('user'), qGet1.patch_name, patch_id))
 
-		except OSError, e:
+		except OSError as e:
 			log_Error("Error: %s - %s." % (e.filename,e.strerror))
 
 
@@ -518,7 +518,7 @@ def customDelete():
 			try:
 				_patch_dir = "/opt/MacPatch/Content/Web/patches/" + puuid
 				shutil.rmtree(_patch_dir)
-			except OSError, e:
+			except OSError as e:
 				log_Error("Error: %s - %s." % (e.filename,e.strerror))
 
 			db.session.delete(qGet1)
@@ -868,7 +868,7 @@ def patchGroupContentEdit(id):
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != 'patch_install_weight' and column != 'patch_reboot_override' and column != 'size' and column != 'active':
 				if column == 'postdate':
 					if value is not None:
@@ -877,7 +877,7 @@ def patchGroupContentEdit(id):
 						_row[column] = "1970-01-01 12:00:00"
 				else:
 					# Check for \r\n in tile to clean up, javascript does not like it
-					if isinstance(value, unicode):
+					if isinstance(value, str):
 						_row[column] = value.replace('\n', ' ').replace('\r', '')
 					else:
 						_row[column] = value
@@ -925,7 +925,7 @@ def patchGroupContent(group_id):
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != 'patch_install_weight' and column != 'patch_reboot_override' and column != 'size' and column != 'active':
 				if column == 'postdate':
 					if value is not None:
@@ -939,7 +939,7 @@ def patchGroupContent(group_id):
 						_row['state'] = 1
 				else:
 					# Check for \r\n in tile to clean up, javascript does not like it
-					if isinstance(value, unicode):
+					if isinstance(value, str):
 						_row[column] = value.replace('\n', ' ').replace('\r', '')
 					else:
 						_row[column] = value
@@ -1173,7 +1173,7 @@ def requiredListPaged(limit,offset,search,sort,order):
 	_results = []
 	for v in _result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			_row[column] = value
 		_results.append(_row)
 

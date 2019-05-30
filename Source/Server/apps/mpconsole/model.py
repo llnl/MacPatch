@@ -29,7 +29,7 @@ class CommonBase(db.Model):
 							result[column.name] = getattr(self, column.name)
 					else:
 						result[column.name] = getattr(self, column.name)
-				except Exception, e:
+				except Exception as e:
 					result[column.name] = getattr(self, column.name)
 
 		return result
@@ -48,7 +48,7 @@ class CommonBase(db.Model):
 						result[column.name] = getattr(self, column.name)
 				else:
 					result[column.name] = getattr(self, column.name)
-			except Exception, e:
+			except Exception as e:
 				result[column.name] = getattr(self, column.name)
 
 		return result
@@ -88,7 +88,7 @@ def get_class_by_tablename(tablename):
 	:param tablename: String with name of table.
 	:return: Class reference or None.
 	"""
-	for c in CommonBase._decl_class_registry.values():
+	for c in list(CommonBase._decl_class_registry.values()):
 		if hasattr(c, '__tablename__') and c.__tablename__ == tablename:
 			return c
 
@@ -944,7 +944,7 @@ class AdmUsers(CommonBase, UserMixin):
 	enabled             = Column(INTEGER(1, unsigned=True), server_default='1')
 
 	def get_id(self):
-		return unicode(self.rid)
+		return str(self.rid)
 
 	@property
 	def password(self):

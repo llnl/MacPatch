@@ -106,7 +106,7 @@ def profileEdit(profile_id):
 
 	# Parse BLOB Data
 	pData = str(profile.profileData)
-	pData = unicode(pData, errors='replace')
+	#pData = str(pData, errors='replace')
 
 	# Using RE get the data between <?xml ... </plist>
 	stringlist = re.findall('<\?.+</plist>', pData, re.DOTALL)
@@ -135,7 +135,6 @@ def allowed_file(filename):
 def profileSave(profile_id):
 	if adminRole() or localAdmin():
 		formDict = request.form.to_dict()
-		print formDict
 
 		isNewProfile=False
 		profile = MpOsConfigProfiles.query.filter(MpOsConfigProfiles.profileID == profile_id).first()
@@ -431,7 +430,6 @@ def groupProfiles(group_id):
 @login_required
 def postProfile():
 	_formDict = dict(request.form)
-	print _formDict
 
 	groupID = request.form['groupID']
 	if groupID is None or len(groupID) <= 0:

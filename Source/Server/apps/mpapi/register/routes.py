@@ -65,7 +65,7 @@ class Registration(MPResource):
 		'''
 
 		content = request.get_json(silent=True)
-		print content
+		print(content)
 
 		if all(key in content for key in ("cKey", "CPubKeyPem", "ClientHash", "HostName", "SerialNo")):
 

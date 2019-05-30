@@ -47,7 +47,7 @@ class AddAutoPKGPatch(MPResource):
 			_patchKeys = _patch.allKeys()
 			setattr(_patch, "puuid", _patchID)
 
-			for key in _body.keys():
+			for key in list(_body.keys()):
 				if key in _patchKeys:
 					if key == "pkg_preinstall" or key == "pkg_postinstall":
 						setattr(_patch, key, base64.b64decode(_body[key]))
@@ -58,7 +58,7 @@ class AddAutoPKGPatch(MPResource):
 			_patchCri = autoPKGCriteria()
 			_patchCriKeys = _patchCri.allKeys()
 
-			for key in _body.keys():
+			for key in list(_body.keys()):
 				if key in _patchCriKeys:
 					setattr(_patchCri, key, _body[key])
 
@@ -124,7 +124,7 @@ class AddAutoPKGPatch(MPResource):
 
 			return {"result": _patchID, "errorno": 0, "errormsg": ''}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			db.session.rollback()
 			log_Error('[AddAutoPKGPatch][Post][IntegrityError] Message: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
@@ -214,7 +214,7 @@ class UploadAutoPKGPatch(MPResource):
 			log_Error('[UploadAutoPKGPatch][Post]: Error patch (%s) was not found to update.' % (patch_id))
 			return {"result": '', "errorno": 104, "errormsg": ""}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[UploadAutoPKGPatch][Post][IntegrityError]: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -282,7 +282,7 @@ class autoPKG(object):
 		return (autoPKG.__dict__)
 
 	def allKeys(autoPKG):
-		return (autoPKG.__dict__.keys())
+		return (list(autoPKG.__dict__.keys()))
 
 class autoPKGCriteria(object):
 
@@ -297,7 +297,7 @@ class autoPKGCriteria(object):
 		return (autoPKG.__dict__)
 
 	def allKeys(autoPKG):
-		return (autoPKG.__dict__.keys())
+		return (list(autoPKG.__dict__.keys()))
 
 
 # Add Routes Resources

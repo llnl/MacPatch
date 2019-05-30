@@ -40,7 +40,7 @@ def read_config_file(configFile):
 			print('Well darn.')
 
 	else:
-		print("Error, could not open file " + configFile.strip())
+		print(("Error, could not open file " + configFile.strip()))
 
 	return data
 
@@ -114,7 +114,7 @@ def verifySignedData(signature, data):
 			private_key = serialization.load_pem_private_key(str(qKeys.priKey), None, default_backend())
 			public_key = private_key.public_key()
 			# Verify Signature
-			result = public_key.verify(b64decode(signature), data, padding.PKCS1v15(),hashes.SHA1())
+			result = public_key.verify(b64decode(signature).decode('utf-8'), data, padding.PKCS1v15(),hashes.SHA1())
 			return True
 		except InvalidSignature:
 			log_Error("InvalidSignature, Unable to verify signature.")

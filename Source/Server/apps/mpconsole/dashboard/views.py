@@ -353,8 +353,6 @@ def requiredPatchCollection(patch):
 					Where patch like '""" + patch + """%'
 					""")
 
-	print sqlStr
-
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
 	for g in q_client_Groups:
@@ -461,7 +459,7 @@ def agentVersionCollection(version):
 		_nDict['addn'] = row.mpa_distinguishedName
 
 		for c in colNames:
-			if c['name'] in _dict.keys():
+			if c['name'] in list(_dict.keys()):
 				_nDict[c['name']] = _dict[c['name']]
 
 		_dict['addomain'] = row.mpa_ADDomain

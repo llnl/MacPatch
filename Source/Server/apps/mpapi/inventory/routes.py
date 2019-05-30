@@ -99,7 +99,7 @@ class InventoryState(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _result}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[InventoryState][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'result': 0, 'errorno': 500, 'errormsg': exc.message}, 500
 		except Exception as e:
@@ -132,12 +132,12 @@ class InventoryState(MPResource):
 
 				return {'errorno': '0', 'errormsg': '', 'result': 0}, 200
 
-			except IntegrityError, exc:
+			except IntegrityError as exc:
 				db.engine.rollback()
 				log_Error('[except] CUUID: %s Message: %s' % (cuuid, exc.message))
 				return {'errorno': 500, 'errormsg': exc.message, 'result': 1}, 500
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[InventoryState][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': 1}, 500
 		except Exception as e:

@@ -69,14 +69,16 @@ def clientsListJSON():
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
 
-
-	return json.dumps({'data': _results}, default=json_serial), 200
+	#_mes = [{'id':1,'name':'bob','price':'125'},{'id':2,'name':'bot','price':'126'}]
+	#return json.dumps(_mes, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
+	#return json.dumps({'data': _results}, default=json_serial), 200
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):
 	if group is None:
 		return "NA"
-	res = (item for item in list if item["group_id"] == group).next()
+	res = next((item for item in list if item["group_id"] == group))
 	if res['group_name']:
 		return res['group_name']
 	else:
@@ -189,7 +191,7 @@ def clientInventoryReport(client_id, inv_id):
 
 	for v in _q_result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != "cdate" or column != "rid" or column != "cuuid":
 				if column == "mdate":
 					_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
@@ -198,7 +200,7 @@ def clientInventoryReport(client_id, inv_id):
 
 		_results.append(_row)
 
-	for column in _q_result.keys():
+	for column in list(_q_result.keys()):
 		if column != "cdate" and column != "rid" and column != "cuuid":
 			_col = {}
 			_col['field'] = column
@@ -243,7 +245,7 @@ def clientGroups():
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			_row[column] = value
 
 		_results.append(_row)
@@ -470,7 +472,7 @@ def clientGroupClients(group_id):
 	for v in _q_result:
 		if v.cuuid in _cuuids:
 			_row = {}
-			for column, value in v.items():
+			for column, value in list(v.items()):
 				if column != "cdate":
 					if column == "mdate":
 						_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
@@ -478,8 +480,8 @@ def clientGroupClients(group_id):
 					else:
 						_row[column] = value
 
-			for key in _row.keys():
-				if not isinstance(_row[key], (long, int)):
+			for key in list(_row.keys()):
+				if not isinstance(_row[key], int):
 					if _row[key]:
 						_row[key] = _row[key].replace('\n', '')
 					else:
@@ -612,7 +614,7 @@ def groupDefaultSettings(id):
 		setattr(cfg, 'rev_tasks', 1)
 		db.session.add(cfg)
 
-	for key, value in form.iteritems():
+	for key, value in list(form.items()):
 		mpc = MpClientSettings()
 		setattr(mpc, 'group_id', id)
 		setattr(mpc, 'key', key)
@@ -705,7 +707,7 @@ def addMissingTasks(group_id, fileTasks, new_task_version):
 		if task['cmd'] not in _cmds:
 			_task = MpClientTasks()
 			setattr(_task, 'group_id', group_id)
-			for key in task.keys():
+			for key in list(task.keys()):
 				setattr(_task, key, task[key])
 
 			db.session.add(_task)
@@ -779,7 +781,6 @@ def groupSoftware(group_id):
 					_results.append(_row)
 					break
 
-	print _results
 	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
 @clients.route('/group/<id>/sw/add',methods=['GET','POST'])
