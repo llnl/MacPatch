@@ -7,7 +7,7 @@ MP_SRV_DIR = MP_ROOT_DIR+'/Server'
 
 class BaseConfig:
 
-	DEBUG   						= True
+	DEBUG   						= False
 	TESTING 						= True
 	BASEDIR 						= basedir
 	MAX_CONTENT_LENGTH              = 9000 * 1024 * 1024    # 9000 Mb limit
@@ -64,7 +64,7 @@ class DevelopmentConfig(BaseConfig):
 
 class ProductionConfig(BaseConfig):
 
-	DEBUG                           = True
+	DEBUG                           = False
 	LOGGING_LEVEL                   = 'info'
 
 config = {

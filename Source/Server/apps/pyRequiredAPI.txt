@@ -8,3 +8,4 @@ Flask-RESTful==0.3.7
 Flask-Login==0.4.1
 ldap3==2.6.0
 cryptography==2.6.1
+pymysql>=0.9.3
