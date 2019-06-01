@@ -9,11 +9,11 @@
         <key>EnvironmentVariables</key>
         <dict>
                 <key>PYTHON_EGG_CACHE</key>
-                <string>/opt/MacPatch/Server/apps/env</string>
+                <string>/opt/MacPatch/Server/env/console</string>
         </dict>
         <key>ProgramArguments</key>
         <array>
-                <string>/opt/MacPatch/Server/apps/env/bin/python</string>
+                <string>/opt/MacPatch/Server/env/console/bin/python</string>
                 <string>/opt/MacPatch/Server/apps/mpconsole.py</string>
                 <string>gunicorn</string>
         </array>
@@ -28,6 +28,6 @@
         <key>StandardOutPath</key>
         <string>/opt/MacPatch/Server/logs/mpconsole_stdout.log</string>
         <key>WorkingDirectory</key>
-        <string>/opt/MacPatch/Server/apps/env/bin</string>
+        <string>/opt/MacPatch/Server/env/console/bin</string>
 </dict>
 </plist>
