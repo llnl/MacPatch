@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPDBMigrate.py
-	Version: 1.0.1
+	Version: 1.1.0
 
 	Description: This Script is used to migrate tables and data from
 	and older version of MacPatch (< 3.0.0) to the new MacPatch 3.0
@@ -88,7 +88,7 @@ table_map = {
 }
 
 MP_SRV_BASE  = "/opt/MacPatch/Server"
-IGNORE_TABLES = [u'alembic_version']
+IGNORE_TABLES = ['alembic_version']
 
 # --------------------------------------------
 # Define Classes
@@ -130,11 +130,11 @@ class MPMySQL:
 					tables.append(table)
 
 			_dbCur.close();
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
-				print( "MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
+				print(( "MySQL Error [%d]: %s" % (e.args[0], e.args[1])))
 			except IndexError:
-				print( "MySQL Error: %s" % str(e))
+				print(( "MySQL Error: %s" % str(e)))
 
 		return tables
 
@@ -169,18 +169,18 @@ class MPMySQL:
 				result.append(tmp)
 
 			_dbCur.close();
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
-				print("MySQL Errors [%d]: %s" % (e.args[0], e.args[1]))
+				print(("MySQL Errors [%d]: %s" % (e.args[0], e.args[1])))
 				print(query)
 			except IndexError:
-				print("MySQL Errors: %s" % str(e))
+				print(("MySQL Errors: %s" % str(e)))
 				print(query)
 
 		return result
 
 	def tableExists(self,table):
-		if table.upper() in map(str.upper, self.tables):
+		if table.upper() in list(map(str.upper, self.tables)):
 			return True
 		else:
 			return False
@@ -210,10 +210,10 @@ class MigrateDB:
 		dbNew = MPMySQL(self.dbNewConf)
 		dbOld = MPMySQL(self.dbOldConf)
 
-		print "Reading database tables"
+		print("Reading database tables")
 		tablesNewFilter = [i for i in dbNew.tables if i not in IGNORE_TABLES]
 		if len(tablesNewFilter) <= 2:
-			print "No tables to migrate, please check that the new database model is installed."
+			print("No tables to migrate, please check that the new database model is installed.")
 			return
 
 		new_tables = []
@@ -275,7 +275,7 @@ class MigrateDB:
 
 				_dbCur.execute("SET FOREIGN_KEY_CHECKS=0;")
 
-				print "Migrating %s table" % (oTable['name'])
+				print("Migrating %s table" % (oTable['name']))
 				_dbCur.execute(_query.encode('ascii',errors='ignore'))
 
 				_dbCur.execute("SET FOREIGN_KEY_CHECKS=1;")
@@ -364,7 +364,7 @@ class MigrateDB:
 			_db = mydb.connect(**self.dbNewConf)
 			_dbCur = _db.cursor()
 
-			print "[INV] Create %s table" % (table)
+			print("[INV] Create %s table" % (table))
 			_dbCur.execute(_query.encode('ascii',errors='ignore'))
 			_dbCur.close()
 			_db.close()
@@ -394,7 +394,7 @@ class MigrateDB:
 			_db = mydb.connect(**self.dbNewConf)
 			_dbCur = _db.cursor()
 
-			print "[INV] Copy data to %s table" % (table)
+			print("[INV] Copy data to %s table" % (table))
 			_dbCur.execute(_query.encode('ascii',errors='ignore'))
 			_dbCur.close()
 			_db.close()
@@ -421,7 +421,7 @@ class MigrateDB:
 			_db = mydb.connect(**self.dbNewConf)
 			_dbCur = _db.cursor()
 
-			print "[INV] Delete column (%s) from %s" % (column, table)
+			print("[INV] Delete column (%s) from %s" % (column, table))
 			_dbCur.execute(_query.encode('ascii',errors='ignore'))
 			_dbCur.close()
 			_db.close()
@@ -486,11 +486,11 @@ def main():
 
 	mdb = MigrateDB(_newConf, _oldConf)
 	if args.core:
-		print "Migrating Core Tables"
+		print("Migrating Core Tables")
 		mdb.migrateCoreTables()
 
 	if args.inventory:
-		print "Migrating Inventory Tables"
+		print("Migrating Inventory Tables")
 		mdb.migrateInvTables()
 
 

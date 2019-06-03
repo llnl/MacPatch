@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 Script : MPAVDefsSync
-Version : 1.0.2
+Version : 1.1.0
 Description: This script will download the last 3 Symantec AV Defs
 files via ftp from Symantec. It will also delete older AV Defs zip
 files.
@@ -51,8 +51,8 @@ try:
 	import json
 	import glob
 	import requests
-except ImportError, e:
-	print "%s" % e
+except ImportError as e:
+	print("%s" % e)
 	sys.exit(1)
 
 parser = argparse.ArgumentParser()
@@ -69,13 +69,13 @@ try:
 	hdlr.setFormatter(formatter)
 	logger.addHandler(hdlr)
 	logger.setLevel(logging.INFO)
-except Exception, e:
-	print "%s" % e
+except Exception as e:
+	print("%s" % e)
 	sys.exit(1)
 
 # Make sure the plist path is valid
 if not os.path.exists(args.plist):
-		print "Unable to open " + args.plist +". File not found."
+		print("Unable to open " + args.plist +". File not found.")
 		logger.info("Unable to open " + args.plist +". File not found.")
 		sys.exit(1)
 
@@ -88,22 +88,22 @@ if not '<?xml' in infile.readline():
 # Read the config plist
 avConf = plistlib.readPlist(args.plist)
 
-if avConf.has_key("MPServerAddress"):
+if "MPServerAddress" in avConf:
 	MPServerName = avConf["MPServerAddress"]
 else:
 	MPServerName = "localhost"
 
-if avConf.has_key("MPServerPort"):
+if "MPServerPort" in avConf:
 	MPServerPort = avConf["MPServerPort"]
 else:
 	MPServerPort = "3601"
 
-if avConf.has_key("MPServerSSL"):
+if "MPServerSSL" in avConf:
 	MPServerSSL = avConf["MPServerSSL"]
 else:
 	MPServerSSL = "0"
 
-if avConf.has_key("avDownloadToFilePaths"):
+if "avDownloadToFilePaths" in avConf:
 	avDefsLoc = avConf["avDownloadToFilePath"]
 else:
 	avDefsLoc = "/opt/MacPatch/Content/Web/sav"
@@ -112,7 +112,7 @@ else:
 # Global Variables
 # ------------------------------
 
-print "Not Supported with MacPatch 3.x"
+print("Not Supported with MacPatch 3.x")
 sys.exit(1)
 
 avFileMapping = '/mp-content/sav'
@@ -185,7 +185,7 @@ def downloadSymantecDefs(server='ftp.symantec.com', user='anonymous', password='
 					return
 			else:
 				logger.info(fileFullPath + " already exists.")
-		except Exception, e:
+		except Exception as e:
 			logger.error("%s" % e)
 			return
 
@@ -213,7 +213,7 @@ def removeAllOutDatedFiles(nFiles):
 				logger.info("Removing old file " + file)
 				try:
 					os.remove(file)
-				except Exception, e:
+				except Exception as e:
 					logger.error("%s" % e)
 					return
 
