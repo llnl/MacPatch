@@ -39,7 +39,6 @@ import json
 import pprint
 import re
 import mysql.connector as mydb
-from operator import itemgetter
 from datetime import datetime
 from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
@@ -709,14 +708,6 @@ class DataMgr:
 			for aField in _autoFields:
 				if self.dictContainsKeyValue(self.invData['fields'],'name',aField) is False:
 					_fields.append(dfObj.getFieldForName(aField,aField))
-
-				#if aField not in self.invData['fields'].index('name'):
-				#    print "adding field : " + aField
-				#    _fields.append( dfObj.getFieldForName(aField,aField) )
-
-				# Something was wrong here ... if filed did not exist
-				#i = map(itemgetter('name'), self.invData['fields']).index(aField)
-				#_fields[i] = dfObj.getFieldForName(aField,self.invData['fields'][i])
 
 		# Create Table if needed
 		if _table not in db.tables:
