@@ -566,24 +566,41 @@ fi
 
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
+		OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+		
+		# Server venv
+		source ${MPSERVERBASE}/env/server/bin/activate
+    pip install --upgrade pip
+		pip -q install python-crontab
+		pip -q install requests
+		pip -q install mysql-connector-python
+		
+		env LDFLAGS="-L${OPENSSLPWD}/lib" \
+		CFLAGS="-I${OPENSSLPWD}/include" \
+		SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredAPI.txt $CA_STR
+    deactivate
+
+		# API venv
     source ${MPSERVERBASE}/env/api/bin/activate
     pip -q install --upgrade pip
 
-	# Install M2Crypto first
-	OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
-	env LDFLAGS="-L${OPENSSLPWD}/lib" \
-	CFLAGS="-I${OPENSSLPWD}/include" \
-	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+		 # Install M2Crypto first
+		env LDFLAGS="-L${OPENSSLPWD}/lib" \
+		CFLAGS="-I${OPENSSLPWD}/include" \
+		SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredAPI.txt $CA_STR
+		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredAPI.txt $CA_STR
     deactivate
 
-    source ${MPSERVERBASE}/env/console/bin/activate
+    # Console venv
+		source ${MPSERVERBASE}/env/console/bin/activate
     pip -q install --upgrade pip
 
     # Install M2Crypto first
-    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
     env LDFLAGS="-L${OPENSSLPWD}/lib" \
     CFLAGS="-I${OPENSSLPWD}/include" \
     SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
@@ -593,12 +610,20 @@ if $USEMACOS; then
     deactivate
 
 else
-    
-	# Install M2Crypto first
+    # Install M2Crypto first
+    source ${MPSERVERBASE}/env/server/bin/activate
+    pip install --upgrade pip
+		pip -q install python-crontab
+		pip -q install requests
+		pip -q install mysql-connector-python
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    deactivate
+
+		# Install M2Crypto first
     source ${MPSERVERBASE}/env/api/bin/activate
     pip install --upgrade pip
-	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	pip -q install -r pyRequiredAPI.txt $CA_STR
+		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+		pip -q install -r pyRequiredAPI.txt $CA_STR
     deactivate
 
     source ${MPSERVERBASE}/env/console/bin/activate
