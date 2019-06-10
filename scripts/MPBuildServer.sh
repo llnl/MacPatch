@@ -314,25 +314,25 @@ mkdirP ${MPSERVERBASE}/logs
 # Copy compiled files
 # ------------------
 if $USEMACOS; then
-	echo
-	echo "* Uncompress source files needed for build"
-	echo "-----------------------------------------------------------------------"
+	#echo
+	#echo "* Uncompress source files needed for build"
+	#echo "-----------------------------------------------------------------------"
 
 	# Copy Agent Uploader
 	cp ${MPSERVERBASE}/conf/Content/Web/tools/MPAgentUploader.zip ${MPBASE}/Content/Web/tools/
 
-	PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | head -n 1`
-	OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | head -n 1`
+	#PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | head -n 1`
+	#OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | head -n 1`
 
 	# PCRE
-	echo " - Uncompress ${PCRE_SW}"
-	mkdir -p ${TMP_DIR}/pcre
-	tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${TMP_DIR}/pcre
+	#echo " - Uncompress ${PCRE_SW}"
+	#mkdir -p ${TMP_DIR}/pcre
+	#tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${TMP_DIR}/pcre
 
 	# OpenSSL
-	echo " - Uncompress ${OSSL_SW}"
-	mkdir -p ${TMP_DIR}/openssl
-	tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${TMP_DIR}/openssl
+	#echo " - Uncompress ${OSSL_SW}"
+	#mkdir -p ${TMP_DIR}/openssl
+	#tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${TMP_DIR}/openssl
 
 	# BREW Software Check
 	XOPENSSL=false

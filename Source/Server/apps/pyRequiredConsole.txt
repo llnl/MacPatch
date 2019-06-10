@@ -14,3 +14,4 @@ yattag==1.11.1
 requests>=2.19.1
 pymysql>=0.9.3
 humanize>=0.5.1
+gunicorn==19.9.0
