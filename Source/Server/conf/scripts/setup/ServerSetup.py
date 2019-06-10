@@ -876,9 +876,9 @@ class MPConfigDefaults:
 		if not os.path.exists(pub_key) and not os.path.exists(pri_key):
 			if conf["settings"]["server"]["autoGenServerKeys"]:
 				rsaKeys = self.genServerKeys()
-				with open(pri_key, 'w') as the_pri_file:
+				with open(pri_key, 'wb') as the_pri_file:
 					the_pri_file.write(rsaKeys[0])
-				with open(pub_key, 'w') as the_pub_file:
+				with open(pub_key, 'wb') as the_pub_file:
 					the_pub_file.write(rsaKeys[1])
 				conf["settings"]["server"]["priKey"] = pri_key
 				conf["settings"]["server"]["pubKey"] = pub_key
