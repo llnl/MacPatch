@@ -388,7 +388,6 @@ if $USELINUX; then
 		# Add the Yarn repo
 		curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
 		# Check if needed packges are installed or install
-		#pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig" "yarn")
         pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python36" "python36-devel" "python36-setuptools" "python36-pip" "swig" "yarn")
 		for i in "${pkgs[@]}"
 		do
@@ -444,18 +443,30 @@ cd ${BUILDROOT}/nginx
 
 if $USELINUX; then
 	./configure --prefix=${MPSERVERBASE}/nginx \
+    --without-http_autoindex_module \
 	--with-http_ssl_module \
 	--with-pcre \
 	--user=www-data \
 	--group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 else
+    # Now using brew installed openssl and pcre
+    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
 	export KERNEL_BITS=64
-	./configure --prefix=${MPSERVERBASE}/nginx \
-	--without-http_autoindex_module \
-	--without-http_ssi_module \
-	--with-http_ssl_module \
-	--with-openssl=${TMP_DIR}/openssl \
-	--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+    ./configure --prefix=${MPSERVERBASE}/nginx \
+    --with-cc-opt="-I${OPENSSLPWD}/include" \
+    --with-ld-opt="-L${OPENSSLPWD}/lib" \
+    --without-http_autoindex_module \
+    --without-http_ssi_module \
+    --with-http_ssl_module \
+    --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+	
+    # Old
+    #./configure --prefix=${MPSERVERBASE}/nginx \
+	#--without-http_autoindex_module \
+	#--without-http_ssi_module \
+	#-with-http_ssl_module \
+	#--with-openssl=${TMP_DIR}/openssl \
+	#--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
@@ -616,6 +627,7 @@ else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
     pip -q install --upgrade pip
+    pip -q install pycrypto
 	pip -q install python-crontab
 	pip -q install requests
 	pip -q install mysql-connector-python
