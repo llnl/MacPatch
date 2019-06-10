@@ -583,7 +583,7 @@ if $USEMACOS; then
     echo "Creating server scripts virtual env..."
 	source ${MPSERVERBASE}/env/server/bin/activate
     pip -q install --upgrade pip
-	pip -q install python-crontab
+    pip -q install pycrypto
 	pip -q install requests
 	pip -q install mysql-connector-python
 	
