@@ -592,7 +592,7 @@ if $USEMACOS; then
 	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredAPI.txt $CA_STR
+	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
 	# API venv
@@ -606,7 +606,7 @@ if $USEMACOS; then
 	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredAPI.txt $CA_STR
+	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     # Console venv
@@ -620,7 +620,7 @@ if $USEMACOS; then
     SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequiredConsole.txt $CA_STR
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 
 else
@@ -638,14 +638,14 @@ else
     source ${MPSERVERBASE}/env/api/bin/activate
     pip -q install --upgrade pip
 	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	pip -q install -r pyRequiredAPI.txt $CA_STR
+	pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
     pip -q install --upgrade pip
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-    pip -q install -r pyRequiredConsole.txt $CA_STR
+    pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 fi
 
