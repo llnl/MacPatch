@@ -678,14 +678,13 @@ class MPDatabase:
 		mp_db_usr = input("MacPatch Database User Name [mpdbadm]: ") or "mpdbadm"
 		conf["DB_USER"] = mp_db_usr
 
-		#print('MacPatch Database User (' +mp_db_usr+ ') Password')
 		mp_db_pas = getpass.getpass('MacPatch Database User (' +mp_db_usr+ ') Password:')
 		conf["DB_PASS"] = mp_db_pas
 
 		#print('MacPatch Database Read Only User (mpdbro) Password:')
-		mp_db_pas_ro = getpass.getpass('MacPatch Database Read Only User (mpdbro) Password:')
-		conf["DB_USER_RO"] = 'mpdbro'
-		conf["DB_PASS_RO"] = mp_db_pas_ro
+		#mp_db_pas_ro = getpass.getpass('MacPatch Database Read Only User (mpdbro) Password:')
+		#conf["DB_USER_RO"] = 'mpdbro'
+		#conf["DB_PASS_RO"] = mp_db_pas_ro
 
 		save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
 		if save_answer == "Y":
