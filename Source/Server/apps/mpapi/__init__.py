@@ -28,7 +28,7 @@ def create_app(config_object=DefaultConfig):
 
 	app.config.from_object(config_object)
 	app.config.from_pyfile('../config.cfg', silent=True)
-	app.config.from_pyfile('../conf_wsapi.cfg', silent=True)
+	app.config.from_pyfile('../conf_api.cfg', silent=True)
 	app.config['JSON_SORT_KEYS'] = False
 
 	# Configure SQLALCHEMY_DATABASE_URI for MySQL
@@ -36,7 +36,7 @@ def create_app(config_object=DefaultConfig):
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
 
 	# Configure logging location and log file name
-	log_file = app.config['LOGGING_LOCATION'] + "/mpwsapi.log"
+	log_file = app.config['LOGGING_LOCATION'] + "/mpapi.log"
 	if not os.path.exists(app.config['LOGGING_LOCATION']):
 		os.makedirs(app.config['LOGGING_LOCATION'])
 		subprocess.call(['chmod', '2775', app.config['LOGGING_LOCATION']])
