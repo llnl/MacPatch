@@ -387,6 +387,7 @@ typedef enum {
 	
 	int	patchesNeedingReboot = 0; // # of patches that need to be installed
 	int patchesRequireReboot = 0; // # of patches that have been installed
+	int patchesRequireHalt = 0; // # of patches that have been installed
 	
 	// Reboot Patch Install Vars
 	if (!hasUserLoggedIn) canInstallRebootPatches = YES; //If no user logged in
@@ -748,6 +749,9 @@ typedef enum {
 					qlerror(@"The install for %@ returned an error.",_patch[@"patch"]);
 					goto instResult;
 				}
+				if (mpAsus.patchMustShutdown) {
+					patchesRequireHalt++;
+				}
 				
 				if (_patch[@"criteria_post"])
 				{
@@ -834,9 +838,8 @@ typedef enum {
 							 @"totalPatchesInstalled": [NSNumber numberWithInt:patchesInstalled],
 							 @"patchInstallErrors": [NSNumber numberWithInt:patchInstallErrors],
 							 @"failedPatches": [failedPatches copy],
+							 @"patchesRequireHalt": [NSNumber numberWithInt:patchesRequireHalt],
 							 };
-
-	qlinfo(@"CEH Result: %@",result);
 	return result;
 }
 

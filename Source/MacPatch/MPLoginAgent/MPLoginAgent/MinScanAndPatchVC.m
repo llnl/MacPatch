@@ -165,7 +165,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		
 		// Begin Patching
 		__block NSMutableArray *failedPatches = [[NSMutableArray alloc] init];
-		
+		int requiresHalt = 0;
 		
 		for (NSDictionary *patch in approvedUpdates)
 		{
@@ -193,6 +193,11 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 				}
 			}
 			
+			if (res[@"patchesRequireHalt"])
+			{
+				if ([res[@"patchInstallErrors"] intValue] >= 1) requiresHalt++;
+			}
+			
 			if (install_result != 0) {
 				qlerror(@"Patch %@ failed to install.",patch[@"patch"]);
 				[failedPatches addObject:patch];
@@ -207,22 +212,33 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		[self progress:@"Complete"];
 		[NSThread sleepForTimeInterval:1.0];
 		
-		qlinfo(@"Patches have been installed, system will now reboot.");
-		[self countDownToClose];
+		if (requiresHalt >= 1)
+		{
+			qlinfo(@"Patches have been installed, system will now halt and reboot.");
+			[self countDownToClose:2];
+		} else {
+			qlinfo(@"Patches have been installed, system will now reboot.");
+			[self countDownToClose];
+		}
 	}
 }
 
 - (void)countDownToClose
 {
-    for (int i = 0; i < 5;i++)
-    {
-        // Message that window is closing
-        [self progress:@"Rebooting system in %d seconds...",(5-i)];
-        sleep(1);
-    }
-    
-    [self progress:@"Rebooting System Please Be Patient"];
-    [self rebootOrLogout:0];
+	[self countDownToClose:0];
+}
+
+- (void)countDownToClose:(int)rebootAction
+{
+	for (int i = 0; i < 5;i++)
+	{
+		// Message that window is closing
+		[self progress:@"Rebooting system in %d seconds...",(5-i)];
+		sleep(1);
+	}
+	
+	[self progress:@"Rebooting System Please Be Patient"];
+	[self rebootOrLogout:rebootAction];
 }
 
 - (void)countDownShowRebootButton
@@ -254,6 +270,12 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		case 1:
 			// just return to loginwindow
 			exit(0);
+			break;
+		case 2:
+			// Firmware updates are needed requiring a shutdown (halt)
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot", @"-halt]];
+			qlinfo(@"MPAuthPlugin issued a launchctl reboot and halt.");
+			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
 			break;
 		default:
 			// Code

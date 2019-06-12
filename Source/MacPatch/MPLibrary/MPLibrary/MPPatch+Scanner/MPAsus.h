@@ -43,6 +43,8 @@
 @property (nonatomic, assign) BOOL allowClient; // Allow Install on Mac OS X
 @property (nonatomic, assign) BOOL allowServer; // Allow Install on Mac OS X Server - Default NO
 
+@property (nonatomic, assign, readonly) BOOL patchMustShutdown; // Patch Install Reboot Status
+
 /**
  Scan System for Apple Software Updates
 

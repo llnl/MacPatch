@@ -76,6 +76,8 @@
 @property (nonatomic, assign)   BOOL        taskIsRunning;
 @property (nonatomic, assign)   int         taskResult;
 
+@property (nonatomic, assign, readwrite) BOOL patchMustShutdown; // Patch Install Reboot Status
+
 - (NSString *)getSizeFromDescription:(NSString *)aDesc;
 - (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
 
@@ -87,6 +89,7 @@
 @synthesize allowServer;
 @synthesize taskIsRunning;
 @synthesize taskResult;
+@synthesize patchMustShutdown;
 
 #pragma mark -
 #pragma mark init
@@ -103,6 +106,8 @@
         fm		 = [NSFileManager defaultManager];
         settings = [MPSettings sharedInstance];
         agent 	 = settings.agent;
+		
+		[self setPatchMustShutdown:NO];
 
         if (agent.patchClient == 1 || agent.patchServer == 1) {
             [self setAllowClient:YES];
@@ -115,6 +120,7 @@
         } else {
             [self setAllowServer:NO];
         }
+		
     }
     return self;
 }
@@ -244,7 +250,7 @@
 - (BOOL)installAppleSoftwareUpdate:(NSString *)approvedUpdate
 {
 	[self postStringToDelegate:@"Install %@",approvedUpdate];
-	
+	[self setPatchMustShutdown:NO];
 	BOOL result = FALSE;
 
 	NSMutableDictionary *environment = [NSMutableDictionary new];
@@ -261,6 +267,11 @@
 	} else {
 		qltrace(@"%@",taskStr);
 		result = TRUE;
+		if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
+		{
+			[self setPatchMustShutdown:YES];
+		}
+		
 	}
 
 	return result;
