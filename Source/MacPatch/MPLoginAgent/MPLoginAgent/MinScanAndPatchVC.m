@@ -273,7 +273,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			break;
 		case 2:
 			// Firmware updates are needed requiring a shutdown (halt)
-			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot", @"-halt]];
+			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot", @"-halt"]];
 			qlinfo(@"MPAuthPlugin issued a launchctl reboot and halt.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
 			break;
