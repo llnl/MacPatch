@@ -153,6 +153,7 @@
 		[self->_mainScanStatusText.animator setFrame:NSMakeRect(progWheelRect.origin.x, progWheelRect.origin.y, 389, 17)];
 		[self->_mainScanProgressWheel stopAnimation:nil];
 		[self->_mainScanProgressWheel setHidden:YES];
+		[self->_mainScanStatusText setStringValue:@"Patch scan completed. No patches needed."];
 		
 		if (self->_content && [self->_content count] >= 0)
 		{
@@ -164,13 +165,14 @@
 			[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"gov.llnl.mp.MacPatch.MacPatchTile" object:nil];
 			
 			if ([self->_content count] >= 1) {
+				[self->_mainScanStatusText setStringValue:@"Patch scan completed."];
 				[[[NSApplication sharedApplication] dockTile] setBadgeLabel:[NSString stringWithFormat:@"%ld", (long)[self->_content count]]];
 			} else {
+				[self->_mainScanStatusText setStringValue:@"Patch scan completed. No patches needed."];
 				[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 			}
 		}
 
-		[self->_mainScanStatusText setStringValue:@"Patch scan completed."];
 		[self->_scanButton setTitle:@"Scan"];
 		[self->_scanButton setNextState];
 		[self->_scanButton setEnabled:YES];
