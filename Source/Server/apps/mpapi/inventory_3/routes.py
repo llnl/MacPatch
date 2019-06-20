@@ -287,7 +287,7 @@ class Inventory:
 
 	def tableExists(self,table):
 		if table.upper() in list(map(str.upper, self.tables)):
-			return True
+    			return True
 		else:
 			return False
 
