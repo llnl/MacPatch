@@ -454,11 +454,7 @@
 		8FF3D6AA217012D600059ACD /* MPSimpleKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSimpleKeychain.h; path = MPLibrary/MPSimpleKeychain.h; sourceTree = "<group>"; };
 		8FF3D6AB217012D600059ACD /* MPCodeSign.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPCodeSign.m; path = MPLibrary/MPCodeSign.m; sourceTree = "<group>"; };
 		8FF3D6AC217012D600059ACD /* MPKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPKeychain.m; path = MPLibrary/MPKeychain.m; sourceTree = "<group>"; };
-		8FF3D6B92170131700059ACD /* MPAgentController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentController.h; sourceTree = "<group>"; };
 		8FF3D6BA2170131700059ACD /* MPSWTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSWTasks.h; path = MPLibrary/MPSWTasks.h; sourceTree = "<group>"; };
-		8FF3D6BB2170131700059ACD /* MPAgentController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentController.m; sourceTree = "<group>"; };
-		8FF3D6BC2170131700059ACD /* MPSWInstaller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPSWInstaller.h; sourceTree = "<group>"; };
-		8FF3D6BD2170131700059ACD /* MPSWInstaller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPSWInstaller.m; sourceTree = "<group>"; };
 		8FF3D6BE2170131700059ACD /* MPSWTasks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPSWTasks.m; path = MPLibrary/MPSWTasks.m; sourceTree = "<group>"; };
 		8FF3D7212170196800059ACD /* MPLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPLog.m; path = MPLibrary/MPLog.m; sourceTree = "<group>"; };
 		8FF3D72321701AB500059ACD /* NSDate+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+Helper.m"; sourceTree = "<group>"; };
@@ -612,7 +608,6 @@
 		8F4B1DE516DD1BC600E15A9E /* MPLibrary */ = {
 			isa = PBXGroup;
 			children = (
-				8FE66403222B5B6500F12AC8 /* REMOVE */,
 				8FF3D64F217010E700059ACD /* MacPatch.h */,
 				8FF3D64D217010E600059ACD /* Constants.h */,
 				8FF3D64E217010E600059ACD /* Constants.m */,
@@ -907,17 +902,6 @@
 				8F0011801F894753009F75EC /* Model */,
 			);
 			name = "MP Settings";
-			sourceTree = "<group>";
-		};
-		8FE66403222B5B6500F12AC8 /* REMOVE */ = {
-			isa = PBXGroup;
-			children = (
-				8FF3D6BC2170131700059ACD /* MPSWInstaller.h */,
-				8FF3D6BD2170131700059ACD /* MPSWInstaller.m */,
-				8FF3D6B92170131700059ACD /* MPAgentController.h */,
-				8FF3D6BB2170131700059ACD /* MPAgentController.m */,
-			);
-			path = REMOVE;
 			sourceTree = "<group>";
 		};
 		8FE6B4811B4C7748000A0471 /* Crypto */ = {
