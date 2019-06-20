@@ -650,6 +650,30 @@ class MpInvState(CommonBase):
 	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
 	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
 
+# rev 100005
+# mp_inv_errors
+class MpInvErrors(CommonBase):
+	__tablename__ = 'mp_inv_errors'
+	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=False)
+	inv_table = Column(String(255), nullable=False)
+	error_msg = Column(TEXT(), nullable=False)
+	json_data = Column(LONGTEXT(), nullable=False)
+	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# rev 100005
+# mp_inv_log
+class MpInvLog(CommonBase):
+	__tablename__ = 'mp_inv_log'
+	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=False)
+	mp_server = Column(String(255), nullable=False)
+	inv_table = Column(String(255), nullable=False)
+	error_no = Column(String(10), nullable=True)
+	error_msg = Column(TEXT(), nullable=True)
+	json_data = Column(LONGTEXT(), nullable=False)
+	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
 # ------------------------------------------
 ## Servers
 
