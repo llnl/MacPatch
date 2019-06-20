@@ -174,7 +174,8 @@ class MP_ConfigData(MPResource):
 				_srv_pub_key = res.pubKey
 				_srv_pub_key_hash = res.pubKeyHash
 
-			configPlist = plistlib.writePlistToString(config)
+			#configPlist = plistlib.writePlistToString(config)
+			configPlist = plistlib.dumps(config).decode('utf-8')
 			log_Debug("[MP_ConfigData][GET]: Agent Config Result: %s" % (configPlist))
 			resData = {'plist': configPlist, 'pubKey': _srv_pub_key, 'pubKeyHash': _srv_pub_key_hash}
 			return {"result": resData, "errorno": 0, "errormsg": ""}, 200
