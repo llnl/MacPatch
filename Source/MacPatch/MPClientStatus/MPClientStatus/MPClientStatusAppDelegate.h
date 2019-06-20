@@ -25,10 +25,11 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MPWorkerProtocol.h"
+#import <WebKit/WebKit.h>
 
 @class MPAsus, MPAppUsage;
 
-@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,NSUserNotificationCenterDelegate>
+@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,NSUserNotificationCenterDelegate,WKNavigationDelegate>
 {
 	NSWindow *__unsafe_unretained window;
     
@@ -62,6 +63,9 @@
 	NSWindow *__unsafe_unretained rebootWindow;
     IBOutlet NSTextField *rebootTitleText;
     IBOutlet NSTextField *rebootBodyText;
+	
+	// Whats New Window
+	IBOutlet NSWindow *__unsafe_unretained whatsNewWindow;
     
 	// New CheckIn Methods
 	NSOperationQueue *queue;
@@ -112,6 +116,10 @@
 @property (unsafe_unretained) IBOutlet NSWindow *rebootWindow;
 @property (nonatomic, strong) IBOutlet NSTextField *rebootTitleText;
 @property (nonatomic, strong) IBOutlet NSTextField *rebootBodyText;
+
+// Whats New Window
+@property (nonatomic, strong) IBOutlet WKWebView *wkWebView;
+@property (nonatomic, strong) IBOutlet NSButton *showWhatsNewOnLaunch;
 
 // Client CheckIn String
 @property (nonatomic, strong) NSOperationQueue *queue;

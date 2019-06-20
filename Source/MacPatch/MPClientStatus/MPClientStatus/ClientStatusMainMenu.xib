@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.68" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.68"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.70"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="14490.70"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -917,8 +918,11 @@
                 <outlet property="rebootTitleText" destination="mwm-Oi-5Fq" id="Tf2-Am-UEt"/>
                 <outlet property="rebootWindow" destination="Rir-3v-4PY" id="tNt-9b-JG4"/>
                 <outlet property="selfVersionInfoMenuItem" destination="539" id="630"/>
+                <outlet property="showWhatsNewOnLaunch" destination="W5t-0c-pCg" id="vjK-67-KSC"/>
                 <outlet property="statusMenu" destination="536" id="631"/>
+                <outlet property="whatsNewWindow" destination="bMN-3l-C5D" id="ZeT-dX-sSp"/>
                 <outlet property="window" destination="371" id="532"/>
+                <outlet property="wkWebView" destination="r0j-lI-7S5" id="fvl-cu-QNU"/>
             </connections>
         </customObject>
         <customObject id="420" customClass="NSFontManager"/>
@@ -1091,10 +1095,46 @@ LQAyADcAQQBHAFAAVwBcAGQAeQB7AH0AfwCBAIsAkgCXAKIApQCnAKkAqwCwALsAxADMAM8A2ADdAOoA
             </view>
             <point key="canvasLocation" x="-469" y="-651"/>
         </window>
+        <window title="MacPatch - What's New" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="bMN-3l-C5D">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+            <rect key="contentRect" x="335" y="390" width="620" height="442"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <value key="minSize" type="size" width="620" height="442"/>
+            <value key="maxSize" type="size" width="620" height="442"/>
+            <value key="minFullScreenContentSize" type="size" width="620" height="442"/>
+            <value key="maxFullScreenContentSize" type="size" width="620" height="442"/>
+            <view key="contentView" id="z3V-fy-vXF">
+                <rect key="frame" x="0.0" y="0.0" width="620" height="442"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <wkWebView wantsLayer="YES" focusRingType="none" allowsLinkPreview="NO" id="r0j-lI-7S5">
+                        <rect key="frame" x="0.0" y="42" width="620" height="400"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <wkWebViewConfiguration key="configuration">
+                            <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                            <wkPreferences key="preferences"/>
+                        </wkWebViewConfiguration>
+                    </wkWebView>
+                    <button verticalHuggingPriority="750" id="W5t-0c-pCg">
+                        <rect key="frame" x="18" y="12" width="115" height="18"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <buttonCell key="cell" type="check" title="Show at launch" bezelStyle="regularSquare" imagePosition="left" state="on" inset="2" id="iJk-J4-LAj">
+                            <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                            <font key="font" metaFont="system"/>
+                        </buttonCell>
+                        <connections>
+                            <binding destination="r3R-te-uoH" name="value" keyPath="values.showWhatsNew" id="WOn-Dm-ofa"/>
+                        </connections>
+                    </button>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="-25" y="-533"/>
+        </window>
+        <userDefaultsController representsSharedInstance="YES" id="r3R-te-uoH"/>
     </objects>
     <resources>
         <image name="MPBaseRoundIcon" width="512" height="512"/>
-        <image name="appImage" width="64" height="64"/>
-        <image name="warn" width="600" height="500"/>
+        <image name="appImage" width="128" height="128"/>
+        <image name="warn" width="32" height="27"/>
     </resources>
 </document>

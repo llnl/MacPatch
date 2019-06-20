@@ -120,6 +120,22 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 @synthesize showCriticalWindowAtDate;
 @synthesize criticalUpdatesTimer;
 
++ (void)initialize
+{
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.mpResetWhatsNew"])
+	{
+		[defaults removeObjectForKey:@"showWhatsNew"];
+		[defaults synchronize];
+		[[NSFileManager defaultManager] removeItemAtPath:@"/private/tmp/.mpResetWhatsNew" error:NULL];
+	}
+	
+	NSMutableDictionary *defaultValues = [NSMutableDictionary dictionary];
+	[defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showWhatsNew"];
+	[defaults registerDefaults:defaultValues];
+	[defaults synchronize];
+}
+
 #pragma mark UI Events
 -(void)awakeFromNib
 {
@@ -207,6 +223,14 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [self runMPUserNotificationCenter];
     
     appRules = @{@"allow":@[],@"deny":@[]};
+	
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	if ([defaults boolForKey:@"showWhatsNew"]) {
+		[self loadWhatsNewWebView:nil];
+		[whatsNewWindow makeKeyAndOrderFront:nil];
+		[whatsNewWindow center];
+		[NSApp activateIgnoringOtherApps:YES];
+	}
 }
 
 #pragma mark -
@@ -974,6 +998,34 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         }
 		 */
     }
+}
+
+- (IBAction)loadWhatsNewWebView:(id)sender
+{	
+	[_wkWebView.enclosingScrollView setHasVerticalScroller:NO];
+	NSString *filePath = [[NSBundle mainBundle] pathForResource:@"banner" ofType:@"html" inDirectory:@"html"];
+	NSString *htmlStringBase = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:NULL];
+	[_wkWebView loadHTMLString:htmlStringBase baseURL:[[NSBundle mainBundle] resourceURL]];
+}
+
+
+#pragma mark - Web URL Info
+
+- (void)webView:(WKWebView *)webView didCommitNavigation:(WKNavigation *)navigation
+{
+	//NSLog(@"didCommitNavigation");
+}
+
+- (void)webView:(WKWebView *)webView
+decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionHandler:(void (^)(WKNavigationActionPolicy))decisionHandler
+{
+	if (navigationAction.navigationType == WKNavigationTypeLinkActivated)
+	{
+		[[NSWorkspace sharedWorkspace] openURL:[navigationAction.request URL]];
+		decisionHandler(WKNavigationActionPolicyCancel);
+	}
+	
+	decisionHandler(WKNavigationActionPolicyAllow);
 }
 
 @end
