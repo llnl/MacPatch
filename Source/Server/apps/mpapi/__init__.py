@@ -139,6 +139,9 @@ def register_blueprints(app):
 	from .inventory_2 import inventory_2 as bp_inventory_2
 	app.register_blueprint(bp_inventory_2, url_prefix='/api/v2')
 
+	from .inventory_3 import inventory_3 as bp_inventory_3
+	app.register_blueprint(bp_inventory_3, url_prefix='/api/v3')
+
 	from .mac_profiles import mac_profiles as bp_mac_profiles
 	app.register_blueprint(bp_mac_profiles, url_prefix=app.config['URL_PREFIX'])
 
