@@ -419,7 +419,7 @@
     
     req = [[MPHTTPRequest alloc] init];
     
-    NSString *urlPath = [@"/api/v1/client/inventory" stringByAppendingPathComponent:[settings ccuid]];
+    NSString *urlPath = [@"/api/v3/client/inventory" stringByAppendingPathComponent:[settings ccuid]];
     result = [req runSyncPOST:urlPath body:aDataMgrData];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
