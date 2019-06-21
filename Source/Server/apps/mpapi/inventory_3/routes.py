@@ -35,6 +35,11 @@ class AddInventoryData(MPResource):
 
 		jData = request.get_json(force=True)
 		if jData:
+			
+			_table="/tmp/" + jData['table'] + ".log"
+			with open(_table, 'w') as f:
+				json.dump(jData, f)
+
 			try:
 				dMgr = DataMgr(jData)
 				if dMgr.parseInvData() is True:
@@ -273,7 +278,7 @@ class Inventory:
 				'dataType': '',
 				'length': 0
 			}
-			tmp['name'] = row.column_name
+			tmp['name'] = row.COLUMN_NAME
 			tmp['dataType'] = row.DATA_TYPE
 			if row.NUMERIC_PRECISION is not None:
 				tmp['length'] = row.NUMERIC_PRECISION
@@ -301,7 +306,7 @@ class Inventory:
 	def colsToAlterOrAdd(self,tableName,cols,fields):
 		log_Info("Number of fields to verify: %d" % len(fields))
 		for field in fields:
-			log_Info("Verify field %s" % field['name'])
+			log_Debug("Verify field %s" % field['name'])
 			if self.searchForColNameInFields(field['name'],cols) is False:
 				log_Info("Add Field: %s" % field['name'])
 				x = self.createColumn(tableName,field)
@@ -436,8 +441,6 @@ class Inventory:
 
 		# is RID field
 		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			_dbCur.close()
-			_db.close()
 			return False
 		else:
 			_sqlStr = _sqlStr + " CHANGE COLUMN `" + _field['name'] + "` `" + _field['name'] + "` " + _field['dataType']
@@ -492,8 +495,6 @@ class Inventory:
 
 		# is RID field
 		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			_dbCur.close()
-			_db.close()
 			return False
 		else:
 			_sqlStr = _sqlStr + " ADD COLUMN `" + _field['name'] + "` " + _field['dataType']
