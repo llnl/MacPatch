@@ -21,6 +21,9 @@
 @property (nonatomic, weak) id <MPHTTPRequestDelegate> delegate;
 @property (nonatomic, weak, readonly) NSError *error;
 
+@property (nonatomic, assign) NSTimeInterval	requestTimeout;
+@property (nonatomic, assign) NSTimeInterval	resourceTimeout;
+
 - (id)initWithAgentPlist;
 
 /**

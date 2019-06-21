@@ -46,6 +46,8 @@
 @synthesize allowSelfSignedCert;
 @synthesize clientKey;
 @synthesize error;
+@synthesize requestTimeout;
+@synthesize resourceTimeout;
 
 - (id)init
 {
@@ -57,6 +59,8 @@
         
         self.requestCount = -1;
         self.allowSelfSignedCert = NO;
+		self.requestTimeout = 10;
+		self.resourceTimeout = 60;
         
         [self populateServerArray];
         [self setClientKey:@"NA"];
@@ -74,6 +78,8 @@
         
         self.requestCount = -1;
         self.allowSelfSignedCert = NO;
+		self.requestTimeout = 10;
+		self.resourceTimeout = 60;
         
         [self populateServerArrayUsingAgentPlist];
         [self setClientKey:@"NA"];
@@ -487,8 +493,6 @@
     
     NSURLSessionDownloadTask *downloadTask;
     NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-    //sessionConfiguration.timeoutIntervalForRequest = 10.0;
-    //sessionConfiguration.timeoutIntervalForResource = 3600.0;
 	sessionConfiguration.timeoutIntervalForRequest = 10;
 	sessionConfiguration.timeoutIntervalForResource = 120.0;
 	
@@ -708,8 +712,8 @@
     // Create session for request
     NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
     sessionConfig.allowsCellularAccess = YES;
-    sessionConfig.timeoutIntervalForRequest = 10;
-    sessionConfig.timeoutIntervalForResource = 60;
+    sessionConfig.timeoutIntervalForRequest = self.requestTimeout;
+    sessionConfig.timeoutIntervalForResource = self.resourceTimeout;
     sessionConfig.HTTPMaximumConnectionsPerHost = 1;
     
     __block NSError *sesErr = nil;
@@ -790,8 +794,8 @@
     // Create session for request
     NSURLSessionConfiguration *sessionConfig = [NSURLSessionConfiguration defaultSessionConfiguration];
     sessionConfig.allowsCellularAccess = YES;
-    sessionConfig.timeoutIntervalForRequest = 10;
-    sessionConfig.timeoutIntervalForResource = 10;
+    sessionConfig.timeoutIntervalForRequest = self.requestTimeout;
+    sessionConfig.timeoutIntervalForResource = self.resourceTimeout;
     sessionConfig.HTTPMaximumConnectionsPerHost = 1;
     
     __block NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfig
