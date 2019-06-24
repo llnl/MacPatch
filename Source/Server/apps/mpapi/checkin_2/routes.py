@@ -3,6 +3,7 @@ from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 import syslog
+import hashlib
 
 from . import *
 from .. import db
@@ -259,6 +260,56 @@ def postClientDataToSysLog(client_obj):
 	log_Info("Wrote to syslog: " + dataStr)
 	return
 
+# Server Public Key Check
+class CheckServerKey(MPResource):
+
+	def __init__(self):
+		self.reqparse = reqparse.RequestParser()
+		super(CheckServerKey, self).__init__()
+
+	def get(self, cuuid):
+		try:
+			if not isValidClientID(cuuid):
+				log_Error('[CheckServerKey][Get]: Failed to verify ClientID (%s)' % (cuuid))
+				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify ClientID'}, 424
+
+			if not isValidSignature(self.req_signature, cuuid, self.req_uri, self.req_ts):
+				if current_app.config['ALLOW_MIXED_SIGNATURES'] == True:
+					log_Info('[CheckServerKey][Get]: ALLOW_MIXED_SIGNATURES is enabled.')
+				else:
+					log_Error('[CheckServerKey][Get]: Failed to verify Signature for client (%s)' % (cuuid))
+					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify Signature'}, 424
+
+			clientKey = None
+			qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
+			cRegData = MPAgentRegistration.query.filter(MPAgentRegistration.cuuid == cuuid).first()
+			if cRegData is not None:
+				clientKey = cRegData.clientKey
+			else:
+				log_Error('[CheckServerKey][Get]: Client registration data not found.')
+				return {"result": '', "errorno": 404, "errormsg": 'Client registration data not found.'}, 404	
+
+			if qKeys is not None:
+				if clientKey is not None:
+					stringToHash = clientKey + "" + qKeys.pubKeyHash
+					pubKeyHash256 = hashlib.sha256(stringToHash.encode('UTF-8')).hexdigest()
+				
+				res = {'pubKey': qKeys.pubKey, 'puKeyHash': pubKeyHash256}
+				return {"result": res, "errorno": 0, "errormsg": 'none'}, 200
+			else:
+				log_Error('[CheckServerKey][Get]: Active Server keys not found')
+				return {"result": '', "errorno": 404, "errormsg": 'Active Server keys not found'}, 404
+
+		except IntegrityError as exc:
+			log_Error('[CheckServerKey][Get][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
+			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
+		except Exception as e:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			log_Error('[CheckServerKey][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
+			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+
 # Add Routes Resources
-checkin_2_api.add_resource(AgentBase,		'/client/checkin/<string:cuuid>')
-checkin_2_api.add_resource(AgentStatus, 	'/client/checkin/info/<string:client_id>')
+checkin_2_api.add_resource(AgentBase,			'/client/checkin/<string:cuuid>')
+checkin_2_api.add_resource(AgentStatus, 		'/client/checkin/info/<string:client_id>')
+
+checkin_2_api.add_resource(CheckServerKey,		'/client/server/key/<string:cuuid>')
