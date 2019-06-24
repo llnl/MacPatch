@@ -14,6 +14,7 @@
 @property (nonatomic, strong, readonly) NSData    *agentPublicKey;
 @property (nonatomic, strong, readonly) NSData    *agentPrivateKey;
 @property (nonatomic, strong, readonly) NSString  *clientKey;
+@property (nonatomic, strong) 			NSString  *agentDataKey;
 
 - (NSString *)getClientKey;
 - (NSData *)getServerPublicKey;
@@ -26,5 +27,6 @@
 - (void)setAgentPrivateKey:(NSData *)aKey;
 
 - (BOOL)generateAgentData;
+- (void)echoAgentData;
 
 @end

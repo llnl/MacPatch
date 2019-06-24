@@ -25,6 +25,7 @@
 @synthesize serverPublicKey;
 @synthesize agentPublicKey;
 @synthesize agentPrivateKey;
+@synthesize agentDataKey;
 
 - (id)init
 {
@@ -36,6 +37,7 @@
 					 @"agentPublicKey":[NSData data],
 					 @"agentPrivateKey":[NSData data],
 					 @"serverPublicKey":[NSData data]};
+		agentDataKey = nil;
 	}
 	return self;
 }
@@ -138,6 +140,21 @@
 	[NSKeyedArchiver archiveRootObject:d toFile:AGENT_REG_FILE];
 }
 
+- (void)echoAgentData
+{
+	NSString *cKey = [self readDataForKey:@"clientKey"];
+	if ([cKey.lowercaseString isEqualToString:agentDataKey.lowercaseString])
+	{
+		NSString *sPubKey = [NSString stringWithUTF8String:[[self readDataForKey:@"serverPublicKey"] bytes]];
+		NSString *aPubKey = [NSString stringWithUTF8String:[[self readDataForKey:@"agentPublicKey"] bytes]];
+		NSString *aPriKey = [NSString stringWithUTF8String:[[self readDataForKey:@"agentPrivateKey"] bytes]];
+		// printf("\nMaster Key: %s\n\n",[schlussel UTF8String]);
+		printf("\nClientKey: %s\n\nServer Pub Key:%s\n\nAgent Pub Key:%s\n\nAgent Pri Key:%s\n", [cKey UTF8String],[sPubKey UTF8String],[aPubKey UTF8String],[aPriKey UTF8String]);
+	}
+	else
+	{
+		printf("\nThis action is not allowed. This failed request has been recorded.\n");
+	}
+}
 @end
-
 
