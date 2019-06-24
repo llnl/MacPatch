@@ -39,7 +39,7 @@
 		8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7761140C2F0700D86586 /* qlog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF65E145F1922006284B2 /* RegexKitLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7754140C2F0700D86586 /* lcl.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; };
+		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6222494D0600FDFBCA /* AgentData.m */; };
 		8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */; };
 		8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6622494D5000FDFBCA /* UAObfuscatedString.m */; };

@@ -31,6 +31,7 @@
 #import "MPAgentRegister.h"
 #import "MPInv.h"
 #import "MPOSUpgrade.h"
+#import "AgentData.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -129,8 +130,9 @@ int main (int argc, char * argv[])
                 {"Profile"          	,no_argument	    ,0, 'p'},
 
 				// Client Registration
-				{"register"		    	,optional_argument	,0, 'r'},
+				{"register"		    	,optional_argument	,0,    'r'},
 				{"regInfo"		    	,optional_argument  ,NULL, 'R'},
+				{"echoReg"		    	,required_argument  ,0,	   'X'},
 				
 				// OS Migration
 				{"OSUpgrade"        	,required_argument	,0, 'k'},
@@ -148,7 +150,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr::R::k:l:m:vbh:", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:vbh:", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -255,6 +257,13 @@ int main (int argc, char * argv[])
 						regKeyHash = [NSString stringWithUTF8String:optarg];
 					}
 					break;
+				case 'X':
+					a_Type = 18;
+					if (optarg) {
+						// re-use variable, this is the client key
+						regKeyHash = [NSString stringWithUTF8String:optarg];
+					}
+					break;
                 case 'k':
 					a_Type = 10;
                     if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"start"]) {
@@ -343,6 +352,7 @@ int main (int argc, char * argv[])
 		MPOSUpgrade *mposu;
 		NSError *err = nil;
 		MPAgentRegister *mpar;
+		AgentData *mpad;
         
 		int result = 1;
 		switch (a_Type)
@@ -503,6 +513,13 @@ int main (int argc, char * argv[])
 						exit(1);
 					}
 				}
+				exit(0);
+				break;
+			case 18:
+				// Check Registration
+				mpad = [[AgentData alloc] init];
+				[mpad setAgentDataKey:regKeyHash];
+				[mpad echoAgentData];
 				exit(0);
 				break;
 			case 50:

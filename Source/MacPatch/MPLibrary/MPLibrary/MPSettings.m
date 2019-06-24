@@ -239,10 +239,17 @@ static MPSettings *_instance;
 
 - (void)updateSettingsUsingKey:(NSString *)key settings:(NSDictionary *)agentSettings
 {
-    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-    [dict[@"settings"] setObject:agentSettings forKey:key];
-    [dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
-    [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+	if (agentSettings)
+	{
+		NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+		[dict[@"settings"] setObject:agentSettings forKey:key];
+		[dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
+		[dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+	}
+	else
+	{
+		qlerror(@"Unable to update setting for key \"%@\", value was null.",key);
+	}
 }
 
 #pragma mark - Private
