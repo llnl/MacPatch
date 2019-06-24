@@ -191,6 +191,36 @@ else
 fi
 
 # ------------------------------------------------------------
+# Client Master Key
+# ------------------------------------------------------------
+ECHO_MASTER_KEY=false
+setMasterKey=false
+MASTER_KEY_SET="Y"
+ClientMasterKey="SuperSimpleKeyPleaseChangeThisInProduction"
+
+echo
+echo " - Client Master Key "
+read -p "Would you like to set the client master key, no will gen a random key (Y/N)? [$MASTER_KEY_SET]: " MASTER_KEY_TXT
+MASTER_KEY_TXT=${MASTER_KEY_TXT:-${MASTER_KEY_SET}}
+MASTER_KEY_TXT=`echo $MASTER_KEY_TXT | awk '{print toupper($0)}'`
+if [[ "$MASTER_KEY_TXT" == "Y" ]]; then
+    setMasterKey=true
+else
+    ClientMasterKey=`env LC_CTYPE=C LC_ALL=C tr -dc "a-zA-Z0-9-_\$\?" < /dev/urandom | head -c 20; echo`
+    ECHO_MASTER_KEY=true
+fi
+
+
+if $setMasterKey; then
+    echo
+    echo
+    read -p "Client Master Key: " CMASTERKEY
+    ClientMasterKey=${CMASTERKEY}    
+fi
+
+
+
+# ------------------------------------------------------------
 # Sign all binaries?
 # ------------------------------------------------------------
 SIGNCODES="Y"
@@ -209,6 +239,9 @@ SIGNCODE=${SIGNCODE:-$SIGNCODES}
 SIGNCODE=`echo $SIGNCODE | awk '{print toupper($0)}'`
 defaults write ${BUILDPLIST} code_sign $SIGNCODE
 if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
+
+    cp "${SRCROOT}/MacPatch/MPLibrary/AgentData.m" /private/tmp/AgentData.m.bak
+    sed -i '' "s/SimpleSecretKey/${ClientMasterKey}/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
 
 	if [ "$SIGNCODE" == "Y" ] ; then
 		# Compile the agent components
@@ -260,6 +293,8 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
 		fi
 	fi
+
+    sed -i '' "s/${ClientMasterKey}/SimpleSecretKey/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
 else
 	echo "Invalid entry, now exiting."
 	exit 1
@@ -443,3 +478,9 @@ fi
 echo
 echo "New Client is located in $BUILDROOT"
 open ${BUILDROOT}
+if $ECHO_MASTER_KEY
+    echo
+    echo "A random master client key has been set. Please write this down in a secure location."
+    echo ${ClientMasterKey}
+fi
+
