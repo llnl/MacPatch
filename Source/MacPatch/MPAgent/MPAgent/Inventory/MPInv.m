@@ -416,10 +416,21 @@
 {
     MPHTTPRequest *req;
     MPWSResult *result;
-    
+	NSString *apiPath = @"/api/v3/client/inventory";
+	
     req = [[MPHTTPRequest alloc] init];
-    
-    NSString *urlPath = [@"/api/v3/client/inventory" stringByAppendingPathComponent:[settings ccuid]];
+	
+	NSFileManager *fm = [NSFileManager defaultManager];
+	if ([fm fileExistsAtPath:@"/Library/MacPatch/Client/Data/.uri.inv.plist"])
+	{
+		NSDictionary *apiDict = [NSDictionary dictionaryWithContentsOfFile:@"/Library/MacPatch/Client/Data/.uri.inv.plist"];
+		if ([apiDict objectForKey:@"version"]) {
+			apiPath = [NSString stringWithFormat:@"/api/%@/client/inventory",apiDict[@"version"]];
+		}
+	}
+	
+	qldebug(@"api path = %@",apiPath);
+    NSString *urlPath = [apiPath stringByAppendingPathComponent:[settings ccuid]];
     result = [req runSyncPOST:urlPath body:aDataMgrData];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
@@ -427,6 +438,7 @@
         logit(lcl_vDebug,@"Data Result: %@",result.result);
     } else {
         logit(lcl_vError,@"Data post, returned false.");
+		logit(lcl_vError,@"API path: %@.",apiPath);
         logit(lcl_vDebug,@"%@",result.toDictionary);
         return NO;
     }
