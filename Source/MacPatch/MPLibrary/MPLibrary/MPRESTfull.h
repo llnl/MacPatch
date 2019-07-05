@@ -190,4 +190,13 @@
  @param err Error object
  */
 - (NSDictionary *)getPatchForBundleID:(NSString *)bundleID error:(NSError **)err;
+
+
+/**
+ Get software restrictions for the client
+
+ @param err Error object
+ @return Dictionary of the revision and rules
+ */
+- (NSDictionary *)getSoftwareRestrictions:(NSError **)err;
 @end

@@ -43,6 +43,7 @@ extern NSString * const APP_PREFS_PLIST;
 extern NSString * const PATCHES_NEEDED_PLIST;
 extern NSString * const PATCHES_APPROVED_PLIST;
 extern NSString * const PATCHES_CRITICAL_PLIST;
+extern NSString * const SW_RESTRICTIONS_PLIST;
 extern NSString * const PATCH_GROUP_PATCHES_PLIST;
 extern NSString * const SOFTWARE_DATA_DIR;
 

@@ -240,6 +240,7 @@
 		SoftwareInstallOperation *swInst = [[SoftwareInstallOperation alloc] init];
 		swInst.swTask = [self.rowData copy];
 		[q.globalQueue addOperation:swInst];
+		
 	}
 	else if ([title isEqualToString:@"Uninstall"])
 	{

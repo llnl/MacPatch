@@ -700,4 +700,43 @@
 	return result;
 }
 
+/**
+ Get software restrictions for the client
+ 
+ @param err Error object
+ @return Dictionary of the revision and rules
+ */
+- (NSDictionary *)getSoftwareRestrictions:(NSError **)err
+{
+	NSError *ws_err = nil;
+	NSDictionary *ws_result;
+	NSDictionary *result = nil;
+	
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/sw/restrictions/%@",self.ccuid];
+	qldebug(@"[getSoftwareRestrictions][urlPath] %@",urlPath);
+	
+	ws_result = [self getDataFromWS:urlPath error:&ws_err];
+	if (ws_err) {
+		*err = ws_err;
+		return nil;
+	}
+	
+	
+	if ([ws_result objectForKey:@"data"])
+	{
+		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+		{
+			qldebug(@"Web Servce result: %@",ws_result);
+			result = [ws_result objectForKey:@"data"];
+		}
+		else
+		{
+			qlerror(@"Result was not of type dictionary.");
+			qlerror(@"Result: %@", ws_result);
+		}
+	}
+	
+	return result;
+}
+
 @end

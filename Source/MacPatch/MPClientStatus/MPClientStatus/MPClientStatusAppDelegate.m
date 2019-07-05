@@ -74,6 +74,7 @@ dispatch_source_t CreateDispatchTimer(double interval, dispatch_queue_t queue, d
 @implementation MPClientStatusAppDelegate
 {
     dispatch_source_t _timer;
+	dispatch_source_t _timerSWRules;
 }
 
 NSString *const kShowPatchesRequiredNotification    = @"kShowPatchesRequiredNotification";
@@ -223,6 +224,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [self runMPUserNotificationCenter];
     
     appRules = @{@"allow":@[],@"deny":@[]};
+	[self processSoftwareRules];
+	
+	if ([prefs stringForKey:@"denyHelpStringMessage"])
+	{
+		_swResHelpMessage = [prefs stringForKey:@"denyHelpStringMessage"];
+	}
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	if ([defaults boolForKey:@"showWhatsNew"]) {
@@ -669,6 +676,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     pid_t pid=[aPID intValue];
     kill(pid,SIGKILL);
+	
 }
 
 #pragma mark -
@@ -757,12 +765,58 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (BOOL)verifyDeny:(NSDictionary *)noteInfo
 {
+	/* noteInfo object
+	 NSApplicationBundleIdentifier = "com.apple.Chess";
+	 NSApplicationName = Chess;
+	 NSApplicationPath = "/Applications/Chess.app";
+	 NSApplicationProcessIdentifier = 35842;
+	 NSApplicationProcessSerialNumberHigh = 0;
+	 NSApplicationProcessSerialNumberLow = 1651091;
+	 NSWorkspaceApplicationKey = "<NSRunningApplication: 0x600003004f30 (com.apple.Chess - 35842)>";
+	 */
+	
+	
     /* Default the rule to deny none */
+	NSDictionary *appRule;
     BOOL result = NO;
     if ([[self.appRules objectForKey:@"deny"] count] <= 0) {
         return result;
     }
-    
+	
+	for (NSDictionary *d in [self.appRules objectForKey:@"deny"])
+	{
+		if ([d[@"processName"] containsString:@"*"]) {
+			NSString *pN = [d[@"processName"] stringByReplacingOccurrencesOfString:@"*" withString:@""];
+			if ([[noteInfo objectForKey:@"NSApplicationName"] containsString:pN])
+			{
+				appRule = [d copy];
+				result = YES;
+				break;
+			}
+		} else {
+			if ([[noteInfo objectForKey:@"NSApplicationName"] isEqualToString:d[@"processName"]])
+			{
+				appRule = [d copy];
+				result = YES;
+				break;
+			}
+			else if ([[[noteInfo objectForKey:@"NSApplicationPath"] lastPathComponent] isEqualToString:d[@"processName"]])
+			{
+				appRule = [d copy];
+				result = YES;
+				break;
+			}
+		}
+		
+		
+	}
+	
+	if (result == YES)
+	{
+		[self showDenyMessage:appRule];
+	}
+	
+	/*
     for (NSString *r in [self.appRules objectForKey:@"deny"])
     {
         if ([[noteInfo objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:r]) {
@@ -785,9 +839,27 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             break;
         }
     }
+	 */
     return result;
 }
 
+- (void)showDenyMessage:(NSDictionary *)rule
+{
+	NSString *theMessage;
+	if (_swResHelpMessage) {
+		theMessage = [NSString stringWithFormat:@"%@\n\n%@",rule[@"message"],_swResHelpMessage];
+	} else {
+		theMessage = [NSString stringWithFormat:@"%@",rule[@"message"]];
+	}
+	
+	[swResMessage setStringValue:theMessage];
+	[swResWindow setLevel:NSFloatingWindowLevel];
+	[swResWindow makeKeyAndOrderFront:nil];
+	[swResWindow center];
+	[NSApp arrangeInFront:nil];
+	[NSApp activateIgnoringOtherApps:YES];
+	
+}
 
 #pragma mark -
 #pragma mark Logout Method
@@ -1026,6 +1098,62 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	}
 	
 	decisionHandler(WKNavigationActionPolicyAllow);
+}
+
+#pragma mark - Software Restrictions
+
+- (void)updateSoftwareRestrictionRules
+{
+	double secondsToFire = 60.0; // Every 1 min
+	logit(lcl_vInfo, @"Start Software Rules Update Thread");
+	logit(lcl_vInfo, @"Run every %f", secondsToFire);
+	
+	// Show Menu Once, then use timer
+	[self performSelectorOnMainThread:@selector(processSoftwareRules)
+						   withObject:nil
+						waitUntilDone:NO
+								modes:@[NSRunLoopCommonModes]];
+	
+	dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	
+	_timerSWRules = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+		logit(lcl_vInfo, @"Start, Software Rules Update Thread");
+		logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
+		[self performSelectorOnMainThread:@selector(processSoftwareRules)
+							   withObject:nil
+							waitUntilDone:NO
+									modes:@[NSRunLoopCommonModes]];
+	});
+}
+
+- (void)processSoftwareRules
+{
+	@autoreleasepool
+	{
+		NSMutableDictionary *_rules = [NSMutableDictionary dictionaryWithDictionary:@{@"allow":@[],@"deny":@[]}];
+		if ([[NSFileManager defaultManager] fileExistsAtPath:SW_RESTRICTIONS_PLIST])
+		{
+			NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:SW_RESTRICTIONS_PLIST];
+			if (d[@"rules"])
+			{
+				[_rules setObject:d[@"rules"] forKey:@"deny"];
+			}
+		}
+		
+		appRules = _rules;
+		
+		// Process Prefs ...
+		NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST];
+		if (prefs[@"denyHelpStringMessage"])
+		{
+			_swResHelpMessage = prefs[@"denyHelpStringMessage"];
+		}
+	}
+}
+
+- (IBAction)closeSWResWindow:(id)sender
+{
+	[swResWindow close];
 }
 
 @end

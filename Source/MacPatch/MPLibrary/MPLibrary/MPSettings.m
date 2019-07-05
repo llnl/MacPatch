@@ -231,6 +231,11 @@ static MPSettings *_instance;
             qlinfo(@"Update Agent tasks, tasks did not match.");
             [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
         }
+		if ([remoteSettingsRevs objectForKey:@"restrictions"] != [self readSoftwareRestrictionRevisionFromFile]) {
+			// Usdate Tasks
+			qlinfo(@"Update Software restrictions, restrictions did not match.");
+			[self writeNewSoftwareRestritionsFile];
+		}
         qlinfo(@"Setting have been updated.");
     }
     
@@ -380,4 +385,26 @@ static MPSettings *_instance;
     return (NSArray *)_newArray;
 }
 
+- (NSString *)readSoftwareRestrictionRevisionFromFile
+{
+	if (![fm fileExistsAtPath:SW_RESTRICTIONS_PLIST]) return @"0-0";
+	
+	NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:SW_RESTRICTIONS_PLIST];
+	if ([d objectForKey:@"revision"]) {
+		return [d objectForKey:@"revision"];
+	}
+	
+	return @"0-0";
+}
+
+- (BOOL)writeNewSoftwareRestritionsFile
+{
+	NSError *err = nil;
+	MPRESTfull *mpr = [MPRESTfull new];
+	NSDictionary *res = [mpr getSoftwareRestrictions:&err];
+	if (err) {
+		qlerror(@"%@",err.localizedDescription);
+	}
+	[res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
+}
 @end

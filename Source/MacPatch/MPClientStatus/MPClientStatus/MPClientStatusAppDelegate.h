@@ -84,6 +84,12 @@
 	IBOutlet NSButton *criticalWinRebootButton;
 	IBOutlet NSPopUpButton *criticalWinPopUpDown;
 	
+	// Software Restritions
+	IBOutlet NSWindow *__unsafe_unretained swResWindow;
+	IBOutlet NSTextField *swResMessage;
+	IBOutlet NSTextField *swResHelpMessage;
+	
+	
 @private
     
 	MPAppUsage *mpAppUsage;
@@ -129,6 +135,9 @@
 @property (nonatomic, strong) NSDate *showCriticalWindowAtDate;
 @property (nonatomic, strong) NSTimer *criticalUpdatesTimer;
 
+// SW Restrictions
+@property (nonatomic, strong) NSString *swResHelpMessage;
+
 #pragma mark -
 #pragma mark Methods
 
@@ -159,5 +168,6 @@
 // App Usage Info
 - (void)appLaunchNotificationReceived:(NSNotification *)aNotification;
 
+- (IBAction)showSWResWindow:(id)sender;
 @end
 
