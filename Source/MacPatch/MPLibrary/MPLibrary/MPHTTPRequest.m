@@ -601,7 +601,6 @@
 	__block BOOL didFail = NO;
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
-	//MPDownloadManager *dm = [[MPDownloadManager alloc] init];
 	dm.downloadUrl = url;
 	dm.downloadDestination = dlDir;
 	
@@ -609,7 +608,6 @@
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
 			NSString *progStr = [NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progressPercent];
-			//qldebug(@"%@",progStr);
 			if ((int)progressPercent % 5 == 0) qlinfo(@"%@",progStr);
 			[self->delegate downloadProgress:progStr];
 		});
@@ -636,7 +634,6 @@
 	if (didFail) {
 		[self runSyncFileDownloadAlt:urlPath downloadDirectory:dlDir error:err];
 	}
-	
 	
 	return @"OK";
 }

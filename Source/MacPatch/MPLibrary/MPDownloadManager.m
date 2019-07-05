@@ -130,7 +130,7 @@ static id _sharedManager = nil;
 - (NSURLSession *)createSession
 {
 	NSURLSession *session = nil;
-	session = [self backgroundSession];
+	session = [self foregroundSession];
 	return session;
 }
 
@@ -152,6 +152,7 @@ static id _sharedManager = nil;
 {
 	NSString *bgSessionID 					= [NSString stringWithFormat:@"mp.download.session.%@",[[NSUUID UUID] UUIDString]];
 	NSURLSessionConfiguration *config 		= [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:bgSessionID];
+	config.requestCachePolicy 				= NSURLRequestReloadIgnoringLocalCacheData;
 	config.HTTPMaximumConnectionsPerHost	= kSessionMaxConnection;
 	qldebug(@"Setting timeoutIntervalForResource to %f",self.resourceTimeout);
 	config.timeoutIntervalForResource 	 	= self.resourceTimeout;
@@ -202,7 +203,7 @@ static id _sharedManager = nil;
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
 {
-	
+
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
