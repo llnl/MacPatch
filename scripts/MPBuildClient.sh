@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
@@ -193,7 +193,7 @@ fi
 # ------------------------------------------------------------
 # Client Master Key
 # ------------------------------------------------------------
-ECHO_MASTER_KEY=false
+SHOW_MASTER_KEY=false
 setMasterKey=false
 MASTER_KEY_SET="Y"
 ClientMasterKey="SuperSimpleKeyPleaseChangeThisInProduction"
@@ -207,7 +207,7 @@ if [[ "$MASTER_KEY_TXT" == "Y" ]]; then
     setMasterKey=true
 else
     ClientMasterKey=`env LC_CTYPE=C LC_ALL=C tr -dc "a-zA-Z0-9-_\$\?" < /dev/urandom | head -c 20; echo`
-    ECHO_MASTER_KEY=true
+    SHOW_MASTER_KEY=true
 fi
 
 
@@ -478,9 +478,12 @@ fi
 echo
 echo "New Client is located in $BUILDROOT"
 open ${BUILDROOT}
-if $ECHO_MASTER_KEY
+
+if $SHOW_MASTER_KEY; then
     echo
     echo "A random master client key has been set. Please write this down in a secure location."
-    echo ${ClientMasterKey}
+    echo "$ClientMasterKey"
+    echo
 fi
+
 
