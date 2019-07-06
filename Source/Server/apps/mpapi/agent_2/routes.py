@@ -116,10 +116,10 @@ class _AgentConfig(MPResource):
 			qClient = MpClient.query.filter(MpClient.cuuid == client_id).first()
 
 			# Return Payload Struct
-			agentConfig = {'schema': 310, 'revs': {}, 'settings': { 'agent': { 'rev': 0, 'data': {} }, 'servers': { 'rev': 0, 'data': [] },
+			agentConfig = {'schema': 330, 'revs': {}, 'settings': { 'agent': { 'rev': 0, 'data': {} }, 'servers': { 'rev': 0, 'data': [] },
 													'suservers': {'rev': 0, 'data': []}, 'tasks': { 'rev': 0, 'data': [] }, 'software': {'data': []} }}
 
-			d_revs = {'agent':0,'servers':0,'suservers':0,'tasks':0}
+			d_revs = {'agent':0,'servers':0,'suservers':0,'tasks':0,'swrestrictions':0}
 			d_agent = {}
 
 			group_id = 0

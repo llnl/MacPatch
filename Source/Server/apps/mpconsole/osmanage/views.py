@@ -524,28 +524,120 @@ def postProfile():
 	App Filters
 	-------------------------------------------
 '''
+swaf_columns = [('appID', 'App ID', '0'), ('bundleID', 'Bundle ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'),
+				('message', 'Message', '1'), ('killProc', 'Kill Process', '1'), ('sendEmail', 'Send Email', '0'), ('enabled', 'Enabled', '1'),
+				('isglobal', 'Is Global', '1')]
+
 @osmanage.route('/app_filters')
 @login_required
 def appFilters():
-	columns = [('profileID', 'Profile ID', '0'), ('profileIdentifier', 'Profile Identifier', '1'), ('profileName', 'Name', '1'),
-				('profileDescription', 'Description', '1'), ('profileRev', 'Revision', '1'), ('enabled', 'Enabled', '1'),
-				('uninstallOnRemove', 'Uninstall On Remove', '1')]
 
-	profileQuery = MpOsConfigProfiles.query.all()
+	return render_template('os_managment/os_app_filters.html', data=[], columns=swaf_columns)
+
+''' AJAX Method '''
+@osmanage.route('/app_filter/list', methods=['GET'])
+@login_required
+def appFilterList():
+
+	srList = MpSoftwareRestrictions.query.all()
 
 	_results = []
-	for p in profileQuery:
-		row = {}
-		for c in columns:
-			y = "p."+c[0]
-			if c[0] == 'enabled' or c[0] == 'uninstallOnRemove':
-				row[c[0]] = "Yes" if eval(y) == 1 else "No"
-			else:
+	if srList is not None:
+		for sr in srList:
+			print(sr)
+			row = {}
+			for c in swaf_columns:
+				y = "sr."+c[0]
+				print(c[0])
+				print(y)
 				row[c[0]] = eval(y)
+			#print(row)
+			_results.append(row)
 
-		_results.append(row)
+	return json.dumps({'data': _results, 'total': 0}), 200
 
-	return render_template('os_managment/os_app_filters.html', data=_results, columns=columns)
+@osmanage.route('/app_filter/add')
+@login_required
+def appFilterAdd():
+	return render_template('os_managment/os_app_restriction.html', data=[], type='new',appID='1234')
+
+@osmanage.route('/app_filter/edit/<appID>')
+@login_required
+def appFilterEdit(appID):
+	data = []
+	swRes = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.appID == appID).first()
+	if swRes is not None:
+		data = swRes
+
+	return render_template('os_managment/os_app_restriction.html', data=swRes, type='edit')
+
+''' AJAX Method '''
+@osmanage.route('/app_filter/save', methods=['POST'])
+@login_required
+def appFilterSave():
+	_form = request.form
+	if adminRole() or localAdmin():
+		formDict = _form.to_dict()
+		print(formDict)
+		if not formDict:
+			return json.dumps({'error': 404, 'data': [], 'total': 0}), 404
+
+		appID = str(uuid.uuid4())
+		isNew = False
+		swRes = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.appID == formDict['appID']).first()
+		if swRes is None:
+			swRes = MpSoftwareRestrictions()
+			isNew = True
+
+		# Save Profile Data
+		setattr(swRes, 'bundleID', formDict['bundleID'])
+		setattr(swRes, 'displayName', formDict['displayName'])
+		setattr(swRes, 'processName', formDict['processName'])
+		setattr(swRes, 'message', formDict['message'])
+		setattr(swRes, 'killProc', formDict['killProc'])
+		setattr(swRes, 'sendEmail', formDict['sendEmail'])
+		setattr(swRes, 'enabled', formDict['enabled'])
+		setattr(swRes, 'isglobal', formDict['isglobal'])
+
+		if isNew:
+			setattr(swRes, 'appID', appID)
+			db.session.add(swRes)
+			log("{} added new software restriction ({}).".format(session.get('user'), appID))
+
+		db.session.commit()
+		return json.dumps({'error': 0}), 200
+	else:
+		return json.dumps({'error': 401}), 401
+
+
+swafcg_columns = [('appID', 'App ID', '0'),('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'),('enabled', 'Enabled', '1')]
+
+''' AJAX Method '''
+@osmanage.route('/app_filter/list/<client_group>', methods=['GET'])
+
+def appFilterClientGroupList(client_group):
+
+	cgList = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == client_group).all()
+
+	_results = []
+	if cgList is not None:
+		srList = MpSoftwareRestrictions.query.all()
+		# Loop through client group sw restrictions
+		for cg in cgList:
+			# Find corresponding sw restriction record
+			swRes = swRestrictionForID(srList,cg.appID)
+			if swRes is not None:
+				row = {'appID':cg.appID,'displayName':swRes.displayName,'processName':swRes.processName,'enabled':cg.enabled}
+				_results.append(row)
+
+	return json.dumps({'data': _results, 'total': 0}), 200
+
+def swRestrictionForID(swResList, appID):
+	for s in swResList:
+		if s.appID == appID and s.isglobal == 0:
+			return s
+
+	return None
 
 '''
 	-------------------------------------------

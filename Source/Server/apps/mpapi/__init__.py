@@ -28,7 +28,7 @@ def create_app(config_object=DefaultConfig):
 
 	app.config.from_object(config_object)
 	app.config.from_pyfile('../config.cfg', silent=True)
-	app.config.from_pyfile('../conf_api.cfg', silent=True)
+	app.config.from_pyfile('../conf_wsapi.cfg', silent=True)
 	app.config['JSON_SORT_KEYS'] = False
 
 	# Configure SQLALCHEMY_DATABASE_URI for MySQL
@@ -36,7 +36,7 @@ def create_app(config_object=DefaultConfig):
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
 
 	# Configure logging location and log file name
-	log_file = app.config['LOGGING_LOCATION'] + "/mpapi.log"
+	log_file = app.config['LOGGING_LOCATION'] + "/mpwsapi.log"
 	if not os.path.exists(app.config['LOGGING_LOCATION']):
 		os.makedirs(app.config['LOGGING_LOCATION'])
 		subprocess.call(['chmod', '2775', app.config['LOGGING_LOCATION']])
@@ -139,9 +139,6 @@ def register_blueprints(app):
 	from .inventory_2 import inventory_2 as bp_inventory_2
 	app.register_blueprint(bp_inventory_2, url_prefix='/api/v2')
 
-	from .inventory_3 import inventory_3 as bp_inventory_3
-	app.register_blueprint(bp_inventory_3, url_prefix='/api/v3')
-
 	from .mac_profiles import mac_profiles as bp_mac_profiles
 	app.register_blueprint(bp_mac_profiles, url_prefix=app.config['URL_PREFIX'])
 
@@ -177,6 +174,9 @@ def register_blueprints(app):
 
 	from .software_2 import software_2 as bp_software_2
 	app.register_blueprint(bp_software_2, url_prefix='/api/v2')
+
+	from .software_3 import software_3 as bp_software_3
+	app.register_blueprint(bp_software_3, url_prefix='/api/v3')
 
 	from .srv_utils import srv as bp_srv_utils
 	app.register_blueprint(bp_srv_utils, url_prefix=app.config['URL_PREFIX'])

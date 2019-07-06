@@ -1,9 +1,14 @@
 import os
 import json
 import subprocess
-from flask import Flask
+from flask import Flask, abort, jsonify
+from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from flask_login import LoginManager
+
+from werkzeug.exceptions import HTTPException
+from http import HTTPStatus
 
 import logging
 import logging.handlers
@@ -22,7 +27,8 @@ def loadJobs(jobsFile, scheduler):
 			scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'])
 
 def job1(a=0, b=0):
-	print(str(a) + ' ' + str(b))
+	pass
+	#print(str(a) + ' ' + str(b))
 
 db = SQLAlchemy()
 
@@ -61,9 +67,9 @@ def create_app(config_object=DefaultConfig):
 		db.session.rollback()
 		db.session.remove()
 
-	@app.context_processor
-	def example():
-		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
+	#@app.context_processor
+	#def example():
+	#	return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
 
 	# Configure logging
 	log_file = app.config['LOGGING_LOCATION'] + "/mpconsole.log"

@@ -439,11 +439,12 @@ def clientGroup(name,tab=1):
 						('description', 'Description', '1'), ('enabled', 'Enabled', '1')]
 
 		swCols = [('rid', 'rid', '0'),('name', 'Name', '1'),('tuuid', 'Software Task ID', '1')]
+		swResCols = [('appID', 'App ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'), ('enabled', 'Enabled', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
 		return render_template('client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
-							profileCols=profileCols, swCols=swCols, swData=[], provCols=provCols, provData=[],
+							profileCols=profileCols, swCols=swCols, swResCols=swResCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
 
 '''
@@ -821,6 +822,56 @@ def clientGroupSWDel(id):
 
 	return json.dumps({}), 200
 
+@clients.route('/group/<id>/sw/res/add',methods=['GET','POST'])
+@login_required
+def clientGroupSWResAdd(id):
+	if request.method == 'GET':
+		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
+		return render_template('client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
+
+	elif request.method == 'POST':
+		_form = request.form
+		print(_form)
+		_groupID = request.form.get('group_id')
+		_appID = request.form.get('appID')
+		allSW = MpClientGroupSoftwareRestrictions.query.all()
+
+		hasSW = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == _groupID, MpClientGroupSoftwareRestrictions.appID == _appID).first()
+		if hasSW is None:
+			swRes = MpClientGroupSoftwareRestrictions()
+			setattr(swRes, 'group_id', _groupID)
+			setattr(swRes, 'appID', _appID)
+			setattr(swRes, 'enabled', '1')
+			db.session.add(swRes)
+			db.session.commit()
+
+		return redirect(url_for('.clientGroup',name=id,tab=5))
+
+@clients.route('/group/<id>/sw/res/enable',methods=['POST'])
+@login_required
+def clientGroupSWResEnable(id):
+
+	if isOwnerOfGroup(id) or isAdminForGroup(id):
+		_form = request.form
+		key = _form.get('pk')
+		value = _form.get('value')
+		log("{} set software restriction {} enabled state to {} ".format(session.get('user'), key, value))
+
+		swRes = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == id,
+															   MpClientGroupSoftwareRestrictions.appID == key).first()
+		if swRes is not None:
+			setattr(swRes, 'enabled', value)
+			db.session.commit()
+			revGroupSWRes(id)
+
+	return clientGroup(id)
+
+def revGroupSWRes(group_id):
+	grp_conf = MPGroupConfig.query.filter(MPGroupConfig.group_id == group_id).first()
+	if grp_conf is not None:
+		rev_swres = grp_conf.restrictions_version + 1
+		setattr(grp_conf, "restrictions_version", rev_swres)
+		db.session.commit()
 
 '''
 ********************************
