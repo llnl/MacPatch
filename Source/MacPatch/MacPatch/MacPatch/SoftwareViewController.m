@@ -94,9 +94,37 @@
 {
 	qlinfo(@"loadBannerView");
 	[_wkWebView.enclosingScrollView setHasVerticalScroller:NO];
-	NSString *filePath = [[NSBundle mainBundle] pathForResource:@"banner" ofType:@"html" inDirectory:@"html"];
-	NSString *htmlStringBase = [NSString stringWithContentsOfFile:filePath encoding:NSUTF8StringEncoding error:NULL];
-	[_wkWebView loadHTMLString:htmlStringBase baseURL:[[NSBundle mainBundle] resourceURL]];
+	NSURL *baseURL;
+	NSString *htmlFilePath;
+	NSString *htmlStringBase;
+	NSString *onDiskBannerDir = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"Data/MacPatch/banner"];
+	NSString *onDiskBanner = [onDiskBannerDir stringByAppendingPathComponent:@"default/html/banner.html"];
+	
+	NSString *clientGroupBanner = [NSString stringWithFormat:@"%@/clientgroup/%@/html/banner.html",onDiskBannerDir,settings.agent.groupId];
+	
+	// Load Client Group Banner
+	if ([fm fileExistsAtPath:clientGroupBanner])
+	{
+		baseURL = [NSURL fileURLWithPath:[clientGroupBanner stringByDeletingLastPathComponent]];
+		[_wkWebView loadFileURL:[NSURL fileURLWithPath:clientGroupBanner] allowingReadAccessToURL:baseURL];
+		return;
+	}
+	
+	// Try
+	if ([fm fileExistsAtPath:onDiskBanner])
+	{
+		baseURL = [NSURL fileURLWithPath:[onDiskBanner stringByDeletingLastPathComponent]];
+		[_wkWebView loadFileURL:[NSURL fileURLWithPath:onDiskBanner] allowingReadAccessToURL:baseURL];
+		return;
+	}
+	else
+	{
+		htmlFilePath = [[NSBundle mainBundle] pathForResource:@"banner" ofType:@"html" inDirectory:@"html"];
+		htmlStringBase = [NSString stringWithContentsOfFile:htmlFilePath encoding:NSUTF8StringEncoding error:NULL];
+		baseURL = [[NSBundle mainBundle] resourceURL];
+		[_wkWebView loadHTMLString:htmlStringBase baseURL:baseURL];
+		return;
+	}
 }
 
 #pragma mark - Helper

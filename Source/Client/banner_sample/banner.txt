@@ -1,0 +1,6 @@
+The banner_sample is the foundation to creating custom banner html for the software view in MacPatch.
+
+By default the MacPatch.app has the html source with in it's resources directory, but if you want to 
+use a custom banner, copy the "html" directory to "/Library/MacPatch/Client/Data/MacPatch/banner/default".
+
+There is a "clientgroup" folder as well, this will be managed by the console on future versions.
