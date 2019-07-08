@@ -1,8 +1,8 @@
-#!/bin/bash -x
+#!/bin/bash
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.0
+# Version: 2.1
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -18,6 +18,7 @@
 # 	1.8		Add PlanB support to base package as an option
 #	1.9		Update to PlanB syntax
 #   2.0		Updated to support new 3.2 agent and package name
+#   2.1     Add support external scripts for customizing
 #
 # -------------------------------------------------------------
 
@@ -29,8 +30,8 @@ BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.2.0.1"
-UPDATEVER="3.2.0.1"
+AGENTVER="3.3.0.1"
+UPDATEVER="3.3.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -38,6 +39,69 @@ MIN_OS="10.12"
 INCPlanBSource=false
 MPPLANB_SRV_ADDR="localhost"
 BUILDPLIST="/Library/Preferences/mp.build.client32.plist"
+
+# Extenral scripts run pre xcode compile
+EXTERNALSCRIPTS=false
+EXTERNALSCRIPTSDIR="/tmp/foo"
+# Post Extenral script, just befor pkg build
+PEXTERNALSCRIPTS=false
+PEXTERNALSCRIPTSDIR="/tmp/foo"
+
+
+# Script Input Args ----------------------------------------------------------
+
+usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir]" 1>&2; exit 1; }
+
+while getopts "hs:p:" opt; do
+    case $opt in
+        s)
+            EXTERNALSCRIPTS=true
+            EXTERNALSCRIPTSDIR=${OPTARG}
+            ;;
+        p)
+            PEXTERNALSCRIPTS=true
+            PEXTERNALSCRIPTSDIR=${OPTARG}
+            ;;
+        h)
+            echo
+            usage
+            exit 1
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            echo
+            usage
+            exit 1
+            ;;
+        :)
+            #echo "Option -$OPTARG requires an argument." >&2
+            #echo
+            #usage
+            #exit 1
+            ;;
+    esac
+done
+
+runExternalScripts () 
+{
+    if [ -z "$1" ]; then
+        # Scripts path is blank
+        return
+    fi
+
+   spath="$1"
+   
+    FILES="$1/*.sh"
+    for f in $FILES 
+    do
+        echo "Processing $f file..."
+        bash $f "$SCRIPT_PARENT" "$BUILDROOT"
+    done
+
+    return
+}
+
+
 
 
 if [ -f "$BUILDPLIST" ]; then
@@ -240,6 +304,10 @@ SIGNCODE=`echo $SIGNCODE | awk '{print toupper($0)}'`
 defaults write ${BUILDPLIST} code_sign $SIGNCODE
 if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 
+    if $EXTERNALSCRIPTS; then
+        runExternalScripts $EXTERNALSCRIPTSDIR
+    fi
+
     cp "${SRCROOT}/MacPatch/MPLibrary/AgentData.m" /private/tmp/AgentData.m.bak
     sed -i '' "s/SimpleSecretKey/${ClientMasterKey}/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
 
@@ -280,6 +348,11 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		echo "Compiling completed."
 		echo
 	else
+
+        if $EXTERNALSCRIPTS; then
+            runExternalScripts $EXTERNALSCRIPTSDIR
+        fi
+
 		# Compile the agent components
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release 
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
@@ -396,6 +469,11 @@ find ${BUILDROOT} -name ".mpRM" -print | xargs -I{} rm -rf {}
 
 # Remove the compiled Release directory now that all of the files have been copied
 # rm -r ${BUILDROOT}/Release
+
+# Run the post external scripts
+if $PEXTERNALSCRIPTS; then
+    runExternalScripts $PEXTERNALSCRIPTSDIR
+fi
 
 mkdir ${BUILDROOT}/Combined/Packages
 
