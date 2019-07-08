@@ -24,18 +24,15 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "MPOperation.h"
 
-@interface PostFailedWSRequests : NSOperation
+@interface PostFailedWSRequests : MPOperation
 {
-	BOOL isExecuting;
-	BOOL isFinished;
 
 @private
 
 	NSFileManager *fm;
 }
 
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

@@ -41,7 +41,7 @@ class PatchGroups(MPResource):
 			log_Debug('[PatchGroups][Get]: Result: %s' % (groups))
 			return {"result": groups, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -81,7 +81,7 @@ class ClientGroups(MPResource):
 			log_Debug('[ClientGroups][Get]: Result: %s' % (groups))
 			return {"result": groups, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ClientGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -144,7 +144,7 @@ class OSMigration(MPResource):
 
 			return {"result": '', "errorno": 0, "errormsg": 'none'}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentBase][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

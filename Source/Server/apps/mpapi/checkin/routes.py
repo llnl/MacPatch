@@ -51,7 +51,7 @@ class AgentBase(MPResource):
 							continue
 						else:
 							_args_Val = args[col]
-							if not isinstance(_args_Val, (long, int)):
+							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
 								_args_Val = _args_Val.replace('\n', '')
 
@@ -76,7 +76,7 @@ class AgentBase(MPResource):
 							continue
 						else:
 							_args_Val = args[col]
-							if not isinstance(_args_Val, (long, int)):
+							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
 								_args_Val = _args_Val.replace('\n', '')
 
@@ -89,7 +89,7 @@ class AgentBase(MPResource):
 				_settings = self.getClientTasksSettingsRev(cuuid)
 				return {"errorno": 0, "errormsg": 'none', "result": _settings}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentBase][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"errorno": 500, "errormsg": exc.message, "result": {}}, 500
 		except Exception as e:
@@ -182,7 +182,7 @@ class AgentPlist(MPResource):
 				# Add
 				log_Info('[AgentPlist][Post]: Adding client (%s) record.' % (cuuid))
 				client_object = MpClientPlist()
-				print client_object.columns
+				print(client_object.columns)
 
 				client_object.cuuid = cuuid
 				for col in client_object.columns:
@@ -195,7 +195,7 @@ class AgentPlist(MPResource):
 				db.session.commit()
 				return {"result": '', "errorno": 0, "errormsg": 'none'}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentPlist][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -236,7 +236,7 @@ class AgentStatus(MPResource):
 				log_Error('[AgentStatus][Get]: Client (%s) not found' % (cuuid))
 				return {"result": '', "errorno": 404, "errormsg": 'Client not found.'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentStatus][Get][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -272,7 +272,7 @@ class CheckServerKey(MPResource):
 				log_Error('[CheckServerKey][Get]: Active Server keys not found')
 				return {"result": '', "errorno": 404, "errormsg": 'Active Server keys not found'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[CheckServerKey][Get][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

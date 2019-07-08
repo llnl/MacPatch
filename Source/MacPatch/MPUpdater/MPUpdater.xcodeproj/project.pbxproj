@@ -1,0 +1,397 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 50;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8F60AD322243F67C00FDFBCA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD312243F67C00FDFBCA /* main.m */; };
+		8F60AD3C2243FF2B00FDFBCA /* MPUpdaterController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD3B2243FF2B00FDFBCA /* MPUpdaterController.m */; };
+		8F60AD45224400FF00FDFBCA /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD44224400FF00FDFBCA /* libMPLibrary.a */; };
+		8F60AD472244012100FDFBCA /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD462244012100FDFBCA /* Python.framework */; };
+		8F60AD492244012B00FDFBCA /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD482244012B00FDFBCA /* libsqlite3.tbd */; };
+		8F60AD4B2244013B00FDFBCA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD4A2244013B00FDFBCA /* Foundation.framework */; };
+		8F60AD4D2244014200FDFBCA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD4C2244014200FDFBCA /* Cocoa.framework */; };
+		8F60AD4F2244014C00FDFBCA /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD4E2244014C00FDFBCA /* CoreFoundation.framework */; };
+		8F60AD512244015B00FDFBCA /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD502244015B00FDFBCA /* CoreServices.framework */; };
+		8F60AD532244016400FDFBCA /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD522244016400FDFBCA /* IOKit.framework */; };
+		8F60AD552244016E00FDFBCA /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD542244016E00FDFBCA /* Security.framework */; };
+		8F60AD572244017600FDFBCA /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD562244017600FDFBCA /* SystemConfiguration.framework */; };
+		8F60AD592244018300FDFBCA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD582244018300FDFBCA /* libz.tbd */; };
+		8F60AD5B2244018F00FDFBCA /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD5A2244018F00FDFBCA /* libicucore.tbd */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8F60AD2C2243F67C00FDFBCA /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8F60AD2E2243F67C00FDFBCA /* MPUpdater */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MPUpdater; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F60AD312243F67C00FDFBCA /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		8F60AD382243F6A000FDFBCA /* MPUpdater-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "MPUpdater-Info.plist"; sourceTree = "<group>"; };
+		8F60AD3A2243FF2B00FDFBCA /* MPUpdaterController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPUpdaterController.h; sourceTree = "<group>"; };
+		8F60AD3B2243FF2B00FDFBCA /* MPUpdaterController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPUpdaterController.m; sourceTree = "<group>"; };
+		8F60AD44224400FF00FDFBCA /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		8F60AD462244012100FDFBCA /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
+		8F60AD482244012B00FDFBCA /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		8F60AD4A2244013B00FDFBCA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		8F60AD4C2244014200FDFBCA /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		8F60AD4E2244014C00FDFBCA /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		8F60AD502244015B00FDFBCA /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		8F60AD522244016400FDFBCA /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8F60AD542244016E00FDFBCA /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		8F60AD562244017600FDFBCA /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		8F60AD582244018300FDFBCA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		8F60AD5A2244018F00FDFBCA /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
+		8F60AD5E22440BA400FDFBCA /* MPUpdater-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPUpdater-Prefix.pch"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8F60AD2B2243F67C00FDFBCA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F60AD45224400FF00FDFBCA /* libMPLibrary.a in Frameworks */,
+				8F60AD492244012B00FDFBCA /* libsqlite3.tbd in Frameworks */,
+				8F60AD5B2244018F00FDFBCA /* libicucore.tbd in Frameworks */,
+				8F60AD592244018300FDFBCA /* libz.tbd in Frameworks */,
+				8F60AD572244017600FDFBCA /* SystemConfiguration.framework in Frameworks */,
+				8F60AD552244016E00FDFBCA /* Security.framework in Frameworks */,
+				8F60AD532244016400FDFBCA /* IOKit.framework in Frameworks */,
+				8F60AD512244015B00FDFBCA /* CoreServices.framework in Frameworks */,
+				8F60AD4F2244014C00FDFBCA /* CoreFoundation.framework in Frameworks */,
+				8F60AD4D2244014200FDFBCA /* Cocoa.framework in Frameworks */,
+				8F60AD4B2244013B00FDFBCA /* Foundation.framework in Frameworks */,
+				8F60AD472244012100FDFBCA /* Python.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8F60AD252243F67C00FDFBCA = {
+			isa = PBXGroup;
+			children = (
+				8F60AD302243F67C00FDFBCA /* MPUpdater */,
+				8F60AD2F2243F67C00FDFBCA /* Products */,
+				8F60AD43224400FE00FDFBCA /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		8F60AD2F2243F67C00FDFBCA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8F60AD2E2243F67C00FDFBCA /* MPUpdater */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8F60AD302243F67C00FDFBCA /* MPUpdater */ = {
+			isa = PBXGroup;
+			children = (
+				8F60AD312243F67C00FDFBCA /* main.m */,
+				8F60AD3A2243FF2B00FDFBCA /* MPUpdaterController.h */,
+				8F60AD3B2243FF2B00FDFBCA /* MPUpdaterController.m */,
+				8F60AD392243F6BD00FDFBCA /* Supporting_Files */,
+			);
+			path = MPUpdater;
+			sourceTree = "<group>";
+		};
+		8F60AD392243F6BD00FDFBCA /* Supporting_Files */ = {
+			isa = PBXGroup;
+			children = (
+				8F60AD382243F6A000FDFBCA /* MPUpdater-Info.plist */,
+				8F60AD5E22440BA400FDFBCA /* MPUpdater-Prefix.pch */,
+			);
+			path = Supporting_Files;
+			sourceTree = "<group>";
+		};
+		8F60AD43224400FE00FDFBCA /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8F60AD5A2244018F00FDFBCA /* libicucore.tbd */,
+				8F60AD582244018300FDFBCA /* libz.tbd */,
+				8F60AD562244017600FDFBCA /* SystemConfiguration.framework */,
+				8F60AD542244016E00FDFBCA /* Security.framework */,
+				8F60AD522244016400FDFBCA /* IOKit.framework */,
+				8F60AD502244015B00FDFBCA /* CoreServices.framework */,
+				8F60AD4E2244014C00FDFBCA /* CoreFoundation.framework */,
+				8F60AD4C2244014200FDFBCA /* Cocoa.framework */,
+				8F60AD4A2244013B00FDFBCA /* Foundation.framework */,
+				8F60AD482244012B00FDFBCA /* libsqlite3.tbd */,
+				8F60AD462244012100FDFBCA /* Python.framework */,
+				8F60AD44224400FF00FDFBCA /* libMPLibrary.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8F60AD2D2243F67C00FDFBCA /* MPUpdater */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8F60AD352243F67C00FDFBCA /* Build configuration list for PBXNativeTarget "MPUpdater" */;
+			buildPhases = (
+				8F60AD2A2243F67C00FDFBCA /* Sources */,
+				8F60AD2B2243F67C00FDFBCA /* Frameworks */,
+				8F60AD2C2243F67C00FDFBCA /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MPUpdater;
+			productName = MPUpdater;
+			productReference = 8F60AD2E2243F67C00FDFBCA /* MPUpdater */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8F60AD262243F67C00FDFBCA /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 1020;
+				ORGANIZATIONNAME = "Charles Heizer";
+				TargetAttributes = {
+					8F60AD2D2243F67C00FDFBCA = {
+						CreatedOnToolsVersion = 10.2;
+					};
+				};
+			};
+			buildConfigurationList = 8F60AD292243F67C00FDFBCA /* Build configuration list for PBXProject "MPUpdater" */;
+			compatibilityVersion = "Xcode 9.3";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 8F60AD252243F67C00FDFBCA;
+			productRefGroup = 8F60AD2F2243F67C00FDFBCA /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8F60AD2D2243F67C00FDFBCA /* MPUpdater */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8F60AD2A2243F67C00FDFBCA /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8F60AD3C2243FF2B00FDFBCA /* MPUpdaterController.m in Sources */,
+				8F60AD322243F67C00FDFBCA /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		8F60AD332243F67C00FDFBCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8F60AD342243F67C00FDFBCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "";
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
+				CODE_SIGN_STYLE = Manual;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8F60AD362243F67C00FDFBCA /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$HOME/Developer/Xcode/MP32/include/**",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPUpdater/Supporting_Files/MPUpdater-Info.plist",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Debug;
+		};
+		8F60AD372243F67C00FDFBCA /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
+				CODE_SIGN_STYLE = Manual;
+				DEVELOPMENT_TEAM = "";
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$HOME/Developer/Xcode/MP32/include/**",
+				);
+				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"MPUpdater/Supporting_Files/MPUpdater-Info.plist",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8F60AD292243F67C00FDFBCA /* Build configuration list for PBXProject "MPUpdater" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F60AD332243F67C00FDFBCA /* Debug */,
+				8F60AD342243F67C00FDFBCA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8F60AD352243F67C00FDFBCA /* Build configuration list for PBXNativeTarget "MPUpdater" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8F60AD362243F67C00FDFBCA /* Debug */,
+				8F60AD372243F67C00FDFBCA /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8F60AD262243F67C00FDFBCA /* Project object */;
+}

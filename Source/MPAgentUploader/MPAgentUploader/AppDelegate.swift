@@ -67,7 +67,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     lazy var preferencesWindowController: PreferencesWindowController  = {
-        let wcSB = NSStoryboard(name: NSStoryboard.Name(rawValue: "Preferences"), bundle: Bundle.main)
+        let wcSB = NSStoryboard(name: "Preferences", bundle: Bundle.main)
         // or whichever bundle
         return wcSB.instantiateInitialController() as! PreferencesWindowController
     }()

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<!-- <meta name="viewport" content="width=1040,user-scalable=no" /> -->
+		<link rel="stylesheet" href="html/bootstrap/css/bootstrap.min.css">
+		<script src="html/js/jquery.min.js"></script>
+		<script src="html/bootstrap/js/bootstrap.min.js"></script>
+		<style>
+			.carousel .carousel-indicators li
+			{
+				background-color: #fff;
+				background-color: rgba(70, 70, 70, 0.25);
+			}
+		
+			.carousel .carousel-indicators .active
+			{
+				background-color: #444;
+			}
+		
+			.carousel-indicators
+			{
+				bottom:-16px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="7000">
+			<!-- Indicators -->
+			<ol class="carousel-indicators">
+				<li data-target="#myCarousel" data-slide-to="0" class="active"></li>
+				<li data-target="#myCarousel" data-slide-to="1"></li>
+				<li data-target="#myCarousel" data-slide-to="2"></li>
+			</ol>
+			
+			<!-- Wrapper for slides -->
+			<div class="carousel-inner">
+				<div class="item active">
+					<img src="html/images/MPSlide1.png" alt="Los Angeles">
+				</div>
+				
+				<div class="item">
+					<img src="html/images/MPSlide2a.png" alt="Chicago">
+				</div>
+				
+				<div class="item">
+					<img src="html/images/MPSlide2b.png" alt="Chicago">
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

@@ -24,21 +24,16 @@
  */
 
 #import <Cocoa/Cocoa.h>
-
+#import "MPOperation.h"
 @class MPSettings;
 
-@interface Profiles : NSOperation
+@interface Profiles : MPOperation
 {
-	BOOL isExecuting;
-	BOOL isFinished;
 
 @private
     
     MPSettings *settings;
 	NSFileManager *fm;
 }
-
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8F382EE11FB624D300129063 /* libMacPatch.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE21FB624D300129063 /* libMacPatch.a */; };
 		8F382EE41FB624E200129063 /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE31FB624E200129063 /* libicucore.tbd */; };
 		8F382EE61FB624EE00129063 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE51FB624ED00129063 /* libz.tbd */; };
 		8F382EF21FB6302500129063 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EEB1FB6254500129063 /* SystemConfiguration.framework */; };
@@ -16,21 +15,16 @@
 		8F382EF51FB6303100129063 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE81FB6251F00129063 /* AppKit.framework */; };
 		8F382EF61FB6303300129063 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE71FB6251F00129063 /* Cocoa.framework */; };
 		8F382EF71FB6303900129063 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F382EE91FB6251F00129063 /* CoreFoundation.framework */; };
-		8F530FB41B3E1DAA00B8D893 /* InstallAppleUpdate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F530FB31B3E1DAA00B8D893 /* InstallAppleUpdate.m */; };
-		8F67E6751B32205F00888EB9 /* MPScanner.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F67E6741B32205F00888EB9 /* MPScanner.m */; };
 		8F752F1E1B34B8170001896F /* MPPanel.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F752F1D1B34B8170001896F /* MPPanel.m */; };
 		8F7924531F06FCFC00440FBB /* MinScanAndPatchVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F7924511F06FCFC00440FBB /* MinScanAndPatchVC.m */; };
 		8F7924541F06FCFC00440FBB /* MinScanAndPatchVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F7924521F06FCFC00440FBB /* MinScanAndPatchVC.xib */; };
 		8F7924571F06FE8500440FBB /* MPAuthViewMin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F7924561F06FE8500440FBB /* MPAuthViewMin.m */; };
-		8F9969F71B3B4F7000360709 /* InstallPackage.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9969F61B3B4F7000360709 /* InstallPackage.m */; };
 		8FA64D9F1B307D26006E9CB7 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA64D9E1B307D26006E9CB7 /* AppDelegate.m */; };
 		8FA64DA21B307D26006E9CB7 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA64DA11B307D26006E9CB7 /* main.m */; };
 		8FA64DA41B307D26006E9CB7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8FA64DA31B307D26006E9CB7 /* Assets.xcassets */; };
 		8FA64DA71B307D26006E9CB7 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FA64DA51B307D26006E9CB7 /* MainMenu.xib */; };
 		8FA64DB51B307D62006E9CB7 /* gov.llnl.MPLoginAgent.plist in Resources */ = {isa = PBXBuildFile; fileRef = 8FA64DB41B307D62006E9CB7 /* gov.llnl.MPLoginAgent.plist */; };
 		8FC495081B309A1D001222A2 /* MPAuthView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC495071B309A1D001222A2 /* MPAuthView.m */; };
-		8FC495211B31D3FA001222A2 /* ScanAndPatchVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC4951F1B31D3FA001222A2 /* ScanAndPatchVC.m */; };
-		8FC495221B31D3FA001222A2 /* ScanAndPatchVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */; };
 		8FE6B4B01B4C86F9000A0471 /* AppleLogo.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A61B4C86F9000A0471 /* AppleLogo.png */; };
 		8FE6B4B11B4C86F9000A0471 /* AppleLogo@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A71B4C86F9000A0471 /* AppleLogo@2x.png */; };
 		8FE6B4B21B4C86F9000A0471 /* Empty.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4A81B4C86F9000A0471 /* Empty.png */; };
@@ -41,6 +35,7 @@
 		8FE6B4B71B4C86F9000A0471 /* Running.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AD1B4C86F9000A0471 /* Running.png */; };
 		8FE6B4B81B4C86F9000A0471 /* Success.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AE1B4C86F9000A0471 /* Success.png */; };
 		8FE6B4B91B4C86F9000A0471 /* Warning.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4AF1B4C86F9000A0471 /* Warning.png */; };
+		8FF365142242EC9600E2683F /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF365132242EC9600E2683F /* libMPLibrary.a */; };
 		8FF5B5061FC658B3006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5051FC658AD006F5FB2 /* Python.framework */; };
 		8FFD37E21FA391E900115F33 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FFD37E11FA391E900115F33 /* libsqlite3.tbd */; };
 /* End PBXBuildFile section */
@@ -80,9 +75,6 @@
 		8FA64DB61B307FD9006E9CB7 /* MPLoginAgent-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPLoginAgent-Bridging-Header.h"; sourceTree = "<group>"; };
 		8FC495061B309A1D001222A2 /* MPAuthView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAuthView.h; sourceTree = "<group>"; };
 		8FC495071B309A1D001222A2 /* MPAuthView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAuthView.m; sourceTree = "<group>"; };
-		8FC4951E1B31D3FA001222A2 /* ScanAndPatchVC.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ScanAndPatchVC.h; sourceTree = "<group>"; };
-		8FC4951F1B31D3FA001222A2 /* ScanAndPatchVC.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ScanAndPatchVC.m; sourceTree = "<group>"; };
-		8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = ScanAndPatchVC.xib; sourceTree = "<group>"; };
 		8FC495231B31DAA2001222A2 /* MPLoginAgent_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLoginAgent_Prefix.pch; sourceTree = "<group>"; };
 		8FE6B4A61B4C86F9000A0471 /* AppleLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppleLogo.png; sourceTree = "<group>"; };
 		8FE6B4A71B4C86F9000A0471 /* AppleLogo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppleLogo@2x.png"; sourceTree = "<group>"; };
@@ -94,6 +86,7 @@
 		8FE6B4AD1B4C86F9000A0471 /* Running.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Running.png; sourceTree = "<group>"; };
 		8FE6B4AE1B4C86F9000A0471 /* Success.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Success.png; sourceTree = "<group>"; };
 		8FE6B4AF1B4C86F9000A0471 /* Warning.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Warning.png; sourceTree = "<group>"; };
+		8FF365132242EC9600E2683F /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF5B5051FC658AD006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 		8FFD37E11FA391E900115F33 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -103,7 +96,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F382EE11FB624D300129063 /* libMacPatch.a in Frameworks */,
+				8FF365142242EC9600E2683F /* libMPLibrary.a in Frameworks */,
 				8F382EE61FB624EE00129063 /* libz.tbd in Frameworks */,
 				8F382EE41FB624E200129063 /* libicucore.tbd in Frameworks */,
 				8FFD37E21FA391E900115F33 /* libsqlite3.tbd in Frameworks */,
@@ -147,8 +140,6 @@
 				8FC495071B309A1D001222A2 /* MPAuthView.m */,
 				8F752F1C1B34B8170001896F /* MPPanel.h */,
 				8F752F1D1B34B8170001896F /* MPPanel.m */,
-				8FC4951E1B31D3FA001222A2 /* ScanAndPatchVC.h */,
-				8FC4951F1B31D3FA001222A2 /* ScanAndPatchVC.m */,
 				8F9969F51B3B4F7000360709 /* InstallPackage.h */,
 				8F9969F61B3B4F7000360709 /* InstallPackage.m */,
 				8F530FB21B3E1DAA00B8D893 /* InstallAppleUpdate.h */,
@@ -156,7 +147,6 @@
 				8F67E6731B32205F00888EB9 /* MPScanner.h */,
 				8F67E6741B32205F00888EB9 /* MPScanner.m */,
 				8FA64DA51B307D26006E9CB7 /* MainMenu.xib */,
-				8FC495201B31D3FA001222A2 /* ScanAndPatchVC.xib */,
 				8F7924551F06FE8500440FBB /* MPAuthViewMin.h */,
 				8F7924561F06FE8500440FBB /* MPAuthViewMin.m */,
 				8F7924501F06FCFC00440FBB /* MinScanAndPatchVC.h */,
@@ -200,6 +190,7 @@
 		8FFD37E01FA391E800115F33 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FF365132242EC9600E2683F /* libMPLibrary.a */,
 				8FF5B5051FC658AD006F5FB2 /* Python.framework */,
 				8F382EEC1FB6254D00129063 /* Security.framework */,
 				8F382EEB1FB6254500129063 /* SystemConfiguration.framework */,
@@ -243,7 +234,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0700;
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Charles Heizer";
 				TargetAttributes = {
 					8FA64D991B307D26006E9CB7 = {
@@ -256,6 +247,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 				Base,
 			);
@@ -281,7 +273,6 @@
 				8FE6B4B01B4C86F9000A0471 /* AppleLogo.png in Resources */,
 				8FE6B4B51B4C86F9000A0471 /* MPBaseRoundIcon.png in Resources */,
 				8FE6B4B11B4C86F9000A0471 /* AppleLogo@2x.png in Resources */,
-				8FC495221B31D3FA001222A2 /* ScanAndPatchVC.xib in Resources */,
 				8FA64DA71B307D26006E9CB7 /* MainMenu.xib in Resources */,
 				8FE6B4B41B4C86F9000A0471 /* Logout.png in Resources */,
 				8FA64DB51B307D62006E9CB7 /* gov.llnl.MPLoginAgent.plist in Resources */,
@@ -300,13 +291,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				8FA64DA21B307D26006E9CB7 /* main.m in Sources */,
-				8FC495211B31D3FA001222A2 /* ScanAndPatchVC.m in Sources */,
 				8F7924571F06FE8500440FBB /* MPAuthViewMin.m in Sources */,
-				8F9969F71B3B4F7000360709 /* InstallPackage.m in Sources */,
-				8F530FB41B3E1DAA00B8D893 /* InstallAppleUpdate.m in Sources */,
 				8FC495081B309A1D001222A2 /* MPAuthView.m in Sources */,
 				8FA64D9F1B307D26006E9CB7 /* AppDelegate.m in Sources */,
-				8F67E6751B32205F00888EB9 /* MPScanner.m in Sources */,
 				8F752F1E1B34B8170001896F /* MPPanel.m in Sources */,
 				8F7924531F06FCFC00440FBB /* MinScanAndPatchVC.m in Sources */,
 			);
@@ -330,6 +317,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -372,7 +360,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -383,6 +371,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
@@ -419,7 +408,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -436,12 +425,12 @@
 				GCC_PREFIX_HEADER = MPLoginAgent/MPLoginAgent_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
+					"$HOME/Developer/Xcode/MP32/include/**",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$HOME/Developer/Xcode/include/**",
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -465,12 +454,12 @@
 				GCC_PREFIX_HEADER = MPLoginAgent/MPLoginAgent_Prefix.pch;
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
+					"$HOME/Developer/Xcode/MP32/include/**",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$HOME/Developer/Xcode/include/**",
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

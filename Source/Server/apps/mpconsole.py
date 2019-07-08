@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/apps/env/bin/python
+#!/opt/MacPatch/Server/env/console/bin/python3
 
 import os
 from flask_script import Manager, Command, Option, Server
@@ -39,7 +39,7 @@ class GunicornServer(Command):
 		workers = multiprocessing.cpu_count() + 1
 		daemon = kwargs['daemon']
 
-		print("Starting gunicorn server on %s:%d ...\n " % (host, port))
+		print(("Starting gunicorn server on %s:%d ...\n " % (host, port)))
 		class FlaskApplication(Application):
 			def init(self, parser, opts, args):
 				return {
@@ -65,17 +65,17 @@ class GunicornServer(Command):
 
 @manager.command
 def addDefaultAdmin():
-	print 'Adding Default Admin Account to DB'
+	print('Adding Default Admin Account to DB')
 	if addDefaultAdminAccount():
-		print 'Default Admin Account has been added to DB'
+		print('Default Admin Account has been added to DB')
 	else:
-		print 'Error Adding Default Admin Account to DB'
+		print('Error Adding Default Admin Account to DB')
 
 @manager.command
 def migrateClientsToGroup():
-	print 'Migrate Clients to Default Group'
+	print('Migrate Clients to Default Group')
 	addUnassignedClientsToGroup()
-	print 'Clients have been migrated to Default Group'
+	print('Clients have been migrated to Default Group')
 
 # Override default runserver with options from config.py
 manager.add_command('runserver', Server(host=app.config['SRV_HOST'], port=app.config['SRV_PORT']) )

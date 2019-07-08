@@ -56,7 +56,7 @@ class PatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (client_id, group_id))
 				return wsResult.resultNoSignature(errorno=404, errormsg='Not Found'), 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 
@@ -119,7 +119,7 @@ class PatchScanList(MPResource):
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CCUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 

@@ -51,10 +51,10 @@ def deleteAdminAccount(user_id):
 			log("{} update account {} options.".format(session.get('user'), user_id))
 			qAdm = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == user_id).first()
 			if qAdm is not None:
-				for key, value in qAdm.asDict.iteritems():
+				for key, value in list(qAdm.asDict.items()):
 					log("Orig: {} = {}".format(key, value))
 
-				for key, value in data.iteritems():
+				for key, value in list(data.items()):
 					log("Updated: {} = {}".format(key, value))
 					setattr(qAdm, key, value)
 
@@ -107,7 +107,7 @@ def accountAdd():
 			usrAttrs = ['user_id','user_pass','enabled']
 			usr	= AdmUsers()
 			usrInf = AdmUsersInfo()
-			for key, value in data.iteritems():
+			for key, value in list(data.items()):
 				if key != 'user_type':
 					if key in usrAttrs:
 						if key == 'user_pass':
@@ -206,7 +206,7 @@ def agentDeploy(tab=1):
 	_agents = []
 	for v in qGet1:
 		_row = {}
-		for column, value in v.asDict.items():
+		for column, value in list(v.asDict.items()):
 			if column != "cdate":
 				if column == "active":
 					_row[column] = "Yes" if value == 1 else "No"
@@ -218,7 +218,7 @@ def agentDeploy(tab=1):
 	_filters = []
 	for v in qGet2:
 		_row = {}
-		for column, value in v.asDict.items():
+		for column, value in list(v.asDict.items()):
 			_row[column] = value
 
 		_row['rid'] = v.rid
@@ -613,7 +613,7 @@ def serversLog(server,type):
 	_uuid = str(uuid.uuid4())
 	dt  = datetime.now()
 	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
-	srvHashStr = "{}{}{}".format(_uuid,dt,type)
+	srvHashStr = "{}{}{}".format(_uuid,dt,type).encode('utf-8')
 	srvHash = sha1(srvHashStr).hexdigest()
 
 	qry = MpServerLogReq()
@@ -759,7 +759,10 @@ def dataSourcesView():
 
 ''' Global '''
 def getDoc(col_obj):
-	return col_obj.doc
+	if col_obj.doc is None:
+		return 0
+	else:
+		return col_obj.doc
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""

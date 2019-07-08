@@ -24,21 +24,16 @@
  */
 
 #import <Cocoa/Cocoa.h>
-
+#import "MPOperation.h"
 @class MPAgent;
 
-@interface InventoryOperation : NSOperation 
+@interface InventoryOperation : MPOperation 
 {
-	BOOL isExecuting;
-	BOOL isFinished;
 	
 @private
 	
 	MPAgent *si;
 	NSFileManager *fm;
 }
-
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

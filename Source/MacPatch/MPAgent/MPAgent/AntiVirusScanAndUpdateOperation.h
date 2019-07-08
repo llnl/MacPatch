@@ -24,16 +24,13 @@
  */
 
 #import <Cocoa/Cocoa.h>
-
+#import "MPOperation.h"
 @class MPAgent;
 
-@interface AntiVirusScanAndUpdateOperation : NSOperation 
+@interface AntiVirusScanAndUpdateOperation : MPOperation
 {
 	int scanType;
     int taskPID;
-    
-	BOOL isExecuting;
-	BOOL isFinished;
 	
 @private
 	MPAgent *si;
@@ -44,8 +41,5 @@
 @property (nonatomic, assign) int taskPID;
 @property (nonatomic, readonly) NSString *taskFile;
 @property (nonatomic) BOOL forceRun;
-
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

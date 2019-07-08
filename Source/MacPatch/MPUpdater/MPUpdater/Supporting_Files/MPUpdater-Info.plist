@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2019 Lawrence Livremore National Laboratory. All rights reserved.</string>
+	<key>CFBundleIdentifier</key>
+	<string>gov.llnl.mp.updater</string>
+	<key>CFBundleName</key>
+	<string>MPUpdater</string>
+	<key>CFBundleShortVersionString</key>
+	<string>3.2.0.1</string>
+	<key>CFBundleVersion</key>
+	<string>3.2.0.1</string>
+	<key>MPInfo</key>
+	<string>MacPatch 3.2.0 Client Software</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

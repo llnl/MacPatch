@@ -209,7 +209,7 @@ def dbUserAuth(user, password):
 
 	except:  # catch *all* exceptions
 		e = sys.exc_info()[0]
-		print e
+		print(e)
 		return False
 
 '''
@@ -293,7 +293,7 @@ def adminUserRights(user):
 
 	except:  # catch *all* exceptions
 		e = sys.exc_info()[0]
-		print e
+		print(e)
 		return None
 
 def isValidAutoPKGUser(user):
@@ -412,7 +412,7 @@ def sendEmailMessage(subject, message, address=None):
 		content = headers + "\r\n\r\n" + message
 		session.sendmail('macpatch@your.macpatch.server.com', admEmlLst, content)
 	except:
-		print("Unexpected error:", sys.exc_info()[0])
+		print(("Unexpected error:", sys.exc_info()[0]))
 
 # ----------------------------------------------------------------------------
 '''
@@ -431,7 +431,7 @@ def read_config_file(configFile):
 			print('Well darn.')
 
 	else:
-		print("Error, could not open file " + configFile.strip())
+		print(("Error, could not open file " + configFile.strip()))
 
 	return data
 

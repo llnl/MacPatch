@@ -27,6 +27,7 @@ extension String: CommandRunning {
 extension String {
 	/// Split text into lines (as separated by newlines).
 	public func lines() -> [String] {
-		return characters.split(separator: "\n").map(String.init)
+		//return characters.split(separator: "\n").map(String.init)
+		return self.components(separatedBy: "\n")
 	}
 }

@@ -53,9 +53,7 @@ fi
 
 DBNAME="MacPatchDB3"
 MPUSER="mpdbadm"
-MPROUSR="mpdbro"
 MPUSRPAS=""
-MPUSRROPAS=""
 HOST=`hostname`
 RESSTR=""
 
@@ -115,39 +113,19 @@ do
     echo "Please try again"
 done
 
-echo
-read -p "MacPatch Read Only User Account [mpdbro]: " MPROUSR
-MPROUSR=${MPROUSR:-mpdbro}
-
-while true
-do
-    readUsrPass "Password: "
-    MPUSRROPAS="$RESSTR"
-    echo
-    readUsrPass "Password (verify): "
-    MPUSRROPASb="$RESSTR"
-    echo
-    [ "$MPUSRROPAS" = "$MPUSRROPASb" ] && break
-    echo "Please try again"
-done
-
 # For MySQL 5.7, not supported yet
 QA="DROP USER IF EXISTS 'mpdbadm'@'localhost';"
 QB="DROP USER IF EXISTS 'mpdbadm'@'%';"
-QC="DROP USER IF EXISTS 'mpdbro'@'localhost';"
-QD="DROP USER IF EXISTS 'mpdbro'@'%';"
 
 Q1="CREATE DATABASE IF NOT EXISTS ${BTICK}$DBNAME${BTICK};"
 Q2="CREATE USER '${MPUSER}'@'%' IDENTIFIED BY '${MPUSRPAS}';"
 Q3="GRANT ALL ON $DBNAME.* TO '${MPUSER}'@'%' IDENTIFIED BY '${MPUSRPAS}';"
 Q4="GRANT ALL PRIVILEGES ON $DBNAME.* TO '${MPUSER}'@'localhost' IDENTIFIED BY '${MPUSRPAS}';"
-Q5="CREATE USER '${MPROUSR}'@'%' IDENTIFIED BY '${MPUSRROPAS}';"
-Q6="GRANT SELECT ON $DBNAME.* TO '${MPROUSR}'@'%';"
 Q7="SET GLOBAL log_bin_trust_function_creators = 1;"
 Q8="DELETE FROM mysql.user WHERE User='';"
 Q9="FLUSH PRIVILEGES;"
 
-SQL="${Q1}${Q2}${Q3}${Q4}${Q5}${Q6}${Q7}${Q8}${Q9}"
+SQL="${Q1}${Q2}${Q3}${Q4}${Q7}${Q8}${Q9}"
 
 clear
 echo

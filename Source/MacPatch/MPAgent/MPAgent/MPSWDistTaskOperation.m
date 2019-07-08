@@ -25,15 +25,13 @@
 
 #import "MPSWDistTaskOperation.h"
 #import "MPSWTasks.h"
-#import "MPSWInstaller.h"
+//#import "MPSWInstaller.h"
 #import "MPSettings.h"
 
 #define K_INSTALLED_FILE    @".installed.plist"
 
 @implementation MPSWDistTaskOperation
 
-@synthesize isExecuting;
-@synthesize isFinished;
 @synthesize _fileHash;
 @synthesize _timerInterval;
 @synthesize l_queue;
@@ -47,8 +45,8 @@
     {
         settings        = [MPSettings sharedInstance];
         fm              = [NSFileManager defaultManager];
-        isExecuting     = NO;
-        isFinished      = NO;
+        self.isExecuting     = NO;
+        self.isFinished      = NO;
         
         [self set_fileHash:NULL];
         
@@ -95,8 +93,8 @@
 {
     [self willChangeValueForKey:@"isFinished"];
     [self willChangeValueForKey:@"isExecuting"];
-    isExecuting = NO;
-    isFinished = YES;
+    self.isExecuting = NO;
+    self.isFinished = YES;
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 }
@@ -105,14 +103,14 @@
 {
     if ([self isCancelled]) {
         [self willChangeValueForKey:@"isFinished"];
-        isFinished = YES;
+        self.isFinished = YES;
         [self didChangeValueForKey:@"isFinished"];
     } else {
         [self willChangeValueForKey:@"isExecuting"];
         [self performSelectorOnMainThread:@selector(main) 
                                withObject:nil 
                             waitUntilDone:NO];
-        isExecuting = YES;
+        self.isExecuting = YES;
         [self didChangeValueForKey:@"isExecuting"];
     }
 }
@@ -149,8 +147,8 @@
         logit(lcl_vInfo,@"No mandatory software tasks to install.");
         return;
     }
-    
-    MPSWInstaller  *mpCatalogD;
+
+    //MPSWInstaller  *mpCatalogD;
     MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
     
     // Install the mandatory software 
@@ -200,7 +198,7 @@
         
         // Download the software
         NSError *error = nil;
-        NSString *file = [self downloadFile:swLoc error:&error];
+        NSString *file = [self downloadFile:_url error:&error];
         if (error)
         {
             file = nil;
@@ -211,26 +209,31 @@
         logit(lcl_vDebug,@"Begin install for (%@).",[d objectForKey:@"name"]);
         int result = -1;
         int pResult = -1;
-        
-        mpCatalogD = [[MPSWInstaller alloc] init];
-        result = [mpCatalogD installSoftware:d];
+		
+		MPSoftware *software = [MPSoftware new];
+		result = [software installSoftwareTask:d];
         if (result == 0) 
         {
             if ([[d valueForKeyPath:@"Software.auto_patch"] isEqualTo:@"1"]) 
             {
                 logit(lcl_vDebug,@"Auto Patching is enabled, begin patching...");
-                pResult = [mpCatalogD patchSoftware:d];
-                if (pResult == 0) {
-                    logit(lcl_vDebug,@"Auto Patching is complete...");
-                }
-                sleep(5); // Dont remeber why I'm doing this :-P
+				MPPatching *patching = [MPPatching new];
+				if (![d[@"patch_bundle_id"] isEqualToString:@""])
+				{
+					NSArray *patches = [patching scanForPatchUsingBundleID:d[@"patch_bundle_id"]];
+					if (patches.count >= 1)
+					{
+						pResult = [patching installPatchesUsingTypeFilter:patches typeFilter:kCustomPatches];
+						if (pResult == 0) {
+							logit(lcl_vDebug,@"Auto Patching is complete...");
+						}
+					}
+				}
             }
             // Register Installed Item for Catalog
             [self softwareItemInstalled:d];
             [self postInstallResults:result resultText:@"" task:d];
         }
-        mpCatalogD = nil;
-
     }
 }
 

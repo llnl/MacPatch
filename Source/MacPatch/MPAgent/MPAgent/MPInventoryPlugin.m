@@ -58,12 +58,10 @@
         Class principalClass = [pluginBundle principalClass];
         
         // Do a little sanity checking
-		
         if (![principalClass conformsToProtocol: @protocol(InventoryPluginProtocol)]) {
             NSLog (@"plug-in principal class must conform to the InventoryPluginProtocol");
             continue;
         }
-		
 		
         // Check to see if valid hash
         NSString *_pluginHash = [self getPluginHash:fullFilePath];

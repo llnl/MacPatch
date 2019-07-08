@@ -24,20 +24,15 @@
  */
 
 #import <Foundation/Foundation.h>
-
+#import "MPOperation.h"
 @class MPSettings;
 
-@interface AppStoreOperation : NSOperation
+@interface AppStoreOperation : MPOperation
 {
-    BOOL isExecuting;
-    BOOL isFinished;
     
 @private
     MPSettings      *settings;
     NSFileManager   *fm;
 }
-
-@property (nonatomic, readonly) BOOL isExecuting;
-@property (nonatomic, readonly) BOOL isFinished;
 
 @end

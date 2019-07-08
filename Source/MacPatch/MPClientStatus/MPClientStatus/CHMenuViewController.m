@@ -49,6 +49,7 @@
 {
     xtitle = aTitle;
     xversion = aVer;
+	
     [[self view] setNeedsDisplay:YES];
 }
 

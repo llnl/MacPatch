@@ -37,7 +37,7 @@ class ServerStatus(MPResource):
 				res_data = {'status': "Server is up and db connection is no good."}
 				return {"result": res_data, "errorno": 404, "errormsg": ''}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ServerStatus][Get][IntegrityError] Message: %s' % (exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': ''}, 500
 		except Exception as e:
@@ -58,7 +58,7 @@ class ServerStatusNoDB(MPResource):
 			res_data = {'status': "Server is up flask is working."}
 			return {"result": res_data, "errorno": 0, "errormsg": 'none'}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[ServerStatusNoDB][Get][IntegrityError] Message: %s' % (exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': ''}, 500
 		except Exception as e:
@@ -81,7 +81,7 @@ class TokenStatus(MPResource):
 			else:
 				return {"result": True, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[TokenStatus][Get][IntegrityError] Message: %s' % (exc.message))
 			return {'errorno': 500, 'errormsg': exc.message, 'result': ''}, 500
 		except Exception as e:
@@ -137,7 +137,7 @@ class TestUpload(MPResource):
 		except OSError as err:
 			log_Error('[MP_UploadAgentPackage][Post][OSError] MP_UploadAgentPackage: %s' % (format(err)))
 			return {"result": '', "errorno": err.errno, "errormsg": format(err)}, 500
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_UploadAgentPackage][Post][IntegrityError] MP_UploadAgentPackage: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": ""}, 500
 		except Exception as e:

@@ -61,7 +61,7 @@ class SUSPatchData(MPResource):
 				log_Error('[SUSPatchData][Post]: Patch data missing.')
 				return {"result": '', "errorno": 1, "errormsg": 'Patch data missing.'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[SUSPatchData][Post][IntegrityError]: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

@@ -1,6 +1,7 @@
 from flask import request
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 from datetime import datetime
 
 import json
@@ -55,21 +56,22 @@ class PatchGroupPatches(MPResource):
 
 			# Query all sources needed
 			_apple_all = self.appleContent()
-			_appMP_all = self.appleMPAdditions()
 			_third_all = self.allCustomActiveContent()
 
 			# Get Patch Group Patches
 			q_data = MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all()
+
 			if q_data is not None:
 				if len(q_data) >= 1:
 					for row in q_data:
+						rowDict = row.asDict
+
 						# Parse Apple Patches
-						for aRow in _apple_all:
-							if row.patch_id == aRow.akey:
-								xt, lst = self.getApplePatchData(aRow, _appMP_all)
-								_apple_patches.append(xt)
-								_appMP_all = lst
-								break
+						aPatchResult = self.getApplePatchData(row.patch_id, _apple_all)
+						if aPatchResult is not None:
+							_apple_patches.append(aPatchResult)
+							continue
+
 						# Parse Custom Patches
 						for tRow in _third_all:
 							if row.patch_id == tRow.puuid:
@@ -88,7 +90,7 @@ class PatchGroupPatches(MPResource):
 			wsResult.data = wsData.toDict()
 			return wsResult.resultNoSignature(), 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 
@@ -100,57 +102,51 @@ class PatchGroupPatches(MPResource):
 	# Methods for Content, this way I can cache the results as they dont change often
 	@cache.cached(timeout=300, key_prefix='AppleCachedList')
 	def appleContent(self):
-		return ApplePatch.query.all()
 
-	@cache.cached(timeout=300, key_prefix='AppleMPCachedList')
-	def appleMPAdditions(self):
-		result = []
-		query = ApplePatchAdditions.query.all()
-		for row in query:
-			result.append(row.asDict)
+		# Combine, apple additions with apple patch
+		sql_str = text("""select ap.akey, ap.title, ap.postdate, ap.restartaction, ap.supatchname, ap.version, 
+							mpa.severity, mpa.severity_int, mpa.patch_state, mpa.patch_install_weight, mpa.patch_reboot
+							from apple_patches ap
+							LEFT JOIN apple_patches_mp_additions mpa ON
+							ap.supatchname = mpa.supatchname""")
 
-		return result
+		results_pre = []
+		q_data = db.engine.execute(sql_str)
+
+		if q_data.rowcount <= 0:
+			return results_pre
+
+		# results from sqlalchemy are returned as a list of tuples; this procedure converts it into a list of dicts
+		for row_number, row in enumerate(q_data):
+			results_pre.append({})
+			for column_number, value in enumerate(row):
+				results_pre[row_number][list(row.keys())[column_number]] = value
+
+		# set the reboot override
+		results = []
+		for row in results_pre:
+			if row["restartaction"] == 'NoRestart' and row['patch_reboot'] == 1:
+				row['restartaction'] = 'RequireRestart'
+			elif row["restartaction"] == 'RequireRestart' and row['patch_reboot'] == 0:
+				row['restartaction'] = 'NoRestart'
+
+			results.append(row)
+
+		return results
 
 	@cache.cached(timeout=300, key_prefix='CustomCachedList')
 	def allCustomActiveContent(self):
 		return MpPatch.query.filter(MpPatch.active == 1).all()
 
-	def getApplePatchData(self, appleData, patchAdditions):
-		patch = {}
+	# return the apple patch for using akey
+	def getApplePatchData(self, akey, patchList):
+		patch = None
+		for x in patchList:
+			if x['akey'] == akey:
+				patch = x
+				break
 
-		patch['akey'] = appleData.akey
-		patch['title'] = appleData.title
-		patch['postdate'] = appleData.postdate
-		patch['restartaction'] = appleData.restartaction
-		patch['patch_reboot'] = '0'
-		if appleData.restartaction == 'RequireRestart':
-			patch['patch_reboot'] = '1'
-		patch['supatchname'] = appleData.supatchname
-		patch['version'] = appleData.version
-
-		# MP Addition
-		patch['severity'] = 'High'
-		patch['severity_int'] = '3'
-		patch['patch_state'] = 'Create'
-		patch['patch_install_weight'] = '60'
-
-		match = next(item for item in patchAdditions if item["supatchname"] == appleData.supatchname)
-		if match is not None:
-			patch['severity'] = match['severity']
-			patch['severity_int'] = match['severity_int']
-			patch['patch_state'] = match['patch_state']
-			patch['patch_install_weight'] = match['patch_install_weight']
-			if appleData.restartaction == 'NoRestart':
-				if match['patch_reboot'] == 1:
-					patch['restartaction'] = 'RequireRestart'
-					patch['patch_reboot'] = '1'
-
-			patchAdditions.remove(match)
-
-		# Return the patch data, also return the apple patch additions list with out
-		# the matching dictionary. The list will get smaller on each iteration thus
-		# speeding up the result
-		return patch, patchAdditions
+		return patch
 
 	# Get the patch group id for a client id
 	# returns group id or NA
@@ -209,7 +205,7 @@ class PatchScanList(MPResource):
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[PatchGroupPatches][Get][IntegrityError] CCUID: %s Message: %s' % (client_id, exc.message))
 			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 

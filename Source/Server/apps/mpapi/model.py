@@ -1,6 +1,6 @@
 from mpapi import db
 
-# Rev 11
+# Rev 12
 #
 
 from datetime import *
@@ -29,7 +29,7 @@ class CommonBase(db.Model):
 							result[column.name] = getattr(self, column.name)
 					else:
 						result[column.name] = getattr(self, column.name)
-				except Exception, e:
+				except Exception as e:
 					result[column.name] = getattr(self, column.name)
 
 		return result
@@ -48,7 +48,7 @@ class CommonBase(db.Model):
 						result[column.name] = getattr(self, column.name)
 				else:
 					result[column.name] = getattr(self, column.name)
-			except Exception, e:
+			except Exception as e:
 				result[column.name] = getattr(self, column.name)
 
 		return result
@@ -88,7 +88,7 @@ def get_class_by_tablename(tablename):
 	:param tablename: String with name of table.
 	:return: Class reference or None.
 	"""
-	for c in CommonBase._decl_class_registry.values():
+	for c in list(CommonBase._decl_class_registry.values()):
 		if hasattr(c, '__tablename__') and c.__tablename__ == tablename:
 			return c
 
@@ -305,6 +305,15 @@ class MpClientGroupSoftware(CommonBase):
 	group_id    = Column(String(50), nullable=False, index=True, unique=False)
 	tuuid       = Column(String(50), nullable=False, index=True, unique=False)
 
+# mp_client_group_software_restrictions
+class MpClientGroupSoftwareRestrictions(CommonBase):
+	__tablename__ = 'mp_client_group_software_restrictions'
+
+	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
+	group_id    = Column(String(50), nullable=False, index=True, unique=False)
+	appID       = Column(String(50), nullable=False, index=True, unique=False)
+	enabled 	= Column(INTEGER(unsigned=True), nullable=False)
+
 # mp_client_tasks
 class MpClientTasks(CommonBase):
 	__tablename__ = 'mp_client_tasks'
@@ -336,6 +345,7 @@ class MPGroupConfig(CommonBase):
 	rev_settings = Column(BigInteger, server_default='1')
 	rev_tasks = Column(BigInteger, server_default='1')
 	tasks_version = Column(BigInteger, server_default='0')
+	restrictions_version = Column(BigInteger, server_default='0')
 
 # mp_client_settings
 class MpClientSettings(CommonBase):
@@ -610,6 +620,7 @@ class MpClientAgentProfiles(CommonBase):
 	version			= Column(String(10), info="Version")
 	fileName		= Column(String(255), info="File Name")
 
+
 # ------------------------------------------
 ## AntiVirus
 
@@ -648,6 +659,30 @@ class MpInvState(CommonBase):
 	__tablename__ = 'mp_inv_state'
 	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
 	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=True)
+	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# rev 100005
+# mp_inv_errors
+class MpInvErrors(CommonBase):
+	__tablename__ = 'mp_inv_errors'
+	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=False)
+	inv_table = Column(String(255), nullable=False)
+	error_msg = Column(TEXT(), nullable=False)
+	json_data = Column(LONGTEXT(), nullable=False)
+	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# rev 100005
+# mp_inv_log
+class MpInvLog(CommonBase):
+	__tablename__ = 'mp_inv_log'
+	rid 	= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 	= Column(String(50), ForeignKey('mp_clients.cuuid', ondelete='CASCADE', onupdate='NO ACTION'), nullable=False, index=True, unique=False)
+	mp_server = Column(String(255), nullable=False)
+	inv_table = Column(String(255), nullable=False)
+	error_no = Column(String(10), nullable=True)
+	error_msg = Column(TEXT(), nullable=True)
+	json_data = Column(LONGTEXT(), nullable=False)
 	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # ------------------------------------------
@@ -751,6 +786,26 @@ class MpOsProfilesCriteria(CommonBase):
 	type_data 	= Column(MEDIUMTEXT())
 	type_action = Column(INTEGER(1, unsigned=True), server_default='0')
 	type_order 	= Column(INTEGER(2, unsigned=True), server_default='0')
+
+# ------------------------------------------
+## Software Restrictions
+
+# mp_software_restrictions
+class MpSoftwareRestrictions(CommonBase):
+	__tablename__ = 'mp_software_restrictions'
+
+	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
+	appID       = Column(String(50), nullable=False, index=True, unique=False)
+	bundleID	= Column(String(50), nullable=True, unique=False)
+	displayName = Column(String(255))
+	processName = Column(String(255))
+	message		= Column(Text)
+	killProc 	= Column(INTEGER(1, unsigned=True), server_default='1')
+	sendEmail 	= Column(INTEGER(1, unsigned=True), server_default='0')
+	enabled 	= Column(INTEGER(1, unsigned=True), server_default='0')
+	isglobal	= Column(INTEGER(1, unsigned=True), server_default='0')
+	mdate 		= Column(DateTime, server_default='1970-01-01 00:00:00')
+
 
 # ------------------------------------------
 ## Software
@@ -943,7 +998,7 @@ class AdmUsers(CommonBase, UserMixin):
 	enabled             = Column(INTEGER(1, unsigned=True), server_default='1')
 
 	def get_id(self):
-		return unicode(self.rid)
+		return str(self.rid)
 
 	@property
 	def password(self):

@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment version="101200" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="14460.31"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner" customClass="AgentVC">
+            <connections>
+                <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
+                <outlet property="wkWebView" destination="Sj3-rj-F6w" id="s6o-O1-Nsa"/>
+            </connections>
+        </customObject>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="Hz6-mo-xeY">
+            <rect key="frame" x="0.0" y="0.0" width="1000" height="818"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <button verticalHuggingPriority="750" id="oFa-hQ-MF1">
+                    <rect key="frame" x="20" y="741" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Agent" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="soU-68-STT">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showAgent:" target="-2" id="DQm-RN-nDs"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="IPB-HF-YCD">
+                    <rect key="frame" x="20" y="571" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Client ID" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="Ukb-mi-Mjv">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showClientID:" target="-2" id="iyn-VL-J2G"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="hM9-Gc-gum">
+                    <rect key="frame" x="20" y="709" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Tasks" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="uEl-oB-gL4">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showTasks:" target="-2" id="Hkq-qJ-53z"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="Twg-PQ-jg9">
+                    <rect key="frame" x="20" y="677" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Servers" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="ThM-fq-bZO">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showServers:" target="-2" id="BI8-TJ-JdE"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="4M1-Ml-PDF">
+                    <rect key="frame" x="20" y="645" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="SoftwareUpdate Servers" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="0kP-VR-FnH">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showSUServers:" target="-2" id="Vwa-gv-iTR"/>
+                    </connections>
+                </button>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="qoA-Yh-7Kw">
+                    <rect key="frame" x="18" y="781" width="156" height="19"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Agent Settings" id="BrM-V6-FhD">
+                        <font key="font" metaFont="systemBold" size="15"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="KZg-ex-80h">
+                    <rect key="frame" x="18" y="610" width="156" height="19"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Host Info" id="VwP-uf-Jmr">
+                        <font key="font" metaFont="systemBold" size="15"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <wkWebView wantsLayer="YES" id="Sj3-rj-F6w">
+                    <rect key="frame" x="190" y="0.0" width="810" height="818"/>
+                    <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
+                    <wkWebViewConfiguration key="configuration">
+                        <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
+                        <wkPreferences key="preferences"/>
+                    </wkWebViewConfiguration>
+                </wkWebView>
+                <button verticalHuggingPriority="750" id="Tuv-P9-Jcs">
+                    <rect key="frame" x="38" y="20" width="105" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Refresh Settings" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="0Fg-21-J5n">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showSUServers:" target="-2" id="oC8-1H-sAk"/>
+                    </connections>
+                </button>
+                <button id="mov-Se-40u">
+                    <rect key="frame" x="20" y="23" width="14" height="16"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                    <buttonCell key="cell" type="bevel" bezelStyle="circular" image="NSRefreshTemplate" imagePosition="overlaps" alignment="left" controlSize="small" imageScaling="proportionallyDown" id="gJe-x8-VRo">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="smallSystem"/>
+                    </buttonCell>
+                </button>
+                <button verticalHuggingPriority="750" id="jOs-NG-cOi">
+                    <rect key="frame" x="20" y="539" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Serial Number" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="CJ5-cc-1E0">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showSerialNo:" target="-2" id="XbF-WX-bfo"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="Cgb-Xf-pFz">
+                    <rect key="frame" x="20" y="507" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="FileVault Status" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="sRE-Mc-iKX">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showFileVaultStatus:" target="-2" id="nJV-cA-KzU"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="1RF-M1-VjM">
+                    <rect key="frame" x="20" y="475" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="Network Info" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="1Mg-eu-6Xo">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showNetworkInfo:" target="-2" id="DTh-cG-RJg"/>
+                    </connections>
+                </button>
+                <button verticalHuggingPriority="750" id="ke7-fO-at8">
+                    <rect key="frame" x="20" y="443" width="152" height="24"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="bevel" title="OS Profiles" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="tmX-FV-ynU">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="showOSProfiles:" target="-2" id="KQb-iM-Pai"/>
+                    </connections>
+                </button>
+            </subviews>
+            <point key="canvasLocation" x="-1046" y="-244"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="NSRefreshTemplate" width="11" height="15"/>
+    </resources>
+</document>

@@ -8,7 +8,7 @@ MP_SRV_DIR = MP_ROOT_DIR+'/Server'
 class BaseConfig:
 
 	DEBUG   						= False
-	TESTING 						= False
+	TESTING 						= True
 	BASEDIR 						= basedir
 	MAX_CONTENT_LENGTH              = 9000 * 1024 * 1024    # 9000 Mb limit
 	# DEBUG_TB_ENABLED = True

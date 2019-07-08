@@ -55,7 +55,7 @@ class AgentSettings():
 		qGroupData = MpClientSettings.query.filter(MpClientSettings.group_id == _group_id).all()
 		if qGroupData is not None:
 			for row in qGroupData:
-				for key in self.__dict__.keys():
+				for key in list(self.__dict__.keys()):
 					if row.key == key:
 						setattr(self, key, row.value)
 						#self[key] = row.value

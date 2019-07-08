@@ -1,19 +1,19 @@
 import os
 import json
 import subprocess
-from flask import Flask
+from flask import Flask, abort, jsonify
+from flask import render_template
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from flask_login import LoginManager
-from flask_debugtoolbar import DebugToolbarExtension
-from healthcheck import HealthCheck, EnvironmentDump
 
-from flask_apscheduler import APScheduler
+from werkzeug.exceptions import HTTPException
+from http import HTTPStatus
 
 import logging
 import logging.handlers
 from .config import DevelopmentConfig, ProductionConfig
 
-#from flask_cors import CORS, cross_origin
 from flask_cors import CORS, cross_origin
 
 def loadJobs(jobsFile, scheduler):
@@ -27,7 +27,8 @@ def loadJobs(jobsFile, scheduler):
 			scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'])
 
 def job1(a=0, b=0):
-	print(str(a) + ' ' + str(b))
+	pass
+	#print(str(a) + ' ' + str(b))
 
 db = SQLAlchemy()
 
@@ -35,8 +36,6 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
 # login_manager.login_view = "auth.login"
-
-toolbar = DebugToolbarExtension()
 
 if os.getenv("MPCONSOLE_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
@@ -54,15 +53,6 @@ def create_app(config_object=DefaultConfig):
 	app.jinja_env.trim_blocks = True
 	app.jinja_env.lstrip_blocks = True
 
-	# Job Scheduler
-	# Using flask-apscheduler
-	#
-	#scheduler = APScheduler()
-	#loadJobs(app.config['JOBS_FILE'], scheduler)
-	#scheduler.init_app(app)
-	#scheduler.start()
-
-
 	# Configure SQLALCHEMY_DATABASE_URI for MySQL
 	_uri = "mysql+pymysql://%s:%s@%s:%s/%s" % (app.config['DB_USER'],app.config['DB_PASS'],app.config['DB_HOST'],app.config['DB_PORT'],app.config['DB_NAME'])
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
@@ -71,20 +61,15 @@ def create_app(config_object=DefaultConfig):
 	# Configure authentication
 	login_manager.init_app(app)
 	login_manager.login_view = "auth.login"
-	#toolbar.init_app(app)
-
-	# wrap the flask app and give a heathcheck url
-	#health = HealthCheck(app, "/healthcheck")
-	#envdump = EnvironmentDump(app, "/environment")
 
 	@app.teardown_request
 	def shutdown_session(exception):
 		db.session.rollback()
 		db.session.remove()
 
-	@app.context_processor
-	def example():
-		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
+	#@app.context_processor
+	#def example():
+	#	return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
 
 	# Configure logging
 	log_file = app.config['LOGGING_LOCATION'] + "/mpconsole.log"
@@ -156,6 +141,11 @@ def create_app(config_object=DefaultConfig):
 	from .console import console as console_blueprint
 	app.register_blueprint(console_blueprint, url_prefix='/console')
 
+	from .test import test as test_blueprint
+	app.register_blueprint(test_blueprint, url_prefix='/test')
+
+	from .maint import maint as maint_blueprint
+	app.register_blueprint(maint_blueprint, url_prefix='/maint')
 
 	return app
 

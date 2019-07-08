@@ -103,7 +103,7 @@ def clients():
 	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
 def searchForGroup(group, list):
-	res = (item for item in list if item["group_id"] == group).next()
+	res = next((item for item in list if item["group_id"] == group))
 	return res['group_name']
 
 # JSON
@@ -162,7 +162,7 @@ def addKey():
 		data = request.form.to_dict()
 		if data['rid'] == '0':
 			key = MpRegKeys()
-			for i in data.keys():
+			for i in list(data.keys()):
 				setattr(key, i, data[i])
 
 			setattr(key, 'regKey', str(uuid.uuid4()))
@@ -171,7 +171,7 @@ def addKey():
 		else:
 			key = MpRegKeys.query.filter(MpRegKeys.rid == data['rid']).first()
 			if key is not None:
-				for i in data.keys():
+				for i in list(data.keys()):
 					setattr(key, i, data[i])
 
 		db.session.commit()
@@ -194,7 +194,7 @@ def editKey(rid):
 		data = request.form.to_dict()
 		if data['rid'] == '0':
 			key = MpRegKeys()
-			for i in data.keys():
+			for i in list(data.keys()):
 				setattr(key, i, data[i])
 
 			setattr(key, 'regKey', str(uuid.uuid4()))
@@ -203,7 +203,7 @@ def editKey(rid):
 		else:
 			key = MpRegKeys.query.filter(MpRegKeys.rid == data['rid']).first()
 			if key is not None:
-				for i in data.keys():
+				for i in list(data.keys()):
 					setattr(key, i, data[i])
 
 		db.session.commit()

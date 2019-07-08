@@ -101,7 +101,7 @@ def applePatchWizard(akey):
 
 	cList = ApplePatch.query.filter(ApplePatch.akey == akey).first()
 	# Base64 Encoded Description needs to be decoded and cleaned up
-	desc = base64.b64decode(cList.description64)
+	desc = base64.b64decode(cList.description64).decode('utf-8')
 	if "<!DOCTYPE" in desc or "<HTML>" in desc:
 		desc = desc.replace("Data('","")
 		desc = desc.replace("\\n", "")
@@ -465,6 +465,9 @@ def customDuplicate(patch_id):
 		setattr(qGet1, 'pkg_path', _pkg_path.replace(patch_id, _new_puuid))
 		setattr(qGet1, 'pkg_url', _pkg_url.replace(patch_id, _new_puuid))
 
+		setattr(qGet1, 'cdate', datetime.now())
+		setattr(qGet1, 'mdate', datetime.now())
+
 		db.session.add(qGet1)
 
 		# Duplicate patch criteria
@@ -485,7 +488,7 @@ def customDuplicate(patch_id):
 			else:
 				log("{}, unable to duplicate custom patch {}({}). Directory does not exist".format(session.get('user'), qGet1.patch_name, patch_id))
 
-		except OSError, e:
+		except OSError as e:
 			log_Error("Error: %s - %s." % (e.filename,e.strerror))
 
 
@@ -515,7 +518,7 @@ def customDelete():
 			try:
 				_patch_dir = "/opt/MacPatch/Content/Web/patches/" + puuid
 				shutil.rmtree(_patch_dir)
-			except OSError, e:
+			except OSError as e:
 				log_Error("Error: %s - %s." % (e.filename,e.strerror))
 
 			db.session.delete(qGet1)
@@ -865,7 +868,7 @@ def patchGroupContentEdit(id):
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != 'patch_install_weight' and column != 'patch_reboot_override' and column != 'size' and column != 'active':
 				if column == 'postdate':
 					if value is not None:
@@ -874,7 +877,7 @@ def patchGroupContentEdit(id):
 						_row[column] = "1970-01-01 12:00:00"
 				else:
 					# Check for \r\n in tile to clean up, javascript does not like it
-					if isinstance(value, unicode):
+					if isinstance(value, str):
 						_row[column] = value.replace('\n', ' ').replace('\r', '')
 					else:
 						_row[column] = value
@@ -922,7 +925,7 @@ def patchGroupContent(group_id):
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != 'patch_install_weight' and column != 'patch_reboot_override' and column != 'size' and column != 'active':
 				if column == 'postdate':
 					if value is not None:
@@ -936,7 +939,7 @@ def patchGroupContent(group_id):
 						_row['state'] = 1
 				else:
 					# Check for \r\n in tile to clean up, javascript does not like it
-					if isinstance(value, unicode):
+					if isinstance(value, str):
 						_row[column] = value.replace('\n', ' ').replace('\r', '')
 					else:
 						_row[column] = value
@@ -1170,7 +1173,7 @@ def requiredListPaged(limit,offset,search,sort,order):
 	_results = []
 	for v in _result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			_row[column] = value
 		_results.append(_row)
 
@@ -1266,7 +1269,10 @@ def installedListPaged(limit,offset,search,sort,order):
 
 	colsForQuery = ['cuuid', 'patch', 'patch_name', 'type', 'mdate']
 	qResult = installedQuery(search, int(offset), int(limit), sort, order, getNewTotal)
-	query = qResult[0]
+	if qResult is not None:
+		query = qResult[0]
+	else:
+		query = []
 
 	session['my_search_name'] = 'installedList'
 
@@ -1310,14 +1316,14 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 	if filterStr == 'undefined' or len(filterStr) <= 0:
 		query = MpInstalledPatch.query.join(MpClient, MpClient.cuuid == MpInstalledPatch.cuuid).add_columns(
-			MpClient.hostname, MpClient.osver, MpClient.ipaddr).order_by(order_by_str)
+			MpClient.hostname, MpClient.osver, MpClient.ipaddr).order_by(text(order_by_str))
 	else:
 		query = MpInstalledPatch.query.join(MpClient, MpClient.cuuid == MpInstalledPatch.cuuid).add_columns(
 			MpClient.hostname, MpClient.osver, MpClient.ipaddr).filter(or_(MpInstalledPatch.patch.contains(filterStr),
 																		MpInstalledPatch.patch_name.contains(filterStr),
 																		MpInstalledPatch.type.contains(filterStr),
 																		MpClient.hostname.contains(filterStr),
-																		MpClient.ipaddr.contains(filterStr))).order_by(order_by_str)
+																		MpClient.ipaddr.contains(filterStr))).order_by(text(order_by_str))
 
 	# count of rows
 	if getCount:

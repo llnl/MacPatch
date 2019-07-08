@@ -69,7 +69,7 @@ class _AgentConfigInfo(MPResource):
 			else:
 				return {"errorno": 404, "errormsg": 'Settings version or client group membersion not found.', "result": {'type': 'AgentConfigInfo', 'data': {}}}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 
 			log_Error('[AgentConfigInfo][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
@@ -116,10 +116,10 @@ class _AgentConfig(MPResource):
 			qClient = MpClient.query.filter(MpClient.cuuid == client_id).first()
 
 			# Return Payload Struct
-			agentConfig = {'schema': 310, 'revs': {}, 'settings': { 'agent': { 'rev': 0, 'data': {} }, 'servers': { 'rev': 0, 'data': [] },
+			agentConfig = {'schema': 330, 'revs': {}, 'settings': { 'agent': { 'rev': 0, 'data': {} }, 'servers': { 'rev': 0, 'data': [] },
 													'suservers': {'rev': 0, 'data': []}, 'tasks': { 'rev': 0, 'data': [] }, 'software': {'data': []} }}
 
-			d_revs = {'agent':0,'servers':0,'suservers':0,'tasks':0}
+			d_revs = {'agent':0,'servers':0,'suservers':0,'tasks':0,'swrestrictions':0}
 			d_agent = {}
 
 			group_id = 0
@@ -179,7 +179,7 @@ class _AgentConfig(MPResource):
 			else:
 				return {"errorno": 404, "errormsg": 'Settings version or client group membersion not found.', "result": {'type': 'AgentConfig', 'data': {}}}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentConfig][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
 
@@ -234,7 +234,7 @@ class _AgentConfig(MPResource):
 
 			return res
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AgentBase_v2][softwareTasksForClientGroup][IntegrityError]: client_id: %s Message: %s' % (client_id, exc.message))
 			return []
 		except Exception as e:
@@ -292,7 +292,7 @@ class _AgentUpdate(MPResource):
 
 				return {"result": {'type': 'AgentUpdate', 'data': {"updateAvailable": False}}, "errorno": 0, "errormsg": 'none'}, 202
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_AgentUpdate][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {'type': 'AgentUpdate', 'data': {"updateAvailable": False}}, "errorno": 500, "errormsg": exc.message}, 500
 
@@ -336,7 +336,7 @@ class _AgentUpdaterUpdate(MPResource):
 				log_Info('[AgentUpdaterUpdate][GET]: No update is needed for client_id: %s' % (client_id))
 				return {"result": {'type': 'AgentUpdaterUpdate', 'data': {"updateAvailable": False}}, "errorno": 0, "errormsg": 'none'}, 202
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_AgentUpdaterUpdate][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {'type': 'AgentUpdaterUpdate', 'data': {"updateAvailable": False}}, "errorno": 500, "errormsg": exc.message}, 500
 
@@ -375,7 +375,7 @@ class _PluginHash(MPResource):
 				log_Error('[PluginHash][GET]: Plugin (%s) hash could not be found.' % (plugin_name))
 				return {"result": {'data':''}, "errorno": 404, "errormsg": 'Plugin hash could not be found.'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_PluginHash][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
 			return {"result": {'data':''}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -418,12 +418,13 @@ class ConfigData(MPResource):
 				_srv_pub_key = res.pubKey
 				_srv_pub_key_hash = res.pubKeyHash
 
-			configPlist = plistlib.writePlistToString(config)
+			#configPlist = plistlib.writePlistToString(config)
+			configPlist = plistlib.dumps(config).decode('utf-8')
 			log_Debug("[MP_ConfigData][GET]: Agent Config Result: %s" % (configPlist))
 			resData = {'plist': configPlist, 'pubKey': _srv_pub_key, 'pubKeyHash': _srv_pub_key_hash}
 			return {"result": resData, "errorno": 0, "errormsg": ""}, 200
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_ConfigData][Get][IntegrityError] Message: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": ""}, 500
 		except Exception as e:
@@ -567,7 +568,7 @@ class UploadAgentPackage(MPResource):
 		except OSError as err:
 			log_Error('[MP_UploadAgentPackage][Post][OSError] MP_UploadAgentPackage: %s' % (format(err)))
 			return {"result": '', "errorno": err.errno, "errormsg": format(err)}, 500
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[MP_UploadAgentPackage][Post][IntegrityError] MP_UploadAgentPackage: %s' % (exc.message))
 			return {"result": '', "errorno": 500, "errormsg": ""}, 500
 		except Exception as e:

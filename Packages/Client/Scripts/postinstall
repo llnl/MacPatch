@@ -1,0 +1,338 @@
+#!/bin/sh -x
+
+# ***************************************************************************************
+# PostFlight Script for MacPatch Client Installer
+# ver 3.2.0
+# Created By Charles Heizer @ LLNL
+#
+# ***************************************************************************************
+
+MP_ROOT="/Library/MacPatch"
+MP_ROOT_CLIENT="${MP_ROOT}/Client"
+
+# Script Parent Dir Path
+SRC="$(dirname "$0")"
+
+# Current logged in User ID
+# consoleUserID at login window is 0
+consoleUserID=$(stat -f%u /dev/console)
+
+isIload ()
+{
+	pid=`ps -e | grep iLoadAssistant | grep -v grep | awk '{print $1}'`
+	echo $pid
+}
+
+setOwner() {
+	if [ -f "$1" ]; then
+		/usr/sbin/chown -R root:wheel "$1"
+	fi
+}
+
+setOwnerAndPerms() {
+	if [ -f "$1" ]; then
+		/usr/sbin/chown root:wheel "$1"
+		/bin/chmod 0644 "$1"
+	fi
+}
+
+existsAndDelete ()
+{
+	if [ -f "$1" ]; then
+		echo "Removing (rm -f) file $1"
+		rm -f "$1" 2>/dev/null
+	elif [ -d "$1" ]; then
+		echo "Removing (rm -rf) directory $1"
+		rm -rf "$1" 2>/dev/null
+	fi
+}
+
+function runClientActions
+{
+	# Check in
+	/Library/MacPatch/Client/MPAgent -c
+	sleep 1
+
+	# Run Profile Installs
+	/Library/MacPatch/Client/MPAgent -p
+}
+
+function removeOldRegFiles
+{
+	existsAndDelete "/Library/Application Support/MacPatch/MacPatch.keychain"
+	existsAndDelete "/Library/Application Support/MacPatch/.keyHash"
+	existsAndDelete "/Library/Application Support/MacPatch/.MacPatch.keychain"
+	existsAndDelete "/Library/Application Support/MacPatch/gov.llnl.mp.plist"
+}
+# ******************************************************************
+# Set Up Python Virtualenv
+
+function setupPyVirtEnv
+{
+	LIBDIR="/Library/MacPatch/Client/lib"
+	PNGHOST="pypi.python.org"
+
+	ping -c 1 "$PNGHOST" > /dev/null
+	if [ $? -eq 0 ]; then
+		echo "ping $PNGHOST is up"
+	else
+		echo "ping $PNGHOST is down"
+	fi
+
+	# See if pip is installed
+	which pip > /dev/null
+	if [ $? == 1 ]; then
+		# Needs to install pip
+		easy_install --quiet pip
+	else
+		# Update pip
+		pip install --quiet --upgrade pip
+	fi
+
+	# See if virtualenv is installed
+	which virtualenv > /dev/null
+	if [ $? == 1 ]; then
+		# Needs to install virtualenv
+		pip install --quiet virtualenv
+	else
+		pip install --quiet --upgrade virtualenv
+	fi
+
+	# Install Xcode Command Line Tools
+	# Code taken from tim sutton
+	# https://github.com/timsutton/osx-vm-templates/blob/master/scripts/xcode-cli-tools.sh
+	xcode-select -p > /dev/null 2>&1
+	if [ $? != 0 ]; then
+		echo "Install Xcode Command Line Tools"
+		# create the placeholder file that's checked by CLI updates' .dist code
+		# in Apple's SUS catalog
+		touch /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+		# find the CLI Tools update
+		PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
+		if [ $? != 0 ]; then
+			PROD=$(softwareupdate -l | grep "\*.*Command Line" | head -n 1 | awk -F"*" '{print $2}' | sed -e 's/^ *//' | tr -d '\n')
+		fi
+		# install it
+		softwareupdate -i "$PROD"
+		rm /tmp/.com.apple.dt.CommandLineTools.installondemand.in-progress
+	fi
+
+	# Create Virtualenv "python" and install extera modules
+	cd $LIBDIR
+	virtualenv --no-site-packages python
+	source python/bin/activate
+
+	MODS="biplist requests xattr"
+	for mod in $MODS; do
+		pip install --quiet $mod
+		if [ $? -ne 0 ] ; then
+			echo " Error installing $mod"
+		fi
+	done
+
+	deactivate
+}
+
+# ******************************************************************
+# Copy in client version info
+if [ -e "${SRC}/.mpVersion.plist" ]; then
+    rm -f "${MP_ROOT_CLIENT}/.mpVersion.plist"
+	cp "${SRC}/.mpVersion.plist" "${MP_ROOT_CLIENT}/.mpVersion.plist"
+fi
+
+# ******************************************************************
+# Set owner & permissions
+setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+setOwnerAndPerms /Library/LaunchAgents/gov.llnl.mp.status.plist
+setOwnerAndPerms /Library/LaunchAgents/gov.llnl.MPLoginAgent.plist
+setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
+setOwner /Library/PrivilegedHelperTools/MPLoginAgent.app
+
+if [ ! -d "/Library/Application Support/MPClientStatus" ]; then
+	mkdir "/Library/Application Support/MPClientStatus"
+fi
+chmod +a 'everyone allow read,write,delete,add_file,file_inherit,directory_inherit' "/Library/Application Support/MPClientStatus"
+
+agentPrefs="/Library/Application Support/MacPatch/gov.llnl.mpagent"
+agentPrefsPlist="/Library/Application Support/MacPatch/gov.llnl.mpagent.plist"
+
+# ******************************************************************
+# Set Agent Plist data ...
+#
+if [ ! -d /Library/Application\ Support/MacPatch ]; then
+	mkdir -p /Library/Application\ Support/MacPatch
+fi
+
+# Add Initial Agent Config Data
+cp "${SRC}/gov.llnl.mpagent.plist" /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+
+# Add new option to stage patches
+# defaults write "${agentPrefsPlist}" PreStageUpdates -bool YES
+
+# Copy in client version info
+if [ -e "${SRC}/.mpVersion.plist" ]; then
+	cp "${SRC}/.mpVersion.plist" "/Library/MacPatch/Client/.mpVersion.plist"
+fi
+
+# Set Permissions
+chown -R root:admin "/Library/Application Support/MacPatch"
+chmod -R 775 "/Library/Application Support/MacPatch"
+
+# ******************************************************************
+# Run Agent Components to populate DB with current info ************
+#
+
+if [ ! -d "/Library/MacPatch/Client/lib" ]; then
+	mkdir -p "/Library/MacPatch/Client/lib"
+	chmod 777 /Library/MacPatch/Client/lib
+else
+	chmod 777 /Library/MacPatch/Client/lib
+fi
+
+# ******************************************************************
+# Install Included Profiles - With PRE prefix 	********************
+#
+if [ -d "${SRC}/profiles" ]; then
+	# Find all mobileconfig files not begin with pst
+	# will install pst at the end of the script
+	find "$SRC/profiles" -type f ! -name "post*.mobileconfig" -print0 | while read -d $'\0' file
+	do
+		/usr/bin/profiles -I -F "$file"
+	done
+fi
+
+# ******************************************************************
+# Add MacPatch Client Plugins if included **************************
+#
+if [ -d "${SRC}/Plugins" ]; then
+	if [ ! -d "/Library/MacPatch/Client/lib/PlugIns" ]; then
+		mkdir -p "/Library/MacPatch/Client/lib/PlugIns"
+	fi
+	/usr/bin/find "${SRC}"/Plugins -name '*.bundle' -exec /bin/cp -r {} /Library/MacPatch/Client/lib/PlugIns/ \;
+fi
+
+# ******************************************************************
+# Add Server Public Key ********************************************
+#
+if [ -f "${SRC}/ServerPub.pem" ]; then
+	mkdir -p "/Library/Application Support/MacPatch/.keys"
+	cp "${SRC}/ServerPub.pem" "/Library/Application Support/MacPatch/.keys/ServerPub.pem"
+fi
+
+# ******************************************************************
+# Run Client Check-in
+CLIENTID=`/Library/MacPatch/Client/MPAgent -C`
+
+regEnabled=`defaults read "${agentPrefsPlist}" registrationEnabled`
+case "$regEnabled" in
+ 0) a=$regEnabled ;;
+ 1) a=$regEnabled ;;
+ *) a=0 ;;
+esac
+regEnabled=$a
+useAutoReg=`defaults read "${agentPrefsPlist}" autoregEnabled`
+case "$useAutoReg" in
+ 0) b=$useAutoReg ;;
+ 1) b=$useAutoReg ;;
+ *) b=0 ;;
+esac
+useAutoReg=$b
+useParking=`defaults read "${agentPrefsPlist}" clientParkingEnabled`
+case "$useParking" in
+ 0) c=$useParking ;;
+ 1) c=$useParking ;;
+ *) c=0 ;;
+esac
+useParking=$c
+
+if [ $regEnabled == 1 ]; then
+	# Check to see if the client is already registered
+	res=`/Library/MacPatch/Client/MPAgent -R`
+	if [ $? == 1 ]; then
+		sleep 1
+		# Remove old reg files, since client is not registered
+		removeOldRegFiles
+		# If reg key file exists we use that
+		# Register Client With Provided Key
+		if [ -f "${SRC}/.mpreg.key" ]; then
+			regFile="${SRC}/.mpreg.key"
+			regKey=$(<$regFile)
+			/Library/MacPatch/Client/MPAgent -r $regKey
+			if [ $? == 0 ]; then
+				sleep 1
+				runClientActions
+			fi
+		fi
+		# If Autoreg is enabled we use it
+		if [ $useAutoReg == 1 ]; then
+			/Library/MacPatch/Client/MPAgent -r
+			if [ $? == 0 ]; then
+				sleep 1
+				runClientActions
+			fi
+		fi
+
+		# If clientParking is enabled we use it
+		# we do not run any of the client actions
+		if [ $useParking == 1 ]; then
+			/Library/MacPatch/Client/MPAgent -r
+			sleep 1
+		fi
+	fi
+else
+	# Run all of the normal client actions
+	runClientActions
+fi
+
+# ******************************************************************
+# Launch the Helper service  ***************************************
+#
+/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+/bin/sleep 2
+/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+/bin/sleep 2
+
+# ******************************************************************
+# Launch the MPAgent service ***************************************
+#
+/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+/bin/sleep 2
+killall MPAgent
+
+# ******************************************************************
+# Launch PlanB		    ********************************************
+#
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.planb.plist" ]; then
+	
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.planb.plist
+	sleep 2
+fi
+
+# ******************************************************************
+# Start LaunchAgent Apps *******************************************
+#
+if [ "$consoleUserID" != "0" ]; then
+	/bin/launchctl bootstrap gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
+fi
+
+# Without this, may have a hard time upgrading
+pkgutil --forget gov.llnl.mp.agent.base
+pkgutil --forget gov.llnl.macpatch.base
+
+# ******************************************************************
+# Install Included Profiles - With POST prefix 	********************
+#
+if [ -d "${SRC}/profiles" ]; then
+	for file in "${SRC}"/profiles/post*.mobileconfig; do
+		if [ -f "$file" ]; then
+			/usr/bin/profiles -I -F "$file"
+		fi
+	done
+fi
+
+touch /tmp/.mpagentinstalled
+
+# Kill the ClientStatus app, launchctl does not restart the app only the service
+/usr/bin/killall MPClientStatus
+
+exit 0;

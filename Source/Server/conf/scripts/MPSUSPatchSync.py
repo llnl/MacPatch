@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSUSPatchSync
-	Version: 1.3.2
+	Version: 1.4.0
 
 	Description: This Script read all of the patch information
 	from the apple software update sucatlog files and post the
@@ -92,7 +92,7 @@ logger = logging.getLogger('MPSUSPatchSync')
 _par_dir = os.path.abspath(os.path.join(logFile, os.pardir))
 if not os.path.exists(_par_dir):
 	logFile = "/tmp/"+logFileName
-	print "Changing log file location to " + logFile
+	print("Changing log file location to " + logFile)
 
 # Variables That Can be Changed
 wsPostKey       = '123456' # Ref from siteconfig.json settings->server->apiKey
@@ -135,7 +135,7 @@ def readServerMetadata(metaURL):
 
 		plist = plistlib.readPlistFromString(r.text.encode('utf-8'))
 
-		if plist.has_key("CFBundleShortVersionString"):
+		if "CFBundleShortVersionString" in plist:
 			version = str(plist["CFBundleShortVersionString"])
 
 		localization = {}
@@ -145,22 +145,22 @@ def readServerMetadata(metaURL):
 				_loc = plist.get('localizations',None)
 
 			if _loc != None:
-				if _loc.has_key("English"):
+				if "English" in _loc:
 					localization = _loc["English"]
-				elif _loc.has_key("en"):
+				elif "en" in _loc:
 					localization = _loc["en"]
 				else:
 					localization = None
 
 				if localization != None:
-					if localization.has_key('title'):
+					if 'title' in localization:
 						title = localization['title']
-					if localization.has_key('description'):
+					if 'description' in localization:
 						descASCII = localization['description'].encode('ascii', 'ignore').decode('ascii')
 						description = base64.b64encode(descASCII)
 						#description = base64.b64encode(str(localization['description']).encode('utf-8'))
 
-		except Exception, e:
+		except Exception as e:
 			logger.error("Error: %s" % e)
 			logger.error("Offending URL: %s" % metaURL)
 
@@ -225,7 +225,7 @@ def readDistributionFile(distURL):
 			distData['suname'] = distData['name'] + "-" + distData['version']
 
 	else:
-		print "Error reading distribution file."
+		print("Error reading distribution file.")
 
 	return distData
 
@@ -246,7 +246,7 @@ def postDataToWebService(patches, config):
 
 	try:
 		request = requests.post(_url, data=payload, verify=False, headers=headers)
-		print request.status_code
+		print(request.status_code)
 		#if request.status_code == requests.codes.ok:
 		if request.status_code in [200, 201, 202]:
 			logger.info("Data post was successful.")
@@ -270,7 +270,7 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
 	if not prefs:
 		return None
 
-	productKeys = prefs['Products'].keys()
+	productKeys = list(prefs['Products'].keys())
 	patches = []
 
 	logger.info("Found " + str(len(productKeys)) + " to process." )
@@ -281,11 +281,11 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
 
 		patch = {}
 		patch['akey'] = key
-		if prefs['Products'][key].has_key("PostDate"):
+		if "PostDate" in prefs['Products'][key]:
 			patch['postdate'] = returnDateTimeAsString(prefs['Products'][key]['PostDate'])
 		else:
 			patch['postdate'] = '1984-01-01 00:00:00'
-		if len(prefs['Products'][key]['Packages']) > 0 and prefs['Products'][key]['Packages'][0].has_key("Size"):
+		if len(prefs['Products'][key]['Packages']) > 0 and "Size" in prefs['Products'][key]['Packages'][0]:
 			patch['size'] = str(prefs['Products'][key]['Packages'][0]['Size'])
 		else:
 			patch['size'] = '0'
@@ -297,15 +297,15 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
 		patch['restart'] = ''
 		patch['version'] = '1.0.0'
 
-		if prefs['Products'][key].has_key("ServerMetadataURL"):
+		if "ServerMetadataURL" in prefs['Products'][key]:
 			patch['ServerMetadataURL'] = prefs['Products'][key]["ServerMetadataURL"]
 		else:
 			patch['ServerMetadataURL'] = ""
 
-		if prefs['Products'][key].has_key("Distributions"):
-			if prefs['Products'][key]["Distributions"].has_key("en"):
+		if "Distributions" in prefs['Products'][key]:
+			if "en" in prefs['Products'][key]["Distributions"]:
 				patch['Distribution'] = prefs['Products'][key]["Distributions"]['en']
-			elif prefs['Products'][key]["Distributions"].has_key("English"):
+			elif "English" in prefs['Products'][key]["Distributions"]:
 				patch['Distribution'] = prefs['Products'][key]["Distributions"]['English']
 			else:
 				patch['Distribution'] = ""
@@ -349,7 +349,7 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
 
 		if containsFilterItem == False:
 			logger.info("Adding patch: " + str(patch['suname']))
-			print("Adding patch: " + str(patch['suname']))
+			print(("Adding patch: " + str(patch['suname'])))
 			patches.append(patch)
 		else:
 			logger.info("Excluding patch: " + str(patch['suname']))
@@ -378,8 +378,8 @@ def main():
 		else:
 			logger.setLevel(logging.INFO)
 
-	except Exception, e:
-		print "%s" % e
+	except Exception as e:
+		print("%s" % e)
 		sys.exit(1)
 
 	# Read and Parse Config
@@ -387,7 +387,7 @@ def main():
 	settings = None
 	if args.config:
 		if not os.path.exists(args.config):
-			print "Unable to open " + args.config +". File not found."
+			print("Unable to open " + args.config +". File not found.")
 			sys.exit(1)
 
 		json_data_fh = open(args.config).read()
@@ -395,7 +395,7 @@ def main():
 		if "settings" in config_data:
 			settings = config_data['settings']
 		else:
-			print "Structure of config files is not correct."
+			print("Structure of config files is not correct.")
 			sys.exit(1)
 
 
@@ -408,7 +408,7 @@ def main():
 			file = open(args.data, 'r')
 			patches = json.loads(file.read())
 		else:
-			print "Unable to open " + args.data +". File not found."
+			print("Unable to open " + args.data +". File not found.")
 			sys.exit(1)
 	else:
 		# Build the Catalogs Array to get the Patches from
@@ -447,7 +447,7 @@ def main():
 
 		# Remove any duplicate keys from the array before posting
 		logger.info("Total patches found %d, begin removing duplicates." % len(patchesRaw))
-		patches = {v['akey']:v for v in patchesRaw}.values()
+		patches = list({v['akey']:v for v in patchesRaw}.values())
 		logger.info("Total patches %d to post to web service." % len(patches))
 
 

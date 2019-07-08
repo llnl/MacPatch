@@ -204,23 +204,41 @@ Client Group - {{group_name}}
 			</table>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 5 %}in active{% endif %}" id="reqSoftware">
-			<table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true">
-                <div id="toolbarSoftware">
-					<button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-                    <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-				</div>
-			</table>
             <br>
-            <div class="panel panel-info">
-                <div class="panel-heading">
-                    Required Software
-                </div>
-                <div class="panel-body">
-                    <p>The following software packages will be installed on client check-in. Software which requires a reboot will notify the user a reboot is nessasary via the standard macOS notification mechanisim.</p>
-                </div>
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#swReq" data-toggle="tab">Required Software</a></li>
+                <li><a href="#swRes" data-toggle="tab">Software Restrictions</a></li>
+	        </ul>
 
-            </div>
-		</div>
+	        <div class="tab-content">
+
+                <div class="tab-pane fade in active" id="swReq">
+                    <table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true">
+                        <div id="toolbarSoftware">
+                            <button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                            <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                        </div>
+                    </table>
+                    <br>
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            Required Software
+                        </div>
+                        <div class="panel-body">
+                            <p>The following software packages will be installed on client check-in. Software which requires a reboot will notify the user a reboot is nessasary via the standard macOS notification mechanisim.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="swRes">
+                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-show-export="true">
+                        <div id="toolbarSoftwareRes">
+                            <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                            <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                        </div>
+                    </table>
+                </div>
+		    </div>
+        </div>
         <div class="tab-pane fade {% if selectedTab == 6 %}in active{% endif %}" id="provisioning">
 			<table id="tableProvision" data-toolbar="#toolbarProvision" data-show-export="true">
 			</table>
@@ -244,9 +262,7 @@ Client Group - {{group_name}}
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/moment/min/moment.min.js') }}"></script>
-<!--
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.15.1/moment.min.js"></script>
--->
+
 	<script>
 	var $tasksTable = $('#tableTasks'), $ttRbutton = $('#ttRefreshbutton');
 	var $tableSoftware = $('#tableSoftware');
@@ -256,6 +272,7 @@ Client Group - {{group_name}}
 	{
 		$('#table').bootstrapTable(
 		{
+            url: "/clients/group/{{group_id}}/clients",
 			striped: true,
 			pagination: true,
 			sidePagination: 'client',
@@ -311,18 +328,6 @@ Client Group - {{group_name}}
 				title: 'clientState',
 				visible: false
 			},
-			],
-			data: [
-			{% for c in data %}
-			{
-				{% for col in columns %}
-				{% if col.name != 'rid' %}
-                {{col.name}}: '{{c[col.name]}}',
-                {% endif %}
-				{% endfor %}
-				'clientState': '{{c['clientState']}}',
-			},
-			{% endfor %}
 			]
 		});
 
@@ -528,7 +533,61 @@ Client Group - {{group_name}}
 			]
 		});
 
+		$('#tableSoftwareRes').bootstrapTable(
+		{
+			url: "/osmanage/app_filter/list/{{group_id}}",
+			striped: true,
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			sidePagination: "client",
+			showRefresh: true,
+            idField: 'appID',
+			columns: [
+            {
+                field: 'state',
+                checkbox: true,
+                rowspan: 1,
+                align: 'center',
+                valign: 'middle'
+			},
+            {% for col in swResCols %}
+                {
+                    {% if col[2] == '0' %}
+                    visible: false,
+                    {% endif %}
+                    sortable: true,
+                    field: '{{col[0]}}',
+                    title: '{{col[1]}}',
+                    {% if col[0] == 'enabled' %}
+                    editable: {
+                        type: 'select',
+                        url: '/clients/group/{{gResults['Group']['id']}}/sw/res/enable',
+                        source: [
+                            {value: '1', text: 'Yes'},
+                            {value: '0', text: 'No'},
+                        ]
+                    },
+                    {% endif %}
+                },
+            {% endfor %}
+			]
+		});
+
 	});
+
+	function formatYesNo(value,row,index)
+    {
+        if (Number.isInteger(value))
+        {
+            return value=='0' ? 'No' : 'Yes';
+        }
+        else
+        {
+            return value;
+        }
+    }
 
 	/*  Format Rows in Clients Table
 		This will set the background color on rows
@@ -746,6 +805,7 @@ Client Group - {{group_name}}
 	$addProfileButton = $('#addProfileButton');
 
 	var $addSWButton = $('#addSWButton'), $delSWButton = $('#delSWButton');
+	var $addSWResButton = $('#addSWResButton'), $delSWResButton = $('#delSWResButton');
 
 	var $_mvClientButton = $('#mvClientButton');
 	$(function () {
@@ -886,6 +946,49 @@ Client Group - {{group_name}}
 		});
 
 		$delSWButton.click(function ()
+		{
+			var rows = $tableSoftware.bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _rid = rows[x]['rid'];
+				rowsArr.push(_rid);
+			}
+
+			var _url = "/clients/group/{{gResults['Group']['id']}}/sw/remove";
+			$.ajax({
+				url: _url,
+				type: 'DELETE',
+				cache: false,
+				data: {'rids':rowsArr.toString()},
+				error: function (request, status, error)
+				{
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					for (x in rowsArr) {
+						$tableSoftware.bootstrapTable('removeByUniqueId', rowsArr[x]);
+					}
+					alert("Software removed successfully.");
+				}
+			});
+		});
+
+		$addSWResButton.click(function ()
+		{
+			$.get( "/clients/group/{{gResults['Group']['id']}}/sw/res/add").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add Software Restriction to Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalSaveButton').remove();
+				$('#modalCancelButton').remove();
+				$('#modalDialog').modal('show');
+			});
+		});
+
+		$delSWResButton.click(function ()
 		{
 			var rows = $tableSoftware.bootstrapTable('getAllSelections');
 			var rowsArr = [];

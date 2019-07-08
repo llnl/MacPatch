@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,9 +25,9 @@
 
 '''
   MacPatch Patch Loader Setup Script
-  MacPatch Version 3.1.x
+  MacPatch Version 3.3.x
 
-  Script Version 2.3.0
+  Script Version 2.4.0
 '''
 
 import os
@@ -41,7 +41,7 @@ import json
 import getpass
 import types
 from distutils.version import LooseVersion
-import ConfigParser
+import configparser
 import sys
 from sys import exit
 from Crypto.PublicKey import RSA
@@ -112,7 +112,7 @@ def read_config_file(file_path):
 		lines = (line.rstrip() for line in f)
 		for l in lines:
 			if l.rstrip():
-				 if l.startswith("#") == False:
+				if l.startswith("#") == False:
 					config[l.split('=')[0].strip()] = l.split('=')[1].strip().replace("'","")
 
 	return config
@@ -121,7 +121,7 @@ def write_config_file(file_path, config, addNotice=True):
 	f = open(file_path,'w+')
 	if addNotice:
 		f.write("# Put Any Global Server & App Config Settings to override any settings\n\n")
-	for key, value in config.iteritems():
+	for key, value in config.items():
 		f.write('{} = \'{}\'\n'.format(key, value))
 
 	f.close()
@@ -134,7 +134,7 @@ def existsOrExit(filePath):
 	if os.path.exists(filePath):
 		return filePath
 	else:
-		print(filePath + ' does not exist. Now exiting.')
+		print((filePath + ' does not exist. Now exiting.'))
 		exit(1)
 
 def readJSON(filename):
@@ -144,7 +144,7 @@ def readJSON(filename):
 		returndata = json.load(fd)
 		fd.close()
 	except:
-		print 'COULD NOT LOAD:', filename
+		print('COULD NOT LOAD:', filename)
 
 	return returndata
 
@@ -154,7 +154,7 @@ def writeJSON(data, filename):
 		json.dump(data,fd, indent=4)
 		fd.close()
 	except:
-		print 'ERROR writing', filename
+		print('ERROR writing', filename)
 		pass
 
 def readServicesConfig(platformType):
@@ -181,7 +181,7 @@ def passwordEntry():
 		if pass1 == pass2:
 			break
 		else:
-			print "Passwords did not match, please try again."
+			print("Passwords did not match, please try again.")
 
 	return pass1
 
@@ -198,15 +198,15 @@ def repairPermissions():
 			for momo in files:
 				os.chown(os.path.join(root, momo), gUID, gGID)
 
-		os.chmod("/opt/MacPatch", 0775)
-		os.chmod(MP_SRV_BASE+"/logs", 0775)
+		os.chmod("/opt/MacPatch", 0o775)
+		os.chmod(MP_SRV_BASE+"/logs", 0o775)
 		os.system("chmod -R 0775 "+ MP_SRV_CONT)
 
 		if os_type == "Darwin":
 			os.system("chown root:wheel "+MP_SRV_BASE+"/conf/launchd/*")
 			os.system("chmod 644 "+MP_SRV_BASE+"/conf/launchd/*")
-	except Exception, e:
-		print("Error: %s" % e)
+	except Exception as e:
+		print(("Error: %s" % e))
 
 def linuxLoadServices(service):
 
@@ -249,7 +249,7 @@ def linuxUnLoadServices(service):
 
 def linuxLoadInitServices(service):
 
-	print "Loading service "+service
+	print("Loading service "+service)
 
 	useSYSTEMD=False
 	if platform.dist()[0] == "Ubuntu" and LooseVersion(platform.dist()[1]) >= LooseVersion("15.0"):
@@ -257,7 +257,7 @@ def linuxLoadInitServices(service):
 	elif (platform.dist()[0] == "redhat" or platform.dist()[0] == "centos") and LooseVersion(platform.dist()[1]) >= LooseVersion("7.0"):
 		useSYSTEMD=True
 	else:
-		print "Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported."
+		print("Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported.")
 		return
 
 	if useSYSTEMD == True:
@@ -267,24 +267,24 @@ def linuxLoadInitServices(service):
 		if os.path.exists(etcServiceConf):
 			os.system("/bin/systemctl start "+serviceName)
 		else:
-			print "Unable to find " + etcServiceConf
+			print("Unable to find " + etcServiceConf)
 	else:
 		_initFile = "/etc/init.d/"+service
 		if os.path.exists(_initFile):
 			os.system("/etc/init.d/"+service+" start")
 		else:
-			print "Unable to find " + _initFile
+			print("Unable to find " + _initFile)
 
 def linuxUnLoadInitServices(service):
 	# UnLoad Init Services
-	print "UnLoading service "+service
+	print("UnLoading service "+service)
 	useSYSTEMD=False
 	if platform.dist()[0] == "Ubuntu" and LooseVersion(platform.dist()[1]) >= LooseVersion("15.0"):
 		useSYSTEMD=True
 	elif (platform.dist()[0] == "redhat" or platform.dist()[0] == "centos") and LooseVersion(platform.dist()[1]) >= LooseVersion("7.0"):
 		useSYSTEMD=True
 	else:
-		print "Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported."
+		print("Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported.")
 		return
 
 	if useSYSTEMD == True:
@@ -294,13 +294,13 @@ def linuxUnLoadInitServices(service):
 		if os.path.exists(etcServiceConf):
 			os.system("/bin/systemctl stop "+serviceName)
 		else:
-			print "Unable to find " + etcServiceConf
+			print("Unable to find " + etcServiceConf)
 	else:
 		_initFile = "/etc/init.d/"+service
 		if os.path.exists(_initFile):
 			os.system("/etc/init.d/"+service+" stop")
 		else:
-			print "Unable to find " + _initFile
+			print("Unable to find " + _initFile)
 
 def linuxLoadCronServices(service):
 	from crontab import CronTab
@@ -342,8 +342,8 @@ def removeCronJob(comment):
 
 	for job in cron:
 		if job.comment == comment:
-			print "\nRemoving Cron Job" + comment
-			cJobRm = raw_input('Are you sure you want to remove this cron job (Y/N)?')
+			print("\nRemoving Cron Job" + comment)
+			cJobRm = input('Are you sure you want to remove this cron job (Y/N)?')
 			if cJobRm.lower() == "y" or cJobRm.lower() == "yes":
 				cron.remove (job)
 
@@ -357,7 +357,7 @@ def osxLoadServices(service):
 			if service in macServices:
 				_services.append(service)
 			else:
-				print service + " was not found. Service will not load."
+				print(service + " was not found. Service will not load.")
 	else:
 		_services = service['services']
 
@@ -365,11 +365,11 @@ def osxLoadServices(service):
 	for srvc in _services:
 		# Set Permissions
 		os.chown(MP_SRV_BASE+"/conf/launchd/"+srvc, 0, 0)
-		os.chmod(MP_SRV_BASE+"/conf/launchd/"+srvc, 0644)
+		os.chmod(MP_SRV_BASE+"/conf/launchd/"+srvc, 0o644)
 
 		_launchdFile = "/Library/LaunchDaemons/"+srvc
 		if os.path.exists(_launchdFile):
-			print "Loading service "+srvc
+			print("Loading service "+srvc)
 			os.system("/bin/launchctl load -w /Library/LaunchDaemons/"+srvc)
 		else:
 			if os.path.exists(MP_SRV_BASE+"/conf/launchd/"+srvc):
@@ -378,11 +378,11 @@ def osxLoadServices(service):
 
 				os.symlink(MP_SRV_BASE+"/conf/launchd/"+srvc,"/Library/LaunchDaemons/"+srvc)
 
-				print "Loading service "+srvc
+				print("Loading service "+srvc)
 				os.system("/bin/launchctl load -w /Library/LaunchDaemons/"+srvc)
 
 			else:
-				print srvc + " was not found in MacPatch Server directory. Service will not load."
+				print(srvc + " was not found in MacPatch Server directory. Service will not load.")
 
 def osxUnLoadServices(service):
 	_services = list()
@@ -399,13 +399,13 @@ def osxUnLoadServices(service):
 	for srvc in _services:
 		_launchdFile = "/Library/LaunchDaemons/"+srvc
 		if os.path.exists(_launchdFile):
-			print "UnLoading service "+srvc
+			print("UnLoading service "+srvc)
 			os.system("/bin/launchctl unload -wF /Library/LaunchDaemons/"+srvc)
 
 def setupRsyncFromMaster():
 	os.system('clear')
 	print("\nConfigure this server to syncronize data from the \"Master\" MacPatch server.\n")
-	server_name = raw_input("MacPatch Server \"hostname\" or \"IP Address\" TO sync data from: ")
+	server_name = input("MacPatch Server \"hostname\" or \"IP Address\" TO sync data from: ")
 
 	'''	Write the Plist With Changes '''
 	theFile = MP_SRV_BASE + "/etc/syncContent.json"
@@ -413,8 +413,8 @@ def setupRsyncFromMaster():
 
 	try:
 		writeJSON(prefs, theFile)
-	except Exception, e:
-		print("Error: %s" % e)
+	except Exception as e:
+		print(("Error: %s" % e))
 
 	''' Enable Startup Scripts '''
 	if os_type == "Darwin":
@@ -424,7 +424,7 @@ def setupRsyncFromMaster():
 
 			os.symlink(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sync.plist","/Library/LaunchDaemons/gov.llnl.mp.sync.plist")
 			os.chown(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sync.plist", 0, 0)
-			os.chmod(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sync.plist", 0644)
+			os.chmod(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sync.plist", 0o644)
 
 	if os_type == "Linux":
 		linuxLoadCronServices("MPSyncContent")
@@ -441,12 +441,12 @@ def setupPatchLoader():
 	_srvPort = "3600"
 	_srvUSSL = "Y"
 
-	srvHost = raw_input('\nMaster server address [127.0.0.1]: ')
+	srvHost = input('\nMaster server address [127.0.0.1]: ')
 	srvHost = srvHost or _srvHost
 
-	srvPort = raw_input('Master server port [3600]: ')
+	srvPort = input('Master server port [3600]: ')
 	srvPort = srvPort or _srvPort
-	srvUSSL = raw_input('Master server, use SSL [Y]: ')
+	srvUSSL = input('Master server, use SSL [Y]: ')
 	if srvUSSL.lower() == "y" or srvUSSL.lower() == "":
 		srvUSSLBOOL = True
 	elif srvUSSL.lower() == "n":
@@ -458,8 +458,8 @@ def setupPatchLoader():
 
 	try:
 		writeJSON(prefs, theFile)
-	except Exception, e:
-		print("Error: %s" % e)
+	except Exception as e:
+		print(("Error: %s" % e))
 
 	''' Enable Startup Scripts '''
 	if os_type == "Darwin":
@@ -469,20 +469,20 @@ def setupPatchLoader():
 
 			os.symlink(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sus.sync.plist","/Library/LaunchDaemons/gov.llnl.mp.sus.sync.plist")
 			os.chown(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sus.sync.plist", 0, 0)
-			os.chmod(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sus.sync.plist", 0644)
+			os.chmod(MP_SRV_BASE+"/conf/launchd/gov.llnl.mp.sus.sync.plist", 0o644)
 	else:
 		linuxLoadCronServices('MPPatchLoader')
 
 def setupServices():
 
 	srvsList = []
-	print "You will be asked which services you would like to load"
-	print "on system startup."
-	print ""
+	print("You will be asked which services you would like to load")
+	print("on system startup.")
+	print("")
 
 	# Master or Distribution
 	masterType = True
-	srvType = raw_input('Is this a Master or Distribution server [M/D]?')
+	srvType = input('Is this a Master or Distribution server [M/D]?')
 	if srvType.lower() == "m" or srvType.lower() == "master":
 		masterType = True
 	elif srvType.lower() == "d" or srvType.lower() == "distribution":
@@ -490,8 +490,8 @@ def setupServices():
 
 	# Web Services
 	_WEBSERVICES = 'Y'
-	print ""
-	webService = raw_input('Enable Web Services [%s]' % _WEBSERVICES)
+	print("")
+	webService = input('Enable Web Services [%s]' % _WEBSERVICES)
 	webService = webService or _WEBSERVICES
 	jData = readJSON(MP_CONF_FILE)
 	if webService.lower() == 'y':
@@ -522,8 +522,8 @@ def setupServices():
 	# Web Admin Console
 
 	_ADMINCONSOLE = 'Y' if masterType else 'N'
-	print ""
-	adminConsole = raw_input('Enable Admin Console Application [%s]' % _ADMINCONSOLE)
+	print("")
+	adminConsole = input('Enable Admin Console Application [%s]' % _ADMINCONSOLE)
 	adminConsole = adminConsole or _ADMINCONSOLE
 	jData = readJSON(MP_CONF_FILE)
 	if adminConsole.lower() == 'y':
@@ -549,9 +549,9 @@ def setupServices():
 
 	# Content Sync
 	_CONTENT = 'Y' if masterType else 'N'
-	print ""
-	print "Content sync allows distribution servers to sync from the master server."
-	cRsync = raw_input('Start Content Sync Service (Master Only) [%s]' % _CONTENT)
+	print("")
+	print("Content sync allows distribution servers to sync from the master server.")
+	cRsync = input('Start Content Sync Service (Master Only) [%s]' % _CONTENT)
 	cRsync = cRsync or _CONTENT
 	if cRsync.lower() == 'y':
 		if os_type == 'Darwin':
@@ -564,8 +564,8 @@ def setupServices():
 
 	# Patch Loader
 	_PATCHLOAD = 'Y' if masterType else 'N'
-	print ""
-	patchLoader = raw_input('ASUS Patch Content Loader [%s]' % _PATCHLOAD)
+	print("")
+	patchLoader = input('ASUS Patch Content Loader [%s]' % _PATCHLOAD)
 	patchLoader = patchLoader or _PATCHLOAD
 	if patchLoader.lower() == 'y':
 		setupPatchLoader()
@@ -575,8 +575,8 @@ def setupServices():
 	# Sync From Master
 	if masterType == False:
 		_RSYNC = 'Y'
-		print ""
-		mpRsync = raw_input('Sync Content from Master server (Recommended) [%s]' % _RSYNC)
+		print("")
+		mpRsync = input('Sync Content from Master server (Recommended) [%s]' % _RSYNC)
 		mpRsync = mpRsync or _RSYNC
 		if mpRsync.lower() == 'y':
 			setupRsyncFromMaster()
@@ -603,7 +603,7 @@ def setupServices():
 
 def linkStartupScripts(service,action='enable',altType=None):
 
-	print "Copy Startup Script for "+service
+	print("Copy Startup Script for "+service)
 	useSYSTEMD=False
 
 	if platform.dist()[0] == "Ubuntu" and LooseVersion(platform.dist()[1]) >= LooseVersion("15.0"):
@@ -611,7 +611,7 @@ def linkStartupScripts(service,action='enable',altType=None):
 	elif (platform.dist()[0] == "redhat" or platform.dist()[0] == "centos") and LooseVersion(platform.dist()[1]) >= LooseVersion("7.0"):
 		useSYSTEMD=True
 	else:
-		print "Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported."
+		print("Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported.")
 		return
 
 	if useSYSTEMD == True:
@@ -635,7 +635,7 @@ def linkStartupScripts(service,action='enable',altType=None):
 			link = "/etc/init.d/"+service
 
 			os.chown(script, 0, 0)
-			os.chmod(script, 0755)
+			os.chmod(script, 0o755)
 			os.symlink(script,link)
 
 		os.system("update-rc.d "+service+" defaults")
@@ -656,7 +656,7 @@ class MPDatabase:
 		try:
 			config = read_config_file(MP_FLASK_FILE)
 		except:
-			print "COULD NOT LOAD " + config_file + " using empty config."
+			print("COULD NOT LOAD " + config_file + " using empty config.")
 
 		return config
 
@@ -665,29 +665,28 @@ class MPDatabase:
 		system_name = platform.uname()[1]
 
 		os.system('clear')
-		print "Configure MacPatch Database Info..."
-		mp_db_hostname = raw_input("MacPatch Database Server Hostname:  [" + str(system_name) + "]: ") or str(system_name)
+		print("Configure MacPatch Database Info...")
+		mp_db_hostname = input("MacPatch Database Server Hostname:  [" + str(system_name) + "]: ") or str(system_name)
 		conf["DB_HOST"] = mp_db_hostname
 
-		mp_db_port = raw_input("MacPatch Database Server Port Number [3306]: ") or "3306"
+		mp_db_port = input("MacPatch Database Server Port Number [3306]: ") or "3306"
 		conf["DB_PORT"] = mp_db_port
 
-		mp_db_name = raw_input("MacPatch Database Name [MacPatchDB3]: ") or "MacPatchDB3"
+		mp_db_name = input("MacPatch Database Name [MacPatchDB3]: ") or "MacPatchDB3"
 		conf["DB_NAME"] = mp_db_name
 
-		mp_db_usr = raw_input("MacPatch Database User Name [mpdbadm]: ") or "mpdbadm"
+		mp_db_usr = input("MacPatch Database User Name [mpdbadm]: ") or "mpdbadm"
 		conf["DB_USER"] = mp_db_usr
 
-		#print('MacPatch Database User (' +mp_db_usr+ ') Password')
 		mp_db_pas = getpass.getpass('MacPatch Database User (' +mp_db_usr+ ') Password:')
 		conf["DB_PASS"] = mp_db_pas
 
 		#print('MacPatch Database Read Only User (mpdbro) Password:')
-		mp_db_pas_ro = getpass.getpass('MacPatch Database Read Only User (mpdbro) Password:')
-		conf["DB_USER_RO"] = 'mpdbro'
-		conf["DB_PASS_RO"] = mp_db_pas_ro
+		#mp_db_pas_ro = getpass.getpass('MacPatch Database Read Only User (mpdbro) Password:')
+		#conf["DB_USER_RO"] = 'mpdbro'
+		#conf["DB_PASS_RO"] = mp_db_pas_ro
 
-		save_answer = raw_input("Would you like the save these settings [Y]?:").upper() or "Y"
+		save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
 		if save_answer == "Y":
 			write_config_file(MP_FLASK_FILE, conf)
 		else:
@@ -712,13 +711,13 @@ class MPLdap:
 			config = json.load(fd)
 			fd.close()
 		except:
-			print 'COULD NOT LOAD:', filename
+			print('COULD NOT LOAD:', filename)
 			exit(1)
 
 		return config
 
 	def writeConfig(self, config):
-		print "Writing configuration data to file ..."
+		print("Writing configuration data to file ...")
 		with open(MPLdap.config_file, "w") as outfile:
 			json.dump(config, outfile, indent=4)
 
@@ -726,41 +725,41 @@ class MPLdap:
 		conf = self.loadConfig()
 
 		os.system('clear')
-		print "Configure MacPatch Login Source..."
-		use_ldap = raw_input("Would you like to use Active Directory/LDAP for login? [Y]:").upper() or "Y"
+		print("Configure MacPatch Login Source...")
+		use_ldap = input("Would you like to use Active Directory/LDAP for login? [Y]:").upper() or "Y"
 
 		if use_ldap == "Y":
-			ldap_hostname = raw_input("Active Directory/LDAP server hostname: ")
+			ldap_hostname = input("Active Directory/LDAP server hostname: ")
 			conf["settings"]["ldap"]["server"] = ldap_hostname
 
-			print "Common ports for LDAP non secure is 389, secure is 636."
-			print "Common ports for Active Directory non secure is 3268, secure is 3269"
-			ldap_port = raw_input("Active Directory/LDAP server port number: ")
+			print("Common ports for LDAP non secure is 389, secure is 636.")
+			print("Common ports for Active Directory non secure is 3268, secure is 3269")
+			ldap_port = input("Active Directory/LDAP server port number: ")
 			conf["settings"]["ldap"]["port"] = ldap_port
 
-			use_ldap_ssl = raw_input("Active Directory/LDAP use ssl? [Y]: ").upper() or "Y"
+			use_ldap_ssl = input("Active Directory/LDAP use ssl? [Y]: ").upper() or "Y"
 			if use_ldap_ssl == "Y":
-				print "Please note, you will need to run the addRemoteCert.py script prior to starting the MacPatch Web Admin Console."
+				print("Please note, you will need to run the addRemoteCert.py script prior to starting the MacPatch Web Admin Console.")
 				ldap_ssl = "CFSSL_BASIC"
 				conf["settings"]["ldap"]["secure"] = ldap_ssl
 			else:
 				ldap_ssl = "NONE"
 				conf["settings"]["ldap"]["secure"] = ldap_ssl
 
-			ldap_searchbase = raw_input("Active Directory/LDAP Search Base: ")
+			ldap_searchbase = input("Active Directory/LDAP Search Base: ")
 			conf["settings"]["ldap"]["searchbase"] = ldap_searchbase
 
-			ldap_lgnattr = raw_input("Active Directory/LDAP Login Attribute [userPrincipalName]: ") or "userPrincipalName"
+			ldap_lgnattr = input("Active Directory/LDAP Login Attribute [userPrincipalName]: ") or "userPrincipalName"
 			conf["settings"]["ldap"]["loginAttr"] = ldap_lgnattr
 
-			ldap_lgnpre = raw_input("Active Directory/LDAP Login User Name Prefix [None]: ") or ""
+			ldap_lgnpre = input("Active Directory/LDAP Login User Name Prefix [None]: ") or ""
 			conf["settings"]["ldap"]["loginUsrPrefix"] = ldap_lgnpre
 
-			ldap_lgnsuf = raw_input("Active Directory/LDAP Login User Name Suffix [None]: ") or ""
+			ldap_lgnsuf = input("Active Directory/LDAP Login User Name Suffix [None]: ") or ""
 			conf["settings"]["ldap"]["loginUsrSufix"] = ldap_lgnsuf
 			conf["settings"]["ldap"]["enabled"] = True
 
-			save_answer = raw_input("Would you like the save these settings [Y]?:").upper() or "Y"
+			save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
 			if save_answer == "Y":
 				self.writeConfig(conf)
 			else:
@@ -788,13 +787,13 @@ class MPAdmin:
 			config = json.load(fd)
 			fd.close()
 		except:
-			print 'COULD NOT LOAD:', filename
+			print('COULD NOT LOAD:', filename)
 			exit(1)
 
 		return config
 
 	def writeConfig(self, config):
-		print "Writing configuration data to file ..."
+		print("Writing configuration data to file ...")
 		with open(MPAdmin.config_file, "w") as outfile:
 			json.dump(config, outfile, indent=4)
 
@@ -802,11 +801,11 @@ class MPAdmin:
 		conf = self.loadConfig()
 
 		os.system('clear')
-		print "Set Default Admin name and password..."
+		print("Set Default Admin name and password...")
 
-		set_admin_info = raw_input("Would you like to set the admin name and password [Y]:").upper() or "Y"
+		set_admin_info = input("Would you like to set the admin name and password [Y]:").upper() or "Y"
 		if set_admin_info == "Y":
-			mp_adm_name = raw_input("MacPatch Default Admin Account Name [mpadmin]: ") or "mpadmin"
+			mp_adm_name = input("MacPatch Default Admin Account Name [mpadmin]: ") or "mpadmin"
 			conf["settings"]["users"]["admin"]["name"] = mp_adm_name
 			print("MacPatch MacPatch Default Admin Account Password")
 			mp_adm_pass = passwordEntry()
@@ -814,7 +813,7 @@ class MPAdmin:
 		else:
 			return
 
-		save_answer = raw_input("Would you like the save these settings [Y]?:").upper() or "Y"
+		save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
 		if save_answer == "Y":
 			self.writeConfig(conf)
 		else:
@@ -839,7 +838,7 @@ class MPConfigDefaults:
 			config = json.load(fd)
 			fd.close()
 		except:
-			print 'COULD NOT LOAD:', MPConfigDefaults.config_file
+			print('COULD NOT LOAD:', MPConfigDefaults.config_file)
 			exit(1)
 
 		return config
@@ -851,12 +850,12 @@ class MPConfigDefaults:
 		return private_key, public_key
 
 	def writeConfig(self, config):
-		print "Writing configuration data to file ..."
+		print("Writing configuration data to file ...")
 		with open(MPConfigDefaults.config_file, "w") as outfile:
 			json.dump(config, outfile, indent=4)
 
 	def genConfigDefaults(self):
-		print "Loading initial configuration data ..."
+		print("Loading initial configuration data ...")
 		conf = self.loadConfig()
 
 		# Paths
@@ -870,27 +869,27 @@ class MPConfigDefaults:
 		if not os.path.exists(MP_SRV_KEYS):
 			os.makedirs(MP_SRV_KEYS)
 
-		print "Generating server keys ..."
+		print("Generating server keys ...")
 		pub_key = MP_SRV_KEYS + "/server_pub.pem"
 		pri_key = MP_SRV_KEYS + "/server_pri.pem"
 		if not os.path.exists(pub_key) and not os.path.exists(pri_key):
 			if conf["settings"]["server"]["autoGenServerKeys"]:
 				rsaKeys = self.genServerKeys()
-				with open(pri_key, 'w') as the_pri_file:
+				with open(pri_key, 'wb') as the_pri_file:
 					the_pri_file.write(rsaKeys[0])
-				with open(pub_key, 'w') as the_pub_file:
+				with open(pub_key, 'wb') as the_pub_file:
 					the_pub_file.write(rsaKeys[1])
 				conf["settings"]["server"]["priKey"] = pri_key
 				conf["settings"]["server"]["pubKey"] = pub_key
 		else:
-			print "Server RSA Keys already exist."
+			print("Server RSA Keys already exist.")
 
-		print "Write MPConfigDefaults"
-		print conf["settings"]["server"]
+		print("Write MPConfigDefaults")
+		print(conf["settings"]["server"])
 		self.writeConfig(conf)
 
 	def writeFlaskConfig(self, key, value):
-		if type(value) == types.BooleanType:
+		if type(value) == bool:
 			keyVal = "%s=%s\n" % (key,value)
 		else:
 			keyVal = "%s=\"%s\"\n" % (key,value)
@@ -906,18 +905,18 @@ class MPConfigDefaults:
 	def configAgentRequirements(self):
 
 		os.system('clear')
-		print "Configure Agent Connection Settings..."
-		print ""
-		print ""
-		print "Verify the client id is a valid client id before processing request."
-		verify_clientid = raw_input("Verify Client ID on requests [Y]?:").upper() or "Y"
-		print ""
-		print ""
-		print "Verify client signature on api requests. Client must be registered in order to work."
-		verify_signature = raw_input("Verify request signatures [Y]?:").upper() or "Y"
-		print ""
-		print ""
-		save_answer = raw_input("Would you like the save these settings [Y]?:").upper() or "Y"
+		print("Configure Agent Connection Settings...")
+		print("")
+		print("")
+		print("Verify the client id is a valid client id before processing request.")
+		verify_clientid = input("Verify Client ID on requests [Y]?:").upper() or "Y"
+		print("")
+		print("")
+		print("Verify client signature on api requests. Client must be registered in order to work.")
+		verify_signature = input("Verify request signatures [Y]?:").upper() or "Y"
+		print("")
+		print("")
+		save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
 		if save_answer == "Y":
 			if verify_clientid == "Y":
 				self.writeFlaskConfig('VERIFY_CLIENTID',True)
@@ -995,7 +994,7 @@ def main():
 		os.system('clear')
 		srvList = setupServices()
 
-		print "Write Service List"
+		print("Write Service List")
 		if os_type == 'Darwin':
 			_enabled_services = {"Darwin": {"services": list(srvList)} }
 		else:
@@ -1035,10 +1034,10 @@ def main():
 
 
 def usage():
-	print "Setup.py --setup or --load/--unload [All - Service]\n"
-	print "\t--setup\t\tSetup all services to start on boot and any configuration needed. Will load selected services."
-	print "\t--load\t\tLoads a Service or All services with the key word 'All'"
-	print "\t--unload\tUn-Loads a Service or All services with the key word 'All'\n"
+	print("Setup.py --setup or --load/--unload [All - Service]\n")
+	print("\t--setup\t\tSetup all services to start on boot and any configuration needed. Will load selected services.")
+	print("\t--load\t\tLoads a Service or All services with the key word 'All'")
+	print("\t--unload\tUn-Loads a Service or All services with the key word 'All'\n")
 
 
 if __name__ == '__main__':

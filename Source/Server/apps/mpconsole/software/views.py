@@ -281,7 +281,7 @@ def saveGroupFilter(group_id):
 		else:
 			filter = MpSoftwareGroupFilters.query.filter(MpSoftwareGroupFilters.rid == _form['rid']).first()
 
-	for key, value in _form.iteritems():
+	for key, value in list(_form.items()):
 		if key not in ['rid', 'gid']:
 			setattr(filter, key, value)
 
@@ -382,7 +382,7 @@ def taskSave(id):
 		_isNewTask=True
 		_task = MpSoftwareTask()
 
-	for key, value in _form.iteritems():
+	for key, value in list(_form.items()):
 		setattr(_task, key, value)
 
 	setattr(_task, 'mdate', datetime.now())
@@ -879,14 +879,14 @@ def saveSWPackage():
 
 		for rpre in _reqsPre:
 			qSWRAdd = MpSoftwareRequisits()
-			for k, v in rpre.items():
+			for k, v in list(rpre.items()):
 				setattr(qSWRAdd, k, v)
 
 			db.session.add(qSWRAdd)
 
 		for rpst in _reqsPost:
 			qSWRAdd = MpSoftwareRequisits()
-			for k, v in rpst.items():
+			for k, v in list(rpst.items()):
 				setattr(qSWRAdd, k, v)
 
 			db.session.add(qSWRAdd)
@@ -1052,7 +1052,12 @@ def deleteSWPackage(id):
 -------------------------------------------------
 '''
 def getDoc(col_obj):
-	return col_obj.doc
+	print(col_obj.name)
+	print(col_obj.doc)
+	if col_obj.doc is None:
+		return 0
+	else:
+		return col_obj.doc
 
 def isOwnerOfSWGroup(id):
 

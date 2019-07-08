@@ -29,11 +29,11 @@ class SWObj(object):
 
 						setattr(self, k, _val)
 
-			print self.__dict__
+			print(self.__dict__)
 
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			print('[Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
+			print(('[Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message)))
 
 
 

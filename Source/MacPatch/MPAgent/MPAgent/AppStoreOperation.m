@@ -40,15 +40,13 @@
 
 @implementation AppStoreOperation
 
-@synthesize isExecuting;
-@synthesize isFinished;
-
 - (id)init
 {
-    if ((self = [super init]))
+	self = [super init];
+    if (self)
     {
-        isExecuting = NO;
-        isFinished  = NO;
+        self.isExecuting = NO;
+        self.isFinished  = NO;
         settings    = [MPSettings sharedInstance];
         fm          = [NSFileManager defaultManager];
     }
@@ -70,8 +68,8 @@
 {
     [self willChangeValueForKey:@"isFinished"];
     [self willChangeValueForKey:@"isExecuting"];
-    isExecuting = NO;
-    isFinished = YES;
+    self.isExecuting = NO;
+    self.isFinished = YES;
     [self didChangeValueForKey:@"isExecuting"];
     [self didChangeValueForKey:@"isFinished"];
 }
@@ -80,12 +78,12 @@
 {
     if ([self isCancelled]) {
         [self willChangeValueForKey:@"isFinished"];
-        isFinished = YES;
+        self.isFinished = YES;
         [self didChangeValueForKey:@"isFinished"];
     } else {
         [self willChangeValueForKey:@"isExecuting"];
         [self performSelectorInBackground:@selector(main) withObject:nil];
-        isExecuting = YES;
+        self.isExecuting = YES;
         [self didChangeValueForKey:@"isExecuting"];
     }
 }

@@ -1,0 +1,107 @@
+#!/bin/bash
+
+# ***************************************************************************************
+# PreFlight Script for MacPatch Client Installer
+# ver 2.0
+# Created By Charles Heizer
+# LLNL
+#
+#
+# ***************************************************************************************
+
+systemVersion=`/usr/bin/sw_vers -productVersion`
+majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
+minorVer=`echo $systemVersion | cut -d . -f 2`
+buildVer=`echo $systemVersion | cut -d . -f 3`
+
+# Script Parent Dir Path
+SRC="$(dirname "$0")"
+
+# Current logged in User ID
+# consoleUserID at login window is 0
+consoleUserID=$(stat -f%u /dev/console)
+
+# ***************************************************************************************
+# Kill the running MP processes
+
+# Launch Agents
+if [ -f "/Library/LaunchAgents/gov.llnl.mp.status.plist" ]; then
+	if [ "$consoleUserID" != "0" ]; then
+    /bin/launchctl bootout gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
+	fi
+
+	rm -f /Library/LaunchAgents/gov.llnl.mp.status.plist
+fi
+
+# Launch Daemons
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" ]; then
+	/bin/launchctl remove gov.llnl.mp.helper
+	sleep 2
+	/bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+	sleep 2
+
+	rm -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+	rm -f /Library/Logs/gov.llnl.mp.helper.log
+fi
+
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.agent.plist" ]; then
+    /bin/launchctl remove gov.llnl.mp.agent
+    sleep 2
+    /bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+    sleep 2
+
+    rm -f /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+fi
+
+
+# ***************************************************************************************
+# MacPatch Pre-Deployment
+#
+
+if [ -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper" ]; then
+	rm -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper"
+fi
+
+if [ -d "/Library/MacPatch/Client/MacPatch.app" ]; then
+	rm -rf "/Library/MacPatch/Client/MacPatch.app"
+fi
+
+if [ -d "/Applications/MacPatch.app" ]; then
+	rm -rf "/Applications/MacPatch.app"
+fi
+
+if [ -d "/Library/MacPatch/Client/MPCatalog.app" ]; then
+	rm -rf "/Library/MacPatch/Client/MPCatalog.app"
+fi
+
+if [ -d "/Library/MacPatch/Client/Self Patch.app" ]; then
+	rm -rf "/Library/MacPatch/Client/Self Patch.app"
+fi
+
+if [ -f "/Library/MacPatch/Client/MPAgentExec" ]; then
+	rm -f "/Library/MacPatch/Client/MPAgentExec"
+fi
+
+if [ -f "/Library/MacPatch/Client/MPWorker" ]; then
+	rm -f "/Library/MacPatch/Client/MPWorker"
+fi
+
+if [ -f "/Library/MacPatch/Client/MPAgent" ]; then
+	rm -f "/Library/MacPatch/Client/MPAgent"
+fi
+
+if [ -d "/Library/Application Support/MacPatch/SW_Data" ]; then
+	rm -rf "/Library/Application Support/MacPatch/SW_Data/*"
+fi
+
+rm -rf "/Library/MacPatch/Client/Logs"
+rm -rf "/Library/MacPatch/Client/Lib"
+rm -rf "/Library/MacPatch/Client/Data"
+rm -rf "/Library/MacPatch/Client/Tools"
+
+# ***************************************************************************************
+# Clear Softwareupdate catalog url, prevents incorrect url's from being maintained.
+#
+/usr/sbin/softwareupdate --clear-catalog
+
+exit 0

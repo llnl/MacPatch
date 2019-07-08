@@ -1,0 +1,7 @@
+MPClient Status
+- Software Restrictions
+	- Prefs /Library/Preferences/gov.llnl.MPClientStatus.plist
+		- key = denyHelpStringMessage (This will append a help message to the message string)
+	- Rules
+		- Deny only, allow in source but not configured
+		

@@ -35,6 +35,7 @@
 # 3.1.0     Updates to remove tomcat and use new console
 # 3.1.1     All of MP now uses a virtualenv
 # 3.2.0     Replaced bower with yarn for javascript package management
+# 3.3.0     Add python 3 support
 #
 #
 # ----------------------------------------------------------------------------
@@ -313,25 +314,25 @@ mkdirP ${MPSERVERBASE}/logs
 # Copy compiled files
 # ------------------
 if $USEMACOS; then
-	echo
-	echo "* Uncompress source files needed for build"
-	echo "-----------------------------------------------------------------------"
+	#echo
+	#echo "* Uncompress source files needed for build"
+	#echo "-----------------------------------------------------------------------"
 
 	# Copy Agent Uploader
 	cp ${MPSERVERBASE}/conf/Content/Web/tools/MPAgentUploader.zip ${MPBASE}/Content/Web/tools/
 
-	PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | head -n 1`
-	OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | head -n 1`
+	#PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | head -n 1`
+	#OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | head -n 1`
 
 	# PCRE
-	echo " - Uncompress ${PCRE_SW}"
-	mkdir -p ${TMP_DIR}/pcre
-	tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${TMP_DIR}/pcre
+	#echo " - Uncompress ${PCRE_SW}"
+	#mkdir -p ${TMP_DIR}/pcre
+	#tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${TMP_DIR}/pcre
 
 	# OpenSSL
-	echo " - Uncompress ${OSSL_SW}"
-	mkdir -p ${TMP_DIR}/openssl
-	tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${TMP_DIR}/openssl
+	#echo " - Uncompress ${OSSL_SW}"
+	#mkdir -p ${TMP_DIR}/openssl
+	#tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${TMP_DIR}/openssl
 
 	# BREW Software Check
 	XOPENSSL=false
@@ -387,7 +388,7 @@ if $USELINUX; then
 		# Add the Yarn repo
 		curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
 		# Check if needed packges are installed or install
-		pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python-devel" "python-setuptools" "python-wheel" "python-pip" "swig" "yarn")
+        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python36" "python36-devel" "python36-setuptools" "python36-pip" "swig" "yarn")
 		for i in "${pkgs[@]}"
 		do
 			p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
@@ -423,85 +424,7 @@ fi
 # ------------------
 # Upgrade Python Modules/Binaries
 # ------------------
-echo
-echo "* Upgrade/Install required python tools."
-echo "-----------------------------------------------------------------------"
-HAVEPIP=`which pip`
-if [ $? != 0 ] ; then
-	easy_install --quiet pip
-fi
 
-if ! command_exists virtualenv ; then
-	pip install virtualenv
-fi
-
-if command_exists virtualenv ; then
-	VENV_VER=`virtualenv --version`
-	echo "virtualenv version $VENV_VER"
-	if [ $(ver $VENV_VER) -lt $(ver "15.0.0") ]; then
-		echo "virtualenv is an older version."
-		echo "Install and setup of the virtual environment may not succeed."
-		read -p "Would you like to continue (Y/N)? [Y]: " VENVOK
-		VENVOK=${VENVOK:-Y}
-		if [ "$VENVOK" == "Y" ] || [ "$VENVOK" == "y" ] ; then
-			echo
-		else
-			exit 1
-		fi
-	fi
-
-	virtualenv --no-site-packages ${MPSERVERBASE}/venv
-	source ${MPSERVERBASE}/venv/bin/activate
-
-	pip_mods=( "pycrypto" "argparse" "biplist" "python-dateutil" "requests" "six" "wheel" "mysql-connector-python-rf" )
-	pip_mods_lnx=( "python-crontab" )
-
-	# Install all common python modules
-	for p in "${pip_mods[@]}"
-	do
-		echo " - Installing ${p}, python module."
-		pip install --quiet --upgrade ${p}
-		if [ $? != 0 ] ; then
-			echo " Error installing ${p}"
-			sleep 2
-			echo
-			echo " - Trying ${p}, python module again."
-			pip install --quiet --upgrade ${p}
-			if [ $? != 0 ] ; then
-				echo " Error installing ${p}"
-			fi
-		fi
-	done
-
-	# Install linux only python modules
-	if $USELINUX; then
-		for p in "${pip_mods_lnx[@]}"
-		do
-			echo " - Installing ${p}, python module."
-			pip install --quiet --upgrade ${p}
-			if [ $? != 0 ] ; then
-				echo " Error installing ${p}"
-				sleep 2
-				echo
-				echo " - Trying ${p}, python module again."
-				pip install --quiet --upgrade ${p}
-				if [ $? != 0 ] ; then
-					echo " Error installing ${p}"
-				fi
-			fi
-		done
-	fi
-
-	deactivate
-else
-	echo "virtualenv was not found. Please create virtual env after"
-	echo "build script has completed."
-	echo
-	echo "% cd $MPSERVERBASE"
-	echo "% virtualenv venv"
-	echo
-	sleep 5
-fi
 
 
 # ------------------
@@ -520,18 +443,30 @@ cd ${BUILDROOT}/nginx
 
 if $USELINUX; then
 	./configure --prefix=${MPSERVERBASE}/nginx \
+    --without-http_autoindex_module \
 	--with-http_ssl_module \
 	--with-pcre \
 	--user=www-data \
 	--group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 else
+    # Now using brew installed openssl and pcre
+    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
 	export KERNEL_BITS=64
-	./configure --prefix=${MPSERVERBASE}/nginx \
-	--without-http_autoindex_module \
-	--without-http_ssi_module \
-	--with-http_ssl_module \
-	--with-openssl=${TMP_DIR}/openssl \
-	--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+    ./configure --prefix=${MPSERVERBASE}/nginx \
+    --with-cc-opt="-I${OPENSSLPWD}/include" \
+    --with-ld-opt="-L${OPENSSLPWD}/lib" \
+    --without-http_autoindex_module \
+    --without-http_ssi_module \
+    --with-http_ssl_module \
+    --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+	
+    # Old
+    #./configure --prefix=${MPSERVERBASE}/nginx \
+	#--without-http_autoindex_module \
+	#--without-http_ssi_module \
+	#-with-http_ssl_module \
+	#--with-openssl=${TMP_DIR}/openssl \
+	#--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
@@ -626,60 +561,94 @@ echo
 echo "* Create Virtualenv for Web services app"
 echo "-----------------------------------------------------------------------"
 
-cd "${MPSERVERBASE}/apps"
 mkdir -p "${MPSERVERBASE}/apps/log"
 chown $OWNERGRP "${MPSERVERBASE}/apps/log"
 chmod 2777 "${MPSERVERBASE}/apps/log"
 
-if command_exists virtualenv ; then
-	VENV_VER=`virtualenv --version`
-	echo "virtualenv version $VENV_VER"
-	if [ $(ver $VENV_VER) -lt $(ver "15.0.0") ]; then
-		echo "virtualenv is an older version."
-		echo "Install and setup of the virtual environment may not succeed."
-		read -p "Would you like to continue (Y/N)? [Y]: " VENVOK
-		VENVOK=${VENVOK:-Y}
-		if [ "$VENVOK" == "Y" ] || [ "$VENVOK" == "y" ] ; then
-			echo
-		else
-			exit 1
-		fi
-	fi
+cd "${MPSERVERBASE}"
+python3 -m venv env/server
+python3 -m venv env/api
+python3 -m venv env/console
 
-	virtualenv --no-site-packages env
-	source env/bin/activate
-
-	CA_STR=""
-	if [ "$CA_CERT" != "NA" ]; then
-		CA_STR="--cert \"$CA_CERT\""
-	fi
-
-	if $USEMACOS; then
-		# Install M2Crypto first
-		OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
-		env LDFLAGS="-L${OPENSSLPWD}/lib" \
-		CFLAGS="-I${OPENSSLPWD}/include" \
-		SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-
-		env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r pyRequired.txt $CA_STR
-	else
-		# Install M2Crypto first
-		pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-		pip -q install -r pyRequired.txt $CA_STR
-	fi
-
-	deactivate
-else
-	echo "virtualenv was not found. Please create virtual env."
-	echo
-	echo "% cd $MPSERVERBASE/apps"
-	echo "% virtualenv --no-site-packages --no-pip env"
-	echo "% source env/bin/activate"
-	echo "% pip -q install -r pyRequired.txt"
-	echo "% deactivate"
-	echo
+CA_STR=""
+if [ "$CA_CERT" != "NA" ]; then
+	CA_STR="--cert \"$CA_CERT\""
 fi
+
+cd "${MPSERVERBASE}/apps"
+if $USEMACOS; then
+	OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+	
+	# Server venv
+    echo "Creating server scripts virtual env..."
+	source ${MPSERVERBASE}/env/server/bin/activate
+    pip -q install --upgrade pip
+    pip -q install pycrypto
+	pip -q install requests
+	pip -q install mysql-connector-python
+	
+	env LDFLAGS="-L${OPENSSLPWD}/lib" \
+	CFLAGS="-I${OPENSSLPWD}/include" \
+	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    deactivate
+
+	# API venv
+    echo "Creating api virtual env..."
+    source ${MPSERVERBASE}/env/api/bin/activate
+    pip -q install --upgrade pip
+
+	 # Install M2Crypto first
+	env LDFLAGS="-L${OPENSSLPWD}/lib" \
+	CFLAGS="-I${OPENSSLPWD}/include" \
+	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    deactivate
+
+    # Console venv
+    echo "Creating console virtual env..."
+	source ${MPSERVERBASE}/env/console/bin/activate
+    pip -q install --upgrade pip
+
+    # Install M2Crypto first
+    env LDFLAGS="-L${OPENSSLPWD}/lib" \
+    CFLAGS="-I${OPENSSLPWD}/include" \
+    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    deactivate
+
+else
+    echo "Creating server scripts virtual env..."
+    source ${MPSERVERBASE}/env/server/bin/activate
+    pip -q install --upgrade pip
+    pip -q install pycrypto
+	pip -q install python-crontab
+	pip -q install requests
+	pip -q install mysql-connector-python
+	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    deactivate
+
+    echo "Creating api virtual env..."
+    source ${MPSERVERBASE}/env/api/bin/activate
+    pip -q install --upgrade pip
+	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+	pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    deactivate
+
+    echo "Creating console virtual env..."
+    source ${MPSERVERBASE}/env/console/bin/activate
+    pip -q install --upgrade pip
+    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    deactivate
+fi
+
 
 # ------------------
 # Clean up structure place holders
@@ -700,7 +669,7 @@ chown -R $OWNERGRP "${MPBASE}/Content"
 chmod -R 0775 "${MPSERVERBASE}/logs"
 chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
-chown -R $OWNERGRP "${MPSERVERBASE}/apps/env"
+chown -R $OWNERGRP "${MPSERVERBASE}/env"
 
 echo
 echo

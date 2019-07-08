@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:MacPatch/MacPatch.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:MPClientStatus/MPClientStatus.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:MPLoginAgent/MPLoginAgent.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:gov.llnl.mp.helper/gov.llnl.mp.helper.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:MPAgent/MPAgent.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:MPUpdater/MPUpdater.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:MPLibrary/MPLibrary.xcodeproj">
+   </FileRef>
+</Workspace>

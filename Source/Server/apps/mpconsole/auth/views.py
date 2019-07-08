@@ -1,5 +1,6 @@
 from flask import render_template, flash, redirect, url_for, request, session
 from flask_login import login_user, logout_user
+from werkzeug.exceptions import HTTPException
 
 from ldap3 import Server, Connection, ALL, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES
 
@@ -270,3 +271,11 @@ def logout():
 	logout_user()
 	session.clear()
 	return redirect(url_for('main.index'))
+
+@auth.errorhandler(Exception)
+def handle_error(e):
+	code = 500
+	if isinstance(e, HTTPException):
+		code = e.code
+
+	return render_template('error.html', error=code, message=str(e))

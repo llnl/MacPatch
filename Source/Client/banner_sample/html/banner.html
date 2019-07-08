@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title></title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=1040,user-scalable=no" />
+		<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+		<script src="bootstrap-table/jquery.min.js"></script>
+		<script src="bootstrap/js/bootstrap.min.js"></script>
+		<style>
+			/* Account for fixed navbar */
+			html, body {
+				height:100%;
+				/* background-image: url("html/images/MPBannerBackground.png"); */
+				overflow-y: hidden; // hide vertical scroll
+				overflow-x: hidden; // hide horizontal scroll
+			}
+		
+			body {
+				background-repeat: no-repeat;
+				background: abb7c7;
+				background: -webkit-linear-gradient(top, #fff 50px, #abb7c7 99%);
+			}
+		
+		
+			/* Non-responsive overrides
+			 *
+			 * Utilitze the following CSS to disable the responsive-ness of the container,
+			 * grid system, and navbar.
+			 * height:178px;
+			 */
+			
+			/* Reset the container */
+			.container {
+				/*width: 1040px;*/
+				width: 100%;
+				max-width: none !important;
+			}
+			
+			.carousel-inner,.carousel,.item,.container,.fill {
+				height:120px;
+				width:100%;
+				/* width:1000px; */
+				background-position:center center;
+			}
+			
+			#centerContainer {
+				padding-left: 20px;
+				padding-right: 20px;
+				text-align: center;
+			}
+		
+			#imgContainer {
+				align-items: center; /* for vertical align */
+				/* background: red; for testing*/
+				display: flex;
+				height: 120px;
+				line-height: 120px;
+				justify-content: center;
+			}
+			
+			table {
+				height: 120px;
+				width:100%;
+			}
+			
+			h1 {
+				color: #555960;
+				text-shadow: 2px 2px #fff;
+			}
+		
+			.col-1 {width: 8.33%;}
+			.col-2 {width: 16.66%;}
+			.col-3 {width: 25%;}
+			.col-4 {width: 33.33%;}
+			.col-5 {width: 41.66%;}
+			.col-6 {width: 50%;}
+			.col-7 {width: 58.33%;}
+			.col-8 {width: 66.66%;}
+			.col-9 {width: 75%;}
+			.col-10 {width: 83.33%;}
+			.col-11 {width: 91.66%;}
+			.col-12 {width: 100%;}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<div id="myCarousel" class="carousel slide" data-ride="carousel">
+				<!-- Wrapper for slides -->
+				<div class="carousel-inner">
+					<div class="item active">
+						<table>
+							<tr>
+								<td class="col-2">
+									<div id="imgContainer">
+										<a href="https://macpatch.llnl.gov"><img src="images/macpatch_logo.png"></a>
+									</div>
+								</td>
+								<td class="col-7">
+									<div id="centerContainer">
+										<h1>Managed Software</h1>
+									</div>
+								</td>
+								<td class="col-3">
+									Questions or help?  <br>
+									Visit <a href="https://helpdesk.example.com">https://helpdesk.example.com</a>’
+								</td>
+							</tr>
+						</table>
+					</div>
+					<!-- If you want a rotating banner -->
+					<!--
+					<div class="item">
+						<div class="container-fluid">
+							Next item
+						</div>
+					</div>
+					-->
+				</div>
+			</div>
+		</div>
+	</body>
+</html>

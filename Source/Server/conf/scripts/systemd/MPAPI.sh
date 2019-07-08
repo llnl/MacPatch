@@ -30,14 +30,14 @@
 
 RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
-WS_HOME="${MP_HOME}/apps"
+ENV_HOME="${MP_HOME}/env/api"
 
 case "$1" in
  start)
 	echo $"Starting MacPatch REST Services"
-	cd $WS_HOME
-	source $WS_HOME/env/bin/activate
-	$WS_HOME/mpapi.py gunicorn --daemon &
+	cd $ENV_HOME
+	source $ENV_HOME/bin/activate
+	$MP_HOME/apps/mpapi.py gunicorn --daemon &
 	;;
  stop)
 	echo $"Stopping MacPatch REST Services"

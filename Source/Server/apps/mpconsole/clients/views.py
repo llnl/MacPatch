@@ -69,14 +69,16 @@ def clientsListJSON():
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
 
-
-	return json.dumps({'data': _results}, default=json_serial), 200
+	#_mes = [{'id':1,'name':'bob','price':'125'},{'id':2,'name':'bot','price':'126'}]
+	#return json.dumps(_mes, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
+	#return json.dumps({'data': _results}, default=json_serial), 200
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):
 	if group is None:
 		return "NA"
-	res = (item for item in list if item["group_id"] == group).next()
+	res = next((item for item in list if item["group_id"] == group))
 	if res['group_name']:
 		return res['group_name']
 	else:
@@ -189,7 +191,7 @@ def clientInventoryReport(client_id, inv_id):
 
 	for v in _q_result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			if column != "cdate" or column != "rid" or column != "cuuid":
 				if column == "mdate":
 					_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
@@ -198,7 +200,7 @@ def clientInventoryReport(client_id, inv_id):
 
 		_results.append(_row)
 
-	for column in _q_result.keys():
+	for column in list(_q_result.keys()):
 		if column != "cdate" and column != "rid" and column != "cuuid":
 			_col = {}
 			_col['field'] = column
@@ -243,7 +245,7 @@ def clientGroups():
 	_results = []
 	for v in result:
 		_row = {}
-		for column, value in v.items():
+		for column, value in list(v.items()):
 			_row[column] = value
 
 		_results.append(_row)
@@ -398,8 +400,6 @@ def clientGroup(name,tab=1):
 
 		# Get All Client IDs in with in our group
 		_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == name).with_entities(MpClientGroups.group_name).first()
-		_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).with_entities(MpClientGroupMembers.cuuid).all()
-		_cuuids = [r for r, in _res]
 
 		# Get All Client Group Admins
 		_admins = []
@@ -413,36 +413,6 @@ def clientGroup(name,tab=1):
 		_admins.append({'user_id':_owner.group_owner,'owner': 'True'})
 		_admins = sorted(_admins, key=itemgetter('owner'), reverse=True)
 
-		# Run Query of all clients that contain the Client ID
-		# sql = text("""select * From mp_clients;""")
-		sql = text("""select c. *, mpa_distinguishedName as ADDN,
-					  SUBSTRING_INDEX(mpa_distinguishedName,",",-4) as ADOU,
-					  mpa_HasSLAM as SLAM
-					  from mp_clients c Left Join mpi_DirectoryServices d
-					  ON c.cuuid = d.cuuid""")
-		_q_result = db.engine.execute(sql)
-
-		_results = []
-		for v in _q_result:
-			if v.cuuid in _cuuids:
-				_row = {}
-				for column, value in v.items():
-					if column != "cdate":
-						if column == "mdate":
-							_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
-							_row['clientState'] = clientStatusFromDate(value)
-						else:
-							_row[column] = value
-
-				for key in _row.keys():
-					if not isinstance(_row[key], (long, int)):
-						if _row[key]:
-							_row[key] = _row[key].replace('\n', '')
-						else:
-							_row[key] = ''
-
-				_results.append(_row)
-
 		_sortedCols = []
 		for x in sortedCols:
 			_sortedCols.append({'name':x.name, 'info':x.info})
@@ -455,7 +425,7 @@ def clientGroup(name,tab=1):
 		_qTasksCols = MpClientTasks.__table__.columns
 
 		# Data in one dict
-		groupResult['Clients'] = {'data': _results, 'columns': _sortedCols}
+		groupResult['Clients'] = {'data': [], 'columns': _sortedCols} # Data comes from ajax request
 		groupResult['Group'] = {'name': _qcg.group_name, 'id':name}
 		groupResult['Software'] = {'catalogs':softwareCatalogs()}  # Used to populate UI for setting
 		groupResult['Patches'] = {'groups': patchGroups()}  # Used to populate UI for setting
@@ -469,11 +439,12 @@ def clientGroup(name,tab=1):
 						('description', 'Description', '1'), ('enabled', 'Enabled', '1')]
 
 		swCols = [('rid', 'rid', '0'),('name', 'Name', '1'),('tuuid', 'Software Task ID', '1')]
+		swResCols = [('appID', 'App ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'), ('enabled', 'Enabled', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
-		return render_template('client_group.html', data=_results, columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
+		return render_template('client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
-							profileCols=profileCols, swCols=swCols, swData=[], provCols=provCols, provData=[],
+							profileCols=profileCols, swCols=swCols, swResCols=swResCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
 
 '''
@@ -481,31 +452,43 @@ def clientGroup(name,tab=1):
 	Groups - > Clients
 ********************************
 '''
-# Not working yet, will add in future, right now clients
-# list is gathered durning clientGroup request
-@clients.route('/group/<name>/clients')
-def clientGroupClients(name):
 
+@clients.route('/group/<group_id>/clients')
+def clientGroupClients(group_id):
 	# Get All Client IDs in with in our group
-	_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).with_entities(MpClientGroupMembers.cuuid).all()
+	_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).with_entities(MpClientGroups.group_name).first()
+	_res = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == group_id).with_entities(MpClientGroupMembers.cuuid).all()
 	_cuuids = [r for r, in _res]
 
 	# Run Query of all clients that contain the Client ID
-	sql = text("""select * From mp_clients Where cuuid in ('""" + '\',\''.join(_cuuids) + """')""")
+	# sql = text("""select * From mp_clients;""")
+	sql = text("""select c. *, mpa_distinguishedName as ADDN,
+				  SUBSTRING_INDEX(mpa_distinguishedName,",",-4) as ADOU,
+				  mpa_HasSLAM as SLAM
+				  from mp_clients c Left Join mpi_DirectoryServices d
+				  ON c.cuuid = d.cuuid""")
 	_q_result = db.engine.execute(sql)
 
 	_results = []
 	for v in _q_result:
-		_row = {}
-		for column, value in v.items():
-			if column != "cdate":
-				if column == "mdate":
-					_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
-					_row['clientState'] = clientStatusFromDate(value)
-				else:
-					_row[column] = value
+		if v.cuuid in _cuuids:
+			_row = {}
+			for column, value in list(v.items()):
+				if column != "cdate":
+					if column == "mdate":
+						_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
+						_row['clientState'] = clientStatusFromDate(value)
+					else:
+						_row[column] = value
 
-		_results.append(_row)
+			for key in list(_row.keys()):
+				if not isinstance(_row[key], int):
+					if _row[key]:
+						_row[key] = _row[key].replace('\n', '')
+					else:
+						_row[key] = ''
+
+			_results.append(_row)
 
 	jResult = json.dumps(_results)
 	return jResult, 200
@@ -632,7 +615,7 @@ def groupDefaultSettings(id):
 		setattr(cfg, 'rev_tasks', 1)
 		db.session.add(cfg)
 
-	for key, value in form.iteritems():
+	for key, value in list(form.items()):
 		mpc = MpClientSettings()
 		setattr(mpc, 'group_id', id)
 		setattr(mpc, 'key', key)
@@ -725,7 +708,7 @@ def addMissingTasks(group_id, fileTasks, new_task_version):
 		if task['cmd'] not in _cmds:
 			_task = MpClientTasks()
 			setattr(_task, 'group_id', group_id)
-			for key in task.keys():
+			for key in list(task.keys()):
 				setattr(_task, key, task[key])
 
 			db.session.add(_task)
@@ -799,7 +782,6 @@ def groupSoftware(group_id):
 					_results.append(_row)
 					break
 
-	print _results
 	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
 @clients.route('/group/<id>/sw/add',methods=['GET','POST'])
@@ -840,6 +822,56 @@ def clientGroupSWDel(id):
 
 	return json.dumps({}), 200
 
+@clients.route('/group/<id>/sw/res/add',methods=['GET','POST'])
+@login_required
+def clientGroupSWResAdd(id):
+	if request.method == 'GET':
+		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
+		return render_template('client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
+
+	elif request.method == 'POST':
+		_form = request.form
+		print(_form)
+		_groupID = request.form.get('group_id')
+		_appID = request.form.get('appID')
+		allSW = MpClientGroupSoftwareRestrictions.query.all()
+
+		hasSW = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == _groupID, MpClientGroupSoftwareRestrictions.appID == _appID).first()
+		if hasSW is None:
+			swRes = MpClientGroupSoftwareRestrictions()
+			setattr(swRes, 'group_id', _groupID)
+			setattr(swRes, 'appID', _appID)
+			setattr(swRes, 'enabled', '1')
+			db.session.add(swRes)
+			db.session.commit()
+
+		return redirect(url_for('.clientGroup',name=id,tab=5))
+
+@clients.route('/group/<id>/sw/res/enable',methods=['POST'])
+@login_required
+def clientGroupSWResEnable(id):
+
+	if isOwnerOfGroup(id) or isAdminForGroup(id):
+		_form = request.form
+		key = _form.get('pk')
+		value = _form.get('value')
+		log("{} set software restriction {} enabled state to {} ".format(session.get('user'), key, value))
+
+		swRes = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == id,
+															   MpClientGroupSoftwareRestrictions.appID == key).first()
+		if swRes is not None:
+			setattr(swRes, 'enabled', value)
+			db.session.commit()
+			revGroupSWRes(id)
+
+	return clientGroup(id)
+
+def revGroupSWRes(group_id):
+	grp_conf = MPGroupConfig.query.filter(MPGroupConfig.group_id == group_id).first()
+	if grp_conf is not None:
+		rev_swres = grp_conf.restrictions_version + 1
+		setattr(grp_conf, "restrictions_version", rev_swres)
+		db.session.commit()
 
 '''
 ********************************

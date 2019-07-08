@@ -25,7 +25,6 @@
  */
 
 #import "AppDelegate.h"
-#import "ScanAndPatchVC.h"
 #import "MinScanAndPatchVC.h"
 
 @interface AppDelegate () <NSApplicationDelegate>
@@ -52,26 +51,13 @@
     
     [[self panel] setBackgroundColor:[NSColor darkGrayColor]];
     
-    
-    if ([[NSUserDefaults standardUserDefaults] boolForKey:@"MinView"]) {
-        
-        // Center the custon view controller
-        [self.minScanAndPatchVC.view setFrameOrigin:NSMakePoint(
-                                                             (NSWidth([self.panel.contentView bounds]) - NSWidth([self.minScanAndPatchVC.view frame])) / 2,
-                                                             (NSHeight([self.panel.contentView bounds]) - NSHeight([self.minScanAndPatchVC.view frame])) / 1.6
-                                                             )];
-        self.minScanAndPatchVC.view.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
-        [self.panel.contentView addSubview:self.minScanAndPatchVC.view];
-        
-    } else {
-        // Center the custon view controller
-        [self.scanAndPatchVC.view setFrameOrigin:NSMakePoint(
-                                            (NSWidth([self.panel.contentView bounds]) - NSWidth([self.scanAndPatchVC.view frame])) / 2,
-                                            (NSHeight([self.panel.contentView bounds]) - NSHeight([self.scanAndPatchVC.view frame])) / 1.6
-                                            )];
-        self.scanAndPatchVC.view.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
-        [self.panel.contentView addSubview:self.scanAndPatchVC.view];
-    }
+	// Center the custon view controller
+	[self.minScanAndPatchVC.view setFrameOrigin:NSMakePoint(
+														 (NSWidth([self.panel.contentView bounds]) - NSWidth([self.minScanAndPatchVC.view frame])) / 2,
+														 (NSHeight([self.panel.contentView bounds]) - NSHeight([self.minScanAndPatchVC.view frame])) / 1.6
+														 )];
+	self.minScanAndPatchVC.view.autoresizingMask = NSViewMinXMargin | NSViewMaxXMargin | NSViewMinYMargin | NSViewMaxYMargin;
+	[self.panel.contentView addSubview:self.minScanAndPatchVC.view];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification

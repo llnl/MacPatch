@@ -172,7 +172,7 @@ def getRevisonForConfig(configID):
 			reslst.append(i.akeyValue.lower())
 
 		reslststr = "".join(reslst)
-		configHash = hashlib.md5(reslststr).hexdigest()
+		configHash = hashlib.md5(str(reslststr).encode('utf-8')).hexdigest()
 
 		return configHash
 	else:
@@ -318,7 +318,7 @@ def addDefaultTasksToClientGroup():
 		for t in tasks:
 			_task = MpClientTasks()
 			setattr(_task, 'group_id', gid)
-			for key, value in t.iteritems():
+			for key, value in t.items():
 				setattr(_task, key, value)
 			db.session.add(_task)
 
@@ -384,7 +384,7 @@ def addDefaultSettingsClientGroup():
 			'patch_state':'Production',
 			'pre_stage_patches':'1'}
 
-	for key, value in form.iteritems():
+	for key, value in form.items():
 		mpcs = MpClientSettings()
 		setattr(mpcs, 'group_id', groupID)
 		setattr(mpcs, 'key', key)

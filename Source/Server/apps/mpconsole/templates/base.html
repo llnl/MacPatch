@@ -153,11 +153,12 @@
 								<li>
 									<a href="{{ url_for('osmanage.profiles') }}"><i class="fa fa-list fa-fw"></i> Profiles</a>
 								</li>
+                                <li>
+									<a href="{{ url_for('osmanage.appFilters') }}"><i class="fa fa-list fa-fw"></i>Software Restrictions</a>
+								</li>
 								{% if session.role[0] == 1 %}
 								<!--
-								<li>
-									<a href="{{ url_for('osmanage.appFilters') }}"><i class="fa fa-list fa-fw"></i> .app Access</a>
-								</li>
+
 								<li>
 									<a href="#"><i class="fa fa-database fa-fw"></i> Security Configuration<span class="fa arrow"></span></a>
 									<ul class="nav nav-third-level">

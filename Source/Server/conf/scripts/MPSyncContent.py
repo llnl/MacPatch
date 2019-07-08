@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.0.1
+	Version: 1.1.0
 '''
 
 import datetime
@@ -37,7 +37,7 @@ import sys
 import subprocess
 import hashlib
 import platform
-import commands
+import subprocess
 import json
 
 
@@ -68,9 +68,9 @@ system_name = platform.uname()[1]
 def script_is_running():
 	script_name = os.path.basename(__file__)
 	cmd = "ps aux | grep -e '%s' | grep -v grep | awk '{print $2}'| awk '{print $2}'" % script_name
-	l = commands.getstatusoutput(cmd)
+	l = subprocess.getstatusoutput(cmd)
 	if l[1]:
-		print "Error, script is already running. Now exiting script."
+		print("Error, script is already running. Now exiting script.")
 		logger.error("Error, script is already running. Now exiting script.")
 		sys.exit(0);
 
@@ -78,7 +78,7 @@ def readJSONFile(filename):
 	returndata = {}
 
 	if not os.path.exists(filename):
-		print "Unable to open " + filename +". File not found."
+		print("Unable to open " + filename +". File not found.")
 		sys.exit(1)
 
 	try:
@@ -86,7 +86,7 @@ def readJSONFile(filename):
 		returndata = json.load(fd)
 		fd.close()
 	except:
-		print 'COULD NOT LOAD:', filename
+		print('COULD NOT LOAD:', filename)
 
 	return returndata
 
@@ -117,8 +117,8 @@ def main():
 		logger.addHandler(hdlr)
 		logger.setLevel(logging.INFO)
 
-	except Exception, e:
-		print "%s" % e
+	except Exception as e:
+		print("%s" % e)
 		sys.exit(1)
 
 	# Set Default Values

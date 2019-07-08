@@ -93,7 +93,7 @@ def read_siteconfig_server_data(app):
 			return
 
 	else:
-		print("Error, could not open file " + app.config['SITECONFIG_FILE'].strip())
+		print(("Error, could not open file " + app.config['SITECONFIG_FILE'].strip()))
 		return
 
 	if "settings" in data:
@@ -174,6 +174,9 @@ def register_blueprints(app):
 
 	from .software_2 import software_2 as bp_software_2
 	app.register_blueprint(bp_software_2, url_prefix='/api/v2')
+
+	from .software_3 import software_3 as bp_software_3
+	app.register_blueprint(bp_software_3, url_prefix='/api/v3')
 
 	from .srv_utils import srv as bp_srv_utils
 	app.register_blueprint(bp_srv_utils, url_prefix=app.config['URL_PREFIX'])

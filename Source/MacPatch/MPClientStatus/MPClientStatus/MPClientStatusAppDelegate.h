@@ -25,11 +25,11 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MPWorkerProtocol.h"
-#import "VDKQueue.h"
+#import <WebKit/WebKit.h>
 
 @class MPAsus, MPAppUsage;
 
-@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,VDKQueueDelegate,NSUserNotificationCenterDelegate>
+@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,NSUserNotificationCenterDelegate,WKNavigationDelegate>
 {
 	NSWindow *__unsafe_unretained window;
     
@@ -44,8 +44,7 @@
 	IBOutlet NSMenuItem *__unsafe_unretained selfVersionInfoMenuItem;
 	IBOutlet NSMenuItem *__unsafe_unretained MPVersionInfoMenuItem;
 	IBOutlet NSMenuItem *__unsafe_unretained checkAgentAndUpdateMenuItem;
-	BOOL	openASUS;
-	BOOL	asusAlertOpen;
+	
 	
 	// Client Info
 	NSWindow *__unsafe_unretained clientInfoWindow;
@@ -64,6 +63,9 @@
 	NSWindow *__unsafe_unretained rebootWindow;
     IBOutlet NSTextField *rebootTitleText;
     IBOutlet NSTextField *rebootBodyText;
+	
+	// Whats New Window
+	IBOutlet NSWindow *__unsafe_unretained whatsNewWindow;
     
 	// New CheckIn Methods
 	NSOperationQueue *queue;
@@ -82,10 +84,15 @@
 	IBOutlet NSButton *criticalWinRebootButton;
 	IBOutlet NSPopUpButton *criticalWinPopUpDown;
 	
+	// Software Restritions
+	IBOutlet NSWindow *__unsafe_unretained swResWindow;
+	IBOutlet NSTextField *swResMessage;
+	IBOutlet NSTextField *swResHelpMessage;
+	
+	
 @private
     
 	MPAppUsage *mpAppUsage;
-    VDKQueue *vdkQueue;
 }
 
 @property (unsafe_unretained) IBOutlet NSWindow *window;
@@ -94,7 +101,6 @@
 @property (unsafe_unretained) IBOutlet NSMenuItem *selfVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *MPVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkAgentAndUpdateMenuItem;
-@property (nonatomic, assign) BOOL openASUS;
 @property (nonatomic, assign) BOOL asusAlertOpen;
 
 // Client Info
@@ -117,6 +123,10 @@
 @property (nonatomic, strong) IBOutlet NSTextField *rebootTitleText;
 @property (nonatomic, strong) IBOutlet NSTextField *rebootBodyText;
 
+// Whats New Window
+@property (nonatomic, strong) IBOutlet WKWebView *wkWebView;
+@property (nonatomic, strong) IBOutlet NSButton *showWhatsNewOnLaunch;
+
 // Client CheckIn String
 @property (nonatomic, strong) NSOperationQueue *queue;
 
@@ -124,6 +134,9 @@
 @property (nonatomic, strong) NSMutableArray *criticalUpdates;
 @property (nonatomic, strong) NSDate *showCriticalWindowAtDate;
 @property (nonatomic, strong) NSTimer *criticalUpdatesTimer;
+
+// SW Restrictions
+@property (nonatomic, strong) NSString *swResHelpMessage;
 
 #pragma mark -
 #pragma mark Methods
@@ -149,18 +162,12 @@
 - (void)showLastCheckIn;
 - (void)showLastCheckInMethod;
 
-- (IBAction)openSelfPatchApplications:(id)sender;
-- (IBAction)openSoftwareCatalogApplications:(id)sender;
-
 // Kill SoftwareUpdate GUI App
 - (void)killApplication:(NSNumber *)aPID;
-- (void)openSoftwareUpdateApplication:(id)sender;
 
 // App Usage Info
 - (void)appLaunchNotificationReceived:(NSNotification *)aNotification;
 
-- (void)turnOffSoftwareUpdateSchedule;
-- (void)checkAgentStatus:(id)sender;
-
+- (IBAction)showSWResWindow:(id)sender;
 @end
 

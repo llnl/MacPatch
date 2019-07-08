@@ -64,7 +64,7 @@ class AVData(MPResource):
 				db.session.commit()
 				return {"result": '', "errorno": 0, "errormsg": 'none'}, 201
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AVData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
@@ -100,7 +100,7 @@ class AVDefs(MPResource):
 				log_Error('[AVDefs][GET]: AV Engine Not found. for client (' + cuuid + ')')
 				return {"result": '', "errorno": 404, "errormsg": 'AV Engine Not found.'}, 404
 
-		except IntegrityError, exc:
+		except IntegrityError as exc:
 			log_Error('[AVDefs][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
 			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:

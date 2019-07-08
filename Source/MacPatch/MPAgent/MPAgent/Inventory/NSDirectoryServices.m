@@ -166,21 +166,6 @@ static tDirStatus dsDataBufferAppendData(tDataBufferPtr  buf,
 	if (!node) //If there is no node specified, use the local node.
 		node = @"/Local/Default";
 	
-	/*if (node == nil)
-	{
-		// see if any nodes were ever fetched
-		if (_nodes == nil)
-			[self getNodes];
-		// see if there are any nodes
-		if (_nodes && [_nodes count] == 0)
-		{
-			NSLog(@"No nodes available");
-			return nil;
-		}
-		
-		// use the first node we find
-		node = [_nodes objectAtIndex:0];
-	}*/
 	NSArray *localNodes = [self getLocalNodes];
 	//NSLog(@"Available nodes: %@", localNodes);
 	if (![localNodes containsObject:node]) {
@@ -192,16 +177,17 @@ static tDirStatus dsDataBufferAppendData(tDataBufferPtr  buf,
 
 	do
 	{
-		if (![self openNode:node]) {
+		if (![self openNode:node])
+		{
 			if (dsError != NULL) *dsError = [NSError errorWithDomain:@"DSError. Couldn't open the correct node" code:99 userInfo:nil];
 			break;
 		}
-	tDataNodePtr authType;
-	tDataBufferPtr dataBuffer;
-	tDataBufferPtr responseBuffer;
-	tDirStatus aDirErr;
-	tContextData aContinueData = 0;
-	long aDataBufSize = 0;
+		tDataNodePtr authType;
+		tDataBufferPtr dataBuffer;
+		tDataBufferPtr responseBuffer;
+		tDirStatus aDirErr;
+		tContextData aContinueData = 0;
+		long aDataBufSize = 0;
 	
 	//Spec the type of auth
 	authType = dsDataNodeAllocateString(_dirRef, kDSStdAuthSetPasswdAsRoot);

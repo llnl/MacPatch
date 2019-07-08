@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/venv/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python
 
 '''
 	Copyright (c) 2018, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPInventory.py
-	Version: 1.1.9
+	Version: 1.2.0
 '''
 
 import logging
@@ -39,9 +39,8 @@ import json
 import pprint
 import re
 import mysql.connector as mydb
-from operator import itemgetter
 from datetime import datetime
-from urlparse import urlparse
+from urllib.parse import urlparse
 import xml.etree.ElementTree as ET
 from uuid import UUID
 import shutil
@@ -186,7 +185,7 @@ class MPMySQL:
 			for (table_name,) in _dbCur:
 				tables.append(table_name)
 
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 			except IndexError:
@@ -225,7 +224,7 @@ class MPMySQL:
 
 				result.append(tmp)
 
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Errors [%d]: %s" % (e.args[0], e.args[1]))
 				logger.error(query)
@@ -238,14 +237,14 @@ class MPMySQL:
 		return result
 
 	def tableExists(self,table):
-		if table.upper() in map(str.upper, self.tables):
+		if table.upper() in list(map(str.upper, self.tables)):
 			return True
 		else:
 			return False
 
 	def columnExists(self, column, table):
 		columns = self.columnsForTable(self,table)
-		if column.upper() in map(str.upper, columns):
+		if column.upper() in list(map(str.upper, columns)):
 			return True
 		else:
 			return False
@@ -305,7 +304,7 @@ class MPMySQL:
 	def returnFieldObjectFromField(self,field):
 		dfObj = DBField() # Creeat New DBField Obj
 		dbField = dfObj.fieldDescription() # Get Default DBField Values
-		for key, value in dbField.iteritems():
+		for key, value in dbField.items():
 			if key in field:
 				dbField[key] = field[key]
 
@@ -374,7 +373,7 @@ class MPMySQL:
 		try:
 			_dbCur.execute(_sqlStrExec.encode('ascii',errors='ignore'))
 			_result = True
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 			except IndexError:
@@ -440,7 +439,7 @@ class MPMySQL:
 			_dbCur.close()
 			_db.close()
 			return True
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				_dbCur.close()
@@ -538,7 +537,7 @@ class MPMySQL:
 			_dbCur.close()
 			_db.close()
 			_result = True
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				_dbCur.close()
@@ -567,7 +566,7 @@ class MPMySQL:
 		_sqlArr.append(_str)
 
 		# Loop through and add the rest
-		for key, value in row.iteritems():
+		for key, value in row.items():
 			if key == "rid" or key == "cuuid":
 				continue
 			else:
@@ -586,7 +585,7 @@ class MPMySQL:
 			_dbCur.close()
 			_db.close()
 			_result = True
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				logger.error(_sqlStr)
@@ -618,7 +617,7 @@ class MPMySQL:
 		_row['mdate'] = mdate
 
 		# Loop through and add the rest
-		for key, value in row.iteritems():
+		for key, value in row.items():
 			if key == 'rid':
 				continue
 			else:
@@ -639,7 +638,7 @@ class MPMySQL:
 			_dbCur.close()
 			_db.close()
 			_result = True
-		except mydb.Error, e:
+		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				logger.error(_sqlStr)
@@ -661,7 +660,7 @@ class DataMgr:
 			json_data=open(self.file)
 			self.invData = json.load(json_data)
 			json_data.close()
-		except Exception, e:
+		except Exception as e:
 			raise e
 
 		logger.info("Processing data for client id %s." % self.invData['key'])
@@ -709,14 +708,6 @@ class DataMgr:
 			for aField in _autoFields:
 				if self.dictContainsKeyValue(self.invData['fields'],'name',aField) is False:
 					_fields.append(dfObj.getFieldForName(aField,aField))
-
-				#if aField not in self.invData['fields'].index('name'):
-				#    print "adding field : " + aField
-				#    _fields.append( dfObj.getFieldForName(aField,aField) )
-
-				# Something was wrong here ... if filed did not exist
-				#i = map(itemgetter('name'), self.invData['fields']).index(aField)
-				#_fields[i] = dfObj.getFieldForName(aField,self.invData['fields'][i])
 
 		# Create Table if needed
 		if _table not in db.tables:
@@ -784,7 +775,7 @@ class MPInventory:
 	def displayFiles(self):
 		self.getFiles()
 		for x in self.files:
-			print x
+			print(x)
 
 	def moveErrorFile(self,file):
 		parDir = os.path.abspath(os.path.join(self.filesBaseDir, os.pardir))
@@ -800,7 +791,7 @@ class MPInventory:
 		try:
 			# Try to move the error file, if fail remove it
 			shutil.move(invFile,errFile)
-		except Exception, e:
+		except Exception as e:
 			logger.error("Error moving file. %s" % str(e))
 			os.remove(invFile)
 
@@ -818,7 +809,7 @@ class MPInventory:
 		try:
 			# Try to move the error file, if fail remove it
 			shutil.move(invFile,proFile)
-		except Exception, e:
+		except Exception as e:
 			logger.error("Error moving file. %s" % str(e))
 			os.remove(invFile)
 
@@ -839,7 +830,7 @@ class MPInventory:
 					else:
 						self.moveErrorFile(iFile)
 
-				except Exception, e:
+				except Exception as e:
 					logger.error('Error reading {0}:\n{1}'.format(iFile,e))
 					self.moveErrorFile(iFile)
 
@@ -893,8 +884,8 @@ def main():
 			hdlrStdOut.setFormatter(formatter)
 			logger.addHandler(hdlrStdOut)
 
-	except Exception, e:
-		print "%s" % e
+	except Exception as e:
+		print("%s" % e)
 		sys.exit(1)
 
 	# Make Sure the Config Exists
@@ -902,7 +893,7 @@ def main():
 	confData = []
 	if args.config_old:
 		if not os.path.exists(args.config_old):
-			print "Unable to open " + args.config_old +". File not found."
+			print("Unable to open " + args.config_old +". File not found.")
 			sys.exit(1)
 		else:
 			useOldConfig=True
@@ -910,7 +901,7 @@ def main():
 
 	elif args.config:
 		if not os.path.exists(args.config):
-			print "Unable to open " + args.config +". File not found."
+			print("Unable to open " + args.config +". File not found.")
 			sys.exit(1)
 		else:
 			confFile = MP_FLASK_FILE
@@ -918,7 +909,7 @@ def main():
 	else:
 		# Fall back to default flask
 		if not os.path.exists(MP_FLASK_FILE):
-			print "Unable to open " + MP_FLASK_FILE +". File not found."
+			print("Unable to open " + MP_FLASK_FILE +". File not found.")
 			sys.exit(1)
 
 	try:
@@ -929,7 +920,7 @@ def main():
 			confData = read_config_file(confFile)
 
 	except OSError:
-		print "Error opening and loading json config file."
+		print("Error opening and loading json config file.")
 		sys.exit(1)
 
 	_cnf = None
@@ -996,7 +987,7 @@ def main():
 		logger.info('Keep processed files is enabled.')
 
 	if not os.path.exists(args.files):
-		print "%s does not exist." % args.files
+		print("%s does not exist." % args.files)
 		sys.exit(1)
 
 	mpi = MPInventory(args.files)
