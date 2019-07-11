@@ -94,7 +94,8 @@ int main (int argc, char * argv[])
 				
 				// Client Check-in
 				{"CheckIn"				,no_argument	    ,0, 'c'},
-				{"iLoad"				,no_argument	    ,0, 'i'},
+				{"iload"				,no_argument	    ,0, 'i'},
+				{"iLoad"				,no_argument	    ,0, 'I'},
 				
 				// Patching
 				{"Scan"					,no_argument	    ,0, 's'},
@@ -150,7 +151,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVcisuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:vbh:", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:vbh:", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -174,6 +175,11 @@ int main (int argc, char * argv[])
 					a_Type = 1;
 					break;
 				case 'i':
+					isILoadMode = YES;
+					a_Type = 10;
+					updateType = kAllPatches;
+					break;
+				case 'I':
 					isILoadMode = YES;
 					a_Type = 10;
 					updateType = kAllPatches;
@@ -570,7 +576,10 @@ void usage(void)
 	printf("Agent Updater \n");
     printf(" -G \t --AgentUpdater \tUpdate the MacPatch agent updater agent.\n\n");
 	// OS Migration - iLoad etc.
-    printf("OS Migration \n");
+	printf("OS Provisioning - iLoad \n");
+	printf(" -i \t --iLoad \tiLoad flag for provisioning output.\n\n");
+	
+	printf("OS Migration \n");
     printf(" -k \t --OSUpgrade \tOS Migration/Upgrade action state (Start/Stop)\n");
     printf(" -l \t --OSLabel \tOS Migration/Upgrade label\n");
     printf(" -m \t --OSUpgradeID \tA Unique Migration/Upgrade ID (Optional Will Auto Gen by default)\n\n");
