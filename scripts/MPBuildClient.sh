@@ -403,7 +403,7 @@ cp -R ${PKGROOT}/Client ${BUILDROOT}
 cp -R ${PKGROOT}/Updater ${BUILDROOT}
 cp -R ${PKGROOT}/Combined ${BUILDROOT}
 
-mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications
+mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications/
 mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 #mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
@@ -411,6 +411,7 @@ mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Clien
 mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
+
 
 # ------------------------------------------------------------
 # Copy PlanB files to base package root
