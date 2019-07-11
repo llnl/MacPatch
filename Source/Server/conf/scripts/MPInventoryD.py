@@ -64,7 +64,7 @@ myConfig = {
 }
 
 # Define logging for global use
-logger       = logging.getLogger('MPInventory')
+logger        = logging.getLogger('MPInventory')
 
 MP_SRV_BASE   = "/opt/MacPatch/Server"
 MP_FLASK_FILE = MP_SRV_BASE+"/apps/config.cfg"
@@ -82,7 +82,7 @@ def read_config_file(file_path):
 		lines = (line.rstrip() for line in f)
 		for l in lines:
 			if l.rstrip():
-				 if l.startswith("#") == False:
+				if l.startswith("#") == False:
 					config[l.split('=')[0].strip()] = l.split('=')[1].strip().replace("'","")
 
 	return config
