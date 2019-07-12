@@ -76,7 +76,7 @@
 	}
 	
 	if (needsReboot >= 1) {
-		qlerror(@"Software has been installed that requires a reboot.");
+		qlinfo(@"Software has been installed that requires a reboot.");
 		return 2;
 	}
 	
@@ -124,7 +124,7 @@
 	}
 	
 	if (needsReboot >= 1) {
-		qlerror(@"Software has been installed that requires a reboot.");
+		qlinfo(@"Software has been installed that requires a reboot.");
 		result = 2;
 	}
 	
@@ -162,14 +162,14 @@
 	{
 		if (![self installSoftwareTask:aTask])
 		{
-			qlerror(@"Software has been installed that requires a reboot.");
+			qlinfo(@"Software has been installed that requires a reboot.");
 			result++;
 		}
 	}
 	
 	if (needsReboot >= 1)
 	{
-		qlerror(@"Software has been installed that requires a reboot.");
+		qlinfo(@"Software has been installed that requires a reboot.");
 		return 2;
 	}
 	
