@@ -176,13 +176,9 @@ int main (int argc, char * argv[])
 					break;
 				case 'i':
 					isILoadMode = YES;
-					a_Type = 10;
-					updateType = kAllPatches;
 					break;
 				case 'I':
 					isILoadMode = YES;
-					a_Type = 10;
-					updateType = kAllPatches;
 					break;
 				case 's':
 					a_Type = 3;
