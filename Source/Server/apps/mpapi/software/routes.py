@@ -82,14 +82,11 @@ class SoftwareTasksForGroup(MPResource):
 				log_Error('[SoftwareTasksForGroup][Get][%s] Group (%s) Not Found' % (cuuid, groupName))
 				return {'errorno': 0, 'errormsg': 'No Data for Group', 'result': {}}, 202
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class SaveSoftwareTasksForGroup(MPResource):
 
@@ -134,14 +131,11 @@ class SaveSoftwareTasksForGroup(MPResource):
 				log_Error('[SaveSoftwareTasksForGroup][Get][IntegrityError][SAVE] CUUID: %s Message: %s' % (cuuid, exc.message))
 				db.session.rollback()
 
-
-		except IntegrityError as exc:
-			log_Error('[SaveSoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SaveSoftwareTasksForGroup][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SaveSoftwareTasksForGroup][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 	def signSoftwareTask(self,data):
@@ -268,14 +262,11 @@ class SoftwareTaskForTaskID(MPResource):
 
 			return {"result": task, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareTaskForTaskID][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareTaskForTaskID][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareTaskForTaskID][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class SoftwareDistributionGroups(MPResource):
 
@@ -316,14 +307,11 @@ class SoftwareDistributionGroups(MPResource):
 				log_Error('[SoftwareDistributionGroups][Get][%s]: Not groups found.' % (cuuid))
 				return {"result": '', "errorno": 0, "errormsg": ''}, 404
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareDistributionGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareDistributionGroups][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareDistributionGroups][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class SoftwareInstallResult(MPResource):
 
@@ -366,14 +354,11 @@ class SoftwareInstallResult(MPResource):
 
 			return {'errorno': 0, "errormsg": "", "result": ""}, 201
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareInstallResult][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareInstallResult][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareInstallResult][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # ----------------------------------
 # Private Class

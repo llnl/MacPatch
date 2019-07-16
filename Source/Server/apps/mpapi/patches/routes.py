@@ -47,13 +47,11 @@ class ClientPatchStatus(MPResource):
 			log_Debug('[ClientPatchStatus][Get]: Result: %s' % (res))
 			return {"result": res, "errorno": 0, "errormsg": 'none'}, 200
 
-		except IntegrityError as exc:
-			log_Error('[ClientPatchStatus][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ClientPatchStatus][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ClientPatchStatus][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Get Patch Scan List (Third Only)
 class PatchScanList(MPResource):
@@ -82,13 +80,11 @@ class PatchScanList(MPResource):
 				log_Error('[PatchScanList][Get]: Failed to get a scan list for client %s' % (cuuid))
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchScanList][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchScanList][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchScanList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Get Patch Scan List filter on OS Ver e.g. 10.9, 10.10 ... (Third Only)
 class PatchScanListFilterOS(MPResource):
@@ -119,14 +115,11 @@ class PatchScanListFilterOS(MPResource):
 				log_Error('[PatchScanListFilterOS][Get]: Failed to get a scan list for client %s' % (cuuid))
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchScanListFilterOS][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchScanListFilterOS][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchScanListFilterOS][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Get Patch Group Patches
 class PatchGroupPatches(MPResource):
@@ -179,14 +172,11 @@ class PatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (cuuid, patchGroup))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Get Patch Group Patches Rev
 class PatchGroupPatchesRev(MPResource):
@@ -222,14 +212,11 @@ class PatchGroupPatchesRev(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (cuuid, patchGroup))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Post Client Patch Scan Data
 class PatchScanData(MPResource):
@@ -324,14 +311,11 @@ class PatchScanData(MPResource):
 				log_Error('[PatchScanData][Post][%s]: Type (%s) not found' % (cuuid, patch_type))
 				return {"result": {}, "errorno": 404, "errormsg": "Type not found"}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchScanData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchScanData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': []}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchScanData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def addClientPatch(self, cuuid, type, data):
 
@@ -438,15 +422,11 @@ class PatchInstallData(MPResource):
 
 			return {"result": '', "errorno": 0, "errormsg": ''}, 202
 
-		except IntegrityError as exc:
-			db.session.rollback()
-			log_Error('[PatchInstallData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchInstallData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchInstallData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Read Saved PatchGroup patches and add signatures
 class SavePatchGroupPatches(MPResource):
@@ -499,13 +479,11 @@ class SavePatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get]: No patch group (%s) found.' % (groupID))
 				return {"result": '', "errorno": 404, "errormsg": 'Not Found'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError]: Message: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d]: Message: %s' % (exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # --------------------------------------------------------------------
 # Add Routes Resources

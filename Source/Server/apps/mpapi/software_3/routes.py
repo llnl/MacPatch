@@ -73,15 +73,11 @@ class SoftwareRestrictions(MPResource):
 			wsResult.data = wsData.toDict()
 			return wsResult.resultWithSignature(), 200
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, str(e)))
-			return wsResult.resultNoSignature(errorno=500, errormsg=str(e)), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return wsResult.resultNoSignature(errorno=500, errormsg=message), 500
 
 	def globalRestrictions(self):
 		_sw_res_list = []

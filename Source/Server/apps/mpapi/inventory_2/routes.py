@@ -65,8 +65,9 @@ class AddInventoryData(MPResource):
 
 			except Exception as e:
 				exc_type, exc_obj, exc_tb = sys.exc_info()
-				log_Error('[AddInventoryData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-				return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+				message=str(e.args[0]).encode("utf-8")
+				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+				return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
 		return {"result": '', "errorno": 412, "errormsg": 'Inventory Data empty'}, 412
@@ -97,13 +98,11 @@ class InventoryState(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': {'data': _result}}, 200
 
-		except IntegrityError as exc:
-			log_Error('[InventoryState][Get][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
-			return {'result': {'data': False}, 'errorno': 500, 'errormsg': exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[InventoryState][Get][Exception][Line: %d] client_id: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return {'result': {'data': False}, 'errorno': 500, 'errormsg': e.message}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[InventoryState][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def post(self, client_id):
 		try:
@@ -134,14 +133,12 @@ class InventoryState(MPResource):
 				log_Error('[except] client_id: %s Message: %s' % (client_id, exc.message))
 				return {'errorno': 500, 'errormsg': exc.message, 'result': {'data': False}}, 500
 
-		except IntegrityError as exc:
-			log_Error('[InventoryState][Post][IntegrityError] client_id: %s Message: %s' % (client_id, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {'data': False}}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[InventoryState][Post][Exception][Line: %d] client_id: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {'data': False}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[InventoryState][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
+	
 
 
 # Add Routes Resources

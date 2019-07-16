@@ -105,14 +105,11 @@ class SoftwareTasksForGroup(MPResource):
 				log_Error('[SoftwareTasksForGroup][Get][%s] Group (%s) Not Found' % (cuuid, groupName))
 				return wsResult.resultNoSignature(errorno=1, errormsg='No Data for Group'), 202
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareTasksForGroup][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareTasksForGroup][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def softwareGroupsForClient(self, clientID):
 
@@ -259,15 +256,11 @@ class SoftwareTaskForTaskID(MPResource):
 			wsResult.data = wsData.toDict()
 			return wsResult.resultWithSignature(), 200
 
-		except IntegrityError as exc:
-			log_Error(
-				'[SoftwareTaskForTaskID][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareTaskForTaskID][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareTaskForTaskID][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return wsResult.resultNoSignature(errorno=500, errormsg=message), 500
 
 class SoftwareGroups(MPResource):
 
@@ -318,13 +311,11 @@ class SoftwareGroups(MPResource):
 				log_Error('[SoftwareDistributionGroups][Get][%s]: Not groups found.' % (cuuid))
 				return wsResult.resultNoSignature(), 404
 
-		except IntegrityError as exc:
-			log_Error('[SoftwareDistributionGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SoftwareDistributionGroups][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SoftwareDistributionGroups][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return wsResult.resultNoSignature(errorno=500, errormsg=message), 500
 
 class SoftwareForClientGroup(MPResource):
 
@@ -357,14 +348,11 @@ class SoftwareForClientGroup(MPResource):
 
 			return {"result": {'data': res, 'type':'RequiredSoftware'}, "errorno": 0, "errormsg": 'none'}, 200
 
-
-		except IntegrityError as exc:
-			log_Error('[AgentStatus][Get][IntegrityError]: client_id: %s Message: %s' % (client_id, exc.message))
-			return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentStatus][Get][Exception][Line: %d] client_id: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {'data': {}, 'type':'AgentStatus'}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentStatus][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {'data': {}, 'type':'AgentStatus'}}, 500
 
 	def criteriaForSUUID(self, suuid):
 		res = MpSoftwareCriteria.query.filter(MpSoftwareCriteria.suuid == suuid).all()

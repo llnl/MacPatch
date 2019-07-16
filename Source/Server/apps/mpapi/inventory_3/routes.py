@@ -60,12 +60,14 @@ class AddInventoryData(MPResource):
 				return {"result": '', "errorno": 0, "errormsg": ''}, 201
 
 			except Exception as e:
-				exc_type, exc_obj, exc_tb = sys.exc_info()
-				log_Error('[AddInventoryData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-				elog = MpInvErrors(cuuid=client_id, inv_table=jData['table'], error_msg='Error adding inventory.', json_data=jData, mdate=datetime.now())
 				db.session.add(elog)
 				db.session.commit()
-				return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+				exc_type, exc_obj, exc_tb = sys.exc_info()
+				message=str(e.args[0]).encode("utf-8")
+				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+				elog = MpInvErrors(cuuid=client_id, inv_table=jData['table'], error_msg='Error adding inventory.', json_data=jData, mdate=datetime.now())
+				return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
+
 
 		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
 		return {"result": '', "errorno": 412, "errormsg": 'Inventory Data empty'}, 412
@@ -424,12 +426,10 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
 			return False
 
 		return True
@@ -480,12 +480,10 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error("Exception: " + message)
 			return False
 
 	def createColumn(self, tableName, field):
@@ -534,12 +532,10 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error("Exception: " + message)
 			return False
 
 	def removeKeyData(self, tableName, keyVal):
@@ -554,12 +550,10 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error("Exception: " + message)
 			return False
 
 	def updateRowData(self,tableName,keyVal,mdate,row):
@@ -592,12 +586,10 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error("Exception: " + message)
 			return False
 
 	def insertRowData(self,tableName,keyVal,mdate,row):
@@ -633,10 +625,8 @@ class Inventory:
 		except OSError as err:
 			log_Error(format(err))
 			return False
-		except IntegrityError as exc:
-			log_Error("IntegrityError " + exc.message)
-			return False
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error("Exception: " + e.message)
+			message=str(e.args[0]).encode("utf-8")
+			log_Error("Exception: " + message)
 			return False

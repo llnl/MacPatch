@@ -3,7 +3,7 @@ from flask import request, abort, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from distutils.version import StrictVersion, LooseVersion
+from distutils.version import LooseVersion
 import sys
 import plistlib
 import hashlib
@@ -52,14 +52,11 @@ class MP_AgentUpdate(MPResource):
 
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 202
 
-		except IntegrityError as exc:
-			log_Error('[MP_AgentUpdate][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[MP_AgentUpdate][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[MP_AgentUpdate][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Agent Updater Updates
 class MP_AgentUpdaterUpdate(MPResource):
@@ -95,14 +92,11 @@ class MP_AgentUpdaterUpdate(MPResource):
 
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 202
 
-		except IntegrityError as exc:
-			log_Error('[MP_AgentUpdaterUpdate][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[MP_AgentUpdaterUpdate][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[MP_AgentUpdaterUpdate][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Agent Plugins
 class MP_PluginHash(MPResource):
@@ -133,14 +127,11 @@ class MP_PluginHash(MPResource):
 				log_Error('[PluginHash][GET]: Plugin (%s) hash could not be found.' % (plugin_name))
 				return {"result": {}, "errorno": 404, "errormsg": 'Plugin hash could not be found.'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[MP_PluginHash][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[MP_PluginHash][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[MP_PluginHash][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Agent Configuration
 class MP_ConfigData(MPResource):
@@ -180,14 +171,11 @@ class MP_ConfigData(MPResource):
 			resData = {'plist': configPlist, 'pubKey': _srv_pub_key, 'pubKeyHash': _srv_pub_key_hash}
 			return {"result": resData, "errorno": 0, "errormsg": ""}, 200
 
-		except IntegrityError as exc:
-			log_Error('[MP_ConfigData][Get][IntegrityError] Message: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": ""}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[MP_ConfigData][Get][Exception][Line: %d] Message: %s' % (
-				exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[MP_ConfigData][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Upload Agent Packages
 class MP_UploadAgentPackage(MPResource):
@@ -294,14 +282,12 @@ class MP_UploadAgentPackage(MPResource):
 		except OSError as err:
 			log_Error('[MP_UploadAgentPackage][Post][OSError] MP_UploadAgentPackage: %s' % (format(err)))
 			return {"result": '', "errorno": err.errno, "errormsg": format(err)}, 500
-		except IntegrityError as exc:
-			log_Error('[MP_UploadAgentPackage][Post][IntegrityError] MP_UploadAgentPackage: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": ""}, 500
+
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[MP_UploadAgentPackage][Post][Exception][Line: %d] Message: %s' % (
-				exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[MP_UploadAgentPackage][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 ''' ******************************* '''
 ''' NEW	3.1.x					    '''
@@ -362,11 +348,10 @@ class MP_AgentConfigInfo(MPResource):
 			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
 
 		except Exception as e:
-
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentConfigInfo][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentConfigInfo][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def suserverRev(self):
 		q = MpAsusCatalogList.query.filter(MpAsusCatalogList.listid == '1').first()
@@ -459,14 +444,11 @@ class MP_AgentConfig(MPResource):
 			else:
 				return {"errorno": 404, "errormsg": 'Settings version or client group membersion not found.', "result": {'type': 'AgentConfig', 'data': {}}}, 404
 
-		except IntegrityError as exc:
-			log_Error('[AgentConfig][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": {}, "errorno": 500, "errormsg": exc.message}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentConfig][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentConfig][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def agentSettingsRev(self,group_id):
 		qGroupInf = MPGroupConfig.query.filter(MPGroupConfig.group_id == group_id).first()
@@ -534,15 +516,11 @@ class MP_AgentConfigVersion(MPResource):
 			else:
 				return {'errorno': 404, 'errormsg': 'Settings version or client group membersion not found.', 'result': 0}, 404
 
-		except IntegrityError as exc:
-			log_Error('[AgentConfigVersion][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': 0}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentConfigVersion][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': 0}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentConfigVersion][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 ''' ------------------------------- '''
 ''' NOT A WEB SERVICE CLASS         '''
@@ -573,7 +551,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= StrictVersion(clientData['osver'])):
+			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
 				log_Error("[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
 
@@ -629,7 +607,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= StrictVersion(clientData['osver'])):
+			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
 				log_Error("[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
 

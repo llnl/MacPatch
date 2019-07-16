@@ -205,7 +205,8 @@ def decodeClientKey(encodedKey):
 
 	except Exception as e:
 		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('[Registration][decodeClientKey][Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
+		message=str(e.args[0]).encode("utf-8")
+		log_Error('[Registration][decodeClientKey][Line: %d] Message: %s' % (exc_tb.tb_lineno, message))
 		db.session.rollback()
 		return None
 

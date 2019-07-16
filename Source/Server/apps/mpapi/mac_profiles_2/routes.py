@@ -57,14 +57,11 @@ class ProfilesForClient(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': {'data': _profiles, 'type': 'MacProfiles'}}, 200
 
-		except IntegrityError as exc:
-			log_Error('[ProfilesForClient][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {'data':[], 'type': 'MacProfiles'}}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ProfilesForClient][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {'data':[], 'type': 'MacProfiles'}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ProfilesForClient][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	#
 	def evaluateCriteriaForProfile(self, clientID, clientGroupID, profileID, isGlobal):

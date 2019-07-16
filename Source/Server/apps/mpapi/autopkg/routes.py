@@ -124,14 +124,11 @@ class AddAutoPKGPatch(MPResource):
 
 			return {"result": _patchID, "errorno": 0, "errormsg": ''}, 201
 
-		except IntegrityError as exc:
-			db.session.rollback()
-			log_Error('[AddAutoPKGPatch][Post][IntegrityError] Message: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AddAutoPKGPatch][Post][Exception][Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AddAutoPKGPatch][Post][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def isValidPatch(self, patch):
 
@@ -214,13 +211,11 @@ class UploadAutoPKGPatch(MPResource):
 			log_Error('[UploadAutoPKGPatch][Post]: Error patch (%s) was not found to update.' % (patch_id))
 			return {"result": '', "errorno": 104, "errormsg": ""}, 404
 
-		except IntegrityError as exc:
-			log_Error('[UploadAutoPKGPatch][Post][IntegrityError]: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[UploadAutoPKGPatch][Post][Exception][Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[UploadAutoPKGPatch][Post][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def isValidPatch(self, patch):
 

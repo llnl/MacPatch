@@ -61,14 +61,11 @@ class SUSPatchData(MPResource):
 				log_Error('[SUSPatchData][Post]: Patch data missing.')
 				return {"result": '', "errorno": 1, "errormsg": 'Patch data missing.'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[SUSPatchData][Post][IntegrityError]: %s' % (exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUSPatchData][Post][Exception][Line: %d] Message: %s' % (
-				exc_tb.tb_lineno, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUSPatchData][Post][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 # Routes

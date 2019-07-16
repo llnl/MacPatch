@@ -103,14 +103,11 @@ class AgentBase(MPResource):
 				_settings = self.getClientTasksSettingsRev(cuuid)
 				return {"errorno": 0, "errormsg": 'none', "result": _settings}, 201
 
-		except IntegrityError as exc:
-			log_Error('[AgentBase][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"errorno": 500, "errormsg": exc.message, "result": {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentBase][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentBase][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def getClientTasksSettingsRev(self, cuuid):
 
@@ -172,14 +169,11 @@ class AgentBase(MPResource):
 
 			return res
 
-		except IntegrityError as exc:
-			log_Error('[AgentBase_v2][softwareTasksForClientGroup][IntegrityError]: client_id: %s Message: %s' % (
-			client_id, exc.message))
-			return []
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
+			message=str(e.args[0]).encode("utf-8")
 			log_Error('[AgentBase_v2][softwareTasksForClientGroup][Exception][Line: %d] client_id: %s Message: %s' % (
-			exc_tb.tb_lineno, client_id, e.message))
+			exc_tb.tb_lineno, client_id, message))
 			return []
 
 	def criteriaForSUUID(self, suuid):
@@ -235,13 +229,11 @@ class AgentStatus(MPResource):
 				log_Error('[AgentStatus][Get]: Client (%s) not found' % (client_id))
 				return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 404, "errormsg": 'Client not found.'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[AgentStatus][Get][IntegrityError]: client_id: %s Message: %s' % (client_id, exc.message))
-			return {"result": {'data': {}, 'type':'AgentStatus'}, "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentStatus][Get][Exception][Line: %d] client_id: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {'data': {}, 'type':'AgentStatus'}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AgentStatus][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 # Post Data To Syslog, for Splunk
@@ -300,13 +292,11 @@ class CheckServerKey(MPResource):
 				log_Error('[CheckServerKey][Get]: Active Server keys not found')
 				return {"result": '', "errorno": 404, "errormsg": 'Active Server keys not found'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[CheckServerKey][Get][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[CheckServerKey][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[CheckServerKey][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Add Routes Resources
 checkin_2_api.add_resource(AgentBase,			'/client/checkin/<string:cuuid>')
