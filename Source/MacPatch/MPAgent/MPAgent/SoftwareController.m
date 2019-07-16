@@ -189,19 +189,22 @@
 	NSDictionary *task = [self getSoftwareTaskForID:aTask];
 	
 	if (!task) {
+		qlerror(@"Error, no task to install.");
 		return NO;
 	}
 	MPSoftware *software = [MPSoftware new];
 	[self iLoadStatus:@"Begin: %@\n", task[@"name"]];
-	if ([software installSoftwareTask:task])
+	if ([software installSoftwareTask:task] == 0)
 	{
+		qlinfo(@"%@ task was installed.",task[@"name"]);
 		result = YES;
 		if ([self softwareTaskRequiresReboot:task]) needsReboot++;
 		//[self iLoadStatus:@"Installing: %@\n Succeeded.", task[@"name"]];
 		[self iLoadStatus:@"Completed: %@\n", task[@"name"]];
 	} else {
+		qlerror(@"%@ task was not installed.",task[@"name"]);
 		//[self iLoadStatus:@"Installing: %@\n Failed.", task[@"name"]];
-		[self iLoadStatus:@"Completed: %@\n Failed.", task[@"name"]];
+		[self iLoadStatus:@"Completed: %@ Failed.\n", task[@"name"]];
 	}
 	return result;
 }
@@ -334,7 +337,8 @@
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	if (iLoadMode == YES) {
-		printf("%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
+		fprintf(stdout,"%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
+		//printf("%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
 	}
 }
 
