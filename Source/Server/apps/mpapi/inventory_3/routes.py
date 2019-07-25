@@ -41,6 +41,8 @@ class AddInventoryData(MPResource):
 				if 'rows' in jData:
 					if len(jData['rows']) <= current_app.config['INVENTORY_HYBRID_ROWS_LIMIT']:
 						result = self.processDirect(client_id,jData)
+					else:
+						result = self.writeToDisk(client_id, jData)
 			elif _inv_type == 'DB':
 				result = self.processDirect(client_id, jData)
 			elif _inv_type == 'File':
@@ -58,7 +60,7 @@ class AddInventoryData(MPResource):
 
 	def processDirect(self, client_id, invObj):
 		try:
-			log_Info("Inventory for {} being processed directly to db.".format(['table']))
+			log_Info("Inventory for {} being processed directly to db.".format(invObj['table']))
 			elog = None
 			dMgr = DataMgr(invObj)
 			if dMgr.parseInvData() is True:
@@ -78,7 +80,7 @@ class AddInventoryData(MPResource):
 			return (False, 500, message)
 
 	def writeToDisk(self, client_id, invObj):
-		log_Info("Inventory for {} being processed by filesystem.".format(['table']))
+		log_Info("Inventory for {} being processed by filesystem.".format(invObj['table']))
 
 		_server_config = current_app.config['MP_SETTINGS']['server']
 		log_Debug('[AddInventoryData][Post]: _server_config = %s' % (_server_config))
