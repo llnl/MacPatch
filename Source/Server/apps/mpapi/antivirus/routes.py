@@ -87,7 +87,7 @@ class AVDefs(MPResource):
 				log_Error('[AVDefs][GET]: Failed to verify Signature for client (' + cuuid + ')')
 				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify Signature'}, 424
 
-			avdefs = AvDefs.filter(AvDefs.engine == av_engine, AvDefs.current == 'YES').first()
+			avdefs = AvDefs.query.filter(AvDefs.engine == av_engine, AvDefs.current == 'YES').first()
 
 			if avdefs:
 				av_data = {'defsUpdate': avdefs.file}

@@ -67,9 +67,8 @@ class SoftwareTasksForGroup(MPResource):
 					if _os_vers == "*":
 						_tasks_new.append(task)
 						continue
-
 					for v, ver in enumerate(_os_vers.split(',')):
-						if LooseVersion(ver) >= LooseVersion(osver):
+						if LooseVersion(ver.strip()) >= LooseVersion(osver.strip()):
 							_tasks_new.append(task)
 							break
 
@@ -202,13 +201,12 @@ class SoftwareTaskForTaskID(MPResource):
 						s_Val = eval("q_software." + s)
 						if type(s_Val) is not datetime:
 							if s == "sw_pre_install" or s == "sw_post_install" or s == "sw_uninstall":
-								_sw_data[s] = base64.b64encode(s_Val)
+								_sw_data[s] = base64.b64encode(s_Val).decode('utf-8')
 							else:
 								_sw_data[s] = s_Val
 						else:
 							_sw_data[s] = s_Val.strftime("%Y-%m-%d %H:%M:%S")
 					else:
-						print(s)
 						if s == "vendorUrl":
 							_sw_data['vendorUrl'] = eval("q_software.sVendorURL")
 
@@ -234,13 +232,13 @@ class SoftwareTaskForTaskID(MPResource):
 							_sw_data['sid'] = eval("q_software.suuid")
 
 						elif s == "sw_post_install":
-							_sw_data['sw_post_install'] = base64.b64encode(eval("q_software.sw_post_install_script"))
+							_sw_data['sw_post_install'] = b64EncodeAsString(rowWithDefault(q_software,"sw_post_install_script",defaultValue=''),defaultValue='')
 
 						elif s == "sw_uninstall":
-							_sw_data['sw_uninstall'] = base64.b64encode(eval("q_software.sw_uninstall_script"))
+							_sw_data['sw_uninstall'] = b64EncodeAsString(rowWithDefault(q_software,"sw_uninstall_script",defaultValue=''),defaultValue='')
 
 						elif s == "sw_pre_install":
-							_sw_data['sw_pre_install'] = base64.b64encode(eval("q_software.sw_pre_install_script"))
+							_sw_data['sw_pre_install'] = b64EncodeAsString(rowWithDefault(q_software,"sw_pre_install_script",defaultValue=''),defaultValue='')
 
 				task['Software'] = _sw_data
 

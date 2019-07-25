@@ -37,10 +37,10 @@ class ClientPatchStatus(MPResource):
 			apple = []
 			third = []
 			for row in apple_obj:
-				apple.append(row.as_dict())
+				apple.append(row.asDict)
 
 			for row in custom_obj:
-				third.append(row.as_dict())
+				third.append(row.asDict)
 
 			# Return Results
 			res = {'apple': apple, 'third': third, 'total': (len(apple) + len(third))}
@@ -387,6 +387,8 @@ class PatchInstallData(MPResource):
 				_patchData = MpPatch.query.filter(MpPatch.puuid == patch).first()
 				if not _patchData:
 					log_Error("[PatchInstallData][Post]: Unable to get patch info for %s" % (patch))
+					return {"result": '', "errorno": 0, "errormsg": ''}, 404
+
 				_patchName = "%s-%s" % (_patchData.patch_name, _patchData.patch_ver)
 				log_Debug('[PatchInstallData][Post][%s]: Adding Custom Patch: %s' % (cuuid, _patchName))
 

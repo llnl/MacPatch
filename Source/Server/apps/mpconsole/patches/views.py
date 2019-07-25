@@ -23,6 +23,7 @@ from .. model import *
 from .. modes import *
 from .. mplogger import *
 from .. mputil import *
+from .. aws import *
 
 '''
 ----------------------------------------------------------------
@@ -234,13 +235,17 @@ def customList():
 	_clist = MpPatch.query.order_by(MpPatch.mdate.desc()).all()
 	_clistCols = ['puuid', 'patch_name', 'patch_ver', 'bundle_id', 'description',
 				'patch_severity', 'patch_state', 'patch_reboot', 'active',
-				'pkg_size', 'pkg_path', 'pkg_url', 'mdate']
+				'pkg_size', 'pkg_path', 'pkg_url', 'pkg_useS3', 'mdate']
 	_results = []
 	for r in _clist:
 		_dict = r.asDict
 		_row = {}
 		for col in _clistCols:
 			_row[col] = _dict[col]
+
+		if _row['pkg_useS3'] == 1:
+			_row['pkg_url'] = getS3UrlForPatch(_row['puuid'])
+
 		_results.append(_row)
 
 	return json.dumps({'data': _results}, default=json_serial), 200
@@ -292,6 +297,10 @@ def customPatchWizard(puuid):
 			break
 
 	base_url = request.url_root
+
+	if patch.pkg_useS3 == 1:
+		patch.pkg_S3path = getS3UrlForPatch(patch.puuid)
+
 	return render_template('patches/custom_patch_wizard.html', data=patch, columns=patchCols, dataAlt=patchDict,
 							dataCrit=patchCrit, dataCritLen=patchCritLen, dataCritAlt=pathCritLst,
 							hasOSArch=_hasOSArch, dataReq=patchReq, baseurl=base_url)
@@ -316,7 +325,12 @@ def customPatchWizardUpdate():
 		_fileData = None
 		if "mainPatchFile" in request.files:
 			_file = request.files['mainPatchFile']
-			_fileData = savePatchFile(puuid, _file)
+			if request.form['pkg_useS3'] == '1':
+				_fileData = savePatchFileToTMP(puuid, _file)
+				uploadFileToS3(_fileData['filePath'],_fileData['fileURL'])
+				shutil.rmtree(os.path.join('/tmp', request.form['puuid']))
+			else:
+				_fileData = savePatchFile(puuid, _file)
 
 		critDict = dict(request.form)
 
@@ -400,8 +414,8 @@ def customPatchWizardUpdate():
 
 	except Exception as e:
 		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('Message: %s' % (e.message))
-		return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+		log_Error('Message: %s' % (e))
+		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
 
 	return json.dumps({'data': {}}, default=json_serial), 200
 
@@ -438,6 +452,40 @@ def savePatchFile(puuid, file):
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
+
+def savePatchFileToTMP(puuid, file):
+
+	result = {}
+	result['fileName'] = None
+	result['filePath'] = None
+	result['fileURL']  = None
+	result['fileHash'] = None
+	result['fileSize'] = 0
+
+	# Save uploaded files
+	upload_dir = os.path.join('/tmp', puuid)
+	if not os.path.isdir(upload_dir):
+		os.makedirs(upload_dir)
+
+	if file is not None and len(file.filename) > 4:
+		filename = secure_filename(file.filename)
+		_file_path = os.path.join(upload_dir, filename)
+		result['fileName'] = filename
+		result['filePath'] = _file_path
+		result['fileURL']  = os.path.join('/patches', puuid, filename)
+
+		if os.path.exists(_file_path):
+			log_Info('Removing existing file (%s)' % (_file_path))
+			os.remove(_file_path)
+
+		log_Info('Saving file to (%s)' % (_file_path))
+		file.save(_file_path)
+
+		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read()).hexdigest()
+		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
+
+	return result
+
 
 @patches.route('/custom/duplicate/<patch_id>',methods=['POST'])
 @login_required
@@ -498,7 +546,8 @@ def customDuplicate(patch_id):
 		db.session.commit()
 	except Exception as e:
 		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('Message: %s' % (e.message))
+		message=str(e.args[0]).encode("utf-8")
+		log_Error('Message: %s' % (message))
 
 	return json.dumps({'data': {}}, default=json_serial), 200
 
@@ -516,8 +565,12 @@ def customDelete():
 		if qGet1 is not None:
 			# Need to delete from file system
 			try:
-				_patch_dir = "/opt/MacPatch/Content/Web/patches/" + puuid
-				shutil.rmtree(_patch_dir)
+				if qGet1.pkg_useS3 == 1:
+					deleteS3PatchFile(qGet1.pkg_url)
+				else:
+					_patch_dir = "/opt/MacPatch/Content/Web/patches/" + puuid
+					shutil.rmtree(_patch_dir)
+
 			except OSError as e:
 				log_Error("Error: %s - %s." % (e.filename,e.strerror))
 
@@ -529,7 +582,8 @@ def customDelete():
 			db.session.commit()
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('Message: %s' % (e.message))
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('Message: %s' % (message))
 
 	return json.dumps({'data': {}}, default=json_serial), 200
 
@@ -1106,11 +1160,11 @@ def customDataForPatchID(patch_id):
 			row["name"] = p.patch_name
 			row["hash"] = p.pkg_hash
 			if p.pkg_preinstall is not None:
-				row["preinst"] = base64.b64encode(p.pkg_preinstall)
+				row["preinst"] = base64.b64encode(p.pkg_preinstall).decode('utf-8')
 			else:
 				row["preinst"] = "NA"
 			if p.pkg_postinstall is not None:
-				row["postinst"] = base64.b64encode(p.pkg_postinstall)
+				row["postinst"] = base64.b64encode(p.pkg_postinstall).decode('utf-8')
 			else:
 				row["postinst"] = "NA"
 			row["env"] = p.pkg_env_var or "NA"

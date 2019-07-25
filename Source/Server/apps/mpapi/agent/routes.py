@@ -117,7 +117,6 @@ class MP_PluginHash(MPResource):
 
 			log_Info('[PluginHash][GET]: Verifying Plugin (%s) for CUUID: %s' % (plugin_name, cuuid))
 			q_result = MPPluginHash.query.filter(MPPluginHash.pluginName == plugin_name, MPPluginHash.pluginBundleID == plugin_bundle, MPPluginHash.pluginVersion == plugin_version).first()
-			# bresult = MPPluginHash.query.filter(MPPluginHash.pluginName == plugin_name).all()
 
 			if q_result is not None:
 				log_Info('[PluginHash][GET]: Plugin (%s) is verified for CUUID: %s' % (plugin_name, cuuid))
@@ -643,32 +642,18 @@ class AgentUpdates():
 	''' Get the RID of the latest updater agent update '''
 
 	def agentUpdaterUpdateID(self):
-		_sql = """Select rid From mp_client_agents
-				Where type = 'update'
-				AND active = '1'
-				ORDER BY
-				INET_ATON(SUBSTRING_INDEX(CONCAT(agent_ver,'.0.0.0.0.0'),'.',6)) DESC,
-				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
-				"""
-		res = db.engine.execute(_sql).first()
+		res = db.engine.execute("CALL AgentUpdateRID('update')").first()
 		if res is not None:
-			return res[0]
+			return res.rid
 
 		return None
 
 	''' Get the RID of the latest agent update '''
 
 	def agentUpdateID(self):
-		_sql = """Select rid From mp_client_agents
-				Where type = 'app'
-				AND active = '1'
-				ORDER BY
-				INET_ATON(SUBSTRING_INDEX(CONCAT(agent_ver,'.0.0.0.0.0'),'.',6)) DESC,
-				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
-				"""
-		res = db.engine.execute(_sql).first()
+		res = db.engine.execute("CALL AgentUpdateRID('app')").first()
 		if res is not None:
-			return res[0]
+			return res.rid
 
 		return None
 

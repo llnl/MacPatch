@@ -299,13 +299,36 @@
 								<br>
 								<input type="file" name="mainPatchFile" id="mainPatchFile" message="Error [Patch File]: A patch package name is required.">
 								<div style="font-size:10px;padding:10px;">
-									<a href="{{baseurl}}mp-content{{data.pkg_url}}" style="font-size:12px;">
+                                    {% if data.pkg_useS3 == 1 %}
+									<a href="{{data.pkg_S3path}}" style="font-size:12px;">
 										<img src="/static/img/arrow_down.png" height="14"/>{{data.pkg_name or ''}} ({{data.pkg_hash or ''}})
 									</a>
+                                    {% else %}
+                                    <a href="{{baseurl}}mp-content{{data.pkg_url}}" style="font-size:12px;">
+										<img src="/static/img/arrow_down.png" height="14"/>{{data.pkg_name or ''}} ({{data.pkg_hash or ''}})
+									</a>
+                                    {% endif %}
 								</div>
 							</div>
 							<div class="col-md-2">
 								<small>(Note: The file must be a zipped pkg or mpkg)</small>
+							</div>
+						</div>
+                        <div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Use AWS S3</label>
+							</div>
+							<div class="col-md-7">
+								<select name="pkg_useS3" size="1">
+									<option value="0" {% if data.pkg_useS3 == 0 %} Selected {% endif %}>No</option>
+									<option value="1" {% if data.pkg_useS3 == 1 %} Selected {% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<small>
+                                    Note: Please verify that S3 has been configured. Before using.<br>
+                                    Upload speed will be slower, than local storage.
+                                </small>
 							</div>
 						</div>
 						<div class="row top-buffer">

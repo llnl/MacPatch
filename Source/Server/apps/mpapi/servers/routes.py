@@ -327,7 +327,7 @@ class Server(object):
 servers_api.add_resource(SUSCatalogs,       '/sus/catalogs/<string:osminor>/<string:cuuid>', endpoint='susUsingMinor')
 servers_api.add_resource(SUSCatalogs,       '/sus/catalogs/<string:osmajor>/<string:osminor>/<string:cuuid>', endpoint='susUsingMajorMinor')
 # New
-servers_api.add_resource(SUSListVersion,    '/sus/list/version/<string:cuuid>/<string:list_id>')
+servers_api.add_resource(SUSListVersion,    '/sus/list/version/<string:cuuid>/<int:list_id>')
 servers_api.add_resource(SUServerList,      '/sus/catalogs/list/<string:osminor>/<string:cuuid>', endpoint='asusUsingMinor')
 servers_api.add_resource(SUServerList,      '/sus/catalogs/list/<string:osmajor>/<string:osminor>/<string:cuuid>', endpoint='asusUsingMajorMinor')
 
@@ -335,4 +335,4 @@ servers_api.add_resource(ServerList,        '/server/list/<string:cuuid>')
 servers_api.add_resource(ServerList,        '/server/list/<int:list_id>/<string:cuuid>', endpoint='srvListWithID')
 
 servers_api.add_resource(ServerListVersion, '/server/list/version/<string:cuuid>', endpoint='srvListVerWithClientID')
-servers_api.add_resource(ServerListVersion, '/server/list/version/<string:list_id>/<string:cuuid>', endpoint='srvListVerWithID')
+servers_api.add_resource(ServerListVersion, '/server/list/version/<int:list_id>/<string:cuuid>', endpoint='srvListVerWithID')

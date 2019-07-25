@@ -53,6 +53,13 @@ class BaseConfig:
 	SCHEDULER_API_ENABLED 		= True
 	ALLOW_CONTENT_DOWNLOAD 		= False
 
+	# AWS
+	USE_AWS_S3					= False
+	AWS_S3_KEY					= None
+	AWS_S3_SECRET				= None
+	AWS_S3_BUCKET 				= None
+	AWS_S3_REGION 				= None
+
 class DevelopmentConfig(BaseConfig):
 
 	DEBUG                           = True

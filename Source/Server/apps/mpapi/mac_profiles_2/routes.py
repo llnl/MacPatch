@@ -46,7 +46,7 @@ class ProfilesForClient(MPResource):
 								_profile['id'] = row.profileID
 								_profile['profileIdentifier'] = row.profileIdentifier
 								_profile['rev'] = row.profileRev
-								_profile['data'] = base64.b64encode(row.profileData)
+								_profile['data'] = base64.b64encode(row.profileData).decode('utf-8')
 								_profile['remove'] = row.uninstallOnRemove
 								_profile['name'] = row.profileName
 								_profile['description'] = row.profileDescription
@@ -139,7 +139,7 @@ class ProfilesForClient(MPResource):
 
 						continue
 				else:
-					criteria.append({'type':row.type,'type_data':base64.b64encode(row.type_data)})
+					criteria.append({'type':row.type,'type_data':base64.b64encode(row.type_data).decode('utf-8')})
 
 		return (result,criteria)
 

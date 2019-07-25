@@ -42,7 +42,7 @@ class ProfilesForClient(MPResource):
 						_profile['id'] = row.profileID
 						_profile['profileIdentifier'] = row.profileIdentifier
 						_profile['rev'] = row.profileRev
-						_profile['data'] = base64.b64encode(row.profileData)
+						_profile['data'] = base64.b64encode(row.profileData).decode('utf-8')
 						_profile['remove'] = row.uninstallOnRemove
 						_profiles.append(_profile)
 
