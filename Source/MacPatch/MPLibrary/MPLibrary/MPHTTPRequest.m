@@ -552,6 +552,89 @@
     return dlFilePath;
 }
 
+- (NSString *)runS3SyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
+{
+	qlinfo(@"[runS3SyncFileDownload][urlPath], %@", urlPath);
+	
+	// Create Download Directory if it does not exist
+	if (![fm fileExistsAtPath:dlDir]) {
+		[fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
+	}
+	
+	// Set File name and File path
+	__block NSString *flName = [urlPath lastPathComponent];
+	__block NSString *flPath = [dlDir stringByAppendingPathComponent:flName];
+	
+	// If downloaded file exists, remove it first
+	if ([fm fileExistsAtPath:flPath]) [fm removeItemAtPath:flPath error:NULL];
+	
+	dispatch_semaphore_t    sem;
+	__block NSString        *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
+	__block NSURLResponse   *responsePtr;
+	__block NSError         *urlErr = nil;
+	
+	sem = dispatch_semaphore_create(0);
+	
+	NSURLSessionDownloadTask *downloadTask;
+	NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
+	sessionConfiguration.timeoutIntervalForRequest = 10;
+	sessionConfiguration.timeoutIntervalForResource = 120.0;
+	
+	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
+	
+	downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:urlPath] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
+					{
+						NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+						qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
+						if (dlerr || [httpResponse statusCode] >= 300)
+						{
+							urlErr = dlerr;
+							qlerror(@"File download error %@", self->error.localizedDescription);
+						}
+						else
+						{
+							if (responsePtr != NULL) responsePtr = response;
+							
+							qlinfo(@"dlFilePath, %@", dlFilePath);
+							qlinfo(@"location, %@", location.path);
+							
+							NSFileManager *fileManager = [NSFileManager defaultManager];
+							NSError *cperror;
+							BOOL fileOKToMove = YES;
+							if ([fileManager fileExistsAtPath:dlFilePath]) {
+								cperror = nil;
+								[fileManager removeItemAtPath:dlFilePath error:&cperror];
+								if (cperror) {
+									fileOKToMove = NO;
+									qlerror(@"Error removing old downloaded file.");
+									qlerror(@"%@",cperror.localizedDescription);
+								}
+							}
+							
+							//moving the file from temp location to app's own directory
+							if (fileOKToMove)
+							{
+								cperror = nil;
+								BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
+								
+								if (cperror) {
+									qlinfo(@"cperror, %@", cperror.localizedDescription);
+								}
+								
+								NSLog(fileCopied ? @"Yes" : @"No");
+							}
+						}
+						
+						dispatch_semaphore_signal(sem);
+					}];
+	
+	[downloadTask resume];
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+	
+	if (urlErr) *err = urlErr;
+	return dlFilePath;
+}
+
 - (NSString *)runSyncFileDownloadAlt:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
 	qlinfo(@"[runSyncFileDownloadAlt][urlPath], %@", urlPath);
