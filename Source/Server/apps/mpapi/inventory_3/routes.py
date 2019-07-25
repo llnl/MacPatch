@@ -24,7 +24,6 @@ class AddInventoryData(MPResource):
 		super(AddInventoryData, self).__init__()
 
 	def post(self, client_id):
-
 		if not isValidClientID(client_id):
 			log_Error('[AddInventoryData][Post]: Failed to verify ClientID (%s)' % (client_id))
 			return {"result": '', "errorno": 412, "errormsg": 'Failed to verify ClientID'}, 412
@@ -35,6 +34,7 @@ class AddInventoryData(MPResource):
 
 		result = None
 		jData = request.get_json(force=True)
+
 		if jData:
 			_inv_type = current_app.config['INVENTORY_PROCESS']
 			if _inv_type == 'Hybrid':
@@ -48,26 +48,24 @@ class AddInventoryData(MPResource):
 			else:
 				log_Error('Inventory processing type ({}) does not exist. Writing data to disk.'.format(_inv_type))
 				result = self.writeToDisk(client_id, jData)
-
+		if result is not None:
 			if result[0] == True:
 				return {"result": {}, "errorno": 0, "errormsg": ''}, result[1]
 			else:
 				return {"result": {}, "errorno": result[1], "errormsg": result[2]}, result[1]
-
+		else:
+			return {"result": {}, "errorno": 500, "errormsg": 'No json data to parse'}, 500
 
 	def processDirect(self, client_id, invObj):
-		_table = "/tmp/" + invObj['table'] + ".log"
-		with open(_table, 'w') as f:
-			json.dump(invObj, f)
-
 		try:
+			log_Info("Inventory for {} being processed directly to db.".format(['table']))
 			elog = None
 			dMgr = DataMgr(invObj)
 			if dMgr.parseInvData() is True:
 				self.recordInvLog(cuuid=client_id, mp_server=request.host, inv_table=invObj['table'], error_no=0, error_msg='', json_data='')
 			else:
 				self.recordInvLog(cuuid=client_id, mp_server=request.host, inv_table=invObj['table'], error_no=1,error_msg='', json_data='')
-				self.recordInvErr(cuuid=client_id, inv_table=invObj['table'], error_msg='Error adding inventory.',json_data=invObj, mdate=datetime.now())
+				self.recordInvErr(cuuid=client_id, inv_table=invObj['table'], error_msg='Error adding inventory.',json_data=invObj)
 				return (False, 417, 'Error adding inventory.')
 
 			return (True, 201, '')
@@ -80,47 +78,37 @@ class AddInventoryData(MPResource):
 			return (False, 500, message)
 
 	def writeToDisk(self, client_id, invObj):
+		log_Info("Inventory for {} being processed by filesystem.".format(['table']))
+
 		_server_config = current_app.config['MP_SETTINGS']['server']
 		log_Debug('[AddInventoryData][Post]: _server_config = %s' % (_server_config))
 		_dt = datetime.now().strftime('%Y%m%d%H%M%S')
 
-		jData = request.get_json(force=True)
-		if jData:
-			try:
-				if 'inventory_dir' in _server_config:
-					_file_Dir = os.path.join(_server_config['inventory_dir'], 'files')
-					log_Debug('[AddInventoryData][Post]: _file_Dir = %s' % (_file_Dir))
-					if not os.path.exists(_file_Dir):
-						log_Debug('[AddInventoryData][Post]: Create _file_Dir: %s' % (_file_Dir))
-						os.makedirs(_file_Dir)
+		if 'inventory_dir' in _server_config:
+			_file_Dir = os.path.join(_server_config['inventory_dir'], 'files')
+			log_Debug('[AddInventoryData][Post]: _file_Dir = %s' % (_file_Dir))
+			if not os.path.exists(_file_Dir):
+				log_Debug('[AddInventoryData][Post]: Create _file_Dir: %s' % (_file_Dir))
+				os.makedirs(_file_Dir)
 
-					if os.path.exists(_file_Dir):
-						log_Debug('[AddInventoryData][Post]: Save Inventory Data to file')
-						_file_str = (str(_dt), jData['table'], ".mpd")
-						_file_Name = "_".join(_file_str)
-						_file_Path = os.path.join(_file_Dir, _file_Name)
-						log_Debug('[AddInventoryData][Post]: file = %s' % (_file_Path))
-						with open(_file_Path, 'w') as outfile:
-							json_string = json.dumps(jData)
-							log_Debug('[AddInventoryData][Post]: json_string = %s' % (json_string))
-							outfile.write(json_string)
+			if os.path.exists(_file_Dir):
+				log_Debug('[AddInventoryData][Post]: Save Inventory Data to file')
+				_file_str = (str(_dt), invObj['table'], ".mpd")
+				_file_Name = "_".join(_file_str)
+				_file_Path = os.path.join(_file_Dir, _file_Name)
+				log_Debug('[AddInventoryData][Post]: file = %s' % (_file_Path))
+				with open(_file_Path, 'w') as outfile:
+					json_string = json.dumps(invObj)
+					log_Debug('[AddInventoryData][Post]: json_string = %s' % (json_string))
+					outfile.write(json_string)
 
-						log_Info('[AddInventoryData][Post]: Writing inventory file (%s) to disk.' % (_file_Name))
+				log_Info('[AddInventoryData][Post]: Writing inventory file (%s) to disk.' % (_file_Name))
 
-					return (True,201,'')
+			return (True,201,'')
 
-				else:
-					log_Error('[AddInventoryData][Post]: Inventory directory object not found in config.')
-					return (False, 412, 'Inventory directory object not found in config.')
-
-			except Exception as e:
-				exc_type, exc_obj, exc_tb = sys.exc_info()
-				message=str(e.args[0]).encode("utf-8")
-				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
-				return (False, 500, message)
-
-		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
-		return (False, 412, 'Inventory Data empty')
+		else:
+			log_Error('[AddInventoryData][Post]: Inventory directory object not found in config.')
+			return (False, 412, 'Inventory directory object not found in config.')
 
 	def recordInvErr(self, cuuid, inv_table, error_msg, json_data ):
 		elog = MpInvErrors(cuuid=cuuid, inv_table=inv_table, error_msg=error_msg, json_data=json_data, mdate=datetime.now())
@@ -222,8 +210,6 @@ class DataMgr:
 			# is not a valid hex code for a UUID.
 			return False
 
-		return False
-
 	def displayData(self):
 		pprint.pprint(self.invData)
 
@@ -324,12 +310,12 @@ class Inventory:
 
 		return _tables
 
-	def columnsForTable(self,tableName):
+	def columnsForTable(self, tableName):
 
 		columns = []
 		dbName = current_app.config['DB_NAME']
 		sqlStr = text("""
-					  SELECT column_name, DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION 
+					  SELECT COLUMN_NAME, DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION 
 					  FROM information_schema.columns 
 					  WHERE table_schema='""" + dbName + """' 
 					  AND table_name = '""" + tableName + """'
@@ -356,12 +342,12 @@ class Inventory:
 
 	def tableExists(self,table):
 		if table.upper() in list(map(str.upper, self.tables)):
-    			return True
+			return True
 		else:
 			return False
 
 	def columnExists(self, column, table):
-		columns = self.columnsForTable(self,table)
+		columns = self.columnsForTable(self, table)
 		if column.upper() in list(map(str.upper, columns)):
 			return True
 		else:
@@ -393,9 +379,6 @@ class Inventory:
 
 		res = True
 		colRes = {}
-		# print name
-		# print cols
-		# print field
 
 		for col in cols:
 			if col['name'].lower() == name.lower():
@@ -494,8 +477,6 @@ class Inventory:
 			log_Error('[Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
 			return False
 
-		return True
-
 	def alterColumn(self,tableName,field):
 
 		_field = self.returnFieldObjectFromField(field)
@@ -545,7 +526,7 @@ class Inventory:
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error("Exception: " + message)
+			log_Error("Exception: {}".format(message))
 			return False
 
 	def createColumn(self, tableName, field):
@@ -597,7 +578,7 @@ class Inventory:
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error("Exception: " + message)
+			log_Error("Exception: {}".format(message))
 			return False
 
 	def removeKeyData(self, tableName, keyVal):
@@ -615,7 +596,7 @@ class Inventory:
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error("Exception: " + message)
+			log_Error("Exception: {}".format(message))
 			return False
 
 	def updateRowData(self,tableName,keyVal,mdate,row):
@@ -651,7 +632,7 @@ class Inventory:
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error("Exception: " + message)
+			log_Error("Exception: {}".format(message))
 			return False
 
 	def insertRowData(self,tableName,keyVal,mdate,row):
@@ -690,5 +671,5 @@ class Inventory:
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error("Exception: " + message)
+			log_Error("Exception: {}".format(message))
 			return False
