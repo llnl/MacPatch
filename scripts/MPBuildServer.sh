@@ -444,6 +444,7 @@ cd ${BUILDROOT}/nginx
 if $USELINUX; then
 	./configure --prefix=${MPSERVERBASE}/nginx \
     --without-http_autoindex_module \
+    --with-http_v2_module \
 	--with-http_ssl_module \
 	--with-pcre \
 	--user=www-data \
@@ -455,6 +456,7 @@ else
     ./configure --prefix=${MPSERVERBASE}/nginx \
     --with-cc-opt="-I${OPENSSLPWD}/include" \
     --with-ld-opt="-L${OPENSSLPWD}/lib" \
+    --with-http_v2_module \
     --without-http_autoindex_module \
     --without-http_ssi_module \
     --with-http_ssl_module \
