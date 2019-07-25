@@ -51,6 +51,17 @@ class BaseConfig:
 	PATCH_CONTENT_DIR       		= '/opt/MacPatch/Content/Web/patches'
 	ALLOW_CONTENT_DOWNLOAD			= False
 
+	# Inventory
+	INVENTORY_PROCESS				= 'Hybrid' # DB, File, Hybrid
+	INVENTORY_HYBRID_ROWS_LIMIT		= 10
+
+	# AWS
+	USE_AWS_S3						= False
+	AWS_S3_KEY 						= None
+	AWS_S3_SECRET 					= None
+	AWS_S3_BUCKET 					= None
+	AWS_S3_REGION 					= None
+
 
 class DevelopmentConfig(BaseConfig):
 

@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app
 from flask_restful import reqparse
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -33,44 +33,106 @@ class AddInventoryData(MPResource):
 			log_Error('[AddInventoryData][Post]: Failed to verify Signature for client (%s)' % (client_id))
 			return {"result": '', "errorno": 412, "errormsg": 'Failed to verify Signature'}, 412
 
+		result = None
 		jData = request.get_json(force=True)
 		if jData:
-			
-			_table="/tmp/" + jData['table'] + ".log"
-			with open(_table, 'w') as f:
-				json.dump(jData, f)
+			_inv_type = current_app.config['INVENTORY_PROCESS']
+			if _inv_type == 'Hybrid':
+				if 'rows' in jData:
+					if len(jData['rows']) <= current_app.config['INVENTORY_HYBRID_ROWS_LIMIT']:
+						result = self.processDirect(client_id,jData)
+			elif _inv_type == 'DB':
+				result = self.processDirect(client_id, jData)
+			elif _inv_type == 'File':
+				result = self.writeToDisk(client_id, jData)
+			else:
+				log_Error('Inventory processing type ({}) does not exist. Writing data to disk.'.format(_inv_type))
+				result = self.writeToDisk(client_id, jData)
 
+			if result[0] == True:
+				return {"result": {}, "errorno": 0, "errormsg": ''}, result[1]
+			else:
+				return {"result": {}, "errorno": result[1], "errormsg": result[2]}, result[1]
+
+
+	def processDirect(self, client_id, invObj):
+		_table = "/tmp/" + invObj['table'] + ".log"
+		with open(_table, 'w') as f:
+			json.dump(invObj, f)
+
+		try:
+			elog = None
+			dMgr = DataMgr(invObj)
+			if dMgr.parseInvData() is True:
+				self.recordInvLog(cuuid=client_id, mp_server=request.host, inv_table=invObj['table'], error_no=0, error_msg='', json_data='')
+			else:
+				self.recordInvLog(cuuid=client_id, mp_server=request.host, inv_table=invObj['table'], error_no=1,error_msg='', json_data='')
+				self.recordInvErr(cuuid=client_id, inv_table=invObj['table'], error_msg='Error adding inventory.',json_data=invObj, mdate=datetime.now())
+				return (False, 417, 'Error adding inventory.')
+
+			return (True, 201, '')
+
+		except Exception as e:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			message = str(e.args[0]).encode("utf-8")
+			log_Error('[AddInventoryData][processDirect][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			self.recordInvErr(cuuid=client_id, inv_table=invObj['table'],error_msg='Error adding inventory.',json_data=invObj)
+			return (False, 500, message)
+
+	def writeToDisk(self, client_id, invObj):
+		_server_config = current_app.config['MP_SETTINGS']['server']
+		log_Debug('[AddInventoryData][Post]: _server_config = %s' % (_server_config))
+		_dt = datetime.now().strftime('%Y%m%d%H%M%S')
+
+		jData = request.get_json(force=True)
+		if jData:
 			try:
-				dMgr = DataMgr(jData)
-				if dMgr.parseInvData() is True:
-					me = MpInvLog(cuuid=client_id, mp_server=request.host, inv_table=jData['table'],
-								error_no=0, error_msg='', json_data='', mdate=datetime.now() )
-					db.session.add(me)
-					db.session.commit()
-				else:
-					ilog = MpInvLog(cuuid=client_id, mp_server=request.host, inv_table=jData['table'],
-								error_no=1, error_msg='', json_data='', mdate=datetime.now())
-					db.session.add(ilog)
-					elog = MpInvErrors(cuuid=client_id, inv_table=jData['table'],
-								error_msg='Error adding inventory.', json_data=jData, mdate=datetime.now())
-					db.session.add(elog)
-					db.session.commit()
-					return {"result": '', "errorno": 417, "errormsg": 'Error adding inventory.'}, 417
+				if 'inventory_dir' in _server_config:
+					_file_Dir = os.path.join(_server_config['inventory_dir'], 'files')
+					log_Debug('[AddInventoryData][Post]: _file_Dir = %s' % (_file_Dir))
+					if not os.path.exists(_file_Dir):
+						log_Debug('[AddInventoryData][Post]: Create _file_Dir: %s' % (_file_Dir))
+						os.makedirs(_file_Dir)
 
-				return {"result": '', "errorno": 0, "errormsg": ''}, 201
+					if os.path.exists(_file_Dir):
+						log_Debug('[AddInventoryData][Post]: Save Inventory Data to file')
+						_file_str = (str(_dt), jData['table'], ".mpd")
+						_file_Name = "_".join(_file_str)
+						_file_Path = os.path.join(_file_Dir, _file_Name)
+						log_Debug('[AddInventoryData][Post]: file = %s' % (_file_Path))
+						with open(_file_Path, 'w') as outfile:
+							json_string = json.dumps(jData)
+							log_Debug('[AddInventoryData][Post]: json_string = %s' % (json_string))
+							outfile.write(json_string)
+
+						log_Info('[AddInventoryData][Post]: Writing inventory file (%s) to disk.' % (_file_Name))
+
+					return (True,201,'')
+
+				else:
+					log_Error('[AddInventoryData][Post]: Inventory directory object not found in config.')
+					return (False, 412, 'Inventory directory object not found in config.')
 
 			except Exception as e:
-				db.session.add(elog)
-				db.session.commit()
 				exc_type, exc_obj, exc_tb = sys.exc_info()
 				message=str(e.args[0]).encode("utf-8")
 				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
-				elog = MpInvErrors(cuuid=client_id, inv_table=jData['table'], error_msg='Error adding inventory.', json_data=jData, mdate=datetime.now())
-				return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
-
+				return (False, 500, message)
 
 		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
-		return {"result": '', "errorno": 412, "errormsg": 'Inventory Data empty'}, 412
+		return (False, 412, 'Inventory Data empty')
+
+	def recordInvErr(self, cuuid, inv_table, error_msg, json_data ):
+		elog = MpInvErrors(cuuid=cuuid, inv_table=inv_table, error_msg=error_msg, json_data=json_data, mdate=datetime.now())
+		db.session.add(elog)
+		db.session.commit()
+
+	def recordInvLog(self, cuuid, mp_server, inv_table, error_no, error_msg, json_data):
+		ilog = MpInvLog(cuuid=cuuid, mp_server=mp_server, inv_table=inv_table,
+						error_no=error_no, error_msg=error_msg, json_data=json_data, mdate=datetime.now())
+		db.session.add(ilog)
+		db.session.commit()
+
 
 # Add Routes Resources
 inventory_3_api.add_resource(AddInventoryData,    '/client/inventory/<string:client_id>')

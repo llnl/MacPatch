@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 import datetime
