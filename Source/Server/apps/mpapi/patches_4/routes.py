@@ -77,6 +77,12 @@ class PatchGroupPatches(MPResource):
 						for tRow in _third_all:
 							if row.patch_id == tRow.puuid:
 								patch = tRow.asDict
+								# Add S3 Support
+								if 'pkg_useS3' in patch:
+									if patch['pkg_useS3'] == 1:
+										s3url = getS3UrlForPatch(patch['puuid'])
+										patch['pkg_url'] = s3url
+
 								del patch['pkg_path']
 								del patch['cve_id']
 								del patch['patch_severity']
@@ -161,59 +167,9 @@ class PatchGroupPatches(MPResource):
 
 		return patch_group_id
 
-# Get Patch Group Patches Fast & Dynamic
-# Get Patch Scan List filter on OS Ver e.g. 10.9, 10.10 ... (Third Only)
-class PatchScanList(MPResource):
-
-	def __init__(self):
-		self.reqparse = reqparse.RequestParser()
-		super(PatchScanList, self).__init__()
-
-	def get(self, client_id, severity='all'):
-
-		wsResult = WSResult()
-		wsData = WSData()
-		wsData.data = {}
-		wsData.type = 'PatchGroupPatches'
-		wsResult.result = wsData
-
-		try:
-			if not isValidClientID(client_id):
-				log_Error('[PatchScanList][Get]: Failed to verify ClientID (%s)' % (client_id))
-				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify ClientID'), 424
-
-			if not isValidSignature(self.req_signature, client_id, self.req_uri, self.req_ts):
-				log_Error('[PatchScanList][Get]: Failed to verify Signature for client (%s)' % (client_id))
-				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify Signature'), 424
-
-			log_Debug('[PatchScanList][Get]: Args: cuuid=(%s) severity=(%s)' % (client_id, severity))
-
-
-			agentSettings = AgentSettings()
-			agentSettings.populateSettings(client_id)
-
-			_scanList = PatchScanV2(agentSettings.patch_state)
-			_list = _scanList.getScanList('*', severity)
-
-			if _list is not None:
-				result = {'data': _list}
-				return {"result": result, "errorno": 0, "errormsg": 'none'}, 200
-			else:
-				log_Error('[PatchScanListFilterOS][Get]: Failed to get a scan list for client %s' % (client_id))
-				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
-
-		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			message=str(e.args[0]).encode("utf-8")
-			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=message), 500
-
 # --------------------------------------------------------------------
-# MP Agent 3.1
-# Add Routes Resources
-# New, Dynamic, no need to save patch group
+# MP Agent 3.4
+# Add S3 Support
 
-patches_3_api.add_resource(PatchGroupPatches,		'/client/patch/group/<string:client_id>')
+patches_4_api.add_resource(PatchGroupPatches,		'/client/patch/group/<string:client_id>')
 
-patches_3_api.add_resource(PatchScanList, 			'/client/patch/scan/list/all/<string:client_id>', endpoint='sevAll')
-patches_3_api.add_resource(PatchScanList, 			'/client/patch/scan/list/<string:severity>/<string:client_id>', endpoint='sevCustom')

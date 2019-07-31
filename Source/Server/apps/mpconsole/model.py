@@ -484,6 +484,8 @@ class MpPatch(CommonBase):
 	pkg_path                = Column(String(255), info="Package Path")
 	pkg_url                 = Column(String(255), info="Package URL")
 	pkg_env_var             = Column(String(255), info="Package Env")
+	pkg_useS3				= Column(INTEGER(1, unsigned=True), server_default="0", info="Active")
+	pkg_S3path 				= Column(String(255), info="S3 Path")
 	cdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Create Date")
 	mdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Modify Date")
 

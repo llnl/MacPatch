@@ -33,7 +33,8 @@ class SWObj(object):
 
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			print(('[Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message)))
+			message=str(e.args[0]).encode("utf-8")
+			print(('[Line: %d] Message: %s' % (exc_tb.tb_lineno, message)))
 
 
 

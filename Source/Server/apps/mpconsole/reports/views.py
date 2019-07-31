@@ -270,7 +270,8 @@ def saveReport():
 
 	except Exception as e:
 		exc_type, exc_obj, exc_tb = sys.exc_info()
-		return json.dumps({'errorno': 500, 'errormsg': e.message, 'data': {}}), 500
+		message=str(e.args[0]).encode("utf-8")
+		return json.dumps({'errorno': 500, 'errormsg': message, 'data': {}}), 500
 
 	return json.dumps({'errorno': 0}, default=json_serial), 304
 

@@ -56,14 +56,11 @@ class PatchGroupPatches(MPResource):
 				log_Error('[PatchGroupPatches][Get][%s]: No patch group (%s) found.' % (client_id, group_id))
 				return wsResult.resultNoSignature(errorno=404, errormsg='Not Found'), 404
 
-		except IntegrityError as exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError] CUUID: %s Message: %s' % (client_id, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def getPatchGroupForClient(self, client_id):
 		patch_group_id = 'NA'
@@ -118,15 +115,11 @@ class PatchScanList(MPResource):
 				log_Error('[PatchScanListFilterOS][Get]: Failed to get a scan list for client %s' % (client_id))
 				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
 
-
-		except IntegrityError as exc:
-			log_Error('[PatchGroupPatches][Get][IntegrityError] CCUID: %s Message: %s' % (client_id, exc.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=exc.message), 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroupPatches][Get][Exception][Line: %d] CCUID: %s Message: %s' % (exc_tb.tb_lineno, client_id, e.message))
-			return wsResult.resultNoSignature(errorno=500, errormsg=e.message), 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroupPatches][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # --------------------------------------------------------------------
 # MP Agent 3.1

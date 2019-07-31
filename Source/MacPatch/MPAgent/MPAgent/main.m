@@ -176,13 +176,9 @@ int main (int argc, char * argv[])
 					break;
 				case 'i':
 					isILoadMode = YES;
-					a_Type = 10;
-					updateType = kAllPatches;
 					break;
 				case 'I':
 					isILoadMode = YES;
-					a_Type = 10;
-					updateType = kAllPatches;
 					break;
 				case 's':
 					a_Type = 3;
@@ -460,6 +456,7 @@ int main (int argc, char * argv[])
 			case 13:
 				// Software - Install Group
 				swc = [SoftwareController new];
+				[swc setILoadMode:isILoadMode];
 				result = [swc installSoftwareTasksForGroup:swArg];
 				return result;
 				break;
@@ -467,12 +464,14 @@ int main (int argc, char * argv[])
 				// Software - Install SW Task
 				// Arg is SW Task ID
 				swc = [SoftwareController new];
+				[swc setILoadMode:isILoadMode];
 				result = [swc installSoftwareTask:swArg];
 				return result;
 				break;
 			case 15:
 				// Software - Install SW Using Plist
 				swc = [SoftwareController new];
+				[swc setILoadMode:isILoadMode];
 				result = [swc installSoftwareTasksUsingPLIST:swArg];
 				return result;
 				break;

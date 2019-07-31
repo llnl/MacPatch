@@ -32,8 +32,6 @@ class SUSCatalogs(MPResource):
 			q_catalogs = MpAsusCatalog.query.filter(MpAsusCatalog.os_major == int(osmajor),
 													MpAsusCatalog.os_minor == int(osminor)).order_by(MpAsusCatalog.c_order.asc()).all()
 
-			# q_catalog_alt = MpAsusCatalog.query.filter(MpAsusCatalog.os_major == osmajor).all()
-
 			# CatalogURLS
 			# ProxyCatalogURLS
 			_errorno = 500
@@ -62,14 +60,11 @@ class SUSCatalogs(MPResource):
 
 			return {'errorno': _errorno, 'errormsg': '', 'result': catalogs}, _result
 
-		except IntegrityError as exc:
-			log_Error('[SUSCatalogs][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUSCatalogs][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUSCatalogs][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class SUServerList(MPResource):
 	def __init__(self):
@@ -97,14 +92,11 @@ class SUServerList(MPResource):
 			log_Debug('[SUServerList][Get] CUUID: %s Result: %s' % (cuuid, _serverObj.struct()))
 			return {'errorno': 0, 'errormsg': '', 'result': _serverObj.struct()}, 200
 
-		except IntegrityError as exc:
-			log_Error('[SUServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUServerList][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUServerList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class SUSListVersion(MPResource):
 	def __init__(self):
@@ -139,14 +131,11 @@ class SUSListVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError as exc:
-			log_Error('[SUSListVersion][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUSListVersion][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUSListVersion][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class ServerList(MPResource):
 	def __init__(self):
@@ -176,15 +165,11 @@ class ServerList(MPResource):
 			log_Error('[ServerList][Get][%s]: Server List Not Found for id (%d)' % (cuuid, list_id))
 			return {'errorno': 404, 'errormsg': 'Server List Not Found', 'result': {}}, 404
 
-		except IntegrityError as exc:
-			log_Error('[ServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': 0}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerList][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class ServerListVersion(MPResource):
 	def __init__(self):
@@ -218,14 +203,11 @@ class ServerListVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError as exc:
-			log_Error('[ServerListVersion][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerListVersion][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerListVersion][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 ''' ------------------------------- '''
 ''' NOT A WEB SERVICE CLASS         '''
@@ -345,7 +327,7 @@ class Server(object):
 servers_api.add_resource(SUSCatalogs,       '/sus/catalogs/<string:osminor>/<string:cuuid>', endpoint='susUsingMinor')
 servers_api.add_resource(SUSCatalogs,       '/sus/catalogs/<string:osmajor>/<string:osminor>/<string:cuuid>', endpoint='susUsingMajorMinor')
 # New
-servers_api.add_resource(SUSListVersion,    '/sus/list/version/<string:cuuid>/<string:list_id>')
+servers_api.add_resource(SUSListVersion,    '/sus/list/version/<string:cuuid>/<int:list_id>')
 servers_api.add_resource(SUServerList,      '/sus/catalogs/list/<string:osminor>/<string:cuuid>', endpoint='asusUsingMinor')
 servers_api.add_resource(SUServerList,      '/sus/catalogs/list/<string:osmajor>/<string:osminor>/<string:cuuid>', endpoint='asusUsingMajorMinor')
 
@@ -353,4 +335,4 @@ servers_api.add_resource(ServerList,        '/server/list/<string:cuuid>')
 servers_api.add_resource(ServerList,        '/server/list/<int:list_id>/<string:cuuid>', endpoint='srvListWithID')
 
 servers_api.add_resource(ServerListVersion, '/server/list/version/<string:cuuid>', endpoint='srvListVerWithClientID')
-servers_api.add_resource(ServerListVersion, '/server/list/version/<string:list_id>/<string:cuuid>', endpoint='srvListVerWithID')
+servers_api.add_resource(ServerListVersion, '/server/list/version/<int:list_id>/<string:cuuid>', endpoint='srvListVerWithID')

@@ -64,14 +64,11 @@ class AVData(MPResource):
 				db.session.commit()
 				return {"result": '', "errorno": 0, "errormsg": 'none'}, 201
 
-		except IntegrityError as exc:
-			log_Error('[AVData][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AVData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AVData][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Antivirus Latest Defs Info
 class AVDefs(MPResource):
@@ -90,7 +87,7 @@ class AVDefs(MPResource):
 				log_Error('[AVDefs][GET]: Failed to verify Signature for client (' + cuuid + ')')
 				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify Signature'}, 424
 
-			avdefs = AvDefs.filter(AvDefs.engine == av_engine, AvDefs.current == 'YES').first()
+			avdefs = AvDefs.query.filter(AvDefs.engine == av_engine, AvDefs.current == 'YES').first()
 
 			if avdefs:
 				av_data = {'defsUpdate': avdefs.file}
@@ -100,14 +97,11 @@ class AVDefs(MPResource):
 				log_Error('[AVDefs][GET]: AV Engine Not found. for client (' + cuuid + ')')
 				return {"result": '', "errorno": 404, "errormsg": 'AV Engine Not found.'}, 404
 
-		except IntegrityError as exc:
-			log_Error('[AVDefs][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AVDefs][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': {}}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[AVDefs][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Add Routes Resources
 antivirus_api.add_resource(AVData, '/client/av/<string:cuuid>')

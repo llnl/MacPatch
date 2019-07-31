@@ -219,7 +219,7 @@
 			$('#modalSaveButton').hide();
 			$('#modalCancelButton').hide();
 			$('#modalBody').html(innerHTML);
-			$('#modalBody').css({'height':'770px'});
+			$('#modalBody').css({'height':'88vh'});
 			$('#modalDialog').addClass("modal-wide");
 			$('#modalDialog').modal('show');
 		});
@@ -236,9 +236,14 @@
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Patch Data">');
 		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
 		{% endif %}
+
 		htmlData.push('</a>');
 		htmlData.push('</td><td>');
-		htmlData.push('<a class="download" href="/mp-content' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
+		if (row['pkg_url'].includes('WSAccessKey')) {
+		    htmlData.push('<a class="download" href="' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
+        } else {
+		    htmlData.push('<a class="download" href="/mp-content' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
+        }
 		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
 		htmlData.push('</td></tr></table>');
 		return htmlData.join('');
@@ -264,7 +269,7 @@
 			$('#modalSaveButton').hide();
 			$('#modalCancelButton').hide();
 			$('#modalBody').html(innerHTML);
-			$('#modalBody').css({'height':'770px'});
+			$('#modalBody').css({'height':'88vh'});
 			$('#modalDialog').addClass("modal-wide");
 			$('#modalDialog').modal('show');
 		},

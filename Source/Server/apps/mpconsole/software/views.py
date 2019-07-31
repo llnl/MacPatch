@@ -62,7 +62,8 @@ def groups():
 					_drow[c['field']] = _objVal
 			except Exception as e:
 				exc_type, exc_obj, exc_tb = sys.exc_info()
-				log_Error(e.message)
+				message=str(e.args[0]).encode("utf-8")
+				log_Error(message)
 
 		_rows.append(_drow)
 
@@ -614,9 +615,9 @@ def swPackageData(swID):
 		"sw_url":qSW.sw_url,
 		"sw_hash":qSW.sw_hash,
 		"sw_size":str(qSW.sw_size),
-		"sw_pre_install":base64.b64encode(qSW.sw_pre_install_script),
-		"sw_post_install":base64.b64encode(qSW.sw_post_install_script),
-		"sw_uninstall":base64.b64encode(qSW.sw_uninstall_script),
+		"sw_pre_install":base64.b64encode(qSW.sw_pre_install_script).decode('utf-8'),
+		"sw_post_install":base64.b64encode(qSW.sw_post_install_script).decode('utf-8'),
+		"sw_uninstall":base64.b64encode(qSW.sw_uninstall_script).decode('utf-8'),
 		"sw_env_var":qSW.sw_env_var,
 		"auto_patch":str(qSW.auto_patch),
 		"patch_bundle_id":qSW.patch_bundle_id,

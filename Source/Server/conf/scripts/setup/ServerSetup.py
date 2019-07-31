@@ -99,7 +99,7 @@ macServices=["gov.llnl.mp.invd.plist","gov.llnl.mp.py.api.plist","gov.llnl.mp.py
 "gov.llnl.mp.sus.sync.plist","gov.llnl.mpavdl.plist","gov.llnl.mp.rsync.plist",
 "gov.llnl.mp.sync.plist","gov.llnl.mp.pfctl.plist","gov.llnl.mp.fw.plist","gov.llnl.mp.nginx.plist"]
 
-lnxServices=["MPInventoryD3","MPAPI","MPConsole","MPNginx3","MPRsyncServer3"]
+lnxServices=["MPInventoryD","MPAPI","MPConsole","MPNginx","MPRsyncServer"]
 lnxCronSrvs=["MPPatchLoader","MPAVLoader","MPSyncContent"]
 
 # ----------------------------------------------------------------------------
@@ -507,10 +507,10 @@ def setupServices():
 			if 'gov.llnl.mp.nginx.plist' not in srvsList:
 				srvsList.append('gov.llnl.mp.nginx.plist')
 		else:
-			linkStartupScripts('MPInventoryD3')
-			srvsList.append('MPInventoryD3')
-			linkStartupScripts('MPNginx3')
-			srvsList.append('MPNginx3')
+			linkStartupScripts('MPInventoryD')
+			srvsList.append('MPInventoryD')
+			linkStartupScripts('MPNginx')
+			srvsList.append('MPNginx')
 			linkStartupScripts('MPAPI')
 			srvsList.append('MPAPI')
 	else:
@@ -536,8 +536,8 @@ def setupServices():
 			if 'gov.llnl.mp.nginx.plist' not in srvsList:
 				srvsList.append('gov.llnl.mp.nginx.plist')
 		else:
-			linkStartupScripts('MPNginx3')
-			srvsList.append('MPNginx3')
+			linkStartupScripts('MPNginx')
+			srvsList.append('MPNginx')
 			linkStartupScripts('MPConsole')
 			srvsList.append('MPConsole')
 

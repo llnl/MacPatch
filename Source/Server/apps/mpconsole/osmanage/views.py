@@ -15,6 +15,7 @@ from .. import db
 from .. model import *
 from .. modes import *
 from .. mplogger import *
+from .. clients.views import revGroupSWRes
 
 '''
 	This method queries the DB for all uploaded profiles
@@ -524,7 +525,7 @@ def postProfile():
 	App Filters
 	-------------------------------------------
 '''
-swaf_columns = [('appID', 'App ID', '0'), ('bundleID', 'Bundle ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'),
+swaf_columns = [('appID', 'App ID', '0'),('bundleID', 'Bundle ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'),
 				('message', 'Message', '1'), ('killProc', 'Kill Process', '1'), ('sendEmail', 'Send Email', '0'), ('enabled', 'Enabled', '1'),
 				('isglobal', 'Is Global', '1')]
 
@@ -538,20 +539,14 @@ def appFilters():
 @osmanage.route('/app_filter/list', methods=['GET'])
 @login_required
 def appFilterList():
-
 	srList = MpSoftwareRestrictions.query.all()
-
 	_results = []
 	if srList is not None:
 		for sr in srList:
-			print(sr)
 			row = {}
 			for c in swaf_columns:
 				y = "sr."+c[0]
-				print(c[0])
-				print(y)
 				row[c[0]] = eval(y)
-			#print(row)
 			_results.append(row)
 
 	return json.dumps({'data': _results, 'total': 0}), 200
@@ -578,7 +573,6 @@ def appFilterSave():
 	_form = request.form
 	if adminRole() or localAdmin():
 		formDict = _form.to_dict()
-		print(formDict)
 		if not formDict:
 			return json.dumps({'error': 404, 'data': [], 'total': 0}), 404
 
@@ -609,6 +603,33 @@ def appFilterSave():
 	else:
 		return json.dumps({'error': 401}), 401
 
+''' AJAX Request '''
+@osmanage.route('/app_filter/delete',methods=['DELETE'])
+@login_required
+def appFilterDelete():
+	if adminRole() or localAdmin():
+		if request.method == 'DELETE':
+			formDict = request.form.to_dict()
+			app_ids = formDict['appID'].split(",")
+			for aid in app_ids:
+				delSWRes = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.appID == aid).first()
+				delSWResForGroup = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.appID == aid).all()
+				if delSWRes is not None:
+					log_Info("{} deleted software restriction {}.".format(session.get('user'), delSWRes.displayName))
+					db.session.delete(delSWRes)
+
+				if delSWResForGroup is not None:
+					for swResG in delSWResForGroup:
+						log_Info("{} deleted software restriction {} from client group {}.".format(session.get('user'), delSWRes.displayName, swResG.group_id))
+						revGroupSWRes(swResG.group_id)
+						db.session.delete(swResG)
+
+			db.session.commit()
+
+		return json.dumps({'error': 0}), 200
+	else:
+		log_Error("{} does not have permission to delete software restrictions.".format(session.get('user')))
+		return json.dumps({'error': 0}), 403
 
 swafcg_columns = [('appID', 'App ID', '0'),('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'),('enabled', 'Enabled', '1')]
 

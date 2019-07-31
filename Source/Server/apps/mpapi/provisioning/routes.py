@@ -41,13 +41,11 @@ class PatchGroups(MPResource):
 			log_Debug('[PatchGroups][Get]: Result: %s' % (groups))
 			return {"result": groups, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError as exc:
-			log_Error('[PatchGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[PatchGroups][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchGroups][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class ClientGroups(MPResource):
 
@@ -81,13 +79,11 @@ class ClientGroups(MPResource):
 			log_Debug('[ClientGroups][Get]: Result: %s' % (groups))
 			return {"result": groups, "errorno": 0, "errormsg": ''}, 200
 
-		except IntegrityError as exc:
-			log_Error('[ClientGroups][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ClientGroups][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ClientGroups][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 class OSMigration(MPResource):
 
@@ -144,14 +140,11 @@ class OSMigration(MPResource):
 
 			return {"result": '', "errorno": 0, "errormsg": 'none'}, 201
 
-		except IntegrityError as exc:
-			log_Error('[AgentBase][Post][IntegrityError]: CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {"result": '', "errorno": 500, "errormsg": exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[AgentBase][Post][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[OSMigration][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 # Add Routes Resources
 provisioning_api.add_resource(PatchGroups,     '/provisioning/groups/patch/<string:cuuid>')

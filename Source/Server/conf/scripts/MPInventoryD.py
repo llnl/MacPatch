@@ -25,7 +25,7 @@
 
 '''
 	Script: MPInventory.py
-	Version: 1.2.0
+	Version: 1.3.0
 '''
 
 import logging
@@ -55,10 +55,10 @@ gKeepFiles = False
 # MySQL Global Config
 myConfig = {
 	'user': 'mpdbadm',
-	'password': '',
-	'host': 'localhost',
+	'password': 'Apple2e123',
+	'host': 'mpqa02.llnl.gov',
 	'port': 3306,
-	'database': 'MacPatchDB3',
+	'database': 'MacPatchDB33QA',
 	'raise_on_warnings': True,
 	'buffered': True
 }
@@ -155,14 +155,14 @@ class DBField:
 		_field['length'] = 0
 		return _field
 
-class MPMySQL:
+class MPDB:
 
 	def __init__(self,dbConfig):
 		try:
 			self.dbConfig = dbConfig
-			self.db = mydb.connect(**dbConfig)
-			self.dbObj = self.db.cursor(buffered=True)
-			self.tables = self.tablesFromDataBase()
+			self.connection = mydb.connect(**dbConfig)
+			self.connection.autocommit = False
+			self.cursor = self.connection.cursor(buffered=True)
 
 		except mydb.Error as err:
 			if err.errno == mydb.errorcode.ER_ACCESS_DENIED_ERROR:
@@ -171,18 +171,19 @@ class MPMySQL:
 				logger.error("Database does not exists")
 			else:
 				logger.error(err)
-		else:
-			self.dbObj.close()
-			self.db.close()
+			
+			self.cursor.close()
+			self.connection.close
+
+	def setAutoCommit(self,enable):
+		self.connection.autocommit = enable
 
 	def tablesFromDataBase(self):
-		_db = mydb.connect(**myConfig)
-		_dbCur = _db.cursor(buffered=True)
 
 		tables = []
 		try:
-			_dbCur.execute("SHOW TABLES")
-			for (table_name,) in _dbCur:
+			self.cursor.execute("SHOW TABLES")
+			for (table_name,) in self.cursor:
 				tables.append(table_name)
 
 		except mydb.Error as e:
@@ -191,36 +192,64 @@ class MPMySQL:
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
 
-		_dbCur.close()
-		_db.close()
-		return tables
+		finally:
+			return tables
+			
+	def commitAndClose(self):
+		try:
+			if self.connection.autocommit == False:
+				self.connection.commit()
+			else:
+				logger.debug("Autocommit is enabled. No commit is nessasary.")
+		except mydb.Error as err:
+			 logger.error("Failed to commit to database, will rollback: {}".format(err))
+			 self.connection.rollback()
+		finally:
+			self.cursor.close()
+			self.connection.close()
+
+	def rollbackAndClose(self):
+		self.connection.rollback()
+		self.cursor.close()
+		self.connection.close()
+
+	def close(self):
+		self.cursor.close()
+		self.connection.close()
+
+class MPMySQL:
+
+	def __init__(self, mpdb):
+		self.database = mpdb.dbConfig['database']
+		self.dbCursor = mpdb.cursor
+		self.dbConn = mpdb.connection
 
 	def columnsForTable(self,tableName):
 
-		_db = mydb.connect(**myConfig)
-		_dbCur = _db.cursor(buffered=True)
-
 		result = []
-		query = "SELECT column_name, DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION FROM information_schema.columns WHERE table_schema='" + self.dbConfig['database'] +"' AND table_name = '" + tableName + "'"
+		query = "SELECT COLUMN_NAME, DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION FROM information_schema.columns WHERE table_schema='" + self.database +"' AND table_name = '" + tableName + "'"
 		try:
-			id = _dbCur.execute(query)
-			columns = _dbCur.description
+			id = self.dbCursor.execute(query)
+			columns = self.dbCursor.description
 			result = []
-			for value in _dbCur.fetchall():
+			for value in self.dbCursor.fetchall():
 				tmp = {
 					'name': '',
 					'dataType': '',
 					'length': 0
 				}
 				for (index,column) in enumerate(value):
-					if columns[index][0] == 'column_name':
+					if columns[index][0] == 'COLUMN_NAME':
 						tmp['name'] = column
 					if columns[index][0] == 'DATA_TYPE':
 						tmp['dataType'] = column
 					if columns[index][0] == 'NUMERIC_PRECISION' or columns[index][0] == 'CHARACTER_MAXIMUM_LENGTH':
 						if column:
 							if len(str(column)) > 0:
-								tmp['length'] = int(column)
+								if columns[index][0] == 'NUMERIC_PRECISION':
+									tmp['length'] = int(column) + 1
+								else:
+									tmp['length'] = int(column)
 
 				result.append(tmp)
 
@@ -232,8 +261,6 @@ class MPMySQL:
 				logger.error("MySQL Errors: %s" % str(e))
 				logger.error(query)
 
-		_dbCur.close()
-		_db.close()
 		return result
 
 	def tableExists(self,table):
@@ -251,17 +278,19 @@ class MPMySQL:
 
 	def colsToAlterOrAdd(self,tableName,cols,fields):
 		logger.info("Number of fields to verify: %d" % len(fields))
+
 		for field in fields:
-			logger.info("Verify field %s" % field['name'])
+			logger.debug("Verify field %s" % field['name'])
 			if self.searchForColNameInFields(field['name'],cols) is False:
 				logger.info("Add Field: %s" % field['name'])
 				x = self.createColumn(tableName,field)
 			else:
 				if self.colMatchesDataInField(field['name'],cols,field) is False:
 					logger.info("Alter Field: %s" % field['name'])
-					x = self.alterColumn(tableName,field)
+					#x = self.alterColumn(tableName,field)
 				else:
 					logger.debug("Field Passed: %s" % field['name'])
+					
 
 	def searchForColNameInFields(self, name, fields):
 		res = False
@@ -275,29 +304,33 @@ class MPMySQL:
 
 		res = True
 		colRes = {}
-		# print name
-		# print cols
-		# print field
+
+		#print(name)
+		#print(cols)
+		#print(field)
 
 		for col in cols:
 			if col['name'].lower() == name.lower():
 				colRes = col
 				break
 
-		for key in colRes:
-			# If database is set to column type of text, do not change it to varchar
-			if key == "dataType":
-				# print "eval dataType"
-				if str(colRes[key]).lower() == "text" and str(field[key]).lower() == "varchar":
-					# print "continue"
-					continue
-
-			if str(colRes[key]).lower() == str(field[key]).lower():
-				continue
+		# Match DataType (Column Type)
+		# If db column is text type dont change to varchar
+		if colRes['dataType'] != field['dataType']:
+			logger.debug("Datatypes do not match for {}. db({}) == inv({})".format(name, colRes['dataType'], field['dataType']))
+			if str(colRes['dataType']).lower() == "text" and str(field['dataType']).lower() == "varchar":
+				logger.debug("Database is of text which is greater than varchar. This is OK.")
 			else:
-				# print "False"
-				res = False
-				break
+				return False
+		else:
+			logger.debug("Datatypes match for {}. db({}) == inv({})".format(name, colRes['dataType'], field['dataType']))
+	
+
+		if int(colRes['length']) >= int(field['length']):
+			logger.debug("Length for {} is greater or equal. db({}) >= inv({})".format(name, colRes['length'], field['length']))
+		else:
+			logger.warning("Column ({}) length {} >= {} did not match.".format(name, colRes['length'], field['length']))
+			return False
 
 		return res
 
@@ -313,9 +346,6 @@ class MPMySQL:
 	def createTable(self,tableName,fields):
 
 		_result = False
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
 
 		_sqlArr = []
 		_sqlStrBegin = "CREATE TABLE %s (" % tableName
@@ -371,7 +401,8 @@ class MPMySQL:
 			return True
 
 		try:
-			_dbCur.execute(_sqlStrExec.encode('ascii',errors='ignore'))
+			self.dbCursor.execute(_sqlStrExec.encode('ascii',errors='ignore'))
+			self.dbConn.commit()
 			_result = True
 		except mydb.Error as e:
 			try:
@@ -379,23 +410,17 @@ class MPMySQL:
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
 
-		_dbCur.close()
-		_db.close()
+			self.dbConn.rollback()
+
 		return _result
 
 	def alterColumn(self,tableName,field):
-
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
 
 		_field = self.returnFieldObjectFromField(field)
 		_sqlStr = "ALTER TABLE %s" % tableName
 
 		# is RID field
 		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			_dbCur.close()
-			_db.close()
 			return False
 		else:
 			_sqlStr = _sqlStr + " CHANGE COLUMN `" + _field['name'] + "` `" + _field['name'] + "` " + _field['dataType']
@@ -429,41 +454,30 @@ class MPMySQL:
 
 		if gDebug:
 			logger.debug(_sqlStr)
-			_dbCur.close()
-			_db.close()
 			return True
 
 		try:
-			_dbCur.execute(_sqlStr.encode('ascii',errors='ignore'))
+			self.dbCursor.execute(_sqlStr.encode('ascii',errors='ignore'))
+			self.dbConn.commit()
 			logger.info("%s was altered sucessfully." % _field['name'])
-			_dbCur.close()
-			_db.close()
 			return True
+
 		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-				_dbCur.close()
-				_db.close()
-				return False
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
-				_dbCur.close()
-				_db.close()
-				return False
+				
+			self.dbConn.rollback()
+			return False
 
 	def createColumn(self, tableName, field):
-
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
 
 		_field = self.returnFieldObjectFromField(field)
 		_sqlStr = "ALTER TABLE %s" % tableName
 
 		# is RID field
 		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			_dbCur.close()
-			_db.close()
 			return False
 		else:
 			_sqlStr = _sqlStr + " ADD COLUMN `" + _field['name'] + "` " + _field['dataType']
@@ -497,64 +511,43 @@ class MPMySQL:
 
 		if gDebug:
 			logger.debug(_sqlStr)
-			_dbCur.close()
-			_db.close()
 			return True
 
 		try:
-			_dbCur.execute(_sqlStr.encode('ascii',errors='ignore'))
+			self.dbCursor.execute(_sqlStr.encode('ascii',errors='ignore'))
+			self.dbConn.commit()
 			logger.info("%s was created sucessfully." % _field['name'])
-			_dbCur.close()
-			_db.close()
 			return True
 		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.errno, e.msg))
-				_dbCur.close()
-				_db.close()
-				return False
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e.msg))
-				_dbCur.close()
-				_db.close()
-				return False
+				
+			self.dbConn.rollback()
+			return False
 
 	def removeKeyData(self, tableName, keyVal):
-
+		
 		_result = False
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
-
 		_sqlStr = "Delete from %s where cuuid = '%s'" % (str(tableName), str(keyVal))
 		if gDebug:
 			logger.debug(_sqlStr)
-			_dbCur.close()
-			_db.close()
 			return True
 		try:
-			_dbCur.execute(_sqlStr)
-			_dbCur.close()
-			_db.close()
+			self.dbCursor.execute(_sqlStr)
 			_result = True
 		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
-				_dbCur.close()
-				_db.close()
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
-				_dbCur.close()
-				_db.close()
 
 		return _result
 
 	def updateRowData(self,tableName,keyVal,mdate,row):
 
 		_result = False
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
 
 		_sqlArr = []
 		_sqlStrPre = "UPDATE %s SET" % tableName
@@ -577,34 +570,23 @@ class MPMySQL:
 		_sqlStr = "%s %s %s;" %(_sqlStrPre,','.join(_sqlArr),_sqlStrPst)
 		if gDebug == True:
 			logger.debug(_sqlStr)
-			_dbCur.close()
-			_db.close()
 			return True
 		try:
-			_dbCur.execute(_sqlStr.encode('ascii',errors='ignore'))
-			_dbCur.close()
-			_db.close()
+			self.dbCursor.execute(_sqlStr.encode('ascii',errors='ignore'))
 			_result = True
 		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				logger.error(_sqlStr)
-				_dbCur.close()
-				_db.close()
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
 				logger.error(_sqlStr)
-				_dbCur.close()
-				_db.close()
 
 		return _result
 
 	def insertRowData(self,tableName,keyVal,mdate,row):
 
 		_result = False
-		_db = mydb.connect(**myConfig)
-		_db.autocommit = True
-		_dbCur = _db.cursor(buffered=True)
 
 		_sqlArrCol = []
 		_sqlArrVal = []
@@ -630,25 +612,17 @@ class MPMySQL:
 		_sqlStr = "%s (%s) Values (%s);" % (_sqlStrPre, ','.join(_sqlArrCol),','.join(_sqlArrVal))
 		if gDebug == True:
 			logger.debug(_sqlStr)
-			_dbCur.close()
-			_db.close()
 			return True
 		try:
-			_dbCur.execute(_sqlStr.encode('ascii',errors='ignore'))
-			_dbCur.close()
-			_db.close()
+			self.dbCursor.execute(_sqlStr.encode('ascii',errors='ignore'))
 			_result = True
 		except mydb.Error as e:
 			try:
 				logger.error("MySQL Error [%d]: %s" % (e.args[0], e.args[1]))
 				logger.error(_sqlStr)
-				_dbCur.close()
-				_db.close()
 			except IndexError:
 				logger.error("MySQL Error: %s" % str(e))
 				logger.error(_sqlStr)
-				_dbCur.close()
-				_db.close()
 
 		return _result
 
@@ -691,8 +665,12 @@ class DataMgr:
 	def parseInvData(self):
 
 		_result = False
-		db = MPMySQL(myConfig)
-		dbExists = False
+		#db = MPMySQL(myConfig)
+
+		mysqlDB = MPDB(myConfig)
+		db = MPMySQL(mysqlDB)
+
+		tableExists = False
 		updateData = False
 		_table = self.invData['table']
 		_fields = self.invData['fields']
@@ -710,19 +688,21 @@ class DataMgr:
 					_fields.append(dfObj.getFieldForName(aField,aField))
 
 		# Create Table if needed
-		if _table not in db.tables:
+		_tables = mysqlDB.tablesFromDataBase()
+		if _table not in _tables:
 			logger.info("Create new table %s" % _table)
 			if db.createTable(_table,_fields) is False:
 				return _result
 		else:
 			logger.info("Table %s exists." % _table)
-			dbExists = True
+			tableExists = True
 
+		# Get columns, verify and alter as nessasary
 		cols = db.columnsForTable(_table)
 		db.colsToAlterOrAdd(_table,cols,_fields)
 
-		# Purge Data if needed
-		if dbExists:
+		# Purge Data if needed, auto commit if off.
+		if tableExists:
 			if self.invData['permanentRows'] is False:
 				# Remove Client Data Before Insert
 				# key = cuuid
@@ -736,19 +716,32 @@ class DataMgr:
 				updateData = True
 
 		# Add or Update Data
+		_updates = 0
+		_inserts = 0
 		for row in _rows:
 			_row = self.removeUnknownFields(row,_fields)
 			if updateData:
 				logger.info("Update record")
 				if db.updateRowData(_table,_keyVal,_dtObj,_row):
+					_updates = _updates + 1
 					_result = True
 			else:
-				logger.info("Insert new record")
+				#logger.debug("Insert new record")
+				_inserts = _inserts + 1
 				if db.insertRowData(_table,_keyVal,_dtObj,_row):
 					_result = True
 
-		return _result
+		if _updates >= 1:
+			logger.info("{} record(s) have been updated.".format(_updates))
 
+		if _inserts >= 1:
+			logger.info("{} record(s) have been inserted.".format(_inserts))
+
+		mysqlDB.commitAndClose()
+		return _result
+	
+	# Remove any extra columns/fields that are not in the fields section of the 
+	# .mpd inventory file.
 	def removeUnknownFields(self, row, fields):
 		fieldNames = [d['name'] for d in fields]
 		newdict = {k: row[k] for k in fieldNames if k in row}
@@ -891,13 +884,48 @@ def main():
 	# Make Sure the Config Exists
 	useOldConfig=False
 	confData = []
+	confFile = None
 	if args.config_old:
 		if not os.path.exists(args.config_old):
 			print("Unable to open " + args.config_old +". File not found.")
 			sys.exit(1)
 		else:
-			useOldConfig=True
 			confFile = MP_FLASK_FILE
+			with open(confFile) as data_file:
+				confData = json.load(data_file)
+
+			_cnf = None
+			if 'prod' in confData['settings']['database']:
+				_cnf = confData['settings']['database']['prod']
+				# pprint.pprint(_cnf)
+			else:
+				raise ValueError("Error, prod was not defined in db config")
+				return None
+
+			if 'dbName' in _cnf:
+				myConfig['database'] = _cnf['dbName']
+			else:
+				raise ValueError("Error, config missing key.")
+
+			if 'dbHost' in _cnf:
+				myConfig['host'] = _cnf['dbHost']
+			else:
+				raise ValueError("Error, config missing key.")
+
+			if 'dbPort' in _cnf:
+				myConfig['port'] = int(_cnf['dbPort'])
+			else:
+				raise ValueError("Error, config missing key.")
+
+			if 'username' in _cnf:
+				myConfig['user'] = _cnf['username']
+			else:
+				raise ValueError("Error, config missing key.")
+
+			if 'password' in _cnf:
+				myConfig['password'] = _cnf['password']
+			else:
+				raise ValueError("Error, config missing key.")
 
 	elif args.config:
 		if not os.path.exists(args.config):
@@ -905,77 +933,31 @@ def main():
 			sys.exit(1)
 		else:
 			confFile = MP_FLASK_FILE
-
-	else:
-		# Fall back to default flask
-		if not os.path.exists(MP_FLASK_FILE):
-			print("Unable to open " + MP_FLASK_FILE +". File not found.")
-			sys.exit(1)
-
-	try:
-		if useOldConfig:
-			with open(confFile) as data_file:
-				confData = json.load(data_file)
-		else:
 			confData = read_config_file(confFile)
 
-	except OSError:
-		print("Error opening and loading json config file.")
-		sys.exit(1)
+			if 'DB_NAME' in confData:
+				myConfig['database'] = confData['DB_NAME']
+			else:
+				raise ValueError("Error, config missing key DB_NAME.")
 
-	_cnf = None
-	if useOldConfig:
-		if 'prod' in confData['settings']['database']:
-			_cnf = confData['settings']['database']['prod']
-			# pprint.pprint(_cnf)
-		else:
-			raise ValueError("Error, prod was not defined in db config")
-			return None
+			if 'DB_HOST' in confData:
+				myConfig['host'] = confData['DB_HOST']
+			else:
+				raise ValueError("Error, config missing key DB_HOST.")
 
-		if 'dbName' in _cnf:
-			myConfig['database'] = _cnf['dbName']
-		else:
-			raise ValueError("Error, config missing key.")
+			if 'DB_USER' in confData:
+				myConfig['user'] = confData['DB_USER']
+			else:
+				raise ValueError("Error, config missing key DB_USER.")
 
-		if 'dbHost' in _cnf:
-			myConfig['host'] = _cnf['dbHost']
-		else:
-			raise ValueError("Error, config missing key.")
+			if 'DB_PASS' in confData:
+				myConfig['password'] = confData['DB_PASS']
+			else:
+				raise ValueError("Error, config missing key DB_PASS.")
 
-		if 'dbPort' in _cnf:
-			myConfig['port'] = int(_cnf['dbPort'])
-		else:
-			raise ValueError("Error, config missing key.")
-
-		if 'username' in _cnf:
-			myConfig['user'] = _cnf['username']
-		else:
-			raise ValueError("Error, config missing key.")
-
-		if 'password' in _cnf:
-			myConfig['password'] = _cnf['password']
-		else:
-			raise ValueError("Error, config missing key.")
 	else:
-		if 'DB_NAME' in confData:
-			myConfig['database'] = confData['DB_NAME']
-		else:
-			raise ValueError("Error, config missing key DB_NAME.")
+		print("Using default config data.")
 
-		if 'DB_HOST' in confData:
-			myConfig['host'] = confData['DB_HOST']
-		else:
-			raise ValueError("Error, config missing key DB_HOST.")
-
-		if 'DB_USER' in confData:
-			myConfig['user'] = confData['DB_USER']
-		else:
-			raise ValueError("Error, config missing key DB_USER.")
-
-		if 'DB_PASS' in confData:
-			myConfig['password'] = confData['DB_PASS']
-		else:
-			raise ValueError("Error, config missing key DB_PASS.")
 
 	logger.info('# ------------------------------------------------------')
 	logger.info('# Starting MPInventory                                  ')

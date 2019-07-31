@@ -41,14 +41,11 @@ class SUServers(MPResource):
 			log_Debug('[SUServerList][Get] CUUID: %s Result: %s' % (cuuid, _serverObj))
 			return {'errorno': 0, 'errormsg': '', 'result': _serverObj}, 200
 
-		except IntegrityError as exc:
-			log_Error('[SUServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUServerList][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUServerList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 class SUServersVersion(MPResource):
@@ -84,14 +81,11 @@ class SUServersVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError as exc:
-			log_Error('[SUSListVersion][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[SUSListVersion][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[SUSListVersion][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 class Servers(MPResource):
@@ -122,15 +116,11 @@ class Servers(MPResource):
 			log_Error('[ServerList][Get][%s]: Server List Not Found for id (%d)' % (cuuid, list_id))
 			return {'errorno': 404, 'errormsg': 'Server List Not Found', 'result': {}}, 404
 
-		except IntegrityError as exc:
-			log_Error('[ServerList][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': 0}, 500
-
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerList][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 class ServersVersion(MPResource):
@@ -165,14 +155,11 @@ class ServersVersion(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _server}, _result
 
-		except IntegrityError as exc:
-			log_Error('[ServerListVersion][Get][except] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': {}}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerListVersion][Get][Exception][Line: %d] CUUID: %s Message: %s' % (
-				exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerListVersion][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 
 class ServerLog(MPResource):
@@ -208,8 +195,9 @@ class ServerLog(MPResource):
 
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerLog][Get][Exception][Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
-			return {'data': [], 'total': 0}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerLog][Get][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def parseLogFile(self, type):
 		try:
@@ -227,10 +215,12 @@ class ServerLog(MPResource):
 					lines.insert(0, l.printLine())
 
 			return lines
+
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[ServerList][Get][Exception][Line: %d] Message: %s' % (exc_tb.tb_lineno, e.message))
-			return []
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[ServerList][Get][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 ''' ------------------------------- '''
 ''' NOT A WEB SERVICE CLASS         '''
@@ -342,7 +332,8 @@ class logline(object):  # no instance of this class should be created
 			self.text = line.split("---")[1]
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[logline][Exception][Line: %d] %s' % (exc_tb.tb_lineno, e.message))
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[logline][Exception][Line: %d] %s' % (exc_tb.tb_lineno, message))
 
 	def printLine(self):
 		row = {}

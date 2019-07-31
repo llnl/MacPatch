@@ -65,8 +65,9 @@ class AddInventoryData(MPResource):
 
 			except Exception as e:
 				exc_type, exc_obj, exc_tb = sys.exc_info()
-				log_Error('[AddInventoryData][Post][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-				return {'errorno': 500, 'errormsg': e.message, 'result': ''}, 500
+				message=str(e.args[0]).encode("utf-8")
+				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+				return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
 		return {"result": '', "errorno": 412, "errormsg": 'Inventory Data empty'}, 412
@@ -99,13 +100,11 @@ class InventoryState(MPResource):
 
 			return {'errorno': '0', 'errormsg': '', 'result': _result}, 200
 
-		except IntegrityError as exc:
-			log_Error('[InventoryState][Get][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'result': 0, 'errorno': 500, 'errormsg': exc.message}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[InventoryState][Get][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': 0}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[InventoryState][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def post(self, cuuid):
 
@@ -137,13 +136,13 @@ class InventoryState(MPResource):
 				log_Error('[except] CUUID: %s Message: %s' % (cuuid, exc.message))
 				return {'errorno': 500, 'errormsg': exc.message, 'result': 1}, 500
 
-		except IntegrityError as exc:
-			log_Error('[InventoryState][Post][IntegrityError] CUUID: %s Message: %s' % (cuuid, exc.message))
-			return {'errorno': 500, 'errormsg': exc.message, 'result': 1}, 500
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
-			log_Error('[InventoryState][Post][Exception][Line: %d] CUUID: %s Message: %s' % (exc_tb.tb_lineno, cuuid, e.message))
-			return {'errorno': 500, 'errormsg': e.message, 'result': 1}, 500
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[InventoryState][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
+
+		
 
 
 # Add Routes Resources

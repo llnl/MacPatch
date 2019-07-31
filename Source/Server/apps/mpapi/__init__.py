@@ -26,6 +26,10 @@ def create_app(config_object=DefaultConfig):
 
 		db.session.remove()
 
+	@app.teardown_appcontext
+	def teardown_appcontext(response_or_exc):
+		db.session.remove()
+
 	app.config.from_object(config_object)
 	app.config.from_pyfile('../config.cfg', silent=True)
 	app.config.from_pyfile('../conf_wsapi.cfg', silent=True)
@@ -139,6 +143,9 @@ def register_blueprints(app):
 	from .inventory_2 import inventory_2 as bp_inventory_2
 	app.register_blueprint(bp_inventory_2, url_prefix='/api/v2')
 
+	from .inventory_3 import inventory_3 as bp_inventory_3
+	app.register_blueprint(bp_inventory_3, url_prefix='/api/v3')
+
 	from .mac_profiles import mac_profiles as bp_mac_profiles
 	app.register_blueprint(bp_mac_profiles, url_prefix=app.config['URL_PREFIX'])
 
@@ -153,6 +160,9 @@ def register_blueprints(app):
 
 	from .patches_3 import patches_3 as bp_patches_3
 	app.register_blueprint(bp_patches_3, url_prefix='/api/v3')
+
+	from .patches_4 import patches_4 as bp_patches_4
+	app.register_blueprint(bp_patches_4, url_prefix='/api/v4')
 
 	from .provisioning import provisioning as bp_provisioning
 	app.register_blueprint(bp_provisioning, url_prefix=app.config['URL_PREFIX'])
