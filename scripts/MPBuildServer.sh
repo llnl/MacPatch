@@ -387,6 +387,15 @@ if $USELINUX; then
 		apt-get update
 
 
+        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+        ubuntuVer=`cat /etc/lsb_release | grep DISTRIB_RELEASE | awk -F= '{print $2}'`
+
+        if [ $(ver $ubuntuVer) -lt $(ver 16.05) ]; then  
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+            apt-get install -y nodejs
+        fi
+
 		# Add the Yarn repo
 		curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 		echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
@@ -612,24 +621,24 @@ if $USEMACOS; then
 else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    pip -q install --upgrade pip
-    pip -q install pycrypto
-	pip -q install python-crontab
-	pip -q install requests
-	pip -q install mysql-connector-python
+    pip -q install --upgrade pip --no-cache-dir
+    pip -q install pycrypto --no-cache-dir
+	pip -q install python-crontab --no-cache-dir
+	pip -q install requests --no-cache-dir
+	pip -q install mysql-connector-python --no-cache-dir
 	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
     deactivate
 
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
-    pip -q install --upgrade pip
+    pip -q install --upgrade pip --no-cache-dir
 	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
 	pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    pip -q install --upgrade pip
+    pip -q install --upgrade pip --no-cache-dir
     pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
     pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
