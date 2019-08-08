@@ -314,25 +314,9 @@ mkdirP ${MPSERVERBASE}/logs
 # Copy compiled files
 # ------------------
 if $USEMACOS; then
-	#echo
-	#echo "* Uncompress source files needed for build"
-	#echo "-----------------------------------------------------------------------"
 
 	# Copy Agent Uploader
 	cp ${MPSERVERBASE}/conf/Content/Web/tools/MPAgentUploader.zip ${MPBASE}/Content/Web/tools/
-
-	#PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | head -n 1`
-	#OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | head -n 1`
-
-	# PCRE
-	#echo " - Uncompress ${PCRE_SW}"
-	#mkdir -p ${TMP_DIR}/pcre
-	#tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${TMP_DIR}/pcre
-
-	# OpenSSL
-	#echo " - Uncompress ${OSSL_SW}"
-	#mkdir -p ${TMP_DIR}/openssl
-	#tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${TMP_DIR}/openssl
 
 	# BREW Software Check
 	XOPENSSL=false
@@ -407,7 +391,7 @@ if $USELINUX; then
 		curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 		echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
 		#statements
-		pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python-dev" "python-pip" "swig" "yarn")
+		pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
 		for i in "${pkgs[@]}"
 		do
 			p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
