@@ -386,16 +386,9 @@ if $USELINUX; then
 		apt-add-repository universe
 		apt-get update
 
-
-        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-        sudo apt-get install -y nodejs
         ubuntuVer=`cat /etc/lsb_release | grep DISTRIB_RELEASE | awk -F= '{print $2}'`
 
-        if [ $(ver $ubuntuVer) -lt $(ver 16.05) ]; then  
-            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-            apt-get install -y nodejs
-        fi
-
+        # Yarn not getting installed  
 		# Add the Yarn repo
 		curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
 		echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
@@ -403,6 +396,16 @@ if $USELINUX; then
 		pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
 		for i in "${pkgs[@]}"
 		do
+            if [ $i == "yarn" ]; then 
+                if [ $(ver $ubuntuVer) -lt $(ver 16.05) ]; then  
+                    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+                    echo
+                    echo "Install nodejs 10.x"
+                    sudo apt-get install -y nodejs
+                    echo
+                fi
+            fi
+
 			p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
 			if [ -z $p ]; then
 				echo
