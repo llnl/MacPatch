@@ -169,7 +169,7 @@ static int isalive(struct sockaddr_in scanaddr)
 	
 	
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-	int statusCode = (int)[((NSHTTPURLResponse *)response) statusCode];
+	int statusCode = (int)[httpResponse statusCode];
 	if (statusCode == aReturnCode) {
 		result = YES;
 	} else {
