@@ -103,6 +103,7 @@
     }
     else
     {
+		[settings refresh];
         self.serverArray = [settings.servers copy];
     }
 }
