@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.1
+# Version: 2.2
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -19,6 +19,7 @@
 #	1.9		Update to PlanB syntax
 #   2.0		Updated to support new 3.2 agent and package name
 #   2.1     Add support external scripts for customizing
+#   2.2     Added planB save server address
 #
 # -------------------------------------------------------------
 
@@ -171,6 +172,14 @@ fi
 
 
 if $INCPlanBSource; then
+    PLANBSRV=$MPPLANB_SRV_ADDR
+    if [ -f "$BUILDPLIST" ]; then
+        PLANBSRV=`defaults read ${BUILDPLIST} planbServer 2> /dev/null`
+        if (($? > 0)); then
+            PLANBSRV=$MPPLANB_SRV_ADDR
+        fi
+    fi
+
 	echo
 	echo
 	read -p "Would you like to set the server address for PlanB, default is localhost. (Y/N)? [Y]: " MPPLANB_SRV
@@ -178,8 +187,9 @@ if $INCPlanBSource; then
 	MPPLANB_SRV=`echo $MPPLANB_SRV | awk '{print toupper($0)}'`
 	if [[ "$MPPLANB_SRV" == "Y" ]] ; then
 		echo
-		read -p "Server address: " MPPLANB_SRV_ADDR
-		MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-localhost}
+		read -p "Server address [$PLANBSRV]: " MPPLANB_SRV_ADDR
+		MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-${PLANBSRV}}
+        defaults write ${BUILDPLIST} planbServer "${MPPLANB_SRV_ADDR}"
 	fi
 fi
 
@@ -276,10 +286,19 @@ fi
 
 
 if $setMasterKey; then
+    MASTERKEY=$ClientMasterKey
+    if [ -f "$BUILDPLIST" ]; then
+        MASTERKEY=`defaults read ${BUILDPLIST} masterKey 2> /dev/null`
+        if (($? > 0)); then
+            MASTERKEY=$ClientMasterKey
+        fi
+    fi
+
     echo
     echo
-    read -p "Client Master Key: " CMASTERKEY
-    ClientMasterKey=${CMASTERKEY}    
+    read -p "Client Master Key [$MASTERKEY]: " CMASTERKEY
+    ClientMasterKey=${CMASTERKEY:-${MASTERKEY}}
+    defaults write ${BUILDPLIST} masterKey "${ClientMasterKey}"
 fi
 
 
