@@ -422,102 +422,116 @@
 		for (NSDictionary *patch in patches)
 		{
 			qlinfo(@"Pre staging update %@.",patch[@"patch"]);
-			if ([patch[@"type"] isEqualToString:@"Apple"])
+			qltrace(@"PATCH: %@",patch);
+			@try
 			{
-				[mpa downloadAppleUpdate:patch[@"patch"]];
-			}
-			else
-			{
-				// This is to clean up non used patches
-				[approvedUpdateIDsArray addObject:patch[@"patch_id"]];
-				
-				NSArray *pkgsFromPatch = patch[@"patches"][@"patches"];
-				for (NSDictionary *_p in pkgsFromPatch)
+				if ([patch[@"type"] isEqualToString:@"Apple"])
 				{
-					NSError *dlErr = nil;
-					NSString *stageDir = [NSString stringWithFormat:@"%@/Data/.stage/%@",MP_ROOT_CLIENT,patch[@"patch_id"]];
-					NSString *downloadURL = [NSString stringWithFormat:@"/mp-content%@",_p[@"url"]];
-					NSString *fileName = [_p[@"url"] lastPathComponent];
-					NSString *stagedFilePath = [stageDir stringByAppendingPathComponent:fileName];
+					[mpa downloadAppleUpdate:patch[@"patch"]];
+				}
+				else
+				{
+					// This is to clean up non used patches
+					[approvedUpdateIDsArray addObject:patch[@"patch_id"]];
 					
-					if ([fm fileExistsAtPath:stagedFilePath])
+					//NSArray *pkgsFromPatch = patch[@"patches"][@"patches"];
+					NSArray *pkgsFromPatch = patch[@"patches"];
+					for (NSDictionary *_p in pkgsFromPatch)
 					{
-						// Migth want to check hash here
-						qlinfo(@"Patch %@ is already pre-staged.",patch[@"patch"]);
-						continue;
-					}
-					
-					// Create Staging Dir
-					BOOL isDir = NO;
-					if ([fm fileExistsAtPath:stageDir isDirectory:&isDir])
-					{
-						if (isDir)
+						qltrace(@"PKGPATCH: %@",_p);
+						if ([_p[@"pkg_size"] integerValue] == 0) {
+							qlinfo(@"Skipping %@, due to zero size.",_p[@"patch_name"]);
+							continue;
+						}
+						
+						NSError *dlErr = nil;
+						NSString *stageDir = [NSString stringWithFormat:@"%@/Data/.stage/%@",MP_ROOT_CLIENT,patch[@"patch_id"]];
+						NSString *downloadURL = [NSString stringWithFormat:@"/mp-content%@",_p[@"pkg_url"]];
+						NSString *fileName = [_p[@"pkg_url"] lastPathComponent];
+						NSString *stagedFilePath = [stageDir stringByAppendingPathComponent:fileName];
+						
+						if ([fm fileExistsAtPath:stagedFilePath])
 						{
-							if ([fm fileExistsAtPath:stagedFilePath])
+							// Migth want to check hash here
+							qlinfo(@"Patch %@ is already pre-staged.",patch[@"patch"]);
+							continue;
+						}
+						
+						// Create Staging Dir
+						BOOL isDir = NO;
+						if ([fm fileExistsAtPath:stageDir isDirectory:&isDir])
+						{
+							if (isDir)
 							{
-								if ([[_p[@"hash"] uppercaseString] isEqualTo:[[crypto md5HashForFile:stagedFilePath] uppercaseString]])
+								if ([fm fileExistsAtPath:stagedFilePath])
 								{
-									qlinfo(@"Patch %@ has already been staged.",patch[@"patch"]);
-									continue;
-								}
-								else
-								{
-									dlErr = nil;
-									[fm removeItemAtPath:stagedFilePath error:&dlErr];
-									if (dlErr)
+									if ([[_p[@"pkg_hash"] uppercaseString] isEqualTo:[[crypto md5HashForFile:stagedFilePath] uppercaseString]])
 									{
-										qlerror(@"Unable to remove bad staged patch file %@",stagedFilePath);
-										qlerror(@"Can not stage %@",patch[@"patch"]);
+										qlinfo(@"Patch %@ has already been staged.",patch[@"patch"]);
 										continue;
 									}
+									else
+									{
+										dlErr = nil;
+										[fm removeItemAtPath:stagedFilePath error:&dlErr];
+										if (dlErr)
+										{
+											qlerror(@"Unable to remove bad staged patch file %@",stagedFilePath);
+											qlerror(@"Can not stage %@",patch[@"patch"]);
+											continue;
+										}
+									}
+								}
+							}
+							else
+							{
+								// Is not a dir but is a file, just remove it. It's in our space
+								dlErr = nil;
+								[fm removeItemAtPath:stageDir error:&dlErr];
+								if (dlErr)
+								{
+									qlerror(@"Unable to remove bad staged directory/file %@",stageDir);
+									qlerror(@"Can not stage %@",patch[@"patch"]);
+									continue;
 								}
 							}
 						}
 						else
 						{
-							// Is not a dir but is a file, just remove it. It's in our space
+							// Stage dir does not exists, create it.
 							dlErr = nil;
-							[fm removeItemAtPath:stageDir error:&dlErr];
+							[fm createDirectoryAtPath:stageDir withIntermediateDirectories:YES attributes:nil error:&dlErr];
 							if (dlErr)
 							{
-								qlerror(@"Unable to remove bad staged directory/file %@",stageDir);
+								qlerror(@"%@",dlErr.localizedDescription);
 								qlerror(@"Can not stage %@",patch[@"patch"]);
-								continue;
+								continue; // Error creating stage patch dir. Can not use it.
 							}
 						}
-					}
-					else
-					{
-						// Stage dir does not exists, create it.
+						
+						qlinfo(@"Download patch from: %@",downloadURL);
 						dlErr = nil;
-						[fm createDirectoryAtPath:stageDir withIntermediateDirectories:YES attributes:nil error:&dlErr];
+						NSString *dlPatchLoc = [self downloadUpdate:downloadURL error:&dlErr];
 						if (dlErr)
 						{
 							qlerror(@"%@",dlErr.localizedDescription);
-							qlerror(@"Can not stage %@",patch[@"patch"]);
+						}
+						qldebug(@"Downloaded patch to %@",dlPatchLoc);
+						
+						dlErr = nil;
+						[fm moveItemAtPath:dlPatchLoc toPath:stagedFilePath error:&dlErr];
+						if (dlErr)
+						{
+							qlerror(@"%@",dlErr.localizedDescription);
 							continue; // Error creating stage patch dir. Can not use it.
 						}
+						qlinfo(@"%@ has been staged.",patch[@"patch"]);
+						qldebug(@"Moved patch to: %@",stagedFilePath);
 					}
-					
-					qlinfo(@"Download patch from: %@",downloadURL);
-					dlErr = nil;
-					NSString *dlPatchLoc = [self downloadUpdate:downloadURL error:&dlErr];
-					if (dlErr)
-					{
-						qlerror(@"%@",dlErr.localizedDescription);
-					}
-					qldebug(@"Downloaded patch to %@",dlPatchLoc);
-					
-					dlErr = nil;
-					[fm moveItemAtPath:dlPatchLoc toPath:stagedFilePath error:&dlErr];
-					if (dlErr)
-					{
-						qlerror(@"%@",dlErr.localizedDescription);
-						continue; // Error creating stage patch dir. Can not use it.
-					}
-					qlinfo(@"%@ has been staged.",patch[@"patches"]);
-					qldebug(@"Moved patch to: %@",stagedFilePath);
 				}
+			} @catch (NSException *exception) {
+				qlerror(@"Pre staging update %@ failed.",patch[@"patch"]);
+				qlerror(@"%@",exception);
 			}
 		}
 		
