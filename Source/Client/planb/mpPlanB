@@ -56,10 +56,10 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.3.0.1"
+MINAGENTVER="3.3.0.2"
 DAYSRANGE=15
 IGNORE_SSL=True
-ISBETA=True
+ISBETA=False
 MPSERVER="localhost"
 MPHASH="0"
 
@@ -101,7 +101,6 @@ def hasCheckedIn(clientID):
 				result = False
 
 	return result
-
 
 def clientID():
 	# IOPlatformUUID
