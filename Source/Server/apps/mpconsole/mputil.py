@@ -166,3 +166,4 @@ def copytree(src, dst, symlinks = False, ignore = None):
 			copytree(s, d, symlinks, ignore)
 		else:
 			shutil.copy2(s, d)
+
