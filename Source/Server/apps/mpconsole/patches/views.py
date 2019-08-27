@@ -1116,7 +1116,7 @@ def patchGroupPatchesSave(group_id):
 
 	jsonData = json.dumps(_patchData)
 	setattr(pData, 'rev', dts)
-	setattr(pData, 'hash', hashlib.md5(jsonData).hexdigest())
+    setattr(pData, 'hash', hashlib.md5(jsonData.encode('utf-8')).hexdigest())
 	setattr(pData, 'data', jsonData)
 	setattr(pData, 'data_type', "JSON")
 	setattr(pData, 'mdate', _now)
