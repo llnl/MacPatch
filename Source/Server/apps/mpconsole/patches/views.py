@@ -1116,7 +1116,7 @@ def patchGroupPatchesSave(group_id):
 
 	jsonData = json.dumps(_patchData)
 	setattr(pData, 'rev', dts)
-	setattr(pData, 'hash', hashlib.md5(jsonData).hexdigest())
+	setattr(pData, 'hash', hashlib.md5(jsonData.encode('utf-8')).hexdigest())
 	setattr(pData, 'data', jsonData)
 	setattr(pData, 'data_type', "JSON")
 	setattr(pData, 'mdate', _now)
@@ -1159,14 +1159,8 @@ def customDataForPatchID(patch_id):
 			row = {}
 			row["name"] = p.patch_name
 			row["hash"] = p.pkg_hash
-			if p.pkg_preinstall is not None:
-				row["preinst"] = base64.b64encode(p.pkg_preinstall).decode('utf-8')
-			else:
-				row["preinst"] = "NA"
-			if p.pkg_postinstall is not None:
-				row["postinst"] = base64.b64encode(p.pkg_postinstall).decode('utf-8')
-			else:
-				row["postinst"] = "NA"
+			row["preinst"] = b64EncodeAsString(p.pkg_preinstall, 'NA')
+			row["postinst"] = b64EncodeAsString(p.pkg_postinstall,'NA')
 			row["env"] = p.pkg_env_var or "NA"
 			row["reboot"] = p.patch_reboot
 			row["type"] = "1"

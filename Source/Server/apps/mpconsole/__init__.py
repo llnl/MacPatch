@@ -67,9 +67,9 @@ def create_app(config_object=DefaultConfig):
 		db.session.rollback()
 		db.session.remove()
 
-	#@app.context_processor
-	#def example():
-	#	return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
+	@app.context_processor
+	def baseData():
+		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
 
 	# Configure logging
 	log_file = app.config['LOGGING_LOCATION'] + "/mpconsole.log"
