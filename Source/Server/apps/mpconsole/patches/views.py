@@ -16,6 +16,7 @@ import shutil
 import json
 
 from datetime import datetime
+from dateutil.parser import parse
 
 from .  import patches
 from .. import db
@@ -1259,37 +1260,64 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 	if filterStr == 'undefined' or len(filterStr) <= 0:
 		# Query for All Records, sql0 is used for count, sql1 is the query for paging
 		sql0 = text("""SELECT date FROM mp_client_patches_full_view""")
-		sql1 = text("""SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v
-					Left Join mp_clients c ON c.cuuid = v.cuuid
-					ORDER BY """ + order_by_str + """ LIMIT """ + str(offset) + """,""" + str(page_size))
+		sql1 =	f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
+				f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
+				f"ORDER BY {order_by_str} LIMIT {str(offset)}, {str(page_size)}"
+
 	else:
 		# Query used when searching, sql0 is not used for count since search is the total
 		isFirst = True
 		whereStr = 'WHERE'
 		for col in columns:
+
 			if col[2] == '1':
+				hasDate = isDateString(filterStr, True)
+				if 'date' in col[0]:
+					if not hasDate:
+						continue
+
 				if isFirst:
 					whereStr = whereStr + " " + col[0] + " like '%" + filterStr + "%'"
 					isFirst = False
 				else:
 					whereStr = whereStr + " OR " + col[0] + " like '%" + filterStr + "%'"
 
-		sql1 = text("""SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v
-					Left Join mp_clients c ON c.cuuid = v.cuuid
-					""" + whereStr + """
-					ORDER BY """ + order_by_str + """ LIMIT """ + str(offset) + """,""" + str(page_size))
+		sql0 = f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
+			   f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
+			   f"{whereStr}"
+		sql0 = text(sql0)
 
+		sql1 =  f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v "\
+					f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
+					f"{whereStr} "\
+					f"ORDER BY {order_by_str}  LIMIT {str(offset)} , {str(page_size)}"
+
+
+	recCounter1 = 0
+	recCounter2 = 0
 	# Execute the SQL statement(s)
 	if sql0 is not None:
 		res1 = db.engine.execute(sql0)
 		recCounter1 = res1.rowcount
 
 	if sql1 is not None:
-		result = db.engine.execute(sql1)
+		result = db.engine.execute(text(sql1))
 		recCounter2 = result.rowcount
 
 	# Return tuple, query results and a record count
 	return (result, recCounter1, recCounter2)
+
+def isDateString(string, fuzzy=False):
+	"""
+    Return whether the string can be interpreted as a date.
+    :param string: str, string to check for date
+    :param fuzzy: bool, ignore unknown tokens in string if True
+    """
+	try:
+		parse(string, fuzzy=fuzzy)
+		return True
+	except ValueError:
+		return False
 
 @patches.route('/installed')
 @login_required
