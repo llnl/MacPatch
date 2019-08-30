@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.1.0
+	Version: 1.5.0
 '''
 
 import datetime
@@ -61,7 +61,7 @@ MP_SRV_CONF=MP_SRV_BASE+"/conf"
 MP_SYNC_CONF=MP_SRV_BASE+"/etc/syncContent.json"
 
 # Global OS vars
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 os_type = platform.system()
 system_name = platform.uname()[1]
 
@@ -143,6 +143,9 @@ def main():
 		if _conf is not None:
 			if 'MPServerAddress' in _conf:
 				MASTER_SERVER = _conf['MPServerAddress']
+            elif 'settings' in _conf:
+                if 'MPServerAddress' in _conf['settings']:
+                    MASTER_SERVER = _conf['settings']['MPServerAddress']
 			else:
 				logger.error("Error, MPServerAddress was not found in config.")
 				sys.exit(1)

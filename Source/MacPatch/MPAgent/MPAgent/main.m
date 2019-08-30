@@ -94,6 +94,8 @@ int main (int argc, char * argv[])
 				
 				// Client Check-in
 				{"CheckIn"				,no_argument	    ,0, 'c'},
+				
+				// iLoad, will echo to stdout and run scan & patch
 				{"iload"				,no_argument	    ,0, 'i'},
 				{"iLoad"				,no_argument	    ,0, 'I'},
 				
@@ -176,9 +178,11 @@ int main (int argc, char * argv[])
 					break;
 				case 'i':
 					isILoadMode = YES;
+					a_Type = 4;
 					break;
 				case 'I':
 					isILoadMode = YES;
+					a_Type = 4;
 					break;
 				case 's':
 					a_Type = 3;

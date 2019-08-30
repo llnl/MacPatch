@@ -372,7 +372,7 @@ if $USELINUX; then
 		# Add the Yarn repo
 		curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
 		# Check if needed packges are installed or install
-        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python36" "python36-devel" "python36-setuptools" "python36-pip" "swig" "yarn")
+        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3" "python3-devel" "python3-setuptools" "python3-pip" "swig" "yarn")
 		for i in "${pkgs[@]}"
 		do
 			p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
