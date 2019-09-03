@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.5.0
+	Version: 1.5.1
 '''
 
 import datetime
@@ -143,9 +143,9 @@ def main():
 		if _conf is not None:
 			if 'MPServerAddress' in _conf:
 				MASTER_SERVER = _conf['MPServerAddress']
-            elif 'settings' in _conf:
-                if 'MPServerAddress' in _conf['settings']:
-                    MASTER_SERVER = _conf['settings']['MPServerAddress']
+			elif 'settings' in _conf:
+				if 'MPServerAddress' in _conf['settings']:
+					MASTER_SERVER = _conf['settings']['MPServerAddress']
 			else:
 				logger.error("Error, MPServerAddress was not found in config.")
 				sys.exit(1)
