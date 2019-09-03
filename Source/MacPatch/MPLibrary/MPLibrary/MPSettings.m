@@ -335,19 +335,39 @@ static MPSettings *_instance;
 }
 
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
-{
-    NSMutableArray *_srvs = [NSMutableArray new];
-    NSArray *_raw_srvs = settings[@"data"];
-    
-    NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"serverType" ascending:YES];
-    _raw_srvs = [_raw_srvs sortedArrayUsingDescriptors:@[descriptor]];
-    
-    for (NSDictionary *_srv in _raw_srvs)
-    {
-        [_srvs addObject:[[Server alloc] initWithDictionary:_srv]];
-    }
-    
-    return (NSArray *)_srvs;
+{	
+	NSMutableArray *_srvs = [NSMutableArray new];
+	NSMutableArray *_srvsRaw = [NSMutableArray new];
+	NSArray *_raw_srvs = settings[@"data"];
+	
+	NSDictionary *_master = nil;
+	NSDictionary *_proxy = nil;
+	
+	for (NSDictionary *_srv in _raw_srvs)
+	{
+		if ([_srv[@"serverType"] integerValue] == 0) {
+			_master = [_srv copy];
+			continue;
+		}
+		
+		if ([_srv[@"serverType"] integerValue] == 2) {
+			_proxy = [_srv copy];
+			continue;
+		}
+		
+		[_srvsRaw addObject:[_srv copy]];
+	}
+	
+	_srvsRaw = [[self randomizeArray:_srvsRaw] mutableCopy]; // Randomize the array of servers
+	if (_master) [_srvsRaw addObject:_master]; // Add the master
+	if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
+	
+	for (NSDictionary *s in _srvsRaw)
+	{
+		[_srvs addObject:[[Server alloc] initWithDictionary:s]];
+	}
+	
+	return (NSArray *)_srvs;
 }
 
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
