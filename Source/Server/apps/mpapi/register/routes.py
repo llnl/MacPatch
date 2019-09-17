@@ -152,7 +152,7 @@ class RegistrationStatus(MPResource):
 
 ''' Private Methods '''
 def verifyClientHash(encodedKey, hash):
-	_lHash = hashlib.sha1(encodedKey).hexdigest()
+	_lHash = hashlib.sha1(str(encodedKey).encode('utf-8')).hexdigest()
 	if _lHash.lower() == hash.lower():
 		return True
 	else:
