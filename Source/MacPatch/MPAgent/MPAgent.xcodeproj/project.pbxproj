@@ -24,6 +24,7 @@
 		8F4B1F1C16DE634600E15A9E /* MPSWDistTaskOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1616DE634600E15A9E /* MPSWDistTaskOperation.m */; };
 		8F4B1F2316DE635200E15A9E /* MPTasks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F1E16DE635200E15A9E /* MPTasks.m */; };
 		8F4B1F2516DE635200E15A9E /* MPTaskValidate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F2216DE635200E15A9E /* MPTaskValidate.m */; };
+		8F4F55A4233010B20087E45D /* CheckIn.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4F55A3233010B20087E45D /* CheckIn.m */; };
 		8F530FEE1B42ED2B00B8D893 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FED1B42ED2B00B8D893 /* libxml2.dylib */; };
 		8F530FF01B42ED5400B8D893 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FEF1B42ED5400B8D893 /* OpenDirectory.framework */; };
 		8F530FF21B42ED5D00B8D893 /* DiskArbitration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F530FF11B42ED5D00B8D893 /* DiskArbitration.framework */; };
@@ -117,6 +118,8 @@
 		8F4B1F2116DE635200E15A9E /* MPTaskValidate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPTaskValidate.h; sourceTree = "<group>"; };
 		8F4B1F2216DE635200E15A9E /* MPTaskValidate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPTaskValidate.m; sourceTree = "<group>"; };
 		8F4B1F3216DE63F200E15A9E /* MPAgent-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPAgent-Info.plist"; sourceTree = "<group>"; };
+		8F4F55A2233010B20087E45D /* CheckIn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = CheckIn.h; sourceTree = "<group>"; };
+		8F4F55A3233010B20087E45D /* CheckIn.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CheckIn.m; sourceTree = "<group>"; };
 		8F530FED1B42ED2B00B8D893 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		8F530FEF1B42ED5400B8D893 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
 		8F530FF11B42ED5D00B8D893 /* DiskArbitration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = DiskArbitration.framework; path = System/Library/Frameworks/DiskArbitration.framework; sourceTree = SDKROOT; };
@@ -284,6 +287,8 @@
 				8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */,
 				8F6D32441CD3C34E006B1094 /* MPOSUpgrade.h */,
 				8F6D32451CD3C34E006B1094 /* MPOSUpgrade.m */,
+				8F4F55A2233010B20087E45D /* CheckIn.h */,
+				8F4F55A3233010B20087E45D /* CheckIn.m */,
 				8F4B1F0916DE633200E15A9E /* MPTasks */,
 				8FE03DD21B601926005D39EE /* Classes */,
 				8F530FFC1B42EEAC00B8D893 /* Third Party Classes */,
@@ -506,6 +511,7 @@
 				8F2FC03E1E205523004710C7 /* MPFirmware.m in Sources */,
 				8FE03DD91B601AC6005D39EE /* AVSoftware.m in Sources */,
 				8F4B1F0616DD77FF00E15A9E /* MPAgent.m in Sources */,
+				8F4F55A4233010B20087E45D /* CheckIn.m in Sources */,
 				8FA6A8821B9621BF006A329B /* PowerProfile.m in Sources */,
 				8F6D32461CD3C34E006B1094 /* MPOSUpgrade.m in Sources */,
 				8FA6A87D1B9621BF006A329B /* MPInv.m in Sources */,

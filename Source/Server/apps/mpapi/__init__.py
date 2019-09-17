@@ -194,6 +194,9 @@ def register_blueprints(app):
 	from .status import status as bp_status
 	app.register_blueprint(bp_status, url_prefix=app.config['URL_PREFIX'])
 
+	from .support import support as bp_support
+	app.register_blueprint(bp_support, url_prefix=app.config['URL_PREFIX'])
+
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""
 

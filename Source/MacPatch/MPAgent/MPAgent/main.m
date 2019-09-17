@@ -37,7 +37,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.3.0.7"
+#define APPVERSION	@"3.3.1.1"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -522,7 +522,6 @@ int main (int argc, char * argv[])
 						exit(1);
 					}
 				}
-				exit(0);
 				break;
 			case 18:
 				// Check Registration

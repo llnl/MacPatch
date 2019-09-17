@@ -5,10 +5,10 @@
 	<key>Disabled</key>
 	<false/>
 	<key>Label</key>
-	<string>gov.llnl.mp.agentUpdater</string>
+	<string>gov.llnl.mp.updater</string>
 	<key>ProgramArguments</key>
 	<array>
-		<string>/Library/MacPatch/Updater/MPAgentUp2Date</string>
+		<string>/Library/MacPatch/Updater/MPUpdater</string>
 		<string>-u</string>
 	</array>
 	<key>ServiceDescription</key>

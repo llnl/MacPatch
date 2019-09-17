@@ -27,6 +27,15 @@ if [ -e "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" ]; then
 	
 fi	
 
+if [ -e "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
+	
+	/bin/launchctl stop gov.llnl.mp.updater
+	sleep 1
+	/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.updater.plist
+	sleep 1
+	
+fi	
+
 if [ -d "$MPUpdaterDir" ]; then
 	echo "Removing $MPUpdaterDir"
 	rm -rf "$MPUpdaterDir"
@@ -35,6 +44,11 @@ fi
 if [ -f "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" ]; then
 	echo "Removing /Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist"
 	rm -f "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist"
+fi
+
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
+	echo "Removing /Library/LaunchDaemons/gov.llnl.mp.updater.plist"
+	rm -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist"
 fi
 
 exit 0

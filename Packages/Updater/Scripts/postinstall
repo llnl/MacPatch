@@ -27,9 +27,9 @@ fi
 chmod 777 "/Users/Shared/.mpUpdate"
 chown root:admin "/Users/Shared/.mpUpdate"
 
-if [ -e "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" ]; then
+if [ -e "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
 	# Launch the swupd daemon...
-	/bin/launchctl load -wF /Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist
+	/bin/launchctl load -wF /Library/LaunchDaemons/gov.llnl.mp.updater.plist
 	/bin/sleep 2
 fi
 

@@ -428,7 +428,8 @@
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         qldebug(@"[runSyncPOST] URL: %@",url);
         wsResult = [self syncronusPOSTWithURL:url body:body];
-        if ((int)wsResult.statusCode == 200 || (int)wsResult.statusCode == 201) {
+		qldebug(@"[runSyncPOST][result]: %d",(int)wsResult.statusCode);
+        if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
             qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }

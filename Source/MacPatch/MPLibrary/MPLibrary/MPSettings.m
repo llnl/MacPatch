@@ -335,7 +335,7 @@ static MPSettings *_instance;
 }
 
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
-{	
+{
 	NSMutableArray *_srvs = [NSMutableArray new];
 	NSMutableArray *_srvsRaw = [NSMutableArray new];
 	NSArray *_raw_srvs = settings[@"data"];
