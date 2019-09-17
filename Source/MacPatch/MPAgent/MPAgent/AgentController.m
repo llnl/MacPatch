@@ -39,6 +39,9 @@
 #import "Profiles.h"
 #import "PostFailedWSRequests.h"
 
+#import "CheckIn.h"
+#import "MPAgentUpdater.h"
+
 @interface AgentController ()
 {
     NSOperationQueue                *queue;
@@ -52,6 +55,8 @@
     MPSWDistTaskOperation           *swDistOp;
     Profiles                        *profilesOp;
     PostFailedWSRequests            *postFailedWSRequestsOp;
+	
+	NSThread 						*checkInThread;
 }
 
 @property NSSet          *tasksSet;
@@ -59,12 +64,17 @@
 @property NSString       *tasksRev;
 @property NSDate         *settingsFileDate;
 
+@property NSUInteger	checkInInterval;
+@property NSUInteger	updaterInterval;
+
 @end
 
 @implementation AgentController
 
 @synthesize iLoadMode;
 @synthesize forceRun;
+@synthesize checkInInterval;
+@synthesize updaterInterval;
 
 - (id)init 
 {
@@ -76,6 +86,9 @@
         settings = [MPSettings sharedInstance];
 		iLoadMode = NO;
 		forceRun = NO;
+		
+		checkInInterval = 300;
+		updaterInterval = 3600;
     }
     return self;
 }
@@ -149,6 +162,8 @@
     logit(lcl_vDebug,@"Run as daemon.");
     [NSThread detachNewThreadSelector:@selector(watchSettingsForChanges:) toTarget:self withObject:MP_AGENT_SETTINGS];
     [NSThread detachNewThreadSelector:@selector(loadTasksAndWatchForChanges) toTarget:self withObject:nil];
+	[NSThread detachNewThreadSelector:@selector(clientCheckInMethod) toTarget:self withObject:nil];
+	[NSThread detachNewThreadSelector:@selector(agentUpdaterMethod) toTarget:self withObject:nil];
     [NSThread detachNewThreadSelector:@selector(runTasksLoop) toTarget:self withObject:nil];
     [[NSRunLoop currentRunLoop] run];
 }
@@ -247,14 +262,20 @@
                     // Need to begin loop for tasks
                     for (taskDict in self.tasksArray)
                     {
+						//qlinfo(@"CEH: %@",taskDict);
                         // If task is Active
                         if ([[taskDict objectForKey:@"active"] isEqualToString:@"1"])
                         {
                             _now = [[NSDate now] timeIntervalSince1970];
-                            qltrace(@"taskDict now: %0.0f",_now);
-							qltrace(@"taskDict next: %0.0f",[taskDict[@"nextrun"] doubleValue]);
-                            qltrace(@"taskDict: %0.0f >: %0.0f", _now, [[NSDate shortDateFromString:taskDict[@"startdate"]] timeIntervalSince1970]);
-                            qltrace(@"taskDict %0.0f <: %0.0f", _now, [[NSDate shortDateFromString:taskDict[@"enddate"]] timeIntervalSince1970]);
+							/*
+							qlinfo(@"taskDict date: %@",[NSDate date]);
+							qlinfo(@"taskDict now: %0.0f",_now);
+							qlinfo(@"taskDict next: %0.0f",[taskDict[@"nextrun"] doubleValue]);
+							qlinfo(@"taskDict: %0.0f [%@][now] >: %0.0f [%@][startdate]", _now,[NSDate now], [[NSDate shortDateFromString:taskDict[@"startdate"]] timeIntervalSince1970],taskDict[@"startdate"]);
+                            qlinfo(@"taskDict %0.0f [now] <: %0.0f [enddate]", _now, [[NSDate shortDateFromString:taskDict[@"enddate"]] timeIntervalSince1970]);
+							qlinfo(@"%@",[NSTimeZone localTimeZone]);
+							*/
+
                             if ( _now > [[NSDate shortDateFromString:taskDict[@"startdate"]] timeIntervalSince1970]
 								&& _now < [[NSDate shortDateFromString:taskDict[@"enddate"]] timeIntervalSince1970])
                             {
@@ -282,8 +303,14 @@
 								{
 									// Reschedule, we missed out date
 									// Schedule for 30 seconds out
-									logit(lcl_vInfo,@"Scheduling first run of task (%@) to run in 30 seconds.",taskDict[@"cmd"]);
-									[self updateNextRunForTask:taskDict missedTask:YES];
+									if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"]) {
+										continue;
+									} else if ([taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
+										continue;
+									} else {
+										logit(lcl_vInfo,@"Scheduling first run of task (%@) to run in 30 seconds.",taskDict[@"cmd"]);
+										[self updateNextRunForTask:taskDict missedTask:YES];
+									}
 								}
                                 else if ([taskDict[@"nextrun"] longValue] == (long)[d timeIntervalSince1970])
                                 {
@@ -314,17 +341,21 @@
 										
 									if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"])
 									{
+										/* Moved to seperate thread
 										clientOp = [[ClientCheckInOperation alloc] init];
 										clientOp.taskName = @"kMPCheckIn";
 										[queue addOperation:clientOp];
 										clientOp = nil;
+										 */
 									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"])
 									{
+										/* Moved to seperate thread
 										agentOp = [[AgentScanAndUpdateOperation alloc] init];
 										agentOp.taskName = @"kMPAgentCheck";
 										[queue addOperation:agentOp];
 										agentOp = nil;
+										 */
 									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
 									{
@@ -758,6 +789,141 @@
     exit(0);
 }
 
+#pragma mark - Check In Thread - NEW
+
+- (NSUInteger)clientCheckInInterval
+{
+	static NSString *settingsPath = @"/Library/Application Support/MacPatch/gov.llnl.mp.plist";
+	NSUInteger result = self.checkInInterval;
+	if ([[NSFileManager defaultManager] fileExistsAtPath:settingsPath])
+	{
+		NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:settingsPath];
+		NSDictionary *tasksDict = d[@"settings"][@"tasks"];
+		if(tasksDict[@"data"])
+		{
+			NSDictionary *taskData = nil;
+			NSArray *tasks = tasksDict[@"data"];
+			for (NSDictionary *t in tasks)
+			{
+				if ([t[@"cmd"] isEqualToString:@"kMPCheckIn"]) {
+					taskData = [t copy];
+					break;
+				}
+			}
+			
+			if (taskData)
+			{
+				NSString *i = taskData[@"interval"]; // EVERY@300
+				NSArray *ia = [i componentsSeparatedByString:@"@"];
+				if ([ia[1] intValue]) {
+					result = [ia[1] intValue];
+				}
+			}
+		}
+	}
+	qlinfo(@"clientCheckInInterval: %lu",(unsigned long)result);
+	return result;
+}
+
+- (void)clientCheckInMethod
+{
+	@autoreleasepool
+	{
+		NSUInteger xCheckInInterval = 30;
+		NSUInteger counter = 0;
+		
+		BOOL keepRunning = YES;
+		while (keepRunning)
+		{
+			// Every 30 Seconds Check to see if the tasks plist has been updated.
+			if (counter >= xCheckInInterval)
+			{
+				counter = 0;
+				xCheckInInterval = [self clientCheckInInterval];
+				// Run CheckIn
+				logit(lcl_vInfo,@"Tasks have been changed, reading in changes.");
+				CheckIn *ci = [CheckIn new];
+				NSLock *lock = [NSLock new];
+				[lock lock];
+				[ci runClientCheckIn];
+				[lock unlock];
+				ci = nil;
+				qlinfo(@"Next interval is in %lu",(unsigned long)xCheckInInterval);
+				NSDate *d = [[NSDate now] dateByAddingTimeInterval:xCheckInInterval];
+				NSString *nextRun = [d descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z" timeZone:[NSTimeZone localTimeZone] locale:nil];
+				qlinfo(@"Next client checkin scheduled for %@",nextRun);
+			}
+			sleep(1);
+			counter++;
+		}
+	}
+}
+
+- (NSUInteger)updateAgentUpdaterInterval
+{
+	static NSString *settingsPath = @"/Library/Application Support/MacPatch/gov.llnl.mp.plist";
+	NSUInteger result = self.checkInInterval;
+	if ([[NSFileManager defaultManager] fileExistsAtPath:settingsPath])
+	{
+		NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:settingsPath];
+		NSDictionary *tasksDict = d[@"settings"][@"tasks"];
+		if(tasksDict[@"data"])
+		{
+			NSDictionary *taskData = nil;
+			NSArray *tasks = tasksDict[@"data"];
+			for (NSDictionary *t in tasks)
+			{
+				if ([t[@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
+					taskData = [t copy];
+					break;
+				}
+			}
+			
+			if (taskData)
+			{
+				NSString *i = taskData[@"interval"]; // EVERY@300
+				NSArray *ia = [i componentsSeparatedByString:@"@"];
+				if ([ia[1] intValue]) { // Make sure value is a int
+					result = [ia[1] intValue];
+				}
+			}
+		}
+	}
+	return result;
+}
+
+- (void)agentUpdaterMethod
+{
+	@autoreleasepool
+	{
+		NSUInteger xInterval = 120;
+		NSUInteger counter = 0;
+		
+		BOOL keepRunning = YES;
+		while (keepRunning)
+		{
+			// Every 30 Seconds Check to see if the tasks plist has been updated.
+			if (counter >= xInterval)
+			{
+				counter = 0;
+				xInterval = [self updateAgentUpdaterInterval];
+				// Run CheckIn
+				logit(lcl_vInfo,@"Running agent updater scan and update.");
+				MPAgentUpdater *mpu = [MPAgentUpdater new];
+				NSLock *lock = [NSLock new];
+				[lock lock];
+				[mpu scanAndUpdateAgentUpdater];
+				[lock unlock];
+				mpu = nil;
+				NSDate *d = [[NSDate now] dateByAddingTimeInterval:xInterval];
+				//NSString *nextRun = [d descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z" timeZone:[NSTimeZone localTimeZone] locale:nil];
+				qlinfo(@"Next agent updater scan and update scheduled for %@",d);
+			}
+			sleep(1);
+			counter++;
+		}
+	}
+}
 
 
 @end
