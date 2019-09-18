@@ -485,7 +485,7 @@
     }
     
     if (avApplication == nil) {
-        logit(lcl_vError,@"Unable to find a McAfee AV product.");
+        qlinfo(@"Unable to find a McAfee AV product.");
         return nil;
     }
     // Get App Bundle Version, App Version and Suite Vers are different

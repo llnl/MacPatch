@@ -31,8 +31,8 @@ BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.3.0.1"
-UPDATEVER="3.3.0.1"
+AGENTVER="3.3.1.1"
+UPDATEVER="3.3.1.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -446,9 +446,9 @@ if $INCPlanBSource; then
 	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
     cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
 
-    agentHash=`md5 -q ${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent`
-	sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
-    sed -i '' "s/MPHASH=\"0\"/MPHASH=\"${agentHash}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
+    #agentHash=`md5 -q ${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent`
+	#sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
+    #sed -i '' "s/MPHASH=\"0\"/MPHASH=\"${agentHash}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
 fi
 
 # ------------------------------------------------------------

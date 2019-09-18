@@ -226,10 +226,20 @@
 					[tmpDict setObject:lineCleanStart forKey:@"patch"];
 					[tmpDict setObject:@"Apple" forKey:@"type"];
 					[tmpDict setObject:[[lineCleanStart componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
-					[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
-					[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
-					[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
+					if (@available(macOS 10.15, *)) {
+						// macOS 10.13 or later code path
+						[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+						[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+						[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"Recommended: YES"] ? @"Y": @"N") forKey:@"recommended"];
+						[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"Action: restart"] ? @"Yes": @"No") forKey:@"restart"];
+					} else {
+						// code for earlier than 10.15
+						[tmpDict setObject:[[strArr objectAtIndex:(i+1)] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] forKey:@"description"];
+						[tmpDict setObject:[self getSizeFromDescription:[tmpDict objectForKey:@"description"]] forKey:@"size"];
+						[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[recommended]"] ? @"Y": @"N") forKey:@"recommended"];
+						[tmpDict setObject:([[tmpDict objectForKey:@"description"] containsString:@"[restart]"] ? @"Yes": @"No") forKey:@"restart"];
+					}
+					
 					
 					[tmpAppleUpdates addObject:[tmpDict copy]];
 					tmpDict = nil;
@@ -368,15 +378,29 @@
 	// Removes the beginning of the line
 	NSString *component = @"*";
 	NSString *_lineTrimed = [line stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
-	if ([_lineTrimed hasPrefix:@"*"])
+	if (@available(macOS 10.15, *))
 	{
-		component = @"* ";
+		if ([_lineTrimed hasPrefix:@"* Label:"])
+		{
+			component = @"* Label: "; // >= 10.15
+		}
+		else if ([_lineTrimed hasPrefix:@"!"])
+		{
+			component = @"! ";
+		}
 	}
-	else if ([_lineTrimed hasPrefix:@"!"])
+	else
 	{
-		component = @"! ";
+		if ([_lineTrimed hasPrefix:@"*"])
+		{
+			component = @"* ";
+		}
+		else if ([_lineTrimed hasPrefix:@"!"])
+		{
+			component = @"! ";
+		}
 	}
-	
+
 	NSMutableArray *items = [[line componentsSeparatedByString:component] mutableCopy];
 	[items removeObjectAtIndex:0];
 	// With first item removed put it all back together
@@ -387,8 +411,22 @@
 // Get the size from a line of text
 - (NSString *)getSizeFromDescription:(NSString *)aDesc
 {
-	NSString *tmpStr = [[aDesc componentsSeparatedByString:@","] lastObject];
-	tmpStr = [[[tmpStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "] firstObject];
+	NSString *tmpStr = @"0";
+	if (@available(macOS 10.15, *))
+	{
+		NSArray *tmpArr = [aDesc componentsSeparatedByString:@","];
+		for (NSString *l in tmpArr) {
+			if ([l containsString:@"Size:"]) {
+				tmpStr = [[[l componentsSeparatedByString:@":"] lastObject] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+				break;
+			}
+		}
+	}
+	else
+	{
+		tmpStr = [[aDesc componentsSeparatedByString:@","] lastObject];
+		tmpStr = [[[tmpStr stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]] componentsSeparatedByString:@" "] firstObject];
+	}
 	return tmpStr;
 }
 
