@@ -314,7 +314,6 @@
 								}
                                 else if ([taskDict[@"nextrun"] longValue] == (long)[d timeIntervalSince1970])
                                 {
-                                    logit(lcl_vInfo,@"Run task (%@) via queue (%lu).",taskDict[@"cmd"],[queue.operations count]);
                                     if ([queue.operations count] >= 20)
 									{
                                         logit(lcl_vError,@"Queue appears to be stuck with %lu waiting in queue. Purging queue now.",[queue.operations count]);
@@ -322,7 +321,6 @@
                                         [queue waitUntilAllOperationsAreFinished];
                                     }
 									
-									//qlinfo(@"operations: %@",queue.operations);
 									BOOL taskInQueue = NO;
 									for (MPOperation *o in queue.operations)
 									{
@@ -333,12 +331,15 @@
 										}
 									}
 									
-									
                                     if (taskInQueue)
 									{
 										continue;
 									}
-										
+									
+									if (![taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"] && ![taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
+										logit(lcl_vInfo,@"Run task (%@) via queue (%lu).",taskDict[@"cmd"],[queue.operations count]);
+									}
+									
 									if ([taskDict[@"cmd"] isEqualToString:@"kMPCheckIn"])
 									{
 										/* Moved to seperate thread
@@ -357,7 +358,7 @@
 										agentOp = nil;
 										 */
 									}
-									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
+									if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
 									{
 										avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
 										avOp.taskName = @"kMPAVInfo";
@@ -848,7 +849,7 @@
 				[ci runClientCheckIn];
 				[lock unlock];
 				ci = nil;
-				qlinfo(@"Next interval is in %lu",(unsigned long)xCheckInInterval);
+				
 				NSDate *d = [[NSDate now] dateByAddingTimeInterval:xCheckInInterval];
 				NSString *nextRun = [d descriptionWithCalendarFormat:@"%Y-%m-%d %H:%M:%S %z" timeZone:[NSTimeZone localTimeZone] locale:nil];
 				qlinfo(@"Next client checkin scheduled for %@",nextRun);

@@ -405,7 +405,7 @@
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         qlinfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
-        if ((int)wsResult.statusCode == 200 || (int)wsResult.statusCode == 201) {
+		if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
             qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
