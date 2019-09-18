@@ -31,7 +31,6 @@ class AgentBase(MPResource):
 		try:
 			args = self.reqparse.parse_args()
 			_body = request.get_json(silent=True)
-
 			# Need a check to see if registration is required
 
 			if not isValidSignature(self.req_signature, cuuid, request.data, self.req_ts):
@@ -48,10 +47,15 @@ class AgentBase(MPResource):
 				# Update
 				log_Info('[AgentBase][Post]: Updating client (%s) record.' % (cuuid))
 				for col in client_obj.columns:
-					if args[col] is not None:
-						if col == 'mdate':
-							continue
-						else:
+					if col == 'mdate':
+						continue
+					elif col == 'fileVaultStatus':
+						if args['fileVaultStatus'] is not None:
+							setattr(client_obj, 'fileVaultStatus', args['fileVaultStatus'])
+						elif _body['fileVault'] is not None:
+							setattr(client_obj, 'fileVaultStatus', _body['fileVault'])
+					else:
+						if args[col] is not None:
 							_args_Val = args[col]
 							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
@@ -75,20 +79,24 @@ class AgentBase(MPResource):
 				# Add
 				log_Info('[AgentBase][Post]: Adding client (%s) record.' % (cuuid))
 				client_object = MpClient()
-				# print client_object.columns
 
 				client_object.cuuid = cuuid
 				for col in client_object.columns:
-					if args[col] is not None:
-						if col == 'mdate':
-							continue
-						else:
+					if col == 'mdate':
+						continue
+					elif col == 'fileVaultStatus':
+						if args['fileVaultStatus'] is not None:
+							setattr(client_obj, 'fileVaultStatus', args['fileVaultStatus'])
+						elif _body['fileVault'] is not None:
+							setattr(client_obj, 'fileVaultStatus', _body['fileVault'])
+					else:
+						if args[col] is not None:
 							_args_Val = args[col]
 							if not isinstance(_args_Val, int):
 								# Remove any new line chars before adding to DB
 								_args_Val = _args_Val.replace('\n', '')
-
 							setattr(client_object, col, _args_Val)
+
 
 				setattr(client_object, 'mdate', datetime.now())
 				db.session.add(client_object)
