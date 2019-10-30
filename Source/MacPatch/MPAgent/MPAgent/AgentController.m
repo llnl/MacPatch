@@ -299,6 +299,9 @@
                                 
                                 d = [[NSDate alloc] init]; // Get current date/time
                                 // Compare as long value, thus removing the floating point.
+								//NSLog(@"[%ld]%ld : %ld",(long)_now,(long)[d timeIntervalSince1970],[taskDict[@"nextrun"] longValue]);
+								
+								
 								if (firstRun)
 								{
 									// Reschedule, we missed out date
@@ -312,7 +315,8 @@
 										[self updateNextRunForTask:taskDict missedTask:YES];
 									}
 								}
-                                else if ([taskDict[@"nextrun"] longValue] == (long)[d timeIntervalSince1970])
+								// If Equal, run task
+                                else if ((long)[d timeIntervalSince1970] == [taskDict[@"nextrun"] longValue])
                                 {
                                     if ([queue.operations count] >= 20)
 									{
@@ -443,7 +447,8 @@
 									
                                     
                                 }
-								else if ([taskDict[@"nextrun"] doubleValue] < [d timeIntervalSince1970])
+								// If time has passed next run
+								else if ((long)[d timeIntervalSince1970] > [taskDict[@"nextrun"] longValue])
 								{
 									if (![taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"])
 									{

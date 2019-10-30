@@ -226,6 +226,8 @@ Record the install of a software task.
  */
 - (BOOL)recordPatchInstall:(NSDictionary *)patch
 {
+	qlinfo(@"[recordPatchInstall]: %@",patch[@"patch"]);
+	
 	BOOL result = NO;
 	@try
 	{
@@ -401,6 +403,9 @@ Record the install of a software task.
 - (BOOL)recordHistory:(DBHistoryType)hstType name:(NSString *)aName uuid:(NSString *)aUUID
 			   action:(DBHistoryAction)aAction result:(NSInteger)code errorMsg:(NSString * _Nullable)aErrMsg
 {
+	qlinfo(@"[recordHistory]: hstType=%ld\nname=%@\nuuid=%@\naction=%ld\nresult=%ld\nerrorMsg=%@",hstType,aName,aUUID,aAction,(long)code,aErrMsg);
+	
+	
 	@try
 	{
 		FMXDatabaseManager *manager = [FMXDatabaseManager sharedManager];
@@ -428,7 +433,7 @@ Record the install of a software task.
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		qlerror(@"[recordHistory]: %@",exception);
 		return NO;
 	}
 }

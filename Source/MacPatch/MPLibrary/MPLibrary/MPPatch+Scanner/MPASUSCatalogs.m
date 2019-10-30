@@ -117,6 +117,7 @@
     NSArray *suServers = settings.suservers;
     if (suServers.count <= 0) {
         qlinfo(@"Software update server list is empty. Can not set CatalogURL");
+		[self resetCatalogURL];
         return YES;
     }
     

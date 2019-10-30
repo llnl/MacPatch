@@ -161,7 +161,7 @@
 		8F60AD262243F67C00FDFBCA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1110;
 				ORGANIZATIONNAME = "Charles Heizer";
 				TargetAttributes = {
 					8F60AD2D2243F67C00FDFBCA = {
@@ -175,6 +175,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 8F60AD252243F67C00FDFBCA;
 			productRefGroup = 8F60AD2F2243F67C00FDFBCA /* Products */;
@@ -317,6 +318,7 @@
 		8F60AD362243F67C00FDFBCA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "";
@@ -337,6 +339,7 @@
 					__info_plist,
 					"MPUpdater/Supporting_Files/MPUpdater-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.updater;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 			};
@@ -345,6 +348,7 @@
 		8F60AD372243F67C00FDFBCA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "";
@@ -365,6 +369,7 @@
 					__info_plist,
 					"MPUpdater/Supporting_Files/MPUpdater-Info.plist",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.updater;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 			};

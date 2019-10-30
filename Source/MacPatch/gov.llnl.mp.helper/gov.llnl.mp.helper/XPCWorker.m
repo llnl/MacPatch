@@ -35,7 +35,7 @@
 
 #import "DBModels.h"
 #import "DBMigration.h"
-#import "MPClientDatabase.h"
+#import "MPClientDB.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPHelper
@@ -94,7 +94,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 // Patching
 - (NSArray *)scanForAppleUpdates:(NSError **)error;
-- (NSArray *)scanForCustomUpdates:(NSError **)error;
 
 // Private
 - (NSData *)encodeResult:(NSData *)dataToEncode error:(NSError **)error;
@@ -373,7 +372,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %d",result);
+	qlinfo(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -402,7 +401,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %d",result);
+	qlinfo(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -1193,7 +1192,9 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	qlinfo(@"uninstallSoftware[taskID]: %@",swTaskID);
 	@try
 	{
-		DBInstalledSoftware *_swTask = [self getSWTaskUsingTaskID:swTaskID];
+		MPClientDB *db = [MPClientDB new];
+		InstalledSoftware *_swTask = [db getSoftwareTaskUsingID:swTaskID];
+		
 		if (!_swTask) {
 			qlerror(@"Software task id (%@) could not be found. Uninstall will not occure.",swTaskID);
 			reply(1);
@@ -1241,20 +1242,11 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 }
 
-- (DBInstalledSoftware *)getSWTaskUsingTaskID:(NSString *)swTaskID
+- (InstalledSoftware *)getSWTaskUsingTaskID:(NSString *)swTaskID
 {
-	DBInstalledSoftware *_swTask = nil;
-	FMXDatabaseManager *manager = [FMXDatabaseManager sharedManager];
-	[manager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
-	FMDatabase *db = [manager defaultDatabase];
-	[db open];
-	
-	NSInteger count = [DBInstalledSoftware countWhere:@"tuuid = :tuuid" parameters:@{@"tuuid": swTaskID}];
-	if (count >= 1) {
-		_swTask = (DBInstalledSoftware *)[DBInstalledSoftware modelWhere:@"tuuid = :tuuid" parameters:@{@"tuuid": swTaskID}];
-	}
-	[db close];
-	
+	InstalledSoftware *_swTask = nil;
+	MPClientDB *cdb = [MPClientDB new];
+	_swTask = [cdb getSoftwareTaskUsingID:swTaskID];
 	return _swTask;
 }
 
@@ -1262,14 +1254,14 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 - (void)createAndUpdateDatabase:(void(^)(BOOL result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
-	[cdb setupDatabase];
+	MPClientDB *cdb = [MPClientDB new];
+	cdb = nil;
 	reply(YES);
 }
 
 - (void)recordSoftwareInstallAdd:(NSDictionary*)swTask withReply:(void(^)(NSInteger result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb recordSoftwareInstall:swTask];
 	if (result)
 	{
@@ -1281,7 +1273,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 - (void)recordPatchInstall:(NSDictionary *)patch withReply:(void(^)(NSInteger result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb recordPatchInstall:patch];
 	if (result)
 	{
@@ -1294,7 +1286,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 - (void)retrieveInstalledSoftwareTasksWithReply:(void(^)(NSData *result))reply
 {
 	NSArray *tasks = [NSArray array];
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	tasks = [cdb retrieveInstalledSoftwareTasks];
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:tasks];
 	reply(data);
@@ -1302,7 +1294,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 - (void)recordSoftwareInstallRemove:(NSString *)swTaskName taskID:(NSString *)swTaskID withReply:(void(^)(BOOL result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb recordSoftwareUninstall:swTaskName taskID:swTaskID];
 	reply(result);
 }
@@ -1314,7 +1306,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 					 errorMsg:(NSString * _Nullable)aErrMsg
 					withReply:(void(^)(BOOL result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb recordHistory:hstType name:aName uuid:aUUID action:aAction result:code errorMsg:aErrMsg];
 	reply(result);
 }
@@ -1324,14 +1316,14 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 - (void)addRequiredPatch:(NSData *)patch withReply:(void(^)(BOOL result))reply
 {
 	NSDictionary *_patch = [NSKeyedUnarchiver unarchiveObjectWithData:patch];
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb addRequiredPatch:_patch];
 	reply(result);
 }
 
 - (void)clearRequiredPatchesWithReply:(void(^)(BOOL result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb clearRequiredPatches];
 	[cdb clearRequiredPatches];
 	reply(result);
@@ -1341,7 +1333,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 // After patch has been installed the record is removed from database table of required patches.
 - (void)removeRequiredPatch:(NSString *)type patchID:(NSString *)patchID patch:(NSString *)patch withReply:(void(^)(BOOL result))reply
 {
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	BOOL result = [cdb removeRequiredPatch:type patchID:patchID patch:patch];
 	reply(result);
 }

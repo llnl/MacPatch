@@ -55,10 +55,10 @@ gKeepFiles = False
 # MySQL Global Config
 myConfig = {
 	'user': 'mpdbadm',
-	'password': '',
-	'host': 'localhost',
+	'password': 'Apple2e123',
+	'host': 'mpqa02.llnl.gov',
 	'port': 3306,
-	'database': 'MacPatchDB3',
+	'database': 'MacPatchDB33QA',
 	'raise_on_warnings': True,
 	'buffered': True
 }

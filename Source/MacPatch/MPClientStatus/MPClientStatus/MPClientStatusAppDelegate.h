@@ -152,8 +152,6 @@
 
 // Client Checkin
 - (IBAction)showCheckinWindow:(id)sender;
-- (void)performClientCheckInThread;
-- (BOOL)performClientCheckInMethod;
 
 // Refresh Status
 - (IBAction)refreshClientStatus:(id)sender;
@@ -168,6 +166,5 @@
 // App Usage Info
 - (void)appLaunchNotificationReceived:(NSNotification *)aNotification;
 
-- (IBAction)showSWResWindow:(id)sender;
 @end
 

@@ -46,7 +46,7 @@
 #import "MPFileUtils.h"
 #import "MPSoftware.h"
 #import "MPPatching.h"
-#import "MPClientDatabase.h"
+#import "MPClientDB.h"
 
 // Networking Add for MP 3.1.0
 #import "MPHTTPRequest.h"
@@ -114,7 +114,11 @@
 #import "Suserver.h"
 #import "Task.h"
 
-#import "DBModels.h"
+// Client DB Models
+#import "History.h"
+#import "InstalledSoftware.h"
+#import "RequiredPatch.h"
+
 // OS Config Profile
 #import "ConfigProfile.h"
 
