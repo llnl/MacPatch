@@ -219,7 +219,9 @@ static MPSettings *_instance;
         if ([remoteSettingsRevs objectForKey:@"servers"] != [localRevs objectForKey:@"servers"]) {
             // Usdate Servers
             qlinfo(@"Update Agent Servers, servers did not match.");
-            [self updateSettingsUsingKey:@"servers" settings:remoteSettings[@"settings"][@"servers"]];
+			// Massage data before entering it in to the plist
+			NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
+			[self updateSettingsUsingKey:@"servers" settings:d];
         }
         if ([remoteSettingsRevs objectForKey:@"suservers"] != [localRevs objectForKey:@"suservers"]) {
             // Usdate SUServers
@@ -336,6 +338,7 @@ static MPSettings *_instance;
 
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
 {
+	
 	NSMutableArray *_srvs = [NSMutableArray new];
 	NSMutableArray *_srvsRaw = [NSMutableArray new];
 	NSArray *_raw_srvs = settings[@"data"];
@@ -358,7 +361,8 @@ static MPSettings *_instance;
 		[_srvsRaw addObject:[_srv copy]];
 	}
 	
-	_srvsRaw = [[self randomizeArray:_srvsRaw] mutableCopy]; // Randomize the array of servers
+	// Randomize the array of servers
+	//_srvsRaw = [[self randomizeArray:_srvsRaw] mutableCopy];
 	if (_master) [_srvsRaw addObject:_master]; // Add the master
 	if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
 	
@@ -367,8 +371,48 @@ static MPSettings *_instance;
 		[_srvs addObject:[[Server alloc] initWithDictionary:s]];
 	}
 	
+	// Now we just read the plist, it's server list is randomized on version rev
 	return (NSArray *)_srvs;
 }
+
+
+/// Read and randomize and sort MacPatch servers. Returns servers in normal
+/// dictionary format, serversFromDictionary method will translate to the
+/// model format.
+///
+/// @param settings servers dictionary
+- (NSDictionary *)serverSettingsFromDictionary:(NSDictionary *)settings
+{
+	NSMutableDictionary *_newSettings = [NSMutableDictionary dictionaryWithDictionary:settings];
+	NSMutableArray *_srvs = [NSMutableArray new];
+	NSArray *_raw_srvs = settings[@"data"];
+	
+	NSDictionary *_master = nil;
+	NSDictionary *_proxy = nil;
+	
+	for (NSDictionary *_srv in _raw_srvs)
+	{
+		if ([_srv[@"serverType"] integerValue] == 0) {
+			_master = [_srv copy];
+			continue;
+		}
+		
+		if ([_srv[@"serverType"] integerValue] == 2) {
+			_proxy = [_srv copy];
+			continue;
+		}
+		
+		[_srvs addObject:[_srv copy]];
+	}
+	
+	_srvs = [[self randomizeArray:_srvs] mutableCopy]; // Randomize the array of servers
+	if (_master) [_srvs addObject:_master]; // Add the master
+	if (_proxy) [_srvs addObject:_proxy]; // Add the proxy
+	
+	_newSettings[@"data"] = _srvs;
+	return _newSettings;
+}
+
 
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
 {
@@ -424,7 +468,9 @@ static MPSettings *_instance;
 	NSDictionary *res = [mpr getSoftwareRestrictions:&err];
 	if (err) {
 		qlerror(@"%@",err.localizedDescription);
+		return NO;
 	}
 	[res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
+	return YES;
 }
 @end

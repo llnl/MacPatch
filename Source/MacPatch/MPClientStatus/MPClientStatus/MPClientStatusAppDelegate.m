@@ -120,6 +120,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 @synthesize criticalUpdates;
 @synthesize showCriticalWindowAtDate;
 @synthesize criticalUpdatesTimer;
+@synthesize swResHelpMessage = _swResHelpMessage;
 
 + (void)initialize
 {
@@ -623,23 +624,19 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
 	@try
 	{
-		FMXDatabaseManager *manager = [FMXDatabaseManager sharedManager];
-		[manager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
-		FMDatabase *db = [manager defaultDatabase];
-		[db open];
+		MPClientDB *cdb = [MPClientDB new];
 		
 		// Query all records
-		NSArray *records = [[DBRequiredPatches query] allRecords];
+		NSArray *records = [cdb retrieveRequiredPatches];
 		qldebug(@"Required patches found %lu.",(unsigned long)records.count);
-		[db close];
 		
 		int needsReboot = 0;
 		NSMutableArray *patches = [NSMutableArray new];
-		for (DBRequiredPatches *p in records)
+		for (RequiredPatch *p in records)
 		{
-			NSString *restart = ([p.patch_reboot integerValue] == 1) ? @"Y" : @"N";
+			NSString *restart = (p.patch_reboot == 1) ? @"Y" : @"N";
 			[patches addObject:@{@"name":p.patch,@"version":p.patch_version,@"reboot":restart}];
-			if ([p.patch_reboot integerValue] == 1) {
+			if (p.patch_reboot == 1) {
 				needsReboot++;
 			}
 		}

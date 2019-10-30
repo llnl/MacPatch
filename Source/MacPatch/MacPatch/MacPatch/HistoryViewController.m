@@ -9,6 +9,7 @@
 #import "HistoryViewController.h"
 #import "DBModels.h"
 
+
 @interface ActionValueTransformer: NSValueTransformer
 
 @end
@@ -64,8 +65,8 @@
 {
     //DBLocal *db;
     NSMutableArray *historyArray;
-	FMXDatabaseManager *dbManager;
-	FMDatabase *db;
+	//FMXDatabaseManager *dbManager;
+	//FMDatabase *db;
 }
 
 @property(nonatomic) IBOutlet NSTableView *tableView;
@@ -79,11 +80,11 @@
     [super viewDidLoad];
     
     historyArray = [[NSMutableArray alloc] init];
-	dbManager = [FMXDatabaseManager sharedManager];
-	[dbManager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
+	//dbManager = [FMXDatabaseManager sharedManager];
+	//[dbManager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
 	
 	// Connect to default database
-	db = [dbManager defaultDatabase];
+	//db = [dbManager defaultDatabase];
 }
 
 - (void)viewDidAppear
@@ -93,10 +94,30 @@
 
 - (NSArray *)databaseRecords
 {
-	[db open];
+	//[db open];
 	NSMutableArray *array = [NSMutableArray new];
 	
 	// Query all records
+	MPClientDB *db = [MPClientDB new];
+	NSArray *records = [db retrieveHistory];
+	
+	if (records) {
+		[arrayController removeObjects:[arrayController arrangedObjects]];
+		for (History *hst in records) {
+			NSDictionary *d = @{@"install_date":[hst valueForKey:@"cdate"],
+								@"type":[hst valueForKey:@"type"],
+								@"uuid":[hst valueForKey:@"uuid"],
+								@"action":[hst valueForKey:@"action"],
+								@"error_code":[hst valueForKey:@"result_code"],
+								@"name":[hst valueForKey:@"name"],
+								@"error_msg":[hst valueForKey:@"error_msg"] ?:@""
+								};
+			[array addObject:d];
+		}
+	}
+	
+	return [NSArray arrayWithArray:array];
+	/*
 	NSArray *records = [[DBHistory query] allRecords];
 	if (records) {
 		[arrayController removeObjects:[arrayController arrangedObjects]];
@@ -114,7 +135,9 @@
 	}
 	
 	[db close];
-	return [NSArray arrayWithArray:array];
+	 */
+	//return [NSArray arrayWithArray:array];
+	
 }
 
 - (void)loadTableData

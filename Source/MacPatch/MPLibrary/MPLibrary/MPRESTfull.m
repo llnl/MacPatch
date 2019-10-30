@@ -71,7 +71,7 @@
     
     req = [[MPHTTPRequest alloc] init];
     wsresult = [req runSyncGET:urlPath];
-	qldebug(@"[getDataFromWS][result]:%d",wsresult.statusCode);
+	qldebug(@"[getDataFromWS][result]:%ld",(long)wsresult.statusCode);
     if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
         logit(lcl_vDebug,@"Get Data from web service (%@) returned true.",urlPath);
         logit(lcl_vDebug,@"Data Result: %@",wsresult.result);

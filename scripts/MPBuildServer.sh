@@ -98,6 +98,22 @@ minorVer="0"
 buildVer="0"
 
 if [[ $platform == 'linux' ]]; then
+
+	pyv="$(python -V 2>&1)"
+	if [ $? != 0 ]; then
+		pyv="$(python3 -V 2>&1)"
+		if [ $? != 0 ]; then
+			echo " "
+			echo "Python was not detected on this system. Please install python then re-run this script."
+			echo " "
+			exit 1
+		else
+			# create symlink to python3 
+			pyPath=`which python3`
+			ln -s $pyPath /bin/pyhton
+		fi
+	fi
+
 	USELINUX=true
 	OWNERGRP="www-data:www-data"
 	LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`

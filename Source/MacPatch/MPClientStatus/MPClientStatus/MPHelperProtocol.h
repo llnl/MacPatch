@@ -122,7 +122,7 @@ enum {
 // ----------------------------------------
 // Client Checkin     ---------------------
 // ----------------------------------------
-- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary *result))reply;
+- (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nullable result))reply;
 
 // ----------------------------------------
 // MacPatch Client Database      ----------

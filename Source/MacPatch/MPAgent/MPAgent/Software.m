@@ -392,7 +392,7 @@
 {
 	[settings refresh];
 	NSString *cGroupID = settings.agent.groupId;
-	// CEH
+	// CEH Not implemented
 	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
 	
@@ -418,7 +418,7 @@
 {
 	[settings refresh];
 	NSString *cGroupID = settings.agent.groupId;
-	// CEH
+	// CEH Not implemented
 	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
 	NSMutableArray *array = reqPlist[@"requiredSoftware"];

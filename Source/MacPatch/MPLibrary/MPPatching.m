@@ -393,7 +393,7 @@ typedef enum {
 	if (!hasUserLoggedIn) canInstallRebootPatches = YES; //If no user logged in
 	if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
 	
-	MPClientDatabase *cdb;
+	MPClientDB *cdb = [MPClientDB new];
 	qlinfo( @"Begin installing patches.");
 	for (i = 0; i < approvedPatches.count; i++)
 	{
@@ -578,7 +578,6 @@ typedef enum {
 					installResult = NO;
 					
 					// Install pkg(s)
-					cdb = [MPClientDatabase new];
 					for (int ii = 0; ii < pkgList.count; ii++)
 					{
 						pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[ii]];
@@ -782,7 +781,6 @@ typedef enum {
 			}
 			
 		instResult:
-			//cdb = [MPClientDatabase new];
 			if (!installResult)
 			{
 				qlerror(@"Error installing update, error code %@.",installResult ? @"Yes":@"No");
@@ -996,7 +994,7 @@ typedef enum {
 - (void)addPatchesToClientDatabase:(NSArray *)patches
 {
 	qlinfo(@"Adding required patches to client database.");
-	MPClientDatabase *cdb = [MPClientDatabase new];
+	MPClientDB *cdb = [MPClientDB new];
 	[cdb clearRequiredPatches];
 	for (NSDictionary *p in patches)
 	{
@@ -1031,7 +1029,7 @@ typedef enum {
 	switch (type) {
 		case kApplePatches:
 			pType = @"apple";
-			patchID = patch[@"patch"];
+			patchID = [patch[@"patch"] urlEncode]; // Apple Patches can have spaces etc.
 			break;
 		case kCustomPatches:
 			pType = @"third";
