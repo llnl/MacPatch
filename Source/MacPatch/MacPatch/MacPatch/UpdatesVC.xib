@@ -10,6 +10,7 @@
             <connections>
                 <outlet property="mainScanProgressWheel" destination="0mq-6Y-lO0" id="1Y5-j9-gxe"/>
                 <outlet property="mainScanStatusText" destination="Frf-m3-5GS" id="TSd-GE-hzO"/>
+                <outlet property="pausedPatchingText" destination="ZDQ-D3-VCH" id="cVn-iA-RoP"/>
                 <outlet property="scanButton" destination="Ks4-Ux-KKR" id="akJ-gk-3W0"/>
                 <outlet property="tableView" destination="T2E-d2-vaD" id="D53-cd-DbI"/>
                 <outlet property="updateAllButton" destination="vri-7I-gpp" id="l8Q-0r-wcW"/>
@@ -22,6 +23,15 @@
             <rect key="frame" x="0.0" y="0.0" width="1000" height="600"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
+                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZDQ-D3-VCH">
+                    <rect key="frame" x="628" y="570" width="354" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Label" id="CCo-CC-3UZ">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
                 <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="82" horizontalPageScroll="10" verticalLineScroll="82" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WxZ-dV-U0a">
                     <rect key="frame" x="0.0" y="0.0" width="1000" height="563"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -38,7 +48,7 @@
                                 <tableColumns>
                                     <tableColumn identifier="MainCell" width="994" minWidth="40" maxWidth="1000" id="CU6-PC-m0s">
                                         <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border">
-                                            <font key="font" metaFont="menu" size="11"/>
+                                            <font key="font" metaFont="label" size="11"/>
                                             <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                             <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                         </tableHeaderCell>
@@ -57,7 +67,7 @@
                                                         <rect key="frame" x="684" y="17" width="211" height="17"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="7bK-Rh-ITF">
-                                                            <font key="font" metaFont="menu" size="11"/>
+                                                            <font key="font" metaFont="label" size="11"/>
                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
@@ -79,7 +89,7 @@
                                                         <rect key="frame" x="66" y="38" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Version" id="6mf-Aa-dc6">
-                                                            <font key="font" metaFont="menu" size="11"/>
+                                                            <font key="font" metaFont="label" size="11"/>
                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
@@ -88,7 +98,7 @@
                                                         <rect key="frame" x="66" y="4" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Reboot" id="97I-Nh-jki">
-                                                            <font key="font" metaFont="menu" size="11"/>
+                                                            <font key="font" metaFont="label" size="11"/>
                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
@@ -97,7 +107,7 @@
                                                         <rect key="frame" x="66" y="21" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Size" id="299-BS-AYz">
-                                                            <font key="font" metaFont="menu" size="11"/>
+                                                            <font key="font" metaFont="label" size="11"/>
                                                             <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>

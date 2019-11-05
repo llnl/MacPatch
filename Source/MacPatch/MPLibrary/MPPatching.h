@@ -34,7 +34,6 @@
 @protocol MPPatchingDelegate <NSObject>
 
 @optional
-//- (void)patchingProgress:(NSString *)progressStr;
 - (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr;
 
 @end
@@ -49,11 +48,11 @@
 @property (nonatomic, assign) BOOL iLoadMode;
 @property (nonatomic, assign) BOOL installRebootPatchesWhileLoggedIn;
 
+- (BOOL)patchingForHostIsPaused;
+
 // Scan for Patches
 - (NSArray *)scanForPatchUsingBundleID:(NSString *)aBundleID;
 - (NSArray *)scanForPatchesUsingTypeFilter:(MPPatchContentType)contentType forceRun:(BOOL)forceRun;
-
-
 
 // Patch System
 

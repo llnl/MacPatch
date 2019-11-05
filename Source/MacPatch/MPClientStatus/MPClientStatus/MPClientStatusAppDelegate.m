@@ -964,6 +964,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)postUserNotificationForReboot
 {
+	MPPatching *p = [MPPatching new];
+	if ([p patchingForHostIsPaused]) { // If paused, then return
+		p = nil;
+		return;
+	}
+	
 	qlinfo(@"postUserNotificationForReboot");
 	// Look to see if we have posted already, if we have, no need to do it again
 	
@@ -974,19 +980,17 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		}
 	}
 	
-	
-    NSUserNotification *userNote = [[NSUserNotification alloc] init];
-    userNote.title = @"Reboot Patches Required";
-    userNote.informativeText = @"This system requires patches that require a reboot.";
-    userNote.actionButtonTitle = @"Reboot";
-    userNote.hasActionButton = YES;
-    userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };
-    [userNote setValue:@YES forKey:@"_showsButtons"];
+	NSUserNotification *userNote = [[NSUserNotification alloc] init];
+	userNote.title = @"Reboot Patches Required";
+	userNote.informativeText = @"This system requires patches that require a reboot.";
+	userNote.actionButtonTitle = @"Reboot";
+	userNote.hasActionButton = YES;
+	userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };
+	[userNote setValue:@YES forKey:@"_showsButtons"];
 
-    [[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
-    [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
+	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
+	[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
 	qlinfo(@"postUserNotificationForReboot deliverNotification");
-	
 }
 
 - (void)postUserNotificationForPatchesWithCount:(NSString *)aCount

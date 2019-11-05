@@ -613,6 +613,31 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	reply(res);
 }
 
+- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply
+{
+	BOOL res = YES;
+	NSError *err = nil;
+	NSString *_file = @"/private/var/db/.MPPatchState.plist";
+	NSDictionary *data;
+	if (state == kPatchingPausedOn) {
+		data = @{@"pausePatching":[NSNumber numberWithBool:YES]};
+	} else {
+		data = @{@"pausePatching":[NSNumber numberWithBool:NO]};
+	}
+
+	if (![data writeToFile:_file atomically:NO])
+	{
+		qlerror(@"Error setting paused patching state to file.");
+		res = NO;
+	}
+	else
+	{
+		NSDictionary *_fileAttr = @{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]};
+		[fm setAttributes:_fileAttr ofItemAtPath:_file error:NULL];
+	}
+	reply(res);
+}
+
 #pragma mark Patching Delegate methods
 - (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr
 {

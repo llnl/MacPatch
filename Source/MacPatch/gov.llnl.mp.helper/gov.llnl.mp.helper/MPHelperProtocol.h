@@ -25,6 +25,12 @@ enum {
 };
 typedef NSUInteger MPFileMoveAction;
 
+enum {
+	kPatchingPausedOff = 0,
+	kPatchingPausedOn = 1
+};
+typedef NSUInteger MPPatchingPausedState;
+
 NS_ASSUME_NONNULL_BEGIN
 
 FOUNDATION_EXPORT NSString *const MPXPCErrorDomain;
@@ -95,6 +101,7 @@ enum {
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 - (void)setPatchOnLogoutWithReply:(void(^)(BOOL result))reply;
+- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // Software -------------------------------

@@ -103,8 +103,14 @@ int main(int argc, char * argv[])
     if (![fm fileExistsAtPath:MP_AUTHRUN_FILE]) {
         return 0;
     } else {
-        // This way it does not run over and over
-        [fm removeFileIfExistsAtPath:MP_AUTHRUN_FILE];
+		// This way it does not run over and over
+		[fm removeFileIfExistsAtPath:MP_AUTHRUN_FILE];
+		
+		// If patching is paused, exit the app
+		MPPatching *p = [MPPatching new];
+		if ([p patchingForHostIsPaused]) {
+			return 0;
+		}
     }
     
     int             retVal;

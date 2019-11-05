@@ -406,11 +406,16 @@
 									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"])
 									{
-										patchOp = [[PatchScanAndUpdateOperation alloc] init];
-										patchOp.taskName = @"kMPVulUpdate";
-										[patchOp setScanType:1];
-										[queue addOperation:patchOp];
-										patchOp = nil;
+										MPPatching *p = [MPPatching new];
+										if (![p patchingForHostIsPaused])
+										{
+											patchOp = [[PatchScanAndUpdateOperation alloc] init];
+											patchOp.taskName = @"kMPVulUpdate";
+											[patchOp setScanType:1];
+											[queue addOperation:patchOp];
+											patchOp = nil;
+										}
+										p = nil;
 									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPSWDistMan"])
 									{

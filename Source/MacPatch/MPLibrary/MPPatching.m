@@ -55,6 +55,8 @@ typedef enum {
 // Networking
 - (NSString *)downloadUpdate:(NSString *)url error:(NSError **)err;
 
+- (BOOL)patchingForHostIsPaused;
+
 @end
 
 @implementation MPPatching
@@ -1002,6 +1004,21 @@ typedef enum {
 		qldebug(@"Added %@",p[@"patch"]);
 	}
 	return;
+}
+
+- (BOOL)patchingForHostIsPaused
+{
+	BOOL res = NO;
+	NSDictionary *data;
+	NSString *_file = @"/private/var/db/.MPPatchState.plist";
+	if ([[NSFileManager defaultManager] fileExistsAtPath:_file]) {
+		data = [NSDictionary dictionaryWithContentsOfFile:_file];
+		if ([data objectForKey:@"pausePatching"]) {
+			res = [[data objectForKey:@"pausePatching"] boolValue];
+		}
+	}
+	
+	return res;
 }
 
 #pragma mark Networking

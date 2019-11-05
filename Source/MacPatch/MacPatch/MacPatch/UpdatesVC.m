@@ -21,6 +21,9 @@
 
 @property (nonatomic, retain) IBOutlet  NSProgressIndicator     *mainPatchProgressWheel;
 @property (nonatomic, retain) IBOutlet  NSTextField             *mainPatchStatusText;
+@property (nonatomic, retain) IBOutlet  NSTextField             *pausedPatchingText;
+
+@property (nonatomic, assign) BOOL isPatchingPaused;
 
 // XPC Connection
 @property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
@@ -42,12 +45,27 @@
     // Do view setup here.
 	
 	_content = [NSMutableArray array];
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(patchingStateChanged:)
+												 name:@"PatchingStateChangedNotification"
+											   object:nil];
 }
 
 - (void)viewDidAppear
 {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self->_mainScanStatusText setStringValue:@""];
+		MPPatching *p = [MPPatching new];
+		[self setIsPatchingPaused:[p patchingForHostIsPaused]];
+		p = nil;
+		if (self->_isPatchingPaused)
+		{
+			[self.pausedPatchingText setStringValue:@"NOTICE: Patching is paused. Change in preferences."];
+			[self.pausedPatchingText setHidden:NO];
+		} else {
+			[self.pausedPatchingText setHidden:YES];
+		}
+		[self.tableView reloadData];
 	});
 }
 
@@ -226,6 +244,11 @@
 		} else {
 			cell.patchTypeIcon.image = [NSImage imageNamed:@"macPatchImage"];
 		}
+		if (self->_isPatchingPaused)
+		{
+			[cell.updateButton setEnabled:NO];
+		}
+		
 		cell.rowData = [d copy];
 		return cell;
 	}
@@ -310,5 +333,27 @@
 	
 }
 
+#pragma mark - Notifications
+
+- (void)patchingStateChanged:(NSNotification *)notification
+{
+	if ([[notification name] isEqualToString:@"PatchingStateChangedNotification"])
+	{
+		qlinfo(@"PatchingStateChangedNotification got it");
+		dispatch_async(dispatch_get_main_queue(), ^{
+			MPPatching *p = [MPPatching new];
+			[self setIsPatchingPaused:[p patchingForHostIsPaused]];
+			if (self->_isPatchingPaused)
+			{
+				[self.pausedPatchingText setStringValue:@"NOTICE: Patching is paused. Change in preferences."];
+				[self.pausedPatchingText setHidden:NO];
+			} else {
+				[self.pausedPatchingText setHidden:YES];
+			}
+			[self.tableView reloadData];
+			p = nil;
+		});
+	}
+}
 
 @end
