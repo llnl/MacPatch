@@ -49,6 +49,7 @@
 @property (nonatomic, assign) BOOL installRebootPatchesWhileLoggedIn;
 
 - (BOOL)patchingForHostIsPaused;
++ (NSString *)isPatchingForHostIsPausedAsString;
 
 // Scan for Patches
 - (NSArray *)scanForPatchUsingBundleID:(NSString *)aBundleID;

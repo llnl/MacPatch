@@ -235,6 +235,7 @@ class MpClient(CommonBase):
 	client_version  = Column(String(20), server_default='NA', info='Client Ver', doc='5')
 	fileVaultStatus = Column(String(255), nullable=True, server_default='NA', info='FileVault Status', doc='13')
 	firmwareStatus  = Column(String(255), nullable=True, server_default='NA', info='Firmware Status', doc='14')
+	hasPausedPatching = Column(String(1), server_default='0', info='Patching Paused', doc='15')
 
 # mp_clients_plist
 class MpClientPlist(CommonBase):

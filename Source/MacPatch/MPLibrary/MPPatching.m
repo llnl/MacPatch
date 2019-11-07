@@ -1021,6 +1021,21 @@ typedef enum {
 	return res;
 }
 
++ (NSString *)isPatchingForHostIsPausedAsString
+{
+    NSString *res = @"0";
+	NSDictionary *data;
+	NSString *_file = @"/private/var/db/.MPPatchState.plist";
+	if ([[NSFileManager defaultManager] fileExistsAtPath:_file]) {
+		data = [NSDictionary dictionaryWithContentsOfFile:_file];
+		if ([data objectForKey:@"pausePatching"]) {
+			res = [[data objectForKey:@"pausePatching"] boolValue] ? @"1": @"0";
+		}
+	}
+	
+	return res;
+}
+
 #pragma mark Networking
 - (NSString *)downloadUpdate:(NSString *)url error:(NSError **)err
 {

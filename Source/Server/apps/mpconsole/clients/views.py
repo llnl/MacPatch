@@ -30,7 +30,8 @@ def clientsList():
 					{'name': 'serialno', 'label': 'Serial No'},{'name': 'fileVaultStatus', 'label': 'FileVault'},
 					{'name': 'firmwareStatus', 'label': 'Firmware'},{'name':'osver','label':'OS Ver'},
 					{'name':'consoleuser','label':'Console User'},{'name':'needsreboot','label':'Needs Reboot'},
-					{'name':'client_version','label':'Client Ver'}, {'name':'mdate','label':'Mod Date'}]
+					{'name':'client_version','label':'Client Ver'}, {'name':'hasPausedPatching','label':'Paused Patching'}, 
+     				{'name':'mdate','label':'Mod Date'}]
 
 	return render_template('clients.html', cData=[], columns=[], colNames=cListColNames)
 
@@ -53,7 +54,8 @@ def clientsListJSON():
 					{'name': 'serialno', 'label': 'Serial No'},{'name': 'fileVaultStatus', 'label': 'FileVault'},
 					{'name': 'firmwareStatus', 'label': 'Firmware'},{'name':'osver','label':'OS Ver'},
 					{'name':'consoleuser','label':'Console User'},{'name':'needsreboot','label':'Needs Reboot'},
-					{'name':'client_version','label':'Client Ver'}, {'name':'mdate','label':'Mod Date'}]
+					{'name':'client_version','label':'Client Ver'}, {'name':'hasPausedPatching','label':'Paused Patching'},
+     				{'name':'mdate','label':'Mod Date'}]
 
 	_groups = []
 	for g in clientGroups:
