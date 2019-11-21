@@ -600,6 +600,7 @@ if $USEMACOS; then
     pip -q install pycrypto
 	pip -q install requests
 	pip -q install mysql-connector-python
+	pip -q install simplejson
 	
 	env LDFLAGS="-L${OPENSSLPWD}/lib" \
 	CFLAGS="-I${OPENSSLPWD}/include" \
@@ -646,6 +647,7 @@ else
 	pip -q install requests --no-cache-dir
 	pip -q install mysql-connector-python --no-cache-dir
 	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+	pip -q install simplejson --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
