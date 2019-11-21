@@ -5,7 +5,7 @@ import subprocess
 from flask import Flask
 from mpapi.config import DevelopmentConfig, ProductionConfig
 from mpapi.extensions import db, migrate, cache
-from datetime import datetime
+from datetime import datetime, date
 
 if os.getenv("MPAPI_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
