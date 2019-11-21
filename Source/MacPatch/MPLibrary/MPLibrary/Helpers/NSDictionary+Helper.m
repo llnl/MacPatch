@@ -62,4 +62,22 @@ static NSString *urlEncode(id object)
 	}
 	return [parts componentsJoinedByString: @"&"];
 }
+
+- (NSString *)asJSON
+{
+	NSError *error = nil;
+	NSData *jsonData = [NSJSONSerialization dataWithJSONObject:self
+													   options:NSJSONWritingPrettyPrinted // Pass 0 if you don't care about the readability of the generated string
+														 error:&error];
+	
+	if (!jsonData) {
+		NSLog(@"Got an error: %@", error);
+	} else {
+		NSString *jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+		return jsonString;
+	}
+	
+	return nil;
+}
+
 @end

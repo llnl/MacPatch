@@ -190,6 +190,10 @@ static MPSettings *_instance;
 	NSString *localID = self.agent.groupId;
 	NSString *remoteID = @"";
 	NSDictionary *remoteRevs = remoteSettingsRevs[@"revs"];
+	if (!remoteSettingsRevs) {
+		qlerror(@"Unable to obtain remote data. Network connection may be down.");
+		return NO;
+	}
 	
     if ([localRevs isEqualToDictionary:remoteRevs])
 	{
@@ -219,24 +223,24 @@ static MPSettings *_instance;
             qlinfo(@"Update Agent Settings, settings did not match.");
             [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];
         }
-        if ([remoteRevs objectForKey:@"servers"] != [localRevs objectForKey:@"servers"]) {
+        if ([[remoteRevs objectForKey:@"servers"] intValue] != [[localRevs objectForKey:@"servers"] intValue]) {
             // Usdate Servers
             qlinfo(@"Update Agent Servers, servers did not match.");
 			// Massage data before entering it in to the plist
 			NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
 			[self updateSettingsUsingKey:@"servers" settings:d];
         }
-        if ([remoteRevs objectForKey:@"suservers"] != [localRevs objectForKey:@"suservers"]) {
+        if ([[remoteRevs objectForKey:@"suservers"] intValue] != [[localRevs objectForKey:@"suservers"] intValue]) {
             // Usdate SUServers
             qlinfo(@"Update Agent SUServers, SUServers did not match.");
             [self updateSettingsUsingKey:@"suservers" settings:remoteSettings[@"settings"][@"suservers"]];
         }
-        if ([remoteRevs objectForKey:@"tasks"] != [localRevs objectForKey:@"tasks"]) {
+        if ([[remoteRevs objectForKey:@"tasks"] intValue] != [[localRevs objectForKey:@"tasks"] intValue]) {
             // Usdate Tasks
             qlinfo(@"Update Agent tasks, tasks did not match.");
             [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
         }
-		if ([remoteRevs objectForKey:@"swrestrictions"] != [self readSoftwareRestrictionRevisionFromFile]) {
+		if ([[remoteRevs objectForKey:@"swrestrictions"] intValue] != [[self readSoftwareRestrictionRevisionFromFile] intValue]) {
 			// Usdate Tasks
 			qlinfo(@"Update Software restrictions, restrictions did not match.");
 			[self writeNewSoftwareRestritionsFile];
@@ -251,15 +255,10 @@ static MPSettings *_instance;
 {
 	if (agentSettings)
 	{
-		if ([agentSettings objectForKey:@"key"])
-		{
-		qlinfo(@"[updateSettingsUsingKey]key: %@",key);
-		qlinfo(@"[updateSettingsUsingKey]agentSettings: %@",agentSettings);
-			NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-			[dict[@"settings"] setObject:agentSettings forKey:key];
-			[dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
-			[dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
-		}
+		NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+		[dict[@"settings"] setObject:agentSettings forKey:key];
+		[dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
+		[dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
 	}
 	else
 	{
