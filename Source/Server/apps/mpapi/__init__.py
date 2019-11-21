@@ -203,7 +203,6 @@ def register_blueprints(app):
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""
 
-	if isinstance(obj, datetime):
+	if isinstance(obj, (date, datetime)):
 		serial = obj.isoformat()
 		return serial
-	raise TypeError("Type not serializable")
