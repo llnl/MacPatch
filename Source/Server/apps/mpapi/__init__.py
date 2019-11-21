@@ -136,6 +136,9 @@ def register_blueprints(app):
 
 	from .checkin_2 import checkin_2 as bp_checkin_2
 	app.register_blueprint(bp_checkin_2, url_prefix='/api/v2')
+ 
+	from .checkin_3 import checkin_3 as bp_checkin_3
+	app.register_blueprint(bp_checkin_3, url_prefix='/api/v3')
 
 	from .inventory import inventory as bp_inventory
 	app.register_blueprint(bp_inventory, url_prefix=app.config['URL_PREFIX'])
