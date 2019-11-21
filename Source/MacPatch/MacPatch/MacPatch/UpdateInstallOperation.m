@@ -7,6 +7,7 @@
 //
 
 #import "UpdateInstallOperation.h"
+#import "LongPatchWindow.h"
 
 @interface UpdateInstallOperation (Private)
 
@@ -179,6 +180,19 @@
 	}];
 	
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+- (void)showLongPatchInstallAlert
+{
+	if ([self.patch objectForKey:@"isLongPatch"])
+	{
+		if ([[self.patch objectForKey:@"isLongPatch"] isEqualTo:@"1"])
+		{
+			LongPatchWindow *lp = [[LongPatchWindow alloc] initWithPatch:self.patch];
+			[lp show];
+		}
+	}
+	
 }
 
 #pragma mark - Helper
