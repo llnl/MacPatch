@@ -598,6 +598,7 @@ if $USEMACOS; then
 	source ${MPSERVERBASE}/env/server/bin/activate
     pip -q install --upgrade pip
     pip -q install pycrypto
+    pip -q install simplejson
 	pip -q install requests
 	pip -q install mysql-connector-python
 	
