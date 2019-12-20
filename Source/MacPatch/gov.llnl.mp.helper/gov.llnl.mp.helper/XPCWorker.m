@@ -658,6 +658,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	
 	NSString *pkgType = [swItem valueForKeyPath:@"Software.sw_type"];
 	
+	MPFileUtils *fu;
 	NSString *fHash = nil;
 	MPScript *mpScript;
 	MPCrypto *mpCrypto = [[MPCrypto alloc] init];
@@ -706,15 +707,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-		
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;
@@ -780,15 +782,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;
@@ -843,14 +846,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;

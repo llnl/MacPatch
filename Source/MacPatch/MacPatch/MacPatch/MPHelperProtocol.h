@@ -101,7 +101,7 @@ enum {
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 - (void)setPatchOnLogoutWithReply:(nullable void(^)(BOOL result))reply;
-- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply;
+- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(nullable void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // Software -------------------------------

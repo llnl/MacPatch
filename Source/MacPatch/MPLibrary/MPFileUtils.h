@@ -32,6 +32,8 @@
 -(int)unzip:(NSString *)aZipFilePath error:(NSError **)err;
 -(int)unzip:(NSString *)aZipFilePath targetPath:(NSString *)aTargetPath error:(NSError **)err;
 
+- (BOOL)unzipItemAtPath:(NSString *)aZipFilePath targetPath:(NSString *)aTargetPath error:(NSError **)err;
+
 - (void)setOwnership:(NSString *)aPath owner:(NSString *)aOwner group:(NSString *)aGroup error:(NSError **)err;
 
 - (BOOL)removeContentsOfDirectory:(NSString *)dirPath;
