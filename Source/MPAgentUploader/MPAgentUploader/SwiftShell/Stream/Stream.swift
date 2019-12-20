@@ -7,7 +7,7 @@
 import Foundation
 
 extension FileHandle {
-	/// Read what is available, as a String.
+	/// Reads what is available, as a String.
 	/// - Parameter encoding: the encoding to use.
 	/// - Returns: The contents as a String, or nil the end has been reached.
 	public func readSome(encoding: String.Encoding) -> String? {
@@ -21,7 +21,7 @@ extension FileHandle {
 		return result
 	}
 
-	/// Read to the end, as a String.
+	/// Reads to the end, as a String.
 	/// - Parameter encoding: the encoding to use.
 	public func read(encoding: String.Encoding) -> String {
 		let data = self.readDataToEndOfFile()
@@ -77,7 +77,7 @@ extension ReadableStream {
 
 	/// Splits stream lazily into lines.
 	public func lines() -> LazySequence<AnySequence<String>> {
-		return AnySequence(PartialSourceLazySplitSequence({self.readSome()?.characters}, separator: "\n").map { String($0) }).lazy
+		return AnySequence(PartialSourceLazySplitSequence({self.readSome()}, separator: "\n").map(String.init)).lazy
 	}
 
 	/// Writes the text in this stream to the given TextOutputStream.
@@ -108,25 +108,28 @@ extension ReadableStream {
 	}
 
 	/// Reads everything at once.
-	public func readData() -> Data {
+	/// Marked with @discardableResult so that the stream can be read before
+	/// calling .finish() without causing any compiler warnings or requiring
+	/// developer work-arounds when the result will not be used (see #52 & #57)
+	@discardableResult public func readData() -> Data {
 		return filehandle.readDataToEndOfFile()
 	}
 }
 
 #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
 	extension ReadableStream {
-		/// `handler` will be called whenever there is new output available.
-		/// - Note: if the stream is read from outside of the handler, or more than once inside
-		/// the handler, it may be called once when stream is closed and empty.
+		/// Sets code to be executed whenever there is new output available.
+		/// - Note: if the stream is read from outside of `handler`, or more than once inside
+		/// it, it may be called once when stream is closed and empty.
 		public func onOutput(_ handler: @escaping (ReadableStream) -> Void) {
-			filehandle.readabilityHandler = { [unowned self] _ in
-				handler(self)
+			filehandle.readabilityHandler = { [weak self] _ in
+				self.map(handler)
 			}
 		}
 
-		/// `handler` will be called whenever there is new text output available.
-		/// - Note: if the stream is read from outside of the handler, or more than once inside
-		/// the handler, it may be called once when stream is closed and empty.
+		/// Sets code to be executed whenever there is new text output available.
+		/// - Note: if the stream is read from outside of `handler`, or more than once inside
+		/// it, it may be called once when stream is closed and empty.
 		public func onStringOutput(_ handler: @escaping (String) -> Void) {
 			self.onOutput { stream in
 				if let output = stream.readSome() {

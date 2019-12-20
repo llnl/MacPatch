@@ -23,15 +23,8 @@
 		8F4911C11DFC6E310018CA70 /* PreferencesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911BE1DFC6E310018CA70 /* PreferencesViewController.swift */; };
 		8F4911C21DFC6E310018CA70 /* PreferencesGeneralViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911BF1DFC6E310018CA70 /* PreferencesGeneralViewController.swift */; };
 		8F4911C41DFDEB4E0018CA70 /* FileUploader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911C31DFDEB4E0018CA70 /* FileUploader.swift */; };
-		8FE8648A20045DA6007F4947 /* Bash.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8647F20045DA6007F4947 /* Bash.swift */; };
-		8FE8648B20045DA6007F4947 /* FileHandle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648020045DA6007F4947 /* FileHandle.swift */; };
-		8FE8648C20045DA6007F4947 /* Array.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648220045DA6007F4947 /* Array.swift */; };
-		8FE8648D20045DA6007F4947 /* Stream.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648420045DA6007F4947 /* Stream.swift */; };
-		8FE8648E20045DA6007F4947 /* Lazy-split.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648520045DA6007F4947 /* Lazy-split.swift */; };
-		8FE8648F20045DA6007F4947 /* Files.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648620045DA6007F4947 /* Files.swift */; };
-		8FE8649020045DA6007F4947 /* Command.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648720045DA6007F4947 /* Command.swift */; };
-		8FE8649120045DA6007F4947 /* Context.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648820045DA6007F4947 /* Context.swift */; };
-		8FE8649220045DA6007F4947 /* String.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FE8648920045DA6007F4947 /* String.swift */; };
+		8FD5E18623AD574D00A47F7C /* SwiftShell.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD5E18423AD573C00A47F7C /* SwiftShell.framework */; };
+		8FD5E18723AD574D00A47F7C /* SwiftShell.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8FD5E18423AD573C00A47F7C /* SwiftShell.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8FEEC2B31DFF5FB8001133F7 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */; };
 		8FF253E51FACDF0D006B0491 /* LogKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF253E41FACDF0D006B0491 /* LogKit.framework */; };
 		8FF253E61FACDF12006B0491 /* LogKit.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8FF253E41FACDF0D006B0491 /* LogKit.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
@@ -44,6 +37,7 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				8FD5E18723AD574D00A47F7C /* SwiftShell.framework in CopyFiles */,
 				8F2BC9E41DF88616009BA318 /* Alamofire.framework in CopyFiles */,
 				8FF253E61FACDF12006B0491 /* LogKit.framework in CopyFiles */,
 			);
@@ -71,15 +65,7 @@
 		8F4911BE1DFC6E310018CA70 /* PreferencesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PreferencesViewController.swift; path = Preferences/PreferencesViewController.swift; sourceTree = "<group>"; };
 		8F4911BF1DFC6E310018CA70 /* PreferencesGeneralViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PreferencesGeneralViewController.swift; path = Preferences/PreferencesGeneralViewController.swift; sourceTree = "<group>"; };
 		8F4911C31DFDEB4E0018CA70 /* FileUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileUploader.swift; sourceTree = "<group>"; };
-		8FE8647F20045DA6007F4947 /* Bash.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Bash.swift; sourceTree = "<group>"; };
-		8FE8648020045DA6007F4947 /* FileHandle.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileHandle.swift; sourceTree = "<group>"; };
-		8FE8648220045DA6007F4947 /* Array.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Array.swift; sourceTree = "<group>"; };
-		8FE8648420045DA6007F4947 /* Stream.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Stream.swift; sourceTree = "<group>"; };
-		8FE8648520045DA6007F4947 /* Lazy-split.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Lazy-split.swift"; sourceTree = "<group>"; };
-		8FE8648620045DA6007F4947 /* Files.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Files.swift; sourceTree = "<group>"; };
-		8FE8648720045DA6007F4947 /* Command.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Command.swift; sourceTree = "<group>"; };
-		8FE8648820045DA6007F4947 /* Context.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Context.swift; sourceTree = "<group>"; };
-		8FE8648920045DA6007F4947 /* String.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = String.swift; sourceTree = "<group>"; };
+		8FD5E18423AD573C00A47F7C /* SwiftShell.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftShell.framework; path = MPAgentUploader/Frameworks/SwiftShell.framework; sourceTree = "<group>"; };
 		8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
 		8FF253E41FACDF0D006B0491 /* LogKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LogKit.framework; path = MPAgentUploader/Frameworks/LogKit.framework; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -89,6 +75,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FD5E18623AD574D00A47F7C /* SwiftShell.framework in Frameworks */,
 				8FF253E51FACDF0D006B0491 /* LogKit.framework in Frameworks */,
 				8F2BC9E21DF884EC009BA318 /* Alamofire.framework in Frameworks */,
 			);
@@ -135,6 +122,7 @@
 		8F2BC9E01DF884EC009BA318 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E18423AD573C00A47F7C /* SwiftShell.framework */,
 				8FF253E41FACDF0D006B0491 /* LogKit.framework */,
 				8F2BC9E11DF884EC009BA318 /* Alamofire.framework */,
 			);
@@ -146,7 +134,6 @@
 			children = (
 				8F2BC9E91DF8DA0E009BA318 /* Spawn.swift */,
 				8F2BC9EB1DF9CCA7009BA318 /* Alamofire-Synchronous.swift */,
-				8FE8647E20045DA6007F4947 /* SwiftShell */,
 			);
 			name = "Third-Party";
 			sourceTree = "<group>";
@@ -181,38 +168,6 @@
 			name = Preferences;
 			sourceTree = "<group>";
 		};
-		8FE8647E20045DA6007F4947 /* SwiftShell */ = {
-			isa = PBXGroup;
-			children = (
-				8FE8647F20045DA6007F4947 /* Bash.swift */,
-				8FE8648020045DA6007F4947 /* FileHandle.swift */,
-				8FE8648120045DA6007F4947 /* General */,
-				8FE8648320045DA6007F4947 /* Stream */,
-				8FE8648620045DA6007F4947 /* Files.swift */,
-				8FE8648720045DA6007F4947 /* Command.swift */,
-				8FE8648820045DA6007F4947 /* Context.swift */,
-				8FE8648920045DA6007F4947 /* String.swift */,
-			);
-			path = SwiftShell;
-			sourceTree = "<group>";
-		};
-		8FE8648120045DA6007F4947 /* General */ = {
-			isa = PBXGroup;
-			children = (
-				8FE8648220045DA6007F4947 /* Array.swift */,
-			);
-			path = General;
-			sourceTree = "<group>";
-		};
-		8FE8648320045DA6007F4947 /* Stream */ = {
-			isa = PBXGroup;
-			children = (
-				8FE8648420045DA6007F4947 /* Stream.swift */,
-				8FE8648520045DA6007F4947 /* Lazy-split.swift */,
-			);
-			path = Stream;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -241,13 +196,13 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 0810;
-				LastUpgradeCheck = 1020;
+				LastUpgradeCheck = 1120;
 				ORGANIZATIONNAME = "Lawrence Livermore Nat'l Lab";
 				TargetAttributes = {
 					8F2BC9CC1DF8805E009BA318 = {
 						CreatedOnToolsVersion = 8.1;
-						DevelopmentTeam = A827VH86QR;
-						LastSwiftMigration = 1010;
+						DevelopmentTeam = BLZUAP2L36;
+						LastSwiftMigration = 1120;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -289,24 +244,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				8F2BC9F01DFA085C009BA318 /* MPCrypto.m in Sources */,
-				8FE8648B20045DA6007F4947 /* FileHandle.swift in Sources */,
 				8F2BC9D31DF8805E009BA318 /* ViewController.swift in Sources */,
-				8FE8648D20045DA6007F4947 /* Stream.swift in Sources */,
 				8F4911C11DFC6E310018CA70 /* PreferencesViewController.swift in Sources */,
 				8F2BC9E61DF88B84009BA318 /* AuthViewController.swift in Sources */,
-				8FE8648A20045DA6007F4947 /* Bash.swift in Sources */,
-				8FE8648C20045DA6007F4947 /* Array.swift in Sources */,
 				8F2BC9EC1DF9CCA7009BA318 /* Alamofire-Synchronous.swift in Sources */,
 				8F2BC9EA1DF8DA0E009BA318 /* Spawn.swift in Sources */,
-				8FE8648E20045DA6007F4947 /* Lazy-split.swift in Sources */,
-				8FE8648F20045DA6007F4947 /* Files.swift in Sources */,
 				8F2BC9D11DF8805E009BA318 /* AppDelegate.swift in Sources */,
-				8FE8649120045DA6007F4947 /* Context.swift in Sources */,
 				8FEEC2B31DFF5FB8001133F7 /* HeaderView.swift in Sources */,
 				8F4911C01DFC6E310018CA70 /* PreferencesWindowController.swift in Sources */,
-				8FE8649020045DA6007F4947 /* Command.swift in Sources */,
 				8F4911C21DFC6E310018CA70 /* PreferencesGeneralViewController.swift in Sources */,
-				8FE8649220045DA6007F4947 /* String.swift in Sources */,
 				8F2BC9E81DF8B4A7009BA318 /* Constants.swift in Sources */,
 				8F4911C41DFDEB4E0018CA70 /* FileUploader.swift in Sources */,
 			);
@@ -444,7 +390,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = A827VH86QR;
+				DEVELOPMENT_TEAM = BLZUAP2L36;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MPAgentUploader/Frameworks",
@@ -456,7 +403,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;
 		};
@@ -466,7 +413,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = A827VH86QR;
+				DEVELOPMENT_TEAM = BLZUAP2L36;
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/MPAgentUploader/Frameworks",
@@ -478,7 +426,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
-				SWIFT_VERSION = 4.2;
+				SWIFT_VERSION = 5.0;
 			};
 			name = Release;
 		};

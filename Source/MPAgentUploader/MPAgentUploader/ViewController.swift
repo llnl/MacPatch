@@ -30,6 +30,7 @@
 import Cocoa
 import Alamofire
 import LogKit
+import SwiftShell
 
 
 class ViewController: NSViewController, AuthViewControllerDelegate
