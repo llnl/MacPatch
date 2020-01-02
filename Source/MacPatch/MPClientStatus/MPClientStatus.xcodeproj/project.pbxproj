@@ -31,7 +31,6 @@
 		8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908116DFE92C00A870A3 /* libicucore.dylib */; };
 		8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908316DFE92C00A870A3 /* libz.dylib */; };
 		8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */; };
-		8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */; };
 		8FE6B4831B4C79A1000A0471 /* warn.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4821B4C79A1000A0471 /* warn.png */; };
 		8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8FE8069622D0095C00D9DE94 /* Notes.txt */; };
 		8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */; };
@@ -54,6 +53,7 @@
 		8FCCBA6E19AFD1BB001F4C3B /* CHMenuViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHMenuViewController.h; sourceTree = "<group>"; };
 		8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMenuViewController.m; sourceTree = "<group>"; };
 		8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHMenuViewController.xib; sourceTree = "<group>"; };
+		8FD5E10023A9729D00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FD8904716DFE84600A870A3 /* MPClientStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPClientStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FD8904A16DFE84600A870A3 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8FD8904D16DFE84600A870A3 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
@@ -78,7 +78,6 @@
 		8FD8908416DFE92C00A870A3 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../Developer/Xcode/DerivedData/MacPatch-gcqqukpepnyosjeqfffypdzoyyfx/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
 		8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		8FD8909A16DFEC0700A870A3 /* MPClientStatus-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPClientStatus-Info.plist"; sourceTree = "<group>"; };
-		8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = MPBaseRoundIcon.png; sourceTree = "<group>"; };
 		8FE6B4821B4C79A1000A0471 /* warn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn.png; sourceTree = "<group>"; };
 		8FE8069622D0095C00D9DE94 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = MPDiagCollector.sh; sourceTree = "<group>"; };
@@ -132,6 +131,7 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E10023A9729D00A47F7C /* libiconv.tbd */,
 				8F22E84922B9980800A27786 /* WebKit.framework */,
 				8F0174CF225D60270035A703 /* UserNotifications.framework */,
 				8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */,
@@ -203,7 +203,6 @@
 			isa = PBXGroup;
 			children = (
 				8FE6B4821B4C79A1000A0471 /* warn.png */,
-				8FD890CD16E51BFB00A870A3 /* MPBaseRoundIcon.png */,
 				8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */,
 				8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */,
 				8FE8069622D0095C00D9DE94 /* Notes.txt */,
@@ -276,7 +275,6 @@
 				8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */,
 				8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */,
 				8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */,
-				8FD890CE16E51BFB00A870A3 /* MPBaseRoundIcon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -431,6 +429,7 @@
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 3.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -455,6 +454,7 @@
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 3.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

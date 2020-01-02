@@ -148,14 +148,15 @@
 				dispatch_semaphore_signal(sem);
 			}] installPatch:self->patch userInstallRebootPatch:aRebPtch withReply:^(NSError *error, NSInteger resultCode) {
 				
-				qlerror(@"installPatch:self->patch withReply");
-				qlerror(@"resultCode: %ld",resultCode);
+				qldebug(@"installPatch:self->patch withReply");
+				qldebug(@"resultCode: %ld",resultCode);
 				
 				if (error) {
 					qlerror(@"%@",error.localizedDescription);
 				}
 				
 				if (resultCode == 0) {
+					qlinfo(@"Install was sucessful");
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];

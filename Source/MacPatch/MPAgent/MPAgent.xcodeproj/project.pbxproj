@@ -171,6 +171,7 @@
 		8FA6A8831B9621DB006A329B /* InventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InventoryPlugin.h; sourceTree = "<group>"; };
 		8FA6A8841B96230C006A329B /* MPInventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInventoryPlugin.h; sourceTree = "<group>"; };
 		8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInventoryPlugin.m; sourceTree = "<group>"; };
+		8FD5E0FD23A9723F00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FE03DCF1B600C5A005D39EE /* MPAgentUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentUpdater.h; sourceTree = "<group>"; };
 		8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentUpdater.m; sourceTree = "<group>"; };
 		8FE03DD41B60195A005D39EE /* AntiVirus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AntiVirus.h; sourceTree = "<group>"; };
@@ -246,6 +247,7 @@
 		8F4B1EEB16DD77BD00E15A9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E0FD23A9723F00A47F7C /* libiconv.tbd */,
 				8F1B0804223707D3004D2ACF /* libMPLibrary.a */,
 				8F53E2091FDA18BB004D4C32 /* PCSC.framework */,
 				8FF5B50B1FC658EC006F5FB2 /* Python.framework */,
@@ -664,6 +666,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CURRENT_PROJECT_VERSION = 3.3.4.4;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -682,6 +685,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 3.3.4.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -706,6 +710,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
+				CURRENT_PROJECT_VERSION = 3.3.4.4;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -724,6 +729,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 3.3.4.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

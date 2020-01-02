@@ -406,6 +406,46 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	reply(nil,result);
 }
 
+- (void)installPatches:(NSArray *)patches withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply
+{
+	int patchCount = 0;
+	double patchProgress = 0.0;
+	NSInteger result = 0;
+	MPPatching *patching = [MPPatching new];
+	
+	[self postPatchStatus:@"Installing all patches ..."];
+	for (NSDictionary *patch in patches)
+	{
+		qlinfo(@"Install Patch: %@",patch[@"patch"]);
+		qldebug(@"Patch: %@",patch);
+		
+		[self postPatchAllStatus:@"Begin %@ install...", patch[@"patch"]];
+		NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
+		
+		if (patchResult[@"patchInstallErrors"])
+		{
+			qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
+			if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
+			{
+				qlerror(@"Error installing %@",patch[@"patch"]);
+				result = result + 1;
+			} else {
+				[self postPatchInstallCompletion:patch[@"patch_id"]];
+			}
+		} else {
+			[self postPatchInstallCompletion:patch[@"patch_id"]];
+		}
+		
+		patchCount = patchCount + 1;
+		patchProgress = patchCount / patches.count;
+		[self postPatchAllProgress:patchCount];
+	}
+
+	qlinfo(@"result = %ld",(long)result);
+	[self postPatchStatus:@"%d install(s) completed.", patchCount];
+	reply(nil,result);
+}
+
 // Private
 - (BOOL)postDataToWS:(NSString *)urlPath data:(NSDictionary *)data
 {
@@ -1423,6 +1463,24 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 }
 
+// Post Status Text
+- (void)postPatchAllStatus:(NSString *)status,...
+{
+	qlinfo(@"Calling postPatchAllStatus");
+	@try {
+		va_list args;
+		va_start(args, status);
+		NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
+		va_end(args);
+		
+		qltrace(@"postPatchStatus[XPCWorker]: %@",statusStr);
+		[[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPPatchAllProcessStatus];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
+
 // Post Progress for a progress bar
 - (void)postPatchProgress:(double)data
 {
@@ -1439,6 +1497,28 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	//qlinfo(@"Progress: %lf",data);
 }
 
+// Post Progress for a progress bar, for patch all
+- (void)postPatchAllProgress:(double)data
+{
+	@try {
+		qlinfo(@"Patch All Progress: %3d",(int)data);
+		[[self.xpcConnection remoteObjectProxy] postStatus:[NSString stringWithFormat:@"%lf", data] type:kMPPatchAllProcessProgress];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
+
+- (void)postPatchInstallCompletion:(NSString *)patchID
+{
+	qlinfo(@"postPatchInstallCompletion for %@",patchID);
+	@try {
+		[[self.xpcConnection remoteObjectProxy] postPatchInstallStatus:patchID type:kMPPatchAllInstallComplete];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
 #pragma mark • Misc
 
 - (void)unzip:(NSString *)aFile withReply:(void(^)(NSError *error, NSInteger result))reply

@@ -31,6 +31,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, assign) IBOutlet NSButton         *updateButton;
 
+- (IBAction)runInstall:(NSButton *)sender;
+- (IBAction)runInstallAlt:(NSButton *)sender;
 
 @end
 

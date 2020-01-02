@@ -54,6 +54,7 @@
 		8F60AD582244018300FDFBCA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		8F60AD5A2244018F00FDFBCA /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
 		8F60AD5E22440BA400FDFBCA /* MPUpdater-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPUpdater-Prefix.pch"; sourceTree = "<group>"; };
+		8FD5E10323A972C400A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -119,6 +120,7 @@
 		8F60AD43224400FE00FDFBCA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E10323A972C400A47F7C /* libiconv.tbd */,
 				8F60AD5A2244018F00FDFBCA /* libicucore.tbd */,
 				8F60AD582244018300FDFBCA /* libz.tbd */,
 				8F60AD562244017600FDFBCA /* SystemConfiguration.framework */,
@@ -321,6 +323,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 3.3.4.4;
 				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
@@ -329,6 +332,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
+				MARKETING_VERSION = 3.3.4.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -351,6 +355,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
+				CURRENT_PROJECT_VERSION = 3.3.4.4;
 				DEVELOPMENT_TEAM = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
@@ -359,6 +364,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
+				MARKETING_VERSION = 3.3.4.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

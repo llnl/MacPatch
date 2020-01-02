@@ -123,8 +123,46 @@
 	
 }
 
+- (IBAction)runInstallAlt:(NSButton *)sender
+{
+	dispatch_async(dispatch_get_main_queue(), ^(void) {
+		[self setupNotification];
+		[self setupCellInstall];
+	});
+	
+	
+	GlobalQueueManager *q = [GlobalQueueManager sharedInstance];
+
+	
+	dispatch_async(dispatch_get_main_queue(), ^(void) {
+		qldebug(@"Operation Queue Count: %lu",(unsigned long)q.globalQueue.operationCount);
+		if (q.globalQueue.operationCount > 1) {
+			[self.updateButton setTitle:@"Waiting..."];
+			[self.updateButton setEnabled:NO];
+			[self.updateButton display];
+		}
+	});
+	
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];
+	
+	if (needsReboot && !allowInstall)
+	{
+		[self stopCellInstallIsRebootPatch];
+	}
+	else
+	{
+		UpdateInstallOperation *inst = [[UpdateInstallOperation alloc] init];
+		inst.patch = [self.rowData copy];
+		[q.globalQueue addOperation:inst];
+	}
+	
+}
+
 - (void)workerStatusText:(NSString *)aStatus
 {
+	NSLog(@"WST: %@",aStatus);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self->_patchStatus.stringValue = aStatus;
 	});
@@ -294,6 +332,7 @@
 	});
 	
 	[self removeNotificationObserver];
+	
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
 	
 	

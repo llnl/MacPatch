@@ -9,6 +9,7 @@
 #import "UpdatesVC.h"
 #import "UpdatesCellView.h"
 #import "AppDelegate.h"
+#import "GlobalQueueManager.h"
 
 @interface UpdatesVC ()
 
@@ -23,7 +24,14 @@
 @property (nonatomic, retain) IBOutlet  NSTextField             *mainPatchStatusText;
 @property (nonatomic, retain) IBOutlet  NSTextField             *pausedPatchingText;
 
+// For Patch All
+@property (nonatomic, retain) IBOutlet  NSProgressIndicator     *patchAllProgressBar;
+@property (nonatomic, retain) IBOutlet  NSProgressIndicator     *patchAllProgressWheel;
+@property (nonatomic, retain) IBOutlet  NSTextField             *patchAllPatchStatusText;
+
 @property (nonatomic, assign) BOOL isPatchingPaused;
+
+@property (weak) IBOutlet NSScrollView *scrollview;
 
 // XPC Connection
 @property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
@@ -94,18 +102,14 @@
 				}
 				
 				NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithData:patches];
-				//NSDictionary *patchGroupDict = [NSKeyedUnarchiver unarchiveObjectWithData:patchGroupData];
-				
 				NSArray *approvedPatches = patchDict[@"required"];
 
-				qlinfo(@"_content removeAllObjects");
 				[self->_content removeAllObjects];
 				[self->_content addObjectsFromArray:[NSMutableArray array]];
 				
 				// If there array has content, we need to remove all objects
 				dispatch_async(dispatch_get_main_queue(), ^{
 					[self.tableView reloadData];
-					qlinfo(@"self.tableView reloadData");
 				});
 				
 				// If we have content to add, add it
@@ -120,7 +124,14 @@
 					[self.tableView reloadData];
 					if (self->_content.count > 1)
 					{
-						// [self.updateAllButton setHidden:NO];
+						[self.updateAllButton setHidden:NO];
+						[self.updateAllButton setEnabled:YES];
+						if (self->_isPatchingPaused) {
+							[self.updateAllButton setEnabled:NO];
+							[self.pausedPatchingText setFrame:NSMakeRect(540, 570, 354, 17)]; // Move it over
+						}
+					} else {
+						[self.pausedPatchingText setFrame:NSMakeRect(628, 570, 354, 17)]; // Move it over
 					}
 				});
 				
@@ -130,7 +141,81 @@
 	}];
 }
 
-- (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification {
+- (IBAction)updateAllPatches:(id)sender
+{
+	__block BOOL hasRebootPatch = NO;
+	// Get an array of all patch dictionaries
+	NSMutableArray *allPatches = [NSMutableArray new];
+	for (int i = 0; i < _tableView.numberOfRows; i++)
+	{
+		UpdatesCellView *cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+		if ([cell.rowData[@"restart"] isEqualToString:@"No"]) {
+			[allPatches addObject:cell.rowData];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[cell.updateButton setHidden:YES];
+			});
+		} else {
+			hasRebootPatch = YES;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[cell.updateButton setTitle:@"On Reboot"];
+				[cell.updateButton setEnabled:NO];
+			});
+		}
+		
+	}
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self.scanButton setEnabled:NO];
+		[self.updateAllButton setHidden:YES];
+		[self.patchAllProgressBar setMaxValue:allPatches.count];
+		[self resizeTableViewForPatchAll];
+	});
+	
+	
+	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
+		if (connectError != nil) {
+			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+		} else {
+			
+			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				qlerror(@"%@",proxyError);
+			}] installPatches:(NSArray *)allPatches withReply:^(NSError *error, NSInteger resultCode) {
+
+				if (error) {
+					qlerror(@"Result Code(%ld): %@",resultCode,error.localizedDescription);
+				}
+				
+				if (resultCode == 0) {
+					qlinfo(@"Install was sucessful");
+					[self resizeTableViewToDefaultSize];
+				} else {
+					qlerror(@"resultCode: %ld",resultCode);
+					if (!error) {
+						// No error obj, need to create one
+						error = [NSError errorWithDomain:@"gov.llnl.patch.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:@"Error installing patch. See helper logs for more details."}];
+					}
+					
+					qlerror(@"Error[%ld] installing patches.", resultCode);
+				}
+				
+				dispatch_async(dispatch_get_main_queue(), ^{
+					if (hasRebootPatch) {
+						[self showRebootPatchActions];
+					}
+				});
+				
+			}];
+			
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->_scanButton setEnabled:YES];
+			});
+		}
+	}];
+	
+}
+
+- (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification
+{
 	return YES;
 }
 
@@ -140,9 +225,47 @@
 	return nil;
 }
 
+- (void)resizeTableViewForPatchAll
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSRect frame = self->_scrollview.frame;
+		frame.size.height = frame.size.height - 67;
+		[self->_scrollview setFrame: frame];
+		[self->_patchAllProgressWheel startAnimation:nil];
+		[self.scanButton setEnabled:NO];
+	});
+}
+
+- (void)resizeTableViewToDefaultSize
+{
+	dispatch_async(dispatch_get_main_queue(), ^{
+		NSRect frame = self->_scrollview.frame;
+		frame.size.height = frame.size.height + 67;
+		[self->_scrollview setFrame: frame];
+		[self->_patchAllProgressWheel stopAnimation:nil];
+		[self.scanButton setEnabled:YES];
+	});
+}
+
+- (void)showRebootPatchActions
+{
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
+	
+	AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+	[appDelegate showRebootWindow];
+}
+
 #pragma mark - Progress Methods
 - (void)startScan
 {
+	for (int i = 0; i < _tableView.numberOfRows; i++)
+	{
+		UpdatesCellView *cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[cell.updateButton setHidden:YES];
+		});
+	}
+	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		
 		[self->_scanButton setTitle:@"Scanning..."];
@@ -213,12 +336,12 @@
 	if ([identifier isEqualToString:@"MainCell"])
 	{
 		NSDictionary *d = _content[row];
-		qlinfo(@"ROW: %@",d);
 		UpdatesCellView* cell = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
 		// Set some defaults
 		cell.updateButton.title = @"Install";
 		[cell.updateButton setState:0];
 		[cell.updateButton setEnabled:YES];
+		[cell.updateButton setHidden:NO];
 		[cell.patchCompletionIcon setImage:[NSImage imageNamed:@"EmptyImage"]];
 		
 		cell.patchName.stringValue = d[@"patch"];
@@ -237,6 +360,8 @@
 				cell.patchRestart.stringValue = @"";
 			} else {
 				cell.patchRestart.stringValue = @"Restart Required";
+				cell.patchCompletionIcon.image = [NSImage imageNamed:@"RebootImage"];
+				cell.patchCompletionIcon.hidden = NO;
 			}
 		}
 		if ([[d[@"type"] uppercaseString] isEqualToString:@"APPLE"]) {
@@ -320,12 +445,81 @@
 			[self->_mainScanStatusText setStringValue:status];
 		});
 	}
+	else if (type == kMPPatchAllProcessProgress)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self->_patchAllProgressBar setDoubleValue:[status doubleValue]];
+		});
+	}
+	else if (type == kMPPatchAllProcessStatus)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[self->_patchAllPatchStatusText setStringValue:status];
+		});
+	}
+}
+
+- (void)postPatchInstallStatus:(NSString *)patchID type:(MPPostDataType)type
+{
+	if (type == kMPPatchAllInstallComplete)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			
+			for (int i = 0; i < self->_tableView.numberOfRows; i++)
+			{
+				UpdatesCellView *cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+				if ([cell.rowData[@"patch_id"] isEqual:patchID]) {
+					[cell.updateButton setTitle:@"Installed"];
+					[cell.updateButton setHidden:NO];
+					[cell.updateButton setEnabled:NO];
+					cell.patchCompletionIcon.hidden = NO;
+					cell.patchCompletionIcon.image = [NSImage imageNamed:@"GoodImage"];
+				}
+			}
+		});
+	}
+}
+
+- (NSString*)formatTypeToString:(MPPostDataType)formatType
+{
+    NSString *result = nil;
+
+    switch(formatType) {
+        case kMPInstallStatus:
+            result = @"kMPInstallStatus";
+            break;
+        case kMPProcessStatus:
+            result = @"kMPProcessStatus";
+            break;
+        case kMPProcessProgress:
+            result = @"kMPProcessProgress";
+            break;
+        case kMPPatchProcessStatus:
+            result = @"kMPPatchProcessStatus";
+            break;
+		case kMPPatchProcessProgress:
+            result = @"kMPPatchProcessProgress";
+            break;
+        case kMPPatchAllProcessProgress:
+            result = @"kMPPatchAllProcessProgress";
+            break;
+        case kMPPatchAllProcessStatus:
+            result = @"kMPPatchAllProcessStatus";
+            break;
+		case kMPPatchAllInstallComplete:
+			result = @"kMPPatchAllInstallComplete";
+			break;
+		default: ;
+            //[NSException raise:NSGenericException format:@"Unexpected FormatType."];
+    }
+
+    return result;
 }
 
 #pragma mark - Post to Server
 - (void)postPatchesFound:(NSArray *)aPatches
 {
-	qlinfo(@"Patches: %@",aPatches);
+	qldebug(@"Patches: %@",aPatches);
 }
 
 - (void)postPatchInstall:(NSDictionary *)aPatch sucess:(BOOL)sucess
@@ -339,7 +533,6 @@
 {
 	if ([[notification name] isEqualToString:@"PatchingStateChangedNotification"])
 	{
-		qlinfo(@"PatchingStateChangedNotification got it");
 		dispatch_async(dispatch_get_main_queue(), ^{
 			MPPatching *p = [MPPatching new];
 			[self setIsPatchingPaused:[p patchingForHostIsPaused]];
@@ -347,8 +540,16 @@
 			{
 				[self.pausedPatchingText setStringValue:@"NOTICE: Patching is paused. Change in preferences."];
 				[self.pausedPatchingText setHidden:NO];
+				
+				if (![self.updateAllButton isHidden]) {
+					[self.updateAllButton setEnabled:NO];
+					[self.pausedPatchingText setFrame:NSMakeRect(540, 570, 354, 17)]; // Move it over
+				}
 			} else {
 				[self.pausedPatchingText setHidden:YES];
+				if (![self.updateAllButton isHidden]) {
+					[self.updateAllButton setEnabled:YES];
+				}
 			}
 			[self.tableView reloadData];
 			p = nil;
