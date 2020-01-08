@@ -92,7 +92,6 @@
 
 - (IBAction)loadBannerView:(id)sender
 {
-	qlinfo(@"loadBannerView");
 	[_wkWebView.enclosingScrollView setHasVerticalScroller:NO];
 	NSURL *baseURL;
 	NSString *htmlFilePath;
@@ -516,10 +515,10 @@
 		}
 	}
 
-	qlinfo(@"Approved Software tasks:");
+	qldebug(@"Approved Software tasks:");
 	for (NSDictionary *s in _SoftwareArray)
 	{
-		qlinfo(@"- %@",s[@"name"]);
+		qldebug(@"- %@",s[@"name"]);
 	}
 
 	dispatch_async(dispatch_get_main_queue(), ^{
