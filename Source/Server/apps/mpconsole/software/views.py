@@ -957,11 +957,11 @@ def saveSoftwareFile(suuid, file):
 		file.save(_file_path)
 
 		md5 = hashlib.md5()
-        with open(_file_path,'rb') as f: 
-            for chunk in iter(lambda: f.read(8192), b''): 
-                md5.update(chunk)
+		with open(_file_path,'rb') as f: 
+			for chunk in iter(lambda: f.read(8192), b''): 
+				md5.update(chunk)
 
-        result['fileHash'] = md5.hexdigest()
+		result['fileHash'] = md5.hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result

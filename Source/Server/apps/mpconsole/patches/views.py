@@ -450,11 +450,11 @@ def savePatchFile(puuid, file):
 		file.save(_file_path)
 
 		md5 = hashlib.md5()
-        with open(_file_path,'rb') as f: 
-            for chunk in iter(lambda: f.read(8192), b''): 
-                md5.update(chunk)
+		with open(_file_path,'rb') as f: 
+			for chunk in iter(lambda: f.read(8192), b''): 
+				md5.update(chunk)
 
-        result['fileHash'] = md5.hexdigest()
+		result['fileHash'] = md5.hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
@@ -1314,10 +1314,10 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 def isDateString(string, fuzzy=False):
 	"""
-    Return whether the string can be interpreted as a date.
-    :param string: str, string to check for date
-    :param fuzzy: bool, ignore unknown tokens in string if True
-    """
+	Return whether the string can be interpreted as a date.
+	:param string: str, string to check for date
+	:param fuzzy: bool, ignore unknown tokens in string if True
+	"""
 	try:
 		parse(string, fuzzy=fuzzy)
 		return True
