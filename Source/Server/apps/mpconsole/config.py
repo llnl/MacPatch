@@ -8,7 +8,7 @@ MP_SRV_DIR = MP_ROOT_DIR+'/Server'
 class BaseConfig:
 
 	DEBUG   						= False
-	TESTING 						= True
+	TESTING 						= False
 	BASEDIR 						= basedir
 	MAX_CONTENT_LENGTH              = 9000 * 1024 * 1024    # 9000 Mb limit
 	# DEBUG_TB_ENABLED = True
@@ -28,9 +28,10 @@ class BaseConfig:
 	DB_NAME                         = 'MacPatchDB'
 	SQLALCHEMY_DATABASE_URI         = 'mysql+pymysql://'
 	SQLALCHEMY_TRACK_MODIFICATIONS  = False
-	SQLALCHEMY_POOL_SIZE            = 50
-	SQLALCHEMY_POOL_TIMEOUT         = 20
-	SQLALCHEMY_POOL_RECYCLE         = 170
+	SQLALCHEMY_ENGINE_OPTIONS = { 'pool_size' : 50,
+                                  'pool_recycle': 120,
+                                  'pool_timeout': 20,
+                                  'pool_pre_ping': True }
 
 	# App Options
 	SECRET_KEY          = '~t\x86\xc9\x1ew\x8bOcX\x85O\xb6\xa2\x11kL\xd1\xce\x7f\x14<y\x9e'
@@ -43,7 +44,7 @@ class BaseConfig:
 	CONTENT_DIR         = MP_ROOT_DIR+'/Content'
 	AGENT_CONTENT_DIR   = MP_ROOT_DIR+'/Content/Web/clients'
 	PATCH_CONTENT_DIR   = MP_ROOT_DIR+'/Content/Web/patches'
-	SW_CONTENT_DIR 		= MP_ROOT_DIR+'/Content/Web/sw'
+	SW_CONTENT_DIR      = MP_ROOT_DIR+'/Content/Web/sw'
 
 	CORS_HEADERS        = 'Content-Type'
 
