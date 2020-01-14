@@ -596,72 +596,75 @@ if $USEMACOS; then
 	# Server venv
     echo "Creating server scripts virtual env..."
 	source ${MPSERVERBASE}/env/server/bin/activate
-    pip -q install --upgrade pip
-    pip -q install pycrypto
-	pip -q install requests
-	pip -q install mysql-connector-python
-	pip -q install simplejson
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
 	
 	env LDFLAGS="-L${OPENSSLPWD}/lib" \
 	CFLAGS="-I${OPENSSLPWD}/include" \
 	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
 	# API venv
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
-    pip -q install --upgrade pip
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
 	 # Install M2Crypto first
 	env LDFLAGS="-L${OPENSSLPWD}/lib" \
 	CFLAGS="-I${OPENSSLPWD}/include" \
 	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
+    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
     deactivate
 
     # Console venv
     echo "Creating console virtual env..."
 	source ${MPSERVERBASE}/env/console/bin/activate
-    pip -q install --upgrade pip
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
     # Install M2Crypto first
     env LDFLAGS="-L${OPENSSLPWD}/lib" \
     CFLAGS="-I${OPENSSLPWD}/include" \
     SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
     deactivate
 
 else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    pip -q install --upgrade pip --no-cache-dir
-    pip -q install pycrypto --no-cache-dir
-	pip -q install python-crontab --no-cache-dir
-	pip -q install requests --no-cache-dir
-	pip -q install mysql-connector-python --no-cache-dir
-	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	pip -q install simplejson --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+	${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
-    pip -q install --upgrade pip --no-cache-dir
-	pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	pip -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+	${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+	${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    pip -q install --upgrade pip --no-cache-dir
-    pip -q install m2crypto --no-cache-dir --upgrade $CA_STR
-    pip -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 fi
 
