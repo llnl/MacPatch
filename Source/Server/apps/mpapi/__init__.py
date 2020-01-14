@@ -5,7 +5,7 @@ import subprocess
 from flask import Flask
 from mpapi.config import DevelopmentConfig, ProductionConfig
 from mpapi.extensions import db, migrate, cache
-from datetime import datetime
+from datetime import datetime, date
 
 if os.getenv("MPAPI_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
@@ -136,6 +136,9 @@ def register_blueprints(app):
 
 	from .checkin_2 import checkin_2 as bp_checkin_2
 	app.register_blueprint(bp_checkin_2, url_prefix='/api/v2')
+ 
+	from .checkin_3 import checkin_3 as bp_checkin_3
+	app.register_blueprint(bp_checkin_3, url_prefix='/api/v3')
 
 	from .inventory import inventory as bp_inventory
 	app.register_blueprint(bp_inventory, url_prefix=app.config['URL_PREFIX'])
@@ -200,7 +203,6 @@ def register_blueprints(app):
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""
 
-	if isinstance(obj, datetime):
+	if isinstance(obj, (date, datetime)):
 		serial = obj.isoformat()
 		return serial
-	raise TypeError("Type not serializable")

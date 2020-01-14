@@ -129,7 +129,7 @@ def isValidAPIKey(key_hash, dtstamp):
 	# Get the API Key from the siteconfig.json
 	apiKey = return_data_for_server_key('apiKey')
 	apiKeyExtra = "%s-%s" % (apiKey, dtstamp)
-	_apiKeyHash = hashlib.sha1(apiKeyExtra).hexdigest()
+	_apiKeyHash = hashlib.sha1(apiKeyExtra.encode('utf-8')).hexdigest()
 
 	if _apiKeyHash.lower() == key_hash.lower():
 		return True

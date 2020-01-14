@@ -29,5 +29,6 @@
 
 - (BOOL)hasKey:(id)aKey;
 - (NSString *)urlEncodedString;
+- (NSString *)asJSON;
 
 @end

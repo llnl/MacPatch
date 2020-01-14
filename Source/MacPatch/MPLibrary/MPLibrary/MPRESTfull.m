@@ -133,8 +133,7 @@
     MPWSResult *ws_result;
     
     MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-    NSString *urlPath = [@"/api/v2/client/checkin" stringByAppendingPathComponent:self.ccuid];
-    
+    NSString *urlPath = [@"/api/v3/client/checkin" stringByAppendingPathComponent:self.ccuid];
     ws_result = [req runSyncPOST:urlPath body:data];
     
     if (ws_result.statusCode >= 200 && ws_result.statusCode <= 299) {

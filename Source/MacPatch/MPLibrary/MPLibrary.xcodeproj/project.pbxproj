@@ -49,10 +49,10 @@
 		8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6222494D0600FDFBCA /* AgentData.m */; };
 		8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */; };
 		8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6622494D5000FDFBCA /* UAObfuscatedString.m */; };
-		8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6922494D8600FDFBCA /* Base64.h */; };
+		8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6922494D8600FDFBCA /* Base64.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6A22494D8600FDFBCA /* Base64.m */; };
 		8F60AD6F22494D8600FDFBCA /* CocoaSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */; };
-		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; };
+		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019EC22848A29006E6BC5 /* MPGCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F8019EF22848A29006E6BC5 /* MPGCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019ED22848A29006E6BC5 /* MPGCDTask.m */; };
 		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -96,44 +96,6 @@
 		8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA8B0CE23636B3500B030C9 /* RequiredPatch.m */; };
 		8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA8B0CF23636B3600B030C9 /* RequiredPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC0A8CC2181112F006C7FCB /* libz.tbd */; };
-		8FC0A91021811678006C7FCB /* ZipArchive.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8E721811678006C7FCB /* ZipArchive.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91121811678006C7FCB /* crypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8E921811678006C7FCB /* crypt.c */; };
-		8FC0A91221811678006C7FCB /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8EA21811678006C7FCB /* unzip.c */; };
-		8FC0A91321811678006C7FCB /* zip.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8EB21811678006C7FCB /* zip.c */; };
-		8FC0A91421811678006C7FCB /* minishared.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8EC21811678006C7FCB /* minishared.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91521811679006C7FCB /* ioapi.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8ED21811678006C7FCB /* ioapi.c */; };
-		8FC0A91621811679006C7FCB /* ioapi_mem.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8EE21811678006C7FCB /* ioapi_mem.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91721811679006C7FCB /* ioapi_buf.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8EF21811678006C7FCB /* ioapi_buf.c */; };
-		8FC0A91821811679006C7FCB /* crypt.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F021811678006C7FCB /* crypt.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91921811679006C7FCB /* zip.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F121811678006C7FCB /* zip.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91A21811679006C7FCB /* unzip.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F221811678006C7FCB /* unzip.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91B21811679006C7FCB /* ioapi_mem.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8F321811678006C7FCB /* ioapi_mem.c */; };
-		8FC0A91C21811679006C7FCB /* minishared.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8F421811678006C7FCB /* minishared.c */; };
-		8FC0A91D21811679006C7FCB /* ioapi.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F521811678006C7FCB /* ioapi.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91E21811679006C7FCB /* ioapi_buf.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F621811678006C7FCB /* ioapi_buf.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A91F21811679006C7FCB /* prng.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F821811678006C7FCB /* prng.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92021811679006C7FCB /* aes_ni.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8F921811678006C7FCB /* aes_ni.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92121811679006C7FCB /* aeskey.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8FA21811678006C7FCB /* aeskey.c */; };
-		8FC0A92221811679006C7FCB /* hmac.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8FB21811678006C7FCB /* hmac.c */; };
-		8FC0A92321811679006C7FCB /* aestab.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8FC21811678006C7FCB /* aestab.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92421811679006C7FCB /* pwd2key.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A8FD21811678006C7FCB /* pwd2key.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92521811679006C7FCB /* aescrypt.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8FE21811678006C7FCB /* aescrypt.c */; };
-		8FC0A92621811679006C7FCB /* fileenc.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A8FF21811678006C7FCB /* fileenc.c */; };
-		8FC0A92721811679006C7FCB /* aesopt.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90021811678006C7FCB /* aesopt.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92821811679006C7FCB /* sha1.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90121811678006C7FCB /* sha1.c */; };
-		8FC0A92921811679006C7FCB /* brg_types.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90221811678006C7FCB /* brg_types.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92A21811679006C7FCB /* hmac.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90321811678006C7FCB /* hmac.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92B21811679006C7FCB /* aes_ni.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90421811678006C7FCB /* aes_ni.c */; };
-		8FC0A92C21811679006C7FCB /* brg_endian.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90521811678006C7FCB /* brg_endian.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92D21811679006C7FCB /* prng.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90621811678006C7FCB /* prng.c */; };
-		8FC0A92E21811679006C7FCB /* aes.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90721811678006C7FCB /* aes.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A92F21811679006C7FCB /* pwd2key.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90821811678006C7FCB /* pwd2key.c */; };
-		8FC0A93021811679006C7FCB /* aestab.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90921811678006C7FCB /* aestab.c */; };
-		8FC0A93121811679006C7FCB /* sha1.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90A21811678006C7FCB /* sha1.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A93221811679006C7FCB /* fileenc.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90B21811678006C7FCB /* fileenc.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A93321811679006C7FCB /* SSZipArchive.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90C21811678006C7FCB /* SSZipArchive.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A93421811679006C7FCB /* SSZipCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A90D21811678006C7FCB /* SSZipCommon.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FC0A93521811679006C7FCB /* SSZipArchive.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A90E21811678006C7FCB /* SSZipArchive.m */; };
 		8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A9A321838A0A006C7FCB /* MPDownloadManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */; };
 		8FC444171D00921900EF328C /* NSString+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC444151D00921900EF328C /* NSString+Base64.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -319,44 +281,6 @@
 		8FAEF65E145F1922006284B2 /* RegexKitLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
 		8FAEF65F145F1922006284B2 /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
 		8FC0A8CC2181112F006C7FCB /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
-		8FC0A8E721811678006C7FCB /* ZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ZipArchive.h; sourceTree = "<group>"; };
-		8FC0A8E921811678006C7FCB /* crypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = crypt.c; sourceTree = "<group>"; };
-		8FC0A8EA21811678006C7FCB /* unzip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = unzip.c; sourceTree = "<group>"; };
-		8FC0A8EB21811678006C7FCB /* zip.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = zip.c; sourceTree = "<group>"; };
-		8FC0A8EC21811678006C7FCB /* minishared.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = minishared.h; sourceTree = "<group>"; };
-		8FC0A8ED21811678006C7FCB /* ioapi.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi.c; sourceTree = "<group>"; };
-		8FC0A8EE21811678006C7FCB /* ioapi_mem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi_mem.h; sourceTree = "<group>"; };
-		8FC0A8EF21811678006C7FCB /* ioapi_buf.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi_buf.c; sourceTree = "<group>"; };
-		8FC0A8F021811678006C7FCB /* crypt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crypt.h; sourceTree = "<group>"; };
-		8FC0A8F121811678006C7FCB /* zip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = zip.h; sourceTree = "<group>"; };
-		8FC0A8F221811678006C7FCB /* unzip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = unzip.h; sourceTree = "<group>"; };
-		8FC0A8F321811678006C7FCB /* ioapi_mem.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ioapi_mem.c; sourceTree = "<group>"; };
-		8FC0A8F421811678006C7FCB /* minishared.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = minishared.c; sourceTree = "<group>"; };
-		8FC0A8F521811678006C7FCB /* ioapi.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi.h; sourceTree = "<group>"; };
-		8FC0A8F621811678006C7FCB /* ioapi_buf.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ioapi_buf.h; sourceTree = "<group>"; };
-		8FC0A8F821811678006C7FCB /* prng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = prng.h; sourceTree = "<group>"; };
-		8FC0A8F921811678006C7FCB /* aes_ni.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes_ni.h; sourceTree = "<group>"; };
-		8FC0A8FA21811678006C7FCB /* aeskey.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aeskey.c; sourceTree = "<group>"; };
-		8FC0A8FB21811678006C7FCB /* hmac.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = hmac.c; sourceTree = "<group>"; };
-		8FC0A8FC21811678006C7FCB /* aestab.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aestab.h; sourceTree = "<group>"; };
-		8FC0A8FD21811678006C7FCB /* pwd2key.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = pwd2key.h; sourceTree = "<group>"; };
-		8FC0A8FE21811678006C7FCB /* aescrypt.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aescrypt.c; sourceTree = "<group>"; };
-		8FC0A8FF21811678006C7FCB /* fileenc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = fileenc.c; sourceTree = "<group>"; };
-		8FC0A90021811678006C7FCB /* aesopt.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aesopt.h; sourceTree = "<group>"; };
-		8FC0A90121811678006C7FCB /* sha1.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sha1.c; sourceTree = "<group>"; };
-		8FC0A90221811678006C7FCB /* brg_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = brg_types.h; sourceTree = "<group>"; };
-		8FC0A90321811678006C7FCB /* hmac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hmac.h; sourceTree = "<group>"; };
-		8FC0A90421811678006C7FCB /* aes_ni.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aes_ni.c; sourceTree = "<group>"; };
-		8FC0A90521811678006C7FCB /* brg_endian.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = brg_endian.h; sourceTree = "<group>"; };
-		8FC0A90621811678006C7FCB /* prng.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = prng.c; sourceTree = "<group>"; };
-		8FC0A90721811678006C7FCB /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
-		8FC0A90821811678006C7FCB /* pwd2key.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = pwd2key.c; sourceTree = "<group>"; };
-		8FC0A90921811678006C7FCB /* aestab.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = aestab.c; sourceTree = "<group>"; };
-		8FC0A90A21811678006C7FCB /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = sha1.h; sourceTree = "<group>"; };
-		8FC0A90B21811678006C7FCB /* fileenc.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fileenc.h; sourceTree = "<group>"; };
-		8FC0A90C21811678006C7FCB /* SSZipArchive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipArchive.h; sourceTree = "<group>"; };
-		8FC0A90D21811678006C7FCB /* SSZipCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SSZipCommon.h; sourceTree = "<group>"; };
-		8FC0A90E21811678006C7FCB /* SSZipArchive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SSZipArchive.m; sourceTree = "<group>"; };
 		8FC0A9A321838A0A006C7FCB /* MPDownloadManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDownloadManager.h; sourceTree = "<group>"; };
 		8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDownloadManager.m; sourceTree = "<group>"; };
 		8FC444151D00921900EF328C /* NSString+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Base64.h"; sourceTree = "<group>"; };
@@ -765,68 +689,6 @@
 			path = MPLibrary/Base64;
 			sourceTree = "<group>";
 		};
-		8FC0A8E621811678006C7FCB /* SSZipArchive */ = {
-			isa = PBXGroup;
-			children = (
-				8FC0A90D21811678006C7FCB /* SSZipCommon.h */,
-				8FC0A8E721811678006C7FCB /* ZipArchive.h */,
-				8FC0A90C21811678006C7FCB /* SSZipArchive.h */,
-				8FC0A90E21811678006C7FCB /* SSZipArchive.m */,
-				8FC0A8E821811678006C7FCB /* minizip */,
-			);
-			name = SSZipArchive;
-			path = MPLibrary/SSZipArchive;
-			sourceTree = "<group>";
-		};
-		8FC0A8E821811678006C7FCB /* minizip */ = {
-			isa = PBXGroup;
-			children = (
-				8FC0A8E921811678006C7FCB /* crypt.c */,
-				8FC0A8EA21811678006C7FCB /* unzip.c */,
-				8FC0A8EB21811678006C7FCB /* zip.c */,
-				8FC0A8EC21811678006C7FCB /* minishared.h */,
-				8FC0A8ED21811678006C7FCB /* ioapi.c */,
-				8FC0A8EE21811678006C7FCB /* ioapi_mem.h */,
-				8FC0A8EF21811678006C7FCB /* ioapi_buf.c */,
-				8FC0A8F021811678006C7FCB /* crypt.h */,
-				8FC0A8F121811678006C7FCB /* zip.h */,
-				8FC0A8F221811678006C7FCB /* unzip.h */,
-				8FC0A8F321811678006C7FCB /* ioapi_mem.c */,
-				8FC0A8F421811678006C7FCB /* minishared.c */,
-				8FC0A8F521811678006C7FCB /* ioapi.h */,
-				8FC0A8F621811678006C7FCB /* ioapi_buf.h */,
-				8FC0A8F721811678006C7FCB /* aes */,
-			);
-			path = minizip;
-			sourceTree = "<group>";
-		};
-		8FC0A8F721811678006C7FCB /* aes */ = {
-			isa = PBXGroup;
-			children = (
-				8FC0A8F821811678006C7FCB /* prng.h */,
-				8FC0A8F921811678006C7FCB /* aes_ni.h */,
-				8FC0A8FA21811678006C7FCB /* aeskey.c */,
-				8FC0A8FB21811678006C7FCB /* hmac.c */,
-				8FC0A8FC21811678006C7FCB /* aestab.h */,
-				8FC0A8FD21811678006C7FCB /* pwd2key.h */,
-				8FC0A8FE21811678006C7FCB /* aescrypt.c */,
-				8FC0A8FF21811678006C7FCB /* fileenc.c */,
-				8FC0A90021811678006C7FCB /* aesopt.h */,
-				8FC0A90121811678006C7FCB /* sha1.c */,
-				8FC0A90221811678006C7FCB /* brg_types.h */,
-				8FC0A90321811678006C7FCB /* hmac.h */,
-				8FC0A90421811678006C7FCB /* aes_ni.c */,
-				8FC0A90521811678006C7FCB /* brg_endian.h */,
-				8FC0A90621811678006C7FCB /* prng.c */,
-				8FC0A90721811678006C7FCB /* aes.h */,
-				8FC0A90821811678006C7FCB /* pwd2key.c */,
-				8FC0A90921811678006C7FCB /* aestab.c */,
-				8FC0A90A21811678006C7FCB /* sha1.h */,
-				8FC0A90B21811678006C7FCB /* fileenc.h */,
-			);
-			path = aes;
-			sourceTree = "<group>";
-		};
 		8FCB774E140C2F0700D86586 /* Logging */ = {
 			isa = PBXGroup;
 			children = (
@@ -973,7 +835,6 @@
 				8F8019F022848A3A006E6BC5 /* GCDTask */,
 				8FE7E9B422372E7C000FAA6A /* UAObfuscatedString */,
 				8FE7E9AB22372E28000FAA6A /* CocoaSecurity */,
-				8FC0A8E621811678006C7FCB /* SSZipArchive */,
 				8F83530E217E8B230034FEFB /* NSDate-Category */,
 				8FF3D6E32170147200059ACD /* FMDB */,
 				8FA28ECD21939EBC005D5E92 /* FMDBx */,
@@ -1039,7 +900,6 @@
 				8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */,
 				8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */,
 				8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */,
-				8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */,
 				8F4B1E2616DD1D8C00E15A9E /* MPBundle.h in Headers */,
 				8F4B1E2716DD1D8C00E15A9E /* MPFileCheck.h in Headers */,
 				8F4B1E2816DD1D8C00E15A9E /* MPOSCheck.h in Headers */,
@@ -1099,38 +959,18 @@
 				8FA28EDD21939EE2005D5E92 /* FMDB.h in Headers */,
 				8FF3D73C21701AB600059ACD /* NSDate+Helper.h in Headers */,
 				8FF3D73221701AB600059ACD /* NSFileManager+DirectoryLocations.h in Headers */,
-				8FC0A92E21811679006C7FCB /* aes.h in Headers */,
-				8FC0A93221811679006C7FCB /* fileenc.h in Headers */,
-				8FC0A91D21811679006C7FCB /* ioapi.h in Headers */,
-				8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */,
-				8FC0A91821811679006C7FCB /* crypt.h in Headers */,
-				8FC0A91F21811679006C7FCB /* prng.h in Headers */,
-				8FC0A93421811679006C7FCB /* SSZipCommon.h in Headers */,
 				8FE663FD22287A4F00F12AC8 /* MPPatching.h in Headers */,
 				8FE66401222887BB00F12AC8 /* MPFileUtils.h in Headers */,
 				8FE663F9222879EB00F12AC8 /* MPSoftware.h in Headers */,
-				8FC0A91921811679006C7FCB /* zip.h in Headers */,
-				8FC0A92321811679006C7FCB /* aestab.h in Headers */,
 				8F03BE902362331600987AD7 /* MPClientDB.h in Headers */,
 				8F03BE962362334800987AD7 /* History.h in Headers */,
 				8F03BE972362334800987AD7 /* InstalledSoftware.h in Headers */,
 				8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */,
-				8FC0A91021811678006C7FCB /* ZipArchive.h in Headers */,
-				8FC0A92C21811679006C7FCB /* brg_endian.h in Headers */,
-				8FC0A92721811679006C7FCB /* aesopt.h in Headers */,
-				8FC0A91A21811679006C7FCB /* unzip.h in Headers */,
-				8FC0A92921811679006C7FCB /* brg_types.h in Headers */,
-				8FC0A91E21811679006C7FCB /* ioapi_buf.h in Headers */,
-				8FC0A92421811679006C7FCB /* pwd2key.h in Headers */,
-				8FC0A93321811679006C7FCB /* SSZipArchive.h in Headers */,
 				8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */,
-				8FC0A91421811678006C7FCB /* minishared.h in Headers */,
-				8FC0A93121811679006C7FCB /* sha1.h in Headers */,
 				8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */,
-				8FC0A92A21811679006C7FCB /* hmac.h in Headers */,
+				8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */,
+				8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */,
 				8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */,
-				8FC0A91621811679006C7FCB /* ioapi_mem.h in Headers */,
-				8FC0A92021811679006C7FCB /* aes_ni.h in Headers */,
 				8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */,
 				8FF3D73821701AB600059ACD /* NSFileManager+Helper.h in Headers */,
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
@@ -1220,19 +1060,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				8FA28EF721939EF8005D5E92 /* FMXColumnMap.m in Sources */,
-				8FC0A91B21811679006C7FCB /* ioapi_mem.c in Sources */,
 				8FA28EF921939EF8005D5E92 /* FMXCsvTable.m in Sources */,
 				8FF3D69B2170127D00059ACD /* Task.m in Sources */,
 				8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */,
 				8F8019EF22848A29006E6BC5 /* MPGCDTask.m in Sources */,
-				8FC0A92F21811679006C7FCB /* pwd2key.c in Sources */,
 				8FF3D67C217011E700059ACD /* MPRESTfull.m in Sources */,
 				8FF3D679217011E700059ACD /* MPHTTPRequest.m in Sources */,
 				8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */,
 				8FE03DCD1B60020E005D39EE /* NSData+Base64.m in Sources */,
 				8FF3D6B4217012D600059ACD /* MPClientKey.m in Sources */,
 				8FA28F0221939EF8005D5E92 /* FMXHelpers.m in Sources */,
-				8FC0A92621811679006C7FCB /* fileenc.c in Sources */,
 				8FE663FE22287A4F00F12AC8 /* MPPatching.m in Sources */,
 				8FF3D6AE217012D600059ACD /* MPSimpleKeychain.m in Sources */,
 				8FF3D6962170127D00059ACD /* Server.m in Sources */,
@@ -1243,26 +1080,19 @@
 				8F4B1DFA16DD1D6400E15A9E /* MPAsus.m in Sources */,
 				8FF3D73B21701AB600059ACD /* NSMutableDictionary+Helper.m in Sources */,
 				8FE66410222EDD2200F12AC8 /* MPPatchScan.m in Sources */,
-				8FC0A92D21811679006C7FCB /* prng.c in Sources */,
 				8FF3D73721701AB600059ACD /* NSString+Helper.m in Sources */,
 				8F03BE982362334800987AD7 /* History.m in Sources */,
 				8F4B1DFC16DD1D6400E15A9E /* MPASUSCatalogs.m in Sources */,
-				8FC0A92821811679006C7FCB /* sha1.c in Sources */,
 				8FA28EFC21939EF8005D5E92 /* FMXDatabaseConfiguration.m in Sources */,
-				8FC0A91C21811679006C7FCB /* minishared.c in Sources */,
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
 				8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */,
-				8FC0A91121811678006C7FCB /* crypt.c in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
-				8FC0A92521811679006C7FCB /* aescrypt.c in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
 				8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */,
-				8FC0A93021811679006C7FCB /* aestab.c in Sources */,
 				8FF3D6642170113900059ACD /* MPNetworkUtils.m in Sources */,
-				8FC0A91321811678006C7FCB /* zip.c in Sources */,
 				8F4B1E1516DD1D6400E15A9E /* LCLLogFile.m in Sources */,
 				8FF3D66A2170113900059ACD /* MPSystemInfo.m in Sources */,
 				8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */,
@@ -1272,10 +1102,7 @@
 				8FA28EE121939EE2005D5E92 /* FMDatabaseAdditions.m in Sources */,
 				8FA28F0321939EF8005D5E92 /* FMXModel.m in Sources */,
 				8FF3D6622170113900059ACD /* MPDate.m in Sources */,
-				8FC0A91221811678006C7FCB /* unzip.c in Sources */,
 				8FF3D6692170113900059ACD /* MPNSTask.m in Sources */,
-				8FC0A91721811679006C7FCB /* ioapi_buf.c in Sources */,
-				8FC0A91521811679006C7FCB /* ioapi.c in Sources */,
 				8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */,
 				8FC444181D00921900EF328C /* NSString+Base64.m in Sources */,
 				8FF3D6B7217012D600059ACD /* MPCodeSign.m in Sources */,
@@ -1285,7 +1112,6 @@
 				8FF3D6AD217012D600059ACD /* MPKeyItem.m in Sources */,
 				8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */,
 				8F1B08032231F2F8004D2ACF /* MPTimer.m in Sources */,
-				8FC0A92B21811679006C7FCB /* aes_ni.c in Sources */,
 				8FA139F521B7857D00124016 /* MPConfigProfiles.m in Sources */,
 				8FEC938817CBFEFB00AA9C1C /* MPApplePatch.m in Sources */,
 				8FA28EDB21939EE2005D5E92 /* FMDatabaseQueue.m in Sources */,
@@ -1297,7 +1123,6 @@
 				8FE663FA222879EB00F12AC8 /* MPSoftware.m in Sources */,
 				8FF3D69A2170127D00059ACD /* Agent.m in Sources */,
 				8FA28F0921939EF8005D5E92 /* FMXDatabaseManager.m in Sources */,
-				8FC0A93521811679006C7FCB /* SSZipArchive.m in Sources */,
 				8FF3D6B5217012D600059ACD /* MPRemoteFingerprint.m in Sources */,
 				8FF3D6802170120600059ACD /* MPWSResult.m in Sources */,
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
@@ -1309,10 +1134,8 @@
 				8FA28F0021939EF8005D5E92 /* FMXQuery.m in Sources */,
 				8FF3D73D21701AB600059ACD /* NSFileManager+Helper.m in Sources */,
 				8F03BE8F2362331600987AD7 /* MPClientDB.m in Sources */,
-				8FC0A92221811679006C7FCB /* hmac.c in Sources */,
 				8FA28EDF21939EE2005D5E92 /* FMResultSet.m in Sources */,
 				8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */,
-				8FC0A92121811679006C7FCB /* aeskey.c in Sources */,
 				8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */,
 				8FF3D6832170123900059ACD /* STHTTPRequest.m in Sources */,
 				8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */,

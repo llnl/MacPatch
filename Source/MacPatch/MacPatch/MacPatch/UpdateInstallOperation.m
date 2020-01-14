@@ -7,6 +7,7 @@
 //
 
 #import "UpdateInstallOperation.h"
+#import "LongPatchWindow.h"
 
 @interface UpdateInstallOperation (Private)
 
@@ -147,14 +148,15 @@
 				dispatch_semaphore_signal(sem);
 			}] installPatch:self->patch userInstallRebootPatch:aRebPtch withReply:^(NSError *error, NSInteger resultCode) {
 				
-				qlerror(@"installPatch:self->patch withReply");
-				qlerror(@"resultCode: %ld",resultCode);
+				qldebug(@"installPatch:self->patch withReply");
+				qldebug(@"resultCode: %ld",resultCode);
 				
 				if (error) {
 					qlerror(@"%@",error.localizedDescription);
 				}
 				
 				if (resultCode == 0) {
+					qlinfo(@"Install was sucessful");
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
@@ -179,6 +181,19 @@
 	}];
 	
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+}
+
+- (void)showLongPatchInstallAlert
+{
+	if ([self.patch objectForKey:@"isLongPatch"])
+	{
+		if ([[self.patch objectForKey:@"isLongPatch"] isEqualTo:@"1"])
+		{
+			LongPatchWindow *lp = [[LongPatchWindow alloc] initWithPatch:self.patch];
+			[lp show];
+		}
+	}
+	
 }
 
 #pragma mark - Helper

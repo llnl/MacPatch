@@ -17,6 +17,7 @@
 #import "PrefsGeneralViewController.h"
 #import "PrefsSoftwareVC.h"
 #import "PrefsUpdatesVC.h"
+#import "PrefsAdvancedVC.h"
 
 @interface AppDelegate ()
 
@@ -228,6 +229,7 @@
 		PrefsGeneralViewController		*general  = [PrefsGeneralViewController new];
 		PrefsSoftwareVC					*software = [PrefsSoftwareVC new];
 		PrefsUpdatesVC					*updates  = [PrefsUpdatesVC new];
+		//PrefsAdvancedVC					*advanced = [PrefsAdvancedVC new];
 
 		NSArray *controllers = @[general, software, updates];
         _preferencesWindowController = [[RHPreferencesWindowController alloc] initWithViewControllers:controllers];

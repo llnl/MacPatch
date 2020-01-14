@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15400" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15400"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15505"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -10,7 +10,12 @@
             <connections>
                 <outlet property="mainScanProgressWheel" destination="0mq-6Y-lO0" id="1Y5-j9-gxe"/>
                 <outlet property="mainScanStatusText" destination="Frf-m3-5GS" id="TSd-GE-hzO"/>
+                <outlet property="patchAllPatchStatusText" destination="dmX-ip-Xqs" id="Fz9-tc-0rN"/>
+                <outlet property="patchAllProgressBar" destination="RJF-1b-cMR" id="XST-qb-6Fe"/>
+                <outlet property="patchAllProgressWheel" destination="M6p-Bp-DVW" id="rKa-pR-XXh"/>
+                <outlet property="pausedPatchingText" destination="ZDQ-D3-VCH" id="cVn-iA-RoP"/>
                 <outlet property="scanButton" destination="Ks4-Ux-KKR" id="akJ-gk-3W0"/>
+                <outlet property="scrollview" destination="WxZ-dV-U0a" id="RZP-wG-Bwp"/>
                 <outlet property="tableView" destination="T2E-d2-vaD" id="D53-cd-DbI"/>
                 <outlet property="updateAllButton" destination="vri-7I-gpp" id="l8Q-0r-wcW"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
@@ -22,6 +27,32 @@
             <rect key="frame" x="0.0" y="0.0" width="1000" height="600"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dmX-ip-Xqs">
+                    <rect key="frame" x="42" y="527" width="938" height="18"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" placeholderString="Installing ..." id="yoP-su-aXO">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="M6p-Bp-DVW">
+                    <rect key="frame" x="20" y="528" width="16" height="16"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                </progressIndicator>
+                <progressIndicator wantsLayer="YES" fixedFrame="YES" maxValue="100" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="RJF-1b-cMR">
+                    <rect key="frame" x="20" y="505" width="960" height="20"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
+                </progressIndicator>
+                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZDQ-D3-VCH">
+                    <rect key="frame" x="628" y="571" width="354" height="17"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
+                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Label" id="CCo-CC-3UZ">
+                        <font key="font" metaFont="system"/>
+                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
                 <scrollView fixedFrame="YES" autohidesScrollers="YES" horizontalLineScroll="82" horizontalPageScroll="10" verticalLineScroll="82" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="WxZ-dV-U0a">
                     <rect key="frame" x="0.0" y="0.0" width="1000" height="563"/>
                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -209,15 +240,6 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
-                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="31J-h6-TqW">
-                    <rect key="frame" x="616" y="571" width="278" height="17"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
-                    <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Label" id="BZJ-Od-TiK">
-                        <font key="font" metaFont="system"/>
-                        <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
-                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
-                    </textFieldCell>
-                </textField>
                 <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Frf-m3-5GS">
                     <rect key="frame" x="130" y="571" width="389" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -309,10 +331,10 @@
                             <real key="value" value="6"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="number" keyPath="borderWidth">
-                            <real key="value" value="0.0"/>
+                            <integer key="value" value="1"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="color" keyPath="backgroundDisabledColor">
-                            <color key="value" red="0.92143100499999997" green="0.92145264149999995" blue="0.92144101860000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                            <color key="value" red="0.88619261979999997" green="0.9020118117" blue="0.91753727200000001" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         </userDefinedRuntimeAttribute>
                         <userDefinedRuntimeAttribute type="color" keyPath="titleDisabledColor">
                             <color key="value" red="0.15637322379999999" green="0.35443465769999999" blue="0.734375" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
@@ -323,7 +345,13 @@
                         <userDefinedRuntimeAttribute type="color" keyPath="pressColor">
                             <color key="value" red="0.33661167510000001" green="0.33661167510000001" blue="0.33661167510000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                         </userDefinedRuntimeAttribute>
+                        <userDefinedRuntimeAttribute type="color" keyPath="borderNormalColor">
+                            <color key="value" red="0.36852371690000002" green="0.55646556619999998" blue="0.78075867889999995" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                        </userDefinedRuntimeAttribute>
                     </userDefinedRuntimeAttributes>
+                    <connections>
+                        <action selector="updateAllPatches:" target="-2" id="ZbH-Po-Ton"/>
+                    </connections>
                 </button>
                 <progressIndicator hidden="YES" wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" bezeled="NO" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="0mq-6Y-lO0">
                     <rect key="frame" x="108" y="571" width="16" height="16"/>

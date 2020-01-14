@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Updater Installer
-# ver 2.1.0
+# ver 2.1.1
 # Created By Charles Heizer @ LLNL
 #
 # ***************************************************************************************
@@ -41,5 +41,8 @@ if [ -d "/Library/MacPatch/.logs" ]; then
 		mv "$f" "/Library/MacPatch/Updater/Logs/${f}"
 	done
 fi
+
+# Create symlink for inhouse tool support
+ln -s ${MPUpdaterDir}/MPUpdater ${MPUpdaterDir}/MPAgentUp2Date
 
 exit 0;

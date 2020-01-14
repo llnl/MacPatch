@@ -406,6 +406,46 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	reply(nil,result);
 }
 
+- (void)installPatches:(NSArray *)patches withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply
+{
+	int patchCount = 0;
+	double patchProgress = 0.0;
+	NSInteger result = 0;
+	MPPatching *patching = [MPPatching new];
+	
+	[self postPatchStatus:@"Installing all patches ..."];
+	for (NSDictionary *patch in patches)
+	{
+		qlinfo(@"Install Patch: %@",patch[@"patch"]);
+		qldebug(@"Patch: %@",patch);
+		
+		[self postPatchAllStatus:@"Begin %@ install...", patch[@"patch"]];
+		NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
+		
+		if (patchResult[@"patchInstallErrors"])
+		{
+			qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
+			if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
+			{
+				qlerror(@"Error installing %@",patch[@"patch"]);
+				result = result + 1;
+			} else {
+				[self postPatchInstallCompletion:patch[@"patch_id"]];
+			}
+		} else {
+			[self postPatchInstallCompletion:patch[@"patch_id"]];
+		}
+		
+		patchCount = patchCount + 1;
+		patchProgress = patchCount / patches.count;
+		[self postPatchAllProgress:patchCount];
+	}
+
+	qlinfo(@"result = %ld",(long)result);
+	[self postPatchStatus:@"%d install(s) completed.", patchCount];
+	reply(nil,result);
+}
+
 // Private
 - (BOOL)postDataToWS:(NSString *)urlPath data:(NSDictionary *)data
 {
@@ -613,6 +653,31 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	reply(res);
 }
 
+- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply
+{
+	BOOL res = YES;
+	NSError *err = nil;
+	NSString *_file = @"/private/var/db/.MPPatchState.plist";
+	NSDictionary *data;
+	if (state == kPatchingPausedOn) {
+		data = @{@"pausePatching":[NSNumber numberWithBool:YES]};
+	} else {
+		data = @{@"pausePatching":[NSNumber numberWithBool:NO]};
+	}
+
+	if (![data writeToFile:_file atomically:NO])
+	{
+		qlerror(@"Error setting paused patching state to file.");
+		res = NO;
+	}
+	else
+	{
+		NSDictionary *_fileAttr = @{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]};
+		[fm setAttributes:_fileAttr ofItemAtPath:_file error:NULL];
+	}
+	reply(res);
+}
+
 #pragma mark Patching Delegate methods
 - (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr
 {
@@ -633,6 +698,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	
 	NSString *pkgType = [swItem valueForKeyPath:@"Software.sw_type"];
 	
+	MPFileUtils *fu;
 	NSString *fHash = nil;
 	MPScript *mpScript;
 	MPCrypto *mpCrypto = [[MPCrypto alloc] init];
@@ -681,15 +747,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-		
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;
@@ -755,15 +822,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;
@@ -818,14 +886,16 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		[self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
 		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
-		[SSZipArchive unzipFileAtPath:dlSoftwareFile
-						toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]
-							overwrite:YES
-							 password:NULL
-								error:&err];
-		if (err) {
-			errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
-			qlerror(@"%@", errStr);
+		fu = [MPFileUtils new];
+		BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+		if (!res || err) {
+			if (err) {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+				qlerror(@"%@", errStr);
+			} else {
+				errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+				qlerror(@"%@", errStr);
+			}
 			err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
 			reply(err,1,installResultData);
 			return;
@@ -1393,6 +1463,24 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 }
 
+// Post Status Text
+- (void)postPatchAllStatus:(NSString *)status,...
+{
+	qlinfo(@"Calling postPatchAllStatus");
+	@try {
+		va_list args;
+		va_start(args, status);
+		NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
+		va_end(args);
+		
+		qltrace(@"postPatchStatus[XPCWorker]: %@",statusStr);
+		[[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPPatchAllProcessStatus];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
+
 // Post Progress for a progress bar
 - (void)postPatchProgress:(double)data
 {
@@ -1409,6 +1497,28 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	//qlinfo(@"Progress: %lf",data);
 }
 
+// Post Progress for a progress bar, for patch all
+- (void)postPatchAllProgress:(double)data
+{
+	@try {
+		qlinfo(@"Patch All Progress: %3d",(int)data);
+		[[self.xpcConnection remoteObjectProxy] postStatus:[NSString stringWithFormat:@"%lf", data] type:kMPPatchAllProcessProgress];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
+
+- (void)postPatchInstallCompletion:(NSString *)patchID
+{
+	qlinfo(@"postPatchInstallCompletion for %@",patchID);
+	@try {
+		[[self.xpcConnection remoteObjectProxy] postPatchInstallStatus:patchID type:kMPPatchAllInstallComplete];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
 #pragma mark • Misc
 
 - (void)unzip:(NSString *)aFile withReply:(void(^)(NSError *error, NSInteger result))reply

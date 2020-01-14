@@ -319,7 +319,7 @@ def customPatchWizardUpdate():
 		# Check Permissions
 		if not localAdmin() and not adminRole():
 			log_Error("{} does not have permission to change custom patch {}.".format(session.get('user'), puuid))
-			return json.dumps({'data': {}}, default=json_serial), 403
+			return {'data': {}}, 403
 
 		# Save File, returns path to file
 		_file = None
@@ -418,7 +418,7 @@ def customPatchWizardUpdate():
 		log_Error('Message: %s' % (e))
 		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
 
-	return json.dumps({'data': {}}, default=json_serial), 200
+	return {'data': {}}, 200
 
 ''' Private '''
 def savePatchFile(puuid, file):
@@ -449,7 +449,12 @@ def savePatchFile(puuid, file):
 		log_Info('Saving file to (%s)' % (_file_path))
 		file.save(_file_path)
 
-		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read()).hexdigest()
+		md5 = hashlib.md5()
+		with open(_file_path,'rb') as f: 
+			for chunk in iter(lambda: f.read(8192), b''): 
+				md5.update(chunk)
+
+		result['fileHash'] = md5.hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
@@ -1309,10 +1314,10 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 def isDateString(string, fuzzy=False):
 	"""
-    Return whether the string can be interpreted as a date.
-    :param string: str, string to check for date
-    :param fuzzy: bool, ignore unknown tokens in string if True
-    """
+	Return whether the string can be interpreted as a date.
+	:param string: str, string to check for date
+	:param fuzzy: bool, ignore unknown tokens in string if True
+	"""
 	try:
 		parse(string, fuzzy=fuzzy)
 		return True

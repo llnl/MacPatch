@@ -77,6 +77,16 @@
 	return 0;
 }
 
+- (BOOL)unzipItemAtPath:(NSString *)aZipFilePath targetPath:(NSString *)aTargetPath error:(NSError **)err
+{
+	NSFileManager *fm = [NSFileManager defaultManager];
+    if (![fm fileExistsAtPath:aZipFilePath] || ![fm createDirectoryAtPath:[aTargetPath stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:nil error:err]) {
+		return NO;
+	}
+    
+    return [self taskWithLaunchPath:@"/usr/bin/ditto" arguments:@[@"-x", @"-k", aZipFilePath, aTargetPath] error:err];
+}
+
 - (void)setOwnership:(NSString *)aPath owner:(NSString *)aOwner group:(NSString *)aGroup error:(NSError **)err
 {
 	BOOL isDir;
@@ -168,6 +178,30 @@
 	NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 	
 	return [string trim];
+}
+
+- (BOOL)taskWithLaunchPath:(NSString *)launchPath arguments:(NSArray *)arguments error:(NSError **)error
+{
+    NSTask *task = [[NSTask alloc] init];
+    NSPipe *standardErrorPipe = [NSPipe pipe];
+    [task setStandardError:standardErrorPipe];
+    [task setLaunchPath:launchPath];
+    [task setArguments:arguments];
+    dispatch_group_t group = dispatch_group_create();
+    dispatch_group_enter(group);
+    [task setTerminationHandler:^(NSTask *task) {
+        dispatch_group_leave(group);
+    }];
+    [task launch];
+    dispatch_group_wait(group, DISPATCH_TIME_FOREVER);
+    
+    int terminationStatus = [task terminationStatus];
+    BOOL success = ((terminationStatus == 0) && ([task terminationReason] == NSTaskTerminationReasonExit));
+	if (!success && error) {
+        *error = [NSError errorWithDomain:@"MPFileUtils" code:terminationStatus
+								 userInfo:[NSDictionary dictionaryWithObject:[[NSString alloc] initWithData:[[standardErrorPipe fileHandleForReading] readDataToEndOfFile] encoding:[NSString defaultCStringEncoding]] forKey:NSLocalizedDescriptionKey]];
+	}
+    return success;
 }
 
 @end

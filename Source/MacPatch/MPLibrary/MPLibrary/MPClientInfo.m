@@ -105,10 +105,10 @@
         [agentDict setObject:hostNameDict[@"localHostName"] forKey:@"hostname"];
         [agentDict setObject:hostNameDict[@"localComputerName"] forKey:@"computername"];
         [agentDict setObject:consoleUserDict[@"consoleUser"] forKey:@"consoleuser"];
-        [agentDict setObject:[MPSystemInfo getIPAddress] forKey:@"ipaddr"];
-        [agentDict setObject:[MPSystemInfo getMacAddressForInterface:@"en0"] forKey:@"macaddr"];
-        [agentDict setObject:[settings osver] forKey:@"osver"];
-        [agentDict setObject:[settings ostype] forKey:@"ostype"];
+        [agentDict setObject:[MPSystemInfo getIPAddress] forKey:@"ipaddr" defaultObject:@"0.0.0.0"];
+		[agentDict setObject:[MPSystemInfo getMacAddressForInterface:@"en0"] forKey:@"macaddr" defaultObject:@"00:00:00:00:00:00"];
+        [agentDict setObject:[settings osver] forKey:@"osver" defaultObject:@"NA"];
+        [agentDict setObject:[settings ostype] forKey:@"ostype" defaultObject:@"NA"];
         [agentDict setObject:@"0" forKey:@"agent_version"];
         [agentDict setObject:agentVer[@"build"] forKey:@"agent_build"];
 		[agentDict setObject:@"0" forKey:@"client_version"];
@@ -119,6 +119,7 @@
         [agentDict setObject:@"false" forKey:@"needsreboot"];
 		[agentDict setObject:[self fileVaultStatus] forKey:@"fileVault"];
 		[agentDict setObject:[self hwModel] forKey:@"model"];
+		[agentDict setObject:[MPPatching isPatchingForHostIsPausedAsString] forKey:@"hasPausedPatching" defaultObject:@"0"];
         
         if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
             [agentDict setObject:@"true" forKey:@"needsreboot"];

@@ -15,7 +15,7 @@
 #import "Task.h"
 #import "MPHTTPRequest.h"
 
-#define SCHEMA_REV  310
+#define SCHEMA_REV  340
 
 
 #undef  ql_component
@@ -189,13 +189,20 @@ static MPSettings *_instance;
     NSDictionary *localRevs = local[@"revs"];
 	NSString *localID = self.agent.groupId;
 	NSString *remoteID = @"";
+	NSDictionary *remoteRevs = remoteSettingsRevs[@"revs"];
+	if (!remoteSettingsRevs) {
+		qlerror(@"Unable to obtain remote data. Network connection may be down.");
+		return NO;
+	}
 	
-    if ([localRevs isEqualToDictionary:remoteSettingsRevs])
+    if ([localRevs isEqualToDictionary:remoteRevs])
 	{
         qldebug(@"Setting Revisions did match.");
         return YES;
     } else {
         qlinfo(@"Setting Revisions did not match. Updating settings.");
+		qlinfo(@"localRevs: %@",localRevs);
+		qlinfo(@"remoteSettingsRevs: %@",remoteRevs);
         NSDictionary *remoteSettings = [self allSettingsFromServer:NO];
 		
 		if (!remoteSettingsRevs[@"id"]) {
@@ -208,32 +215,32 @@ static MPSettings *_instance;
 		{
 			// Update all, group id does not match
 			qlinfo(@"Client group has been changed. Update all settings.");
-			localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0};
+			localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0,@"swrestrictions":@0};
 		}
 		
-        if ([[remoteSettingsRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
+        if ([[remoteRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
             // Usdate Agent Settings
             qlinfo(@"Update Agent Settings, settings did not match.");
             [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];
         }
-        if ([remoteSettingsRevs objectForKey:@"servers"] != [localRevs objectForKey:@"servers"]) {
+        if ([[remoteRevs objectForKey:@"servers"] intValue] != [[localRevs objectForKey:@"servers"] intValue]) {
             // Usdate Servers
             qlinfo(@"Update Agent Servers, servers did not match.");
 			// Massage data before entering it in to the plist
 			NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
 			[self updateSettingsUsingKey:@"servers" settings:d];
         }
-        if ([remoteSettingsRevs objectForKey:@"suservers"] != [localRevs objectForKey:@"suservers"]) {
+        if ([[remoteRevs objectForKey:@"suservers"] intValue] != [[localRevs objectForKey:@"suservers"] intValue]) {
             // Usdate SUServers
             qlinfo(@"Update Agent SUServers, SUServers did not match.");
             [self updateSettingsUsingKey:@"suservers" settings:remoteSettings[@"settings"][@"suservers"]];
         }
-        if ([remoteSettingsRevs objectForKey:@"tasks"] != [localRevs objectForKey:@"tasks"]) {
+        if ([[remoteRevs objectForKey:@"tasks"] intValue] != [[localRevs objectForKey:@"tasks"] intValue]) {
             // Usdate Tasks
             qlinfo(@"Update Agent tasks, tasks did not match.");
             [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
         }
-		if ([remoteSettingsRevs objectForKey:@"restrictions"] != [self readSoftwareRestrictionRevisionFromFile]) {
+		if ([[remoteRevs objectForKey:@"swrestrictions"] intValue] != [[self readSoftwareRestrictionRevisionFromFile] intValue]) {
 			// Usdate Tasks
 			qlinfo(@"Update Software restrictions, restrictions did not match.");
 			[self writeNewSoftwareRestritionsFile];
@@ -416,17 +423,23 @@ static MPSettings *_instance;
 
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
 {
-    NSMutableArray *_srvs = [NSMutableArray new];
-    NSArray *_raw_srvs = settings[@"data"];
-    
-    NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"serverType" ascending:YES];
-    _raw_srvs = [_raw_srvs sortedArrayUsingDescriptors:@[descriptor]];
-    
-    for (NSDictionary *_srv in _raw_srvs)
-    {
-        [_srvs addObject:[[Suserver alloc] initWithDictionary:_srv]];
-    }
-    
+	NSMutableArray *_srvs = [NSMutableArray new];
+	if (@available(macOS 10.15, *)) {
+		// macOS 10.13 or later code path
+		qltrace(@"suServersFromDictionary is no longer supported by Apple.");
+	} else {
+		// code for earlier than 10.14
+		
+		NSArray *_raw_srvs = settings[@"data"];
+		
+		NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"serverType" ascending:YES];
+		_raw_srvs = [_raw_srvs sortedArrayUsingDescriptors:@[descriptor]];
+		
+		for (NSDictionary *_srv in _raw_srvs)
+		{
+			[_srvs addObject:[[Suserver alloc] initWithDictionary:_srv]];
+		}
+	}
     return (NSArray *)_srvs;
 }
 

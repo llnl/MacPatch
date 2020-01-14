@@ -70,6 +70,7 @@ extension String {
     }
     
     var md5: String! {
+		/* Old Swift 4
         let str = self.cString(using: String.Encoding.utf8)
         let strLen = CC_LONG(self.lengthOfBytes(using: String.Encoding.utf8))
         let digestLen = Int(CC_MD5_DIGEST_LENGTH)
@@ -85,9 +86,18 @@ extension String {
         result.deallocate(capacity: digestLen)
         
         return String(format: hash as String)
+		*/
+		let data = Data(self.utf8)
+        let hash = data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) -> [UInt8] in
+            var hash = [UInt8](repeating: 0, count: Int(CC_MD5_DIGEST_LENGTH))
+            CC_MD5(bytes.baseAddress, CC_LONG(data.count), &hash)
+            return hash
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
     
     var sha1: String! {
+		/* Old Swift 4
         let str = self.cString(using: String.Encoding.utf8)
         let strLen = CC_LONG(self.lengthOfBytes(using: String.Encoding.utf8))
         let digestLen = Int(CC_SHA1_DIGEST_LENGTH)
@@ -103,5 +113,13 @@ extension String {
         result.deallocate(capacity: digestLen)
         
         return String(format: hash as String)
+		*/
+		let data = Data(self.utf8)
+        let hash = data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) -> [UInt8] in
+            var hash = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
+            CC_SHA1(bytes.baseAddress, CC_LONG(data.count), &hash)
+            return hash
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
 }

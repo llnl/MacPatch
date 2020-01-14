@@ -30,7 +30,11 @@
 		8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */; };
 		8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4AD1A7225E975600698096 /* Carbon.framework */; };
 		8F4AD1AB225E990300698096 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F4AD1A9225E990300698096 /* EventToSend.c */; };
+		8F5C74972370B1D000CE18B2 /* PrefsAdvancedVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */; };
+		8F5C74982370B1D000CE18B2 /* PrefsAdvancedVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */; };
 		8F60AD742249960E00FDFBCA /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD732249960E00FDFBCA /* MBProgressHUD.m */; };
+		8F6FE7252385DFD200403A41 /* LongPatchWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F6FE7222385DFD100403A41 /* LongPatchWindow.m */; };
+		8F6FE7262385DFD200403A41 /* LongPatchWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F6FE7242385DFD200403A41 /* LongPatchWindow.xib */; };
 		8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AEB1E4D461B0011C256 /* Cocoa.framework */; };
 		8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AEC1E4D461B0011C256 /* CoreFoundation.framework */; };
 		8F771AF61E4D461B0011C256 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AED1E4D461B0011C256 /* CoreServices.framework */; };
@@ -113,8 +117,14 @@
 		8F4AD1A7225E975600698096 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		8F4AD1A9225E990300698096 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EventToSend.c; path = MacPatch/EventToSend.c; sourceTree = SOURCE_ROOT; };
 		8F4AD1AA225E990300698096 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventToSend.h; path = MacPatch/EventToSend.h; sourceTree = SOURCE_ROOT; };
+		8F5C74942370B1D000CE18B2 /* PrefsAdvancedVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefsAdvancedVC.h; sourceTree = "<group>"; };
+		8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrefsAdvancedVC.m; sourceTree = "<group>"; };
+		8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrefsAdvancedVC.xib; sourceTree = "<group>"; };
 		8F60AD722249960E00FDFBCA /* MBProgressHUD.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MBProgressHUD.h; sourceTree = "<group>"; };
 		8F60AD732249960E00FDFBCA /* MBProgressHUD.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MBProgressHUD.m; sourceTree = "<group>"; };
+		8F6FE7222385DFD100403A41 /* LongPatchWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LongPatchWindow.m; sourceTree = "<group>"; };
+		8F6FE7232385DFD200403A41 /* LongPatchWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LongPatchWindow.h; sourceTree = "<group>"; };
+		8F6FE7242385DFD200403A41 /* LongPatchWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LongPatchWindow.xib; sourceTree = "<group>"; };
 		8F771AE91E4D454D0011C256 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../../../../../../../Library/Developer/Xcode/DerivedData/MacPatch-gxkmkynletpxzdaprzqsylnshysq/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
 		8F771AEB1E4D461B0011C256 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8F771AEC1E4D461B0011C256 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -144,6 +154,7 @@
 		8FB39E591E5395B80034ED78 /* UnPressedButton.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = UnPressedButton.png; sourceTree = "<group>"; };
 		8FB39E5B1E53A9D80034ED78 /* NSImage+RoundCorner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSImage+RoundCorner.h"; sourceTree = "<group>"; };
 		8FB39E5C1E53A9D80034ED78 /* NSImage+RoundCorner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSImage+RoundCorner.m"; sourceTree = "<group>"; };
+		8FD5E0FF23A9729100A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FE4CDDC1F1AA98C00F770FA /* SYFlatButton.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SYFlatButton.h; sourceTree = "<group>"; };
 		8FE4CDDD1F1AA98C00F770FA /* SYFlatButton.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SYFlatButton.m; sourceTree = "<group>"; };
 		8FE663E8222721E500F12AC8 /* PrefsSoftwareVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefsSoftwareVC.h; sourceTree = "<group>"; };
@@ -218,6 +229,9 @@
 				8F130BA8219E3BE90036C8DD /* UpdatesCellView.m */,
 				8F130BAA21A5C7880036C8DD /* UpdateInstallOperation.h */,
 				8F130BAB21A5C7880036C8DD /* UpdateInstallOperation.m */,
+				8F6FE7232385DFD200403A41 /* LongPatchWindow.h */,
+				8F6FE7222385DFD100403A41 /* LongPatchWindow.m */,
+				8F6FE7242385DFD200403A41 /* LongPatchWindow.xib */,
 				8F130BA4219E3B6B0036C8DD /* UpdatesVC.xib */,
 			);
 			name = " Updates";
@@ -239,6 +253,7 @@
 		8F2486A31A40DF61003E24C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E0FF23A9729100A47F7C /* libiconv.tbd */,
 				8F4AD1A7225E975600698096 /* Carbon.framework */,
 				8FA13A5F21B99DFD00124016 /* WebKit.framework */,
 				8F83530C217E87950034FEFB /* Python.framework */,
@@ -293,6 +308,9 @@
 				8FE663EF2227230600F12AC8 /* PrefsUpdatesVC.h */,
 				8FE663F02227230600F12AC8 /* PrefsUpdatesVC.m */,
 				8FE663F12227230600F12AC8 /* PrefsUpdatesVC.xib */,
+				8F5C74942370B1D000CE18B2 /* PrefsAdvancedVC.h */,
+				8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */,
+				8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -507,6 +525,7 @@
 				8FB202171A3FA6390013C622 /* SoftwareViewController.xib in Resources */,
 				8F130BA6219E3B6B0036C8DD /* UpdatesVC.xib in Resources */,
 				8FB39E581E53955E0034ED78 /* PressedButton.png in Resources */,
+				8F5C74982370B1D000CE18B2 /* PrefsAdvancedVC.xib in Resources */,
 				8FE663F32227230600F12AC8 /* PrefsUpdatesVC.xib in Resources */,
 				8F130B89219BFB5D0036C8DD /* AgentVC.xib in Resources */,
 				8F130B83219BFAAF0036C8DD /* html in Resources */,
@@ -516,6 +535,7 @@
 				8FE663EE2227225000F12AC8 /* Images.xcassets in Resources */,
 				8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */,
 				8FB201FF1A3F90C60013C622 /* MainMenu.xib in Resources */,
+				8F6FE7262385DFD200403A41 /* LongPatchWindow.xib in Resources */,
 				8FB39E5A1E5395B80034ED78 /* UnPressedButton.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -541,11 +561,13 @@
 				8F03FC372267EF0100820EC6 /* MPOProgressBar.m in Sources */,
 				8FA28E14219102E8005D5E92 /* SoftwareInstallOperation.m in Sources */,
 				8F2486CD1A41FFD0003E24C9 /* PrefsGeneralViewController.m in Sources */,
+				8F6FE7252385DFD200403A41 /* LongPatchWindow.m in Sources */,
 				8FE663EB222721E500F12AC8 /* PrefsSoftwareVC.m in Sources */,
 				8FE4CDDE1F1AA98C00F770FA /* SYFlatButton.m in Sources */,
 				8FB202181A3FA6390013C622 /* SoftwareViewController.m in Sources */,
 				8FB39E5D1E53A9D80034ED78 /* NSImage+RoundCorner.m in Sources */,
 				8F130BA9219E3BE90036C8DD /* UpdatesCellView.m in Sources */,
+				8F5C74972370B1D000CE18B2 /* PrefsAdvancedVC.m in Sources */,
 				8F2486C81A41EE7B003E24C9 /* RHPreferencesWindowController.m in Sources */,
 				8F1305C1219B4B000036C8DD /* SoftwareUninstallOperation.m in Sources */,
 				8F24869F1A40DB53003E24C9 /* HistoryItem.m in Sources */,

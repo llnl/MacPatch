@@ -76,6 +76,7 @@
 		8FC495061B309A1D001222A2 /* MPAuthView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAuthView.h; sourceTree = "<group>"; };
 		8FC495071B309A1D001222A2 /* MPAuthView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAuthView.m; sourceTree = "<group>"; };
 		8FC495231B31DAA2001222A2 /* MPLoginAgent_Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLoginAgent_Prefix.pch; sourceTree = "<group>"; };
+		8FD5E10123A972AA00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FE6B4A61B4C86F9000A0471 /* AppleLogo.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = AppleLogo.png; sourceTree = "<group>"; };
 		8FE6B4A71B4C86F9000A0471 /* AppleLogo@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "AppleLogo@2x.png"; sourceTree = "<group>"; };
 		8FE6B4A81B4C86F9000A0471 /* Empty.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Empty.png; sourceTree = "<group>"; };
@@ -190,6 +191,7 @@
 		8FFD37E01FA391E800115F33 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD5E10123A972AA00A47F7C /* libiconv.tbd */,
 				8FF365132242EC9600E2683F /* libMPLibrary.a */,
 				8FF5B5051FC658AD006F5FB2 /* Python.framework */,
 				8F382EEC1FB6254D00129063 /* Security.framework */,
