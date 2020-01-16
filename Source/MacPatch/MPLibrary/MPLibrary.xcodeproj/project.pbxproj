@@ -1050,7 +1050,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -d \"$HOME/Developer/Xcode/MP32/include\" ]; then\n    mkdir -p \"$HOME/Developer/Xcode/MP32/include\"\nfi\n\ncp -r \"${TARGET_BUILD_DIR}/usr/local/include/\" \"$HOME/Developer/Xcode/MP32/include\"\n";
+			shellScript = "if [ ! -d \"$HOME/Developer/Xcode/MP32/include\" ]; then\n    mkdir -p \"$HOME/Developer/Xcode/MP32/include\"\nfi\n\ncp -r \"${TARGET_BUILD_DIR}/usr/local/include/\" \"$HOME/Developer/Xcode/MP32/include\"\ncp -r \"${TARGET_BUILD_DIR}/libMPLibrary.a\" \"$HOME/Developer/Xcode/MP32/libMPLibrary.a\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
