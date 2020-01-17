@@ -71,10 +71,7 @@ def clientsListJSON():
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
 
-	#_mes = [{'id':1,'name':'bob','price':'125'},{'id':2,'name':'bot','price':'126'}]
-	#return json.dumps(_mes, default=json_serial), 200
 	return json.dumps(_results, default=json_serial), 200
-	#return json.dumps({'data': _results}, default=json_serial), 200
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):

@@ -167,3 +167,26 @@ def copytree(src, dst, symlinks = False, ignore = None):
 		else:
 			shutil.copy2(s, d)
 
+# ----------------------------------------------------------------------------
+'''
+		Base64 With Default
+'''
+def b64EncodeAsString(data, defaultValue=None):
+	result = ''
+	if defaultValue is not None:
+			result = defaultValue
+
+	if data is not None:
+			if data.__class__ is not 'bytes':
+					if len(data) > 0:
+							data = data.encode('utf-8')
+							result = b64encode(data).decode('utf-8')
+			else:
+					if len(data) > 0:
+							result = b64encode(data).decode('utf-8')
+
+	return result
+
+
+
+

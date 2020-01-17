@@ -50,7 +50,7 @@ class AddAutoPKGPatch(MPResource):
 			for key in list(_body.keys()):
 				if key in _patchKeys:
 					if key == "pkg_preinstall" or key == "pkg_postinstall":
-						setattr(_patch, key, base64.b64decode(_body[key]))
+						setattr(_patch, key, base64.b64decode(_body[key]).decode('utf-8'))
 					else:
 						setattr(_patch, key, _body[key])
 
@@ -100,7 +100,7 @@ class AddAutoPKGPatch(MPResource):
 			x = 3 # Last Inserted Order number for patch criteria
 			for cItem in _patchCri.patch_criteria_enc:
 				x += 1 # Add 1 for the order
-				_critStr = base64.b64decode(cItem) # Decode Base64
+				_critStr = base64.b64decode(cItem).decode('utf-8') # Decode Base64
 				_critLst = _critStr.split("@") # Gen List from String, split on @ symbol
 				_cType = _critLst[0] # Get Type
 				_critLst.pop(0) # Remove Type to get the Query
