@@ -219,6 +219,11 @@ def drillDownDataFilter(chart, filterValue):
 		result = osVersionCollection(filterValue)
 		data = result[0]
 		cols = result[1]
+	elif chart == "osverminor":
+		title = "OS Version - " + filterValue
+		result = osVersionMinorCollection(filterValue)
+		data = result[0]
+		cols = result[1]
 	elif chart == "reboot":
 		title = "OS Version - " + filterValue
 		result = needsRebootCollection(filterValue.lower())
@@ -229,9 +234,19 @@ def drillDownDataFilter(chart, filterValue):
 		result = modelTypeCollection(filterValue)
 		data = result[0]
 		cols = result[1]
+	elif chart == "modelTypes":
+		title = "Model Type - " + filterValue
+		result = modelTypesCollection(filterValue)
+		data = result[0]
+		cols = result[1]
 	elif chart == "requiredPatches":
 		title = "Required Patch - " + filterValue
 		result = requiredPatchCollection(filterValue)
+		data = result[0]
+		cols = result[1]
+	elif chart == "installedPatch":
+		title = "Installed Patch - " + filterValue
+		result = installedPatchCollection(filterValue)
 		data = result[0]
 		cols = result[1]
 	elif chart == "agentStatus":
@@ -251,18 +266,60 @@ def drillDownDataFilter(chart, filterValue):
 def osVersionCollection(os_version):
 	_results = []
 	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
-		MPIDirectoryServices.mpa_ADDomain, MPIDirectoryServices.mpa_distinguishedName).filter(MpClient.osver == os_version).all()
+		MPIDirectoryServices.mpa_ADDomain, MPIDirectoryServices.mpa_distinguishedName).outerjoin(
+		MpClientGroupMembers, MpClientGroupMembers.cuuid == MpClient.cuuid).add_columns(
+		MpClientGroupMembers.group_id).filter(MpClient.osver == os_version).all()
 
 	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
 				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
 				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
-				{'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'osver', 'label': 'OS Ver'},{'name': 'mdate', 'label': 'Last Check-in'}]
+
+	_client_Groups = {}
+	q_client_Groups = MpClientGroups.query.all()
+	for g in q_client_Groups:
+		_client_Groups[g.group_id] = g.group_name
 
 	for c in clients:
 		_dict = c[0].asDict
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
+		if c.group_id and _client_Groups[c.group_id]:
+			_dict['client_group'] = _client_Groups[c.group_id]
+		else:
+			_dict['client_group'] = "NA"
+		_results.append(_dict)
+
+	return _results, colNames
+
+# Filter - OS Version Query
+def osVersionMinorCollection(os_version_minor):
+	_results = []
+	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
+		MPIDirectoryServices.mpa_ADDomain, MPIDirectoryServices.mpa_distinguishedName).outerjoin(
+		MpClientGroupMembers, MpClientGroupMembers.cuuid == MpClient.cuuid).add_columns(
+		MpClientGroupMembers.group_id).filter(MpClient.osver.like(os_version_minor+"%")).all()
+
+	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
+				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
+				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
+				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
+				{'name': 'osver', 'label': 'OS Ver'},{'name': 'mdate', 'label': 'Last Check-in'}]
+
+	_client_Groups = {}
+	q_client_Groups = MpClientGroups.query.all()
+	for g in q_client_Groups:
+		_client_Groups[g.group_id] = g.group_name
+
+	for c in clients:
+		_dict = c[0].asDict
+		_dict['addomain'] = c.mpa_ADDomain
+		_dict['addn'] = c.mpa_distinguishedName
+		if c.group_id and _client_Groups[c.group_id]:
+			_dict['client_group'] = _client_Groups[c.group_id]
+		else:
+			_dict['client_group'] = "NA"
 		_results.append(_dict)
 
 	return _results, colNames
@@ -271,18 +328,30 @@ def osVersionCollection(os_version):
 def needsRebootCollection(reboot):
 	_results = []
 	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
-		MPIDirectoryServices.mpa_ADDomain, MPIDirectoryServices.mpa_distinguishedName).filter(MpClient.needsreboot == str(reboot)).all()
+		MPIDirectoryServices.mpa_ADDomain, MPIDirectoryServices.mpa_distinguishedName).outerjoin(
+		MpClientGroupMembers, MpClientGroupMembers.cuuid == MpClient.cuuid).add_columns(
+		MpClientGroupMembers.group_id).filter(MpClient.needsreboot == str(reboot)).all()
 
 	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
 				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
 				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
-				{'name': 'needsreboot', 'label': 'Needs Reboot'},{'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'needsreboot', 'label': 'Needs Reboot'},{'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
+
+	_client_Groups = {}
+	q_client_Groups = MpClientGroups.query.all()
+	for g in q_client_Groups:
+		_client_Groups[g.group_id] = g.group_name
 
 	for c in clients:
 		_dict = c[0].asDict
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
+		if c.group_id and _client_Groups[c.group_id]:
+			_dict['client_group'] = _client_Groups[c.group_id]
+		else:
+			_dict['client_group'] = "NA"
 		_results.append(_dict)
 
 	return _results, colNames
@@ -294,7 +363,8 @@ def modelTypeCollection(model):
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
 				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
 				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
-				{'name': 'modelType', 'label': 'Model Type'}, {'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'modelType', 'label': 'Model Type'}, {'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
 
 	# Get Model Info
 	sqlStr = text("""
@@ -333,6 +403,74 @@ def modelTypeCollection(model):
 
 	return _results, colNames
 
+# Filter - Model Types (Laptop, Desktop ...)
+def modelTypesCollection(model):
+	_results = []
+	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
+				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
+				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
+				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
+				{'name': 'modelType', 'label': 'Model Type'}, {'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
+
+	# Get Model Info
+	if model == 'Laptop':
+		sqlStr = text("""
+					SELECT *, hw.mpa_Model_Identifier AS modelType, cg.group_id as client_group,
+					ds.mpa_distinguishedName as addn, ds.mpa_ADDomain as addomain
+					FROM mp_clients mpc
+					LEFT JOIN mpi_SPHardwareOverview hw ON hw.cuuid = mpc.cuuid
+					LEFT JOIN mpi_DirectoryServices ds ON ds.cuuid = mpc.cuuid
+					LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
+					WHERE hw.mpa_Model_Identifier like '%book%'
+					""")
+	elif model == 'Server':
+		sqlStr = text("""
+							SELECT *, hw.mpa_Model_Identifier AS modelType, cg.group_id as client_group,
+							ds.mpa_distinguishedName as addn, ds.mpa_ADDomain as addomain
+							FROM mp_clients mpc
+							LEFT JOIN mpi_SPHardwareOverview hw ON hw.cuuid = mpc.cuuid
+							LEFT JOIN mpi_DirectoryServices ds ON ds.cuuid = mpc.cuuid
+							LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
+							WHERE hw.mpa_Model_Identifier like '%serve%'
+							""")
+	elif model == 'Desktop':
+		sqlStr = text("""
+							SELECT *, hw.mpa_Model_Identifier AS modelType, cg.group_id as client_group,
+							ds.mpa_distinguishedName as addn, ds.mpa_ADDomain as addomain
+							FROM mp_clients mpc
+							LEFT JOIN mpi_SPHardwareOverview hw ON hw.cuuid = mpc.cuuid
+							LEFT JOIN mpi_DirectoryServices ds ON ds.cuuid = mpc.cuuid
+							LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
+							WHERE hw.mpa_Model_Identifier not like '%serve%'
+							AND hw.mpa_Model_Identifier not like '%Book%'
+							""")
+	_client_Groups = {}
+	q_client_Groups = MpClientGroups.query.all()
+	for g in q_client_Groups:
+		_client_Groups[g.group_id] = g.group_name
+
+	mdl_result = db.engine.execute(sqlStr)
+	for row in mdl_result:
+		_dict = {}
+		for col in colNames:
+			_name = col['name']
+			if _name in row:
+				if _name == 'client_group':
+					_row_val = row[_name]
+					if _row_val:
+						_dict[_name] = _client_Groups[_row_val]
+					else:
+						_dict[_name] = ""
+				else:
+					_dict[_name] = row[_name]
+			else:
+				_dict[_name] = ""
+
+		_results.append(_dict)
+
+	return _results, colNames
+
 # Filter - Required Patch
 def requiredPatchCollection(patch):
 	_results = []
@@ -340,7 +478,8 @@ def requiredPatchCollection(patch):
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'addomain', 'label': 'AD-Domain'},
 				{'name': 'addn', 'label': 'AD-DistinguishedName'},{'name': 'ipaddr', 'label': 'IP Address'},
 				{'name': 'serialno', 'label': 'Serial No'},{'name': 'patch', 'label': 'Patch'},
-				{'name': 'type', 'label': 'Patch Type'},{'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'type', 'label': 'Patch Type'},{'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
 
 	# Get Model Info
 	sqlStr = text("""
@@ -353,6 +492,53 @@ def requiredPatchCollection(patch):
 					Where patch like '""" + patch + """%'
 					""")
 
+	_client_Groups = {}
+	q_client_Groups = MpClientGroups.query.all()
+	for g in q_client_Groups:
+		_client_Groups[g.group_id] = g.group_name
+
+	mdl_result = db.engine.execute(sqlStr)
+	for row in mdl_result:
+		_dict = {}
+		for col in colNames:
+			_name = col['name']
+			if _name in row:
+				if _name == 'client_group':
+					_row_val = row[_name]
+					if _row_val:
+						_dict[_name] = _client_Groups[_row_val]
+					else:
+						_dict[_name] = ""
+				else:
+					_dict[_name] = row[_name]
+			else:
+				_dict[_name] = ""
+
+		_results.append(_dict)
+
+	return _results, colNames
+
+# Filter - Installed Patch
+def installedPatchCollection(patch):
+	_results = []
+	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
+				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'addomain', 'label': 'AD-Domain'},
+				{'name': 'addn', 'label': 'AD-DistinguishedName'},{'name': 'ipaddr', 'label': 'IP Address'},
+				{'name': 'serialno', 'label': 'Serial No'},{'name': 'patch', 'label': 'Patch'},
+				{'name': 'type', 'label': 'Patch Type'},{'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
+
+	# Get Model Info
+	sqlStr = text("""
+					SELECT *, cg.group_id as client_group, ds.mpa_distinguishedName as addn, ds.mpa_ADDomain as addomain,
+					cli.osver as osver, cli.serialno as serialno
+					FROM mp_installed_patches mpc
+					LEFT JOIN mp_clients cli ON cli.cuuid = mpc.cuuid
+					LEFT JOIN mpi_DirectoryServices ds ON ds.cuuid = mpc.cuuid
+					LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
+					Where patch_name like '""" + patch + """%'
+					""")
+	
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
 	for g in q_client_Groups:
@@ -429,7 +615,6 @@ def agentStatusCollection(state):
 # Filter - Agent Version
 def agentVersionCollection(version):
 	_results = []
-	_resultsN = []
 	colNames = []
 
 	clients = MpClient.query.outerjoin(MPIDirectoryServices, MPIDirectoryServices.cuuid == MpClient.cuuid).add_columns(
@@ -441,7 +626,8 @@ def agentVersionCollection(version):
 				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
 				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
 				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'serialno', 'label': 'Serial No'},
-				{'name': 'client_version', 'label': 'Agent Version'}, {'name': 'osver', 'label': 'OS Ver'}]
+				{'name': 'client_version', 'label': 'Agent Version'}, {'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'mdate', 'label': 'Last Check-in'}]
 
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
@@ -450,17 +636,9 @@ def agentVersionCollection(version):
 
 	for row in clients:
 		_dict = row[0].asDict
-		_nDict = {}
 
 		_dict['addomain'] = row.mpa_ADDomain
 		_dict['addn'] = row.mpa_distinguishedName
-
-		_nDict['addomain'] = row.mpa_ADDomain
-		_nDict['addn'] = row.mpa_distinguishedName
-
-		for c in colNames:
-			if c['name'] in list(_dict.keys()):
-				_nDict[c['name']] = _dict[c['name']]
 
 		_dict['addomain'] = row.mpa_ADDomain
 		_dict['addn'] = row.mpa_distinguishedName
@@ -470,9 +648,8 @@ def agentVersionCollection(version):
 			_dict['client_group'] = "NA"
 
 		_results.append(_dict)
-		_resultsN.append(_nDict)
 
-	return _resultsN, colNames
+	return _results, colNames
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""
