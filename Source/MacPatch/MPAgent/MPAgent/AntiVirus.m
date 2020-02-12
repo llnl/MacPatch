@@ -236,13 +236,12 @@
 - (NSDictionary *)symantecAppInfo
 {
     NSString *avApplication;
-    NSArray *avAppArray = [NSArray arrayWithObjects:
+    NSArray *avAppArray = @[
                            @"/Applications/Symantec Solutions/Symantec AntiVirus.app",
                            @"/Applications/Symantec Solutions/Norton AntiVirus.app",
                            @"/Applications/Norton Solutions/Symantec AntiVirus.app",
                            @"/Applications/Norton Solutions/Norton AntiVirus.app",
-                           @"/Applications/Symantec Solutions/Symantec Endpoint Protection.app",
-                           nil];
+                           @"/Applications/Symantec Solutions/Symantec Endpoint Protection.app"];
     // Find the
     for (NSString *item in avAppArray) {
         if ([fm fileExistsAtPath:item]) {
@@ -277,12 +276,12 @@
 - (NSString *)symantecDefsDate
 {
     NSString *_avDefsPath = nil;
-    NSArray *avDefsArray = [NSArray arrayWithObjects:
+    NSArray *avDefsArray = @[
                             @"/Library/Application Support/Symantec/AntiVirus/Engine/V.GRD",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/v.grd",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/V.GRD",
                             @"/Library/Application Support/Symantec/Silo/NFM/Definitions/virusdefs/definfo.dat",
-                            nil];
+							@"/Library/Application Support/Symantec/Silo/MES/Definitions/virusdefs/definfo.dat"];
     
     NSString *avDefsAltPath = @"/Library/Application Support/Symantec/LiveUpdate/ActiveRegistry/NAV12Defs.plist";
     
@@ -616,13 +615,12 @@
 -(NSDictionary *)getAvAppInfo
 {
     NSString *avApplication;
-    NSArray *avAppArray = [NSArray arrayWithObjects:
+    NSArray *avAppArray = @[
                            @"/Applications/Symantec Solutions/Symantec AntiVirus.app",
                            @"/Applications/Symantec Solutions/Norton AntiVirus.app",
                            @"/Applications/Norton Solutions/Symantec AntiVirus.app",
                            @"/Applications/Norton Solutions/Norton AntiVirus.app",
-                           @"/Applications/Symantec Solutions/Symantec Endpoint Protection.app",
-                           nil];
+                           @"/Applications/Symantec Solutions/Symantec Endpoint Protection.app"];
     // Find the
     for (NSString *item in avAppArray) {
         if ([fm fileExistsAtPath:item]) {
@@ -653,12 +651,12 @@
 -(NSString *)getLocalDefsDate
 {
     NSString *_avDefsPath = nil;
-    NSArray *avDefsArray = [NSArray arrayWithObjects:
+    NSArray *avDefsArray = @[
                             @"/Library/Application Support/Symantec/AntiVirus/Engine/V.GRD",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/v.grd",
                             @"/Library/Application Support/Norton Solutions Support/Norton AntiVirus/Engine/V.GRD",
 							@"/Library/Application Support/Symantec/Silo/NFM/Definitions/virusdefs/definfo.dat",
-                            nil];
+							@"/Library/Application Support/Symantec/Silo/MES/Definitions/virusdefs/definfo.dat"];
     
     NSString *avDefsAltPath = @"/Library/Application Support/Symantec/LiveUpdate/ActiveRegistry/NAV12Defs.plist";
     
@@ -760,8 +758,7 @@
         @catch (NSException *exception) {
             logit(lcl_vError,@"%@",exception);
         }
-		// Old, change to match SEP 14 format
-		//result = [NSString stringWithFormat:@"%@%@%@ r%@",strYear,strMonth,strDay,strRev];
+
 		result = [NSString stringWithFormat:@"%@%@%@.%@",strYear,strMonth,strDay,strRev];
     }
     logit(lcl_vDebug,@"Parsed Defs Date: %@",result);

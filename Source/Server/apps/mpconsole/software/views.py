@@ -16,6 +16,7 @@ from .. import db
 from .. model import *
 from .. modes import *
 from .. mplogger import *
+from .. mputil import *
 
 '''
 	-------------------------------------------------
@@ -115,9 +116,12 @@ def swGroupSave():
 
 		# set rights for owner or site admin
 		if mpsgp is not None:
-			if session.get('user_id') == '1' or mpsg.uid == session.get('user'):
+			if session.get('user_id') == '1' or mpsgp.uid == session.get('user'):
 				is_admin = 2
 
+		if session.get('role')[0] == 1:
+			is_admin = 2
+			
 		# Set rights for standard group admin
 		if mpsgpUsr is not None:
 			is_admin = 1
@@ -545,7 +549,7 @@ def swGroupTasksSave(id):
 		qData = MpSoftwareTasksData()
 
 	setattr(qData, 'gid', id)
-	setattr(qData, 'gDataHash', hashlib.md5(tData).hexdigest())
+	setattr(qData, 'gDataHash', hashlib.md5(tData.encode('utf-8')).hexdigest())
 	setattr(qData, 'gData', tData)
 	setattr(qData, 'mdate', datetime.now())
 	setattr(qGroup, 'mdate', datetime.now())
@@ -615,9 +619,9 @@ def swPackageData(swID):
 		"sw_url":qSW.sw_url,
 		"sw_hash":qSW.sw_hash,
 		"sw_size":str(qSW.sw_size),
-		"sw_pre_install":base64.b64encode(qSW.sw_pre_install_script).decode('utf-8'),
-		"sw_post_install":base64.b64encode(qSW.sw_post_install_script).decode('utf-8'),
-		"sw_uninstall":base64.b64encode(qSW.sw_uninstall_script).decode('utf-8'),
+		"sw_pre_install":b64EncodeAsString(qSW.sw_pre_install_script,''),
+		"sw_post_install":b64EncodeAsString(qSW.sw_post_install_script,''),
+		"sw_uninstall":b64EncodeAsString(qSW.sw_uninstall_script,''),
 		"sw_env_var":qSW.sw_env_var,
 		"auto_patch":str(qSW.auto_patch),
 		"patch_bundle_id":qSW.patch_bundle_id,
@@ -1034,6 +1038,16 @@ def deleteSWPackage(id):
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
 	qSWC = MpSoftwareCriteria.query.filter(MpSoftwareCriteria.suuid == id).all()
 	qSWR = MpSoftwareRequisits.query.filter(MpSoftwareRequisits.suuid == id).all()
+
+	sw_path = qSW.sw_path
+	if os.path.exists(sw_path):
+		parDir = os.path.dirname(sw_path)
+		log_Info('Removing sw package file (%s)' % (sw_path))
+		if os.path.exists(parDir):
+			try:
+				shutil.rmtree(parDir)
+			except OSError as e:
+				log_Error("Error Delete Dir: %s - %s." % (e.filename, e.strerror))
 
 	db.session.delete(qSW)
 

@@ -68,7 +68,12 @@ class SoftwareTasksForGroup(MPResource):
 						_tasks_new.append(task)
 						continue
 					for v, ver in enumerate(_os_vers.split(',')):
-						if LooseVersion(ver.strip()) >= LooseVersion(osver.strip()):
+						if "*" in ver:
+							_ver = ver.replace('*','')
+							if osver in _ver :
+								_tasks_new.append(task)
+								break
+						elif LooseVersion(ver.strip()) == LooseVersion(osver.strip()):
 							_tasks_new.append(task)
 							break
 
