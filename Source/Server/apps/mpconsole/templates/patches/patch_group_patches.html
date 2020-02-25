@@ -19,17 +19,13 @@
 	<div>
 		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true">
 			<div id="patchesToolbar">
-				<button id="saveGroupDataButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-floppy-save"></i></button>
-
+                {% if isOwner == true or session.role[0] == 1 %}
 				<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-All</i></button>
 				<button id="selectAppleButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Apple</i></button>
 				<button id="selectThirdButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Custom</i></button>
+                {% endif %}
 			</div>
 		</table>
-	</div>
-	<div id="overlay">
-		<img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
-		<h1 style="text-align: center; color: white; ">Saving...</h1>
 	</div>
 {% endblock %}
 

@@ -189,10 +189,6 @@ def swPackageCriteriaNew(swID, criteria):
 
 	return None
 
-
 # Add Routes Resources
-# software_4_api.add_resource(SoftwareTasksForGroup,		'/sw/tasks/<string:cuuid>/<string:groupName>', endpoint='swTasks')
-# software_4_api.add_resource(SoftwareTasksForGroup,		'/sw/tasks/<string:cuuid>/<string:groupName>/<string:osver>', endpoint='swTasksFilter')
-
 software_4_api.add_resource(SoftwareTasksForGroup,		'/sw/tasks/<string:clientID>/<string:groupName>')
 software_4_api.add_resource(SoftwareTasksForGroup,		'/sw/tasks/<string:clientID>/<string:groupName>/<string:osver>', endpoint='swTasksFilter')

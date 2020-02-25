@@ -20,9 +20,6 @@
 	<div>
 		<table id="tasksTable" class="table table-condensed" data-toolbar="#tasksToolbar" data-show-export="true" data-show-columns="true">
 			<div id="tasksToolbar">
-				{% if session.role[0] == 1 %}
-				<button id="saveGroupDataButton" type="button" class="btn btn-default" title="Save Group Data"><i class="glyphicon glyphicon-floppy-save"></i></button>
-				{% endif %}
 			</div>
 		</table>
 		<div id="group_id" hidden>{{group_id}}</div>
@@ -133,35 +130,5 @@
 		{% endif %}
 	});
 
-	/* Save button and save content to json */
-	var $patchesTable = $('#tasksTable'), $saveButton = $('#saveGroupDataButton');
-	$(function () {
-		$saveButton.click(function ()
-		{
-			{% if session.role[0] == 1 %}
-				// Overlay shows save progress wheel
-				$('#overlay').show();
-
-				var _url = "/software/group/{{group_id}}/tasks/save"
-				$.ajax({
-					type:'GET',
-					url: _url,
-					cache: false,
-					processData: false,
-					contentType: false,
-					success: function()
-					{
-						$('#overlay').hide();
-						alert("Software tasks data saved successfully.");
-						parent.closeModal();
-					},
-					error: function(jqXHR, textStatus, errorThrown){
-						$('#overlay').hide();
-						alert("Software tasks data was not saved.");
-					}
-				});
-			{% endif %}
-		});
-	});
 	</script>
 {% endblock %}

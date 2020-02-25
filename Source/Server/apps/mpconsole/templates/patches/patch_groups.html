@@ -113,29 +113,31 @@ Patch Groups
 		if ( hasRights || '{{session.role[0]}}' == 1 ) {
 			htmlData.push('<a class="patches" href="javascript:void(0)" title="Add/Remove Patches">');
 			htmlData.push('<i class="fa fa-list-ul" aria-hidden="true"></i></a>');
+
+			if ( row['user_id'] == '{{session.user}}' || '{{session.role[0]}}' == 1 ) {
+			    htmlData.push('</td><td>');
+                htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch Group Info">');
+                htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i></a>');
+                htmlData.push('</td><td>');
+            }
+			htmlData.push('<a class="admins" href="javascript:void(0)" title="Patch Group Admins">');
+            htmlData.push('<i class="fa fa-users" aria-hidden="true"></i></a>');
+            if ( row['user_id'] == '{{session.user}}' || '{{session.role[0]}}' == 1 ) {
+                htmlData.push('</td><td>');
+                htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
+			    htmlData.push('<i class="fa fa-trash-o"></i></a>');
+            }
+            htmlData.push('</td>');
 		} else {
 			htmlData.push('<a class="patches" href="javascript:void(0)" title="View Patches">');
 			htmlData.push('<i class="fa fa-search" aria-hidden="true"></i></a>');
+			htmlData.push('</td><td>');
+			htmlData.push('<a class="admins" href="javascript:void(0)" title="Patch Group Admins">');
+            htmlData.push('<i class="fa fa-users" aria-hidden="true"></i></a>');
+            htmlData.push('</td>');
 		}
-		htmlData.push('</td><td>');
-		if ( row['user_id'] == '{{session.user}}' || '{{session.role[0]}}' == 1 ) {
-			htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch Group Info">');
-			htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i>');
-			htmlData.push('</a>');
-		} else {
-			htmlData.push('&nbsp;&nbsp;');
-		}
-		htmlData.push('</td><td>');
-		htmlData.push('<a class="admins" href="javascript:void(0)" title="Patch Group Admins">');
-		htmlData.push('<i class="fa fa-users" aria-hidden="true"></i></a>');
-		htmlData.push('</td><td>');
-		if ( row['user_id'] == '{{session.user}}' || '{{session.role[0]}}' == 1 ) {
-			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
-			htmlData.push('<i class="fa fa-trash-o"></i></a>');
-		} else {
-			htmlData.push('&nbsp;&nbsp;');
-		}
-		htmlData.push('</td></tr></table>');
+
+		htmlData.push('</tr></table>');
 		return htmlData.join('');
 	}
 
