@@ -119,7 +119,10 @@
         [agentDict setObject:@"false" forKey:@"needsreboot"];
 		[agentDict setObject:[self fileVaultStatus] forKey:@"fileVault"];
 		[agentDict setObject:[self hwModel] forKey:@"model"];
-		[agentDict setObject:[MPPatching isPatchingForHostIsPausedAsString] forKey:@"hasPausedPatching" defaultObject:@"0"];
+		
+		NSDictionary *depMdm = [self depMDMStatus];
+		[agentDict setObject:depMdm[@"depEnrollment"] forKey:@"depEnrolled" defaultObject:@"NA"];
+		[agentDict setObject:depMdm[@"mdmEnrollment"] forKey:@"mdmEnrolled" defaultObject:@"NA"];
         
         if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.MPAuthRun"]) {
             [agentDict setObject:@"true" forKey:@"needsreboot"];
@@ -152,6 +155,44 @@
 		NSString *string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
 		
 		return string;
+	}
+}
+
+- (NSDictionary *)depMDMStatus
+{
+	@autoreleasepool
+	{
+		NSTask *task = [[NSTask alloc] init];
+		[task setLaunchPath:@"/usr/bin/profiles"];
+		[task setArguments:@[@"status", @"-type", @"enrollment"]];
+		
+		NSPipe *pipe = [NSPipe pipe];
+		[task setStandardOutput: pipe];
+		
+		NSFileHandle *file = [pipe fileHandleForReading];
+		[task launch];
+		
+		NSData *data = [file readDataToEndOfFile];
+		NSString *string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
+		
+		NSCharacterSet *separator = [NSCharacterSet newlineCharacterSet];
+		NSArray *lines = [string componentsSeparatedByCharactersInSet:separator];
+		
+		NSString *depStatus = @"NA";
+		NSString *mdmStatus = @"NA";
+		
+		for (NSString *l in lines)
+		{
+			if ([l containsString:@"DEP:"]) {
+				depStatus = [[l componentsSeparatedByString:@":"][1] trim];
+			}
+			if ([l containsString:@"MDM"]) {
+				mdmStatus = [[l componentsSeparatedByString:@":"][1] trim];
+			}
+		}
+		
+		NSDictionary *status = @{@"mdmEnrollment":mdmStatus, @"depEnrollment":depStatus};
+		return status;
 	}
 }
 
