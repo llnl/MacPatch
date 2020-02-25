@@ -36,6 +36,7 @@
 
 // Private
 @property (nonatomic, strong) NSURL *SOFTWARE_DATA_DIR;
+@property (nonatomic, strong) NSArray *SP_APPS;
 
 // WebView
 @property (strong, nonatomic) IBOutlet NSProgressIndicator *webSpinner;
@@ -87,6 +88,7 @@
 	[self setupNotification];
 
 	[self populateSoftwareGroupsPopupButton:nil];
+	//[self readSystemApps];
 	[self getInstalledSoftwareTasks];
 }
 
@@ -729,6 +731,16 @@
 			}
 		}
 		
+		// if sw_app_path exists and is does not have a value of None
+		if (sw[@"Software"][@"sw_app_path"]) {
+			if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
+			{
+				if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
+					cellView.isAppInstalled = YES;
+				}
+			}
+		}
+		
         return cellView;
     }
     return nil;
@@ -808,6 +820,30 @@
 		[[SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
 	}
 }
+
+- (void)readSystemApps
+{
+	if (![fm fileExistsAtPath:@"/private/tmp/sp_temp.plist"]) {
+		NSLog(@"Need to add collection here...");
+		return;
+	}
+	
+	[self setSP_APPS:[NSArray arrayWithContentsOfFile:@"/tmp/sp_app.plist"]];
+}
+
+- (BOOL)isAppInstalledOnSystem:(NSString *)appPath
+{
+	if ([fm fileExistsAtPath:appPath]) {
+		qldebug(@"%@, was found.",appPath);
+		return YES;
+	} else {
+		qldebug(@"%@, was not found.",appPath);
+	}
+	
+	return NO;
+}
+
+// Will want a method to show a update needed if the app is OLD
 
 #pragma mark - HUD Views
 

@@ -447,7 +447,8 @@
     NSDictionary *ws_result;
     NSArray *result = nil;
     
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+    //NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
     qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];

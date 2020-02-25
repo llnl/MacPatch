@@ -101,23 +101,11 @@ def isValidClientID(ClientID):
 		if not current_app.config['VERIFY_CLIENTID']:
 			return True
 
-	# Old Way, now check if client is registered
-	# client_obj = MpClient.query.filter_by(cuuid=ClientID).first()
+	if 'CLIENTID_ZERO' in current_app.config:
+		if current_app.config['CLIENTID_ZERO']:
+			return True
+
 	client_obj = MPAgentRegistration.query.filter_by(cuuid=ClientID).first()
-
-	if client_obj:
-		return True
-	else:
-		if 'VERIFY_CLIENTID_OLD' in current_app.config:
-			if current_app.config['VERIFY_CLIENTID_OLD'] == True:
-				return isValidOlderClientID(ClientID)
-
-		return False
-
-def isValidOlderClientID(ClientID):
-
-	# Old Way, now check if client is registered
-	client_obj = MpClient.query.filter_by(cuuid=ClientID).first()
 
 	if client_obj:
 		return True

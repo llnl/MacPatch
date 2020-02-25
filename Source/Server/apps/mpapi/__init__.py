@@ -191,6 +191,9 @@ def register_blueprints(app):
 	from .software_3 import software_3 as bp_software_3
 	app.register_blueprint(bp_software_3, url_prefix='/api/v3')
 
+	from .software_4 import software_4 as bp_software_4
+	app.register_blueprint(bp_software_4, url_prefix='/api/v4')
+
 	from .srv_utils import srv as bp_srv_utils
 	app.register_blueprint(bp_srv_utils, url_prefix=app.config['URL_PREFIX'])
 

@@ -1,6 +1,20 @@
 <!DOCTYPE html>
 
 {% block styles %}
+    <!-- Set MetaData -->
+    {% if hasOSArch == True %}
+        {% set orderTypeSize = 4 %}
+    {% else %}
+        {% set orderTypeSize = 3 %}
+    {% endif %}
+
+    {% for cri in dataCritAlt %}
+        {% if cri['type_order'] >= orderTypeSize %}
+            <meta id="cri-data{{ cri['type_order'] }}" data-value="{{ cri['type_data'] }}">
+        {% endif %}
+    {% endfor %}
+
+
 	<!-- Bootstrap Core CSS -->
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 	<!-- Custom CSS -->
@@ -481,7 +495,6 @@
 					// Loop and add values to new form data obj
 					for (var pair of formData.entries())
 					{
-						//console.log('Eval: '+pair[0]);
 						if (pair[0] == 'mainPatchFile')
 						{
 							if( $('#mainPatchFile').val() == '' )
@@ -489,7 +502,6 @@
 								continue;
 							}
 						}
-						//console.log('Append: '+pair[0]);
 						formDataNew.append(pair[0], pair[1]);
 					}
 					// Add the criteria to form dict as needed
@@ -550,9 +562,7 @@
 				},
 				onFinished: function (event, currentIndex)
 				{
-					//alert("Submitted!");
-                    // console.log("onFinished:");
-					// parent.closeIFrame();
+					// alert("Submitted!");
 				}
 			});
 
@@ -570,9 +580,8 @@
 						x = {}
 						x['order'] = {{cri['type_order'] or 0}};
 						x['type'] = "{{cri['type'] or 'File'}}";
-						x['data'] = `{{ cri['type_data'] }}`;
-						
-						var _instance = addRow(x['order'], x['type'], x['data']);
+
+                        var _instance = addRow(x['order'], x['type'], '');
 						xeditors.push({ id: x['order'], instance: _instance });
 						document.getElementById('reqid').value = x['order'];
 						{% set xi = xi + 1 %}
@@ -638,7 +647,7 @@
 
 				// Center Column
 				_htm = _htm + '<div class="col-md-7">';
-				_htm = _htm + '<div id="editor_' + sid +'">'+data+'</div>';
+				_htm = _htm + '<div id="editor_' + sid +'"></div>';
 				_htm = _htm + '</div>'; //Center
 
 				// Right Column
@@ -652,12 +661,13 @@
 				$('.block:last').after(_htm);
 
 				try {
-					_name = 'editor_' + sid
+					_name = 'editor_' + sid;
+                    _meta = '#cri-data' + sid;
 					vars[_name] = ace.edit("editor_" + sid);
 					vars[_name].setTheme("ace/theme/eclipse");
 					vars[_name].getSession().setMode("ace/mode/sh");
+					vars[_name].session.setValue( $(_meta).data("value") );
 					vars[_name].setFontSize('10px');
-					//vars[_name].insert(data); // This way the encoding gets all messed up
 				} catch (err) {
 					console.log("console catch:" + err);
 				}

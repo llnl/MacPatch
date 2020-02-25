@@ -1,6 +1,6 @@
 from mpapi import db
 
-# Rev 12
+# Rev 13
 #
 
 from datetime import *
@@ -236,6 +236,8 @@ class MpClient(CommonBase):
 	fileVaultStatus = Column(String(255), nullable=True, server_default='NA', info='FileVault Status', doc='13')
 	firmwareStatus  = Column(String(255), nullable=True, server_default='NA', info='Firmware Status', doc='14')
 	hasPausedPatching = Column(String(1), server_default='0', info='Patching Paused', doc='15')
+	depEnrolled 	= Column(String(50), server_default='NA', info='DEP Enrolled', doc='16')
+	mdmEnrolled 	= Column(String(50), server_default='NA', info='MDM Enrolled', doc='17')
 
 # mp_clients_plist
 class MpClientPlist(CommonBase):
@@ -828,6 +830,7 @@ class MpSoftware(CommonBase):
 	sDescription        	= Column(String(255), info="Description")
 	sVendorURL          	= Column(String(255), info="Vendor URL")
 	sReboot             	= Column(Integer, server_default='1', info="Reboot")
+	sw_app_path 			= Column(TEXT(), info="SW App Path")
 	sw_type             	= Column(String(10), info="SW Type")
 	sw_path             	= Column(String(255), info="Patch")
 	sw_url              	= Column(String(255), info="URL")

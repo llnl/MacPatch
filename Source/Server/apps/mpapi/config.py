@@ -40,7 +40,7 @@ class BaseConfig:
 	# MacPatch App Options
 	SITECONFIG_FILE         		= '/opt/MacPatch/Server/etc/siteconfig.json'
 	VERIFY_CLIENTID         		= True
-	VERIFY_CLIENTID_OLD     		= True
+	CLIENTID_ZERO 					= False
 	REQUIRE_SIGNATURES      		= False
 	ALLOW_MIXED_SIGNATURES  		= True
 	POST_CHECKIN_TO_SYSLOG  		= False
@@ -65,13 +65,13 @@ class BaseConfig:
 
 
 class DevelopmentConfig(BaseConfig):
-
-	DEBUG               = True
+	pass
+	#DEBUG               = True
 
 
 class ProductionConfig(BaseConfig):
-
-	DEBUG               = False
+	pass
+	#DEBUG               = False
 
 
 config = {

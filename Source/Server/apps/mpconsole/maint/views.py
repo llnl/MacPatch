@@ -56,3 +56,49 @@ def getFilesInDirToRemove(sw_path):
 			files = _files
 
 	return files
+
+
+@maint.route('/mpi/extensions')
+@login_required
+def extensions():
+	result = []
+	_clients = []
+	_ext_clients = []
+	clients = MpClient.query.all()
+	for x in clients:
+		_clients.append(x.cuuid)
+
+	sql = text("SELECT Distinct cuuid from mpi_SPExtensions")
+	_sql_result = db.engine.execute(sql)
+	for r in _sql_result:
+		_row = dict(r)
+		_ext_clients.append(_row['cuuid'])
+
+	result = set(_ext_clients).difference(_clients)
+
+	return render_template('maint/maint.html', data=result, count=len(result))
+
+@maint.route('/mpi/extensions/purge')
+@login_required
+def extensions_p():
+	result = []
+	_clients = []
+	_ext_clients = []
+	clients = MpClient.query.all()
+	for x in clients:
+		_clients.append(x.cuuid)
+
+	sql = text("SELECT Distinct cuuid from mpi_SPExtensions")
+	_sql_result = db.engine.execute(sql)
+	for r in _sql_result:
+		_row = dict(r)
+		_ext_clients.append(_row['cuuid'])
+
+	result = set(_ext_clients).difference(_clients)
+
+	for c in result:
+		sql = text("Delete from mpi_SPExtensions Where cuuid = '" + c +"'")
+		_sql_result = db.engine.execute(sql)
+
+
+	return render_template('maint/maint.html', data=result, count=len(result))

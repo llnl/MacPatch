@@ -1,4 +1,4 @@
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from flask import request, abort, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError

@@ -538,7 +538,7 @@ def installedPatchCollection(patch):
 					LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
 					Where patch_name like '""" + patch + """%'
 					""")
-	
+
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
 	for g in q_client_Groups:

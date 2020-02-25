@@ -32,7 +32,7 @@ class GetAuthToken(MPResource):
 				return {"result": {}, "errorno": 401, "errormsg": 'Unauthorized'}, 401
 
 			s = Serializer(current_app.config['SECRET_KEY'], expires_in=3600)
-			_token = s.dumps({'id': _body['authUser']}).decode('UTF-8')
+			_token = s.dumps({'id': _body['authUser']})
 
 			log_Debug('[GetAuthToken][Get]: Token (%s) issued for user (%s) and password.' % (_token.decode('utf-8'), _body['authUser']))
 			return {"result": {'token': _token.decode('utf-8')}, "errorno": 0, "errormsg": 'none'}, 200

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+{%  endblock %}
+
+{% block pageHeader %}
+	Orphans ({{ count }})
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	{% for d in data %}
+			{{ d }} <br>
+	{% endfor %}
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{% endblock %}
