@@ -899,12 +899,17 @@ class GenAgentConfig():
 
 		masterConf = self.serverDataOfType("Master")
 		proxyConf = self.serverDataOfType("Proxy")
+
+		defaultProxy = False
+		defaultMaster = False
+
 		if masterConf is None and proxyConf is None:
 			log_Error("[GenAgentConfig][config]: No serverDataOfType for Master or Proxy found.")
 			return None
 
-		defaultProxy = False
-		defaultMaster = False
+		if 'MPProxyEnabled' in proxyConf:
+			if proxyConf['MPProxyEnabled'] == 1:
+				defaultProxy = True
 
 		_aConfig = {}
 		_default = {}
@@ -922,10 +927,6 @@ class GenAgentConfig():
 			_default['MPServerPort'] = masterConf['MPServerPort']
 			_default['MPServerSSL'] = masterConf['MPServerSSL']
 			_default['MPServerAllowSelfSigned'] = masterConf['MPServerAllowSelfSigned']
-			#if current_app.config['REQUIRE_SIGNATURES']:
-			#   _default['registrationEnabled'] = '1'
-			#else:
-			#   _default['registrationEnabled'] = '0'
 			_default['registrationEnabled'] = '1'
 
 			_default['autoregEnabled'] = _autoReg
@@ -946,10 +947,7 @@ class GenAgentConfig():
 			_enforced['MPProxyServerPort'] = proxyConf['MPProxyServerPort']
 			_enforced['MPProxyEnabled'] = proxyConf['MPProxyEnabled']
 
-
 		_aConfig["default"] = _default
-		#_aConfig["enforced"] = _enforced
-
 		return _aConfig
 
 	def serverDataOfType(self, type):
