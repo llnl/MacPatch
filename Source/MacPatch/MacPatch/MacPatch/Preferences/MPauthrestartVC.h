@@ -12,6 +12,14 @@ NS_ASSUME_NONNULL_BEGIN
 
 @interface MPauthrestartVC : NSViewController
 
+@property (nonatomic, weak) IBOutlet NSTextField *userName;
+@property (nonatomic, weak) IBOutlet NSSecureTextField *userPass;
+
+@property (nonatomic, weak) IBOutlet NSImageView *errImage;
+@property (nonatomic, weak) IBOutlet NSTextField *errMsg;
+
+
+- (BOOL)clearAuthStatus;
 @end
 
 NS_ASSUME_NONNULL_END

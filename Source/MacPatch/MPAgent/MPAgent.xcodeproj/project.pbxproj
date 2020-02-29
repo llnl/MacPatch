@@ -46,7 +46,6 @@
 		8FA6A8791B9621BF006A329B /* CHDiskInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8641B9621BF006A329B /* CHDiskInfo.m */; };
 		8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */; };
 		8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */; };
-		8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */; };
 		8FA6A87D1B9621BF006A329B /* MPInv.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86C1B9621BF006A329B /* MPInv.m */; };
 		8FA6A87E1B9621BF006A329B /* MPServerEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86E1B9621BF006A329B /* MPServerEntry.m */; };
 		8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8701B9621BF006A329B /* MPUsersAndGroups.m */; };
@@ -154,8 +153,6 @@
 		8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MacAppStoreDataItem.m; sourceTree = "<group>"; };
 		8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDirectoryServices.h; sourceTree = "<group>"; };
 		8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDirectoryServices.m; sourceTree = "<group>"; };
-		8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
-		8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
 		8FA6A86B1B9621BF006A329B /* MPInv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInv.h; sourceTree = "<group>"; };
 		8FA6A86C1B9621BF006A329B /* MPInv.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInv.m; sourceTree = "<group>"; };
 		8FA6A86D1B9621BF006A329B /* MPServerEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPServerEntry.h; sourceTree = "<group>"; };
@@ -372,8 +369,6 @@
 				8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */,
 				8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */,
 				8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */,
-				8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */,
-				8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */,
 				8FA6A86D1B9621BF006A329B /* MPServerEntry.h */,
 				8FA6A86E1B9621BF006A329B /* MPServerEntry.m */,
 				8FA6A86F1B9621BF006A329B /* MPUsersAndGroups.h */,
@@ -523,7 +518,6 @@
 				8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */,
 				8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */,
 				8F4B1F0716DD77FF00E15A9E /* AgentController.m in Sources */,
-				8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */,
 				8FE8A7F22112564500E8796E /* Software.m in Sources */,
 				8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */,
 				8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */,

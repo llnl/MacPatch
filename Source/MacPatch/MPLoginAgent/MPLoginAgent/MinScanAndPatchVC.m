@@ -248,11 +248,52 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	}
 }
 
+- (void)bypassFileVaultForRestart
+{
+	NSDictionary *authPlist = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+	if (![authPlist[@"enabled"] boolValue]) {
+		return;
+	}
+	
+	NSDictionary *d;
+	NSError *err = nil;
+	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+	MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+	if (err) {
+		qlerror(@"%@",err.localizedDescription);
+		return;
+	}
+	d = [pi toDictionary];
+	
+	NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
+	"/usr/bin/fdesetup authrestart -delayminutes -0 -verbose -inputplist <<EOF"
+	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+	"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \n"
+	"<plist version=\"1.0\"> \n"
+	"<dict> \n"
+	"	<key>Username</key> \n"
+	"	<string>%@</string> \n"
+	"	<key>Password</key> \n"
+	"	<string>\"%@\"</string> \n"
+	"</dict></plist>\n"
+	"EOF",d[@"authUser"],d[@"authPass"]];
+	
+	MPScript *mps = [MPScript new];
+	BOOL res = [mps runScript:script];
+	if (!res) {
+		qlerror(@"bypassFileVaultForRestart script failed to run.");
+	}
+	
+	// Quick Sleep before the reboot
+	[NSThread sleepForTimeInterval:1.0];
+}
+
 - (void)rebootOrLogout:(int)action
 {
 	switch ( action )
 	{
 		case 0:
+			[self bypassFileVaultForRestart];
 			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
 			qlinfo(@"MPAuthPlugin issued a launchctl reboot.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
@@ -263,6 +304,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			break;
 		case 2:
 			// Firmware updates are needed requiring a shutdown (halt)
+			[self bypassFileVaultForRestart];
 			[NSTask launchedTaskWithLaunchPath:@"/sbin/halt" arguments:@[]];
 			qlinfo(@"MPAuthPlugin issued a launchctl reboot and halt.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];

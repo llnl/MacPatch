@@ -70,6 +70,7 @@
             }
         } else {
             keyChainFile = [aKeyChainFile copy];
+			[self createKeyChain:keyChainFile];
         }
     }
     return self;
@@ -157,6 +158,39 @@
     return YES;
 }
 
+- (BOOL)savePassItemWithService:(MPPassItem *)aPasswordObj service:(NSString *)aService error:(NSError **)error
+{
+	if (![self keychainIsUnlocked]) {
+        if (![self unlockKeyChain:keyChainFile]) {
+            return NO;
+        }
+    }
+    
+    NSData *passData = [NSKeyedArchiver archivedDataWithRootObject:[aPasswordObj toDictionary]];
+    
+    // setup keychain storage properties
+    SecAccessRef kAccess = [self createAccessRefWithLabel:ACCESS_LABEL error:NULL];
+    NSDictionary *storageQuery = @{
+                                   (__bridge id)kSecAttrAccount:    aService,
+                                   (__bridge id)kSecAttrService:    aService,
+                                   (__bridge id)kSecValueData:      passData,
+                                   (__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
+                                   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
+                                   (__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
+                                   (__bridge id)kSecAttrAccess:     (__bridge id)kAccess,
+                                   };
+    
+    OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef)storageQuery, nil);
+    if(osStatus != noErr) {
+        if (error != NULL) {
+            *error = [self errorForOSStatus:osStatus];
+        }
+        return NO;
+    }
+    
+    return YES;
+}
+
 - (MPKeyItem *)retrieveKeyItemForService:(ServiceType)aService error:(NSError **)error
 {
     NSString *accountName = [self nameForServiceType:aService];
@@ -203,6 +237,41 @@
     return ki;
 }
 
+- (MPPassItem *)retrievePassItemForService:(NSString *)aService error:(NSError **)error
+{
+    if (![self keychainIsUnlocked]) {
+        if (![self unlockKeyChain:keyChainFile]) {
+            return nil;
+        }
+    }
+    
+    const char *serviceUTF8  = [aService UTF8String];
+    const char *accountUTF8  = [aService UTF8String];
+    char *passwordData;
+    UInt32 passwordLength;
+    
+    OSStatus status = SecKeychainFindGenericPassword(xKeychain,
+                                                     (UInt32)strlen(serviceUTF8),
+                                                     serviceUTF8,
+                                                     (UInt32)strlen(accountUTF8),
+                                                     accountUTF8,
+                                                     &passwordLength,
+                                                     (void **)&passwordData,
+                                                     NULL);
+    
+    if (status != noErr) {
+        if (error != NULL) {
+            *error = [self errorForOSStatus:status];
+        }
+        return nil;
+    }
+    
+    NSData *data = [[NSData alloc] initWithBytesNoCopy:passwordData length:passwordLength];
+    NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    MPPassItem *pi = [[MPPassItem alloc] initWithDictionary:storedDictionary];
+    return pi;
+}
+
 - (BOOL)updateKeyItemWithService:(MPKeyItem *)aPasswordObj service:(ServiceType)aService error:(NSError **)error
 {
     NSString *accountName = [self nameForServiceType:aService];
@@ -227,6 +296,34 @@
     err = nil;
     if (delItem == YES) {
         BOOL saveItem = [self saveKeyItemWithServiceAndAccount:aPasswordObj service:aService account:aAccount error:&err];
+        if (err) {
+            if (error != NULL) *error = err;
+            return NO;
+        }
+        return saveItem;
+    }
+    
+    return NO;
+}
+
+- (BOOL)updatePassItemForService:(MPPassItem *)aPasswordObj service:(NSString *)aService error:(NSError **)error
+{
+    if (![self keychainIsUnlocked]) {
+        if (![self unlockKeyChain:keyChainFile]) {
+            return NO;
+        }
+    }
+    
+    NSError *err = nil;
+    BOOL delItem = [self deletePassItemforService:aService error:&err];
+    if (err) {
+        if (error != NULL) *error = err;
+        return NO;
+    }
+    
+    err = nil;
+    if (delItem == YES) {
+        BOOL saveItem = [self savePassItemWithService:aPasswordObj service:aService error:&err];
         if (err) {
             if (error != NULL) *error = err;
             return NO;
@@ -262,6 +359,40 @@
     OSStatus status;
     
     if (keyItem == nil || item == nil) {
+        status = errSecItemNotFound;
+    } else {
+        status = SecKeychainItemDelete(item);
+    }
+    
+    if (item != nil) CFRelease(item);
+    
+    if (status == noErr) {
+        return YES;
+    } else {
+        if (error != NULL) *error = [self errorForOSStatus:status];
+        return NO;
+    }
+}
+
+- (BOOL)deletePassItemforService:(NSString *)aService error:(NSError **)error
+{
+    if (![self keychainIsUnlocked]) {
+        if (![self unlockKeyChain:keyChainFile]) {
+            return NO;
+        }
+    }
+    
+    NSError *err = nil;
+    SecKeychainItemRef item = nil;
+	MPPassItem *passItem = [self retrievePassItemForService:aService error:&err];
+    if (err) {
+        if (error != NULL) *error = err;
+        return NO;
+    }
+    
+    OSStatus status;
+    
+    if (passItem == nil || item == nil) {
         status = errSecItemNotFound;
     } else {
         status = SecKeychainItemDelete(item);

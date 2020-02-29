@@ -35,8 +35,10 @@
 @property (nonatomic, assign, readonly) int state;
 @property (nonatomic, strong, readonly) NSString *status;
 @property (nonatomic, strong, readonly) NSString *users;
+@property (nonatomic, strong, readonly) NSArray *userArray;
 @property (nonatomic, strong, readonly) NSError *error;
 
 - (void)refresh;
+- (void)runFDESetupCommand:(NSString *)argument;
 
 @end

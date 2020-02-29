@@ -7,10 +7,12 @@
 //
 
 #import "PrefsUpdatesVC.h"
+#import "MPauthrestartVC.h"
 
 @interface PrefsUpdatesVC ()
 
 @property (nonatomic, readwrite, retain) NSString *windowTitle;
+@property (nonatomic, weak) IBOutlet NSTextField *authState;
 
 // XPC Connection
 
@@ -25,6 +27,7 @@
 @synthesize preStageRebootPatchesBox;
 @synthesize allowInstallRebootPatchesCheckBox;
 @synthesize pausePatchingCheckBox;
+@synthesize authState;
 
 - (void)viewDidLoad
 {
@@ -35,6 +38,16 @@
 	[preStageRebootPatchesBox setState:[self preStageRebootPatches]];
 	[allowInstallRebootPatchesCheckBox setState:[self allowInstallRebootPatches]];
 	[pausePatchingCheckBox setState:[self pausePatching]];
+	[self checkAuthrestartState];
+	
+	[[NSNotificationCenter defaultCenter] addObserverForName:@"authStateNotify" object:nil queue:nil usingBlock:^(NSNotification *note)
+	{
+		//NSDictionary *userInfo = note.userInfo;
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSLog(@"authStateNotify");
+			[self checkAuthrestartState];
+		});
+	}];
 }
 
 #pragma mark - RHPreferencesViewControllerProtocol
@@ -149,6 +162,54 @@
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	return [d boolForKey:@"pausePatching"];
 }
+
+// Run the Auth restart setup to save the user creds
+- (IBAction)setupAuthrestart:(id)sender
+{
+	NSDictionary *authPlist = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+	if ([authPlist[@"enabled"] boolValue]) {
+		NSAlert *alert = [[NSAlert alloc] init];
+		[alert setMessageText:@"MacPatch Authrestart Setup"];
+		[alert setInformativeText:@"There is an account already setup. If you want to change the account or reset the password, you must clear it first."];
+		[alert addButtonWithTitle:@"OK"];
+		[alert setAlertStyle:NSAlertStyleCritical];
+		[alert runModal];
+		return;
+	}
+	
+	MPauthrestartVC *authVC = [MPauthrestartVC new];
+	authVC.title = @"";
+	[self presentViewControllerAsModalWindow:authVC];
+}
+
+// Will show a message if creds are setup and being used
+- (void)checkAuthrestartState
+{
+	NSString *authString = @"";
+	NSDictionary *authPlist = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+	if ([authPlist[@"enabled"] boolValue]) {
+		authString = [NSString stringWithFormat:@"%@ is used to bypass filevault for patching.",authPlist[@"user"]];
+	}
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self->authState setStringValue:authString];
+	});
+}
+
+// Clear the creds for auth restart
+- (IBAction)clearAuthrestart:(id)sender
+{
+	NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Yes"];
+    [alert addButtonWithTitle:@"No"];
+    [alert setMessageText:@"Clear FileVault Authrestart"];
+    [alert setInformativeText:@"Are you sure you want to clear the authrestart data?"];
+    if([alert runModal] == NSAlertFirstButtonReturn) {
+		MPauthrestartVC *authVC = [MPauthrestartVC new];
+		[authVC clearAuthStatus];
+		[self checkAuthrestartState];
+    }
+}
+
 
 #pragma mark - Helper
 

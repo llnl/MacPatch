@@ -313,6 +313,30 @@
 				[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 			}
 		}
+		
+		MPFileCheck *fu = [MPFileCheck new];
+		if ([fu fExists:MP_AUTHSTATUS_FILE]) {
+			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+			if ([d[@"enabled"] boolValue]) {
+				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
+				
+				NSError *err = nil;
+				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				if (!err) {
+					BOOL isValid = NO;
+					isValid = [dh checkPassword:pi.userName forUserWithName:pi.userPass];
+					if (!isValid) {
+						[d setObject:[NSNumber numberWithBool:YES] forKey:@"outOfSync"];
+						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+						[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kFileVaultUserOutOfSync" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
+						
+					}
+				} else {
+					qlerror(@"%@",err.localizedDescription);
+				}
+			}
+		}
 
 		[self->_scanButton setTitle:@"Scan"];
 		[self->_scanButton setNextState];

@@ -25,12 +25,15 @@
 
 #import "MPFileVaultInfo.h"
 #include <unistd.h>
+#import <Cocoa/Cocoa.h>
 
 @interface MPFileVaultInfo ()
 
 @property (nonatomic, assign, readwrite) int state;
 @property (nonatomic, strong, readwrite) NSString *status;
 @property (nonatomic, strong, readwrite) NSString *users;
+@property (nonatomic, strong, readwrite) NSArray *userArray;
+@property (nonatomic, strong, readwrite) NSString *result;
 @property (nonatomic, strong, readwrite) NSError *error;
 
 - (int)currentUserID;
@@ -57,6 +60,20 @@
         [self setStatus:@"na"];
 
         [self refresh];
+    }
+    return self;
+}
+
+- (id)initForCMD
+{
+    self = [super init];
+    if (self)
+    {
+        _error = nil;
+
+        [self setUsers:@"na"];
+        [self setState:-1];
+        [self setStatus:@"na"];
     }
     return self;
 }
@@ -123,12 +140,15 @@
     }
 
     NSString *results = [[NSString alloc] initWithData:data encoding: NSUTF8StringEncoding];
-    if ([argument isEqualToString:@"status"]) {
+	self.result = results;
+    
+	if ([argument isEqualToString:@"status"]) {
         [self setStatus:results];
         return;
     }
     if ([argument isEqualToString:@"list"]) {
         [self parseUsersOutput:results];
+		[self parseUsersOutputToArray:results];
         return;
     }
     
@@ -143,16 +163,36 @@
         NSMutableArray *data = (NSMutableArray *)[aString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
         for (int i = 0; i < [data count]; i++)
         {
-            qldebug(@"Parsing %@",[data objectAtIndex:i]);
             [newData addObject:[[[data objectAtIndex:i] componentsSeparatedByString: @","] objectAtIndex:0]];
         }
         
         [self setUsers:[newData componentsJoinedByString:@","]];
     }
     @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        NSLog(@"%@",exception);
     }
 }
 
+- (void)parseUsersOutputToArray:(NSString *)aString;
+{
+    //smith1,286A5B18-32C0-4C1B-B69D-2C4D6B5FD110
+    //local,94188C0B-5535-4195-B534-372ABB1E0CAB
+	// output {smith1,local}
+	
+    @try {
+        NSMutableArray *newData = [NSMutableArray array];
+        NSMutableArray *data = (NSMutableArray *)[aString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
+		[data removeLastObject];
+		for (NSString *u in data)
+		{
+			[newData addObject:[[NSArray arrayWithArray:[u componentsSeparatedByString:@","]] firstObject]];
+		}
+		
+		self.userArray = [newData copy];
+    }
+    @catch (NSException *exception) {
+        NSLog(@"%@",exception);
+    }
+}
 
 @end

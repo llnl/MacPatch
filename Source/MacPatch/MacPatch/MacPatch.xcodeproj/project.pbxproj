@@ -30,6 +30,9 @@
 		8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */; };
 		8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4AD1A7225E975600698096 /* Carbon.framework */; };
 		8F4AD1AB225E990300698096 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F4AD1A9225E990300698096 /* EventToSend.c */; };
+		8F4E3CB22405F77A008CA5E6 /* FileVaultIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB12405F77A008CA5E6 /* FileVaultIcon.icns */; };
+		8F4E3CB62406E448008CA5E6 /* MPauthrestartVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB42406E448008CA5E6 /* MPauthrestartVC.m */; };
+		8F4E3CB72406E448008CA5E6 /* MPauthrestartVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB52406E448008CA5E6 /* MPauthrestartVC.xib */; };
 		8F5C74972370B1D000CE18B2 /* PrefsAdvancedVC.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */; };
 		8F5C74982370B1D000CE18B2 /* PrefsAdvancedVC.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */; };
 		8F60AD742249960E00FDFBCA /* MBProgressHUD.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD732249960E00FDFBCA /* MBProgressHUD.m */; };
@@ -117,6 +120,10 @@
 		8F4AD1A7225E975600698096 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		8F4AD1A9225E990300698096 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EventToSend.c; path = MacPatch/EventToSend.c; sourceTree = SOURCE_ROOT; };
 		8F4AD1AA225E990300698096 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventToSend.h; path = MacPatch/EventToSend.h; sourceTree = SOURCE_ROOT; };
+		8F4E3CB12405F77A008CA5E6 /* FileVaultIcon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = FileVaultIcon.icns; sourceTree = "<group>"; };
+		8F4E3CB32406E448008CA5E6 /* MPauthrestartVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPauthrestartVC.h; sourceTree = "<group>"; };
+		8F4E3CB42406E448008CA5E6 /* MPauthrestartVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPauthrestartVC.m; sourceTree = "<group>"; };
+		8F4E3CB52406E448008CA5E6 /* MPauthrestartVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = MPauthrestartVC.xib; sourceTree = "<group>"; };
 		8F5C74942370B1D000CE18B2 /* PrefsAdvancedVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefsAdvancedVC.h; sourceTree = "<group>"; };
 		8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrefsAdvancedVC.m; sourceTree = "<group>"; };
 		8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrefsAdvancedVC.xib; sourceTree = "<group>"; };
@@ -311,6 +318,9 @@
 				8F5C74942370B1D000CE18B2 /* PrefsAdvancedVC.h */,
 				8F5C74952370B1D000CE18B2 /* PrefsAdvancedVC.m */,
 				8F5C74962370B1D000CE18B2 /* PrefsAdvancedVC.xib */,
+				8F4E3CB32406E448008CA5E6 /* MPauthrestartVC.h */,
+				8F4E3CB42406E448008CA5E6 /* MPauthrestartVC.m */,
+				8F4E3CB52406E448008CA5E6 /* MPauthrestartVC.xib */,
 			);
 			path = Preferences;
 			sourceTree = "<group>";
@@ -387,6 +397,7 @@
 				8FB201F91A3F90C60013C622 /* main.m */,
 				8F2486A01A40DECF003E24C9 /* MacPatch.pch */,
 				8FE663ED2227225000F12AC8 /* Images.xcassets */,
+				8F4E3CB12405F77A008CA5E6 /* FileVaultIcon.icns */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -526,9 +537,11 @@
 				8F130BA6219E3B6B0036C8DD /* UpdatesVC.xib in Resources */,
 				8FB39E581E53955E0034ED78 /* PressedButton.png in Resources */,
 				8F5C74982370B1D000CE18B2 /* PrefsAdvancedVC.xib in Resources */,
+				8F4E3CB22405F77A008CA5E6 /* FileVaultIcon.icns in Resources */,
 				8FE663F32227230600F12AC8 /* PrefsUpdatesVC.xib in Resources */,
 				8F130B89219BFB5D0036C8DD /* AgentVC.xib in Resources */,
 				8F130B83219BFAAF0036C8DD /* html in Resources */,
+				8F4E3CB72406E448008CA5E6 /* MPauthrestartVC.xib in Resources */,
 				8F2486C71A41EE7B003E24C9 /* RHPreferencesWindow.xib in Resources */,
 				8F2486841A40A369003E24C9 /* HistoryViewController.xib in Resources */,
 				8FE663EC222721E500F12AC8 /* PrefsSoftwareVC.xib in Resources */,
@@ -563,6 +576,7 @@
 				8F2486CD1A41FFD0003E24C9 /* PrefsGeneralViewController.m in Sources */,
 				8F6FE7252385DFD200403A41 /* LongPatchWindow.m in Sources */,
 				8FE663EB222721E500F12AC8 /* PrefsSoftwareVC.m in Sources */,
+				8F4E3CB62406E448008CA5E6 /* MPauthrestartVC.m in Sources */,
 				8FE4CDDE1F1AA98C00F770FA /* SYFlatButton.m in Sources */,
 				8FB202181A3FA6390013C622 /* SoftwareViewController.m in Sources */,
 				8FB39E5D1E53A9D80034ED78 /* NSImage+RoundCorner.m in Sources */,

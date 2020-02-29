@@ -45,6 +45,8 @@
 		8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7761140C2F0700D86586 /* qlog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF65E145F1922006284B2 /* RegexKitLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7754140C2F0700D86586 /* lcl.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB92406EC57008CA5E6 /* MPPassItem.m */; };
 		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6222494D0600FDFBCA /* AgentData.m */; };
 		8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */; };
@@ -53,6 +55,8 @@
 		8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6A22494D8600FDFBCA /* Base64.m */; };
 		8F60AD6F22494D8600FDFBCA /* CocoaSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */; };
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */; };
+		8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019EC22848A29006E6BC5 /* MPGCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F8019EF22848A29006E6BC5 /* MPGCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019ED22848A29006E6BC5 /* MPGCDTask.m */; };
 		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -95,6 +99,8 @@
 		8FA28F0921939EF8005D5E92 /* FMXDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EF621939EF8005D5E92 /* FMXDatabaseManager.m */; };
 		8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA8B0CE23636B3500B030C9 /* RequiredPatch.m */; };
 		8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA8B0CF23636B3600B030C9 /* RequiredPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8FBC25622407417600996F5B /* DHCachedPasswordUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */; };
 		8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC0A8CC2181112F006C7FCB /* libz.tbd */; };
 		8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A9A321838A0A006C7FCB /* MPDownloadManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */; };
@@ -211,6 +217,8 @@
 		8F4B1DE716DD1BC600E15A9E /* MPLibrary-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPLibrary-Prefix.pch"; sourceTree = "<group>"; };
 		8F4B1F2816DE639100E15A9E /* NSData+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Base64.h"; path = "../NSData+Base64.h"; sourceTree = "<group>"; };
 		8F4B1F2916DE639100E15A9E /* NSData+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Base64.m"; path = "../NSData+Base64.m"; sourceTree = "<group>"; };
+		8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPPassItem.h; sourceTree = "<group>"; };
+		8F4E3CB92406EC57008CA5E6 /* MPPassItem.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPPassItem.m; sourceTree = "<group>"; };
 		8F60AD6122494D0600FDFBCA /* AgentData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgentData.h; sourceTree = "<group>"; };
 		8F60AD6222494D0600FDFBCA /* AgentData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AgentData.m; sourceTree = "<group>"; };
 		8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAObfuscatedString.h; sourceTree = "<group>"; };
@@ -219,6 +227,8 @@
 		8F60AD6A22494D8600FDFBCA /* Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Base64.m; sourceTree = "<group>"; };
 		8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CocoaSecurity.m; sourceTree = "<group>"; };
 		8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
+		8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
+		8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
 		8F8019EC22848A29006E6BC5 /* MPGCDTask.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPGCDTask.h; sourceTree = "<group>"; };
 		8F8019ED22848A29006E6BC5 /* MPGCDTask.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGCDTask.m; sourceTree = "<group>"; };
 		8F8019F122848A5B006E6BC5 /* GCDTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDTask.h; sourceTree = "<group>"; };
@@ -280,6 +290,8 @@
 		8FAEF650145F187C006284B2 /* MPDataMgr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDataMgr.m; sourceTree = "<group>"; };
 		8FAEF65E145F1922006284B2 /* RegexKitLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
 		8FAEF65F145F1922006284B2 /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
+		8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DHCachedPasswordUtil.h; sourceTree = "<group>"; };
+		8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DHCachedPasswordUtil.m; sourceTree = "<group>"; };
 		8FC0A8CC2181112F006C7FCB /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		8FC0A9A321838A0A006C7FCB /* MPDownloadManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDownloadManager.h; sourceTree = "<group>"; };
 		8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDownloadManager.m; sourceTree = "<group>"; };
@@ -778,6 +790,8 @@
 				8FF3D6AC217012D600059ACD /* MPKeychain.m */,
 				8FF3D6A7217012D600059ACD /* MPKeyItem.h */,
 				8FF3D6A1217012D500059ACD /* MPKeyItem.m */,
+				8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */,
+				8F4E3CB92406EC57008CA5E6 /* MPPassItem.m */,
 				8FF3D6A6217012D600059ACD /* MPRemoteFingerprint.h */,
 				8FF3D6A9217012D600059ACD /* MPRemoteFingerprint.m */,
 				8FF3D6AA217012D600059ACD /* MPSimpleKeychain.h */,
@@ -864,8 +878,12 @@
 				8FE663FC22287A4F00F12AC8 /* MPPatching.m */,
 				8FE663FF222887BB00F12AC8 /* MPFileUtils.h */,
 				8FE66400222887BB00F12AC8 /* MPFileUtils.m */,
+				8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */,
+				8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */,
 				8F8019EC22848A29006E6BC5 /* MPGCDTask.h */,
 				8F8019ED22848A29006E6BC5 /* MPGCDTask.m */,
+				8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */,
+				8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */,
 			);
 			name = NEW;
 			sourceTree = "<group>";
@@ -974,6 +992,8 @@
 				8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */,
 				8FF3D73821701AB600059ACD /* NSFileManager+Helper.h in Headers */,
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
+				8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */,
+				8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */,
 				8FF3D73921701AB600059ACD /* NSString+Hash.h in Headers */,
 				8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */,
 				8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */,
@@ -986,6 +1006,7 @@
 				8FEC938717CBFEFB00AA9C1C /* MPApplePatch.h in Headers */,
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
+				8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */,
 				8FC444171D00921900EF328C /* NSString+Base64.h in Headers */,
 				8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */,
 			);
@@ -1089,6 +1110,7 @@
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
 				8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */,
+				8FBC25622407417600996F5B /* DHCachedPasswordUtil.m in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
 				8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */,
@@ -1118,6 +1140,7 @@
 				8FF3D73A21701AB600059ACD /* NSDictionary+Helper.m in Sources */,
 				8F60AD6F22494D8600FDFBCA /* CocoaSecurity.m in Sources */,
 				8FF3D73121701AB600059ACD /* NSDate+Helper.m in Sources */,
+				8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */,
 				8FEC938C17CBFF0F00AA9C1C /* MPCustomPatch.m in Sources */,
 				8FF3D66B2170113900059ACD /* MPClientInfo.m in Sources */,
 				8FE663FA222879EB00F12AC8 /* MPSoftware.m in Sources */,
@@ -1127,6 +1150,7 @@
 				8FF3D6802170120600059ACD /* MPWSResult.m in Sources */,
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
 				8FF3D674217011C500059ACD /* MPPython.m in Sources */,
+				8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */,
 				8FF3D6B8217012D600059ACD /* MPKeychain.m in Sources */,
 				8FF3D68C2170125900059ACD /* MPSettings.m in Sources */,
 				8FF3D68B2170125900059ACD /* MPDefaults.m in Sources */,

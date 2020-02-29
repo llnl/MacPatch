@@ -176,6 +176,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 															name: kRequiredPatchesChangeNotification
 														  object: nil];
 	
+	[[NSDistributedNotificationCenter defaultCenter] addObserver: self
+														selector: @selector(userNotificationReceived:)
+															name: @"kFileVaultUserOutOfSync"
+														  object: nil];
+	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
 }
@@ -231,6 +236,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	{
 		_swResHelpMessage = [prefs stringForKey:@"denyHelpStringMessage"];
 	}
+	
+	// Run FileVault User Password Check Sync
+	[self fvUserCheck];
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	if ([defaults boolForKey:@"showWhatsNew"]) {
@@ -474,6 +482,58 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         }
     }
 }
+
+- (void)fvUserCheck
+{
+    double secondsToFire = 120.0; // Every 5 min
+    logit(lcl_vInfo, @"Start FileVault User Check Thread");
+    logit(lcl_vInfo, @"Run every %f", secondsToFire);
+    
+    // Show Menu Once, then use timer
+    [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
+                           withObject:nil
+                        waitUntilDone:NO
+                                modes:@[NSRunLoopCommonModes]];
+    
+    dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+        [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
+                               withObject:nil
+                            waitUntilDone:NO
+                                    modes:@[NSRunLoopCommonModes]];
+    });
+}
+
+- (void)fvUserCheckMethod
+{
+	@autoreleasepool
+	{
+		MPFileCheck *fu = [MPFileCheck new];
+		if ([fv fExists:MP_AUTHSTATUS_FILE]) {
+			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+			if ([d[@"enabled"] boolValue]) {
+				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
+				
+				NSError *err = nil;
+				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				if (!err) {
+					BOOL isValid = NO;
+					isValid = [dh checkPassword:pi.userName forUserWithName:pi.userPass];
+					if (!isValid) {
+						[d setObject:[NSNumber numberWithBool:YES] forKey:@"outOfSync"];
+						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+						[self postUserNotificationForFVAuthRestart];
+					}
+				} else {
+					qlerror(@"%@",err.localizedDescription);
+				}
+			}
+		}
+	}
+}
+
 
 #pragma mark Show Patch Status
 
@@ -1012,6 +1072,31 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
 }
 
+- (void)postUserNotificationForFVAuthRestart
+{
+	qlinfo(@"postUserNotificationForFVAuthRestart");
+	// Look to see if we have posted already, if we have, no need to do it again
+	
+	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
+	{
+		if ([deliveredNote.title isEqualToString:@"Credientials Need Updating"]) {
+			return;
+		}
+	}
+	
+	NSUserNotification *userNote = [[NSUserNotification alloc] init];
+	userNote.title = @"Credientials Need Updating";
+	userNote.informativeText = @"The FileVault authrestart creditials are out of sync.";
+	userNote.actionButtonTitle = @"Update";
+	userNote.hasActionButton = YES;
+	userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };
+	[userNote setValue:@YES forKey:@"_showsButtons"];
+
+	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
+	[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
+	qlinfo(@"postUserNotificationForFVAuthRestart deliverNotification");
+}
+
 - (void)userNotificationReceived:(NSNotification *)notification
 {
 	qlinfo(@"[userNotificationReceived]: %@",notification.name);
@@ -1031,6 +1116,10 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	else if ([notification.name isEqualToString: kRequiredPatchesChangeNotification])
 	{
 		[self displayPatchDataMethod];
+	}
+	else if ([notification.name isEqualToString: @"kFileVaultUserOutOfSync"])
+	{
+		[self postUserNotificationForFVAuthRestart];
 	}
     else
     {

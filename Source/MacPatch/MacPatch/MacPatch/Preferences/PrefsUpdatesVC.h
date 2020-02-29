@@ -19,4 +19,5 @@
 @property (nonatomic, retain) IBOutlet NSButton *allowInstallRebootPatchesCheckBox;
 @property (nonatomic, retain) IBOutlet NSButton *pausePatchingCheckBox;
 
+
 @end
