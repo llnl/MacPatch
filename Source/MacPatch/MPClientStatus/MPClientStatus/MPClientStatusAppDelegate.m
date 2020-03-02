@@ -510,7 +510,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	@autoreleasepool
 	{
 		MPFileCheck *fu = [MPFileCheck new];
-		if ([fv fExists:MP_AUTHSTATUS_FILE]) {
+		if ([fu fExists:MP_AUTHSTATUS_FILE]) {
 			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
 			if ([d[@"enabled"] boolValue]) {
 				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
@@ -1099,7 +1099,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)userNotificationReceived:(NSNotification *)notification
 {
-	qlinfo(@"[userNotificationReceived]: %@",notification.name);
+	qldebug(@"[userNotificationReceived]: %@",notification.name);
     if ([notification.name isEqualToString: kShowPatchesRequiredNotification])
     {
         NSString *pc = [@(self.patchCount) stringValue];

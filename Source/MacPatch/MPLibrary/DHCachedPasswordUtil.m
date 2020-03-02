@@ -54,13 +54,13 @@
     BOOL returnVal = FALSE;
     NSArray *usersWithName = [self usersWithName:userName];
     for (ODRecord *theUser in usersWithName) {
-        if ([self userIsNetworkUserAccount:theUser]) {
-        returnVal = [theUser verifyPassword:pass error:&theError];
-            if (returnVal == TRUE ) {
-                //Cache
-                [self.myNode passwordContentCheck:pass forRecordName:userName error:&theError];
-            }
-        }
+        //if ([self userIsNetworkUserAccount:theUser]) {
+		returnVal = [theUser verifyPassword:pass error:&theError];
+		if (returnVal == TRUE ) {
+			//Cache
+			[self.myNode passwordContentCheck:pass forRecordName:userName error:&theError];
+		}
+        //}
     }
     if (theError) {
         NSLog(@"Error verifying user password with the directory node: %@.", theError);

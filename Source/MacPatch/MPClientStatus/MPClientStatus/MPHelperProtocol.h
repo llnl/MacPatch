@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.8
+// Rev 30
 
 #import <Foundation/Foundation.h>
 
@@ -15,7 +15,10 @@ enum {
 	kMPProcessStatus = 1,
 	kMPProcessProgress = 2,
 	kMPPatchProcessStatus = 3,
-	kMPPatchProcessProgress = 4
+	kMPPatchProcessProgress = 4,
+	kMPPatchAllProcessProgress = 5,
+	kMPPatchAllProcessStatus = 6,
+	kMPPatchAllInstallComplete = 7
 };
 typedef NSUInteger MPPostDataType;
 
@@ -24,6 +27,12 @@ enum {
 	kMPMoveFile = 1
 };
 typedef NSUInteger MPFileMoveAction;
+
+enum {
+	kPatchingPausedOff = 0,
+	kPatchingPausedOn = 1
+};
+typedef NSUInteger MPPatchingPausedState;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -84,7 +93,7 @@ enum {
 
 /**
  Scan host for patches
- 
+
  @param patchType - filter scan based on type All, Apple, Custom
  @param reply foundPatches, patchGroupData
  */
@@ -93,8 +102,10 @@ enum {
 // Patching
 - (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
+- (void)installPatches:(NSArray *)patches withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 - (void)setPatchOnLogoutWithReply:(void(^)(BOOL result))reply;
+- (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply;
 
 // ----------------------------------------
 // Software -------------------------------
@@ -154,11 +165,18 @@ enum {
 - (void)scanForInstalledConfigProfiles:(nullable void(^)(NSArray * _Nullable profiles))reply;
 - (void)getInstalledConfigProfilesWithReply:(nullable void(^)(NSString * _Nullable aString, NSData * _Nullable aProfilesData))reply;
 
+// ----------------------------------------
+// FileVault			         ----------
+// ----------------------------------------
+- (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
+
+
 @end
 
 @protocol MPHelperProgress
 
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
+- (void)postPatchInstallStatus:(nullable NSString *)patchID type:(MPPostDataType)type;
 
 @end
 

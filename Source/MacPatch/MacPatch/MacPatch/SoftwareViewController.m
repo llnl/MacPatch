@@ -248,7 +248,9 @@
 		
 		if (error) {
 			qlerror(@"%@",error.localizedDescription);
-			[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+			});
 			return;
 		}
 		

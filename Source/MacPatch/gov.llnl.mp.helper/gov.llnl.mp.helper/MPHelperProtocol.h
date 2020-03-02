@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.9
+// Rev 30
 
 #import <Foundation/Foundation.h>
 
@@ -164,6 +164,12 @@ enum {
 
 - (void)scanForInstalledConfigProfiles:(nullable void(^)(NSArray * _Nullable profiles))reply;
 - (void)getInstalledConfigProfilesWithReply:(nullable void(^)(NSString * _Nullable aString, NSData * _Nullable aProfilesData))reply;
+
+// ----------------------------------------
+// FileVault			         ----------
+// ----------------------------------------
+- (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
+
 
 @end
 

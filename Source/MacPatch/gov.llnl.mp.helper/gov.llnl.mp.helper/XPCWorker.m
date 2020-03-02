@@ -1923,6 +1923,19 @@ done:
 	reply(@"Hello",data);
 }
 
+
+#pragma mark • FileVault
+- (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply
+{
+	qlinfo(@"getFileVaultUsers");
+	MPFileVaultInfo *fvi = [MPFileVaultInfo new];
+	[fvi runFDESetupCommand:@"list"];
+	NSArray *fvUsers = [fvi userArray];
+	qlinfo(@"FileVault Users found %lu",(unsigned long)fvUsers.count);
+	reply(fvUsers);
+}
+
+
 #pragma mark - Private
 
 - (NSData *)encodeResult:(NSData *)dataToEncode error:(NSError **)error

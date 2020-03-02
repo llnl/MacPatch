@@ -101,7 +101,7 @@
     const char *pass = [[self clientInfo] UTF8String];
     SecKeychainOpen(path, &xKeychain);
     OSStatus unlockResult = SecKeychainUnlock(xKeychain, (UInt32) strlen(pass), pass, TRUE);
-
+	qlinfo(@"unlock: %@",[[self errorForOSStatus:unlockResult] localizedDescription]);
     return unlockResult;
 }
 
@@ -142,7 +142,8 @@
                                    (__bridge id)kSecAttrService:    aAccount,
                                    (__bridge id)kSecValueData:      passData,
                                    (__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
-                                   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
+                                   //(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
+								   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlways,
                                    (__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
                                    (__bridge id)kSecAttrAccess:     (__bridge id)kAccess,
                                    };
@@ -175,7 +176,8 @@
                                    (__bridge id)kSecAttrService:    aService,
                                    (__bridge id)kSecValueData:      passData,
                                    (__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
-                                   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
+                                   //(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
+								   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlways,
                                    (__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
                                    (__bridge id)kSecAttrAccess:     (__bridge id)kAccess,
                                    };
@@ -440,25 +442,32 @@
     SecTrustedApplicationRef me;
     SecTrustedApplicationRef MPAgent = NULL;
     SecTrustedApplicationRef MPWorker = NULL;
-    SecTrustedApplicationRef MPCatalog = NULL;
-    SecTrustedApplicationRef SelfPatch = NULL;
+    SecTrustedApplicationRef MacPatchApp1 = NULL;
+	SecTrustedApplicationRef MacPatchApp2 = NULL;
     SecTrustedApplicationRef MPClientStatus = NULL;
     SecTrustedApplicationRef MPLoginAgent = NULL;
     SecTrustedApplicationRef MPUpdateAgent = NULL;
+	SecTrustedApplicationRef MPHelper = NULL;
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
+	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPCatalog.app", &MPCatalog);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/Self Patch.app", &SelfPatch);
+	result = SecTrustedApplicationCreateFromPath("/Applications/MacPatch.app", &MacPatchApp1);
+	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MacPatch.app", &MacPatchApp2);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
     result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
+	result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.helper", &MPHelper);
     
-    NSArray *trustedApplications = [NSArray arrayWithObjects:(__bridge_transfer id)me, (__bridge_transfer id)MPAgent,
-                                    (__bridge_transfer id)MPWorker, (__bridge_transfer id)MPCatalog,
-                                    (__bridge_transfer id)SelfPatch, (__bridge_transfer id)MPClientStatus, (__bridge_transfer id)MPLoginAgent,
-                                    (__bridge_transfer id)MPUpdateAgent, nil];
+    NSArray *trustedApplications = @[(__bridge_transfer id)me,
+									 (__bridge_transfer id)MPAgent,
+									 (__bridge_transfer id)MPWorker,
+									 (__bridge_transfer id)MacPatchApp1,
+									 (__bridge_transfer id)MacPatchApp2,
+									 (__bridge_transfer id)MPClientStatus,
+									 (__bridge_transfer id)MPLoginAgent,
+									 (__bridge_transfer id)MPUpdateAgent,
+									 (__bridge_transfer id)MPHelper];
     
     SecAccessRef accessObj = NULL;
     result = SecAccessCreate((__bridge CFStringRef)label, (__bridge CFArrayRef)trustedApplications, &accessObj);

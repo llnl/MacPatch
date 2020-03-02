@@ -11,6 +11,12 @@
 
 @interface MPauthrestartVC ()
 
+// XPC Connection
+@property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
+
+- (void)connectToHelperTool;
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
+
 @end
 
 @implementation MPauthrestartVC
@@ -34,15 +40,9 @@
 		self.errMsg.stringValue = @"";
 	});
 	
+	// Check is user account is valid
 	BOOL isValidUser = NO;
-	MPFileVaultInfo *fvi = [MPFileVaultInfo new];
-	[fvi runFDESetupCommand:@"list"];
-	NSArray *fvUsers = [fvi userArray];
-	for (NSString *u in fvUsers) {
-		if ([u isEqualToString:self.userName.stringValue]) {
-			isValidUser = YES;
-		}
-	}
+	isValidUser =  [self validFileVaultUser:self.userName.stringValue];
 	
 	// Check if account is in FV user array.
 	if (!isValidUser) {
@@ -53,9 +53,18 @@
 		return;
 	}
 	
+	if (![self validUserPassword]) {
+		dispatch_async(dispatch_get_main_queue(), ^{
+			self.errImage.hidden = NO;
+			self.errMsg.stringValue = @"Error, password does not match system.";
+		});
+		return;
+	}
 	
 	NSError *err = nil;
 	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+	[kc createKeyChain:MP_AUTHSTATUS_KEYCHAIN];
+	
 	MPPassItem *pi = [MPPassItem new];
 	[pi setUserName:self.userName.stringValue];
 	[pi setUserPass:self.userPass.stringValue];
@@ -121,4 +130,93 @@
 	return YES;
 }
 
+- (BOOL)validFileVaultUser:(NSString *)user
+{
+	__block BOOL result = NO;
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+	
+	[self connectAndExecuteCommandBlock:^(NSError * connectError)
+	{
+		if (connectError != nil)
+		{
+			qlerror(@"connectError: %@",connectError.localizedDescription);
+		}
+		else
+		{
+			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+			}] getFileVaultUsers:^(NSArray *users) {
+				
+				if (users.count > 0) {
+					for (NSString *u in users) {
+						if ([u isEqualToString:user]) {
+							result = YES;
+							break;
+						}
+					}
+				}
+				
+				dispatch_semaphore_signal(sem);
+			}];
+		}
+	}];
+	
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+	return result;
+}
+
+- (BOOL)validUserPassword
+{
+	BOOL result = NO;
+	DHCachedPasswordUtil *dhc = [DHCachedPasswordUtil new];
+	result = [dhc checkPassword:self.userPass.stringValue forUserWithName:self.userName.stringValue];
+	return result;
+}
+
+#pragma mark - Helper
+
+- (void)connectToHelperTool
+// Ensures that we're connected to our helper tool.
+{
+	assert([NSThread isMainThread]);
+	if (self.workerConnection == nil) {
+		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
+		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
+		
+		// Register Progress Messeges From Helper
+		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
+		self.workerConnection.exportedObject = self;
+		
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+		// We can ignore the retain cycle warning because a) the retain taken by the
+		// invalidation handler block is released by us setting it to nil when the block
+		// actually runs, and b) the retain taken by the block passed to -addOperationWithBlock:
+		// will be released when that operation completes and the operation itself is deallocated
+		// (notably self does not have a reference to the NSBlockOperation).
+		self.workerConnection.invalidationHandler = ^{
+			// If the connection gets invalidated then, on the main thread, nil out our
+			// reference to it.  This ensures that we attempt to rebuild it the next time around.
+			self.workerConnection.invalidationHandler = nil;
+			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+				self.workerConnection = nil;
+			}];
+		};
+#pragma clang diagnostic pop
+		[self.workerConnection resume];
+	}
+}
+
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock
+// Connects to the helper tool and then executes the supplied command block on the
+// main thread, passing it an error indicating if the connection was successful.
+{
+	assert([NSThread isMainThread]);
+	
+	// Ensure that there's a helper tool connection in place.
+	self.workerConnection = nil;
+	[self connectToHelperTool];
+	
+	commandBlock(nil);
+}
 @end
