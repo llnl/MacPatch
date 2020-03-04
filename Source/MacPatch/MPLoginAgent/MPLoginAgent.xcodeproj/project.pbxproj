@@ -53,6 +53,7 @@
 		8F382EEC1FB6254D00129063 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8F530FB21B3E1DAA00B8D893 /* InstallAppleUpdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InstallAppleUpdate.h; sourceTree = "<group>"; };
 		8F530FB31B3E1DAA00B8D893 /* InstallAppleUpdate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InstallAppleUpdate.m; sourceTree = "<group>"; };
+		8F542C23240F31DF0034E8FE /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 		8F67E6731B32205F00888EB9 /* MPScanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPScanner.h; sourceTree = "<group>"; };
 		8F67E6741B32205F00888EB9 /* MPScanner.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPScanner.m; sourceTree = "<group>"; };
 		8F752F1C1B34B8170001896F /* MPPanel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPPanel.h; sourceTree = "<group>"; };
@@ -134,6 +135,7 @@
 		8FA64D9C1B307D26006E9CB7 /* MPLoginAgent */ = {
 			isa = PBXGroup;
 			children = (
+				8F542C23240F31DF0034E8FE /* MPHelperProtocol.h */,
 				8FA64DA11B307D26006E9CB7 /* main.m */,
 				8FA64D9D1B307D26006E9CB7 /* AppDelegate.h */,
 				8FA64D9E1B307D26006E9CB7 /* AppDelegate.m */,
@@ -432,6 +434,7 @@
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -461,6 +464,7 @@
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

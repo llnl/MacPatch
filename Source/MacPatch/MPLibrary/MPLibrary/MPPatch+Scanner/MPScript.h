@@ -31,6 +31,7 @@
 
 - (id)initWithScript:(NSString *)aScript;
 - (BOOL)runScript:(NSString *)aScript;
+- (NSString *)runScriptReturningResult:(NSString *)aScript;
 
 - (BOOL)runScriptsFromDirectory:(NSString *)aDirectory;
 - (BOOL)runScriptsFromDirectory:(NSString *)aDirectory error:(NSError **)error;

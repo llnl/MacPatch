@@ -26,6 +26,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MacPatch.h"
+#import "MPHelperProtocol.h"
 
 // Define Logfile init's
 #define FileLevelLogComponent lcl_cMain

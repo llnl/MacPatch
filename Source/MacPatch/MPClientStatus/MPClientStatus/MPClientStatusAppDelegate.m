@@ -510,27 +510,37 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	@autoreleasepool
 	{
 		MPFileCheck *fu = [MPFileCheck new];
-		if ([fu fExists:MP_AUTHSTATUS_FILE]) {
-			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
-			if ([d[@"enabled"] boolValue]) {
-				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
-				
-				NSError *err = nil;
-				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
-				if (!err) {
-					BOOL isValid = NO;
-					isValid = [dh checkPassword:pi.userName forUserWithName:pi.userPass];
-					if (!isValid) {
-						[d setObject:[NSNumber numberWithBool:YES] forKey:@"outOfSync"];
-						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
+		
+		
+		__block BOOL res = NO;
+		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+		
+		[self connectAndExecuteCommandBlock:^(NSError * connectError)
+		{
+			if (connectError != nil)
+			{
+				qlerror(@"connectError: %@",connectError.localizedDescription);
+			}
+			else
+			{
+				[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+					qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
+					if (err) {
+						qlerror(@"%@",err.localizedDescription);
+					}
+					
+					// User account is out of sync, post notification.
+					if (!result) {
 						[self postUserNotificationForFVAuthRestart];
 					}
-				} else {
-					qlerror(@"%@",err.localizedDescription);
-				}
+					dispatch_semaphore_signal(sem);
+				}];
 			}
-		}
+		}];
+		
+		dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 	}
 }
 
@@ -1079,14 +1089,31 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
 	{
-		if ([deliveredNote.title isEqualToString:@"Credientials Need Updating"]) {
+		if ([deliveredNote.title isEqualToString:@"Credentials Need Updating"]) {
+			return;
+		}
+		if ([deliveredNote.title isEqualToString:@"Recovery Key Need Updating"]) {
 			return;
 		}
 	}
 	
+	NSDictionary *prefs;
+	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
+		prefs = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+		if (![prefs[@"enabled"] boolValue]) {
+			return; // Dont post any notifications if not enabled.
+		}
+	}
+	
 	NSUserNotification *userNote = [[NSUserNotification alloc] init];
-	userNote.title = @"Credientials Need Updating";
-	userNote.informativeText = @"The FileVault authrestart creditials are out of sync.";
+	if (prefs[@"outOfSync"]) {
+		userNote.title = @"Credentials  Need Updating";
+		userNote.informativeText = @"The FileVault authrestart credentials are out of sync.";
+	}
+	if (prefs[@"keyOutOfSync"]) {
+		userNote.title = @"Recovery Key Need Updating";
+		userNote.informativeText = @"The FileVault authrestart recovery key is out of sync.";
+	}
 	userNote.actionButtonTitle = @"Update";
 	userNote.hasActionButton = YES;
 	userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };

@@ -14,6 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property (nonatomic, weak) IBOutlet NSTextField *userName;
 @property (nonatomic, weak) IBOutlet NSSecureTextField *userPass;
+@property (nonatomic, retain) IBOutlet NSButton *useRecoveryKeyCheckBox;
 
 @property (nonatomic, weak) IBOutlet NSImageView *errImage;
 @property (nonatomic, weak) IBOutlet NSTextField *errMsg;

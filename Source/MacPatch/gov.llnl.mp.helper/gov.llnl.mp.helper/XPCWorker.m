@@ -656,7 +656,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 - (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(void(^)(BOOL result))reply
 {
 	BOOL res = YES;
-	NSError *err = nil;
 	NSString *_file = @"/private/var/db/.MPPatchState.plist";
 	NSDictionary *data;
 	if (state == kPatchingPausedOn) {
@@ -1925,16 +1924,199 @@ done:
 
 
 #pragma mark • FileVault
-- (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply
+- (void)getFileVaultUsers:(void(^)(NSArray *users))reply
 {
-	qlinfo(@"getFileVaultUsers");
 	MPFileVaultInfo *fvi = [MPFileVaultInfo new];
 	[fvi runFDESetupCommand:@"list"];
 	NSArray *fvUsers = [fvi userArray];
-	qlinfo(@"FileVault Users found %lu",(unsigned long)fvUsers.count);
+	qldebug(@"FileVault Users found %lu",(unsigned long)fvUsers.count);
 	reply(fvUsers);
 }
 
+- (void)setAuthrestartDataForUser:(NSString *)userName userPass:(NSString *)userPass useRecoveryKey:(BOOL)useKey withReply:(void(^)(NSError *error, NSInteger result))reply
+{
+	NSInteger result = 1;
+	NSError *err = nil;
+	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+	[kc createKeyChain:MP_AUTHSTATUS_KEYCHAIN];
+	
+	MPPassItem *pi = [MPPassItem new];
+	[pi setUserName:userName];
+	[pi setUserPass:userPass];
+
+	[kc savePassItemWithService:pi service:@"mpauthrestart" error:&err];
+	if (err) {
+		qlerror(@"Save Error: %@",err.localizedDescription);
+		result = 1;
+	} else {
+		qlinfo(@"Data has been saved. Write plist.");
+		[self writeAuthStatusToPlist:userName enabled:YES useRecoveryKey:useKey];
+		result = 0;
+	}
+	
+	reply(err, result);
+}
+
+- (void)getAuthRestartDataWithReply:(void(^)(NSError *error, NSDictionary *result))reply
+{
+	NSDictionary *result = nil;
+	NSError *err = nil;
+	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+	MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+	if (!err) {
+		result = [pi toDictionary];
+	}
+	reply(err,result);
+}
+
+- (void)clearAuthrestartData:(void(^)(NSError *error, BOOL result))reply
+{
+	BOOL result = YES;
+	NSError *err = nil;
+	NSFileManager *fs = [NSFileManager defaultManager];
+	if ([fs fileExistsAtPath:MP_AUTHSTATUS_KEYCHAIN]) {
+		[fs removeItemAtPath:MP_AUTHSTATUS_KEYCHAIN error:&err];
+	}
+	if ([fs fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
+		NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+		[d setObject:[NSNumber numberWithBool:NO] forKey:@"enabled"];
+		[d setObject:@"" forKey:@"user"];
+		[d setObject:[NSNumber numberWithBool:NO] forKey:@"outOfSync"];
+		[d setObject:[NSNumber numberWithBool:NO] forKey:@"keyOutOfSync"];
+		[d setObject:[NSNumber numberWithBool:NO] forKey:@"useRecovery"];
+		[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+	}
+	if (err) {
+		qlerror(@"Error clearing authrestart from keychain.");
+		qlerror(@"%@",err.localizedDescription);
+		result = NO;
+	}
+	
+	reply(err,result);
+}
+
+- (void)fvAuthrestartAccountIsValid:(void(^)(NSError *error, BOOL result))reply
+{
+	NSError *err = nil;
+	BOOL isValid = NO;
+	MPFileCheck *fu = [MPFileCheck new];
+	if ([fu fExists:MP_AUTHSTATUS_FILE])
+	{
+		NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+		if ([d[@"enabled"] boolValue])
+		{
+			if ([d[@"useRecovery"] boolValue])
+			{
+				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				if (!err)
+				{
+					isValid = [self recoveryKeyIsValid:pi.userPass];
+					qldebug(@"Is FV Recovery Key Valid: %@",isValid ? @"Yes":@"No");
+					
+					if (!isValid) {
+						[d setObject:[NSNumber numberWithBool:YES] forKey:@"keyOutOfSync"];
+						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+					}
+				} else {
+					qlerror(@"Could not retrievePassItemForService");
+					qlerror(@"%@",err.localizedDescription);
+				}
+			} else {
+				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
+				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				if (!err)
+				{
+					isValid = [dh checkPassword:pi.userPass forUserWithName:pi.userName];
+					qldebug(@"Is FV UserName and Password Valid: %@",isValid ? @"Yes":@"No");
+					
+					if (!isValid) {
+						[d setObject:[NSNumber numberWithBool:YES] forKey:@"outOfSync"];
+						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+					}
+				} else {
+					qlerror(@"Could not retrievePassItemForService");
+					qlerror(@"%@",err.localizedDescription);
+				}
+			}
+		} else {
+			qlerror(@"Authrestart is not enabled.");
+		}
+	}
+	
+	reply(err,isValid);
+}
+
+- (void)fvRecoveryKeyIsValid:(NSString *)rKey withReply:(void(^)(NSError *error, BOOL result))reply
+{
+	NSError *err = nil;
+	BOOL isValid = NO;
+	MPFileCheck *fu = [MPFileCheck new];
+	if ([fu fExists:MP_AUTHSTATUS_FILE])
+	{
+		NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+		if ([d[@"enabled"] boolValue])
+		{
+			if ([d[@"useRecoveryKey"] boolValue])
+			{
+				isValid = [self recoveryKeyIsValid:rKey];
+			}
+		} else {
+			qlerror(@"Authrestart is not enabled.");
+		}
+	}
+	
+	reply(err,isValid);
+}
+
+- (BOOL)recoveryKeyIsValid:(NSString *)rKey
+{
+	BOOL isValid = NO;
+
+	NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
+	"/usr/bin/expect -f- << EOT \n"
+	"spawn /usr/bin/fdesetup validaterecovery; \n"
+	"expect \"Enter the current recovery key:*\" \n"
+	"send -- %@ \n"
+	"send -- \"\\r\" \n"
+	"expect \"true\" \n"
+	"expect eof; \n"
+	"EOT",rKey];
+	MPScript *mps = [MPScript new];
+	NSString *res = [mps runScriptReturningResult:script];
+	// Now Look for our result ...
+	NSArray *arr = [res componentsSeparatedByString:@"\n"];
+	for (NSString *l in arr) {
+		if ([l containsString:@"fdesetup"]) {
+			continue;
+		}
+		if ([l containsString:@"Enter the "]) {
+			continue;
+		}
+		if ([[l trim] isEqualToString:@"false"]) {
+			isValid = NO;
+			break;
+		}
+		if ([[l trim] isEqualToString:@"true"]) {
+			isValid = YES;
+			break;
+		}
+	}
+
+	return isValid;
+}
+
+// Private
+- (void)writeAuthStatusToPlist:(NSString *)authUser enabled:(BOOL)aEnabled useRecoveryKey:(BOOL)useKey
+{
+	NSDictionary *authStatus = @{@"user":authUser,
+								 @"enabled":[NSNumber numberWithBool:aEnabled],
+								 @"useRecovery":[NSNumber numberWithBool:useKey],
+								 @"keyOutOfSync":[NSNumber numberWithBool:NO],
+								 @"outOfSync":[NSNumber numberWithBool:NO]};
+	[authStatus writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
+}
 
 #pragma mark - Private
 

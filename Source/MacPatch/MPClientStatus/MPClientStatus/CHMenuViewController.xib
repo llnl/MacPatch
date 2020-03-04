@@ -54,6 +54,7 @@
                     </connections>
                 </imageView>
             </subviews>
+            <point key="canvasLocation" x="-496" y="154"/>
         </customView>
         <userDefaultsController representsSharedInstance="YES" id="TXz-Dy-axG"/>
         <customView id="gZN-5x-XJf">

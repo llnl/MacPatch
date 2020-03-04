@@ -56,6 +56,12 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 
 // Web Service
 - (void)postInstallToWebService:(NSString *)aPatch type:(NSString *)aType;
+
+// XPC Connection
+@property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
+
+- (void)connectToHelperTool;
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
 @end
 
 @implementation MinScanAndPatchVC
@@ -255,15 +261,34 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		return;
 	}
 	
-	NSDictionary *d;
-	NSError *err = nil;
-	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-	MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
-	if (err) {
-		qlerror(@"%@",err.localizedDescription);
-		return;
-	}
-	d = [pi toDictionary];
+	__block NSDictionary *authData = nil;
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
+		if (connectError != nil) {
+			qlerror(@"Error getting connection to helper. Authrestart will not occure.");
+			qlerror(@"%@",connectError);
+			dispatch_semaphore_signal(sem);
+		} else {
+			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				qlerror(@"Error getting remote object from helper. Authrestart will not occure.");
+				qlerror(@"%@",proxyError);
+				dispatch_semaphore_signal(sem);
+			}] getAuthRestartDataWithReply:^(NSError *error, NSDictionary *result) {
+				
+				if (error) {
+					qlerror(@"Error getting result from helper. Authrestart will not occure.");
+					qlerror(@"%@",error);
+				} else {
+					authData = [result copy];
+				}
+				
+				dispatch_semaphore_signal(sem);
+			}];
+		}
+	}];
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+	
+	if (!authData) return; // Authdata is empty, no need to run the script
 	
 	NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
 	"/usr/bin/fdesetup authrestart -delayminutes -0 -verbose -inputplist <<EOF"
@@ -276,7 +301,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	"	<key>Password</key> \n"
 	"	<string>\"%@\"</string> \n"
 	"</dict></plist>\n"
-	"EOF",d[@"authUser"],d[@"authPass"]];
+	"EOF",authData[@"userName"],authData[@"userPass"]];
 	
 	MPScript *mps = [MPScript new];
 	BOOL res = [mps runScript:script];
@@ -423,5 +448,52 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
         }
     }
     return;
+}
+
+#pragma mark - Helper
+
+- (void)connectToHelperTool
+// Ensures that we're connected to our helper tool.
+{
+	assert([NSThread isMainThread]);
+	if (self.workerConnection == nil) {
+		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
+		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
+		
+		// Register Progress Messeges From Helper
+		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
+		self.workerConnection.exportedObject = self;
+		
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warc-retain-cycles"
+		// We can ignore the retain cycle warning because a) the retain taken by the
+		// invalidation handler block is released by us setting it to nil when the block
+		// actually runs, and b) the retain taken by the block passed to -addOperationWithBlock:
+		// will be released when that operation completes and the operation itself is deallocated
+		// (notably self does not have a reference to the NSBlockOperation).
+		self.workerConnection.invalidationHandler = ^{
+			// If the connection gets invalidated then, on the main thread, nil out our
+			// reference to it.  This ensures that we attempt to rebuild it the next time around.
+			self.workerConnection.invalidationHandler = nil;
+			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
+				self.workerConnection = nil;
+			}];
+		};
+#pragma clang diagnostic pop
+		[self.workerConnection resume];
+	}
+}
+
+- (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock
+// Connects to the helper tool and then executes the supplied command block on the
+// main thread, passing it an error indicating if the connection was successful.
+{
+	assert([NSThread isMainThread]);
+	
+	// Ensure that there's a helper tool connection in place.
+	self.workerConnection = nil;
+	[self connectToHelperTool];
+	
+	commandBlock(nil);
 }
 @end

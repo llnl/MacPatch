@@ -70,7 +70,6 @@
             }
         } else {
             keyChainFile = [aKeyChainFile copy];
-			[self createKeyChain:keyChainFile];
         }
     }
     return self;
@@ -101,7 +100,7 @@
     const char *pass = [[self clientInfo] UTF8String];
     SecKeychainOpen(path, &xKeychain);
     OSStatus unlockResult = SecKeychainUnlock(xKeychain, (UInt32) strlen(pass), pass, TRUE);
-	qlinfo(@"unlock: %@",[[self errorForOSStatus:unlockResult] localizedDescription]);
+	qldebug(@"unlockResult: %d",(int)unlockResult);
     return unlockResult;
 }
 
@@ -142,8 +141,7 @@
                                    (__bridge id)kSecAttrService:    aAccount,
                                    (__bridge id)kSecValueData:      passData,
                                    (__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
-                                   //(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
-								   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlways,
+								   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlwaysThisDeviceOnly,
                                    (__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
                                    (__bridge id)kSecAttrAccess:     (__bridge id)kAccess,
                                    };
@@ -161,36 +159,48 @@
 
 - (BOOL)savePassItemWithService:(MPPassItem *)aPasswordObj service:(NSString *)aService error:(NSError **)error
 {
-	if (![self keychainIsUnlocked]) {
-        if (![self unlockKeyChain:keyChainFile]) {
-            return NO;
-        }
-    }
-    
-    NSData *passData = [NSKeyedArchiver archivedDataWithRootObject:[aPasswordObj toDictionary]];
-    
-    // setup keychain storage properties
-    SecAccessRef kAccess = [self createAccessRefWithLabel:ACCESS_LABEL error:NULL];
-    NSDictionary *storageQuery = @{
-                                   (__bridge id)kSecAttrAccount:    aService,
-                                   (__bridge id)kSecAttrService:    aService,
-                                   (__bridge id)kSecValueData:      passData,
-                                   (__bridge id)kSecClass:          (__bridge id)kSecClassGenericPassword,
-                                   //(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleWhenUnlocked,
-								   (__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlways,
-                                   (__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
-                                   (__bridge id)kSecAttrAccess:     (__bridge id)kAccess,
-                                   };
-    
-    OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef)storageQuery, nil);
-    if(osStatus != noErr) {
-        if (error != NULL) {
-            *error = [self errorForOSStatus:osStatus];
-        }
-        return NO;
-    }
-    
-    return YES;
+	@try
+	{
+		if (![self keychainIsUnlocked]) {
+			if (![self unlockKeyChain:keyChainFile]) {
+				qlerror(@"Keychain is locked, error trying to unlock it.");
+				return NO;
+			}
+		}
+		
+		NSData *passData = [NSKeyedArchiver archivedDataWithRootObject:[aPasswordObj toDictionary]];
+		
+		// setup keychain storage properties
+		NSError *err = nil;
+		SecAccessRef kAccess = [self createAccessRefWithLabel:ACCESS_LABEL error:&err];
+		if (err) {
+			qlerror(@"%@",err.localizedDescription);
+			return false;
+		}
+		
+		NSDictionary *storageQuery = @{
+			(__bridge id)kSecClass: (__bridge id)kSecClassGenericPassword,
+			(__bridge id)kSecAttrService:    aService,
+			(__bridge id)kSecAttrAccount:    aService,
+			(__bridge id)kSecValueData:      passData,
+			(__bridge id)kSecUseKeychain:    (__bridge id)xKeychain,
+			(__bridge id)kSecAttrAccessible: (__bridge id)kSecAttrAccessibleAlwaysThisDeviceOnly,
+			(__bridge id)kSecAttrAccess:     (__bridge id)kAccess
+		};
+		
+		OSStatus osStatus = SecItemAdd((__bridge CFDictionaryRef)storageQuery, NULL);
+		if(osStatus != noErr) {
+			if (error != NULL) {
+				*error = [self errorForOSStatus:osStatus];
+			}
+			return NO;
+		}
+		
+		return YES;
+	} @catch (NSException *exception) {
+		qlerror(@"%@",exception);
+		return NO;
+	}
 }
 
 - (MPKeyItem *)retrieveKeyItemForService:(ServiceType)aService error:(NSError **)error
@@ -441,9 +451,9 @@
     OSStatus result;
     SecTrustedApplicationRef me;
     SecTrustedApplicationRef MPAgent = NULL;
-    SecTrustedApplicationRef MPWorker = NULL;
+    //SecTrustedApplicationRef MPWorker = NULL;
     SecTrustedApplicationRef MacPatchApp1 = NULL;
-	SecTrustedApplicationRef MacPatchApp2 = NULL;
+	//SecTrustedApplicationRef MacPatchApp2 = NULL;
     SecTrustedApplicationRef MPClientStatus = NULL;
     SecTrustedApplicationRef MPLoginAgent = NULL;
     SecTrustedApplicationRef MPUpdateAgent = NULL;
@@ -451,9 +461,9 @@
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
 	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
+    //result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
 	result = SecTrustedApplicationCreateFromPath("/Applications/MacPatch.app", &MacPatchApp1);
-	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MacPatch.app", &MacPatchApp2);
+	//result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MacPatch.app", &MacPatchApp2);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
     result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
@@ -461,9 +471,9 @@
     
     NSArray *trustedApplications = @[(__bridge_transfer id)me,
 									 (__bridge_transfer id)MPAgent,
-									 (__bridge_transfer id)MPWorker,
+									 //(__bridge_transfer id)MPWorker,
 									 (__bridge_transfer id)MacPatchApp1,
-									 (__bridge_transfer id)MacPatchApp2,
+									 //(__bridge_transfer id)MacPatchApp2,
 									 (__bridge_transfer id)MPClientStatus,
 									 (__bridge_transfer id)MPLoginAgent,
 									 (__bridge_transfer id)MPUpdateAgent,

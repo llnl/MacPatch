@@ -660,7 +660,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.3.4.4;
+				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -679,7 +679,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4.4;
+				MARKETING_VERSION = 3.5.0.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -704,7 +704,7 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.3.4.4;
+				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -723,7 +723,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4.4;
+				MARKETING_VERSION = 3.5.0.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

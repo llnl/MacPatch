@@ -21,7 +21,10 @@
 
 @implementation MPauthrestartVC
 
-- (void)viewDidLoad {
+@synthesize useRecoveryKeyCheckBox;
+
+- (void)viewDidLoad
+{
     [super viewDidLoad];
     // Do view setup here.
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -42,8 +45,11 @@
 	
 	// Check is user account is valid
 	BOOL isValidUser = NO;
-	isValidUser =  [self validFileVaultUser:self.userName.stringValue];
+	__block BOOL useKey = NO;
 	
+	isValidUser =  [self validFileVaultUser:self.userName.stringValue];
+	useKey = (int)[useRecoveryKeyCheckBox state] == 1 ? YES : NO;
+	qlinfo(@"useRecoveryKeyCheckBox: %@",useKey ? @"YES" : @"NO");
 	// Check if account is in FV user array.
 	if (!isValidUser) {
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -53,46 +59,56 @@
 		return;
 	}
 	
-	if (![self validUserPassword]) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.errImage.hidden = NO;
-			self.errMsg.stringValue = @"Error, password does not match system.";
-		});
-		return;
+	if (!useKey) { // If using a recovery key, ignore ... for now ;)
+		if (![self validUserPassword]) {
+			dispatch_async(dispatch_get_main_queue(), ^{
+				self.errImage.hidden = NO;
+				self.errMsg.stringValue = @"Error, password does not match system.";
+			});
+			return;
+		}
 	}
 	
-	NSError *err = nil;
-	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-	[kc createKeyChain:MP_AUTHSTATUS_KEYCHAIN];
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	
-	MPPassItem *pi = [MPPassItem new];
-	[pi setUserName:self.userName.stringValue];
-	[pi setUserPass:self.userPass.stringValue];
+	[self connectAndExecuteCommandBlock:^(NSError * connectError)
+	{
+		if (connectError != nil)
+		{
+			qlerror(@"connectError: %@",connectError.localizedDescription);
+			dispatch_semaphore_signal(sem);
+		}
+		else
+		{
+			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				dispatch_async(dispatch_get_main_queue(), ^{
+					self->_errImage.hidden = NO;
+					self->_errMsg.stringValue = [NSString stringWithFormat:@"Error Saving Credentials. %@",proxyError.localizedDescription];
+				});
+				dispatch_semaphore_signal(sem);
+				
+			}] setAuthrestartDataForUser:self.userName.stringValue userPass:self.userPass.stringValue useRecoveryKey:useKey withReply:^(NSError *err, NSInteger result) {
+				if (err) {
+					qlerror(@"%@",err.localizedDescription);
+					dispatch_async(dispatch_get_main_queue(), ^{
+						self.errImage.hidden = NO;
+						self.errMsg.stringValue = @"Error Saving Credentials.";
+					});
+				} else {
+					if (result != 0) {
+						qlerror(@"Unable to set user and password for authrestart.");
+					}
+				}
+				dispatch_semaphore_signal(sem);
+			}];
+		}
+	}];
 	
-	[kc savePassItemWithService:pi service:@"mpauthrestart" error:&err];
-	if (err) {
-		qlerror(@"%@",err.localizedDescription);
-		dispatch_async(dispatch_get_main_queue(), ^{
-			self.errImage.hidden = NO;
-			self.errMsg.stringValue = @"Error Saving Credentials.";
-		});
-		return;
-	} else {
-		[self writeAuthStatusToPlist:self.userName.stringValue enabled:YES];
-	}
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"authStateNotify" object:nil userInfo:@{}];
 	[self.view.window close];
-}
-
-- (IBAction)showAuthrestart:(id)sender
-{
-	NSError *err = nil;
-	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-	MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
-	NSDictionary *d = [pi toDictionary];
-	NSLog(@"%@",d);
-	
 }
 
 - (IBAction)closeWindow:(id)sender
@@ -100,34 +116,36 @@
 	[self.view.window close];
 }
 
-- (void)writeAuthStatusToPlist:(NSString *)authUser enabled:(BOOL)aEnabled
-{
-	NSDictionary *authStatus = @{@"user":authUser,@"enabled":[NSNumber numberWithBool:aEnabled],@"outOfSync":[NSNumber numberWithBool:NO]};
-	[authStatus writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
-}
-
 - (BOOL)clearAuthStatus
 {
-	NSError *err = nil;
-	NSFileManager *fs = [NSFileManager defaultManager];
-	if ([fs fileExistsAtPath:MP_AUTHSTATUS_KEYCHAIN]) {
-		[fs removeItemAtPath:MP_AUTHSTATUS_KEYCHAIN error:&err];
-	}
-	if ([fs fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
-		NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
-		[d setObject:[NSNumber numberWithBool:NO] forKey:@"enabled"];
-		[d setObject:@"" forKey:@"user"];
-		[d setObject:[NSNumber numberWithBool:NO] forKey:@"outOfSync"];
-		[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
-	}
-	if (err) {
-		qlerror(@"Error clearing authrestart from keychain.");
-		qlerror(@"%@",err.localizedDescription);
-		return FALSE;
-	}
+	__block BOOL res = NO;
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+	
+	[self connectAndExecuteCommandBlock:^(NSError * connectError)
+	{
+		if (connectError != nil)
+		{
+			qlerror(@"connectError: %@",connectError.localizedDescription);
+		}
+		else
+		{
+			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+			}] clearAuthrestartData:^(NSError *err, BOOL result) {
+				if (err) {
+					qlerror(@"%@",err.localizedDescription);
+				} else {
+					res = result;
+				}
+				dispatch_semaphore_signal(sem);
+			}];
+		}
+	}];
+	
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:@"authStateNotify" object:nil userInfo:@{}];
-	return YES;
+	return res;
 }
 
 - (BOOL)validFileVaultUser:(NSString *)user

@@ -198,6 +198,7 @@
     [r setHeaderWithName:@"X-API-TS" value:ts];
     [r setHeaderWithName:@"X-API-Signature" value:sg];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
+	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
     
     
     __weak STHTTPRequest *wr = r;
@@ -253,6 +254,7 @@
     [r setHeaderWithName:@"content-type" value:@"application/json; charset=utf-8"];
     [r setHeaderWithName:@"Accept" value:@"application/json"];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
+	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
     
     NSError *jerror = nil;
     // Convert body to JSON Data
@@ -330,6 +332,7 @@
     r.timeoutSeconds = 20;
     r.allowSelfSignedCert = server.allowSelfSigned;
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
+	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
     
     __weak STHTTPRequest *wr = r;
     __block __typeof(self) weakSelf = self;
@@ -772,6 +775,7 @@
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"GET";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
+	[request setValue:settings.clientVer forHTTPHeaderField:@"X-Agent-VER"];
     
     NSString *sg;
     NSString *ts = [self generateTimeStampForSignature];
@@ -848,6 +852,7 @@
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
+	[request setValue:settings.clientVer forHTTPHeaderField:@"X-Agent-VER"];
     
     // Generate Signture
     NSString *sg;

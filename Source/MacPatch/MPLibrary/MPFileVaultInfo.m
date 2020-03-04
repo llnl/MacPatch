@@ -195,4 +195,10 @@
     }
 }
 
+- (BOOL)checkIfRecoveryKeyIsValid:(NSString *)rKey
+{
+	BOOL result = NO;
+	
+	return result;
+}
 @end
