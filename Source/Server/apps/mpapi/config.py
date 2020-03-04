@@ -44,6 +44,8 @@ class BaseConfig:
 	REQUIRE_SIGNATURES      		= False
 	ALLOW_MIXED_SIGNATURES  		= True
 	POST_CHECKIN_TO_SYSLOG  		= False
+	REDIRECT_TO_NEW_API				= True
+	MIN_AGENT_VER					= '0'
 
 	# Content
 	CONTENT_DIR             		= '/opt/MacPatch/Content'

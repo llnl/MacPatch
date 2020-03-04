@@ -53,6 +53,7 @@ class BaseConfig:
 
 	SCHEDULER_API_ENABLED 		= True
 	ALLOW_CONTENT_DOWNLOAD 		= False
+	REDIRECT_TO_NEW_API 		= True
 
 	# AWS
 	USE_AWS_S3					= False

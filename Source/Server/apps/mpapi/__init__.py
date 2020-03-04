@@ -2,10 +2,11 @@ import os
 import logging, logging.handlers
 import json
 import subprocess
-from flask import Flask
+from flask import Flask, request, abort
 from mpapi.config import DevelopmentConfig, ProductionConfig
 from mpapi.extensions import db, migrate, cache
 from datetime import datetime, date
+from distutils.version import LooseVersion
 
 if os.getenv("MPAPI_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
@@ -82,6 +83,18 @@ def create_app(config_object=DefaultConfig):
 	register_extensions(app)
 	register_blueprints(app)
 	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+
+	@app.before_request
+	def only_supported_agents():
+		req = request.environ
+		_req_agent = req['HTTP_X_AGENT_ID']
+		_req_agent_ver = req['HTTP_X_AGENT_VER']
+
+		# Agent Ver is Less than Min Agent Ver
+		if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
+			abort(409)
+			#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
+
 	return app
 
 def read_siteconfig_server_data(app):

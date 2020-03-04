@@ -42,6 +42,7 @@ class MPResource(flask_restful.Resource):
 		self.req_akey       = self.reqKeyValue(req, 'HTTP_X_API_KEY')
 		self.req_ts         = self.reqKeyValue(req, 'HTTP_X_API_TS')
 		self.req_agent      = self.reqKeyValue(req, 'HTTP_X_AGENT_ID')
+		self.req_agent_ver  = self.reqKeyValue(req, 'HTTP_X_AGENT_VER')
 		self.req_uri        = self.reqKeyValue(req, 'PATH_INFO')
 
 	def reqKeyValue(self, req, key):
