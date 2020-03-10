@@ -259,6 +259,8 @@
 
 - (BOOL)installAppleSoftwareUpdate:(NSString *)approvedUpdate
 {
+	static BOOL called = NO; // If failed run, allow to try again
+	
 	[self postStringToDelegate:@"Install %@",approvedUpdate];
 	[self setPatchMustShutdown:NO];
 	BOOL result = FALSE;
@@ -275,13 +277,27 @@
 		qlerror(@"Error installing %@.",approvedUpdate);
 		qlerror(@"%@.",taskErr.localizedDescription);
 	} else {
+		// Scan for the word error ...
+		if ([taskStr containsString:@"error" ignoringCase:YES]) {
+			qlerror(@"Softwareupdate task completed with an error. Update did not get installed.");
+			qlerror(@"Softwareupdate output: %@",taskStr);
+			if (called == NO)
+			{
+				called = YES;
+				qlinfo(@"There was an error installing the update, will try one more time.");
+				[self installAppleSoftwareUpdate:[approvedUpdate copy]];
+			} else {
+				called = NO;
+			}
+			return FALSE;
+		}
+		
 		qltrace(@"%@",taskStr);
-		result = TRUE;
 		if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
 		{
 			[self setPatchMustShutdown:YES];
 		}
-		
+		result = TRUE;
 	}
 
 	return result;
