@@ -291,17 +291,19 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	if (!authData) return; // Authdata is empty, no need to run the script
 	
 	NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
-	"/usr/bin/fdesetup authrestart -delayminutes -0 -verbose -inputplist <<EOF"
-	"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+	"/usr/bin/fdesetup authrestart -delayminutes -1 -verbose -inputplist <<EOF \n"
+	"<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n"
 	"<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \n"
 	"<plist version=\"1.0\"> \n"
 	"<dict> \n"
 	"	<key>Username</key> \n"
 	"	<string>%@</string> \n"
 	"	<key>Password</key> \n"
-	"	<string>\"%@\"</string> \n"
+	"	<string>%@</string> \n"
 	"</dict></plist>\n"
 	"EOF",authData[@"userName"],authData[@"userPass"]];
+	
+	[script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
 	
 	MPScript *mps = [MPScript new];
 	BOOL res = [mps runScript:script];
@@ -455,7 +457,7 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
 - (void)connectToHelperTool
 // Ensures that we're connected to our helper tool.
 {
-	assert([NSThread isMainThread]);
+	//assert([NSThread isMainThread]);
 	if (self.workerConnection == nil) {
 		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
 		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
@@ -488,7 +490,7 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
 // Connects to the helper tool and then executes the supplied command block on the
 // main thread, passing it an error indicating if the connection was successful.
 {
-	assert([NSThread isMainThread]);
+	//assert([NSThread isMainThread]);
 	
 	// Ensure that there's a helper tool connection in place.
 	self.workerConnection = nil;
