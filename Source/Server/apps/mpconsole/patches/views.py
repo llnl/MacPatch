@@ -1467,8 +1467,8 @@ def json_serial(obj):
 	
 
 def escapeStringForACEEditor(data_string):
-	result = ""
-	result = data_string.replace('`','\`')
-	result = result.replace('${','\${')
-	result = result.replace('}','\}')
-	return result
+	#result = ""
+	#result = data_string.replace('`','\`')
+	#result = result.replace('${','\${')
+	#result = result.replace('}','\}')
+	return data_string
