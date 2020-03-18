@@ -739,4 +739,29 @@
 	return result;
 }
 
+/**
+ Post agent install
+ 
+ @param agentVer agent version installed
+ @param err Error object
+ @return BOOL
+ */
+- (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err
+{
+    BOOL result = NO;
+    NSError *error = nil;
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/agent/install/%@/%@",self.ccuid,agentVer];
+    qldebug(@"[postAgentInstall][urlPath] %@",urlPath);
+    
+    result = [self postDataToWS:urlPath data:nil error:&error];
+    if (error) {
+        *err = error;
+    }
+    if (result) {
+        qlinfo(@"Agent install data was posted to webservice.");
+    }
+    
+    return result;
+}
+
 @end

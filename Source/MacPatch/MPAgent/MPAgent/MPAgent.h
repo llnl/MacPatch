@@ -61,4 +61,6 @@
 - (NSDictionary *)getOSInfo;
 - (NSString *)clientKey;
 
+- (BOOL)postAgentHasBeenInstalled;
+
 @end

@@ -32,6 +32,7 @@
 #import "MPInv.h"
 #import "MPOSUpgrade.h"
 #import "AgentData.h"
+#import "MPAgent.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
@@ -142,6 +143,9 @@ int main (int argc, char * argv[])
 				{"OSLabel"          	,required_argument	,0, 'l'},
 				{"OSUpgradeID"      	,required_argument	,0, 'm'},
 				
+				// Agent Install
+				{"agentInstall"        	,no_argument		,0, 'K'},
+				
 				// Version Info
 				{"version"				,no_argument		,0, 'v'},
 				{"build"				,no_argument		,0, 'b'},
@@ -153,7 +157,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:vbh:", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:Kvbh:", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -290,7 +294,9 @@ int main (int argc, char * argv[])
                 case 'm':
                     osMigID = [NSString stringWithUTF8String:optarg];
                     break;
-				
+				case 'K':
+					a_Type = 19;
+					break;
 				case 'v':
 					printf("%s\n",[APPVERSION UTF8String]);
 					return 0;
@@ -364,6 +370,7 @@ int main (int argc, char * argv[])
 		NSError *err = nil;
 		MPAgentRegister *mpar;
 		AgentData *mpad;
+		MPAgent *mpAgent;
         
 		int result = 1;
 		switch (a_Type)
@@ -533,6 +540,12 @@ int main (int argc, char * argv[])
 				mpad = [[AgentData alloc] init];
 				[mpad setAgentDataKey:regKeyHash];
 				[mpad echoAgentData];
+				exit(0);
+				break;
+			case 19:
+				// Post Agent Install
+				mpAgent = [MPAgent new];
+				[mpAgent postAgentHasBeenInstalled];
 				exit(0);
 				break;
 			case 50:

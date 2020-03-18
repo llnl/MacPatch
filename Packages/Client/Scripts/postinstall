@@ -330,6 +330,10 @@ if [ -d "${SRC}/profiles" ]; then
 	done
 fi
 
+# Post that agent software has been installed...
+/Library/MacPatch/Client/MPAgent -K
+sleep 1
+
 touch /tmp/.mpagentinstalled
 
 # Kill the ClientStatus app, launchctl does not restart the app only the service

@@ -7,7 +7,7 @@ MacPatch v3.5.0.1
 - Add FileValut authrestart support the MacPatch.app. Can use Users account and password, or user account and recovery key.
 - Add collection of MDM enrollment
 - Add collection of DEP enrollment
-
+- Add tracking for when an agent is installed
 
 * Server
 - Cleaned up UI on privleges 

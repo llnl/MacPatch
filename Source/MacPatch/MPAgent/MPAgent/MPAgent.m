@@ -168,4 +168,11 @@ static MPAgent *_instance;
     return cKey;
 }
 
+- (BOOL)postAgentHasBeenInstalled
+{
+	MPClientInfo *ci = [MPClientInfo new];
+	NSDictionary *clientData = [ci agentData];
+	MPRESTfull *rest = [MPRESTfull new];
+}
+
 @end

@@ -135,6 +135,9 @@ def register_blueprints(app):
 	from .agent_2 import agent_2 as bp_agent_2
 	app.register_blueprint(bp_agent_2, url_prefix='/api/v2')
 
+	from .agent_3 import agent_3 as bp_agent_3
+	app.register_blueprint(bp_agent_3, url_prefix='/api/v3')
+
 	from .antivirus import antivirus as bp_antivirus
 	app.register_blueprint(bp_antivirus, url_prefix=app.config['URL_PREFIX'])
 

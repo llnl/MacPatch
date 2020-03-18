@@ -1,6 +1,6 @@
 from mpapi import db
 
-# Rev 13
+# Rev 14
 #
 
 from datetime import *
@@ -1085,6 +1085,15 @@ class AgentConfigData(CommonBase):
 	akey        = Column(String(255), nullable=False)
 	akeyValue   = Column(String(255), nullable=False)
 	enforced    = Column(INTEGER(1, unsigned=True), nullable=False, server_default='0')
+
+# mp_agent_installs
+class AgentInstall(CommonBase):
+	__tablename__ = 'mp_agent_installs'
+
+	rid 			= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 			= Column(String(50), nullable=False)
+	agent_ver 		= Column(String(255), nullable=False)
+	install_date 	= Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # ------------------------------------------
 ## Inventory

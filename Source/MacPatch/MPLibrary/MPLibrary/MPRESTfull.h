@@ -199,4 +199,13 @@
  @return Dictionary of the revision and rules
  */
 - (NSDictionary *)getSoftwareRestrictions:(NSError **)err;
+
+/**
+ Post agent install
+ 
+ @param agentVer agent version installed
+ @param err Error object
+ @return BOOL
+ */
+- (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err;
 @end
