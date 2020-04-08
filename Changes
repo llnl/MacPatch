@@ -8,6 +8,7 @@ MacPatch v3.5.0.1
 - Add collection of MDM enrollment
 - Add collection of DEP enrollment
 - Add tracking for when an agent is installed
+- Add Notifications will now open to the location of the task (e.g. Patches needed will open to updates and begin a scan)
 
 * Server
 - Cleaned up UI on privleges 

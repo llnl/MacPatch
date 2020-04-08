@@ -57,6 +57,11 @@
 											 selector:@selector(patchingStateChanged:)
 												 name:@"PatchingStateChangedNotification"
 											   object:nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(scanForPatches:)
+												 name:@"PatchScanNotification"
+											   object:nil];
 }
 
 - (void)viewDidAppear
@@ -315,26 +320,38 @@
 		}
 		
 		MPFileCheck *fu = [MPFileCheck new];
-		if ([fu fExists:MP_AUTHSTATUS_FILE]) {
+		if ([fu fExists:MP_AUTHSTATUS_FILE])
+		{
 			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
-			if ([d[@"enabled"] boolValue]) {
-				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
-				
-				NSError *err = nil;
-				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
-				if (!err) {
-					BOOL isValid = NO;
-					isValid = [dh checkPassword:pi.userName forUserWithName:pi.userPass];
-					if (!isValid) {
-						[d setObject:[NSNumber numberWithBool:YES] forKey:@"outOfSync"];
-						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
-						[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kFileVaultUserOutOfSync" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
-						
+			if ([d[@"enabled"] boolValue])
+			{
+				dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+				[self connectAndExecuteCommandBlock:^(NSError * connectError)
+				{
+					if (connectError != nil)
+					{
+						qlerror(@"connectError: %@",connectError.localizedDescription);
 					}
-				} else {
-					qlerror(@"%@",err.localizedDescription);
-				}
+					else
+					{
+						[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+							qlerror(@"proxyError: %@",proxyError.localizedDescription);
+						}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
+							if (err) {
+								qlerror(@"%@",err.localizedDescription);
+							}
+							// User account is out of sync, post notification.
+							if (!result) {
+								[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kFileVaultUserOutOfSync"
+																							   object:nil
+																							 userInfo:nil
+																							  options:NSNotificationPostToAllSessions];
+							}
+							dispatch_semaphore_signal(sem);
+						}];
+					}
+				}];
+				dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 			}
 		}
 

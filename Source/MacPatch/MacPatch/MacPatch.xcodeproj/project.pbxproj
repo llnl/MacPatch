@@ -472,6 +472,7 @@
 				8FB201ED1A3F90C60013C622 /* Sources */,
 				8FB201EE1A3F90C60013C622 /* Frameworks */,
 				8FB201EF1A3F90C60013C622 /* Resources */,
+				8F53F6CB243D312B001B2D30 /* ShellScript */,
 			);
 			buildRules = (
 			);
@@ -554,6 +555,26 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		8F53F6CB243D312B001B2D30 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\nrm -rf \"/private/tmp/MacPatch.app\"\ncp -r \"${TARGET_BUILD_DIR}/MacPatch.app\" \"/private/tmp/MacPatch.app\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		8F0D48A0220B847D00500A78 /* Sources */ = {

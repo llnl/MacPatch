@@ -731,10 +731,28 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 #pragma mark Open MacPatch
 - (IBAction)openMacPatchApplication:(id)sender
 {
+//	[[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"gov.llnl.mp.MacPatch"
+//														 options:NSWorkspaceLaunchDefault
+//								  additionalEventParamDescriptor:nil
+//												launchIdentifier:NULL];
+	[self openMacPatchAppWithAction:@""];
+}
+
+- (void)openMacPatchAppWithAction:(NSString *)action
+{
+	NSString *cURL = @"macpatch://";
+	if ([action isEqualToString:@"PatchScan"]) {
+		cURL = @"macpatch://?openAndScan";
+	} else if ([action isEqualToString:@"PatchPrefs"]) {
+		cURL = @"macpatch://?openAndPatchPrefs";
+	}
+	
 	[[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"gov.llnl.mp.MacPatch"
-														 options:NSWorkspaceLaunchDefault
-								  additionalEventParamDescriptor:nil
-												launchIdentifier:NULL];
+															 options:NSWorkspaceLaunchDefault
+									  additionalEventParamDescriptor:nil
+													launchIdentifier:NULL];
+	[NSThread sleepForTimeInterval:1.0];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:cURL]];
 }
 
 #pragma mark -
@@ -1089,10 +1107,13 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
 	{
+		qlinfo(@"deliveredNote: %@",deliveredNote.title);
 		if ([deliveredNote.title isEqualToString:@"Credentials Need Updating"]) {
+			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
 			return;
 		}
 		if ([deliveredNote.title isEqualToString:@"Recovery Key Need Updating"]) {
+			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
 			return;
 		}
 	}
@@ -1107,7 +1128,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	NSUserNotification *userNote = [[NSUserNotification alloc] init];
 	if (prefs[@"outOfSync"]) {
-		userNote.title = @"Credentials  Need Updating";
+		userNote.title = @"Credentials Need Updating";
 		userNote.informativeText = @"The FileVault authrestart credentials are out of sync.";
 	}
 	if (prefs[@"keyOutOfSync"]) {
@@ -1161,24 +1182,38 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)notification
 {
+	qlinfo(@"didActivateNotification");
     if (notification.activationType == NSUserNotificationActivationTypeActionButtonClicked)
     {
         if ([notification.actionButtonTitle isEqualToString:@"Patch"])
 		{
+			qlinfo(@"didActivateNotification openMacPatchApplication:nil");
+			
 			NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 			[ud setBool:NO forKey:@"patch"];
 			ud = nil;
-			[self openMacPatchApplication:nil];
+			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchScan");
+			[self openMacPatchAppWithAction:@"PatchScan"];
         }
 		
-        if ([notification.actionButtonTitle isEqualToString:@"Reboot"]) [self logoutNow];
+		if ([notification.actionButtonTitle isEqualToString:@"Reboot"])
+		{
+			[self logoutNow];
+		}
+		
+		if ([notification.actionButtonTitle isEqualToString:@"Update"])
+		{
+			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchPrefs");
+			[self openMacPatchAppWithAction:@"PatchPrefs"];
+        }
     }
 }
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)notification
 {
-    if ([notification.actionButtonTitle isEqualToString:@"Patch"])
-	{
+	//qlinfo(@"didDeliverNotification");
+    //if ([notification.actionButtonTitle isEqualToString:@"Patch"])
+	//{
         // Dont show patch info if reboot is required.
 		/*
         if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
@@ -1186,7 +1221,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notification];
         }
 		 */
-    }
+    //}
 }
 
 - (IBAction)loadWhatsNewWebView:(id)sender

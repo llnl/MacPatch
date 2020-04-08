@@ -32,6 +32,8 @@
 @property (weak) IBOutlet NSButton *HistoryToolbarButton;
 @property (weak) IBOutlet NSButton *AgentToolbarButton;
 
+@property (weak) NSString *eventAction;
+
 
 // Helper Setup
 @property (atomic, strong, readwrite) NSXPCConnection *worker;
@@ -111,6 +113,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+	[[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
+													   andSelector:@selector(handleURLEvent:withReplyEvent:)
+													 forEventClass:kInternetEventClass
+														andEventID:kAEGetURL];
+	
     // Insert code here to initialize your application
     self.toolBar.delegate = self;
     
@@ -219,6 +226,12 @@
     
     [view setNextResponder:controller];
     [controller setNextResponder:viewHolder];
+	if (_eventAction) {
+		if ([_eventAction isEqualToString:@"PatchScan"]) {
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"PatchScanNotification" object:nil userInfo:@{}];
+			_eventAction = nil;
+		}
+	}
 }
 
 -(IBAction)showPreferences:(id)sender
@@ -235,9 +248,12 @@
         _preferencesWindowController = [[RHPreferencesWindowController alloc] initWithViewControllers:controllers];
     }
     
+    
+	if ([_eventAction isEqualToString:@"PatchPrefs"]) {
+		[_preferencesWindowController setSelectedIndex:2];
+	}
     [_preferencesWindowController showWindow:self];
 	[_preferencesWindowController setWindowTitle:@"Preferences"];
-    
 }
 
 - (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
@@ -329,6 +345,39 @@
 		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 	}
 	
+}
+
+#pragma mark - URL Scheme
+
+- (void)handleURLEvent:(NSAppleEventDescriptor*)event withReplyEvent:(NSAppleEventDescriptor*)replyEvent
+{
+	qlinfo(@"handleURLEvent");
+	id urlDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
+    NSString *urlStr = [urlDescriptor stringValue];
+	NSURL *url = [NSURL URLWithString:urlStr];
+	qlinfo(@"url: %@",url);
+	NSString *query = url.query;
+	if ([query isEqualToString:@"openAndScan"])
+	{
+		qlinfo(@"openAndScan");
+		_eventAction = @"PatchScan";
+		[self changeView:self->_UpdatesToolbarButton];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			//[NSThread sleepForTimeInterval:0.5];
+			
+		});
+	}
+	else if ([query isEqualToString:@"openAndPatchPrefs"])
+	{
+		qlinfo(@"openAndPatchPrefs");
+		_eventAction = @"PatchPrefs";
+		[self showPreferences:nil];
+		//dispatch_async(dispatch_get_main_queue(), ^{
+		//	[NSThread performSelectorOnMainThread:@selector(showPreferences:) withObject:nil waitUntilDone:NO];
+			//[NSThread sleepForTimeInterval:0.5];
+			//[self showPreferences:nil];
+		//});
+	}
 }
 
 
