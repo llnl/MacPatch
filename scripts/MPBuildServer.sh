@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.2.0
+# Version: 3.4.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -36,7 +36,7 @@
 # 3.1.1     All of MP now uses a virtualenv
 # 3.2.0     Replaced bower with yarn for javascript package management
 # 3.3.0     Add python 3 support
-#
+# 3.4.0     Added a node version check for yarn packages
 #
 # ----------------------------------------------------------------------------
 
@@ -307,6 +307,10 @@ function ver {
 	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
+function version { 
+    echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
+}
+
 # ------------------
 # Create Skeleton Dir Structure
 # ------------------
@@ -431,6 +435,17 @@ if $USELINUX; then
 			fi
 		done
 	fi
+
+    minNodeVer="8.0.0"
+    nodeVer=`node -v | sed s/v//g`
+    if [ $(version $nodeVer) -le $(version $minNodeVer) ]; then
+        clear
+        echo "***** ERROR *****"
+        echo "Node version failed. Expected version \">=8\". Got $nodeVer"
+        echo "Please install a newer version of node and re-run this script."
+        exit 1
+    fi
+
 fi
 
 # ------------------
