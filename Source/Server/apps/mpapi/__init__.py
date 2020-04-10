@@ -37,8 +37,9 @@ def create_app(config_object=DefaultConfig):
 	app.config['JSON_SORT_KEYS'] = False
 
 	# Configure SQLALCHEMY_DATABASE_URI for MySQL
-	_uri = "mysql+pymysql://%s:%s@%s:%s/%s" % (app.config['DB_USER'], app.config['DB_PASS'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
+	_uri = "%s://%s:%s@%s:%s/%s" % (app.config['DB_CONNECTOR'], app.config['DB_USER'], app.config['DB_PASS'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
+	app.config['DB_URI_STRING'] = "%s://%s@%s:%s/%s" % (app.config['DB_CONNECTOR'], app.config['DB_USER'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
 
 	# Configure logging location and log file name
 	log_file = app.config['LOGGING_LOCATION'] + "/mpwsapi.log"

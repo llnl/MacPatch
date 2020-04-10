@@ -1,10 +1,10 @@
 from mpconsole import db
 
-# Rev 14
+# Rev 15
 #
 
 from datetime import *
-from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey
+from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, TEXT, INTEGER
 
 from flask_login import UserMixin
@@ -1177,6 +1177,60 @@ class MPISPHardwareOverview(CommonBase):
 	mpa_l3_cache_per_processor = Column(String(255))
 	mpa_smc_version_processor_tray = Column(String(255))
 	mpa_illumination_version = Column(String(255))
+
+# ------------------------------------------
+## MDM
+
+class MDMIntuneDevices():
+	__tablename__ = 'mdm_intune_devices'
+
+	rid = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+	id = Column(String(255))
+	userId = Column(String(255))
+	deviceName = Column(String(255))
+	managedDeviceOwnerType = Column(String(255))
+	enrolledDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	lastSyncDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	operatingSystem = Column(String(255))
+	complianceState = Column(String(255))
+	jailBroken = Column(String(255))
+	managementAgent = Column(String(255))
+	osVersion = Column(String(255))
+	easActivated = Column(Boolean(), server_default='0')
+	easDeviceId = Column(String(255))
+	easActivationDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	azureADRegistered = Column(String(255))
+	deviceEnrollmentType = Column(String(255))
+	activationLockBypassCode = Column(String(255))
+	emailAddress = Column(String(255))
+	azureADDeviceId = Column(String(255))
+	deviceRegistrationState = Column(String(255))
+	deviceCategoryDisplayName = Column(String(255))
+	isSupervised = Column(Boolean(), server_default='0')
+	exchangeLastSuccessfulSyncDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	exchangeAccessState = Column(String(255))
+	exchangeAccessStateReason = Column(String(255))
+	remoteAssistanceSessionUrl = Column(String(255))
+	remoteAssistanceSessionErrorDetails = Column(String(255))
+	isEncrypted = Column(Boolean(), server_default='0')
+	userPrincipalName = Column(String(255))
+	model = Column(String(255))
+	manufacturer = Column(String(255))
+	imei = Column(String(255))
+	complianceGracePeriodExpirationDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	serialNumber = Column(String(255))
+	phoneNumber = Column(String(255))
+	androidSecurityPatchLevel = Column(String(255))
+	userDisplayName = Column(String(255))
+	configurationManagerClientEnabledFeatures = Column(String(255))
+	wiFiMacAddress = Column(String(255))
+	deviceHealthAttestationState = Column(String(255))
+	subscriberCarrier = Column(String(255))
+	meid = Column(String(255))
+	totalStorageSpaceInBytes = Column(BigInteger(), server_default='0')
+	freeStorageSpaceInBytes = Column(BigInteger(), server_default='0')
+	managedDeviceName = Column(String(255))
+	partnerReportedThreatState = Column(String(255))
 
 # ------------------------------------------
 ## Misc

@@ -73,9 +73,11 @@ def isValidSignature(Signature, ClientID, Data, TimeStamp):
 		log_Debug('[isValidSignature][Data]: (%s)' % (str(Data)))
 		log_Debug('[isValidSignature][Time]: (%s)' % (TimeStamp))
 
-		secret = bytes(cKey).encode('utf-8')
+		#secret = bytes(cKey).encode('utf-8')
+		secret = bytes(cKey,'utf-8')
 		message_str = '%s-%s' % (str(Data), TimeStamp)
-		message = bytes(message_str).encode('utf-8')
+		#message = bytes(message_str).encode('utf-8')
+		message = bytes(message_str, 'utf-8')
 
 		log_Debug('[isValidSignature][secret]: (%s)' % (secret[-4:]))
 		log_Debug('[isValidSignature][message_str]: (%s)' % (message_str))
