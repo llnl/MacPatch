@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.4.0
+# Version: 3.5.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -37,6 +37,8 @@
 # 3.2.0     Replaced bower with yarn for javascript package management
 # 3.3.0     Add python 3 support
 # 3.4.0     Added a node version check for yarn packages
+# 3.5.0		All python now ref as python3
+#			Changed Linux dist detection to /etc/os-release
 #
 # ----------------------------------------------------------------------------
 
@@ -99,34 +101,45 @@ buildVer="0"
 
 if [[ $platform == 'linux' ]]; then
 
-	pyv="$(python -V 2>&1)"
-	if [ $? != 0 ]; then
-		pyv="$(python3 -V 2>&1)"
-		if [ $? != 0 ]; then
-			echo " "
-			echo "Python was not detected on this system. Please install python then re-run this script."
-			echo " "
-			exit 1
-		else
-			# create symlink to python3 
-			pyPath=`which python3`
-			ln -s $pyPath /bin/pyhton
-		fi
+	distName = `cat /etc/os-release | grep "NAME=" | head -n1`
+	if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
+		USERHEL=true
+	elif [[ $LNXDIST == "Ubuntu" ]]; then
+		USEUBUNTU=true
+	else
+		echo "Not running a supported version of Linux."
+		exit 1
 	fi
+
+	#pyv="$(python -V 2>&1)"
+	#if [ $? != 0 ]; then
+	#	pyv="$(python3 -V 2>&1)"
+	#	if [ $? != 0 ]; then
+	#		echo " "
+	#		echo "Python was not detected on this system. Please install python then re-run this script."
+	#		echo " "
+	#		exit 1
+	#	else
+	#		# create symlink to python3 
+	#		pyPath=`which python3`
+	#		ln -s $pyPath /bin/pyhton
+	#	fi
+	#else 
+	#fi
 
 	USELINUX=true
 	OWNERGRP="www-data:www-data"
-	LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`
-	if [[ $LNXDIST == *"Red"*  || $LNXDIST == *"Cent"* ]]; then
-		USERHEL=true
-	else
-		USEUBUNTU=true
-	fi
+	#LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`
+	#if [[ $LNXDIST == *"Red"*  || $LNXDIST == *"Cent"* ]]; then
+	#	USERHEL=true
+	#else
+	#	USEUBUNTU=true
+	#fi
 
-	if ( ! $USERHEL && ! $USEUBUNTU ); then
-		echo "Not running a supported version of Linux."
-		exit 1;
-	fi
+	#if ( ! $USERHEL && ! $USEUBUNTU ); then
+	#	echo "Not running a supported version of Linux."
+	#	exit 1;
+	#fi
 
 elif [[ "$unamestr" == 'Darwin' ]]; then
 	USEMACOS=true
