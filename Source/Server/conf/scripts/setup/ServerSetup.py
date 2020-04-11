@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,9 +25,9 @@
 
 '''
   MacPatch Patch Loader Setup Script
-  MacPatch Version 3.3.x
+  MacPatch Version 3.5.x
 
-  Script Version 2.4.0
+  Script Version 2.4.1
 '''
 
 import os

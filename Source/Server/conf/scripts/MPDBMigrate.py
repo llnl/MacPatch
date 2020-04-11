@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPDBMigrate.py
-	Version: 1.1.0
+	Version: 1.1.1
 
 	Description: This Script is used to migrate tables and data from
 	and older version of MacPatch (< 3.0.0) to the new MacPatch 3.0

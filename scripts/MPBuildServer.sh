@@ -101,7 +101,7 @@ buildVer="0"
 
 if [[ $platform == 'linux' ]]; then
 
-	distName = `cat /etc/os-release | grep "NAME=" | head -n1`
+	distName=`cat /etc/os-release | grep "NAME=" | head -n1`
 	if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
 		USERHEL=true
 	elif [[ $LNXDIST == "Ubuntu" ]]; then
@@ -111,35 +111,8 @@ if [[ $platform == 'linux' ]]; then
 		exit 1
 	fi
 
-	#pyv="$(python -V 2>&1)"
-	#if [ $? != 0 ]; then
-	#	pyv="$(python3 -V 2>&1)"
-	#	if [ $? != 0 ]; then
-	#		echo " "
-	#		echo "Python was not detected on this system. Please install python then re-run this script."
-	#		echo " "
-	#		exit 1
-	#	else
-	#		# create symlink to python3 
-	#		pyPath=`which python3`
-	#		ln -s $pyPath /bin/pyhton
-	#	fi
-	#else 
-	#fi
-
 	USELINUX=true
 	OWNERGRP="www-data:www-data"
-	#LNXDIST=`python -c "import platform;print(platform.linux_distribution()[0])"`
-	#if [[ $LNXDIST == *"Red"*  || $LNXDIST == *"Cent"* ]]; then
-	#	USERHEL=true
-	#else
-	#	USEUBUNTU=true
-	#fi
-
-	#if ( ! $USERHEL && ! $USEUBUNTU ); then
-	#	echo "Not running a supported version of Linux."
-	#	exit 1;
-	#fi
 
 elif [[ "$unamestr" == 'Darwin' ]]; then
 	USEMACOS=true
@@ -149,10 +122,6 @@ elif [[ "$unamestr" == 'Darwin' ]]; then
 	minorVer=`echo $systemVersion | cut -d . -f 2`
 	buildVer=`echo $systemVersion | cut -d . -f 3`
 
-	# Test for Brew
-	# if type brew 2>/dev/null; then
-	#	MACPROMPTFORBREW=false
-	#fi
 fi
 
 # Script Input Args ----------------------------------------------------------
@@ -316,12 +285,8 @@ function command_exists () {
 	type "$1" &> /dev/null ;
 }
 
-function ver {
+function version {
 	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
-}
-
-function version { 
-    echo "$@" | awk -F. '{ printf("%d%03d%03d%03d\n", $1,$2,$3,$4); }'; 
 }
 
 # ------------------
@@ -430,7 +395,7 @@ if $USELINUX; then
 		for i in "${pkgs[@]}"
 		do
             if [ $i == "yarn" ]; then 
-                if [ $(ver $ubuntuVer) -lt $(ver 16.05) ]; then  
+                if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then  
                     curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
                     echo
                     echo "Install nodejs 10.x"
@@ -608,9 +573,9 @@ chown $OWNERGRP "${MPSERVERBASE}/apps/log"
 chmod 2777 "${MPSERVERBASE}/apps/log"
 
 cd "${MPSERVERBASE}"
-python3 -m venv env/server
-python3 -m venv env/api
-python3 -m venv env/console
+python3 -m venv env/server --copies --clear
+python3 -m venv env/api --copies --clear
+python3 -m venv env/console --copies --clear
 
 CA_STR=""
 if [ "$CA_CERT" != "NA" ]; then
