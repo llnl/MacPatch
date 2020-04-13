@@ -594,7 +594,8 @@ if $USEMACOS; then
     ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-	
+	${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+
 	env LDFLAGS="-L${OPENSSLPWD}/lib" \
 	CFLAGS="-I${OPENSSLPWD}/include" \
 	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
@@ -637,13 +638,14 @@ if $USEMACOS; then
 else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
 	${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
 	${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+	${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
 	${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
