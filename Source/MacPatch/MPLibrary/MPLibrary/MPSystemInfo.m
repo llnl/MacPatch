@@ -311,11 +311,15 @@ done:
 	SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, (CFStringRef)@"LocalUserLoggedIn", NULL, NULL);
 	CFStringRef consoleUserName;
 	consoleUserName = SCDynamicStoreCopyConsoleUser(store, NULL, NULL);
-	
+	NSString *_consoleUserName = (__bridge NSString *)consoleUserName;
 	if (consoleUserName != NULL)
 	{
-		qlinfo(@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
-		CFRelease(consoleUserName);
+		if ([_consoleUserName.lowercaseString isEqualToString:@"loginwindow"]) {
+			result = NO;
+		} else {
+			qlinfo(@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
+			CFRelease(consoleUserName);
+		}
 	} else {
 		result = NO;
 	}
