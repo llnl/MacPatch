@@ -1,5 +1,5 @@
 from flask import render_template, request, session, redirect, url_for
-from werkzeug import secure_filename
+from werkzeug.utils import secure_filename
 from flask_security import login_required
 from sqlalchemy import text, or_
 from sqlalchemy.orm.session import make_transient

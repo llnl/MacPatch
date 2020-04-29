@@ -27,7 +27,7 @@
   MacPatch Patch Loader Setup Script
   MacPatch Version 3.3.x
 
-  Script Version 2.4.0
+  Script Version 2.4.1
 '''
 
 import os
@@ -557,10 +557,10 @@ def setupServices():
 		if os_type == 'Darwin':
 			srvsList.append('gov.llnl.mp.rsync.plist')
 		else:
-			linkStartupScripts('MPRsyncServer3')
-			linkStartupScripts('MPRsyncServer3@','copy')
-			linkStartupScripts('MPRsyncServer3','copy','socket')
-			srvsList.append('MPRsyncServer3')
+			linkStartupScripts('MPRsyncServer')
+			linkStartupScripts('MPRsyncServer@','copy')
+			linkStartupScripts('MPRsyncServer','copy','socket')
+			srvsList.append('MPRsyncServer')
 
 	# Patch Loader
 	_PATCHLOAD = 'Y' if masterType else 'N'

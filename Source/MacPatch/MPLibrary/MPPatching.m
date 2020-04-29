@@ -1048,6 +1048,8 @@ typedef enum {
 	if (error) {
 		if (err != NULL) {
 			*err = error;
+		} else {
+			qlerror(@"%@",error.localizedDescription);
 		}
 	}
 	
