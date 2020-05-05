@@ -280,6 +280,8 @@
 		if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
 		{
 			[self setPatchMustShutdown:YES];
+		} else if ([taskStr containsString:@"Error installing updates." ignoringCase:YES]) {
+			result = FALSE;
 		}
 		
 	}

@@ -362,7 +362,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
 	
 	if (patchResult[@"patchInstallErrors"]) {
-		qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 		{
 			qlerror(@"Error installing %@",patch[@"patch"]);
@@ -372,7 +371,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -389,19 +388,26 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[patching setInstallRebootPatchesWhileLoggedIn:YES];
 	}
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
-	
+	qltrace(@"patchResult: %@",patchResult);
 	if (patchResult[@"patchInstallErrors"]) {
-		qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 		{
 			qlerror(@"Error installing %@",patch[@"patch"]);
 			result = 1;
+		} else {
+			// No Errors detected
+			if (patchResult[@"patchesRequireHalt"]) {
+				// Patch Requires a halt/shutdown ... this is for Apple Patches with firmware
+				if ([patchResult[@"patchInstallErrors"] intValue] >= 1) {
+					result = 1000;
+				}
+			}
 		}
 	} else {
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -424,7 +430,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		
 		if (patchResult[@"patchInstallErrors"])
 		{
-			qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 			if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 			{
 				qlerror(@"Error installing %@",patch[@"patch"]);
@@ -441,7 +446,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[self postPatchAllProgress:patchCount];
 	}
 
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%d install(s) completed.", patchCount];
 	reply(nil,result);
 }

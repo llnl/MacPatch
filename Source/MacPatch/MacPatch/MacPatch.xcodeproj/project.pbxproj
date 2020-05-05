@@ -800,6 +800,7 @@
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 1.2.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -831,6 +832,7 @@
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MARKETING_VERSION = 1.2.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
