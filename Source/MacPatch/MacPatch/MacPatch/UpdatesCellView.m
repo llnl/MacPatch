@@ -210,7 +210,7 @@
 	 {
 		 qlinfo(@"%@ was called.",weakSelf.cellStopNote);
 		 NSDictionary *userInfo = note.userInfo;
-		 qlinfo(@"userInfo: %@",userInfo);
+		 qldebug(@"userInfo: %@",userInfo);
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 if (userInfo[@"error"]) {
 				 weakSelf.patchStatus.stringValue = userInfo[@"status"];
@@ -253,7 +253,9 @@
 }
 
 - (void)stopCellInstallWithError:(BOOL)hadError errorString:(NSString *)errStr
-{	
+{
+	qlinfo(@"stopCellInstallWithError");
+	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
 		self->_patchStatus.stringValue = @" ";
@@ -263,7 +265,6 @@
 		
 		if (hadError)
 		{
-			qlinfo(@"HadErr");
 			//[self.errorImage setHidden:NO];
 			[self.updateButton setTitle:@"Install"];
 			self->_patchCompletionIcon.hidden = NO;
@@ -319,6 +320,7 @@
 
 - (void)stopCellInstallIsRebootPatch
 {
+	qlinfo(@"stopCellInstallIsRebootPatch");
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
 		self->_patchStatus.stringValue = @" ";

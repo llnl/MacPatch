@@ -20,5 +20,6 @@
 @property (nonatomic, strong, readonly) 		NSDictionary *userInfo;
 @property (nonatomic, strong, setter=setPatch:)	NSDictionary *patch;
 @property (atomic, strong, readwrite) 			NSXPCConnection *workerConnection;
+//@property (nonatomic, assign, readonly) int showRebootWindow;
 
 @end
