@@ -42,6 +42,7 @@ class MPResource(flask_restful.Resource):
 		self.req_akey       = self.reqKeyValue(req, 'HTTP_X_API_KEY')
 		self.req_ts         = self.reqKeyValue(req, 'HTTP_X_API_TS')
 		self.req_agent      = self.reqKeyValue(req, 'HTTP_X_AGENT_ID')
+		self.req_agent_ver  = self.reqKeyValue(req, 'HTTP_X_AGENT_VER')
 		self.req_uri        = self.reqKeyValue(req, 'PATH_INFO')
 
 	def reqKeyValue(self, req, key):
@@ -72,9 +73,9 @@ def isValidSignature(Signature, ClientID, Data, TimeStamp):
 		log_Debug('[isValidSignature][Data]: (%s)' % (str(Data)))
 		log_Debug('[isValidSignature][Time]: (%s)' % (TimeStamp))
 
-		secret = bytes(cKey).encode('utf-8')
+		secret = bytes(cKey,'utf-8')
 		message_str = '%s-%s' % (str(Data), TimeStamp)
-		message = bytes(message_str).encode('utf-8')
+		message = bytes(message_str, 'utf-8')
 
 		log_Debug('[isValidSignature][secret]: (%s)' % (secret[-4:]))
 		log_Debug('[isValidSignature][message_str]: (%s)' % (message_str))
@@ -101,23 +102,11 @@ def isValidClientID(ClientID):
 		if not current_app.config['VERIFY_CLIENTID']:
 			return True
 
-	# Old Way, now check if client is registered
-	# client_obj = MpClient.query.filter_by(cuuid=ClientID).first()
+	if 'CLIENTID_ZERO' in current_app.config:
+		if current_app.config['CLIENTID_ZERO']:
+			return True
+
 	client_obj = MPAgentRegistration.query.filter_by(cuuid=ClientID).first()
-
-	if client_obj:
-		return True
-	else:
-		if 'VERIFY_CLIENTID_OLD' in current_app.config:
-			if current_app.config['VERIFY_CLIENTID_OLD'] == True:
-				return isValidOlderClientID(ClientID)
-
-		return False
-
-def isValidOlderClientID(ClientID):
-
-	# Old Way, now check if client is registered
-	client_obj = MpClient.query.filter_by(cuuid=ClientID).first()
 
 	if client_obj:
 		return True

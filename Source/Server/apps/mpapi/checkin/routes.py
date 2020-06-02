@@ -179,7 +179,6 @@ class AgentPlist(MPResource):
 				# Add
 				log_Info('[AgentPlist][Post]: Adding client (%s) record.' % (cuuid))
 				client_object = MpClientPlist()
-				print(client_object.columns)
 
 				client_object.cuuid = cuuid
 				for col in client_object.columns:

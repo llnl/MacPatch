@@ -98,6 +98,10 @@ MacPatch Servers
         htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>');
         htmlData.push('</td>');
 
+        htmlData.push('<td><a class="dbConf" href="javascript:void(0)" title="Database Config">');
+        htmlData.push('<i class="fa fa-database fa-lg" aria-hidden="true"></i></a>');
+        htmlData.push('</td>');
+
         htmlData.push('<td><a class="logA" href="javascript:void(0)" title="API Log">');
         htmlData.push('<i class="fa fa-file-text-o fa-lg" aria-hidden="true"> API</i></a>');
         htmlData.push('</td>');
@@ -123,6 +127,24 @@ MacPatch Servers
 				$('#modalDialog').addClass("modal-mid");
 				$('#modalBody').css({'height':'420px'});
 				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$_table.bootstrapTable('refresh');
+				});
+			});
+		},
+        'click .dbConf': function (e, value, row, index)
+		{
+			$.get( "/console/servers/db/" + row['server'] + "/" + row['port'] ).done(function(data)
+			{
+			    resetModalWindow();
+				$('#modalTitle').html('MacPatch Server DB Config - ' + row['server']);
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-mid");
+				$('#modalBody').css({'height':'420px'});
+				$('#modalFooter').hide();
+				$('#modalDialog').modal('show');
+				$('#modalSaveButton').hide();
 
 				$("#modalDialog").on("hidden.bs.modal", function () {
 					$_table.bootstrapTable('refresh');

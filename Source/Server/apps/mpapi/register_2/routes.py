@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app
 from flask_restful import reqparse
 
 from . import *
@@ -9,6 +9,7 @@ from .. model import *
 from .. mplogger import *
 from .. wsresult import *
 from .. shared.agentRegistration import *
+from .. MSIntune import MPTaskJobs
 
 from M2Crypto import RSA
 import hashlib
@@ -112,6 +113,13 @@ class Registration(MPResource):
 					if reg_key_id >= 1:
 						setRegKeyUsed(client_id, regKey, reg_key_id)
 						# setClientRegKeyUsed(cuuid, regKey)
+
+				if "ENABLE_INTUNE" in current_app.config:
+					if current_app.config["ENABLE_INTUNE"]:
+						# ENABLE_INTUNE is set and true, now register corporate device.
+						intune = MPTaskJobs()
+						intune.init_app(current_app)
+						intuneRes = intune.AddCorporateDevice(content['SerialNo'],client_id)
 
 				return {"result": 'Client Registered', "errorno": 0, "errormsg": ''}, 201
 

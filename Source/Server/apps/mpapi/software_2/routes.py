@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, current_app, redirect
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
@@ -12,6 +12,7 @@ from .. model import *
 from .. mplogger import *
 from .. wsresult import *
 from .. shared.software import *
+from .. software_4.routes import SoftwareTasksForGroup as SoftwareTasksForGroupNew
 
 parser = reqparse.RequestParser()
 
@@ -41,6 +42,11 @@ class SoftwareTasksForGroup(MPResource):
 				if not isValidSignature(self.req_signature, cuuid, self.req_uri, self.req_ts):
 					log_Error('[SoftwareTasksForGroup][Get]: Failed to verify Signature for client (%s)' % (cuuid))
 					return wsResult.resultNoSignature(errorno=424, errormsg='Failed to verify Signature'), 424
+
+			if 'REDIRECT_TO_NEW_API' in current_app.config:
+				if current_app.config['REDIRECT_TO_NEW_API']:
+					_newURL = "/api/v4/sw/tasks/{}/{}/{}".format(cuuid,groupName,osver)
+					return redirect(_newURL,303)
 
 			log_Debug("[SoftwareTasksForGroup][Get][%s]: Args: groupName=%s, osver=%s" % (cuuid, groupName, osver))
 

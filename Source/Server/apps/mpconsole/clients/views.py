@@ -258,7 +258,7 @@ def clientGroups():
 @login_required
 def clientGroupAdd():
 	''' Returns an empty set of data to add a new record '''
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	_owner = usr.user_id
 	_group_id = str(uuid.uuid4())
 
@@ -289,7 +289,7 @@ def clientGroupUserAdd(id):
 
 @clients.route('/group/<id>/<user_id>/remove')
 def clientGroupUserRemove(id, user_id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	if usr.user_id == user_id or isOwnerOfGroup(id):
 		uadm = MpClientGroupAdmins().query.filter(MpClientGroupAdmins.group_id == id, MpClientGroupAdmins.group_admin == user_id).first()
 		if uadm:
@@ -368,7 +368,7 @@ def clientGroup(name,tab=1):
 		if qMembers is not None and len(qMembers) >= 1:
 			return json.dumps({'errormsg':'Group still contains agents. Can not delete group while agents are assigned.'}), 401
 		else:
-			usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+			usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 			if usr is not None or isOwnerOfGroup(name):
 				MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).delete()
 				MpClientTasks.query.filter(MpClientTasks.group_id == name).delete()
@@ -496,7 +496,7 @@ def clientGroupClients(group_id):
 @clients.route('/group/<id>/remove/clients',methods=['POST'])
 def clientGroupClientsRemove(id):
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	if usr is not None or isOwnerOfGroup(id):
 		for x in request.form['clients'].split(","):
 			client = MpClient.query.filter(MpClient.cuuid == x).first()
@@ -830,7 +830,6 @@ def clientGroupSWResAdd(id):
 
 	elif request.method == 'POST':
 		_form = request.form
-		print(_form)
 		_groupID = request.form.get('group_id')
 		_appID = request.form.get('appID')
 		allSW = MpClientGroupSoftwareRestrictions.query.all()
@@ -881,7 +880,7 @@ def getDoc(col_obj):
 	return col_obj.doc
 
 def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	usrInf = accountInfo() # Check if console admin account
 
 	if usr:
@@ -900,7 +899,7 @@ def isOwnerOfGroup(id):
 	return False
 
 def isAdminForGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	usrInf = accountInfo()
 
 	if usr:
@@ -923,7 +922,8 @@ def isAdminForGroup(id):
 
 def accessToGroups():
 	_groups = set([])
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usid = session.get('_user_id')
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	usrInf = accountInfo()
 	if usr:
 		if usrInf:

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-editable/css/bootstrap-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block pageHeader %}
+MDM - Device Config Profiles
+{% endblock %}
+
+{% block bodyPanel %}
+    {% for col in columns %}
+
+    {% endfor %}
+	<table id="table" data-toolbar="#toolbar" data-show-export="true">
+		<div id="toolbar">
+            {% if session.role[0] == 1 %}
+            <button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
+            {% endif %}
+            &nbsp;<div id="lastSync">Last Sync: {{ lastSync }}</div>
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+<script>
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+            url: "/mdm/configProfiles/list",
+			striped: true,
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '20', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: true,
+			sortable: true,
+			showColumns: true,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			idField: 'id',
+			columns: [
+            {
+				field: 'operate',
+				title: 'Payload',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter
+			},
+			{% for col in columns %}
+			{
+                    field: '{{ col['column'] }}',
+                    title: '{{ col['displayName'] }}',
+                    {% if col['visible'] == 0 %}
+                    visible: false,
+                    {% endif %}
+                    sortable: true
+			},
+			{% endfor %}
+			],
+			data: [
+
+			]
+		});
+
+		$('#syncButton').click(function ()
+        {
+            var load = "<i class=\"fa fa-gear fa-spin\"></i> Getting Data"
+            document.getElementById("lastSync").innerHTML = load;
+            $.get("/mdm/runSync/deviceProfiles", function(data) {
+                var obj = JSON.parse(data);
+                document.getElementById("lastSync").innerHTML = "Last Sync: " + obj.lastSync;
+            }).fail(function() {
+                document.getElementById("lastSync").innerHTML = "Error getting sync data. ";
+            });
+        });
+
+	});
+
+    function operateFormatter(value, row, index)
+    {
+            var htmlData = [];
+            htmlData.push('<table><tr><td>')
+            htmlData.push('<a class="profilePayload" href="javascript:void(0)" title="Edit Patch">');
+            htmlData.push('<i class="fa fa-file fa-lg" aria-hidden="true"></i>');
+            htmlData.push('</a>');
+            htmlData.push('</td></tr></table>');
+            return htmlData.join('');
+        }
+
+    window.operateEvents = {
+        'click .profilePayload': function (e, value, row, index)
+        {
+            $('#myContent').remove();
+            console.log(row);
+            // row['puuid']
+            var _url = "/mdm/configProfiles/payload/"+row['id'];
+            var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+             ' frameborder="0" allowtransparency="true"' +
+             ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+            $('#modalTitle').html("Device Config Payload (" + row['displayName'] + ")");
+            $('#modalSaveButton').hide();
+            $('#modalBody').html(innerHTML);
+            $('#modalBody').css({'height':'80vh'});
+            $('#modalDialog').addClass("modal-mid-wide");
+            $('#modalDialog').modal('show');
+        }
+    };
+</script>
+{% endblock %}

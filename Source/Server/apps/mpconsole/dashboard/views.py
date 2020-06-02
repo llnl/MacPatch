@@ -10,11 +10,11 @@ from .  import dashboard
 from .. import login_manager
 from .. import db
 from .. model import *
+from .. import errors
 
 @dashboard.route('/dashboard')
 @login_required
 def index():
-
 	clients = MpClient.query.all()
 	_client_count = len(clients)
 
@@ -538,7 +538,7 @@ def installedPatchCollection(patch):
 					LEFT JOIN mp_client_group_members cg ON cg.cuuid = mpc.cuuid
 					Where patch_name like '""" + patch + """%'
 					""")
-	
+
 	_client_Groups = {}
 	q_client_Groups = MpClientGroups.query.all()
 	for g in q_client_Groups:

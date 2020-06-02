@@ -1,0 +1,164 @@
+{
+    "tables": {
+      "mdm_intune_devices_config_profiles": {
+        "columns":
+        [
+            {
+                "column": "rid",
+                "displayName": "RowID",
+                "order": 1,
+                "visible": 0
+            },
+            {
+                "column": "id",
+                "displayName": "ID",
+                "order": 2,
+                "visible": 0
+            },
+            {
+                "column": "lastModifiedDateTime",
+                "displayName": "Mod Date",
+                "order": 9,
+                "visible": 1
+            },
+            {
+                "column": "roleScopeTagIds",
+                "displayName": "roleScopeTagIds",
+                "order": 99,
+                "visible": 0
+            },
+            {
+                "column": "supportsScopeTags",
+                "displayName": "supportsScopeTags",
+                "order": 99,
+                "visible": 0
+            },
+            {
+                "column": "deviceManagementApplicabilityRuleOsEdition",
+                "displayName": "deviceManagementApplicabilityRuleOsEdition",
+                "order": 99,
+                "visible": 0
+            },
+            {
+                "column": "deviceManagementApplicabilityRuleOsVersion",
+                "displayName": "deviceManagementApplicabilityRuleOsVersion",
+                "order": 99,
+                "visible": 0
+            },
+            {
+                "column": "deviceManagementApplicabilityRuleDeviceMode",
+                "displayName": "deviceManagementApplicabilityRuleDeviceMode",
+                "order": 99,
+                "visible": 0
+            },
+            {
+                "column": "createdDateTime",
+                "displayName": "Create Date",
+                "order": 8,
+                "visible": 1
+            },
+            {
+                "column": "description",
+                "displayName": "Description",
+                "order": 4,
+                "visible": 1
+            },
+            {
+                "column": "displayName",
+                "displayName": "Display Name",
+                "order": 3,
+                "visible": 1
+            },
+            {
+                "column": "version",
+                "displayName": "Version",
+                "order": 5,
+                "visible": 1
+            },
+            {
+                "column": "payloadName",
+                "displayName": "Payload Name",
+                "order": 6,
+                "visible": 1
+            },
+            {
+                "column": "payloadFileName",
+                "displayName": "Payload File",
+                "order": 7,
+                "visible": 1
+            },
+            {
+                "column": "payload",
+                "displayName": "Payload",
+                "order": 10,
+                "visible": 0
+            }
+        ]
+      },
+      "mdm_intune_corporate_devices": {
+        "columns":
+        [
+            {
+                "column": "rid",
+                "displayName": "RowID",
+                "order": 1,
+                "visible": 0
+            },
+            {
+                "column": "id",
+                "displayName": "ID",
+                "order": 2,
+                "visible": 0
+            },
+            {
+                "column": "importedDeviceIdentifier",
+                "displayName": "Imported Device ID",
+                "order": 3,
+                "visible": 1
+            },
+            {
+                "column": "importedDeviceIdentityType",
+                "displayName": "Imported Device ID Type",
+                "order": 4,
+                "visible": 1
+            },
+            {
+                "column": "lastModifiedDateTime",
+                "displayName": "Modified Date",
+                "order": 10,
+                "visible": 1
+            },
+            {
+                "column": "createdDateTime",
+                "displayName": "Create Date",
+                "order": 9,
+                "visible": 1
+            },
+            {
+                "column": "lastContactedDateTime",
+                "displayName": "Last Contacted Date",
+                "order": 11,
+                "visible": 1
+            },
+            {
+                "column": "enrollmentState",
+                "displayName": "Enrollment State",
+                "order": 6,
+                "visible": 1
+            },
+            {
+                "column": "platform",
+                "displayName": "Platform",
+                "order": 7,
+                "visible": 1
+            },
+            {
+                "column": "description",
+                "displayName": "Description",
+                "order": 8,
+                "visible": 1
+            }
+        ]
+      }
+    }
+}

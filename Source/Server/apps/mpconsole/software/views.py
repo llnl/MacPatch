@@ -1070,8 +1070,6 @@ def deleteSWPackage(id):
 -------------------------------------------------
 '''
 def getDoc(col_obj):
-	print(col_obj.name)
-	print(col_obj.doc)
 	if col_obj.doc is None:
 		return 0
 	else:

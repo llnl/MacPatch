@@ -113,6 +113,5 @@ class SoftwareRestrictions(MPResource):
 		else:
 			return None
 
-
 # Add Routes Resources
 software_3_api.add_resource(SoftwareRestrictions,		'/sw/restrictions/<string:client_id>')

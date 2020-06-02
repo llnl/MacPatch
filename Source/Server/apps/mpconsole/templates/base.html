@@ -47,7 +47,7 @@
 		}
 
 		function aboutConsole() {
-			alert("MacPatch Console 3.3.5")
+			alert("MacPatch Console 3.5.0")
 		}
 	</script>
 </head>
@@ -184,7 +184,23 @@
 							</ul>
 							<!-- /.nav-second-level -->
 						</li>
-						<li id="admin">
+                        {% if intune == 1 %}
+						<li id="mdm">
+                            <a href="#"><i class="fa fa-cloud fa-fw"></i> MDM - inTune <span class="fa arrow"></span></a>
+							<ul class="nav nav-second-level">
+                                <li>
+                                    <a href="{{ url_for('mdm.enrolledDevices') }}"><i class="fa fa-id-badge fa-fw fa-lg"></i> Enrolled Devices</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('mdm.corporateDevices') }}"><i class="fa fa-building fa-fw fa-lg"></i> Corporate Devices</a>
+                                </li>
+                                <li>
+                                    <a href="{{ url_for('mdm.configProfiles') }}"><i class="fa fa-files-o fa-fw fa-lg"></i> Profiles</a>
+                                </li>
+                            </ul>
+                        </li>
+                        {% endif %}
+                        <li id="admin">
 							<a href="#"><i class="fa fa-cog fa-fw"></i> Admin<span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level">
 								{% if session.role[0] == 1 %}

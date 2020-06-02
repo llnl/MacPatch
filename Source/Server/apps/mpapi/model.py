@@ -1,10 +1,10 @@
 from mpapi import db
 
-# Rev 12
+# Rev 18
 #
 
 from datetime import *
-from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey
+from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, TEXT, INTEGER
 
 from flask_login import UserMixin
@@ -236,6 +236,8 @@ class MpClient(CommonBase):
 	fileVaultStatus = Column(String(255), nullable=True, server_default='NA', info='FileVault Status', doc='13')
 	firmwareStatus  = Column(String(255), nullable=True, server_default='NA', info='Firmware Status', doc='14')
 	hasPausedPatching = Column(String(1), server_default='0', info='Patching Paused', doc='15')
+	depEnrolled = Column(String(50), server_default='NA', info='DEP Enrolled', doc='16')
+	mdmEnrolled = Column(String(50), server_default='NA', info='MDM Enrolled', doc='17')
 
 # mp_clients_plist
 class MpClientPlist(CommonBase):
@@ -485,7 +487,7 @@ class MpPatch(CommonBase):
 	pkg_path                = Column(String(255), info="Package Path")
 	pkg_url                 = Column(String(255), info="Package URL")
 	pkg_env_var             = Column(String(255), info="Package Env")
-	pkg_useS3 				= Column(INTEGER(1, unsigned=True), server_default="0", info="Active")
+	pkg_useS3				= Column(INTEGER(1, unsigned=True), server_default="0", info="Active")
 	pkg_S3path 				= Column(String(255), info="S3 Path")
 	cdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Create Date")
 	mdate                   = Column(DateTime, server_default='1970-01-01 00:00:00', info="Modify Date")
@@ -754,7 +756,7 @@ class MpOsConfigProfiles(CommonBase):
 	profileHash         = Column(String(50))
 	profileRev          = Column(Integer)
 	enabled             = Column(Integer, server_default='0')
-	isglobal              = Column(INTEGER(1), server_default='0')
+	isglobal            = Column(INTEGER(1), server_default='0')
 	uninstallOnRemove   = Column(Integer, server_default='1')
 	cdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
 	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
@@ -828,6 +830,7 @@ class MpSoftware(CommonBase):
 	sDescription        	= Column(String(255), info="Description")
 	sVendorURL          	= Column(String(255), info="Vendor URL")
 	sReboot             	= Column(Integer, server_default='1', info="Reboot")
+	sw_app_path				= Column(TEXT(), info="SW App Path")
 	sw_type             	= Column(String(10), info="SW Type")
 	sw_path             	= Column(String(255), info="Patch")
 	sw_url              	= Column(String(255), info="URL")
@@ -1083,6 +1086,15 @@ class AgentConfigData(CommonBase):
 	akeyValue   = Column(String(255), nullable=False)
 	enforced    = Column(INTEGER(1, unsigned=True), nullable=False, server_default='0')
 
+# mp_agent_installs
+class AgentInstall(CommonBase):
+	__tablename__ = 'mp_agent_installs'
+
+	rid 			= Column(BigInteger, primary_key=True, autoincrement=True)
+	cuuid 			= Column(String(50), nullable=False)
+	agent_ver 		= Column(String(255), nullable=False)
+	install_date 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
 # ------------------------------------------
 ## Inventory
 
@@ -1165,6 +1177,105 @@ class MPISPHardwareOverview(CommonBase):
 	mpa_l3_cache_per_processor = Column(String(255))
 	mpa_smc_version_processor_tray = Column(String(255))
 	mpa_illumination_version = Column(String(255))
+
+# ------------------------------------------
+## MDM
+
+class MDMIntuneDevices(CommonBase):
+	__tablename__ = 'mdm_intune_devices'
+
+	rid 						= Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+	id 							= Column(String(255), info="ID")
+	userId 						= Column(String(255))
+	deviceName 					= Column(String(255), info="Device Name")
+	managedDeviceOwnerType 		= Column(String(255), info="Device Owner")
+	enrolledDateTime 			= Column(DateTime, server_default='1970-01-01 00:00:00', info="Enrolled Date")
+	lastSyncDateTime 			= Column(DateTime, server_default='1970-01-01 00:00:00', info="Last Sync")
+	operatingSystem 			= Column(String(255), info="OS")
+	complianceState 			= Column(String(255), info="Compliance")
+	jailBroken 					= Column(String(255))
+	managementAgent 			= Column(String(255))
+	osVersion 					= Column(String(255), info="OS Ver")
+	easActivated 				= Column(Boolean(), server_default='0')
+	easDeviceId 				= Column(String(255))
+	easActivationDateTime 		= Column(DateTime, server_default='1970-01-01 00:00:00')
+	azureADRegistered 			= Column(String(255), info="AD Registered")
+	deviceEnrollmentType 		= Column(String(255), info="Enrollment Type")
+	activationLockBypassCode 	= Column(String(255))
+	emailAddress 				= Column(String(255))
+	azureADDeviceId 			= Column(String(255))
+	deviceRegistrationState 	= Column(String(255), info="Reg Status")
+	deviceCategoryDisplayName	= Column(String(255))
+	isSupervised 				= Column(Boolean(), server_default='0', info="Supervised")
+	exchangeLastSuccessfulSyncDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	exchangeAccessState 		= Column(String(255))
+	exchangeAccessStateReason 	= Column(String(255))
+	remoteAssistanceSessionUrl 	= Column(String(255))
+	remoteAssistanceSessionErrorDetails = Column(String(255))
+	isEncrypted 				= Column(Boolean(), server_default='0')
+	userPrincipalName 			= Column(String(255), info="User Principal Name")
+	model 						= Column(String(255), info="Model")
+	manufacturer 				= Column(String(255), info="Manufacture")
+	imei 						= Column(String(255))
+	udid 						= Column(String(255), info="CUUID")
+	complianceGracePeriodExpirationDateTime = Column(DateTime, server_default='1970-01-01 00:00:00')
+	serialNumber 				= Column(String(255), info="Serial No")
+	phoneNumber 				= Column(String(255))
+	androidSecurityPatchLevel 	= Column(String(255))
+	userDisplayName 			= Column(String(255), info="User Name")
+	configurationManagerClientEnabledFeatures = Column(String(255))
+	wiFiMacAddress 				= Column(String(255))
+	deviceHealthAttestationState = Column(String(255))
+	subscriberCarrier 			= Column(String(255))
+	meid 						= Column(String(255))
+	totalStorageSpaceInBytes 	= Column(BigInteger(), server_default='0' , info="Storage - Total")
+	freeStorageSpaceInBytes 	= Column(BigInteger(), server_default='0' , info="Storage - Free")
+	managedDeviceName 			= Column(String(255))
+	partnerReportedThreatState 	= Column(String(255))
+
+class MDMIntuneConfigProfiles(CommonBase):
+	__tablename__ = 'mdm_intune_devices_config_profiles'
+
+	rid                                         = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+	id                                          = Column(String(255))
+	lastModifiedDateTime                        = Column(DateTime, server_default='1970-01-01 00:00:00', info="Mod Date")
+	roleScopeTagIds                             = Column(String(255))
+	supportsScopeTags                           = Column(Boolean(), server_default='0')
+	deviceManagementApplicabilityRuleOsEdition  = Column(LONGTEXT())
+	deviceManagementApplicabilityRuleOsVersion  = Column(LONGTEXT())
+	deviceManagementApplicabilityRuleDeviceMode = Column(LONGTEXT())
+	createdDateTime                             = Column(DateTime, server_default='1970-01-01 00:00:00', info="Create Date")
+	description                                 = Column(String(255), info="Description")
+	displayName                                 = Column(String(255), info="Display Name")
+	version                                     = Column(BigInteger(), server_default='0', info="Version")
+	payloadName                                 = Column(String(255), info="Payload Name")
+	payloadFileName                             = Column(String(255), info="Payload File")
+	payload                                     = Column(LONGTEXT(), info="Payload")
+
+class MDMIntuneCorporateDevices(CommonBase):
+	__tablename__ = 'mdm_intune_corporate_devices'
+
+	rid                             = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+	id                              = Column(String(255))
+	importedDeviceIdentifier        = Column(String(255))
+	importedDeviceIdentityType      = Column(String(255))
+	lastModifiedDateTime            = Column(DateTime, server_default='1970-01-01 00:00:00')
+	createdDateTime  				= Column(DateTime, server_default='1970-01-01 00:00:00')
+	lastContactedDateTime  			= Column(DateTime, server_default='1970-01-01 00:00:00')
+	description 					= Column(String(255))
+	enrollmentState                 = Column(String(255))
+	platform                        = Column(String(255))
+	
+
+class MDMIntuneLastSync(CommonBase):
+	__tablename__ = "mdm_intune_table_lastsync"
+
+	rid                     = Column(BigInteger, nullable=False, primary_key=True, autoincrement=True)
+	lastSyncDateTime        = Column(DateTime, server_default='1970-01-01 00:00:00')
+	tableName				= Column(String(255))
+	modelTableName			= Column(String(255))
+	syncUser            	= Column(String(255))
+
 
 # ------------------------------------------
 ## Misc
