@@ -39,9 +39,8 @@ else:
 	DefaultConfig = DevelopmentConfig
 
 def create_app(config_object=DefaultConfig):
-	_basedir = os.path.abspath(os.path.dirname(__file__))
-	_templatedir = os.path.join(_basedir, 'mpconsole/templates')
-	app = Flask(__name__, template_folder=_templatedir)
+
+	app = Flask(__name__)
 	cors = CORS(app)
 
 	app.config.from_object(SchedulerConfig())

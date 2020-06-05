@@ -22,7 +22,6 @@ class MPTaskJobs():
 				self.user = user
 
 	def getAccessToken(self):
-
 		AUTHORITY_URL = self.app.config.get('INTUNE_AUTHORITY_HOST_URL') + '/' + self.app.config.get('INTUNE_TENANT')
 		auth_context = adal.AuthenticationContext(AUTHORITY_URL)
 		token_response = auth_context.acquire_token_with_username_password(self.app.config.get('INTUNE_RESOURCE'),
@@ -31,6 +30,13 @@ class MPTaskJobs():
 		self.app.config.get('INTUNE_CLIENT_ID'))
 
 		self.token = token_response['accessToken']
+
+	def getHTTPHeader(self):
+		return {'Authorization': 'Bearer ' + self.token,
+						'User-Agent': 'adal-python-sample',
+						'Accept': 'application/json',
+						'Content-Type': 'application/json',
+						'client-request-id': str(uuid.uuid4())}
 
 #
 # Will get all managed/enrolled devices in InTune MDM
@@ -42,15 +48,15 @@ class MPTaskJobs():
 		devices = []
 
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices'
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
 		log("[GetEnrolledDevices]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=http_headers, stream=False)
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.status_code != requests.codes.ok:
+			log_Error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
 		json_data = json.loads(graph_data.content)
 		devices = json_data['value']
+		log("[GetEnrolledDevices]: Devices found {}".format(len(devices)))
 
 		# Get all of the paged records
 		if "@odata.nextLink" in graph_data:
@@ -92,15 +98,12 @@ class MPTaskJobs():
 		self.getAccessToken()
 
 		devices = []
-		# https://graph.microsoft.com/beta/deviceManagement/importedDeviceIdentities
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities'
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
 		log("[GetCorpDevices]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=http_headers, stream=False).json()
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
+		if graph_data.status_code != requests.codes.ok:
+			log_Error("[GetCorpDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
 
 		devices = graph_data["value"]
 		if "@odata.nextLink" in graph_data:
@@ -147,13 +150,11 @@ class MPTaskJobs():
 
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/beta/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
 		log("[GetDeviceConfigProfiles]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=http_headers, stream=False).json()
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
+		if graph_data.status_code != requests.codes.ok:
+			log_Error("[GetDeviceConfigProfiles]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
 
 		profiles = graph_data["value"]
 		if "@odata.nextLink" in graph_data:
@@ -201,12 +202,7 @@ class MPTaskJobs():
 # everything after the ?
 	def getNextLink(self,url,nextLink):
 		endpoint = url + "?" + nextLink
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
-		graph_data = requests.get(endpoint, headers=http_headers, stream=False).json()
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
 
 		nxtLink = None
 		if "@odata.nextLink" in graph_data:
@@ -254,23 +250,22 @@ class MPTaskJobs():
 
 		return _sqlStr
 
+	# Work around function as managedDevice does not return a value for udid
+	# Eventually this will no longer be needed
+	# /beta/deviceManagement/managedDevices('483fe593-8556-4d06-856c-a66d43628c08')?select=udid
 	def getUDIDForDeviceID(self,deviceID):
-		# Work around function as managedDevice does not return a value for udid
-		# Eventually this will no longer be needed
-		# /beta/deviceManagement/managedDevices('483fe593-8556-4d06-856c-a66d43628c08')?select=udid
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices(\''+deviceID+'\')?select=udid'
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
-		graph_data = requests.get(endpoint, headers=http_headers, stream=False).json()
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
+		if graph_data.status_code != requests.codes.ok:
+			log_Error("[getUDIDForDeviceID]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return None
+
 		udid = None
 		if 'udid' in graph_data:
 			udid = graph_data['udid']
 
 		return  udid
-#
+
 # Will add a last sync db record for a given task.
 #
 	def AddCorporateDevice(self, serialno, description):
@@ -287,13 +282,11 @@ class MPTaskJobs():
 		'platform': 'unknown' } ] }
 
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities/importDeviceIdentityList'
-		http_headers = {'Authorization': 'Bearer ' + self.token,
-						'User-Agent': 'adal-python-sample',
-						'Accept': 'application/json',
-						'Content-Type': 'application/json',
-						'client-request-id': str(uuid.uuid4())}
+		graph_data = requests.post(endpoint, headers=self.getHTTPHeader(), stream=False, data=json.dumps(deviceData)).json()
+		if graph_data.status_code != requests.codes.ok:
+			log_Error("[AddCorporateDevice]: Error adding InTune data error code {}".format(graph_data.status_code))
+			return None
 
-		graph_data = requests.post(endpoint, headers=http_headers, stream=False, data=json.dumps(deviceData)).json()
 		return graph_data
 
 	def AddLastSync(self,table,modelTable,user):
