@@ -946,7 +946,7 @@ def accessToGroups():
 
 		return _groups
 	else:
-		return None
+		return _groups
 
 def accountInfo():
 	usrInf = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == session.get('user')).first()

@@ -129,7 +129,12 @@ def applePatchWizard(akey):
 	patchCrit = ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == cList.supatchname).order_by(ApplePatchCriteria.type_order.asc()).all()
 	patchCritLen = len(patchCrit)
 
-	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen)
+	if localAdmin() or adminRole():
+		canEdit=1
+	else:
+		canEdit=0
+
+	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit)
 
 @patches.route('/applePatchWizard/update',methods=['POST'])
 @login_required
@@ -174,6 +179,7 @@ def applePatchWizardUpdate():
 
 	else:
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))
+		return json.dumps({'error': 'Does not have permission to update apple patch.'}, default=json_serial), 401
 
 	return json.dumps({'data': {}}, default=json_serial), 200
 
