@@ -12,6 +12,6 @@ cryptography==2.9.2
 pymysql>=0.9.3
 SQLAlchemy==1.3.17
 gunicorn==20.0.4
-gevent==20.5.2
-boto3==1.13.23
-adal==1.2.3
+boto3==1.13.25
+adal==1.2.4
+email-validator==1.1.1
