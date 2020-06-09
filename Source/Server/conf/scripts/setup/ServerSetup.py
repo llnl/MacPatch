@@ -27,7 +27,7 @@
   MacPatch Patch Loader Setup Script
   MacPatch Version 3.3.x
 
-  Script Version 2.4.1
+  Script Version 2.4.2
 '''
 
 import os
@@ -739,7 +739,6 @@ class MPLdap:
 
 			use_ldap_ssl = input("Active Directory/LDAP use ssl? [Y]: ").upper() or "Y"
 			if use_ldap_ssl == "Y":
-				print("Please note, you will need to run the addRemoteCert.py script prior to starting the MacPatch Web Admin Console.")
 				ldap_ssl = "CFSSL_BASIC"
 				conf["settings"]["ldap"]["secure"] = ldap_ssl
 			else:

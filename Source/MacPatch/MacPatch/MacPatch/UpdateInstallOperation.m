@@ -8,6 +8,13 @@
 
 #import "UpdateInstallOperation.h"
 #import "LongPatchWindow.h"
+#import "AppDelegate.h"
+
+@interface UpdateInstallOperation ()
+
+@property (nonatomic, assign) int showRebootWindow; // 0 = Off, 1 = Restart, 2 = Shutdown
+
+@end
 
 @interface UpdateInstallOperation (Private)
 
@@ -34,6 +41,7 @@
 @synthesize workerConnection;
 @synthesize userInfo;
 @synthesize patch;
+@synthesize showRebootWindow;
 
 - (id)init
 {
@@ -44,17 +52,14 @@
 		isFinished  = NO;
 		fm	= [NSFileManager defaultManager];
 		patch = nil;
+		showRebootWindow = 0;
 	}
 	return self;
 }
 
 - (void)setPatch:(NSDictionary *)arg1
 {
-	qlinfo(@"arg1: %@",arg1);
-	
 	patch = arg1;
-	
-	qlinfo(@"patch: %@",patch);
 	
 	NSString *pID = @"NA";
 	if ([patch[@"type"] isEqualToString:@"Apple"]) {
@@ -73,10 +78,10 @@
 		cellStopNote = [NSString stringWithFormat:@"patchStop-%@",@"NA"];
 	}
 	
-	qlinfo(@"Setup Set Patch");
-	qlinfo(@"cellStartNote: %@",cellStartNote);
-	qlinfo(@"cellProgressNote: %@",cellProgressNote);
-	qlinfo(@"cellStopNote: %@",cellStopNote);
+	qldebug(@"Setup Set Patch");
+	qltrace(@"cellStartNote: %@",cellStartNote);
+	qltrace(@"cellProgressNote: %@",cellProgressNote);
+	qltrace(@"cellStopNote: %@",cellStopNote);
 }
 
 - (BOOL)isConcurrent
@@ -97,8 +102,25 @@
 	isFinished = YES;
 	[self didChangeValueForKey:@"isExecuting"];
 	[self didChangeValueForKey:@"isFinished"];
-	qlinfo(@"-(void)finish ... calling %@",cellStopNote);
+	qltrace(@"-(void)finish ... calling %@",cellStopNote);
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
+	qlinfo(@"finish");
+	qlinfo(@"showRebootWindow: %d",showRebootWindow);
+	AppDelegate *appDelegate;
+	if (showRebootWindow == 1) {
+		qlinfo(@"showRebootWindow == 1");
+		appDelegate = (AppDelegate *)NSApp.delegate;
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[appDelegate showRestartWindow:0];
+		});
+	} else if (showRebootWindow == 2) {
+		qlinfo(@"showRebootWindow == 2");
+		appDelegate = (AppDelegate *)NSApp.delegate;
+		dispatch_async(dispatch_get_main_queue(), ^{
+			[appDelegate showRestartWindow:1];
+		});
+	}
+	qlinfo(@"finish");
 }
 
 - (void)start
@@ -150,16 +172,30 @@
 				
 				qldebug(@"installPatch:self->patch withReply");
 				qldebug(@"resultCode: %ld",resultCode);
-				
+
 				if (error) {
 					qlerror(@"%@",error.localizedDescription);
 				}
 				
-				if (resultCode == 0) {
+				if (resultCode == 0 || resultCode == 1000) // 1000 is a signal for patch that needs a halt
+				{
 					qlinfo(@"Install was sucessful");
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
+					if (aRebPtch == 1)
+					{
+						//AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+						if (resultCode == 1000) {
+							qlinfo(@"resultCode == 1000");
+							self->showRebootWindow = 2;
+							qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+						} else {
+							qlinfo(@"resultCode == 0");
+							self->showRebootWindow = 1;
+							qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+						}
+					}
 				} else {
 					if (!error) {
 						// No error obj, need to create one

@@ -24,7 +24,9 @@ class BaseConfig:
 	DB_HOST                         = 'localhost'
 	DB_PORT                         = '3306'
 	DB_NAME                         = 'MacPatchDB3'
-	SQLALCHEMY_DATABASE_URI         = 'mysql+pymysql://'
+	DB_CONNECTOR					= 'mysql+pymysql'
+	DB_URI_STRING					= ''
+	SQLALCHEMY_DATABASE_URI         = DB_CONNECTOR+'://'
 	SQLALCHEMY_TRACK_MODIFICATIONS  = False
 	SQLALCHEMY_ENGINE_OPTIONS = {  'pool_size' : 200,
                                    'pool_recycle':120,
@@ -40,10 +42,13 @@ class BaseConfig:
 	# MacPatch App Options
 	SITECONFIG_FILE         		= '/opt/MacPatch/Server/etc/siteconfig.json'
 	VERIFY_CLIENTID         		= True
-	VERIFY_CLIENTID_OLD     		= True
+	CLIENTID_ZERO 					= False
 	REQUIRE_SIGNATURES      		= False
 	ALLOW_MIXED_SIGNATURES  		= True
 	POST_CHECKIN_TO_SYSLOG  		= False
+	REDIRECT_TO_NEW_API				= True
+	VERIFY_MIN_AGENT_VER			= False
+	MIN_AGENT_VER 					= '0'
 
 	# Content
 	CONTENT_DIR             		= '/opt/MacPatch/Content'
@@ -63,15 +68,24 @@ class BaseConfig:
 	AWS_S3_BUCKET 					= None
 	AWS_S3_REGION 					= None
 
+	# InTune - MDM
+	ENABLE_INTUNE					= False
+	INTUNE_RESOURCE					= "https://graph.microsoft.com"
+	INTUNE_TENANT					= ""
+	INTUNE_AUTHORITY_HOST_URL		= ""
+	INTUNE_CLIENT_ID				= ""
+	INTUNE_CLIENT_SECRET			= ""
+	INTUNE_USER						= ""
+	INTUNE_USER_PASS				= ""
 
 class DevelopmentConfig(BaseConfig):
-
-	DEBUG               = True
+	pass
+	#DEBUG               = True
 
 
 class ProductionConfig(BaseConfig):
-
-	DEBUG               = False
+	pass
+	#DEBUG               = False
 
 
 config = {

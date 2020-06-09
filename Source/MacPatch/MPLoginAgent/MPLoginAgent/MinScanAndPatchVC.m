@@ -176,7 +176,6 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			int install_result = 9999;
 			NSDictionary *res = [patching installPatchUsingTypeFilter:patch typeFilter:pType];
 			if (res[@"patchInstallErrors"]) {
-				qldebug(@"patchResult[patchInstallErrors] = %d",[res[@"patchInstallErrors"] intValue]);
 				if ([res[@"patchInstallErrors"] intValue] >= 1) {
 					qlerror(@"Error installing %@",patch[@"patch"]);
 					install_result = 1;

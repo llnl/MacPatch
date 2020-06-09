@@ -502,12 +502,19 @@
     
     downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:url] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
 	{
+		if (dlerr) {
+			urlErr = dlerr;
+			qlerror(@"Error %ld. File download error %@", (long)dlerr.code, dlerr.localizedDescription);
+			[weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
+		}
+		
 		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
 		qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
-		if (dlerr || [httpResponse statusCode] == 404)
+		if ([httpResponse statusCode] == 404)
 		{
 			urlErr = dlerr;
-			qlerror(@"File download error %@", self->error.localizedDescription);
+			//qlerror(@"File download error %@", self->error.localizedDescription);
+			qlerror(@"File download error %@", dlerr.localizedDescription);
 			[weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
 		}
 		else
@@ -584,51 +591,57 @@
 	
 	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
 	
-	downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:urlPath] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
-					{
-						NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-						qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
-						if (dlerr || [httpResponse statusCode] >= 300)
-						{
-							urlErr = dlerr;
-							qlerror(@"File download error %@", self->error.localizedDescription);
-						}
-						else
-						{
-							if (responsePtr != NULL) responsePtr = response;
-							
-							qlinfo(@"dlFilePath, %@", dlFilePath);
-							qlinfo(@"location, %@", location.path);
-							
-							NSFileManager *fileManager = [NSFileManager defaultManager];
-							NSError *cperror;
-							BOOL fileOKToMove = YES;
-							if ([fileManager fileExistsAtPath:dlFilePath]) {
-								cperror = nil;
-								[fileManager removeItemAtPath:dlFilePath error:&cperror];
-								if (cperror) {
-									fileOKToMove = NO;
-									qlerror(@"Error removing old downloaded file.");
-									qlerror(@"%@",cperror.localizedDescription);
-								}
-							}
-							
-							//moving the file from temp location to app's own directory
-							if (fileOKToMove)
-							{
-								cperror = nil;
-								BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
-								
-								if (cperror) {
-									qlinfo(@"cperror, %@", cperror.localizedDescription);
-								}
-								
-								NSLog(fileCopied ? @"Yes" : @"No");
-							}
-						}
-						
-						dispatch_semaphore_signal(sem);
-					}];
+	downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:urlPath]
+							  completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
+	{
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
+		qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
+
+		if (dlerr) {
+			urlErr = dlerr;
+			qlerror(@"Error %ld. File download error %@", (long)dlerr.code, dlerr.localizedDescription);
+		}
+		else if ([httpResponse statusCode] >= 300)
+		{
+			urlErr = dlerr;
+			qlerror(@"File download error, status code %ld", (long)[httpResponse statusCode]);
+		}
+		else
+		{
+			if (responsePtr != NULL) responsePtr = response;
+			
+			qlinfo(@"dlFilePath, %@", dlFilePath);
+			qlinfo(@"location, %@", location.path);
+			
+			NSFileManager *fileManager = [NSFileManager defaultManager];
+			NSError *cperror;
+			BOOL fileOKToMove = YES;
+			if ([fileManager fileExistsAtPath:dlFilePath]) {
+				cperror = nil;
+				[fileManager removeItemAtPath:dlFilePath error:&cperror];
+				if (cperror) {
+					fileOKToMove = NO;
+					qlerror(@"Error removing old downloaded file.");
+					qlerror(@"%@",cperror.localizedDescription);
+				}
+			}
+			
+			//moving the file from temp location to app's own directory
+			if (fileOKToMove)
+			{
+				cperror = nil;
+				BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
+				
+				if (cperror) {
+					qlinfo(@"cperror, %@", cperror.localizedDescription);
+				}
+				
+				NSLog(fileCopied ? @"Yes" : @"No");
+			}
+		}
+		
+		dispatch_semaphore_signal(sem);
+	}];
 	
 	[downloadTask resume];
 	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
@@ -699,17 +712,20 @@
 	};
 	dm.completionHandler = ^(int httpStatusCode, NSURL *downloadedFile, NSError *downloadError)
 	{
-		if (downloadError) {
-			qlerror(@"%@",downloadError.localizedDescription);
+		if (downloadError)
+		{
+			qlerror(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
 			didFail = YES;
 			dispatch_semaphore_signal(semaphore);
 		}
-		
-		qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
-		if (httpStatusCode >= 200 && httpStatusCode <= 304) {
-			didFail = NO;
-		} else {
-			didFail = YES;
+		else
+		{
+			qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
+			if (httpStatusCode >= 200 && httpStatusCode <= 304) {
+				didFail = NO;
+			} else {
+				didFail = YES;
+			}
 		}
 		dispatch_semaphore_signal(semaphore);
 	};

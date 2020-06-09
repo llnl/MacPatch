@@ -582,6 +582,26 @@ def updateServerRev():
 
 	db.session.commit()
 
+@console.route('/servers/db/<server>/<port>', methods=['GET'])
+@login_required
+def mpServerDBConfig(server,port):
+
+	_uuid = str(uuid.uuid4())
+	dt  = datetime.now()
+	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
+	srvHashStr = "{}{}{}".format(_uuid,dt,type).encode('utf-8')
+	srvHash = sha1(srvHashStr).hexdigest()
+
+	_data = []
+	_url = "https://{}:{}/api/v1/db/config".format(server,port)
+	#_url = "http://0.0.0.0:5000/api/v1/db/config".format(server,port) # For Testing
+	headers = {'x-agent-id': '1', 'x-agent-ver': '99'}
+	r = requests.get(_url, headers=headers, verify=False)
+	if r.status_code == 200:
+		rawData = json.loads(r.text)
+		_data = rawData['result']
+
+	return render_template('admin/mp_server_db_config.html', server=server, data=_data)
 
 class logline(object):  # no instance of this class should be created
 

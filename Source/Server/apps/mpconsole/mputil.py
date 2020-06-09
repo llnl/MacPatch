@@ -120,7 +120,6 @@ def verifySignedData(signature, data):
 			log_Error("InvalidSignature, Unable to verify signature.")
 			log_Debug("Signature: " + signature)
 			log_Debug("Data: " + data)
-			print('InvalidSignature.')
 			return False
 		except InvalidKey:
 			log_Error("InvalidKey, Unable to verify signature.")
@@ -166,6 +165,14 @@ def copytree(src, dst, symlinks = False, ignore = None):
 			copytree(s, d, symlinks, ignore)
 		else:
 			shutil.copy2(s, d)
+
+from datetime import datetime
+def json_serial(obj):
+	"""JSON serializer for objects not serializable by default json code"""
+
+	if isinstance(obj, datetime):
+		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
+		return serial
 
 # ----------------------------------------------------------------------------
 '''

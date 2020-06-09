@@ -2,10 +2,11 @@ import os
 import logging, logging.handlers
 import json
 import subprocess
-from flask import Flask
+from flask import Flask, request, abort
 from mpapi.config import DevelopmentConfig, ProductionConfig
 from mpapi.extensions import db, migrate, cache
 from datetime import datetime, date
+from distutils.version import LooseVersion
 
 if os.getenv("MPAPI_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
@@ -36,8 +37,9 @@ def create_app(config_object=DefaultConfig):
 	app.config['JSON_SORT_KEYS'] = False
 
 	# Configure SQLALCHEMY_DATABASE_URI for MySQL
-	_uri = "mysql+pymysql://%s:%s@%s:%s/%s" % (app.config['DB_USER'], app.config['DB_PASS'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
+	_uri = "%s://%s:%s@%s:%s/%s" % (app.config['DB_CONNECTOR'], app.config['DB_USER'], app.config['DB_PASS'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
+	app.config['DB_URI_STRING'] = "%s://%s@%s:%s/%s" % (app.config['DB_CONNECTOR'], app.config['DB_USER'], app.config['DB_HOST'], app.config['DB_PORT'], app.config['DB_NAME'])
 
 	# Configure logging location and log file name
 	log_file = app.config['LOGGING_LOCATION'] + "/mpwsapi.log"
@@ -82,6 +84,21 @@ def create_app(config_object=DefaultConfig):
 	register_extensions(app)
 	register_blueprints(app)
 	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+
+	@app.before_request
+	def only_supported_agents():
+		req = request.environ
+		_req_agent = req['HTTP_X_AGENT_ID']
+		_req_agent_ver = '0'
+		if 'HTTP_X_AGENT_VER' in req:
+			_req_agent_ver = req['HTTP_X_AGENT_VER']
+
+		# Agent Ver is Less than Min Agent Ver
+		if app.config['VERIFY_MIN_AGENT_VER']:
+			if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
+				abort(409)
+				#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
+
 	return app
 
 def read_siteconfig_server_data(app):
@@ -121,6 +138,9 @@ def register_blueprints(app):
 
 	from .agent_2 import agent_2 as bp_agent_2
 	app.register_blueprint(bp_agent_2, url_prefix='/api/v2')
+
+	from .agent_3 import agent_3 as bp_agent_3
+	app.register_blueprint(bp_agent_3, url_prefix='/api/v3')
 
 	from .antivirus import antivirus as bp_antivirus
 	app.register_blueprint(bp_antivirus, url_prefix=app.config['URL_PREFIX'])
@@ -190,6 +210,9 @@ def register_blueprints(app):
 
 	from .software_3 import software_3 as bp_software_3
 	app.register_blueprint(bp_software_3, url_prefix='/api/v3')
+
+	from .software_4 import software_4 as bp_software_4
+	app.register_blueprint(bp_software_4, url_prefix='/api/v4')
 
 	from .srv_utils import srv as bp_srv_utils
 	app.register_blueprint(bp_srv_utils, url_prefix=app.config['URL_PREFIX'])

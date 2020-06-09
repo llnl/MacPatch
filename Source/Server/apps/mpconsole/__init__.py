@@ -1,13 +1,13 @@
 import os
 import json
 import subprocess
-from flask import Flask, abort, jsonify
-from flask import render_template
+from flask import Flask, abort, jsonify, session, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from pymysql import OperationalError as PyOperationalError
 from flask_login import LoginManager
 
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, InternalServerError
 from http import HTTPStatus
 
 import logging
@@ -15,27 +15,23 @@ import logging.handlers
 from .config import DevelopmentConfig, ProductionConfig
 
 from flask_cors import CORS, cross_origin
+from flask_apscheduler import APScheduler
+from . mplogger import *
 
-def loadJobs(jobsFile, scheduler):
+class SchedulerConfig(object):
+	
+	SCHEDULER_JOB_DEFAULTS = {
+		'coalesce': False,
+		'max_instances': 1
+	}
 
-	jData = None
-	with open(jobsFile) as json_data:
-		jData = json.load(json_data)
-
-	if jData:
-		for j in jData:
-			scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'])
-
-def job1(a=0, b=0):
-	pass
-	#print(str(a) + ' ' + str(b))
+	SCHEDULER_API_ENABLED = True
 
 db = SQLAlchemy()
+scheduler = APScheduler()
 
 # Configure authentication
 login_manager = LoginManager()
-login_manager.session_protection = "strong"
-# login_manager.login_view = "auth.login"
 
 if os.getenv("MPCONSOLE_ENV") == 'prod':
 	DefaultConfig = ProductionConfig
@@ -43,8 +39,11 @@ else:
 	DefaultConfig = DevelopmentConfig
 
 def create_app(config_object=DefaultConfig):
+
 	app = Flask(__name__)
 	cors = CORS(app)
+
+	app.config.from_object(SchedulerConfig())
 
 	app.config.from_object(config_object)
 	app.config.from_pyfile('../config.cfg', silent=True)
@@ -57,19 +56,14 @@ def create_app(config_object=DefaultConfig):
 	_uri = "mysql+pymysql://%s:%s@%s:%s/%s" % (app.config['DB_USER'],app.config['DB_PASS'],app.config['DB_HOST'],app.config['DB_PORT'],app.config['DB_NAME'])
 	app.config['SQLALCHEMY_DATABASE_URI'] = _uri
 
-	db.init_app(app)
 	# Configure authentication
 	login_manager.init_app(app)
+	login_manager.session_protection = "strong"
 	login_manager.login_view = "auth.login"
 
-	@app.teardown_request
-	def shutdown_session(exception):
-		db.session.rollback()
-		db.session.remove()
-
-	@app.context_processor
-	def baseData():
-		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount())
+	# Add Database
+	db.app = app
+	db.init_app(app)
 
 	# Configure logging
 	log_file = app.config['LOGGING_LOCATION'] + "/mpconsole.log"
@@ -102,7 +96,23 @@ def create_app(config_object=DefaultConfig):
 	handler.setFormatter(formatter)
 	app.logger.addHandler(handler)
 
+	@app.teardown_request
+	def shutdown_session(exception):
+		db.session.rollback()
+		db.session.remove()
+
+	@app.context_processor
+	def baseData():
+		enableIntune = 0
+		if app.config['ENABLE_INTUNE']:
+			enableIntune = 1
+
+		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount(), intune=enableIntune)
+
 	read_siteconfig_server_data(app)
+
+	from .errors import errors as errors_blueprint
+	app.register_blueprint(errors_blueprint)
 
 	from .main import main as main_blueprint
 	app.register_blueprint(main_blueprint, url_prefix='/')
@@ -146,6 +156,48 @@ def create_app(config_object=DefaultConfig):
 
 	from .maint import maint as maint_blueprint
 	app.register_blueprint(maint_blueprint, url_prefix='/maint')
+
+	from .mdm import mdm as mdm_blueprint
+	app.register_blueprint(mdm_blueprint, url_prefix='/mdm')
+
+	from .mptasks import MPTaskJobs
+	mpTaskJobs = MPTaskJobs()
+	mpTaskJobs.init_app(app)
+
+	jData = None
+	with open(app.config['JOBS_FILE']) as json_data:
+		jData = json.load(json_data)
+
+	if app.config['ENABLE_INTUNE']:
+		# Read Schema File and Store In App Var
+		mdm_schema_file = app.config['STATIC_JSON_DIR']+"/mdm_schema.json"
+		if os.path.exists(mdm_schema_file.strip()):
+			schema_data = {}
+			try:
+				with open(mdm_schema_file.strip()) as data_file:
+					schema_data = json.load(data_file)
+
+				app.config["MDM_SCHEMA"] = schema_data
+			except OSError:
+				print('Well darn.')
+				return
+
+		if jData:
+			for j in jData:
+				if j['enabled']:
+					if j['trigger'] == "interval":
+						print("Add interval job ({})".format(j['id']))
+						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'], coalesce=False, max_instances=1)
+					elif j['trigger'] == "cron":
+						print("Add cron job ({})".format(j['id']))
+						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], minute=j['minute'], coalesce=False, max_instances=1)
+
+	scheduler.init_app(app)
+	scheduler.start()
+
+	@app.errorhandler(InternalServerError)
+	def handle_exception1(e):
+		return render_template('500.html'), 200
 
 	return app
 

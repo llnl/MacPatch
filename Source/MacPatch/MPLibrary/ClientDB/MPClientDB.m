@@ -336,17 +336,21 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	{
 		
 		qlinfo(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
+		NSMutableArray *toDelete = [NSMutableArray array];
 		NSMutableArray *rpArray = [dbDict[@"required_patches"] mutableCopy];
 		for (RequiredPatch *p in rpArray)
 		{
 			if ([p.type isEqualToString:type] && [p.patch_id isEqualToString:patchID] && [p.patch isEqualToString:patch])
 			{
 				qlinfo(@"Removing required patch %@",p.patch);
-				[rpArray removeObject:p];
+				[toDelete addObject:p];
+				//[rpArray removeObject:p];
 			}
 		}
-		
+		qlinfo(@"Setting new array.");
+		[rpArray removeObjectsInArray:toDelete];
 		[dbDict setObject:rpArray forKey:@"required_patches"];
+		qlinfo(@"Save");
 		[self save];
 		
 		return YES;
