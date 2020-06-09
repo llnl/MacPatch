@@ -15,11 +15,6 @@ def load_user(userid):
 		except SQLAlchemyError:
 			return AdmUsers()
 
-@login_manager.unauthorized_handler
-def unauthorized():
-	"""Redirect unauthorized users to Login page."""
-	return render_template('login.html'), 200
-
 @main.route('/')
 @login_required
 def index():
