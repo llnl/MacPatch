@@ -775,7 +775,7 @@ def patchGroupUpdate():
 		_owner = patchGroupMember.user_id
 	else:
 		patchGroupMember = PatchGroupMembers()
-		usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+		usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 		_owner = usr.user_id
 
 	setattr(patchGroup, 'name', _name)
@@ -1444,7 +1444,7 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 ''' Global '''
 def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 
 	if usr:
 		pgroup = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id,
