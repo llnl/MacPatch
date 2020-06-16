@@ -26,7 +26,7 @@ def upgrade():
 		sa.PrimaryKeyConstraint('rid')
 	)
 
-	op.create_index(op.f('ix_mdm_intune_table_lastsync'), 'mdm_intune_table_lastsync', ['tableName,modelTableName'], unique=False)
+	op.create_index(op.f('ix_mdm_intune_table_lastsync'), 'mdm_intune_table_lastsync', ['tableName','modelTableName'], unique=False)
 
 	op.create_table('mdm_intune_devices_config_profiles',
 		sa.Column('rid', sa.BigInteger(), nullable=False, autoincrement=True),
