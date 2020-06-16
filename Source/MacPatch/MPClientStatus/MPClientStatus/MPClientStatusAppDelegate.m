@@ -1003,7 +1003,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     
     NSUserNotification *userNote = [[NSUserNotification alloc] init];
     userNote.title = @"Patches Required";
-    userNote.informativeText = [NSString stringWithFormat:@"This system requires %@ patche(s).",aCount];
+    userNote.informativeText = [NSString stringWithFormat:@"This system requires %@ %@.",aCount,
+								(aCount == 1) ? @"Patch" : @"Patches"];
     userNote.actionButtonTitle = @"Patch";
     userNote.hasActionButton = YES;
 	[userNote setValue:@YES forKey:@"_showsButtons"];
