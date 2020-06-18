@@ -157,10 +157,11 @@ class _AgentConfig(MPResource):
 			agentConfig['settings']['servers']['data'] = _serversData['data']
 			d_revs['servers'] = _serversData['version']
 
-			_suserversData = suServerListForID(1, qClient.osver)
-			agentConfig['settings']['suservers']['rev'] = _suserversData['version']
-			agentConfig['settings']['suservers']['data'] = _suserversData['data']
-			d_revs['suservers'] = _suserversData['version']
+			if qClient is not None:
+				_suserversData = suServerListForID(1, qClient.osver)
+				agentConfig['settings']['suservers']['rev'] = _suserversData['version']
+				agentConfig['settings']['suservers']['data'] = _suserversData['data']
+				d_revs['suservers'] = _suserversData['version']
 
 			agentConfig['settings']['tasks'] = self.getTasksData(group_id)
 			d_revs['tasks'] = agentConfig['settings']['tasks']['rev']
