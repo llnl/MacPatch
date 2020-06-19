@@ -2,6 +2,7 @@ from flask import session, current_app
 
 import boto3
 from boto3.session import Session
+from botocore.config import Config
 from botocore.errorfactory import ClientError
 
 

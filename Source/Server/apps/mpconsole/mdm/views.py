@@ -4,6 +4,7 @@ from flask_cors import cross_origin
 from sqlalchemy import text, or_, desc
 from datetime import datetime
 
+import sys
 import json
 import humanize
 import base64
@@ -217,17 +218,24 @@ def runIntuneDataSync(id):
 	_lastSyncAt = "Error getting sync data."
 	tasks = MPTaskJobs()
 	tasks.init_app(current_app,session['user'])
-	if id == "corporateDevices":
-		tasks.GetCorpDevices()
-		_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == 'mdm_intune_corporate_devices' ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
-	elif id == "enrolledDevices":
-		tasks.GetEnrolledDevices()
-		_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneDevices.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
-	elif id == "deviceProfiles":
-		tasks.GetDeviceConfigProfiles()
-		_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneConfigProfiles.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
+	try:
+		if id == "corporateDevices":
+			tasks.GetCorpDevices()
+			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == 'mdm_intune_corporate_devices' ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
+		elif id == "enrolledDevices":
+			tasks.GetEnrolledDevices()
+			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneDevices.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
+		elif id == "deviceProfiles":
+			tasks.GetDeviceConfigProfiles()
+			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneConfigProfiles.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
 
-	if _lastSync is not None:
-		_lastSyncAt = _lastSync.lastSyncDateTime
+		if _lastSync is not None:
+			_lastSyncAt = _lastSync.lastSyncDateTime
 
-	return json.dumps({'lastSync': _lastSyncAt }, default=json_serial), 200
+		return json.dumps({'lastSync': _lastSyncAt}, default=json_serial), 200
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message=str(e.args[0]).encode("utf-8")
+		log_Error('[runIntuneDataSync][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+		return json.dumps({'lastSync': _lastSyncAt}, default=json_serial), 401
+

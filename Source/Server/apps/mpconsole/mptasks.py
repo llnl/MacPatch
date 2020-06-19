@@ -50,7 +50,7 @@ class MPTaskJobs():
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices'
 		log("[GetEnrolledDevices]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
-		if graph_data.status_code != requests.codes.ok:
+		if graph_data.ok != True:
 			log_Error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
@@ -100,14 +100,16 @@ class MPTaskJobs():
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities'
 		log("[GetCorpDevices]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
-		if graph_data.status_code != requests.codes.ok:
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
 			log_Error("[GetCorpDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
-		devices = graph_data["value"]
-		if "@odata.nextLink" in graph_data:
-			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
+		json_data = json.loads(graph_data.content)
+		devices = json_data['value']
+		if "@odata.nextLink" in json_data:
+			_qryStr = json_data["@odata.nextLink"].split("?")[1]
+			print(_qryStr)
 			while True:
 				res = self.getNextLink(endpoint,_qryStr)
 				devices.extend(res[0])
@@ -151,12 +153,13 @@ class MPTaskJobs():
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/beta/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
 		log("[GetDeviceConfigProfiles]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
-		if graph_data.status_code != requests.codes.ok:
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
 			log_Error("[GetDeviceConfigProfiles]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
-		profiles = graph_data["value"]
+		json_data = json.loads(graph_data.content)
+		profiles = json_data['value']
 		if "@odata.nextLink" in graph_data:
 			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
 			while True:
@@ -255,10 +258,12 @@ class MPTaskJobs():
 	# /beta/deviceManagement/managedDevices('483fe593-8556-4d06-856c-a66d43628c08')?select=udid
 	def getUDIDForDeviceID(self,deviceID):
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices(\''+deviceID+'\')?select=udid'
-		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
-		if graph_data.status_code != requests.codes.ok:
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
 			log_Error("[getUDIDForDeviceID]: Error getting InTune data error code {}".format(graph_data.status_code))
-			return None
+			return
+		else:
+			graph_data = graph_data.json()
 
 		udid = None
 		if 'udid' in graph_data:
@@ -282,12 +287,12 @@ class MPTaskJobs():
 		'platform': 'unknown' } ] }
 
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities/importDeviceIdentityList'
-		graph_data = requests.post(endpoint, headers=self.getHTTPHeader(), stream=False, data=json.dumps(deviceData)).json()
-		if graph_data.status_code != requests.codes.ok:
+		graph_data = requests.post(endpoint, headers=self.getHTTPHeader(), stream=False, data=json.dumps(deviceData))
+		if graph_data.ok != True:
 			log_Error("[AddCorporateDevice]: Error adding InTune data error code {}".format(graph_data.status_code))
 			return None
 
-		return graph_data
+		return graph_data.json()
 
 	def AddLastSync(self,table,modelTable,user):
 		lastSync = MDMIntuneLastSync()
