@@ -88,16 +88,20 @@ def create_app(config_object=DefaultConfig):
 	@app.before_request
 	def only_supported_agents():
 		req = request.environ
-		_req_agent = req['HTTP_X_AGENT_ID']
-		_req_agent_ver = '0'
-		if 'HTTP_X_AGENT_VER' in req:
-			_req_agent_ver = req['HTTP_X_AGENT_VER']
+		pathInfo = req['PATH_INFO']
+		if '/v1/auth/' in pathInfo or '/v1/token/' in pathInfo or '/agent/config/' in pathInfo or '/agent/update/' in pathInfo or '/agent/upload/' in pathInfo:
+			app.logger.info("Bypass before_request for " + req['REQUEST_URI'])
+		else:
+			_req_agent = req['HTTP_X_AGENT_ID']
+			_req_agent_ver = '0'
+			if 'HTTP_X_AGENT_VER' in req:
+				_req_agent_ver = req['HTTP_X_AGENT_VER']
 
-		# Agent Ver is Less than Min Agent Ver
-		if app.config['VERIFY_MIN_AGENT_VER']:
-			if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
-				abort(409)
-				#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
+			# Agent Ver is Less than Min Agent Ver
+			if app.config['VERIFY_MIN_AGENT_VER']:
+				if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
+					abort(409)
+					#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
 
 	return app
 
