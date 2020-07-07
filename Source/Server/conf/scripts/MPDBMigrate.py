@@ -25,7 +25,7 @@
 
 '''
 	Script: MPDBMigrate.py
-	Version: 1.1.1
+	Version: 1.1.0
 
 	Description: This Script is used to migrate tables and data from
 	and older version of MacPatch (< 3.0.0) to the new MacPatch 3.0

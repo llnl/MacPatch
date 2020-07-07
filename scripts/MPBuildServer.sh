@@ -14,31 +14,31 @@
 # History:
 # 1.4:    Remove Jetty Support
 #     Added Tomcat 7.0.57
-# 1.5:    	Added Tomcat 7.0.63
-# 1.6:    	Variableized the tomcat config
-#     		removed all Jetty refs
-# 1.6.1:  	Now using InstallPyMods.sh script to install python modules
-# 1.6.2:  	Fix cp paths
-# 1.6.3:  	Updated OpenJDK to 1.8.0
-# 1.6.4:  	Updated to install Ubuntu packages
-# 1.6.5:  	More ubuntu updates
-# 2.0.0:  	Apache HTTPD removed
-#     		Single Tomcat Instance, supports webservices and console
-# 2.0.1:  	Updated java version check
-# 2.0.2:  	Updated linux package requirements
-# 2.0.3:  	Added Mac PKG support
-# 2.0.4:  	Added compile for Mac MPServerAdmin.app
-#     		Removed create archive (aka zip)
+# 1.5:      Added Tomcat 7.0.63
+# 1.6:      Variableized the tomcat config
+#           removed all Jetty refs
+# 1.6.1:    Now using InstallPyMods.sh script to install python modules
+# 1.6.2:    Fix cp paths
+# 1.6.3:    Updated OpenJDK to 1.8.0
+# 1.6.4:    Updated to install Ubuntu packages
+# 1.6.5:    More ubuntu updates
+# 2.0.0:    Apache HTTPD removed
+#           Single Tomcat Instance, supports webservices and console
+# 2.0.1:    Updated java version check
+# 2.0.2:    Updated linux package requirements
+# 2.0.3:    Added Mac PKG support
+# 2.0.4:    Added compile for Mac MPServerAdmin.app
+#           Removed create archive (aka zip)
 # 2.0.5     Disabled the MPServerAdmin app build, having issue
-#     		with the launch services.
+#           with the launch services.
 # 3.0.0     Rewritten for new Python Env
 # 3.1.0     Updates to remove tomcat and use new console
 # 3.1.1     All of MP now uses a virtualenv
 # 3.2.0     Replaced bower with yarn for javascript package management
 # 3.3.0     Add python 3 support
 # 3.4.0     Added a node version check for yarn packages
-# 3.5.0		All python now ref as python3
-#			Changed Linux dist detection to /etc/os-release
+# 3.5.0     All python now ref as python3
+#           Changed Linux dist detection to /etc/os-release
 #
 # ----------------------------------------------------------------------------
 
@@ -101,26 +101,26 @@ buildVer="0"
 
 if [[ $platform == 'linux' ]]; then
 
-	distName=`cat /etc/os-release | grep "NAME=" | head -n1`
-	if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
-		USERHEL=true
-	elif [[ $LNXDIST == "Ubuntu" ]]; then
-		USEUBUNTU=true
-	else
-		echo "Not running a supported version of Linux."
-		exit 1
-	fi
+    distName=`cat /etc/os-release | grep "NAME=" | head -n1`
+    if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
+        USERHEL=true
+    elif [[ $LNXDIST == "Ubuntu" ]]; then
+        USEUBUNTU=true
+    else
+        echo "Not running a supported version of Linux."
+        exit 1
+    fi
 
-	USELINUX=true
-	OWNERGRP="www-data:www-data"
+    USELINUX=true
+    OWNERGRP="www-data:www-data"
 
 elif [[ "$unamestr" == 'Darwin' ]]; then
-	USEMACOS=true
+    USEMACOS=true
 
-	systemVersion=`/usr/bin/sw_vers -productVersion`
-	majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
-	minorVer=`echo $systemVersion | cut -d . -f 2`
-	buildVer=`echo $systemVersion | cut -d . -f 3`
+    systemVersion=`/usr/bin/sw_vers -productVersion`
+    majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
+    minorVer=`echo $systemVersion | cut -d . -f 2`
+    buildVer=`echo $systemVersion | cut -d . -f 3`
 
 fi
 
@@ -129,28 +129,28 @@ fi
 usage() { echo "Usage: $0 [-c ALT_SSL_CERT]" 1>&2; exit 1; }
 
 while getopts "hc:" opt; do
-	case $opt in
-		c)
-			CA_CERT=${OPTARG}
-			;;
-		h)
-			echo
-			usage
-			exit 1
-			;;
-		\?)
-			echo "Invalid option: -$OPTARG" >&2
-			echo
-			usage
-			exit 1
-			;;
-		:)
-			echo "Option -$OPTARG requires an argument." >&2
-			echo
-			usage
-			exit 1
-			;;
-	esac
+    case $opt in
+        c)
+            CA_CERT=${OPTARG}
+            ;;
+        h)
+            echo
+            usage
+            exit 1
+            ;;
+        \?)
+            echo "Invalid option: -$OPTARG" >&2
+            echo
+            usage
+            exit 1
+            ;;
+        :)
+            echo "Option -$OPTARG requires an argument." >&2
+            echo
+            usage
+            exit 1
+            ;;
+    esac
 done
 
 # ----------------------------------------------------------------------------
@@ -160,52 +160,52 @@ clear
 
 if $USEMACOS; then
 
-	if $MACPROMPTFORXCODE; then
-		clear
-		echo
-		echo "* Xcode requirements"
-		echo "-----------------------------------------------------------------------"
-		echo
-		echo "Server Build Requires Xcode Command line tools to be installed"
-		echo "and the license agreement accepted. If you have not done this,"
-		echo "parts of the install will fail."
-		echo
-		echo "It is recommended that you run \"sudo xcrun --show-sdk-version\""
-		echo "prior to continuing with this script."
-		echo
-		read -p "Would you like to continue (Y/N)? [Y]: " XCODEOK
-		XCODEOK=${XCODEOK:-Y}
-		if [ "$XCODEOK" == "Y" ] || [ "$XCODEOK" == "y" ] ; then
-			echo
-		else
-			exit 1
-		fi
-	fi
+    if $MACPROMPTFORXCODE; then
+        clear
+        echo
+        echo "* Xcode requirements"
+        echo "-----------------------------------------------------------------------"
+        echo
+        echo "Server Build Requires Xcode Command line tools to be installed"
+        echo "and the license agreement accepted. If you have not done this,"
+        echo "parts of the install will fail."
+        echo
+        echo "It is recommended that you run \"sudo xcrun --show-sdk-version\""
+        echo "prior to continuing with this script."
+        echo
+        read -p "Would you like to continue (Y/N)? [Y]: " XCODEOK
+        XCODEOK=${XCODEOK:-Y}
+        if [ "$XCODEOK" == "Y" ] || [ "$XCODEOK" == "y" ] ; then
+            echo
+        else
+            exit 1
+        fi
+    fi
 
-	if $MACPROMPTFORBREW; then
-		echo
-		echo "* Brew requirements"
-		echo "-----------------------------------------------------------------------"
-		echo
-		echo "Server Build Requires Brew to be installed."
-		echo
-		echo "To install brew go to https://brew.sh and follow the install"
-		echo "directions."
-		echo
-		echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" to be installed"
-		echo "using brew. It's recommended that you install these two"
-		echo "applications before continuing."
-		echo
-		echo "Exapmple: brew install yarn openssl swig gpm"
-		echo
-		read -p "Would you like to continue (Y/N)? [Y]: " BREWOK
-		BREWOK=${BREWOK:-Y}
-		if [ "$BREWOK" == "Y" ] || [ "$BREWOK" == "y" ] ; then
-			echo
-		else
-			exit 1
-		fi
-	fi
+    if $MACPROMPTFORBREW; then
+        echo
+        echo "* Brew requirements"
+        echo "-----------------------------------------------------------------------"
+        echo
+        echo "Server Build Requires Brew to be installed."
+        echo
+        echo "To install brew go to https://brew.sh and follow the install"
+        echo "directions."
+        echo
+        echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" to be installed"
+        echo "using brew. It's recommended that you install these two"
+        echo "applications before continuing."
+        echo
+        echo "Exapmple: brew install yarn openssl swig gpm"
+        echo
+        read -p "Would you like to continue (Y/N)? [Y]: " BREWOK
+        BREWOK=${BREWOK:-Y}
+        if [ "$BREWOK" == "Y" ] || [ "$BREWOK" == "y" ] ; then
+            echo
+        else
+            exit 1
+        fi
+    fi
 fi
 
 # ----------------------------------------------------------------------------
@@ -220,10 +220,10 @@ if $USELINUX; then
 
   getent passwd www-data > /dev/null 2>&1
   if [ $? -eq 0 ]; then
-	echo "www-data user exists"
+    echo "www-data user exists"
   else
-	  echo "Create user www-data"
-	useradd -r -M -s /dev/null -U www-data
+      echo "Create user www-data"
+    useradd -r -M -s /dev/null -U www-data
   fi
 fi
 
@@ -257,12 +257,12 @@ function mkdirP {
   # Function for creating directory and echo it
   #
   if [ ! -n "$1" ]; then
-	echo "Enter a directory name"
+    echo "Enter a directory name"
   elif [ -d $1 ]; then
-	echo "$1 already exists"
+    echo "$1 already exists"
   else
-	echo " - Creating directory $1"
-	mkdir -p $1
+    echo " - Creating directory $1"
+    mkdir -p $1
   fi
 }
 
@@ -271,22 +271,22 @@ function rmF {
   # Function for remove files and dirs and echos
   #
   if [ ! -n "$1" ]; then
-	echo "Enter a path"
+    echo "Enter a path"
   elif [ -d $1 ]; then
-	echo " - Removing $1"
-	rm -rf $1
+    echo " - Removing $1"
+    rm -rf $1
   elif [ -f $1 ]; then
-	echo " - Removing $1"
-	rm -rf $1
+    echo " - Removing $1"
+    rm -rf $1
   fi
 }
 
 function command_exists () {
-	type "$1" &> /dev/null ;
+    type "$1" &> /dev/null ;
 }
 
 function version {
-	printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+    printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
 # ------------------
@@ -313,87 +313,87 @@ mkdirP ${MPSERVERBASE}/logs
 # ------------------
 if $USEMACOS; then
 
-	# Copy Agent Uploader
-	cp ${MPSERVERBASE}/conf/Content/Web/tools/MPAgentUploader.zip ${MPBASE}/Content/Web/tools/
+    # Copy Agent Uploader
+    cp ${MPSERVERBASE}/conf/Content/Web/tools/MPAgentUploader.zip ${MPBASE}/Content/Web/tools/
 
-	# BREW Software Check
-	XOPENSSL=false
-	declare -i needsInstall=0
-	sudo -u _appserver bash -c "brew list | grep openssl > /dev/null 2>&1"
-	if [ $? != 0 ] ; then
-		# echo "OpenSSL is not installed using brew. Please install openssl."
-		needsInstall=1
-		XOPENSSL=true
-	fi
+    # BREW Software Check
+    XOPENSSL=false
+    declare -i needsInstall=0
+    sudo -u _appserver bash -c "brew list | grep openssl > /dev/null 2>&1"
+    if [ $? != 0 ] ; then
+        # echo "OpenSSL is not installed using brew. Please install openssl."
+        needsInstall=1
+        XOPENSSL=true
+    fi
 
-	XSWIG=false
-	sudo -u _appserver bash -c "brew list | grep swig > /dev/null 2>&1"
-	if [ $? != 0 ] ; then
-		# echo "SWIG is not installed using brew. Please install swig."
-		needsInstall=1
-		XSWIG=true
-	fi
+    XSWIG=false
+    sudo -u _appserver bash -c "brew list | grep swig > /dev/null 2>&1"
+    if [ $? != 0 ] ; then
+        # echo "SWIG is not installed using brew. Please install swig."
+        needsInstall=1
+        XSWIG=true
+    fi
 
-	if [ "$needsInstall" -gt 0 ]; then
-		echo
-		echo
-		echo "* Missing Required Software (brew packages)"
-		echo "--------------------------------------------"
-		if $XOPENSSL; then
-			echo "Please install OpenSSL: brew install openssl"
-		fi
-		if $XSWIG; then
-			echo "Please install SWIG: brew install swig"
-		fi
-		echo
-		echo "Please open a new terminal and install the missing packages"
-		echo "and continue with the script."
-		echo
-		read -p "Ready to continue (Y/N)? [Y]: " BREWSWOK
-		BREWSWOK=${BREWSWOK:-Y}
-		if [ "$BREWSWOK" == "Y" ] || [ "$BREWSWOK" == "y" ] ; then
-			echo
-		else
-			exit 1
-		fi
-	fi
+    if [ "$needsInstall" -gt 0 ]; then
+        echo
+        echo
+        echo "* Missing Required Software (brew packages)"
+        echo "--------------------------------------------"
+        if $XOPENSSL; then
+            echo "Please install OpenSSL: brew install openssl"
+        fi
+        if $XSWIG; then
+            echo "Please install SWIG: brew install swig"
+        fi
+        echo
+        echo "Please open a new terminal and install the missing packages"
+        echo "and continue with the script."
+        echo
+        read -p "Ready to continue (Y/N)? [Y]: " BREWSWOK
+        BREWSWOK=${BREWSWOK:-Y}
+        if [ "$BREWSWOK" == "Y" ] || [ "$BREWSWOK" == "y" ] ; then
+            echo
+        else
+            exit 1
+        fi
+    fi
 fi
 
 # ------------------
 # Install required packages
 # ------------------
 if $USELINUX; then
-	echo
-	echo "* Install required linux packages"
-	echo "-----------------------------------------------------------------------"
-	if $USERHEL; then
-		# Add the Yarn repo
-		curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
-		# Check if needed packges are installed or install
+    echo
+    echo "* Install required linux packages"
+    echo "-----------------------------------------------------------------------"
+    if $USERHEL; then
+        # Add the Yarn repo
+        curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
+        # Check if needed packges are installed or install
         pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3" "python3-devel" "python3-setuptools" "python3-pip" "swig" "yarn")
-		for i in "${pkgs[@]}"
-		do
-			p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
-			if [ -z $p ]; then
-				echo " - Install $i"
-				yum install -y -q -e 1 ${i}
-			fi
-		done
-	elif $USEUBUNTU; then
-		# Add additional Repo
-		apt-add-repository universe
-		apt-get update
+        for i in "${pkgs[@]}"
+        do
+            p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
+            if [ -z $p ]; then
+                echo " - Install $i"
+                yum install -y -q -e 1 ${i}
+            fi
+        done
+    elif $USEUBUNTU; then
+        # Add additional Repo
+        apt-add-repository universe
+        apt-get update
 
         ubuntuVer=`cat /etc/lsb_release | grep DISTRIB_RELEASE | awk -F= '{print $2}'`
 
         # Yarn not getting installed  
-		# Add the Yarn repo
-		curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
-		echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
-		#statements
-		pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
-		for i in "${pkgs[@]}"
-		do
+        # Add the Yarn repo
+        curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+        echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+        #statements
+        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
+        for i in "${pkgs[@]}"
+        do
             if [ $i == "yarn" ]; then 
                 if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then  
                     curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
@@ -404,15 +404,15 @@ if $USELINUX; then
                 fi
             fi
 
-			p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
-			if [ -z $p ]; then
-				echo
-				echo "Install $i"
-				echo
-				apt-get install ${i} -y
-			fi
-		done
-	fi
+            p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
+            if [ -z $p ]; then
+                echo
+                echo "Install $i"
+                echo
+                apt-get install ${i} -y
+            fi
+        done
+    fi
 
     minNodeVer="8.0.0"
     nodeVer=`node -v | sed s/v//g`
@@ -447,17 +447,17 @@ tar xfz ${SRC_DIR}/${NGINX_SW} --strip 1 -C ${BUILDROOT}/nginx
 cd ${BUILDROOT}/nginx
 
 if $USELINUX; then
-	./configure --prefix=${MPSERVERBASE}/nginx \
+    ./configure --prefix=${MPSERVERBASE}/nginx \
     --without-http_autoindex_module \
     --with-http_v2_module \
-	--with-http_ssl_module \
-	--with-pcre \
-	--user=www-data \
-	--group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+    --with-http_ssl_module \
+    --with-pcre \
+    --user=www-data \
+    --group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 else
     # Now using brew installed openssl and pcre
     OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
-	export KERNEL_BITS=64
+    export KERNEL_BITS=64
     ./configure --prefix=${MPSERVERBASE}/nginx \
     --with-cc-opt="-I${OPENSSLPWD}/include" \
     --with-ld-opt="-L${OPENSSLPWD}/lib" \
@@ -466,14 +466,7 @@ else
     --without-http_ssi_module \
     --with-http_ssl_module \
     --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
-	
-    # Old
-    #./configure --prefix=${MPSERVERBASE}/nginx \
-	#--without-http_autoindex_module \
-	#--without-http_ssi_module \
-	#-with-http_ssl_module \
-	#--with-openssl=${TMP_DIR}/openssl \
-	#--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
+    
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
@@ -481,11 +474,11 @@ make install >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 
 mv ${MPSERVERBASE}/nginx/conf/nginx.conf ${MPSERVERBASE}/nginx/conf/nginx.conf.orig
 if $USEMACOS; then
-	echo " - Copy nginx.conf.mac to ${MPSERVERBASE}/nginx/conf/nginx.conf"
-	cp ${MPSERVERBASE}/conf/nginx/nginx.conf.mac ${MPSERVERBASE}/nginx/conf/nginx.conf
+    echo " - Copy nginx.conf.mac to ${MPSERVERBASE}/nginx/conf/nginx.conf"
+    cp ${MPSERVERBASE}/conf/nginx/nginx.conf.mac ${MPSERVERBASE}/nginx/conf/nginx.conf
 else
-	echo " - Copy nginx.conf to ${MPSERVERBASE}/nginx/conf/nginx.conf"
-	cp ${MPSERVERBASE}/conf/nginx/nginx.conf ${MPSERVERBASE}/nginx/conf/nginx.conf
+    echo " - Copy nginx.conf to ${MPSERVERBASE}/nginx/conf/nginx.conf"
+    cp ${MPSERVERBASE}/conf/nginx/nginx.conf ${MPSERVERBASE}/nginx/conf/nginx.conf
 fi
 echo " - Copy nginx sites to ${MPSERVERBASE}/nginx/conf/sites"
 cp -r ${MPSERVERBASE}/conf/nginx/sites ${MPSERVERBASE}/nginx/conf/sites
@@ -494,9 +487,9 @@ perl -pi -e "s#\[SRVBASE\]#$MPSERVERBASE#g" $MPSERVERBASE/nginx/conf/nginx.conf
 FILES=$MPSERVERBASE/nginx/conf/sites/*.conf
 for f in $FILES
 do
-	#echo "$f"
-	perl -pi -e "s#\[SRVBASE\]#$MPSERVERBASE#g" $f
-	perl -pi -e "s#\[SRVCONTENT\]#$MPSRVCONTENT#g" $f
+    #echo "$f"
+    perl -pi -e "s#\[SRVBASE\]#$MPSERVERBASE#g" $f
+    perl -pi -e "s#\[SRVCONTENT\]#$MPSRVCONTENT#g" $f
 done
 
 # ------------------
@@ -512,10 +505,10 @@ echo "-----------------------------------------------------------------------"
 
 # Set Permissions
 if $USEMACOS; then
-	chown -R $OWNERGRP ${MPSERVERBASE}/logs
-	chmod 0775 ${MPSERVERBASE}
-	chown root:wheel ${MPSERVERBASE}/conf/launchd/*.plist
-	chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
+    chown -R $OWNERGRP ${MPSERVERBASE}/logs
+    chmod 0775 ${MPSERVERBASE}
+    chown root:wheel ${MPSERVERBASE}/conf/launchd/*.plist
+    chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
 fi
 
 echo
@@ -534,7 +527,7 @@ echo "-----------------------------------------------------------------------"
 
 certsDir="${MPSERVERBASE}/etc/ssl"
 if [ ! -d "${certsDir}" ]; then
-	mkdirP "${certsDir}"
+    mkdirP "${certsDir}"
 fi
 
 USER="MacPatch"
@@ -551,14 +544,14 @@ COMMAND=(openssl req -new -sha256 -x509 -nodes -days 999 -subj "${OPTS[@]}" -new
 
 "${COMMAND[@]}"
 if (( $? )) ; then
-	echo -e "ERROR: Something went wrong!"
-	exit 1
+    echo -e "ERROR: Something went wrong!"
+    exit 1
 else
-	echo "Done!"
-	echo
-	echo "NOTE: It's strongly recommended that an actual signed certificate be installed"
-	echo "if running in a production environment."
-	echo
+    echo "Done!"
+    echo
+    echo "NOTE: It's strongly recommended that an actual signed certificate be installed"
+    echo "if running in a production environment."
+    echo
 fi
 
 # ------------------------------------------------------------
@@ -579,41 +572,41 @@ python3 -m venv env/console --copies --clear
 
 CA_STR=""
 if [ "$CA_CERT" != "NA" ]; then
-	CA_STR="--cert \"$CA_CERT\""
+    CA_STR="--cert \"$CA_CERT\""
 fi
 
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
-	OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
-	
-	# Server venv
+    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+    
+    # Server venv
     echo "Creating server scripts virtual env..."
-	source ${MPSERVERBASE}/env/server/bin/activate
+    source ${MPSERVERBASE}/env/server/bin/activate
     ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
 
-	env LDFLAGS="-L${OPENSSLPWD}/lib" \
-	CFLAGS="-I${OPENSSLPWD}/include" \
-	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    env LDFLAGS="-L${OPENSSLPWD}/lib" \
+    CFLAGS="-I${OPENSSLPWD}/include" \
+    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
-	env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
-	# API venv
+    # API venv
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-	 # Install M2Crypto first
-	env LDFLAGS="-L${OPENSSLPWD}/lib" \
-	CFLAGS="-I${OPENSSLPWD}/include" \
-	SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+     # Install M2Crypto first
+    env LDFLAGS="-L${OPENSSLPWD}/lib" \
+    CFLAGS="-I${OPENSSLPWD}/include" \
+    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
     ${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
@@ -622,7 +615,7 @@ if $USEMACOS; then
 
     # Console venv
     echo "Creating console virtual env..."
-	source ${MPSERVERBASE}/env/console/bin/activate
+    source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
     # Install M2Crypto first
@@ -638,21 +631,21 @@ if $USEMACOS; then
 else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-	${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
-	${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
     deactivate
 
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-	${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-	${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."

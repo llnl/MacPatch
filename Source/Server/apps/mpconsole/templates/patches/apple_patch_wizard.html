@@ -146,8 +146,10 @@
 									{% if dataAdds.user_install == 1 %}
 									<option value="1" selected>True</option>
 									<option value="0">False</option>
-									{% endif %}
-									{% if dataAdds.user_install == 0 %}
+									{% elif dataAdds.user_install == 0 %}
+									<option value="1">True</option>
+									<option value="0" selected>False</option>
+									{% else %}
 									<option value="1">True</option>
 									<option value="0" selected>False</option>
 									{% endif %}
@@ -212,6 +214,10 @@
 		$("#applePatchForm").children("div").steps({
 			headerTag: "h1",
 			bodyTag: "section",
+			{% if canEdit == 0 %}
+            enableFinishButton: false,
+            enableCancelButton: true,
+            {% endif %}
 			onFinishing: function (event, currentIndex)
 			{
 				// Add ACE Editor Data to form to post

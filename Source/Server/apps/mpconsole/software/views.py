@@ -74,7 +74,7 @@ def groups():
 @login_required
 def swGroupAdd(id):
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	return render_template('software/software_group_modify.html', group_id=id, user=usr.user_id)
 
 @software.route('/group/edit/<id>')
@@ -116,7 +116,7 @@ def swGroupSave():
 
 		# set rights for owner or site admin
 		if mpsgp is not None:
-			if session.get('user_id') == '1' or mpsgp.uid == session.get('user'):
+			if session.get('_user_id') == '1' or mpsgp.uid == session.get('user'):
 				is_admin = 2
 
 		if session.get('role')[0] == 1:
@@ -155,7 +155,7 @@ def swGroupDelete(id):
 	groupPriv = MpSoftwareGroupPrivs.query.filter(MpSoftwareGroupPrivs.gid == id, MpSoftwareGroupPrivs.isowner == 1,
 	MpSoftwareGroupPrivs.uid == session.get('user') ).first()
 	# Must be owner or default admin
-	if groupPriv is not None or session.get('user_id') == '1':
+	if groupPriv is not None or session.get('_user_id') == '1':
 		# Session user is the owner
 		MpSoftwareGroup.query.filter(MpSoftwareGroup.gid == id).delete()
 		MpSoftwareGroupPrivs.query.filter(MpSoftwareGroupPrivs.gid == id).delete()
@@ -1070,8 +1070,6 @@ def deleteSWPackage(id):
 -------------------------------------------------
 '''
 def getDoc(col_obj):
-	print(col_obj.name)
-	print(col_obj.doc)
 	if col_obj.doc is None:
 		return 0
 	else:
@@ -1084,7 +1082,7 @@ def isOwnerOfSWGroup(id):
 	if session.get('role')[0] == 1:
 		return True
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 
 	if usr:
 		pgroup = MpSoftwareGroupPrivs.query.filter(MpSoftwareGroupPrivs.gid == id).first()
@@ -1102,7 +1100,7 @@ def isAdminForSWGroup(id):
 	if session.get('role')[0] == 1:
 		return True
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 
 	if usr:
 		q_admin = MpSoftwareGroupPrivs.query.filter(MpSoftwareGroupPrivs.gid == id).all()

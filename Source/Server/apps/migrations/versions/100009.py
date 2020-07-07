@@ -23,7 +23,8 @@ def upgrade():
 					sa.Column('cuuid', sa.String(length=50), server_default='', nullable=False),
 					sa.Column('install_date', sa.DateTime(), server_default='1970-01-01 00:00:00', nullable=True),
 					sa.Column('agent_ver', sa.String(length=255), server_default='', nullable=False),
-					sa.PrimaryKeyConstraint('rid')
+					sa.PrimaryKeyConstraint('rid'),
+					keep_existing=True,
 					)
 
 	op.create_index(op.f('ix_mp_agent_installs_cuuid'), 'mp_agent_installs', ['cuuid'], unique=False)

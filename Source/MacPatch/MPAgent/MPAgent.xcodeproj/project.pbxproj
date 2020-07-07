@@ -662,6 +662,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
@@ -706,6 +707,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",

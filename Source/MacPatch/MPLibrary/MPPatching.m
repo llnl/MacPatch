@@ -787,6 +787,8 @@ typedef enum {
 			{
 				qlerror(@"Error installing update, error code %@.",installResult ? @"Yes":@"No");
 				[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
+				[failedPatches addObject:_patch];
+				patchInstallErrors++;
 				continue;
 			}
 			else
@@ -1048,6 +1050,8 @@ typedef enum {
 	if (error) {
 		if (err != NULL) {
 			*err = error;
+		} else {
+			qlerror(@"%@",error.localizedDescription);
 		}
 	}
 	

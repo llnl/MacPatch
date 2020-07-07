@@ -10,11 +10,11 @@ from .  import dashboard
 from .. import login_manager
 from .. import db
 from .. model import *
+from .. import errors
 
 @dashboard.route('/dashboard')
 @login_required
 def index():
-
 	clients = MpClient.query.all()
 	_client_count = len(clients)
 

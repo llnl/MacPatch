@@ -129,7 +129,12 @@ def applePatchWizard(akey):
 	patchCrit = ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == cList.supatchname).order_by(ApplePatchCriteria.type_order.asc()).all()
 	patchCritLen = len(patchCrit)
 
-	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen)
+	if localAdmin() or adminRole():
+		canEdit=1
+	else:
+		canEdit=0
+
+	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit)
 
 @patches.route('/applePatchWizard/update',methods=['POST'])
 @login_required
@@ -174,6 +179,7 @@ def applePatchWizardUpdate():
 
 	else:
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))
+		return json.dumps({'error': 'Does not have permission to update apple patch.'}, default=json_serial), 401
 
 	return json.dumps({'data': {}}, default=json_serial), 200
 
@@ -247,7 +253,7 @@ def customList():
 
 		if _row['pkg_useS3'] == 1:
 			if current_app.config.get('USE_AWS_S3'):
-				_row['pkg_url'] = getS3UrlForPatch(_row['puuid'])
+				_row['pkg_url'] = _aws.getS3UrlForPatch(_row['puuid'])
 			else:
 				_row['pkg_url'] = ""
 
@@ -769,7 +775,7 @@ def patchGroupUpdate():
 		_owner = patchGroupMember.user_id
 	else:
 		patchGroupMember = PatchGroupMembers()
-		usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+		usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 		_owner = usr.user_id
 
 	setattr(patchGroup, 'name', _name)
@@ -1438,7 +1444,7 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 ''' Global '''
 def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('user_id')).first()
+	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 
 	if usr:
 		pgroup = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id,

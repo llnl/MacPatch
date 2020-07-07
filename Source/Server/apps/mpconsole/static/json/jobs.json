@@ -1,9 +1,23 @@
 [
   {
-    "id": "job1",
-    "func": "job1",
-    "args": "1,2",
+    "enabled": false,
+    "id": "GetCorpDevices",
+    "func": "mpTaskJobs.GetCorpDevices",
     "trigger": "interval",
-    "seconds": 5
+    "seconds": 1800
+  },
+  {
+    "enabled": false,
+    "id": "GetEnrolledDevices",
+    "func": "mpTaskJobs.GetEnrolledDevices",
+    "trigger": "interval",
+    "seconds": 1800
+  },
+  {
+    "enabled": false,
+    "id": "GetDeviceConfigProfiles",
+    "func": "mpTaskJobs.GetDeviceConfigProfiles",
+    "trigger": "interval",
+    "seconds": 120
   }
 ]

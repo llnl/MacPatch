@@ -47,7 +47,8 @@ class BaseConfig:
 	ALLOW_MIXED_SIGNATURES  		= True
 	POST_CHECKIN_TO_SYSLOG  		= False
 	REDIRECT_TO_NEW_API				= True
-	MIN_AGENT_VER					= '0'
+	VERIFY_MIN_AGENT_VER			= False
+	MIN_AGENT_VER 					= '0'
 
 	# Content
 	CONTENT_DIR             		= '/opt/MacPatch/Content'
@@ -67,6 +68,15 @@ class BaseConfig:
 	AWS_S3_BUCKET 					= None
 	AWS_S3_REGION 					= None
 
+	# InTune - MDM
+	ENABLE_INTUNE					= False
+	INTUNE_RESOURCE					= "https://graph.microsoft.com"
+	INTUNE_TENANT					= ""
+	INTUNE_AUTHORITY_HOST_URL		= ""
+	INTUNE_CLIENT_ID				= ""
+	INTUNE_CLIENT_SECRET			= ""
+	INTUNE_USER						= ""
+	INTUNE_USER_PASS				= ""
 
 class DevelopmentConfig(BaseConfig):
 	pass

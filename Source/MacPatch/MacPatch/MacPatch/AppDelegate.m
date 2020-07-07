@@ -274,11 +274,13 @@
 - (void)showRebootWindow
 {
 	[self.rebootWindow makeKeyAndOrderFront:self];
+	[self.rebootWindow setLevel:NSStatusWindowLevel];
 }
 
 - (void)showSWRebootWindow
 {
 	[self.swRebootWindow makeKeyAndOrderFront:self];
+	[self.swRebootWindow setLevel:NSStatusWindowLevel];
 }
 
 - (IBAction)logoutAndPatch:(id)sender
@@ -319,10 +321,50 @@
 	 error = SendAppleEventToSystemProcess(kAERestart);
 	 error = SendAppleEventToSystemProcess(kAELogOut);
 	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+	 error = SendAppleEventToSystemProcess(kAEShutDown);
 	 */
 	
 	OSStatus error = noErr;
 	error = SendAppleEventToSystemProcess(kAERestart);
+}
+
+- (void)showRestartWindow:(int)action
+{
+	if (action == 1) {
+		[@"HALT" writeToFile:@"/private/tmp/.asusHalt" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+	}
+	//dispatch_async(dispatch_get_main_queue(), ^{
+	//	[NSApp runModalForWindow:self.restartWindow];
+	//});
+	[self.restartWindow makeKeyAndOrderFront:self];
+	[self.restartWindow setLevel:NSStatusWindowLevel];
+}
+
+- (IBAction)restartOrShutdown:(id)sender
+{
+	OSStatus error = noErr;
+	
+	int action = 0; // 0 = normal reboot, 1 = shutdown
+	NSFileManager *fm = [NSFileManager defaultManager];
+	if (![fm fileExistsAtPath:@"/private/tmp/.asusHalt"]) {
+		action = 1;
+	}
+	
+	switch ( action )
+	{
+		case 0:
+			error = SendAppleEventToSystemProcess(kAERestart);
+			qlinfo(@"MacPatch issued a launchctl kAERestart.");
+			break;
+		case 1:
+			error = SendAppleEventToSystemProcess(kAEShutDown);
+			qlinfo(@"MacPatch issued a kAEShutDown.");
+			break;
+		default:
+			// Code
+			exit(0);
+			break;
+	}
 }
 
 #pragma mark - DockTile

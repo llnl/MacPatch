@@ -27,7 +27,7 @@
   MacPatch Patch Loader Setup Script
   MacPatch Version 3.5.x
 
-  Script Version 2.4.1
+  Script Version 2.4.2
 '''
 
 import os
@@ -557,10 +557,10 @@ def setupServices():
 		if os_type == 'Darwin':
 			srvsList.append('gov.llnl.mp.rsync.plist')
 		else:
-			linkStartupScripts('MPRsyncServer3')
-			linkStartupScripts('MPRsyncServer3@','copy')
-			linkStartupScripts('MPRsyncServer3','copy','socket')
-			srvsList.append('MPRsyncServer3')
+			linkStartupScripts('MPRsyncServer')
+			linkStartupScripts('MPRsyncServer@','copy')
+			linkStartupScripts('MPRsyncServer','copy','socket')
+			srvsList.append('MPRsyncServer')
 
 	# Patch Loader
 	_PATCHLOAD = 'Y' if masterType else 'N'
@@ -739,7 +739,6 @@ class MPLdap:
 
 			use_ldap_ssl = input("Active Directory/LDAP use ssl? [Y]: ").upper() or "Y"
 			if use_ldap_ssl == "Y":
-				print("Please note, you will need to run the addRemoteCert.py script prior to starting the MacPatch Web Admin Console.")
 				ldap_ssl = "CFSSL_BASIC"
 				conf["settings"]["ldap"]["secure"] = ldap_ssl
 			else:

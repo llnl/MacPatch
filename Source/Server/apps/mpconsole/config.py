@@ -20,6 +20,8 @@ class BaseConfig:
 	SRV_HOST                        = '127.0.0.1'
 	SRV_PORT                        = 3602
 
+	CORS_HEADERS 					= 'Content-Type'
+
 	# Database Options
 	DB_USER                         = 'mpdbadm'
 	DB_PASS                         = 'password'
@@ -46,21 +48,34 @@ class BaseConfig:
 	PATCH_CONTENT_DIR   = MP_ROOT_DIR+'/Content/Web/patches'
 	SW_CONTENT_DIR      = MP_ROOT_DIR+'/Content/Web/sw'
 
-	CORS_HEADERS        = 'Content-Type'
+	STATIC_DIR 					= basedir + '/static'
+	STATIC_JSON_DIR 			= STATIC_DIR + '/json'
 
-	JOBS_FILE = basedir+'/jobs.json'
-	JOBS = []
+	JOBS_FILE 					= STATIC_JSON_DIR+'/jobs.json'
+	JOBS 						= []
 
 	SCHEDULER_API_ENABLED 		= True
 	ALLOW_CONTENT_DOWNLOAD 		= False
 	REDIRECT_TO_NEW_API 		= True
 
-	# AWS
+	# AWS - MP
 	USE_AWS_S3					= False
 	AWS_S3_KEY					= None
 	AWS_S3_SECRET				= None
 	AWS_S3_BUCKET				= None
 	AWS_S3_REGION				= None
+
+	# InTune - MDM
+	ENABLE_INTUNE				= True
+	INTUNE_RESOURCE				= "https://graph.microsoft.com"
+	INTUNE_TENANT				= ""
+	INTUNE_AUTHORITY_HOST_URL	= ""
+	INTUNE_CLIENT_ID			= ""
+	INTUNE_CLIENT_SECRET		= ""
+	INTUNE_USER					= ""
+	INTUNE_USER_PASS			= ""
+
+	SCHEDULER_API_ENABLED = True
 
 class DevelopmentConfig(BaseConfig):
 
@@ -69,7 +84,6 @@ class DevelopmentConfig(BaseConfig):
 	DEBUG_TB_INTERCEPT_REDIRECTS    = False
 	SQLALCHEMY_TRACK_MODIFICATIONS  = False
 	ALLOW_CONTENT_DOWNLOAD 			= True
-
 
 class ProductionConfig(BaseConfig):
 

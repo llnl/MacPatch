@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPServerUpgrader.sh
-# Version: 1.0
+# Version: 1.1
 #
 # Description:
 # Upgrade script will upgrade a current install of the MacPatch server
@@ -40,17 +40,20 @@ fi
 # Script Variables -----------------------------------------------------------
 
 MPBASE="/opt/MacPatch"
+MPCONTENT="${MPBASE}/Content"
+MPCONTENTLNK="${MPCONTENT}"
 MPSRVCONTENT="${MPBASE}/Content/Web"
+USECONTENTLNK=false
 MPSERVERBASE="/opt/MacPatch/Server"
 BUILDROOT="${MPBASE}/.build/server"
 
 MPBASEBACK="/tmp/MPUSrvUpgrade"
 GITBRANCH="master"
 MOVECONTENT=true
-MASTERSERVER=true
+MASTERSERVER=false
 # Script Input Args ----------------------------------------------------------
 
-usage() { echo "Usage: $0 [-b GitHub Branch] -d (Is Distribution server)" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-b GitHub Branch] -m (Is Distribution server)" 1>&2; exit 1; }
 
 while getopts "hb:d" opt; do
 	case $opt in
@@ -62,8 +65,8 @@ while getopts "hb:d" opt; do
 			usage
 			exit 1
 			;;
-		d)
-			MASTERSERVER=false
+		m)
+			MASTERSERVER=true
 			;;
 		\?)
 			echo "Invalid option: -$OPTARG" >&2
@@ -121,7 +124,14 @@ cp $MPSERVERBASE/apps/*.cfg /tmp/MPUSrvUpgrade/Server/apps
 
 # Move the content files to tmp location
 if $MOVECONTENT; then
-	mv $MPSERVERBASE/Content /tmp/MPUSrvUpgrade/Content
+    if [[ -L "$MPBASE/Content" && -d "$MPBASE/Content" ]]; then
+        #echo "$file is a symlink to a directory"
+        USECONTENTLNK=true
+        MPCONTENTLNK=`readlink -f ${MPBASE}/Content`
+        unlink $MPBASE/Content
+    else
+        mv $MPSERVERBASE/Content /tmp/MPUSrvUpgrade/Content
+    fi
 fi
 #rm -rf /tmp/MPUSrvUpgrade/Content/Web/tools
 
@@ -158,22 +168,24 @@ cp /tmp/MPUSrvUpgrade/Server/apps/conf_console.cfg $MPSERVERBASE/apps/conf_conso
 mv $MPSERVERBASE/apps/config.cfg $MPSERVERBASE/apps/config.cfg.back
 cp /tmp/MPUSrvUpgrade/Server/apps/config.cfg $MPSERVERBASE/apps/config.cfg
 
-mv $MPSERVERBASE/apps/conf_wsapi.cfg $MPSERVERBASE/apps/conf_wsapi.cfg.back
-cp /tmp/MPUSrvUpgrade/Server/apps/conf_wsapi.cfg $MPSERVERBASE/apps/conf_wsapi.cfg
-
 # Content
 if $MOVECONTENT; then
-	rm -rf $MPSERVERBASE/Content/Web/clients
-	mv /tmp/MPUSrvUpgrade/Content/Web/clients $MPSERVERBASE/Content/Web/clients
+    if $USECONTENTLNK; then
+        rm -rf $MPSERVERBASE/Content
+        ln -s "${MPCONTENTLNK}" "${MPSERVERBASE}/Content"
+    else
+    	rm -rf $MPSERVERBASE/Content/Web/clients
+    	mv /tmp/MPUSrvUpgrade/Content/Web/clients $MPSERVERBASE/Content/Web/clients
 
-	rm -rf $MPSERVERBASE/Content/Web/patches
-	mv /tmp/MPUSrvUpgrade/Content/Web/patches $MPSERVERBASE/Content/Web/patches
+    	rm -rf $MPSERVERBASE/Content/Web/patches
+    	mv /tmp/MPUSrvUpgrade/Content/Web/patches $MPSERVERBASE/Content/Web/patches
 
-	rm -rf $MPSERVERBASE/Content/Web/sav
-	mv /tmp/MPUSrvUpgrade/Content/Web/sav $MPSERVERBASE/Content/Web/sav
+    	rm -rf $MPSERVERBASE/Content/Web/sav
+    	mv /tmp/MPUSrvUpgrade/Content/Web/sav $MPSERVERBASE/Content/Web/sav
 
-	rm -rf $MPSERVERBASE/Content/Web/sw
-	mv /tmp/MPUSrvUpgrade/Content/Web/sw $MPSERVERBASE/Content/Web/sw
+    	rm -rf $MPSERVERBASE/Content/Web/sw
+    	mv /tmp/MPUSrvUpgrade/Content/Web/sw $MPSERVERBASE/Content/Web/sw
+    fi 
 fi
 
 if $MASTERSERVER; then

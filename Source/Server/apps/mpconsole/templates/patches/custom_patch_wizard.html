@@ -266,7 +266,7 @@
 					</div>
 				</div>
 			</section>
-			<h1>Patch Package</h1>
+            <h1>Patch Package</h1>
 			<section>
 				<h4>Patch Package</h4>
 				<hr>
@@ -342,6 +342,79 @@
 								<small>
                                     Note: Please verify that S3 has been configured. Before using.<br>
                                     Upload speed will be slower, than local storage.
+                                </small>
+							</div>
+						</div>
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Installer Env Variables</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" id="env_var" name="pkg_env_var" SIZE="80" value="{{data.pkg_env_var or ''}}">
+							</div>
+							<div class="col-md-2">
+								<small>(Example: ATTR=VALUE,ATTR=VALUE)</small>
+							</div>
+						</div>
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Install Weight</label>
+							</div>
+							<div class="col-md-7">
+								<div class="range range-primary">
+									<input name="patch_install_weight" min="0" max="100" step="1" value="{{data.patch_install_weight}}" onchange="rangePrimary.value=value" type="range">
+									<output id="rangePrimary">{{data.patch_install_weight}}</output>
+								</div>
+							</div>
+							<div class="col-md-2">
+								<small>Sets a patch install weight order.<br>Lower = Earlier</small>
+							</div>
+						</div>
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Requires Reboot</label>
+							</div>
+							<div class="col-md-7">
+								<select name="patch_reboot" size="1">
+									<option {% if data.patch_reboot == "No" %} Selected {% endif %}>No</option>
+									<option {% if data.patch_reboot == "Yes" %} Selected {% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-2">&nbsp;</div>
+						</div>
+					</div>
+				</div>
+			</section>
+            <h1>Patch Install</h1>
+			<section>
+				<h4>Patch Install Options</h4>
+				<hr>
+				<div class="container-fluid">
+					<div class="form-group">
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Patch Application Path</label>
+							</div>
+							<div class="col-md-7">
+								<input type="text" name="bundle_id" SIZE="80" required="Yes"  message="Error [Patch Group ID]: A patch group id is required." value="{{data.bundle_id or ''}}">
+							</div>
+							<div class="col-md-2">
+								<small>(e.g. /Applications/Google Chrome.app/Contents/MacOS/Google Chrome)</small>
+							</div>
+						</div>
+                        <div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Quit Application</label>
+							</div>
+							<div class="col-md-7">
+								<select name="pkg_useS3" size="1">
+									<option value="0" {% if data.pkg_useS3 == 0 %} Selected {% endif %}>No</option>
+									<option value="1" {% if data.pkg_useS3 == 1 %} Selected {% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<small>
+                                    Note: This will prompt a user to quit an app before it's patched.
                                 </small>
 							</div>
 						</div>

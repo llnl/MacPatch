@@ -26,6 +26,7 @@
  */
 
 #import "SoftwareInstallOperation.h"
+#import "AppDelegate.h"
 
 @interface SoftwareInstallOperation (Private)
 
@@ -94,6 +95,7 @@
 
 - (void)finish
 {
+	qlinfo(@"Finish");
 	[self willChangeValueForKey:@"isFinished"];
 	[self willChangeValueForKey:@"isExecuting"];
 	isExecuting = NO;
@@ -102,6 +104,19 @@
 	[self didChangeValueForKey:@"isFinished"];
 	
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
+	
+	NSDictionary *swDict = swTask[@"Software"];
+	qlinfo(@"swDict: %@",swDict);
+	if (userInfo == nil)
+	{
+		if ([swDict[@"reboot"] intValue] == 1) {
+			AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[appDelegate showSWRebootWindow];
+			});
+			qlinfo(@"Show Reboot Window");
+		}
+	}
 }
 
 - (void)start
