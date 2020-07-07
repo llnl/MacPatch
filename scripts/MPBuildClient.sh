@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.2
+# Version: 2.3
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -20,6 +20,7 @@
 #   2.0		Updated to support new 3.2 agent and package name
 #   2.1     Add support external scripts for customizing
 #   2.2     Added planB save server address
+#   2.3     Update variables for version 3.5
 #
 # -------------------------------------------------------------
 
@@ -27,19 +28,19 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
+BUILDROOT="/private/var/tmp/MP/Client35/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.3.1.1"
-UPDATEVER="3.3.1.1"
+AGENTVER="3.5.0.1"
+UPDATEVER="3.5.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
 MIN_OS="10.12"
 INCPlanBSource=false
 MPPLANB_SRV_ADDR="localhost"
-BUILDPLIST="/Library/Preferences/mp.build.client32.plist"
+BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
 
 # Extenral scripts run pre xcode compile
 EXTERNALSCRIPTS=false
