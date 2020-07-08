@@ -27,6 +27,7 @@
 @property (nonatomic, strong) IBOutlet NSImageView *errorImage;
 @property (nonatomic, strong) IBOutlet NSTextField *swRebootTextFlag;
 @property (nonatomic, strong) IBOutlet NSImageView *swIcon;
+@property (nonatomic, strong) NSString *swIconName;
 @property (nonatomic, strong) IBOutlet NSTextField *swTitle;
 @property (nonatomic, strong) IBOutlet NSTextField *swCompany;
 @property (nonatomic, strong) IBOutlet NSTextField *swVersion;

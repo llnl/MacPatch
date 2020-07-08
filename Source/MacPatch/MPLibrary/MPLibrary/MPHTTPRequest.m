@@ -741,9 +741,12 @@
 		qlinfo(@"URL: %@",url);
 		//
 		NSError *dataErr = nil;
-		result = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
+		result = [[NSData alloc] initWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
+		//result = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
 		if (!dataErr) {
 			break;
+		} else {
+			qlinfo("Got Error, %@",dataErr.localizedDescription);
 		}
 	}
 	

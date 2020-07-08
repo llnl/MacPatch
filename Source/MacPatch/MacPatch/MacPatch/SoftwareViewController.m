@@ -43,6 +43,7 @@
 @property (strong, nonatomic) IBOutlet NSWindow *webWindow;
 @property (strong, nonatomic) IBOutlet WKWebView *webView;
 @property (strong, nonatomic) NSString *productURL;
+@property (strong, nonatomic) NSString *cacheDir;
 
 @end
 
@@ -71,6 +72,12 @@
 			[defaults setObject:@"Default" forKey:@"SWGroupSelected"];
 			[defaults synchronize];
 		}
+		
+		NSString *tempDirectoryTemplate = [NSTemporaryDirectory() stringByAppendingPathComponent:@"MacPatchApp"];
+		if (![fm fileSizeAtPath:tempDirectoryTemplate]) {
+			[fm createDirectoryRecursivelyAtPath:tempDirectoryTemplate];
+		}
+		self.cacheDir = tempDirectoryTemplate;
 		
 		[self setupSWDataDir];		
     }
@@ -474,10 +481,28 @@
 			}
 			
 			// Populate install by date
+			/*
 			if ([[[d objectForKey:@"sw_task_type"] uppercaseString] containsString:@"m"]) {
 				[d setObject:[d objectForKey:@"sw_end_datetime"] forKey:@"installBy"];
 			}
-			
+			// Add image
+			if (![item[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
+				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+				NSString *imgURL = item[@"Software"][@"sw_img_path"];
+				if (imgURL.length > 2)
+				{
+					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
+					if (imgData) {
+						[d setObject:imgData forKey:@"swImageData"];
+					} else {
+						d[@"swImageData"] = nil;
+					}
+				}
+			} else {
+				d[@"swImageData"] = nil;
+			}
+			*/
+			d[@"swImageData"] = nil;
 			[_SoftwareArray addObject:d];
 			d = nil;
 		}
@@ -679,25 +704,64 @@
 		cellView.actionButton.title = @"Install";
 		[cellView.actionButton setState:0];
 		[cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
+		if (sw[@"swImageData"]) {
+			NSImage *image = [[NSImage alloc] initWithData:sw[@"swImageData"]];
+			[cellView.swIcon setImage:image];
+		} else {
+			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+		}
 		
 		if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
-			MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-			NSString *imgURL = sw[@"Software"][@"sw_img_path"];
-			if (imgURL.length > 2)
-			{
-				NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-				if (imgData) {
-					NSImage *image = [[NSImage alloc] initWithData:imgData];
-					[cellView.swIcon setImage:image];
-				} else {
-					[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+			NSString *_imgCachePath = [_cacheDir stringByAppendingPathComponent:sw[@"Software"][@"sw_img_path"]];
+			if ([fm fileSizeAtPath:_imgCachePath]) {
+				NSImage *image = [[NSImage alloc] initWithContentsOfFile:_imgCachePath];
+				[cellView.swIcon setImage:image];
+			} else {
+				NSString *_imgCachePathDir = [_cacheDir stringByAppendingPathComponent:[sw[@"Software"][@"sw_img_path"] stringByDeletingLastPathComponent]];
+				[fm createDirectoryRecursivelyAtPath:_imgCachePathDir];
+				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+				NSString *imgURL = sw[@"Software"][@"sw_img_path"];
+				if (imgURL.length > 2)
+				{
+					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
+					if (imgData) {
+						[imgData writeToFile:_imgCachePath atomically:NO];
+						NSImage *image = [[NSImage alloc] initWithData:imgData];
+						[cellView.swIcon setImage:image];
+					} else {
+						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+					}
 				}
 			}
 		} else {
 			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
 		}
 		
-        
+		/*
+		if (!cellView.swIconName)
+		{
+			if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
+				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+				NSString *imgURL = sw[@"Software"][@"sw_img_path"];
+				if (imgURL.length > 2)
+				{
+					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
+					if (imgData) {
+						NSImage *image = [[NSImage alloc] initWithData:imgData];
+						[cellView.swIcon setImage:image];
+						cellView.swIconName = imgURL.lastPathComponent;
+						//[cellView setSwIconName:[imgURL.lastPathComponent]];
+					} else {
+						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+					}
+				}
+			} else {
+				[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+			}
+		} else {
+			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+		}
+        */
         [cellView.swTitle setStringValue:sw[@"name"]];
 		[cellView.swCompany setPlaceholderString:@""];
 		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
