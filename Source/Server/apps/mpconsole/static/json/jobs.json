@@ -4,20 +4,20 @@
     "id": "GetCorpDevices",
     "func": "mpTaskJobs.GetCorpDevices",
     "trigger": "interval",
-    "seconds": 1800
+    "seconds": 1801
   },
   {
     "enabled": false,
     "id": "GetEnrolledDevices",
     "func": "mpTaskJobs.GetEnrolledDevices",
     "trigger": "interval",
-    "seconds": 1800
+    "seconds": 1811
   },
   {
     "enabled": false,
     "id": "GetDeviceConfigProfiles",
     "func": "mpTaskJobs.GetDeviceConfigProfiles",
     "trigger": "interval",
-    "seconds": 120
+    "seconds": 1821
   }
 ]
