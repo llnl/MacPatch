@@ -77,7 +77,6 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (BOOL)recordSoftwareInstall:(NSDictionary *)swTask
 {
-	qlerror(@"%@",swTask);
 	BOOL result = NO;
 	@try
 	{
@@ -335,7 +334,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	@try
 	{
 		
-		qlinfo(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
+		qltrace(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
 		NSMutableArray *toDelete = [NSMutableArray array];
 		NSMutableArray *rpArray = [dbDict[@"required_patches"] mutableCopy];
 		for (RequiredPatch *p in rpArray)
@@ -347,10 +346,10 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 				//[rpArray removeObject:p];
 			}
 		}
-		qlinfo(@"Setting new array.");
+		qltrace(@"Setting new array.");
 		[rpArray removeObjectsInArray:toDelete];
 		[dbDict setObject:rpArray forKey:@"required_patches"];
-		qlinfo(@"Save");
+		qltrace(@"Save");
 		[self save];
 		
 		return YES;
