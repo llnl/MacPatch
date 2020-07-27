@@ -106,7 +106,6 @@
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
 	
 	NSDictionary *swDict = swTask[@"Software"];
-	qlinfo(@"swDict: %@",swDict);
 	if (userInfo == nil)
 	{
 		if ([swDict[@"reboot"] intValue] == 1) {
@@ -150,7 +149,9 @@
 {
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
-	qlinfo(@"Install Software Task: %@",swTask);
+	qlinfo(@"Install Software Task: %@",swTask[@"name"]);
+	qldebug(@"Task Data: %@",swTask);
+	
 	[self postSWStatus:@"Starting Install operation"];
 	NSDictionary *softwareObj = swTask[@"Software"];
 	

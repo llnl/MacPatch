@@ -268,7 +268,7 @@ done:
 	if ([fm fileExistsAtPath:l_localFilePath]) {
 		localFileDict = [NSDictionary dictionaryWithContentsOfFile:l_localFilePath];
 	} else {
-		qlerror(@"Unable to get version. %@ does not exist.",localFilePath);
+		qldebug(@"Unable to get version. %@ does not exist.",localFilePath);
 		return fileVerPass;
 	}
 	
