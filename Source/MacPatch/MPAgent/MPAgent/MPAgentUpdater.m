@@ -114,7 +114,7 @@
     // First we need to download the update
     @try
 	{
-        logit(lcl_vInfo,@"Start download for patch from %@",[self.agentUpdateData objectForKey:@"pkg_url"]);
+        logit(lcl_vInfo,@"Start download for patch %@",[[self.agentUpdateData objectForKey:@"pkg_url"] lastPathComponent]);
         //Pre Proxy Config
         downloadURL = [self.agentUpdateData objectForKey:@"pkg_url"];
         logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
