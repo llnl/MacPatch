@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
     Copyright (c) 2018, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
     Script: MPInventory.py
-    Version: 1.7.0
+    Version: 1.7.1
 '''
 
 import logging
