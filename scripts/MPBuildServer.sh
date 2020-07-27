@@ -467,13 +467,6 @@ else
     --with-http_ssl_module \
     --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
     
-    # Old
-    #./configure --prefix=${MPSERVERBASE}/nginx \
-    #--without-http_autoindex_module \
-    #--without-http_ssi_module \
-    #-with-http_ssl_module \
-    #--with-openssl=${TMP_DIR}/openssl \
-    #--with-pcre=${TMP_DIR}/pcre  > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
