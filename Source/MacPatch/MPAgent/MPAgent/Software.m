@@ -9,7 +9,7 @@
 #import "Software.h"
 #import "MacPatch.h"
 #import <SystemConfiguration/SystemConfiguration.h>
-
+/*
 @interface NSFileHandle (MPNSFileHandleAdditions)
 - (NSData *)availableDataOrError:(NSException **)returnError;
 @end
@@ -39,7 +39,7 @@
 	}
 }
 @end
-
+*/
 @interface Software ()
 {
 	NSFileManager *fm;
@@ -852,7 +852,7 @@ done:
 	NSError *err = nil;
 	for (NSString *app in onlyApps) {
 		if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]]) {
-			logit(lcl_vInfo,@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+			qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
 			[fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
 			if (err) {
 				logit(lcl_vError,@"%@",[err description]);
@@ -1145,7 +1145,7 @@ done:
 		// First we need to download the update
 		//
 		@try {
-			logit(lcl_vInfo,@"Start download for patch from %@",[patchData[@"pkg_url"] lastPathComponent]);
+			logit(lcl_vInfo,@"Start download for patch %@",[patchData[@"pkg_url"] lastPathComponent]);
 			//Pre Proxy Config
 			dlURL = [NSString stringWithFormat:@"/mp-content%@",patchData[@"pkg_url"]];
 			logit(lcl_vInfo,@"Download patch from: %@",dlURL);
