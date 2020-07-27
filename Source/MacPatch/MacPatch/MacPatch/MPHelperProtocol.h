@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 2.9
+// Rev 3.0
 
 #import <Foundation/Foundation.h>
 
@@ -18,7 +18,8 @@ enum {
 	kMPPatchProcessProgress = 4,
 	kMPPatchAllProcessProgress = 5,
 	kMPPatchAllProcessStatus = 6,
-	kMPPatchAllInstallComplete = 7
+	kMPPatchAllInstallComplete = 7,
+	kMPPatchAllInstallError = 8
 };
 typedef NSUInteger MPPostDataType;
 
@@ -103,6 +104,7 @@ enum {
 - (void)installPatch:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)installPatch:(NSDictionary *_Nonnull)patch userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)installPatches:(NSArray *_Nonnull)patches withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
+- (void)installPatches:(NSArray *_Nonnull)patches userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply;
 - (void)scanAndPatchSoftwareItem:(nullable NSDictionary *)aSWDict withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 - (void)setPatchOnLogoutWithReply:(nullable void(^)(BOOL result))reply;
 - (void)setStateOnPausePatching:(MPPatchingPausedState)state withReply:(nullable void(^)(BOOL result))reply;
@@ -169,6 +171,7 @@ enum {
 
 @protocol MPHelperProgress
 
+- (void)patchProgress:(NSString *)progressStr;
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
 - (void)postPatchInstallStatus:(nullable NSString *)patchID type:(MPPostDataType)type;
 

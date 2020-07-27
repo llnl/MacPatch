@@ -313,7 +313,8 @@
 	NSString *_url = [NSString stringWithFormat:@"/mp-content%@",[swTask valueForKeyPath:@"Software.sw_url"]];
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-	NSString *dlPath = [req runSyncFileDownloadAlt:_url downloadDirectory:toPath error:&dlErr];
+	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
+	//NSString *dlPath = [req runSyncFileDownloadAlt:_url downloadDirectory:toPath error:&dlErr];
 	qldebug(@"Downloaded software to %@",dlPath);
 	return YES;
 }

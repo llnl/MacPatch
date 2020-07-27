@@ -45,6 +45,8 @@
 		8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7761140C2F0700D86586 /* qlog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF65E145F1922006284B2 /* RegexKitLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7754140C2F0700D86586 /* lcl.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F54747524CB427500710F9F /* NSFileHandle-Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F54747324CB427500710F9F /* NSFileHandle-Helper.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F54747624CB427500710F9F /* NSFileHandle-Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F54747424CB427500710F9F /* NSFileHandle-Helper.m */; };
 		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6222494D0600FDFBCA /* AgentData.m */; };
 		8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */; };
@@ -211,6 +213,8 @@
 		8F4B1DE716DD1BC600E15A9E /* MPLibrary-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MPLibrary-Prefix.pch"; sourceTree = "<group>"; };
 		8F4B1F2816DE639100E15A9E /* NSData+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "NSData+Base64.h"; path = "../NSData+Base64.h"; sourceTree = "<group>"; };
 		8F4B1F2916DE639100E15A9E /* NSData+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "NSData+Base64.m"; path = "../NSData+Base64.m"; sourceTree = "<group>"; };
+		8F54747324CB427500710F9F /* NSFileHandle-Helper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSFileHandle-Helper.h"; sourceTree = "<group>"; };
+		8F54747424CB427500710F9F /* NSFileHandle-Helper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSFileHandle-Helper.m"; sourceTree = "<group>"; };
 		8F60AD6122494D0600FDFBCA /* AgentData.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AgentData.h; sourceTree = "<group>"; };
 		8F60AD6222494D0600FDFBCA /* AgentData.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AgentData.m; sourceTree = "<group>"; };
 		8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UAObfuscatedString.h; sourceTree = "<group>"; };
@@ -750,6 +754,8 @@
 				8FF3D72521701AB500059ACD /* NSString+Hash.m */,
 				8FF3D73021701AB600059ACD /* NSString+Helper.h */,
 				8FF3D72921701AB600059ACD /* NSString+Helper.m */,
+				8F54747324CB427500710F9F /* NSFileHandle-Helper.h */,
+				8F54747424CB427500710F9F /* NSFileHandle-Helper.m */,
 			);
 			name = Helpers;
 			path = MPLibrary/Helpers;
@@ -974,6 +980,7 @@
 				8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */,
 				8FF3D73821701AB600059ACD /* NSFileManager+Helper.h in Headers */,
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
+				8F54747524CB427500710F9F /* NSFileHandle-Helper.h in Headers */,
 				8FF3D73921701AB600059ACD /* NSString+Hash.h in Headers */,
 				8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */,
 				8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */,
@@ -1128,6 +1135,7 @@
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
 				8FF3D674217011C500059ACD /* MPPython.m in Sources */,
 				8FF3D6B8217012D600059ACD /* MPKeychain.m in Sources */,
+				8F54747624CB427500710F9F /* NSFileHandle-Helper.m in Sources */,
 				8FF3D68C2170125900059ACD /* MPSettings.m in Sources */,
 				8FF3D68B2170125900059ACD /* MPDefaults.m in Sources */,
 				8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */,

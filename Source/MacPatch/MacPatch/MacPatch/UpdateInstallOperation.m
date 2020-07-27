@@ -152,6 +152,7 @@
 
 - (void)runPatchInstall
 {
+	[self postPatchStatus:@"Start Patch Install" ];
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
@@ -280,32 +281,24 @@
 	commandBlock(nil);
 }
 
-/*
 #pragma mark - MPHelperProgress protocol
 
-- (void)postStatus:(NSString *)status type:(MPPostDataType)type
+- (void)patchProgress:(NSString *)progressStr
 {
-	if (type == kMPPatchProcessStatus) {
-		//[self postSWStatus:status];
-	} else if (type == kMPPatchProcessProgress) {
-		//
-	}
+	qlinfo(@"patchProgress: %@",progressStr);
+	[self postPatchStatus:progressStr];
 }
-*/
-
-#pragma mark - MPHelperProgress protocol
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
-	qlinfo(@"UpdateInstallOperation[%lu]: %@",(unsigned long)type,status);
 	if (type == kMPProcessStatus) {
-		[self postSWStatus:status];
+		[self postPatchStatus:status];
 	}
 }
 
 #pragma mark - Notifications
 
-- (void)postSWStatus:(NSString *)status
+- (void)postPatchStatus:(NSString *)status
 {
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status}];
 }

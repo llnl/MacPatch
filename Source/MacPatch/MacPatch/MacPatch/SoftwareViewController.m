@@ -474,6 +474,7 @@
 				[d setObject:[d objectForKey:@"sw_end_datetime"] forKey:@"installBy"];
 			}
 			
+			d[@"swImgData"] = nil;
 			[_SoftwareArray addObject:d];
 			d = nil;
 		}
@@ -658,7 +659,7 @@
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
-    NSDictionary *sw = filteredSwTasks[row];
+    NSMutableDictionary *sw = filteredSwTasks[row];
     
     NSString *identifier = [tableColumn identifier];
     if ([identifier isEqualToString:@"MainCell"])
@@ -681,12 +682,19 @@
 			NSString *imgURL = sw[@"Software"][@"sw_img_path"];
 			if (imgURL.length > 2)
 			{
-				NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-				if (imgData) {
-					NSImage *image = [[NSImage alloc] initWithData:imgData];
-					[cellView.swIcon setImage:image];
+				if (!sw[@"swImgData"])
+				{
+					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
+					if (imgData) {
+						NSImage *image = [[NSImage alloc] initWithData:imgData];
+						[cellView.swIcon setImage:image];
+						sw[@"swImgData"] = imgData;
+					} else {
+						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+					}
 				} else {
-					[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
+					NSImage *image = [[NSImage alloc] initWithData:sw[@"swImgData"]];
+					[cellView.swIcon setImage:image];
 				}
 			}
 		} else {

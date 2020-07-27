@@ -73,7 +73,7 @@
 		} else {
 			[self.pausedPatchingText setHidden:YES];
 		}
-		[self.tableView reloadData];
+		//[self.tableView reloadData];
 	});
 }
 
@@ -85,6 +85,43 @@
 	});
 		 
 	[self startScan];
+	/*
+	NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithFile:@"/private/var/tmp/patches.plist"];
+	NSArray *approvedPatches = patchDict[@"required"];
+
+	[self->_content removeAllObjects];
+	[self->_content addObjectsFromArray:[NSMutableArray array]];
+	
+	// If there array has content, we need to remove all objects
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self.tableView reloadData];
+	});
+	
+	// If we have content to add, add it
+	if (approvedPatches && approvedPatches.count > 0)
+	{
+		[self->_content addObjectsFromArray:approvedPatches];
+	} else {
+		[self->_content addObjectsFromArray:[NSArray array]];
+	}
+	
+	dispatch_async(dispatch_get_main_queue(), ^{
+		[self.tableView reloadData];
+		if (self->_content.count > 1)
+		{
+			[self.updateAllButton setHidden:NO];
+			[self.updateAllButton setEnabled:YES];
+			if (self->_isPatchingPaused) {
+				[self.updateAllButton setEnabled:NO];
+				[self.pausedPatchingText setFrame:NSMakeRect(540, 570, 354, 17)]; // Move it over
+			}
+		} else {
+			[self.pausedPatchingText setFrame:NSMakeRect(628, 570, 354, 17)]; // Move it over
+		}
+	});
+	*/
+	//[self stopScan];
+	//return;
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
@@ -143,13 +180,19 @@
 
 - (IBAction)updateAllPatches:(id)sender
 {
+	__block int allowInstallInt = 0;
 	__block BOOL hasRebootPatch = NO;
+	
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+	if (allowInstall) allowInstallInt = 1;
+	
 	// Get an array of all patch dictionaries
 	NSMutableArray *allPatches = [NSMutableArray new];
 	for (int i = 0; i < _tableView.numberOfRows; i++)
 	{
 		UpdatesCellView *cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-		if ([cell.rowData[@"restart"] isEqualToString:@"No"]) {
+		if ([cell.rowData[@"restart"] isEqualToString:@"No"] || allowInstall) {
 			[allPatches addObject:cell.rowData];
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[cell.updateButton setHidden:YES];
@@ -179,7 +222,7 @@
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 				qlerror(@"%@",proxyError);
-			}] installPatches:(NSArray *)allPatches withReply:^(NSError *error, NSInteger resultCode) {
+			}] installPatches:(NSArray *)allPatches userInstallRebootPatch:allowInstallInt withReply:^(NSError *error, NSInteger resultCode) {
 
 				if (error) {
 					qlerror(@"Result Code(%ld): %@",resultCode,error.localizedDescription);
@@ -204,11 +247,15 @@
 					}
 				});
 				
+				dispatch_async(dispatch_get_main_queue(), ^{
+					[self->_scanButton setEnabled:YES];
+					[self resizeTableViewToDefaultSize];
+					if (allowInstallInt) {
+						AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+						[appDelegate showRestartWindow:0];
+					}
+				});
 			}];
-			
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self->_scanButton setEnabled:YES];
-			});
 		}
 	}];
 	
@@ -474,6 +521,23 @@
 					[cell.updateButton setEnabled:NO];
 					cell.patchCompletionIcon.hidden = NO;
 					cell.patchCompletionIcon.image = [NSImage imageNamed:@"GoodImage"];
+				}
+			}
+		});
+	}
+	else if (type == kMPPatchAllInstallError)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			
+			for (int i = 0; i < self->_tableView.numberOfRows; i++)
+			{
+				UpdatesCellView *cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+				if ([cell.rowData[@"patch_id"] isEqual:patchID]) {
+					[cell.updateButton setTitle:@"Error"];
+					[cell.updateButton setHidden:NO];
+					[cell.updateButton setEnabled:NO];
+					cell.patchCompletionIcon.hidden = NO;
+					cell.patchCompletionIcon.image = [NSImage imageNamed:@"ErrorImage"];
 				}
 			}
 		});
