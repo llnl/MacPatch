@@ -177,7 +177,7 @@
 	{
 		if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]])
 		{
-			qlinfo(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+			qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
 			[fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
 			if (err)
 			{

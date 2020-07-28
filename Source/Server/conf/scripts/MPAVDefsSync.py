@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 Script : MPAVDefsSync
-Version : 1.1.0
+Version : 1.1.1
 Description: This script will download the last 3 Symantec AV Defs
 files via ftp from Symantec. It will also delete older AV Defs zip
 files.

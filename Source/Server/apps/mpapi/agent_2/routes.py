@@ -42,7 +42,7 @@ class _AgentConfigInfo(MPResource):
 
 			agentConfigInfo = {}
 			group_id = 0
-			qGroupMembership = MpClientGroupMembers.query.filter(MpClientGroupMembers.client_id == client_id).first()
+			qGroupMembership = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == client_id).first()
 			if qGroupMembership is not None:
 				group_id = qGroupMembership.group_id
 

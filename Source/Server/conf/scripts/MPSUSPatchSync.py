@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
     Script: MPSUSPatchSync
-    Version: 1.6.0
+    Version: 1.6.1
 
     Description: This Script read all of the patch information
     from the apple software update sucatlog files and post the

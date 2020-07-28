@@ -10,6 +10,7 @@
 #import "GlobalQueueManager.h"
 #import "UpdateInstallOperation.h"
 #import "AppDelegate.h"
+#import "MPOProgressBar.h"
 
 @interface UpdatesCellView ()
 {
@@ -22,6 +23,7 @@
 @property (atomic, strong) NSString *cellStartNote;
 @property (atomic, strong) NSString *cellProgressNote;
 @property (atomic, strong) NSString *cellStopNote;
+@property (nonatomic, strong) MPOProgressBar *progressBarNew;
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
@@ -33,6 +35,16 @@
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
+	
+	_progressBarNew = [[MPOProgressBar alloc] init];
+	_progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
+	_progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
+	[self.layer addSublayer:_progressBarNew];
+	
+
+	NSRect pbar = _patchProgressBar.frame;
+	_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+	[_progressBarNew setHidden:YES];
     
     // Drawing code here.
 }
@@ -187,7 +199,6 @@
 	__weak typeof(self) weakSelf = self;
 	[nc addObserverForName:_cellStartNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellStartNote);
 		 //NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 [weakSelf.updateButton setTitle:@"Installing..."];
@@ -196,8 +207,6 @@
 	
 	[nc addObserverForName:_cellProgressNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellProgressNote);
-		 
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 if (userInfo[@"status"]) {
@@ -208,7 +217,6 @@
 	
 	[nc addObserverForName:_cellStopNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellStopNote);
 		 NSDictionary *userInfo = note.userInfo;
 		 qldebug(@"userInfo: %@",userInfo);
 		 dispatch_async(dispatch_get_main_queue(), ^{
@@ -235,8 +243,13 @@
 	dispatch_async(dispatch_get_main_queue(), ^{
 		//[self->_errorImage setHidden:YES];
 		
-		[self->_patchProgressBar setHidden:NO];
-		[self->_patchProgressBar startAnimation:nil];
+		//[self->_patchProgressBar setHidden:NO];
+		//[self->_patchProgressBar startAnimation:nil];
+		
+		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+		[self.progressBarNew startAnimation];
+		[self.progressBarNew setHidden:NO];
+		[self.progressBarNew display];
 		
 		[self->_patchStatus setHidden:NO];
 		self->_patchStatus.stringValue = @"Starting install...";
@@ -262,6 +275,9 @@
 		[self->_patchProgressBar setIndeterminate:YES];
 		[self->_patchProgressBar setHidden:YES];
 		[self->_patchProgressBar display];
+		
+		[self.progressBarNew stopAnimation];
+		[self.progressBarNew setHidden:YES];
 		
 		if (hadError)
 		{

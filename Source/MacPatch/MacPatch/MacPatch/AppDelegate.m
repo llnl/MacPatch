@@ -62,7 +62,7 @@
     self = [super init];
 	
 	NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MacPatch.log"];
-	[MPLog setupLogging:_logFile level:lcl_vDebug];
+	[MPLog setupLogging:_logFile level:lcl_vInfo];
 	[LCLLogFile setMirrorsToStdErr:YES];
 	
 	qlinfo(@"Logging up and running");

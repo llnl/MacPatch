@@ -186,10 +186,10 @@ def create_app(config_object=DefaultConfig):
 			for j in jData:
 				if j['enabled']:
 					if j['trigger'] == "interval":
-						print("Add interval job ({})".format(j['id']))
+						app.logger.info("Add interval job ({})".format(j['id']))
 						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'], coalesce=False, max_instances=1)
 					elif j['trigger'] == "cron":
-						print("Add cron job ({})".format(j['id']))
+						app.logger.info("Add cron job ({})".format(j['id']))
 						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], minute=j['minute'], coalesce=False, max_instances=1)
 
 	scheduler.init_app(app)

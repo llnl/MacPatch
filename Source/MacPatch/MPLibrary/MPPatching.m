@@ -425,14 +425,15 @@ typedef enum {
 			
 			qlinfo(@"Starting install for %@",_patch[@"patch"]);
 			[self iLoadStatus:@"Begin: %@\n", _patch[@"patch"]];
+			[self postStatusToDelegate:@"Begin: %@\n", _patch[@"patch"]];
 			
-			qlinfo(@"_patch: %@",_patch);
+			qldebug(@"Patch Data: %@",_patch);
 			
 			// Get all of the patches, main and subs
 			// This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
 			NSArray *patchPatchesArray = [NSArray arrayWithArray:_patch[@"patches"]];
 			qlinfo(@"Current patch has total patches associated with it %ld", patchPatchesArray.count);
-			qlinfo(@"patchPatchesArray: %@", patchPatchesArray);
+			qldebug(@"patchPatchesArray: %@", patchPatchesArray);
 			
 			MPFileUtils *fu;
 			NSString *dlPatchLoc; //Download location Path
@@ -457,6 +458,7 @@ typedef enum {
 				
 				// We have a currPatchToInstallDict to work with
 				qlinfo(@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]);
+				[self postStatusToDelegate:@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]];
 				
 				// *****************************
 				// Download the update
@@ -492,7 +494,8 @@ typedef enum {
 					// -------------------------------------------
 					if (downloadPatch)
 					{
-						qlinfo(@"Start download for patch from %@",currPatchToInstallDict[@"pkg_url"]);
+						qlinfo(@"Start download for patch %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]);
+						[self postStatusToDelegate:@"Downloading %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]];
 						NSString *patchURL = [NSString stringWithFormat:@"/mp-content%@",currPatchToInstallDict[@"pkg_url"]];
 						
 						qlinfo(@"Download patch from: %@",patchURL);
@@ -500,6 +503,9 @@ typedef enum {
 						dlPatchLoc = [self downloadUpdate:patchURL error:&err];
 						if (err) {
 							qlerror(@"Error downloading a patch, skipping %@. Err Message: %@",_patch[@"patch"],err.localizedDescription);
+							patchInstallErrors++;
+							[failedPatches addObject:_patch];
+							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 							break;
 						}
 						qlinfo(@"File downloaded to %@",dlPatchLoc);
@@ -507,20 +513,30 @@ typedef enum {
 						// -------------------------------------------
 						// Validate hash, before install
 						// -------------------------------------------
+						[self postStatusToDelegate:@"Verifying file hash..."];
 						if (![self doesHashMatch:dlPatchLoc knownHash:currPatchToInstallDict[@"pkg_hash"]])
 						{
 							qlerror(@"The downloaded file did not pass the file hash validation. No install will occur.");
 							
-							fu = [MPFileUtils new];
-							[fu removeContentsOfDirectory:dlPatchLoc.stringByDeletingLastPathComponent];
+							//fu = [MPFileUtils new];
+							//[fu removeContentsOfDirectory:dlPatchLoc.stringByDeletingLastPathComponent];
+							qlerror(@"Remove: %@",dlPatchLoc);
 							
-							continue;
+							patchInstallErrors++;
+							[failedPatches addObject:_patch];
+							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
+							break;
+							
+							//continue;
 						}
 					}
 				}
 				@catch (NSException *e)
 				{
 					qlerror(@"%@", e);
+					patchInstallErrors++;
+					[failedPatches addObject:_patch];
+					[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 					break;
 				}
 				
@@ -528,6 +544,7 @@ typedef enum {
 				// Now we need to unzip
 				qlinfo(@"Uncompressing patch, to begin install.");
 				qlinfo(@"Begin decompression of file, %@",dlPatchLoc);
+				[self postStatusToDelegate:@"Decompressing file, %@",[dlPatchLoc lastPathComponent]];
 				err = nil;
 				fu = [MPFileUtils new];
 				[fu unzip:dlPatchLoc error:&err];
@@ -545,6 +562,7 @@ typedef enum {
 					if ([currPatchToInstallDict[@"pkg_preinstall"] length] > 0 && ([currPatchToInstallDict[@"pkg_preinstall"] isEqualTo:@"NA"] == NO))
 					{
 						qlinfo(@"Begin pre install script.");
+						[self postStatusToDelegate:@"Begin pre install script."];
 						NSString *preInstScript = @"";
 						if ([currPatchToInstallDict[@"pkg_preinstall"] isBase64String])
 						{
@@ -584,6 +602,7 @@ typedef enum {
 					{
 						pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[ii]];
 						qlinfo(@"Installing %@",pkgPath.lastPathComponent);
+						[self postStatusToDelegate:@"Installing %@",pkgPath.lastPathComponent];
 						qlinfo(@"Start install of %@",pkgPath);
 						mpInstaller = [[MPInstaller alloc] init];
 						int instalRes = -1;
@@ -857,6 +876,11 @@ typedef enum {
 	[self.delegate patchingProgress:self progress:data];
 }
 
+- (void)downloadProgress:(NSString *)progressStr
+{
+	[self.delegate patchingProgress:self progress:progressStr];
+}
+
 #pragma mark - Private
 
 - (BOOL)isTaskRunning:(MPTaskRunningType)task
@@ -1044,10 +1068,13 @@ typedef enum {
 	NSString *res = nil;
 	NSError *error = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+	req.delegate = self;
 	NSString *uuid = [[NSUUID UUID] UUIDString];
 	NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:uuid];
 	res = [req runSyncFileDownload:url downloadDirectory:dlDir error:&error];
+	qlerror(@"[downloadUpdate][res]:%@",res);
 	if (error) {
+		qlerror(@"[downloadUpdate][error]:%@",error.localizedDescription);
 		if (err != NULL) {
 			*err = error;
 		} else {
@@ -1132,4 +1159,16 @@ typedef enum {
 }
 
 #pragma mark Local Database
+
+
+- (void)postStatusToDelegate:(NSString *)str, ...
+{
+	va_list va;
+	va_start(va, str);
+	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
+	va_end(va);
+	qlinfo(@"postStatusToDelegate: %@",string);
+	[self.delegate patchProgress:string];
+}
+
 @end

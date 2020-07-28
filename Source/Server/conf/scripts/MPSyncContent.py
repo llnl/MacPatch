@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python
+#!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
  Copyright (c) 2013, Lawrence Livermore National Security, LLC.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.5.1
+	Version: 1.5.2
 '''
 
 import datetime
