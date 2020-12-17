@@ -46,7 +46,8 @@ class SoftwareTasksForGroup(MPResource):
 			if 'REDIRECT_TO_NEW_API' in current_app.config:
 				if current_app.config['REDIRECT_TO_NEW_API']:
 					swV4 = SoftwareTasksForGroupNew()
-					return swV4.get(cuuid,groupName,osver)
+					x = swV4.get(cuuid,groupName,osver)
+					return x
 
 			log_Debug("[SoftwareTasksForGroup][Get][%s]: Args: groupName=%s, osver=%s" % (cuuid, groupName, osver))
 

@@ -1,7 +1,9 @@
 from flask import Flask
 
-from flask_sqlalchemy import SQLAlchemy
-db = SQLAlchemy()
+from flask_sqlalchemy_cache import CachingQuery
+from flask_sqlalchemy import SQLAlchemy, Model
+Model.query_class = CachingQuery
+db = SQLAlchemy(query_class=CachingQuery)
 
 from flask_migrate import Migrate
 migrate = Migrate()

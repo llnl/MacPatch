@@ -150,6 +150,9 @@ def register_blueprints(app):
 	from .antivirus import antivirus as bp_antivirus
 	app.register_blueprint(bp_antivirus, url_prefix=app.config['URL_PREFIX'])
 
+	from .antivirus_2 import antivirus_2 as bp_antivirus_2
+	app.register_blueprint(bp_antivirus_2, url_prefix='/api/v2')
+
 	from .auth import auth as bp_auth
 	app.register_blueprint(bp_auth, url_prefix=app.config['URL_PREFIX'])
 

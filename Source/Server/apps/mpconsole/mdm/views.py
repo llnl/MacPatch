@@ -87,6 +87,9 @@ def corporateDevices():
 		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_corporate_devices"]["columns"]
 		columns = sorted(schemaColumns, key = lambda i: i['order'])
 
+		joinCols = [{ "column": "cuuid", "displayName": "MP-ClientID", "order": 99,"visible": 0},{ "column": "hostname", "displayName": "MP-Hostname", "order": 99,"visible": 1}]
+		columns = columns + joinCols
+
 	except:
 		_lastSyncAt = "Error"
 
@@ -99,18 +102,22 @@ def corporateDevices():
 def corporateDevicesList():
 	cols = []
 	listCols = MDMIntuneCorporateDevices.__table__.columns
-	devices = MDMIntuneCorporateDevices.query.all()
+	devices = MDMIntuneCorporateDevices.query.outerjoin(MpClient, MpClient.serialno == MDMIntuneCorporateDevices.importedDeviceIdentifier).add_columns(
+														MpClient.cuuid, MpClient.hostname).all()
 
 	for c in listCols:
 		cols.append(c.name)
 
 	_results = []
 	for r in devices:
-		_dict = r.asDict
+		_dict = r[0].asDict
 		_row = {}
 		for col in cols:
 			if col in _dict:
 				_row[col] = _dict[col]
+
+		_row['cuuid'] = r.cuuid
+		_row['hostname'] = r.hostname
 
 		_results.append(OrderedDict(sorted(_row.items())) )
 
@@ -131,6 +138,20 @@ def corporateDeviceAdd():
 		columns = sorted(schemaColumns, key = lambda i: i['order'])
 
 		return render_template('mdm/corporate_devices_add.html', columns=columns)
+
+@mdm.route('/corporateDevice/live/query',methods=['GET'])
+@login_required
+def corporateDeviceQueryForm():
+	return render_template('mdm/corporate_device_query.html', columns={})
+
+''' AJAX Request '''
+''' Live Query '''
+@mdm.route('/corporateDevice/query',methods=['GET'])
+@login_required
+@cross_origin()
+def corporateDeviceQuery():
+	_results = {}
+	return json.dumps({'data': _results}, default=json_serial), 200
 
 @mdm.route('/corporateDevice/search',methods=['POST'])
 @login_required

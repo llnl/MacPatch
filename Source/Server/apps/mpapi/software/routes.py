@@ -10,6 +10,7 @@ from .. import db
 from .. mputil import *
 from .. model import *
 from .. mplogger import *
+from .. software_4.routes import SoftwareTasksForGroup as SoftwareTasksForGroupNew
 
 parser = reqparse.RequestParser()
 
@@ -35,6 +36,16 @@ class SoftwareTasksForGroup(MPResource):
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify Signature'}, 424
 
 			log_Debug("[SoftwareTasksForGroup][Get][%s]: Args: groupName=%s, osver=%s" % (cuuid, groupName, osver))
+
+			if 'REDIRECT_TO_NEW_API' in current_app.config:
+				if current_app.config['REDIRECT_TO_NEW_API']:
+					swV4 = SoftwareTasksForGroupNew()
+					_redirectResult = swV4.get(cuuid,groupName,osver)
+					_redirectResultData = _redirectResult[0]['result']['data']
+					if _redirectResultData is not None:
+						return {'errorno': 0, 'errormsg': '', 'result': {"Tasks": _redirectResultData } }, 200
+					else:
+						return {'errorno': 0, 'errormsg': 'No Data for Group', 'result': {}}, 202
 
 			_group_id = None
 			_group_data = None
