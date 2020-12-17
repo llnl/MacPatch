@@ -71,7 +71,8 @@ def create_app(config_object=DefaultConfig):
 		_log_level = logging.INFO
 
 	# Set and Enable Logging
-	handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=30)
+	# handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=30)
+	handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=10485760, backupCount=30)
 	handler.setLevel(_log_level) # This is needed for log rotation
 	# Set log file formatting
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
@@ -154,6 +155,9 @@ def register_blueprints(app):
 
 	from .autopkg import autopkg as bp_autopkg
 	app.register_blueprint(bp_autopkg, url_prefix=app.config['URL_PREFIX'])
+
+	from .aws import aws as bp_aws
+	app.register_blueprint(bp_aws, url_prefix=app.config['URL_PREFIX'])
 
 	from .checkin import checkin as bp_checkin
 	app.register_blueprint(bp_checkin, url_prefix=app.config['URL_PREFIX'])

@@ -27,6 +27,7 @@
 #import <Foundation/Foundation.h>
 #import "MPPatchScan.h"
 #import "MPAsus.h"
+#import "MPHTTPRequest.h"
 
 @class MPPatching;
 
@@ -34,15 +35,17 @@
 @protocol MPPatchingDelegate <NSObject>
 
 @optional
+
+- (void)patchProgress:(NSString *)progressStr;
 - (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr;
 
 @end
 
 @class MPPatchScan;
 
-@interface MPPatching : NSObject <MPPatchingDelegate, MPPatchScanDelegate, MPAsusDelegate>
+@interface MPPatching : NSObject <MPPatchingDelegate, MPPatchScanDelegate, MPAsusDelegate, MPHTTPRequestDelegate>
 
-@property (weak, nonatomic) id delegate;
+@property (weak, nonatomic) id <MPPatchingDelegate> delegate;
 
 @property (nonatomic, assign) BOOL forceTaskRun;
 @property (nonatomic, assign) BOOL iLoadMode;
@@ -54,6 +57,7 @@
 // Scan for Patches
 - (NSArray *)scanForPatchUsingBundleID:(NSString *)aBundleID;
 - (NSArray *)scanForPatchesUsingTypeFilter:(MPPatchContentType)contentType forceRun:(BOOL)forceRun;
+- (NSArray *)scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun patchAllFound:(BOOL)patchAll;
 
 // Patch System
 

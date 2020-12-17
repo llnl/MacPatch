@@ -1,6 +1,7 @@
 from flask import render_template, session, request, current_app, redirect, url_for
 from flask_security import login_required
 from flask_cors import cross_origin
+from flask_breadcrumbs import register_breadcrumb
 from sqlalchemy import text, or_, desc
 from datetime import datetime
 
@@ -19,6 +20,7 @@ from .. modes import *
 from .. mplogger import *
 from .. mputil import *
 from .. mptasks import MPTaskJobs
+from .. mptasks import MPIntune
 
 
 @mdm.route('/enrolledDevices')
@@ -223,8 +225,11 @@ def runIntuneDataSync(id):
 			tasks.GetCorpDevices()
 			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == 'mdm_intune_corporate_devices' ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
 		elif id == "enrolledDevices":
+			log("id == enrolledDevices")
 			tasks.GetEnrolledDevices()
+			log("enrolledDevices done")
 			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneDevices.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
+			log("_lastSync done")
 		elif id == "deviceProfiles":
 			tasks.GetDeviceConfigProfiles()
 			_lastSync = MDMIntuneLastSync.query.filter( MDMIntuneLastSync.tableName == MDMIntuneConfigProfiles.__tablename__ ).order_by(desc(MDMIntuneLastSync.lastSyncDateTime)).first()
@@ -239,3 +244,95 @@ def runIntuneDataSync(id):
 		log_Error('[runIntuneDataSync][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
 		return json.dumps({'lastSync': _lastSyncAt}, default=json_serial), 401
 
+@mdm.route('/groups',methods=['GET'])
+@login_required
+@cross_origin()
+def getMDMGroups():
+	columns = []
+	try:
+		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_groups"]["columns"]
+		columns = sorted(schemaColumns, key=lambda i: i['order'])
+
+	except:
+		_lastSyncAt = "Error"
+
+	return render_template('mdm/mdm_groups.html', data=[], columns=columns)
+
+''' AJAX Request '''
+@mdm.route('/groups/list',methods=['GET'])
+@login_required
+@cross_origin()
+def getMDMGroupsList():
+	_results = []
+
+	schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_groups"]["columns"]
+	columns = sorted(schemaColumns, key=lambda i: i['order'])
+
+	mpi = MPIntune()
+	mpi.init_app(current_app)
+	groups = mpi.GetGroups()
+
+	for group in groups:
+		_row = {}
+		for c in columns:
+			_row[c['column']] = group[c['column']]
+
+		_results.append(_row)
+
+	return json.dumps({'data': _results}, default=json_serial), 200
+
+
+@mdm.route('/groups/members/<string:id>',methods=['GET'])
+@login_required
+@cross_origin()
+def getMDMGroupsMembers(id):
+	columns = []
+	groupName = "ERR"
+	mpi = MPIntune()
+	mpi.init_app(current_app)
+	groupName = mpi.GetGroup(id)
+
+	try:
+
+		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_group_membership"]["columns"]
+		columns = sorted(schemaColumns, key=lambda i: i['order'])
+
+	except:
+		_lastSyncAt = "Error"
+
+	return render_template('mdm/mdm_group_membership.html', data=[], groupid=id, groupname=groupName, columns=columns)
+
+
+@mdm.route('/groups/members/<string:id>/list',methods=['GET'])
+@login_required
+@cross_origin()
+def getMDMGroupsMembersList(id):
+	_results = []
+
+	schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_group_membership"]["columns"]
+	columns = sorted(schemaColumns, key=lambda i: i['order'])
+
+	mpi = MPIntune()
+	mpi.init_app(current_app)
+	groups = mpi.GetGroupMembers(id)
+
+	for group in groups:
+		_row = {}
+		for c in columns:
+			_row[c['column']] = group[c['column']]
+
+		_results.append(_row)
+
+	print(_results)
+	return json.dumps({'data': _results}, default=json_serial), 200
+
+@mdm.route('/groups/members/<string:groupid>/<string:deviceid>',methods=['DELETE'])
+@login_required
+@cross_origin()
+def deleteMDMGroupsMember(groupid, deviceid):
+	print("deleteMDMGroupsMember")
+	mpi = MPIntune()
+	mpi.init_app(current_app)
+	groups = mpi.DeleteMemberFromGroup(groupid,deviceid)
+
+	return json.dumps({'data': {}}, default=json_serial), 200

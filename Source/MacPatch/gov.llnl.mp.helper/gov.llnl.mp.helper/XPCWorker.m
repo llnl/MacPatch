@@ -33,7 +33,7 @@
 
 #import "MPPatching.h"
 
-#import "DBModels.h"
+//#import "DBModels.h"
 #import "DBMigration.h"
 #import "MPClientDB.h"
 
@@ -42,37 +42,8 @@
 
 NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
-@interface NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError;
-@end
 
-@implementation NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError
-{
-    for(;;)
-    {
-        @try
-        {
-            return [self availableData];
-        }
-        @catch (NSException *e)
-        {
-            if ([[e name] isEqualToString:NSFileHandleOperationException]) {
-                if ([[e reason] isEqualToString:@"*** -[NSConcreteFileHandle availableData]: Interrupted system call"]) {
-                    continue;
-                }
-                if (returnError) {
-                    *returnError = e;
-                }
-                return nil;
-            }
-            @throw;
-        }
-    }
-}
-@end
-
-@interface XPCWorker () <NSXPCListenerDelegate, MPHelperProtocol, MPHTTPRequestDelegate>
+@interface XPCWorker () <NSXPCListenerDelegate, MPHelperProtocol, MPHTTPRequestDelegate, MPPatchingDelegate>
 {
     NSFileManager *fm;
 }
@@ -161,13 +132,9 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 // Called by our XPC listener when a new connection comes in.  We configure the connection
 // with our protocol and ourselves as the main object.
 {
-    qlinfo(@"Listener recieved new connection.");
-    //BOOL valid = [self newConnectionIsTrusted:newConnection];
-	
 	BOOL valid = YES;
     if (valid)
 	{
-        logit(lcl_vInfo,@"Listener, new connection is trusted and valid");
         assert(listener == self.listener);
         assert(newConnection != nil);
 		
@@ -182,7 +149,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         return YES;
     }
     
-    logit(lcl_vError,@"Listener failed to trust new connection.");
+    qlerror(@"Listener failed to trust new connection.");
     return NO;
 }
 
@@ -259,12 +226,12 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     // We specifically don't check for authorization here.  Everyone is always allowed to get
     // the version of the helper tool.
 	
-	qlinfo(@"scanForInstalledConfigProfiles");
+	
 	MPConfigProfiles *p = [[MPConfigProfiles alloc] init];
 	NSArray *cp = [p readProfileStoreReturnAsConfigProfile];
 	NSString *str = [NSString stringWithFormat:@"Profiles Found %lu",(unsigned long)cp.count];
 	
-    logit(lcl_vDebug,@"getTestWithReply");
+    qldebug(@"getTestWithReply");
     reply(str);
 }
 
@@ -273,13 +240,13 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	// We specifically don't check for authorization here.  Everyone is always allowed to get
 	// the version of the helper tool.
 	
-	qlinfo(@"scanForInstalledConfigProfiles");
+	qlinfo(@"Scan For Installed Config Profiles");
 	MPConfigProfiles *p = [[MPConfigProfiles alloc] init];
 	NSArray *cp = [p readProfileStoreReturnAsConfigProfile];
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:cp];
 	NSString *str = [NSString stringWithFormat:@"Profiles Found %lu",(unsigned long)cp.count];
 	
-	logit(lcl_vDebug,@"getProfilesWithReply");
+	qldebug(@"getProfilesWithReply");
 	reply(str,data);
 }
 
@@ -290,7 +257,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 // Delegate Method
 - (void)appleScanProgress:(NSString *)data
 {
-	qlinfo(@"appleScanProgress: %@",[data trim]);
+	//qlinfo(@"appleScanProgress: %@",[data trim]);
 	//[self postPatchStatus:[data trim]];
 	[self postStatus:[data trim]];
 }
@@ -337,7 +304,11 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	
 	MPPatching *mpPatching = [MPPatching new];
 	mpPatching.delegate = self;
-	requiredPatches = [mpPatching scanForPatchesUsingTypeFilter:patchType forceRun:NO];
+	if (patchType == kAllActivePatches) {
+		requiredPatches = [mpPatching scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:kAllPatches bundleID:NULL forceRun:NO patchAllFound:YES];
+	} else {
+		requiredPatches = [mpPatching scanForPatchesUsingTypeFilter:patchType forceRun:NO];
+	}
 	
 	// Create Patch Dict
 	patches = @{@"apple":@[], @"custom": @[], @"required": requiredPatches};
@@ -358,11 +329,12 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	qldebug(@"Patch: %@",patch);
 	
 	MPPatching *patching = [MPPatching new];
-	[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
+	patching.delegate = self;
+	//[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
 	
 	if (patchResult[@"patchInstallErrors"]) {
-		qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
+		qldebug(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 		{
 			qlerror(@"Error installing %@",patch[@"patch"]);
@@ -372,7 +344,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -384,24 +356,32 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	qldebug(@"Patch: %@",patch);
 	
 	MPPatching *patching = [MPPatching new];
+	patching.delegate = self;
 	[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
 	if (installRebootPatch == 1) {
 		[patching setInstallRebootPatchesWhileLoggedIn:YES];
 	}
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
-	
+	qltrace(@"patchResult: %@",patchResult);
 	if (patchResult[@"patchInstallErrors"]) {
-		qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 		{
 			qlerror(@"Error installing %@",patch[@"patch"]);
 			result = 1;
+		} else {
+			// No Errors detected
+			if (patchResult[@"patchesRequireHalt"]) {
+				// Patch Requires a halt/shutdown ... this is for Apple Patches with firmware
+				if ([patchResult[@"patchInstallErrors"] intValue] >= 1) {
+					result = 1000;
+				}
+			}
 		}
 	} else {
 		result = 9999;
 	}
 	
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -418,22 +398,29 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	{
 		qlinfo(@"Install Patch: %@",patch[@"patch"]);
 		qldebug(@"Patch: %@",patch);
+        
+        NSString *_patchID;
+        if ([[patch[@"type"] uppercaseString] isEqualToString:@"APPLE"]) {
+            _patchID = patch[@"patch"];
+        } else {
+            _patchID = patch[@"patch_id"];
+        }
 		
 		[self postPatchAllStatus:@"Begin %@ install...", patch[@"patch"]];
 		NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
 		
 		if (patchResult[@"patchInstallErrors"])
 		{
-			qlinfo(@"patchResult[patchInstallErrors] = %d",[patchResult[@"patchInstallErrors"] intValue]);
 			if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 			{
 				qlerror(@"Error installing %@",patch[@"patch"]);
 				result = result + 1;
+				[self postPatchInstallError:_patchID];
 			} else {
-				[self postPatchInstallCompletion:patch[@"patch_id"]];
+				[self postPatchInstallCompletion:_patchID];
 			}
 		} else {
-			[self postPatchInstallCompletion:patch[@"patch_id"]];
+			[self postPatchInstallCompletion:_patchID];
 		}
 		
 		patchCount = patchCount + 1;
@@ -441,10 +428,62 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[self postPatchAllProgress:patchCount];
 	}
 
-	qlinfo(@"result = %ld",(long)result);
+	qltrace(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%d install(s) completed.", patchCount];
 	reply(nil,result);
 }
+
+- (void)installPatches:(NSArray *)patches userInstallRebootPatch:(int)installRebootPatch withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode))reply
+{
+	int patchCount = 0;
+	double patchProgress = 0.0;
+	NSInteger result = 0;
+	MPPatching *patching = [MPPatching new];
+    patching.delegate = self;
+	if (installRebootPatch == 1) {
+		[patching setInstallRebootPatchesWhileLoggedIn:YES];
+	}
+	
+	[self postPatchStatus:@"Installing all patches ..."];
+	for (NSDictionary *patch in patches)
+	{
+		qlinfo(@"Install Patch: %@",patch[@"patch"]);
+		qldebug(@"Patch: %@",patch);
+        
+        NSString *_patchID;
+        if ([[patch[@"type"] uppercaseString] isEqualToString:@"APPLE"]) {
+            _patchID = patch[@"patch"];
+        } else {
+            _patchID = patch[@"patch_id"];
+        }
+		
+		[self postPatchAllStatus:@"Begin %@ install...", patch[@"patch"]];
+		NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
+        qldebug(@"patchResult: %@",patchResult);
+		if (patchResult[@"patchInstallErrors"])
+		{
+			if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
+			{
+				qlerror(@"Error installing %@",patch[@"patch"]);
+				result = result + 1;
+				[self postPatchInstallError:_patchID];
+			} else {
+				[self postPatchInstallCompletion:_patchID];
+			}
+		} else {
+			[self postPatchInstallCompletion:_patchID];
+		}
+		
+		patchCount = patchCount + 1;
+		patchProgress = patchCount / patches.count;
+		[self postPatchAllProgress:patchCount];
+	}
+
+	qltrace(@"result = %ld",(long)result);
+	[self postPatchStatus:@"%d install(s) completed.", patchCount];
+	reply(nil,result);
+}
+
 
 // Private
 - (BOOL)postDataToWS:(NSString *)urlPath data:(NSDictionary *)data
@@ -466,15 +505,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 	
 	return YES;
-}
-
-- (NSDictionary *)patchesForPatchGroup:(NSError **)error
-{
-    //NSError *err = nil;
-	//MPWebServices *mpws = [[MPWebServices alloc] init];
-	//NSDictionary *a = [mpws getPatchGroupContent:&err];
-	//return a;
-	return [NSDictionary dictionary];
 }
 
 - (NSArray *)scanForAppleUpdates:(NSError **)error
@@ -688,7 +718,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 - (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
 {
 	qlinfo(@"Start install of %@",swItem[@"name"]);
-	qlinfo(@"swItem: %@",swItem); // Change to debug later
+	qldebug(@"swItem: %@",swItem);
 	
 	NSError *err = nil;
 	NSString *errStr;
@@ -709,20 +739,9 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	NSString *dlSoftwareFile = [NSString pathWithComponents:@[[SW_DATA_DIR path],@"sw",swItem[@"id"],dlSoftwareFileName]];
 	
 	// -----------------------------------------
-	// Create Download URL
-	// -----------------------------------------
-	//NSString *_url = [NSString stringWithFormat:@"/mp-content%@",[swItem valueForKeyPath:@"Software.sw_url"]];
-	//qldebug(@"Download software from: %@",[swItem valueForKeyPath:@"Software.sw_url"]);
-	
-	// -----------------------------------------
 	// Download Software
 	// -----------------------------------------
-	//if ([self hasCanceledInstall:swItem]) return 99;
-	//if ([self downloadSoftwareAndMoveTo:_url destination:swLoc] != 0) {
-	//	return 1;
-	//}
 	[self downloadSoftware:[swItem copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
-	
 	
 	if ([pkgType isEqualToString:@"SCRIPTZIP" ignoringCase:YES])
 	{
@@ -849,7 +868,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Install PKG
 		// ------------------------------------------------
-		[self postStatus:@"Running pre-install script..."];
+		[self postStatus:@"Installing %@",[dlSoftwareFile stringByDeletingLastPathComponent]];
 		result = [self installPkgFromZIP:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swItem[@"pkgEnv"]];
 		
 		// ------------------------------------------------
@@ -936,6 +955,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Check File Hash
 		// ------------------------------------------------
+		[self postStatus:@"Checking file hash..."];
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
 		if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
 		{
@@ -986,6 +1006,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Check File Hash
 		// ------------------------------------------------
+		[self postStatus:@"Checking file hash..."];
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
 		if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
 		{
@@ -1032,7 +1053,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 	else
 	{
-		qlinfo(@"Install Type Not Supported");
+		qlerror(@"Install Type Not Supported for %@",swItem[@"name"]);
 		// Install Type Not Supported
 		result = 2;
 	}
@@ -1061,12 +1082,25 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 - (BOOL)downloadSoftware:(NSDictionary *)swTask toDestination:(NSString *)toPath
 {
-	NSString *_url = [NSString stringWithFormat:@"/mp-content%@",[swTask valueForKeyPath:@"Software.sw_url"]];
+	NSString *_url;
+	NSInteger useS3 = [[swTask valueForKeyPath:@"Software.sw_useS3"] integerValue];
+	if (useS3 == 1) {
+		MPRESTfull *mpr = [MPRESTfull new];
+		NSDictionary *res = [mpr getS3URLForType:@"sw" id:swTask[@"id"]];
+		if (res) {
+			_url = res[@"url"];
+		} else {
+			qlerror(@"Result from getting the S3 url was nil. No download can occure.");
+			return FALSE;
+		}
+	} else {
+		_url = [NSString stringWithFormat:@"/mp-content%@",[swTask valueForKeyPath:@"Software.sw_url"]];
+	}
 	
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 	req.delegate = self;
-	NSString *dlPath = [req runSyncFileDownloadAlt:_url downloadDirectory:toPath error:&dlErr];
+	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
 	qldebug(@"Downloaded software to %@",dlPath);
 	return YES;
 }
@@ -1134,7 +1168,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
             break;
         }
         mps = [[MPScript alloc] init];
-        //[self postDataToClient:[NSString stringWithFormat:@"Running script %@",scpt] type:kMPProcessStatus];
         if ([mps runScript:scriptText]) {
             result = 0;
         } else {
@@ -1187,7 +1220,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     for (NSString *app in onlyApps)
     {
         if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]]) {
-            qlinfo(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+            qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
             [fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
             if (err) {
                 logit(lcl_vError,@"%@",[err description]);
@@ -1454,7 +1487,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
 		va_end(args);
 		
-		qltrace(@"postPatchStatus[XPCWorker]: %@",statusStr);
 		[[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPPatchProcessStatus];
 	}
 	@catch (NSException *exception) {
@@ -1465,14 +1497,12 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 // Post Status Text
 - (void)postPatchAllStatus:(NSString *)status,...
 {
-	qlinfo(@"Calling postPatchAllStatus");
 	@try {
 		va_list args;
 		va_start(args, status);
 		NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
 		va_end(args);
 		
-		qltrace(@"postPatchStatus[XPCWorker]: %@",statusStr);
 		[[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPPatchAllProcessStatus];
 	}
 	@catch (NSException *exception) {
@@ -1493,7 +1523,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	@catch (NSException *exception) {
 		qlerror(@"%@",exception);
 	}
-	//qlinfo(@"Progress: %lf",data);
 }
 
 // Post Progress for a progress bar, for patch all
@@ -1508,9 +1537,20 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	}
 }
 
+- (void)postPatchInstallError:(NSString *)patchID
+{
+	qlinfo(@"Post Patch Install Error for %@",patchID);
+	@try {
+		[[self.xpcConnection remoteObjectProxy] postPatchInstallStatus:patchID type:kMPPatchAllInstallError];
+	}
+	@catch (NSException *exception) {
+		qlerror(@"%@",exception);
+	}
+}
+
 - (void)postPatchInstallCompletion:(NSString *)patchID
 {
-	qlinfo(@"postPatchInstallCompletion for %@",patchID);
+	qlinfo(@"Post Patch Install Completion for %@",patchID);
 	@try {
 		[[self.xpcConnection remoteObjectProxy] postPatchInstallStatus:patchID type:kMPPatchAllInstallComplete];
 	}
@@ -1581,6 +1621,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     NSMutableData	*data;
     NSData			*dataChunk = nil;
     NSException		*error = nil;
+	NSCharacterSet  *newlineSet;
     
     
     //[self setTaskIsRunning:YES];
@@ -1639,6 +1680,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         goto done;
     }
     
+	newlineSet = [NSCharacterSet newlineCharacterSet];
     data = [[NSMutableData alloc] init];
     dataChunk = nil;
     error = nil;
@@ -1649,12 +1691,20 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         tmpStr = [[NSString alloc] initWithData:dataChunk encoding:NSUTF8StringEncoding];
         if ([[tmpStr trim] length] != 0)
         {
-            if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
-                qlinfo(@"%@",tmpStr);
-                //[self postDataToClient:tmpStr type:kMPInstallStatus];
-            } else {
-                qlinfo(@"%@",tmpStr);
-            }
+			NSArray *lines = [tmpStr componentsSeparatedByCharactersInSet:newlineSet];
+			for (NSString *l in lines)
+			{
+				if ([[l trim] length] != 0)
+				{
+					if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
+						qldebug(@"%@",l.trim);
+						//[self postDataToClient:l.trim type:kMPInstallStatus];
+					} else {
+						qldebug(@"%@",l.trim);
+					}
+				}
+			}
+            
         }
         
         [data appendData:dataChunk];
@@ -1664,7 +1714,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     [[aPipe fileHandleForReading] closeFile];
     
     if (swTaskTimedOut == YES) {
-        logit(lcl_vError,@"Task was terminated due to timeout.");
+        qlerror(@"Task was terminated due to timeout.");
         [NSThread sleepForTimeInterval:5.0];
         [swTask terminate];
         taskResult = 1;
@@ -1914,7 +1964,7 @@ done:
 
 - (void)getInstalledConfigProfilesWithReply:(void(^)(NSString *aString, NSData *aProfilesData))reply
 {
-	qlinfo(@"getInstalledConfigProfilesWithReply");
+	qldebug(@"getInstalledConfigProfilesWithReply");
 	MPConfigProfiles *p = [[MPConfigProfiles alloc] init];
 	NSArray *cp = [p readProfileStoreReturnAsConfigProfile];
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:cp];
@@ -1953,8 +2003,63 @@ done:
 		[self writeAuthStatusToPlist:userName enabled:YES useRecoveryKey:useKey];
 		result = 0;
 	}
-	
+    
+    kc = nil;
 	reply(err, result);
+}
+
+- (void)enableAuthRestartWithReply:(void(^)(NSError *error, NSInteger result))reply
+{
+    NSInteger result = 1;
+    NSDictionary *authData = nil;
+    NSError *err = nil;
+    MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+    MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+    if (!err) {
+        authData = [pi toDictionary];
+    } else {
+        qlerror(@"Error getting saved FileVault auth data.");
+        reply(err,result);
+    }
+    
+    NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
+    "/usr/bin/fdesetup authrestart -delayminutes -1 -verbose -inputplist <<EOF \n"
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n"
+    "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \n"
+    "<plist version=\"1.0\"> \n"
+    "<dict> \n"
+    "    <key>Username</key> \n"
+    "    <string>%@</string> \n"
+    "    <key>Password</key> \n"
+    "    <string>%@</string> \n"
+    "</dict></plist>\n"
+    "EOF",authData[@"userName"],authData[@"userPass"]];
+    
+    [script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+    
+    MPScript *mps = [MPScript new];
+    BOOL res = [mps runScript:script];
+    if (!res) {
+        qlerror(@"bypassFileVaultForRestart script failed to run.");
+    } else {
+        result = 0;
+    }
+    // Keep for debugging
+    BOOL keepScript = NO;
+    if (!keepScript)
+    {
+        if ([fm fileExistsAtPath:@"/private/var/tmp/authScript"]) {
+            err = nil;
+            [fm removeItemAtPath:@"/private/var/tmp/authScript" error:&err];
+            if (err) {
+                qlerror(@"Error removing authScript");
+            }
+        }
+    }
+
+    // Quick Sleep before the reboot
+    [NSThread sleepForTimeInterval:1.0];
+    reply(err,result);
 }
 
 - (void)getAuthRestartDataWithReply:(void(^)(NSError *error, NSDictionary *result))reply
@@ -1974,9 +2079,15 @@ done:
 	BOOL result = YES;
 	NSError *err = nil;
 	NSFileManager *fs = [NSFileManager defaultManager];
-	if ([fs fileExistsAtPath:MP_AUTHSTATUS_KEYCHAIN]) {
-		[fs removeItemAtPath:MP_AUTHSTATUS_KEYCHAIN error:&err];
-	}
+    
+    MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+    OSStatus delRes = [kc deleteKeyChain];
+    if (delRes != noErr) {
+        qlerror(@"Error deleteing keychain.");
+        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:@[]];
+        result = NO;
+    }
+    
 	if ([fs fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
 		NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
 		[d setObject:[NSNumber numberWithBool:NO] forKey:@"enabled"];
@@ -2201,7 +2312,7 @@ done:
 	{
 		if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]])
 		{
-			logit(lcl_vInfo,@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+			qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
 			[fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
 			if (err) {
 				if (error != NULL) *error = err;
@@ -2276,6 +2387,16 @@ done:
 - (void)downloadProgress:(NSString *)progressStr
 {
 	[self postStatus:progressStr];
+	[self postPatchStatus:progressStr];
 }
+
+- (void)patchProgress:(NSString *)progressStr
+{
+	//[self postPatchStatus:progressStr];
+	[self postStatus:progressStr];
+}
+
+
+#pragma mark - Test Code
 
 @end

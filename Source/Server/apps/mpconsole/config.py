@@ -75,8 +75,6 @@ class BaseConfig:
 	INTUNE_USER					= ""
 	INTUNE_USER_PASS			= ""
 
-	SCHEDULER_API_ENABLED = True
-
 class DevelopmentConfig(BaseConfig):
 
 	DEBUG                           = True

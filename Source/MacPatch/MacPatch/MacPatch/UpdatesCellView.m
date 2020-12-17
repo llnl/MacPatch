@@ -1,15 +1,33 @@
 //
 //  UpdatesCellView.m
-//  MacPatch
-//
-//  Created by Charles Heizer on 11/15/18.
-//  Copyright © 2018 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "UpdatesCellView.h"
 #import "GlobalQueueManager.h"
 #import "UpdateInstallOperation.h"
 #import "AppDelegate.h"
+#import "MPOProgressBar.h"
 
 @interface UpdatesCellView ()
 {
@@ -22,6 +40,7 @@
 @property (atomic, strong) NSString *cellStartNote;
 @property (atomic, strong) NSString *cellProgressNote;
 @property (atomic, strong) NSString *cellStopNote;
+@property (nonatomic, strong) MPOProgressBar *progressBarNew;
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
@@ -33,6 +52,16 @@
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
+	
+	_progressBarNew = [[MPOProgressBar alloc] init];
+	_progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
+	_progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
+	[self.layer addSublayer:_progressBarNew];
+	
+
+	NSRect pbar = _patchProgressBar.frame;
+	_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+	[_progressBarNew setHidden:YES];
     
     // Drawing code here.
 }
@@ -162,7 +191,7 @@
 
 - (void)workerStatusText:(NSString *)aStatus
 {
-	NSLog(@"WST: %@",aStatus);
+	qlinfo(@"WST: %@",aStatus);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self->_patchStatus.stringValue = aStatus;
 	});
@@ -187,8 +216,6 @@
 	__weak typeof(self) weakSelf = self;
 	[nc addObserverForName:_cellStartNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellStartNote);
-		 //NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 [weakSelf.updateButton setTitle:@"Installing..."];
 		 });
@@ -196,8 +223,6 @@
 	
 	[nc addObserverForName:_cellProgressNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellProgressNote);
-		 
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 if (userInfo[@"status"]) {
@@ -208,9 +233,7 @@
 	
 	[nc addObserverForName:_cellStopNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 qlinfo(@"%@ was called.",weakSelf.cellStopNote);
 		 NSDictionary *userInfo = note.userInfo;
-		 qldebug(@"userInfo: %@",userInfo);
 		 dispatch_async(dispatch_get_main_queue(), ^{
 			 if (userInfo[@"error"]) {
 				 weakSelf.patchStatus.stringValue = userInfo[@"status"];
@@ -233,10 +256,10 @@
 - (void)setupCellInstall
 {
 	dispatch_async(dispatch_get_main_queue(), ^{
-		//[self->_errorImage setHidden:YES];
-		
-		[self->_patchProgressBar setHidden:NO];
-		[self->_patchProgressBar startAnimation:nil];
+		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+		[self.progressBarNew startAnimation];
+		[self.progressBarNew setHidden:NO];
+		[self.progressBarNew display];
 		
 		[self->_patchStatus setHidden:NO];
 		self->_patchStatus.stringValue = @"Starting install...";
@@ -253,13 +276,18 @@
 }
 
 - (void)stopCellInstallWithError:(BOOL)hadError errorString:(NSString *)errStr
-{	
+{
+	qlinfo(@"stopCellInstallWithError");
+	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
 		self->_patchStatus.stringValue = @" ";
 		[self->_patchProgressBar setIndeterminate:YES];
 		[self->_patchProgressBar setHidden:YES];
 		[self->_patchProgressBar display];
+		
+		[self.progressBarNew stopAnimation];
+		[self.progressBarNew setHidden:YES];
 		
 		if (hadError)
 		{
@@ -318,6 +346,7 @@
 
 - (void)stopCellInstallIsRebootPatch
 {
+	qlinfo(@"stopCellInstallIsRebootPatch");
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
 		self->_patchStatus.stringValue = @" ";

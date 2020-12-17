@@ -337,7 +337,7 @@ def customPatchWizardUpdate():
 			_file = request.files['mainPatchFile']
 			if request.form['pkg_useS3'] == '1':
 				aws = MPaws()
-				_fileData = aws.savePatchFileToTMP(puuid, _file)
+				_fileData = savePatchFileToTMP(puuid, _file)
 				aws.uploadFileToS3(_fileData['filePath'],_fileData['fileURL'])
 				shutil.rmtree(os.path.join('/tmp', request.form['puuid']))
 			else:

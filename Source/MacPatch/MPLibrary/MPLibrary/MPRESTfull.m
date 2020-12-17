@@ -276,6 +276,43 @@
 }
 
 /**
+ Get a dictionary containing all active apple and custom patches
+ 
+ @param err Error object
+ @return a dictioanary containg two arrays "AppleUpdates, CustomUpdates"
+ */
+- (NSDictionary *)getAllPatchesForClient:(NSError **)err
+{
+	NSError *ws_err = nil;
+	NSDictionary *ws_result;
+	NSDictionary *result = nil;
+	
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/all/%@",self.ccuid];
+	
+	ws_result = [self getDataFromWS:urlPath error:&ws_err];
+	if (ws_err) {
+		*err = ws_err;
+		return nil;
+	}
+	
+	if ([ws_result objectForKey:@"data"])
+	{
+		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+		{
+			qldebug(@"Web Servce result: %@",ws_result);
+			result = [ws_result objectForKey:@"data"];
+		}
+		else
+		{
+			qlerror(@"Result was not of type dictionary.");
+			qlerror(@"Result: %@", ws_result);
+		}
+	}
+	
+	return result;
+}
+
+/**
  Post patch install using patch and type
  
  @param patch patch id or name depending on type
@@ -728,6 +765,49 @@
 		{
 			qldebug(@"Web Servce result: %@",ws_result);
 			result = [ws_result objectForKey:@"data"];
+		}
+		else
+		{
+			qlerror(@"Result was not of type dictionary.");
+			qlerror(@"Result: %@", ws_result);
+		}
+	}
+	
+	return result;
+}
+
+
+/**
+ Get S3 url for package type
+
+ @param type (patch, sw)
+ @param id ID of the package to download
+ @return Dictionary (url is the key)
+ */
+- (NSDictionary *)getS3URLForType:(NSString *)type id:(NSString *)packageID
+{
+	// /url/<string:type>/<string:id>/<string:cuuid>
+	
+	NSError *ws_err = nil;
+	NSDictionary *ws_result;
+	NSDictionary *result = nil;
+	
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.ccuid];
+	qldebug(@"[getS3URLForType][urlPath] %@",urlPath);
+	
+	ws_result = [self getDataFromWS:urlPath error:&ws_err];
+	if (ws_err) {
+		qlerror(@"%@",ws_err.localizedDescription);
+		//*err = ws_err;
+		return nil;
+	}
+	
+	if ([ws_result objectForKey:@"result"])
+	{
+		if ([[ws_result objectForKey:@"result"] isKindOfClass:[NSDictionary class]])
+		{
+			qldebug(@"Web Servce result: %@",ws_result);
+			result = [ws_result objectForKey:@"result"];
 		}
 		else
 		{

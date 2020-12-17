@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
-# ver 3.2.0
+# ver 3.5.0
 # Created By Charles Heizer @ LLNL
 #
 # ***************************************************************************************
@@ -287,17 +287,24 @@ fi
 # ******************************************************************
 # Launch the Helper service  ***************************************
 #
-/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
-/bin/sleep 2
+
+#/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+#/bin/sleep 2
+
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 /bin/sleep 2
 
 # ******************************************************************
 # Launch the MPAgent service ***************************************
 #
-/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.agent.plist
-/bin/sleep 2
-killall MPAgent
+if [ -z "$(sIload)" ]; then
+	# No iLoadAssistant
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+	/bin/sleep 2
+else
+	echo "Running iLoad, apps will launch on reboot."
+fi
+
 
 # ******************************************************************
 # Launch PlanB		    ********************************************
@@ -337,6 +344,16 @@ sleep 1
 touch /tmp/.mpagentinstalled
 
 # Kill the ClientStatus app, launchctl does not restart the app only the service
-/usr/bin/killall MPClientStatus
+# /usr/bin/killall MPClientStatus
+if [ -f "/private/tmp/clientStatusPID" ]; then
+	curClientStatusPID=$(ps -ae | grep MPClientStatus | grep -v grep | awk '{ print $1 }')
+	fileClientStatusPID=$(<private/tmp/clientStatusPID)
+
+	if [ $curClientStatusPID = $fileClientStatusPID ]; then
+		/usr/bin/killall MPClientStatus
+	else
+		rm -f /private/tmp/clientStatusPID
+	fi
+fi
 
 exit 0;

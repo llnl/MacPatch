@@ -74,7 +74,6 @@
 
 // Software Distribution
 #import "MPSWTasks.h"
-// #import "MPSWInstaller.h"
 
 // WebServices
 #import "MPDataMgr.h"
@@ -97,7 +96,7 @@
 #import "FMDB.h"
 #import "FMDBx.h"
 
-// Helpers
+// Helpers - Extensions
 #import "NSString+Helper.h"
 #import "NSString+Hash.h"
 #import "NSFileManager+Helper.h"
@@ -108,6 +107,7 @@
 #import "NSDate+MPHelper.h"
 #import "NSData+Base64.h"
 #import "NSString+Base64.h"
+#import "NSFileHandle-Helper.h"
 
 // -- Models
 // Settings

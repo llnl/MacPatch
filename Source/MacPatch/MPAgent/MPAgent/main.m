@@ -38,7 +38,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.5.0.1"
+#define APPVERSION	@"3.5.0.5"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -96,9 +96,10 @@ int main (int argc, char * argv[])
 				// Client Check-in
 				{"CheckIn"				,no_argument	    ,0, 'c'},
 				
-				// iLoad, will echo to stdout and run scan & patch
+				// iload or iLoad, will echo to stdout and run scan & patch
 				{"iload"				,no_argument	    ,0, 'i'},
 				{"iLoad"				,no_argument	    ,0, 'I'},
+                {"iLoadEcho"            ,no_argument        ,0, 'Y'},
 				
 				// Patching
 				{"Scan"					,no_argument	    ,0, 's'},
@@ -150,14 +151,16 @@ int main (int argc, char * argv[])
 				{"version"				,no_argument		,0, 'v'},
 				{"build"				,no_argument		,0, 'b'},
 				{"help"					,no_argument		,0, 'h'},
-
-				
+                
+                // FV Check
+                {"fvCheck"              ,no_argument        ,0, 'Z'},
+                
 
 				{0, 0, 0, 0}
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:Kvbh:", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:Kvbh:Z", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -188,6 +191,9 @@ int main (int argc, char * argv[])
 					isILoadMode = YES;
 					a_Type = 4;
 					break;
+                case 'Y':
+                    isILoadMode = YES;
+                    break;
 				case 's':
 					a_Type = 3;
 					break;
@@ -303,6 +309,9 @@ int main (int argc, char * argv[])
 				case 'b':
 					printf("%s\n",[APPBUILD UTF8String]);
 					return 0;
+                case 'Z':
+                    a_Type = 8888;
+                    break;
 				case 'h':
 				case '?':
 				default:
@@ -548,6 +557,11 @@ int main (int argc, char * argv[])
 				[mpAgent postAgentHasBeenInstalled];
 				exit(0);
 				break;
+            case 8888:
+                mpac = [[AgentController alloc] init];
+                [mpac runWithType:a_Type];
+                return 0;
+                break;
 			case 50:
 				break;
 			case 60:
@@ -580,6 +594,7 @@ void usage(void)
 	printf("Patching \n");
 	printf(" -s \t --Scan \tScan for patches.\n");
 	printf(" -u \t --Update \tScan & Update approved patches.\n\n");
+    printf(" -Z \t --fvCheck \tCheck if file valut authrestart is set.\n\n");
 	// printf(" -x \tScan & Update critical patches only.\n");
 	
 	// Software Dist

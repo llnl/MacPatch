@@ -30,7 +30,6 @@
 #import "FMDatabaseAdditions.h"
 #import "CHDiskInfo.h"
 #import "MPUsersAndGroups.h"
-#import "MPFileVaultInfo.h"
 #import <CommonCrypto/CommonDigest.h>
 #import "BatteryInfo.h"
 #import "PowerProfile.h"
@@ -44,11 +43,12 @@
 #import "LocalAdminAccounts.h"
 #import "SmartCardReaderList.h"
 #import "SysInfoCacheGen.h"
+#import "SPSmartCard.h"
 
 
 #define kSP_DATA_Dir			@"/private/tmp/.mpData"
 #define kSP_APP                 @"/usr/sbin/system_profiler"
-#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,SPExtensionsDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders,SINetworkInfo,SIHardDrive,SIPCIBus,SIRAM,SIUSB"
+#define kINV_SUPPORTED_TYPES	@"SPHardwareDataType,SPSoftwareDataType,SPNetworkDataType,SPApplicationsDataType,SPFrameworksDataType,SPExtensionsDataType,SPSmartCardsDataType,DirectoryServices,InternetPlugins,AppUsage,ClientTasks,DiskInfo,Users,Groups,FileVault,PowerManagment,BatteryInfo,ConfigProfiles,AppStoreApps,Plugins,FirmwarePasswordInfo,LocalAdminAccounts,SmartCardReaders,SINetworkInfo,SIHardDrive,SIPCIBus,SIRAM,SIUSB"
 #define kTasksPlist             @"/Library/MacPatch/Client/.tasks/gov.llnl.mp.tasks.plist"
 #define kInvHashData            @"/Library/MacPatch/Client/Data/.gov.llnl.mp.inv.data.plist"
 
@@ -266,6 +266,10 @@
 					tmpArr = [self parseFrameworksDataFromXML:[item objectForKey:@"file"]];
 				} else if ([[item objectForKey:@"type"] isEqual:@"SPExtensionsDataType"]) {
 					tmpArr = [self parseExtensionsDataFromXML:[item objectForKey:@"file"]];
+				} else if ([[item objectForKey:@"type"] isEqual:@"SPSmartCardsDataType"]) {
+					// NEW
+					tmpArr = [self parseExtensionsDataFromXML:[item objectForKey:@"file"]];
+					
 				} else if ([[item objectForKey:@"type"] isEqual:@"DirectoryServices"]) {
 					tmpArr = [self parseDirectoryServicesData];
 				} else if ([[item objectForKey:@"type"] isEqual:@"InternetPlugins"]) {
@@ -1321,35 +1325,6 @@
 		} else {
 			[record setObject:@"0" forKey:@"HasSLAM"];	
 		}
-
-        /* New Way, not working yet
-        MPDirectoryServices *mpds = [[MPDirectoryServices alloc] init];
-		NSDictionary *computerAccountInfo = [mpds computerInfo:[adInfo objectForKey:@"trustaccount"]];
-
-		if ([computerAccountInfo objectForKey:@"dsAttrTypeStandard:AppleMetaRecordName"]) {
-			[record setObject:[computerAccountInfo objectForKey:@"dsAttrTypeStandard:AppleMetaRecordName"] forKey:@"distinguishedName"];
-		} else {
-			[record setObject:@"NA" forKey:@"distinguishedName"];
-		}
-		if ([computerAccountInfo objectForKey:@"dsAttrTypeStandard:RealName"]) {
-			[record setObject:[computerAccountInfo objectForKey:@"dsAttrTypeStandard:RealName"] forKey:@"cn"];
-		} else {
-			[record setObject:@"NA" forKey:@"cn"];
-		}
-		if ([computerAccountInfo objectForKey:@"dsAttrTypeStandard:DNSName"]) {
-			[record setObject:[computerAccountInfo objectForKey:@"dsAttrTypeStandard:DNSName"] forKey:@"DNSName"];
-		} else {
-			[record setObject:@"NA" forKey:@"DNSName"];
-		}
-
-		if ([computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"]) {
-			if ([[computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"] count] > 0) {
-				[record setObject:@"1" forKey:@"HasSLAM"];
-			}
-		} else {
-			[record setObject:@"0" forKey:@"HasSLAM"];
-		}
-         */
         
         logit(lcl_vDebug,@"%@",record);
         result = [NSArray arrayWithObject:record];
@@ -1945,6 +1920,45 @@ done:
 	SmartCardReaderList *scl = [[SmartCardReaderList alloc] init];
 	result = [scl getSmartCardReaders];
 	return result;
+}
+
+- (void)parseSPSmartCardData:(NSString *)xmlFile
+{
+	NSDictionary *invDict;
+	
+	SPSmartCard *sc = [SPSmartCard new];
+	NSArray *scItems = [sc parseXMLFile:xmlFile];
+	if (!scItems) {
+		qlerror(@"Error, no data file to parse for SPSmartCard");
+		return;
+	}
+	
+	NSArray *invarr;
+	invarr = [sc getSPSmartCardReaders:scItems];
+	if (invarr.count >= 1) {
+		invDict = @{ @"wstype":@"SPSmartCardReaders", @"type":@"SPSmartCardReaders"}; // Just use table name for both
+		[self processInventoryData:invarr inventoryNode:invDict];
+	}
+	invarr = nil;
+	invarr = [sc getSPSmartCardReaderDrivers:scItems];
+	if (invarr.count >= 1) {
+		invDict = @{ @"wstype":@"SPSmartCardReaderDrivers", @"type":@"SPSmartCardReaderDrivers"}; // Just use table name for both
+		[self processInventoryData:invarr inventoryNode:invDict];
+	}
+	invarr = nil;
+	invarr = [sc getSPSmartCardTokendDrivers:scItems];
+	if (invarr.count >= 1) {
+		invDict = @{ @"wstype":@"SPSmartCardTokendDrivers", @"type":@"SPSmartCardTokendDrivers"}; // Just use table name for both
+		[self processInventoryData:invarr inventoryNode:invDict];
+	}
+	invarr = nil;
+	invarr = [sc getSPSmartCardDrivers:scItems];
+	if (invarr.count >= 1) {
+		invDict = @{ @"wstype":@"getSPSmartCardDrivers", @"type":@"getSPSmartCardDrivers"}; // Just use table name for both
+		[self processInventoryData:invarr inventoryNode:invDict];
+	}
+	
+	return;
 }
 
 #pragma mark Helper

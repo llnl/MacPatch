@@ -5,7 +5,7 @@
     <domains enable_anywhere="true" enable_localSystem="true"/>
     <installation-check script="pm_install_check();"/>
     <script>function pm_install_check() {
-        if(!(/* >= */ system.compareVersions(system.version.ProductVersion, '10.12.0') >= 0)) {
+        if(!(/* >= */ system.compareVersions(system.version.ProductVersion, '10.17.0') >= 0)) {
             my.result.title = 'OS Check';
             my.result.message = 'This software requires Mac OS X 10.12 or higher.';
             my.result.type = 'Fatal';

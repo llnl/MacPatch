@@ -227,7 +227,7 @@ def readDistributionFile(distURL):
             distData['suname'] = distData['name'] + "-" + distData['version']
 
     else:
-        print("Error reading distribution file.")
+        print("Error reading distribution file ({}).".format(distURL))
 
     return distData
 
@@ -244,7 +244,7 @@ def postDataToWebService(patches, config):
     logger.debug("Post URL: "+ _url)
 
     payload = {'type': 'json' , 'data': simplejson.dumps(patches)}
-    headers = {'X-API-Key': apiKey, 'MPVersion-API': wsPostVersion, 'X-API-TS': dts}
+    headers = {'X-API-Key': apiKey, 'MPVersion-API': wsPostVersion, 'X-API-TS': dts, 'X-AGENT-ID': 'MacPatch', 'X-AGENT-VER': '99'}
 
     try:
         request = requests.post(_url, data=payload, verify=False, headers=headers)

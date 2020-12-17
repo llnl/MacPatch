@@ -2,8 +2,8 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block pageHeader %}
@@ -21,20 +21,20 @@
 						<!-- /.panel-heading -->
 						<div class="panel-body">
 
-							<ul class="nav nav-tabs" role="tablist" id="modelTab">
-							   <li><a href="#mTypes" data-toggle="tab">Types</a></li>
-							   <li><a href="#mBreakDown" data-toggle="tab">Top 10</a></li>
-							</ul>
-							<div class="tab-content">
+                            <ul class="nav nav-tabs" role="tablist" id="modelTab">
+                               <li><a href="#mTypes" data-toggle="tab">Types</a></li>
+                               <li><a href="#mBreakDown" data-toggle="tab">Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
 								<div class="tab-pane active" id="mBreakDown">
 									<br>
 									<canvas id="model-bar-chart" />
 								</div>
-								<div class="tab-pane" id="mTypes">
+                                <div class="tab-pane" id="mTypes">
 									<br>
-									<canvas id="model-pie-chart" />
+                                    <canvas id="model-pie-chart" />
 								</div>
-							</div>
+                            </div>
 
 						</div>
 						<!-- /.panel-body -->
@@ -43,17 +43,17 @@
 				</div>
 				<!-- /.col-lg-6 -->
 				<div class="col-lg-6">
-					<div class="panel panel-default">
+                    <div class="panel panel-default">
 						<div class="panel-heading">
 							Patches
 						</div>
-						<div class="panel-body">
-							<ul class="nav nav-tabs" id="patchTab">
-							   <li><a href="#pRequired" data-toggle="tab">Required</a></li>
-							   <li><a href="#pReleased" data-toggle="tab">Released</a></li>
-							   <li><a href="#pInstalled" data-toggle="tab">Installed</a></li>
-							</ul>
-							<div class="tab-content">
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="patchTab">
+                               <li><a href="#pRequired" data-toggle="tab">Required</a></li>
+                               <li><a href="#pReleased" data-toggle="tab">Released</a></li>
+                               <li><a href="#pInstalled" data-toggle="tab">Installed</a></li>
+                            </ul>
+                            <div class="tab-content">
 								<div class="tab-pane active" id="pRequired">
 									<br>
 									<canvas id="patch-bar-chart" />
@@ -81,12 +81,12 @@
 									<br>
 									<canvas id="patch-installed-bar-chart" />
 								</div>
-							</div>
-						</div>
-					</div>
+                            </div>
+                        </div>
+                    </div>
 				</div>
-			</div>
-			<div class="row">
+            </div>
+            <div class="row">
 				<!-- /.col-lg-6 -->
 				<div class="col-lg-6">
 					<div class="panel panel-default">
@@ -94,22 +94,22 @@
 							macOS Versions
 						</div>
 						<!-- /.panel-heading -->
-						<div class="panel-body">
+                        <div class="panel-body">
 
-							<ul class="nav nav-tabs" role="tablist" id="osTab">
-							   <li><a href="#osMinor" data-toggle="tab">OS Version - Minor</a></li>
-							   <li><a href="#osAll" data-toggle="tab">OS Version - Top 10</a></li>
-							</ul>
-							<div class="tab-content">
+                            <ul class="nav nav-tabs" role="tablist" id="osTab">
+                               <li><a href="#osMinor" data-toggle="tab">OS Version - Minor</a></li>
+                               <li><a href="#osAll" data-toggle="tab">OS Version - Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
 								<div class="tab-pane active" id="osMinor">
 									<br>
 									<canvas id="osminor-bar-chart" />
 								</div>
-								<div class="tab-pane" id="osAll">
+                                <div class="tab-pane" id="osAll">
 									<br>
-									<canvas id="osver-bar-chart" />
+                                    <canvas id="osver-bar-chart" />
 								</div>
-							</div>
+                            </div>
 
 						</div>
 						<!-- /.panel-body -->
@@ -130,8 +130,8 @@
 					</div>
 					<!-- /.panel -->
 				</div>
-			</div>
-			<div class="row">
+            </div>
+            <div class="row">
 				<!-- /.col-lg-6 -->
 				<div class="col-lg-6">
 					<div class="panel panel-default">
@@ -184,9 +184,9 @@
 	<script>
 	$( document ).ready(function()
 	{
-		$('#modelTab li:last-child a').tab('show');
-		$('#patchTab li:first-child a').tab('show');
-		$('#osTab li:first-child a').tab('show');
+        $('#modelTab li:last-child a').tab('show');
+        $('#patchTab li:first-child a').tab('show');
+        $('#osTab li:first-child a').tab('show');
 	});
 
 	var ctxRebootStatus = document.getElementById("reboot-pie-chart");
@@ -274,7 +274,7 @@
 						{{item[1]}},
 					{% endfor %}
 				],
-				backgroundColor: [
+                backgroundColor: [
 					{% for item in modelTypeData %}
 					chartColor(),
 					{% endfor %}
@@ -461,7 +461,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('osver','OS Version',label,value);
+        showDrillDownWindow('osver','OS Version',label,value);
 	};
 
 	ctxOSVerMinor.onclick = function (evt)
@@ -472,7 +472,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('osverminor','OS Version',label,value);
+        showDrillDownWindow('osverminor','OS Version',label,value);
 	};
 
 	ctxRebootStatus.onclick = function (evt)
@@ -483,7 +483,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('reboot','Reboot Status',label,value);
+        showDrillDownWindow('reboot','Reboot Status',label,value);
 	};
 
 	ctxModelType.onclick = function (evt)
@@ -494,7 +494,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('modelType','Model Type',label,value);
+        showDrillDownWindow('modelType','Model Type',label,value);
 	};
 
 	ctxModelTypes.onclick = function (evt)
@@ -505,7 +505,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('modelTypes','Model Type',label,value);
+        showDrillDownWindow('modelTypes','Model Type',label,value);
 	};
 
 	ctxRequiredPatches.onclick = function (evt)
@@ -579,7 +579,7 @@
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
-		showDrillDownWindow('agentStatus','Agent Status',label,value);
+        showDrillDownWindow('agentStatus','Agent Status',label,value);
 	};
 
 	var ctxAgentVersion = document.getElementById("agents-pie-chart");
@@ -630,13 +630,13 @@
 			 ' frameborder="0" allowtransparency="false"' +
 			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
 
-		$('#modalTitle').html(title +" - " + label);
-		$('#modalSaveButton').remove();
-		$('#modalCancelButton').remove();
-		$('#modalBody').html(innerHTML);
-		$('#modalBody').css({'height':'80vh'});
-		$('#modalDialog').addClass("modal-wide");
-		$('#modalDialog').modal('show');
+        $('#modalTitle').html(title +" - " + label);
+        $('#modalSaveButton').remove();
+        $('#modalCancelButton').remove();
+        $('#modalBody').html(innerHTML);
+        $('#modalBody').css({'height':'80vh'});
+        $('#modalDialog').addClass("modal-wide");
+        $('#modalDialog').modal('show');
 	};
 
 	</script>

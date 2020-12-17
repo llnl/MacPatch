@@ -115,12 +115,19 @@
 	
 	for (NSDictionary *task in tasks)
 	{
-		MPSoftware *software = [MPSoftware new];
+        NSString *aTask = task[@"id"];
+        if (![self installSoftwareUsingTaskDictionary:task])
+        {
+            qlinfo(@"Software has been installed that requires a reboot.");
+            result++;
+        }
+		/*MPSoftware *software = [MPSoftware new];
 		if (![software installSoftwareTask:task])
 		{
 			qlerror(@"FAILED to install task %@",[task objectForKey:@"name"]);
 			result = 1;
 		}
+         */
 	}
 	
 	if (needsReboot >= 1) {
@@ -180,7 +187,7 @@
  Private Method
  Install Software Task using software task ID
  
- @param swTaskID software task ID
+ @param aTask software task ID
  @return BOOL
  */
 - (BOOL)installSoftwareTask:(NSString *)aTask
@@ -193,20 +200,44 @@
 		return NO;
 	}
 	MPSoftware *software = [MPSoftware new];
-	[self iLoadStatus:@"Begin: %@\n", task[@"name"]];
+	[self iLoadStatus:@"Begin: %@", task[@"name"]];
 	if ([software installSoftwareTask:task] == 0)
 	{
 		qlinfo(@"%@ task was installed.",task[@"name"]);
 		result = YES;
 		if ([self softwareTaskRequiresReboot:task]) needsReboot++;
-		//[self iLoadStatus:@"Installing: %@\n Succeeded.", task[@"name"]];
 		[self iLoadStatus:@"Completed: %@\n", task[@"name"]];
 	} else {
 		qlerror(@"%@ task was not installed.",task[@"name"]);
-		//[self iLoadStatus:@"Installing: %@\n Failed.", task[@"name"]];
 		[self iLoadStatus:@"Completed: %@ Failed.\n", task[@"name"]];
 	}
 	return result;
+}
+
+/**
+ Private Method
+ Install Software Task using software task dictionary
+ 
+ @param task software task dictionary
+ @return BOOL
+ */
+- (BOOL)installSoftwareUsingTaskDictionary:(NSDictionary *)task
+{
+    BOOL result = NO;
+    
+    MPSoftware *software = [MPSoftware new];
+    [self iLoadStatus:@"Begin: %@", task[@"name"]];
+    if ([software installSoftwareTask:task] == 0)
+    {
+        qlinfo(@"%@ task was installed.",task[@"name"]);
+        result = YES;
+        if ([self softwareTaskRequiresReboot:task]) needsReboot++;
+        [self iLoadStatus:@"Completed: %@\n", task[@"name"]];
+    } else {
+        qlerror(@"%@ task was not installed.",task[@"name"]);
+        [self iLoadStatus:@"Completed: %@ Failed.\n", task[@"name"]];
+    }
+    return result;
 }
 
 // Private
@@ -307,12 +338,14 @@
 	}
 	
 	// OSType
+    /* CEH: Dsable for now, no longer needed.
 	if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
 		qldebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 	} else {
 		qlinfo(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 		return NO;
 	}
+     */
 	// OSVersion
 	if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
 		qldebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);

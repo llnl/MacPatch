@@ -1,7 +1,5 @@
 //
 //  SoftwareUninstallOperation.m
-//  MacPatch
-//
 /*
  Copyright (c) 2018, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
@@ -182,7 +180,6 @@
 					[self didChangeValueForKey:@"userInfo"];
 				}
 				
-				// CEH - Post Install Result
 				dispatch_semaphore_signal(sem);
 			}];
 		}

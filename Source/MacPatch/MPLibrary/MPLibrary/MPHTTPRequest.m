@@ -10,8 +10,8 @@
 #import "MacPatch.h"
 #import "MPWSResult.h"
 #import "STHTTPRequest.h"
-#import <CommonCrypto/CommonHMAC.h>
 #import "MPDownloadManager.h"
+#import <CommonCrypto/CommonHMAC.h>
 
 #undef  ql_component
 #define ql_component lcl_cMPHTTPRequest
@@ -292,102 +292,6 @@
     [r startAsynchronous];
 }
 
-- (void)runDownloadRequest:(NSString *)urlPath downloadDirectory:(NSString *)dlDir
-                  progress:(NSProgressIndicator *)progressBar progressPercent:(id)progressPercent
-                completion:(void (^)(NSString *fileName, NSString *filePath, NSError *error))completion
-{
-    // Create Download Directory if it does not exist
-    if (![fm fileExistsAtPath:dlDir]) {
-        [fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
-    }
-    
-    // Set File name and File path
-    __block NSString *flName = [urlPath lastPathComponent];
-    __block NSString *flPath = [dlDir stringByAppendingPathComponent:flName];
-    
-    if (self.requestCount == -1)
-    {
-        self.requestCount++;
-    } else {
-        if (self.requestCount >= (self.serverArray.count - 1))
-        {
-            NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
-            NSError *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
-            completion(nil, nil, err);
-            return;
-        } else {
-            self.requestCount++;
-        }
-    }
-    
-    // Create URL
-    self.allowSelfSignedCert = NO;
-    Server *server = [self.serverArray objectAtIndex:self.requestCount];
-    if (server.allowSelfSigned == 1)
-        self.allowSelfSignedCert = YES;
-    NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-    qlinfo(@"Download URL: %@",url);
-    
-    __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
-    r.timeoutSeconds = 20;
-    r.allowSelfSignedCert = server.allowSelfSigned;
-    [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
-	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
-    
-    __weak STHTTPRequest *wr = r;
-    __block __typeof(self) weakSelf = self;
-    
-    // Create if does not exist, if exists then delete and create
-    if (![fm fileExistsAtPath:flPath])
-    {
-        [fm createFileAtPath:flPath contents:nil attributes:nil];
-    } else {
-        [fm removeItemAtPath:flPath error:NULL];
-        [fm createFileAtPath:flPath contents:nil attributes:nil];
-    }
-    
-    r.downloadProgressBlock = ^(NSData *dataJustReceived, int64_t totalBytesReceived, int64_t totalBytesExpectedToReceive)
-    {
-        // Calculate Download Percentage
-        // Return as NSProgressIndicator and NSTextField
-        float progress = ((float)totalBytesReceived) / totalBytesExpectedToReceive;
-        double percentComplete = progress*100.0;
-        
-        qlinfo(@"Downloading file %d",(int)percentComplete);
-        
-        if (progressPercent) {
-            [progressPercent setStringValue:[NSString stringWithFormat:@"%d",(int)percentComplete]];
-        }
-        if (progressBar) {
-            [progressBar setDoubleValue:percentComplete];
-        }
-        
-        // Write Streamed Data to file
-        NSFileHandle *file1 = [NSFileHandle fileHandleForUpdatingAtPath:flPath];
-        [file1 seekToEndOfFile];
-        [file1 writeData:dataJustReceived];
-        [file1 closeFile];
-    };
-    
-    r.completionDataBlock = ^(NSDictionary *headers, NSData *data)
-    {
-        __strong STHTTPRequest *sr = wr;
-        if(sr == nil) return;
-        completion(flName, flPath,  nil);
-    };
-    // Error block
-    r.errorBlock = ^(NSError *err)
-    {
-        qlerror(@"File download error %@", err.localizedDescription);
-        [weakSelf runDownloadRequest:urlPath downloadDirectory:(NSString *)dlDir
-                            progress:progressBar progressPercent:progressPercent
-                          completion:(void (^)(NSString *fileName, NSString *filePath, NSError *error))completion];
-    };
-    
-    qlinfo(@"startAsynchronous");
-    [r startAsynchronous];
-}
-
 #pragma mark - Public Syncronus Methdos
 - (MPWSResult *)runSyncGET:(NSString *)urlPath
 {
@@ -441,126 +345,42 @@
     return wsResult;
 }
 
-
 - (NSString *)runSyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
-    qlinfo(@"[runSyncFileDownload][urlPath], %@", urlPath);
-    
-    // Create Download Directory if it does not exist
-    if (![fm fileExistsAtPath:dlDir]) {
-        [fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
-    }
-    
-    // Set File name and File path
-    __block NSString *flName = [urlPath lastPathComponent];
-    __block NSString *flPath = [dlDir stringByAppendingPathComponent:flName];
-    
-    // If downloaded file exists, remove it first
-    if ([fm fileExistsAtPath:flPath]) {
-        [fm removeItemAtPath:flPath error:NULL];
-    }
-    
-    // requestCount is the server index of the servers array
-    // this gets incremented on failed attempts
-    if (self.requestCount == -1)
+	int srvErrs = 0;
+	NSError *dlerror = nil;
+	NSString *url;
+	NSString *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
+	NSString *res;
+	for (Server *s in self.serverArray)
 	{
-        self.requestCount++;
-    }
-	else
-	{
-        if (self.requestCount >= (self.serverArray.count - 1))
-		{
-            NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
-            NSError *srverr = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
-            if (err != NULL) *err = srverr;
-            return nil;
-        }
-		else
-		{
-            self.requestCount++;
-        }
-    }
-	
-    Server *server = [self.serverArray objectAtIndex:self.requestCount];
-	self.allowSelfSignedCert = (server.allowSelfSigned == 1) ? YES : NO;
-	
-    NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-    qlinfo(@"URL: %@",url);
-    
-    __block __typeof(self) weakSelf = self;
-    
-    dispatch_semaphore_t    sem;
-    __block NSString        *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
-    __block NSURLResponse   *responsePtr;
-    __block NSError         *urlErr = nil;
-    
-    sem = dispatch_semaphore_create(0);
-    
-    NSURLSessionDownloadTask *downloadTask;
-    NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-	sessionConfiguration.timeoutIntervalForRequest = 10;
-	sessionConfiguration.timeoutIntervalForResource = 120.0;
-	
-    NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
-    
-    downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:url] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
-	{
-		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-		qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
-		if (dlerr || [httpResponse statusCode] == 404)
-		{
-			urlErr = dlerr;
-			qlerror(@"File download error %@", self->error.localizedDescription);
-			[weakSelf runSyncFileDownload:urlPath downloadDirectory:dlDir error:err];
+		self.allowSelfSignedCert = (s.allowSelfSigned == 1) ? YES : NO;
+		url = [NSString stringWithFormat:@"%@://%@:%d%@",s.usessl ? @"https":@"http", s.host, (int)s.port, urlPath];
+		qlinfo(@"URL: %@",url);
+		dlerror = nil;
+		res = [self runSyncFileDownloadFromServer:url downloadDirectory:dlDir error:&dlerror];
+		qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
+		if (dlerror) {
+			qlerror(@"%@",dlerror.localizedDescription);
+			srvErrs++;
+			continue;
+		} else {
+			srvErrs = 0;
+			break;
 		}
-		else
-		{
-			if (responsePtr != NULL) {
-				responsePtr = response;
-			}
+	}
 
-			qlinfo(@"dlFilePath, %@", dlFilePath);
-			qlinfo(@"location, %@", location.path);
-			
-			NSFileManager *fileManager = [NSFileManager defaultManager];
-			NSError *cperror;
-			BOOL fileOKToMove = YES;
-			if ([fileManager fileExistsAtPath:dlFilePath]) {
-				cperror = nil;
-				[fileManager removeItemAtPath:dlFilePath error:&cperror];
-				if (cperror) {
-					fileOKToMove = NO;
-					qlerror(@"Error removing old downloaded file.");
-					qlerror(@"%@",cperror.localizedDescription);
-				}
-			}
-			
-			//moving the file from temp location to app's own directory
-			if (fileOKToMove)
-			{
-				cperror = nil;
-				BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
-				
-				if (cperror) {
-					qlinfo(@"cperror, %@", cperror.localizedDescription);
-				}
-				
-				NSLog(fileCopied ? @"Yes" : @"No");
-			}
-		}
-
-		dispatch_semaphore_signal(sem);
-   }];
-    
-    [downloadTask resume];
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    return dlFilePath;
+	if (srvErrs > 0) {
+		dlFilePath = @"ERR";
+		NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
+		NSError *sError = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
+		if (err != NULL) *err = sError;
+	}
+	return dlFilePath;
 }
 
-- (NSString *)runS3SyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
+- (NSString *)runSyncFileDownloadFromServer:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
-	qlinfo(@"[runS3SyncFileDownload][urlPath], %@", urlPath);
-	
 	// Create Download Directory if it does not exist
 	if (![fm fileExistsAtPath:dlDir]) {
 		[fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
@@ -571,79 +391,61 @@
 	__block NSString *flPath = [dlDir stringByAppendingPathComponent:flName];
 	
 	// If downloaded file exists, remove it first
-	if ([fm fileExistsAtPath:flPath]) [fm removeItemAtPath:flPath error:NULL];
+	if ([fm fileExistsAtPath:flPath]) {
+		[fm removeItemAtPath:flPath error:NULL];
+	}
 	
-	dispatch_semaphore_t    sem;
-	__block NSString        *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
-	__block NSURLResponse   *responsePtr;
-	__block NSError         *urlErr = nil;
+	__block NSString *curPercent = @"";
+	__block NSString *dlFile = @"ERR";
+	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
+	MPDownloadManager *dm = [MPDownloadManager sharedManager];
+	dm.downloadUrl = urlPath;
+	dm.downloadDestination = dlDir;
 	
-	sem = dispatch_semaphore_create(0);
+	dm.progressHandler = ^(double progressPercent, double sizeDownloaded, double sizeComplete)
+	{
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSString *progStr = [NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progressPercent];
+			if ((int)progressPercent % 5 == 0) {
+				if (![curPercent isEqualToString:[NSString stringWithFormat:@"%i",(int)progressPercent]]) {
+					qlinfo(@"%@",progStr);
+					curPercent = [NSString stringWithFormat:@"%i",(int)progressPercent];
+				}
+			}
+			[self->delegate downloadProgress:progStr];
+		});
+	};
+	dm.completionHandler = ^(int httpStatusCode, NSURL *downloadedFile, NSError *downloadError)
+	{
+		if (downloadError)
+		{
+			qlerror(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
+			if (err != NULL) *err = downloadError;
+			dispatch_semaphore_signal(semaphore);
+		}
+		else
+		{
+			qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
+			if (httpStatusCode >= 200 && httpStatusCode <= 304) {
+				dlFile = [downloadedFile path];
+			} else {
+				NSString *errStr = [NSString stringWithFormat:@"Error, status code %d",httpStatusCode];
+				if (err != NULL) *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:@{NSLocalizedDescriptionKey:errStr}];
+			}
+		}
+		dispatch_semaphore_signal(semaphore);
+	};
 	
-	NSURLSessionDownloadTask *downloadTask;
-	NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-	sessionConfiguration.timeoutIntervalForRequest = 10;
-	sessionConfiguration.timeoutIntervalForResource = 120.0;
+	[dm beginDownload];
+	dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 	
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
-	
-	downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:urlPath] completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
-					{
-						NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-						qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
-						if (dlerr || [httpResponse statusCode] >= 300)
-						{
-							urlErr = dlerr;
-							qlerror(@"File download error %@", self->error.localizedDescription);
-						}
-						else
-						{
-							if (responsePtr != NULL) responsePtr = response;
-							
-							qlinfo(@"dlFilePath, %@", dlFilePath);
-							qlinfo(@"location, %@", location.path);
-							
-							NSFileManager *fileManager = [NSFileManager defaultManager];
-							NSError *cperror;
-							BOOL fileOKToMove = YES;
-							if ([fileManager fileExistsAtPath:dlFilePath]) {
-								cperror = nil;
-								[fileManager removeItemAtPath:dlFilePath error:&cperror];
-								if (cperror) {
-									fileOKToMove = NO;
-									qlerror(@"Error removing old downloaded file.");
-									qlerror(@"%@",cperror.localizedDescription);
-								}
-							}
-							
-							//moving the file from temp location to app's own directory
-							if (fileOKToMove)
-							{
-								cperror = nil;
-								BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
-								
-								if (cperror) {
-									qlinfo(@"cperror, %@", cperror.localizedDescription);
-								}
-								
-								NSLog(fileCopied ? @"Yes" : @"No");
-							}
-						}
-						
-						dispatch_semaphore_signal(sem);
-					}];
-	
-	[downloadTask resume];
-	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-	
-	if (urlErr) *err = urlErr;
-	return dlFilePath;
+	return dlFile;
 }
 
-- (NSString *)runSyncFileDownloadAlt:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
+- (NSString *)runSyncFileDownloadAltOrig:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
 	qlinfo(@"[runSyncFileDownloadAlt][urlPath], %@", urlPath);
-	[self->delegate downloadProgress:@"Configuring download for %@",[urlPath lastPathComponent]];
+	[self postStatusToDelegate:@"Configuring download for %@",urlPath.lastPathComponent];
 	// Create Download Directory if it does not exist
 	if (![fm fileExistsAtPath:dlDir]) {
 		[fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
@@ -686,6 +488,7 @@
 	qlinfo(@"URL: %@",url);
 	
 	//__block __typeof(self) weakSelf = self;
+	__block NSString *dlFile = @"ERR";
 	__block BOOL didFail = NO;
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
@@ -702,17 +505,21 @@
 	};
 	dm.completionHandler = ^(int httpStatusCode, NSURL *downloadedFile, NSError *downloadError)
 	{
-		if (downloadError) {
-			qlerror(@"%@",downloadError.localizedDescription);
+		if (downloadError)
+		{
+			qlerror(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
 			didFail = YES;
 			dispatch_semaphore_signal(semaphore);
 		}
-		
-		qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
-		if (httpStatusCode >= 200 && httpStatusCode <= 304) {
-			didFail = NO;
-		} else {
-			didFail = YES;
+		else
+		{
+			qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
+			if (httpStatusCode >= 200 && httpStatusCode <= 304) {
+				didFail = NO;
+				dlFile = [downloadedFile path];
+			} else {
+				didFail = YES;
+			}
 		}
 		dispatch_semaphore_signal(semaphore);
 	};
@@ -720,10 +527,10 @@
 	[dm beginDownload];
 	dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
 	if (didFail) {
-		[self runSyncFileDownloadAlt:urlPath downloadDirectory:dlDir error:err];
+		[self runSyncFileDownloadAltOrig:urlPath downloadDirectory:dlDir error:err];
 	}
-	
-	return @"OK";
+
+	return dlFile;
 }
 
 // Used to get small images from MP servers
@@ -741,12 +548,11 @@
 		qlinfo(@"URL: %@",url);
 		//
 		NSError *dataErr = nil;
-		result = [[NSData alloc] initWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
-		//result = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
+		result = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
 		if (!dataErr) {
 			break;
 		} else {
-			qlinfo("Got Error, %@",dataErr.localizedDescription);
+			qlerror(@"[dataForURLPath] Err\n%@",dataErr.localizedDescription);
 		}
 	}
 	
@@ -813,22 +619,22 @@
     
     // Make Request Task
     NSURLSessionDataTask *task = [session dataTaskWithRequest:request completionHandler:^(NSData *data, NSURLResponse *response, NSError *_error)
-                                  {
-                                      if (!_error)
-                                      {
-                                          NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
-                                          statusCode = httpResponse.statusCode;
-                                          res = [[MPWSResult alloc] initWithJSONData:data];
-                                          res.statusCode = statusCode;
-                                      }
-                                      else
-                                      {
-                                          qlerror(@"Error: %@", _error.localizedDescription);
-                                          sesErr = _error;
-                                      }
-                                      
-                                      dispatch_semaphore_signal(semaphore);
-                                  }];
+	{
+		if (!_error)
+		{
+			NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+			statusCode = httpResponse.statusCode;
+			res = [[MPWSResult alloc] initWithJSONData:data];
+			res.statusCode = statusCode;
+		}
+		else
+		{
+			qlerror(@"Error: %@", _error.localizedDescription);
+			sesErr = _error;
+		}
+
+		dispatch_semaphore_signal(semaphore);
+	}];
     // Run Task
     [task resume];
     
@@ -852,6 +658,7 @@
     
     // Create URLRequest
     NSURL *url = [NSURL URLWithString:aURL];
+	qlinfo(@"Post data to URL: %@",aURL);
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
@@ -1020,29 +827,12 @@
     }
 }
 
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
+- (void)postStatusToDelegate:(NSString *)str, ...
 {
-	completionHandler(NSURLSessionResponseAllow);
-	_downloadSize=[response expectedContentLength];
-	_dataToDownload=[[NSMutableData alloc]init];
+	va_list va;
+	va_start(va, str);
+	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
+	va_end(va);
+	[self.delegate downloadProgress:string];
 }
-
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
-{
-	[_dataToDownload appendData:data];
-	float progress = [ _dataToDownload length ]/_downloadSize;
-	
-	if([delegate respondsToSelector:@selector(downloadProgress:)])
-	{
-		NSString *progStr = [NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progress];
-		[delegate downloadProgress:progStr];
-	}
-}
-
--(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
-{
-	qlerror(@"completed; error: %@", error);
-}
-
-
 @end

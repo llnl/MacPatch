@@ -8,8 +8,6 @@
 
 #import <Foundation/Foundation.h>
 
-@class MPWebServices;
-
 @interface MPAgentRegister : NSObject
 
 @property (nonatomic, strong) NSString *clientKey;

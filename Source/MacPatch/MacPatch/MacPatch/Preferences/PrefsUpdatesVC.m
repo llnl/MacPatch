@@ -1,10 +1,27 @@
 //
 //  PrefsUpdatesVC.m
-//  MacPatch
-//
-//  Created by Charles Heizer on 2/27/19.
-//  Copyright © 2019 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "PrefsUpdatesVC.h"
 #import "MPauthrestartVC.h"
@@ -25,6 +42,7 @@
 
 @synthesize scanOnLaunchCheckBox;
 @synthesize preStageRebootPatchesBox;
+@synthesize showAllPatchesBox;
 @synthesize allowInstallRebootPatchesCheckBox;
 @synthesize pausePatchingCheckBox;
 @synthesize authState;
@@ -36,6 +54,7 @@
 	
 	[scanOnLaunchCheckBox setState:[self scanOnLaunch]];
 	[preStageRebootPatchesBox setState:[self preStageRebootPatches]];
+	[showAllPatchesBox setState:[self showAllPatches]];
 	[allowInstallRebootPatchesCheckBox setState:[self allowInstallRebootPatches]];
 	[pausePatchingCheckBox setState:[self pausePatching]];
 	[self checkAuthrestartState];
@@ -79,6 +98,15 @@
 	qlinfo(@"Scan on launch state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"enableScanOnLaunch"];
+	[d synchronize];
+}
+
+- (IBAction)changeShowAllPatches:(id)sender
+{
+	int state = (int)[showAllPatchesBox state];
+	qlinfo(@"Show all patches state changed %d",state);
+	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+	[d setBool:state forKey:@"showAllPatches"];
 	[d synchronize];
 }
 
@@ -143,6 +171,12 @@
 {
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	return [d boolForKey:@"preStageRebootPatches"];
+}
+
+- (BOOL)showAllPatches
+{
+	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+	return [d boolForKey:@"showAllPatches"];
 }
 
 - (BOOL)debugLogging

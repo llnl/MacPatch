@@ -966,7 +966,7 @@ static STHTTPRequestCookiesStorage globalCookiesStoragePolicy = STHTTPRequestCoo
             result = data;
         }
         
-        dispatch_semaphore_signal(sem);  
+        dispatch_semaphore_signal(sem);
     }] resume];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
@@ -1068,6 +1068,7 @@ static STHTTPRequestCookiesStorage globalCookiesStoragePolicy = STHTTPRequestCoo
     }
 }
 
+/*
 - (void)URLSessionDidFinishEventsForBackgroundURLSession:(NSURLSession *)session NS_AVAILABLE_IOS(7_0)
 {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -1081,6 +1082,7 @@ static STHTTPRequestCookiesStorage globalCookiesStoragePolicy = STHTTPRequestCoo
         
     });
 }
+ */
 
 #pragma mark NSURLSessionTaskDelegate
 

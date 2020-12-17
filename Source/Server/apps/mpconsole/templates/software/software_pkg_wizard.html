@@ -14,7 +14,7 @@
 
 	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
 
-    <link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
 	<style type="text/css" media="screen">
 		#spanLink {
@@ -66,7 +66,7 @@
 
 {% block bodyPanel %}
 <div class="content">
-    <form id="softwarePKGForm" action="#" method="post" enctype="multipart/form-data">
+	<form id="softwarePKGForm" action="#" method="post" enctype="multipart/form-data">
 		<div id="wizard">
 			<!-- Section 1 -->
 			<h1>Software Package Information</h1>
@@ -173,8 +173,7 @@
 						</div>
 					</div>
 				</div>
-				<br>
-                <h4>Software Application Path</h4>
+				<h4>Software Application Path</h4>
 				<div class="container-fluid">
 					<div class="form-group">
 						<div class="row top-buffer">
@@ -182,37 +181,61 @@
 								<label>Application Path</label>
 							</div>
 							<div class="col-md-7">
-                                <input type="text" id="sw_app_path" name="sw_app_path" SIZE="60" value="{{data['PKG'].sw_app_path or ''}}">
+								<input type="text" id="sw_app_path" name="sw_app_path" SIZE="60" value="{{data['PKG'].sw_app_path or ''}}">
 							</div>
 							<div class="col-md-3">
 								<small>
-                                    Application path (e.g. /Applications/Chess.app). Used for catalog detection.
-                                </small>
+									Application path (e.g. /Applications/Chess.app). Used for catalog detection.
+								</small>
 							</div>
 						</div>
 					</div>
 				</div>
-				<br>
 				<h4>Package</h4>
 				<div class="container-fluid">
 					<div class="form-group">
 						<div class="row top-buffer">
 							<div class="col-md-2">
-								<label>Package</label>
+								<label>Package Upload</label>
 							</div>
 							<div class="col-md-7">
 								<input type="file" name="mainPackage" id="mainPackage">
 								<br>
 								<div style="font-size:12px;padding-bottom:10px;">
-									{% if data['PKG'].sw_url %}
-									<a href="/mp-content/{{data['PKG'].sw_url}}">
-										<img src="{{ url_for('static', filename='img/arrow_down.png') }}" height="14" />{{ data['PKG'].sw_url.split("/") | last }} ({{data['PKG'].sw_hash }})
-									</a>
+									{% if data['PKG'].sw_useS3 == 1 %}
+										<a id="sw_s3url" href="javascript:void(0)" style="font-size:12px;">
+											<img src="/static/img/arrow_down.png" height="14"/>{{ data['PKG'].sw_url.split("/") | last }} ({{data['PKG'].sw_hash }})
+										</a>
+									{% else %}
+										{% if data['PKG'].sw_url %}
+										<a href="/mp-content/{{data['PKG'].sw_url}}">
+											<img src="{{ url_for('static', filename='img/arrow_down.png') }}" height="14" />{{ data['PKG'].sw_url.split("/") | last }} ({{data['PKG'].sw_hash }})
+										</a>
+										{% endif %}
 									{% endif %}
+
+
 								</div>
 							</div>
 							<div class="col-md-3">
 								<small>Note: The file must be a zip file or dmg file.</small>
+							</div>
+						</div>
+						<div class="row top-buffer">
+							<div class="col-md-2">
+								<label>Use AWS S3 Storage</label>
+							</div>
+							<div class="col-md-7">
+								<select name="sw_useS3" size="1">
+									<option value="0" {% if data['PKG'].sw_useS3 == 0 %} Selected {% endif %}>No</option>
+									<option value="1" {% if data['PKG'].sw_useS3 == 1 %} Selected {% endif %}>Yes</option>
+								</select>
+							</div>
+							<div class="col-md-2">
+								<small>
+									Note: Please verify that S3 has been configured. Before using.<br>
+									Upload speed will be slower, than local storage.
+								</small>
 							</div>
 						</div>
 						<div class="row top-buffer">
@@ -264,7 +287,7 @@
 			</section>
 			<!-- Section 3 -->
 			<h1>Patching</h1>
-            <section>
+			<section>
 				<h4>Software Patching</h4>
 				<div class="container-fluid">
 					<div class="form-group">
@@ -300,8 +323,8 @@
 
 					</div>
 				</div>
-            </section>
-            <!-- Section 4 -->
+			</section>
+			<!-- Section 4 -->
 			<h1>Filters</h1>
 			<section>
 				<h4>Install Filters</h4>
@@ -400,7 +423,7 @@
 					</div>
 				</div>
 			</section>
-            <!--
+			<!--
 			<h1>Save</h1>
 			<section>
 				<h4>Install Requisites &amp; Save</h4>
@@ -434,22 +457,22 @@
 	</form>
 </div>
 <div id="overlay">
-    <img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
-    <h1 style="text-align: center; color: white; ">Saving...</h1>
-    <table width="500" align="center">
-        <tr>
-            <td>
-                <div class="well">
-                <label for="exampleInputFile">Upload Progress</label>
-                <div id="progress" class="progress">
-                    <div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
-                      0%
-                    </div>
-                </div>
-                </div>
-            </td>
-        </tr>
-    </table>
+	<img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
+	<h1 style="text-align: center; color: white; ">Saving...</h1>
+	<table width="500" align="center">
+		<tr>
+			<td>
+				<div class="well">
+				<label for="exampleInputFile">Upload Progress</label>
+				<div id="progress" class="progress">
+					<div id="progressBar" class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width:0%">
+					  0%
+					</div>
+				</div>
+				</div>
+			</td>
+		</tr>
+	</table>
 </div>
 {%  endblock %}
 
@@ -470,6 +493,8 @@
 	<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
 
 	<script>
+
+
 		$(document).ready(function()
 		{
 			// Create Global vars
@@ -489,6 +514,40 @@
 					style.sheet.insertRule(name+"{"+rules+"}",0);
 				}
 			}
+
+			function downloadURL(url) {
+				var hiddenIFrameID = 'hiddenDownloader',
+					iframe = document.getElementById(hiddenIFrameID);
+				if (iframe === null) {
+					iframe = document.createElement('iframe');
+					iframe.id = hiddenIFrameID;
+					iframe.style.display = 'none';
+					document.body.appendChild(iframe);
+				}
+				iframe.src = url;
+			};
+
+			$(document).on('click',"#sw_s3url",function () {
+				$.ajax({
+				   url: '/software/s3url/{{ data['SUUID'] or 0 }}',
+				   data: {
+					  format: 'json'
+				   },
+				   error: function() {
+					  //$('#info').html('<p>An error has occurred</p>');
+					  alert('An error has occurred.');
+				   },
+				   dataType: 'json',
+				   success: function(data) {
+					   //console.log(data);
+					   //console.log(data['url']);
+					   if ( data['error'] == 0 ) {
+						   downloadURL(data['url']);
+					   }
+				   },
+				   type: 'GET'
+				});
+			});
 
 			// jQuery Wizard
 			$("#softwarePKGForm").children("div").steps(
@@ -526,26 +585,26 @@
 					formDataNew.append('sw_uninstall_script', uninstall.getValue());
 
 					var res = true;
-                    $('#overlay').show();
+					$('#overlay').show();
 
 					$.ajax({
-                        xhr: function() {
-                            var xhr = new window.XMLHttpRequest();
-                            xhr.upload.addEventListener('progress',function(e)
-                            {
-                                if (e.lengthComputable)
-                                {
-                                    var percent = Math.round((e.loaded / e.total) * 100);
-                                    $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text(percent + '%');
-                                    if (percent == 100) {
-                                        document.getElementById('progress').className += ' progress-striped active';
-                                        $("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text('Saving Uploaded Software');
-                                    }
-                                }
-                            });
+						xhr: function() {
+							var xhr = new window.XMLHttpRequest();
+							xhr.upload.addEventListener('progress',function(e)
+							{
+								if (e.lengthComputable)
+								{
+									var percent = Math.round((e.loaded / e.total) * 100);
+									$("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text(percent + '%');
+									if (percent == 100) {
+										document.getElementById('progress').className += ' progress-striped active';
+										$("#progressBar").attr('aria-valuenow', percent).css('width',percent + '%').text('Saving Uploaded Software');
+									}
+								}
+							});
 
-                            return xhr;
-                        },
+							return xhr;
+						},
 
 						type:'POST',
 						url: '/software/package/save',
@@ -572,7 +631,7 @@
 				onFinished: function (event, currentIndex)
 				{
 					//alert("Submitted!");
-                    /*
+					/*
 					$('#modalDialog').modal('hide');
 					parent.closeModal();
 					*/

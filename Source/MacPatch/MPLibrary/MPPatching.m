@@ -99,10 +99,10 @@ typedef enum {
  */
 - (NSArray *)scanForPatchesUsingTypeFilter:(MPPatchContentType)contentType forceRun:(BOOL)forceRun
 {
-	return [self scanForPatchesUsingTypeFilterOrBundleID:contentType bundleID:NULL forceRun:forceRun];
+	return [self scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:contentType bundleID:NULL forceRun:forceRun patchAllFound:NO];
 }
 
-- (NSArray *)scanForPatchesUsingTypeFilterOrBundleID:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun
+- (NSArray *)scanForPatchesUsingTypeFilterOrBundleID_ORIG:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun
 {
 	NSArray *result = [NSArray array];
 	if (!forceTaskRun)
@@ -339,9 +339,282 @@ typedef enum {
 		}
 	}
 
-	[self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
-	qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
-	result = [NSArray arrayWithArray:approvedUpdatesArray];
+    if (approvedUpdatesArray.count >= 1)
+    {
+        [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
+        qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
+        result = [NSArray arrayWithArray:approvedUpdatesArray];
+    }
+	
+	[self patchScanCompleted];
+	return result;
+}
+
+- (NSArray *)scanForPatchesUsingTypeFilterOrBundleID:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun
+{
+	return [self scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:contentType bundleID:bundleID forceRun:forceRun patchAllFound:NO];
+}
+
+- (NSArray *)scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun patchAllFound:(BOOL)patchAll
+{
+	NSArray *result = [NSArray array];
+	if (!forceTaskRun)
+	{
+		if (forceRun)
+		{
+			// Wait up to 60 seconds to see if current running task will complete
+			int w = 0;
+			while ([self isTaskRunning:kScanRunning])
+			{
+				w++;
+				sleep(1);
+			}
+		}
+		else
+		{
+			if ([self isTaskRunning:kScanRunning])
+			{
+				qlinfo(@"Patch scan is already running. Now exiting.");
+				[self patchScanCompleted];
+				return nil;
+			} else {
+				[self writeTaskRunning:kScanRunning];
+			}
+		}
+	}
+	
+	NSMutableArray      *approvedUpdatesArray = [[NSMutableArray alloc] init];
+	NSMutableArray      *userInstallApplePatches = [[NSMutableArray alloc] init];
+	NSMutableDictionary *tmpDict;
+	NSArray             *approvedApplePatches = nil;
+	NSArray             *approvedCustomPatches = nil;
+	NSArray             *applePatchesArray = nil;
+	NSMutableArray      *customPatchesArray;
+	NSDictionary        *patchGroupPatches;
+	
+	// Get Patch Group Patches
+	NSError *wsErr = nil;
+	MPRESTfull *mprest = [[MPRESTfull alloc] init];
+	qlinfo(@"Get approved patches list.");
+    [self iLoadStatus:@"Status: Getting patch group patches."];
+	if (patchAll)
+	{
+		patchGroupPatches = [mprest getAllPatchesForClient:&wsErr];
+	} else {
+		if (bundleID != NULL)
+		{
+			// Filter on BundleID
+			patchGroupPatches = [mprest getApprovedPatchesForClient:&wsErr];
+		}
+		else
+		{
+			patchGroupPatches = [mprest getApprovedPatchesForClient:&wsErr];
+		}
+	}
+	if (wsErr)
+	{
+		if (!patchAll) { // If patch all, we dont care about approved patches.
+			// Error getting approved patch group patches
+			qlerror(@"%@",wsErr.localizedDescription);
+			[self patchScanCompleted];
+            [self iLoadStatus:@"Completed: Error getting patch group patches."];
+			return result;
+		}
+	}
+	
+	if (!patchGroupPatches && !patchAll)
+	{
+		qlerror(@"");
+        [self iLoadStatus:@"Completed: There was a issue getting the approved patches, scan will exit."];
+		[self patchScanCompleted];
+		return result;
+	}
+	
+	if (!patchAll)
+	{
+		if ((contentType == kApplePatches) || (contentType == kAllPatches))
+		{
+			approvedApplePatches = patchGroupPatches[@"Apple"];
+			if (approvedApplePatches.count <= 0)
+			{
+				qlinfo(@"Warning: no apple updates have been approved for install.");
+			}
+		}
+		if ((contentType == kCustomPatches) || (contentType == kAllPatches))
+		{
+			approvedCustomPatches = patchGroupPatches[@"Custom"];
+			if (approvedCustomPatches.count <= 0)
+			{
+				qlinfo(@"Warning: no custom updates have been approved for install.");
+			}
+		}
+	}
+	
+	// Scan for Apple Patches
+	if ((contentType == kApplePatches) || (contentType == kAllPatches))
+	{
+		qlinfo(@"Scanning for Apple software updates.");
+		
+		// New way, using the helper daemon
+		MPAsus *asus = [MPAsus new];
+		asus.delegate = self;
+		
+        [self iLoadStatus:@"Status: Scanning for Apple patches."];
+		applePatchesArray = [asus scanForAppleUpdates];
+		[self wsPostPatchScanResults:applePatchesArray type:kApplePatches];
+		
+		// Process patches
+		// If no items in array, lets bail...
+		if (applePatchesArray.count == 0)
+		{
+			qlinfo(@"No Apple updates found.");
+            [self iLoadStatus:@"Status: No Apple updates found."];
+		}
+		else
+		{
+			qlinfo(@"%ld Apple updates found.",applePatchesArray.count);
+			for (NSDictionary *d in applePatchesArray) {
+				qlinfo(@"Apple Patch Needed: %@",d[@"patch"]);
+			}
+			
+			// We have Apple patches, now add them to the array of approved patches
+			// If no items in array, lets bail...
+			if (approvedApplePatches.count == 0 && !patchAll)
+			{
+				qlinfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
+			}
+			else
+			{
+				// Build Approved Patches
+				qlinfo(@"Building approved patch list...");
+				
+				for (int i=0; i<[applePatchesArray count]; i++)
+				{
+					NSDictionary *_applePatch = applePatchesArray[i];
+					for (int x=0;x < [approvedApplePatches count]; x++)
+					{
+						NSDictionary *_approvedPatch = approvedApplePatches[x];
+						if ([ _approvedPatch[@"supatchname"] isEqualTo:_applePatch[@"patch"]])
+						{
+							
+							// Check to see if the approved apple patch requires a user
+							// to install the patch, right now this is for 10.13 os updates
+							if (_approvedPatch[@"user_install"])
+							{
+								if ([_approvedPatch[@"user_install"] intValue] == 1)
+								{
+									qlinfo(@"Approved (User Install) update %@",_applePatch[@"patch"]);
+									qldebug(@"Approved: %@",_approvedPatch);
+									[userInstallApplePatches addObject:@{@"type":@"Apple",@"patch":_applePatch[@"patch"]}];
+									break;
+								}
+							}
+							
+							qlinfo(@"Approved update %@",_applePatch[@"patch"]);
+							tmpDict = [[NSMutableDictionary alloc] init];
+							[tmpDict setObject:@"Apple" forKey:@"type"];
+							[tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
+							[tmpDict setObject:_applePatch[@"description"] forKey:@"description"];
+							[tmpDict setObject:_applePatch[@"restart"] forKey:@"restart"];
+							[tmpDict setObject:_applePatch[@"size"] forKey:@"size"];
+							[tmpDict setObject:_applePatch[@"version"] forKey:@"version"];
+							[tmpDict setObject:_approvedPatch[@"severity"] forKey:@"severity"];
+							[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
+							
+							if (_approvedPatch[@"hasCriteria"])
+							{
+								[tmpDict setObject:_approvedPatch[@"hasCriteria"] forKey:@"hasCriteria"];
+								if ([_approvedPatch[@"hasCriteria"] boolValue] == YES)
+								{
+									if ( _approvedPatch[@"criteria_pre"] && [_approvedPatch[@"criteria_pre"] count] > 0)
+									{
+										[tmpDict setObject:_approvedPatch[@"criteria_pre"] forKey:@"criteria_pre"];
+									}
+									if (_approvedPatch[@"criteria_post"] && [_approvedPatch[@"criteria_post"] count] > 0)
+									{
+										[tmpDict setObject:_approvedPatch[@"criteria_post"] forKey:@"criteria_post"];
+									}
+								}
+							}
+							
+							qldebug(@"Apple Patch Dictionary Added: %@",tmpDict);
+							[approvedUpdatesArray addObject:tmpDict];
+							break;
+						}
+					}
+				}
+			}
+		} // If has applePatchesArray
+	} // Scan for Apple or All
+	
+	// Scan for Custom Patches to see what is relevant for the system
+	if ((contentType == kCustomPatches) || (contentType == kAllPatches))
+	{
+        [self iLoadStatus:@"Scanning for custom patch vulnerabilities..."];
+		qlinfo(@"Scanning for custom patch vulnerabilities...");
+		MPPatchScan *scanner = [MPPatchScan new];
+		scanner.delegate = self;
+		
+		if (bundleID != NULL)
+		{
+			customPatchesArray = [NSMutableArray arrayWithArray:[scanner scanForPatchesWithbundleID:bundleID]];
+		}
+		else
+		{
+			qlinfo(@"Start custom patch scan.");
+			customPatchesArray = [NSMutableArray arrayWithArray:[scanner scanForPatches]];
+			qlinfo(@"Custom patch scan completed.");
+			qlinfo(@"%ld custom patches needed.",customPatchesArray.count);
+			// Only post found patches on full scan, bundle id is for targeting sw install
+			// auto-updates
+			[self wsPostPatchScanResults:customPatchesArray type:kCustomPatches];
+		}
+		
+		qlinfo(@"Custom Patches Needed: %ld",customPatchesArray.count);
+		qldebug(@"Custom Patches Needed: %@",customPatchesArray);
+		qlinfo(@"Approved Custom Patches: %ld",approvedCustomPatches.count);
+		qldebug(@"Approved Custom Patches: %@",approvedCustomPatches);
+
+		
+		// Filter List of Patches containing only the approved patches
+		qlinfo(@"Building approved patch list...");
+		for (int i=0; i < customPatchesArray.count; i++)
+		{
+			NSDictionary *_customPatch = customPatchesArray[i];
+			for (int x=0;x < approvedCustomPatches.count; x++)
+			{
+				NSDictionary *_approvedPatch = approvedCustomPatches[x];
+				if ( [ _customPatch[@"patch_id"] isEqualTo:_approvedPatch[@"puuid"] ] )
+				{
+					qlinfo(@"Patch %@ approved for update.",_customPatch[@"description"]);
+					tmpDict = [[NSMutableDictionary alloc] init];
+					[tmpDict setObject:@"Third" forKey:@"type"];
+					[tmpDict setObject:_customPatch[@"patch"] forKey:@"patch"];
+					[tmpDict setObject:_customPatch[@"description"] forKey:@"description"];
+					[tmpDict setObject:_customPatch[@"restart"] forKey:@"restart"];
+					[tmpDict setObject:_customPatch[@"version"] forKey:@"version"];
+					[tmpDict setObject:_customPatch[@"patchData"] forKey:@"patchData"];
+					// CEH - This needs to be fixed, but it will take a lot of refactoring
+					[tmpDict setObject:@[_approvedPatch] forKey:@"patches"];
+					[tmpDict setObject:_customPatch[@"patch_id"] forKey:@"patch_id"];
+					[tmpDict setObject:_customPatch[@"bundleID"] forKey:@"bundleID"];
+					[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
+
+					qldebug(@"Custom Patch Dictionary Added: %@",tmpDict);
+					[approvedUpdatesArray addObject:[tmpDict copy]];
+					tmpDict = nil;
+					break;
+				}
+			}
+		}
+	}
+
+    if (approvedUpdatesArray.count >= 1)
+    {
+        [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
+        qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
+        result = [NSArray arrayWithArray:approvedUpdatesArray];
+    }
 	
 	[self patchScanCompleted];
 	return result;
@@ -365,8 +638,8 @@ typedef enum {
 
 - (NSDictionary *)installPatchesUsingTypeFilter:(NSArray *)approvedPatches typeFilter:(MPPatchContentType)contentType
 {
-	//qlinfo(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
-	//qlinfo(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
+	qldebug(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
+    qldebug(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
 	
 	BOOL hasUserLoggedIn = [MPSystemInfo isUserLoggedIn];
 	BOOL canInstallRebootPatches = NO;
@@ -396,7 +669,7 @@ typedef enum {
 	if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
 	
 	MPClientDB *cdb = [MPClientDB new];
-	qlinfo( @"Begin installing patches.");
+	qlinfo(@"Begin installing patches.");
 	for (i = 0; i < approvedPatches.count; i++)
 	{
 		// Create/Get Dictionary of Patch to install
@@ -414,7 +687,8 @@ typedef enum {
 				continue;
 			}
 		}
-		
+        
+        [self iLoadStatus:@"Progress: Installing %ld of %ld",(i+1),approvedPatches.count];
 		// -------------------------------------------
 		// Now proceed to the download and install
 		// -------------------------------------------
@@ -424,15 +698,16 @@ typedef enum {
 		{
 			
 			qlinfo(@"Starting install for %@",_patch[@"patch"]);
-			[self iLoadStatus:@"Begin: %@\n", _patch[@"patch"]];
+			[self iLoadStatus:@"Begin: %@", _patch[@"patch"]];
+			//[self postStatusToDelegate:@"Begin: %@", _patch[@"patch"]];
 			
-			qlinfo(@"_patch: %@",_patch);
+			qldebug(@"Patch Data: %@",_patch);
 			
 			// Get all of the patches, main and subs
 			// This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
 			NSArray *patchPatchesArray = [NSArray arrayWithArray:_patch[@"patches"]];
 			qlinfo(@"Current patch has total patches associated with it %ld", patchPatchesArray.count);
-			qlinfo(@"patchPatchesArray: %@", patchPatchesArray);
+			qldebug(@"patchPatchesArray: %@", patchPatchesArray);
 			
 			MPFileUtils *fu;
 			NSString *dlPatchLoc; //Download location Path
@@ -456,7 +731,9 @@ typedef enum {
 				BOOL validHash = NO;
 				
 				// We have a currPatchToInstallDict to work with
-				qlinfo(@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]);
+				//qlinfo(@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]);
+                qlinfo(@"Start install for patch %@ from %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent],_patch[@"patch"]);
+				[self postStatusToDelegate:@"Start install for patch %@ from %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent],_patch[@"patch"]];
 				
 				// *****************************
 				// Download the update
@@ -492,14 +769,41 @@ typedef enum {
 					// -------------------------------------------
 					if (downloadPatch)
 					{
-						qlinfo(@"Start download for patch from %@",currPatchToInstallDict[@"pkg_url"]);
-						NSString *patchURL = [NSString stringWithFormat:@"/mp-content%@",currPatchToInstallDict[@"pkg_url"]];
+						qlinfo(@"Start download for patch %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]);
+						[self postStatusToDelegate:@"Downloading %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]];
+						NSString *patchURL;
+						BOOL useS3 = NO;
+						if ([currPatchToInstallDict[@"pkg_useS3"] intValue] == 1)
+						{
+							MPRESTfull *mpr = [MPRESTfull new];
+							NSDictionary *mpr_res = [mpr getS3URLForType:@"patch" id:_patch[@"patch_id"]];
+							if (mpr_res) {
+								useS3 = YES;
+								patchURL = mpr_res[@"url"];
+							} else {
+								qlerror(@"Result from getting the S3 url was nil. No download can occure.");
+								patchInstallErrors++;
+								[failedPatches addObject:_patch];
+								[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to download patch"];
+								break;
+							}
+						} else {
+							patchURL = [NSString stringWithFormat:@"/mp-content%@",currPatchToInstallDict[@"pkg_url"]];
+						}
+						
 						
 						qlinfo(@"Download patch from: %@",patchURL);
 						err = nil;
-						dlPatchLoc = [self downloadUpdate:patchURL error:&err];
+						if (useS3) {
+							dlPatchLoc = [self downloadUpdate:patchURL useFullURL:YES error:&err];
+						} else {
+							dlPatchLoc = [self downloadUpdate:patchURL error:&err];
+						}
 						if (err) {
 							qlerror(@"Error downloading a patch, skipping %@. Err Message: %@",_patch[@"patch"],err.localizedDescription);
+							patchInstallErrors++;
+							[failedPatches addObject:_patch];
+							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 							break;
 						}
 						qlinfo(@"File downloaded to %@",dlPatchLoc);
@@ -507,20 +811,27 @@ typedef enum {
 						// -------------------------------------------
 						// Validate hash, before install
 						// -------------------------------------------
+						[self postStatusToDelegate:@"Verifying file hash..."];
 						if (![self doesHashMatch:dlPatchLoc knownHash:currPatchToInstallDict[@"pkg_hash"]])
 						{
 							qlerror(@"The downloaded file did not pass the file hash validation. No install will occur.");
+							qlerror(@"Remove: %@",dlPatchLoc);
 							
-							fu = [MPFileUtils new];
-							[fu removeContentsOfDirectory:dlPatchLoc.stringByDeletingLastPathComponent];
+							patchInstallErrors++;
+							[failedPatches addObject:_patch];
+							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
+							break;
 							
-							continue;
+							//continue;
 						}
 					}
 				}
 				@catch (NSException *e)
 				{
 					qlerror(@"%@", e);
+					patchInstallErrors++;
+					[failedPatches addObject:_patch];
+					[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 					break;
 				}
 				
@@ -528,6 +839,7 @@ typedef enum {
 				// Now we need to unzip
 				qlinfo(@"Uncompressing patch, to begin install.");
 				qlinfo(@"Begin decompression of file, %@",dlPatchLoc);
+				[self postStatusToDelegate:@"Decompressing file, %@",[dlPatchLoc lastPathComponent]];
 				err = nil;
 				fu = [MPFileUtils new];
 				[fu unzip:dlPatchLoc error:&err];
@@ -545,6 +857,7 @@ typedef enum {
 					if ([currPatchToInstallDict[@"pkg_preinstall"] length] > 0 && ([currPatchToInstallDict[@"pkg_preinstall"] isEqualTo:@"NA"] == NO))
 					{
 						qlinfo(@"Begin pre install script.");
+						[self postStatusToDelegate:@"Begin pre install script."];
 						NSString *preInstScript = @"";
 						if ([currPatchToInstallDict[@"pkg_preinstall"] isBase64String])
 						{
@@ -584,6 +897,7 @@ typedef enum {
 					{
 						pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[ii]];
 						qlinfo(@"Installing %@",pkgPath.lastPathComponent);
+						[self postStatusToDelegate:@"Installing %@",pkgPath.lastPathComponent];
 						qlinfo(@"Start install of %@",pkgPath);
 						mpInstaller = [[MPInstaller alloc] init];
 						int instalRes = -1;
@@ -699,6 +1013,8 @@ typedef enum {
 			[self iLoadStatus:@"Begin: %s",_patch[@"patch"]];
 			
 			mpAsus = [MPAsus new];
+            mpAsus.delegate = self;
+            
 			if ([_patch[@"hasCriteria"] boolValue] == NO || !_patch[@"hasCriteria"])
 			{
 				qlinfo(@"hasCriteria=No");
@@ -822,7 +1138,7 @@ typedef enum {
 	// Update MP Client Status to reflect patch install
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRequiredPatchesChangeNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
 	
-	if (patchesNeedingReboot >= 1 || patchesRequireReboot >= 1)
+	if ( (patchesNeedingReboot >= 1 || patchesRequireReboot >= 1) && !canInstallRebootPatches)
 	{
 		if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
 		{
@@ -854,7 +1170,14 @@ typedef enum {
 
 - (void)asusProgress:(NSString *)data
 {
+    qlinfo(@"asusProgress: %@",data);
 	[self.delegate patchingProgress:self progress:data];
+    [self postStatusToDelegate:data];
+}
+
+- (void)downloadProgress:(NSString *)progressStr
+{
+	[self.delegate patchingProgress:self progress:progressStr];
 }
 
 #pragma mark - Private
@@ -957,9 +1280,10 @@ typedef enum {
 	va_start(va, str);
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
-	if (iLoadMode == YES) {
-		printf("%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
-	}
+    if (iLoadMode == YES) {
+        qlinfo(@"Send to iLoad: %@",string);
+        fprintf(stdout,"%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
+    }
 }
 
 - (BOOL)doesHashMatch:(NSString *)filePath knownHash:(NSString *)knownHash
@@ -998,14 +1322,15 @@ typedef enum {
 - (void)addPatchesToClientDatabase:(NSArray *)patches
 {
 	qlinfo(@"Adding required patches to client database.");
-	MPClientDB *cdb = [MPClientDB new];
-	[cdb clearRequiredPatches];
-	for (NSDictionary *p in patches)
-	{
-		[cdb addRequiredPatch:p];
-		qldebug(@"Added %@",p[@"patch"]);
-	}
-	return;
+    MPClientDB *cdb = [MPClientDB new];
+    [cdb clearRequiredPatches];
+
+    for (NSDictionary *p in patches)
+    {
+        [cdb addRequiredPatch:p];
+        qldebug(@"Added %@",p[@"patch"]);
+    }
+    return;
 }
 
 - (BOOL)patchingForHostIsPaused
@@ -1041,13 +1366,25 @@ typedef enum {
 #pragma mark Networking
 - (NSString *)downloadUpdate:(NSString *)url error:(NSError **)err
 {
+	return [self downloadUpdate:url useFullURL:NO error:err];
+}
+
+- (NSString *)downloadUpdate:(NSString *)url useFullURL:(BOOL)isFullURL error:(NSError **)err
+{
 	NSString *res = nil;
 	NSError *error = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+	req.delegate = self;
 	NSString *uuid = [[NSUUID UUID] UUIDString];
 	NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:uuid];
-	res = [req runSyncFileDownload:url downloadDirectory:dlDir error:&error];
+	if (isFullURL) {
+		res = [req runSyncFileDownloadFromServer:url downloadDirectory:dlDir error:&error];
+	} else {
+		res = [req runSyncFileDownload:url downloadDirectory:dlDir error:&error];
+	}
+	qlerror(@"[downloadUpdate][res]:%@",res);
 	if (error) {
+		qlerror(@"[downloadUpdate][error]:%@",error.localizedDescription);
 		if (err != NULL) {
 			*err = error;
 		} else {
@@ -1132,4 +1469,18 @@ typedef enum {
 }
 
 #pragma mark Local Database
+
+
+- (void)postStatusToDelegate:(NSString *)str, ...
+{
+	va_list va;
+	va_start(va, str);
+	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
+	va_end(va);
+	qltrace(@"postStatusToDelegate: %@",string);
+	if ([self.delegate respondsToSelector:@selector(patchProgress:)]) {
+		[self.delegate patchProgress:string];
+	}
+}
+
 @end

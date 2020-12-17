@@ -1,10 +1,27 @@
 //
 //  SoftwareCellView.m
-//  TestTable
-//
-//  Created by Heizer, Charles on 12/18/14.
-//  Copyright (c) 2014 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "SoftwareCellView.h"
 #import "GlobalQueueManager.h"
@@ -22,6 +39,8 @@
 
 @property (atomic, strong, readwrite) NSXPCConnection *worker;
 @property (nonatomic, strong) MPOProgressBar *progressBarNew;
+
+@property (nonatomic)         NSInteger requestCount;
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
@@ -55,8 +74,55 @@
 	}
 	
 	[self connectToHelperTool];
+	[self loadImage];
 	//[self setupCell];
     // Drawing code here.
+}
+
+- (void)loadImage
+{
+    NSString *imgURL = _rowData[@"Software"][@"sw_img_path"];
+	if ([imgURL isEqualToString:@"None"]) return; //If no image then dont try
+	
+    if (self.requestCount == -1) {
+        self.requestCount++;
+    } else {
+        if (self.requestCount >= (self.serverArray.count - 1)) {
+			qlerror(@"[SoftwareCellView]: Error, could not complete request, failed all servers.");
+            return;
+        } else {
+            self.requestCount++;
+        }
+    }
+    
+    Server *server = [self.serverArray objectAtIndex:self.requestCount];
+	NSString *urlPath = [NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode];
+    NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
+	qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+    __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
+    r.allowSelfSignedCert = server.allowSelfSigned;
+    __weak STHTTPRequest *wr = r;
+    __block __typeof(self) weakSelf = self;
+    
+    r.completionDataBlock = ^(NSDictionary *headers, NSData *data)
+    {
+        __strong STHTTPRequest *sr = wr;
+        if(sr == nil) return;
+        if (sr.responseStatus >= 200 && sr.responseStatus <= 299) {
+			NSImage *image = [[NSImage alloc] initWithData:data];
+			[self.swIcon setImage:image];
+        } else {
+            [weakSelf loadImage];
+        }
+    };
+    // Error block
+    r.errorBlock = ^(NSError *error)
+    {
+		qlerror(@"%@",error.localizedDescription);
+        [weakSelf loadImage];
+    };
+    
+    [r startAsynchronous];
 }
 
 // Setup User Notification for Software Install Operation
@@ -479,3 +545,4 @@
 	[self removeUninstallNotificationObserver];
 }
 @end
+

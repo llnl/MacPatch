@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16096" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17156" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16096"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17156"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -13,6 +13,7 @@
                 <outlet property="pausePatchingCheckBox" destination="fkL-p0-oKI" id="JhD-Wu-Ytg"/>
                 <outlet property="preStageRebootPatchesBox" destination="I19-Dk-aer" id="HNK-To-bmY"/>
                 <outlet property="scanOnLaunchCheckBox" destination="Ei2-Rz-hzL" id="oeX-al-nEp"/>
+                <outlet property="showAllPatchesBox" destination="YmG-ZE-xe6" id="ZIb-0n-jJH"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
             </connections>
         </customObject>
@@ -154,6 +155,17 @@
                         </subviews>
                     </view>
                 </box>
+                <button hidden="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YmG-ZE-xe6">
+                    <rect key="frame" x="18" y="339" width="356" height="18"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="check" title="Show All Patches (Non-approved)" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="jGI-Pf-agT">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="changeShowAllPatches:" target="-2" id="qqB-mJ-6PL"/>
+                    </connections>
+                </button>
             </subviews>
             <point key="canvasLocation" x="116" y="175.5"/>
         </customView>

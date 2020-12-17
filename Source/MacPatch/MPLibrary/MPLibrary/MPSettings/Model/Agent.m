@@ -288,4 +288,5 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
     copy.preStagePatches = self.preStagePatches;
 	return copy;
 }
+
 @end

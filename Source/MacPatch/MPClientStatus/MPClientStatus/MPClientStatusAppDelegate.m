@@ -512,7 +512,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		MPFileCheck *fu = [MPFileCheck new];
 		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
 		
-		
 		__block BOOL res = NO;
 		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 		
@@ -526,6 +525,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 			{
 				[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 					qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                    dispatch_semaphore_signal(sem);
 				}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
 					if (err) {
 						qlerror(@"%@",err.localizedDescription);
@@ -1103,7 +1103,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)postUserNotificationForFVAuthRestart
 {
-	qlinfo(@"postUserNotificationForFVAuthRestart");
+	qldebug(@"postUserNotificationForFVAuthRestart");
 	// Look to see if we have posted already, if we have, no need to do it again
 	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
@@ -1125,7 +1125,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		if (![prefs[@"enabled"] boolValue]) {
 			return; // Dont post any notifications if not enabled.
 		}
-	}
+    } else {
+        return; // Dont post any notifications, not setup.
+    }
 	
 	NSUserNotification *userNote = [[NSUserNotification alloc] init];
 	if (prefs[@"outOfSync"]) {

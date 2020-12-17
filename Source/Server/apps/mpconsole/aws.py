@@ -21,9 +21,9 @@ class MPaws:
 	# S3 Patch data
 	# ------------------------------------------------------
 
-	def getS3UrlForPatch(self, patch_id):
+	def getS3UrlForPatch(self, id):
 		result = "None"
-		patch = MpPatch.query.filter(MpPatch.puuid == patch_id).first()
+		patch = MpPatch.query.filter(MpPatch.puuid == id).first()
 		if patch is not None:
 			_fP = patch.pkg_url[1:]
 			if self.fileExistsInS3(_fP):
@@ -31,15 +31,55 @@ class MPaws:
 
 		return result
 
+	# CEH: Need to document this ...
 	def deleteS3PatchFile(self, patch_id):
+		return self.deleteS3File(filePath=patch_id)
+
+	# ------------------------------------------------------
+	# S3 Software data
+	# ------------------------------------------------------
+
+	def getS3UrlForSoftware(self, id):
+		result = "None"
+		_sw = MpSoftware.query.filter(MpSoftware.suuid == id).first()
+		if _sw is not None:
+			_fP = _sw.sw_url[1:]
+			if self.fileExistsInS3(_fP):
+				result = self.urlForS3FilePath(_fP)
+
+		return result
+
+	# ------------------------------------------------------
+	# AWS S3 Universal Functions
+	# ------------------------------------------------------
+
+	def uploadFileToS3(self, file, filePath):
 		try:
-			#_s3 = getS3Client()
-			#_fP = os.path.join('/patches', patch_id)[1:]
-			_fP = patch_id[1:]
+			_key = filePath[1:]
+			response = self.s3Client.upload_file(file, current_app.config['AWS_S3_BUCKET'], _key)
+		except ClientError as e:
+			print("Error: {}".format(e))
+			return False
+
+		return True
+
+	def uploadFileObjToS3(self,fileObj,filePath,contentType):
+		try:
+			_key = filePath[1:]
+			response = self.s3Client.put_object(Body=fileObj, Bucket=current_app.config['AWS_S3_BUCKET'], Key=_key, ContentType=contentType)
+
+		except ClientError as e:
+			print("Error: {}".format(e))
+			return False
+
+		return True
+
+	def deleteS3File(self, filePath):
+		try:
+			_fP = filePath[1:] # removes first char which is a / in the MP path
 			session = Session(aws_access_key_id=current_app.config['AWS_S3_KEY'],
 							  aws_secret_access_key=current_app.config['AWS_S3_SECRET'])
 
-			# s3_client = session.client('s3')
 			s3_resource = session.resource('s3')
 			my_bucket = s3_resource.Bucket(current_app.config['AWS_S3_BUCKET'])
 
@@ -52,27 +92,6 @@ class MPaws:
 					]
 				}
 			)
-
-		except ClientError as e:
-			print("Error: {}".format(e))
-			return False
-
-		return True
-
-	def uploadFileToS3(self, file, swFilePath):
-		try:
-			_key = swFilePath[1:]
-			response = self.s3Client.upload_file(file, current_app.config['AWS_S3_BUCKET'], _key)
-		except ClientError as e:
-			print("Error: {}".format(e))
-			return False
-
-		return True
-
-	def uploadFileObjToS3(self,fileObj,swFilePath,contentType):
-		try:
-			_key = swFilePath[1:]
-			response = self.s3Client.put_object(Body=fileObj, Bucket=current_app.config['AWS_S3_BUCKET'], Key=_key, ContentType=contentType)
 
 		except ClientError as e:
 			print("Error: {}".format(e))

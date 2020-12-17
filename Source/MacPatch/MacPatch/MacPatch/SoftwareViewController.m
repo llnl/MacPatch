@@ -1,10 +1,27 @@
 //
 //  SoftwareViewController.m
-//  MPPortal
-//
-//  Created by Heizer, Charles on 12/13/12.
-//  Copyright (c) 2012 LLNL. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "SoftwareViewController.h"
 #import "SWInstallItem.h"
@@ -43,7 +60,6 @@
 @property (strong, nonatomic) IBOutlet NSWindow *webWindow;
 @property (strong, nonatomic) IBOutlet WKWebView *webView;
 @property (strong, nonatomic) NSString *productURL;
-@property (strong, nonatomic) NSString *cacheDir;
 
 @end
 
@@ -73,12 +89,6 @@
 			[defaults synchronize];
 		}
 		
-		NSString *tempDirectoryTemplate = [NSTemporaryDirectory() stringByAppendingPathComponent:@"MacPatchApp"];
-		if (![fm fileSizeAtPath:tempDirectoryTemplate]) {
-			[fm createDirectoryRecursivelyAtPath:tempDirectoryTemplate];
-		}
-		self.cacheDir = tempDirectoryTemplate;
-		
 		[self setupSWDataDir];		
     }
 	
@@ -95,7 +105,6 @@
 	[self setupNotification];
 
 	[self populateSoftwareGroupsPopupButton:nil];
-	//[self readSystemApps];
 	[self getInstalledSoftwareTasks];
 }
 
@@ -255,9 +264,7 @@
 		
 		if (error) {
 			qlerror(@"%@",error.localizedDescription);
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
-			});
+			[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
 			return;
 		}
 		
@@ -347,7 +354,9 @@
 			});
 			return;
 		} else {
-			[self->swTasks removeAllObjects];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->swTasks removeAllObjects];
+			});
 			[self->swTasks addObjectsFromArray:[self filterSoftwareTasks:tasks]];
 			//[self filterSoftwareTasks:tasks];
 		}
@@ -425,12 +434,14 @@
 				c++;
 			}
 			// OSType
+            /* CEH: Dsable for now, no longer needed.
 			if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
 				qldebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 			} else {
 				qldebug(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 				c++;
 			}
+             */
 			// OSVersion
 			if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
 				qldebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
@@ -481,28 +492,11 @@
 			}
 			
 			// Populate install by date
-			/*
 			if ([[[d objectForKey:@"sw_task_type"] uppercaseString] containsString:@"m"]) {
 				[d setObject:[d objectForKey:@"sw_end_datetime"] forKey:@"installBy"];
 			}
-			// Add image
-			if (![item[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
-				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-				NSString *imgURL = item[@"Software"][@"sw_img_path"];
-				if (imgURL.length > 2)
-				{
-					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-					if (imgData) {
-						[d setObject:imgData forKey:@"swImageData"];
-					} else {
-						d[@"swImageData"] = nil;
-					}
-				}
-			} else {
-				d[@"swImageData"] = nil;
-			}
-			*/
-			d[@"swImageData"] = nil;
+			
+			d[@"swImgData"] = nil;
 			[_SoftwareArray addObject:d];
 			d = nil;
 		}
@@ -687,7 +681,7 @@
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
 {
-    NSDictionary *sw = filteredSwTasks[row];
+    NSMutableDictionary *sw = filteredSwTasks[row];
     
     NSString *identifier = [tableColumn identifier];
     if ([identifier isEqualToString:@"MainCell"])
@@ -695,74 +689,19 @@
         NSFileManager *fm = [NSFileManager defaultManager];
         NSURL *appSupportDir = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSSystemDomainMask] objectAtIndex:0];
         NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch/SW_Data"];
-        
-		NSString *appImage = sw[@"image"]?:@"AppStore";
 
         SoftwareCellView *cellView = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
+		cellView.serverArray = [settings.servers copy];
         cellView.mp_SOFTWARE_DATA_DIR = appSupportMPDir;
         cellView.rowData = [sw copy];
 		cellView.actionButton.title = @"Install";
 		[cellView.actionButton setState:0];
 		[cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
-		if (sw[@"swImageData"]) {
-			NSImage *image = [[NSImage alloc] initWithData:sw[@"swImageData"]];
-			[cellView.swIcon setImage:image];
-		} else {
-			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-		}
 		
-		if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
-			NSString *_imgCachePath = [_cacheDir stringByAppendingPathComponent:sw[@"Software"][@"sw_img_path"]];
-			if ([fm fileSizeAtPath:_imgCachePath]) {
-				NSImage *image = [[NSImage alloc] initWithContentsOfFile:_imgCachePath];
-				[cellView.swIcon setImage:image];
-			} else {
-				NSString *_imgCachePathDir = [_cacheDir stringByAppendingPathComponent:[sw[@"Software"][@"sw_img_path"] stringByDeletingLastPathComponent]];
-				[fm createDirectoryRecursivelyAtPath:_imgCachePathDir];
-				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-				NSString *imgURL = sw[@"Software"][@"sw_img_path"];
-				if (imgURL.length > 2)
-				{
-					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-					if (imgData) {
-						[imgData writeToFile:_imgCachePath atomically:NO];
-						NSImage *image = [[NSImage alloc] initWithData:imgData];
-						[cellView.swIcon setImage:image];
-					} else {
-						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-					}
-				}
-			}
-		} else {
-			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-		}
-		
-		/*
-		if (!cellView.swIconName)
-		{
-			if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
-				MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-				NSString *imgURL = sw[@"Software"][@"sw_img_path"];
-				if (imgURL.length > 2)
-				{
-					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-					if (imgData) {
-						NSImage *image = [[NSImage alloc] initWithData:imgData];
-						[cellView.swIcon setImage:image];
-						cellView.swIconName = imgURL.lastPathComponent;
-						//[cellView setSwIconName:[imgURL.lastPathComponent]];
-					} else {
-						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-					}
-				}
-			} else {
-				[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-			}
-		} else {
-			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-		}
-        */
-        [cellView.swTitle setStringValue:sw[@"name"]];
+		//NSString *appImage = sw[@"image"]?:@"AppStore";
+		[cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
+        
+		[cellView.swTitle setStringValue:sw[@"name"]];
 		[cellView.swCompany setPlaceholderString:@""];
 		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
         [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
@@ -811,6 +750,7 @@
     }
     return nil;
 }
+
 
 #pragma mark - Search
 - (IBAction)searchString:(id)sender

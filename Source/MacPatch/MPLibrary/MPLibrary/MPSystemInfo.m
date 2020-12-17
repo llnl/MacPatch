@@ -256,6 +256,12 @@ done:
 		case CPU_TYPE_X86_64:
 			return @"i386";
 			break;
+        case CPU_TYPE_ARM64:
+            return @"arm";
+            break;
+        case CPU_TYPE_ARM64_32:
+            return @"arm";
+            break;
 		default:
 			return @"na";
 			break;

@@ -116,6 +116,7 @@
 				[self scanForPatches:patchFilter forceRun:forceRun];
 				break;
 			case 1:
+                NSAssert(patchFilter,@"patchFilter failed");
 				[self patchScanAndUpdate:patchFilter bundleID:bundleID];
 				break;
 			case 2:
@@ -132,7 +133,6 @@
 	[self finish];
 }
 
-// CEH - No more MPAgentExec
 - (void)runCritialPatchScanAndUpdate
 {
     logit(lcl_vInfo,@"Running Critial vulnerability scan and update.");
@@ -258,8 +258,6 @@
 	{
 		// We only update notification if a normal scan has run
 		[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRefreshStatusIconNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
-		// CEH
-		// Need to write approved updates to database
 	}
 	
 	qlinfo(@"Patch Scan Completed.");
@@ -269,6 +267,7 @@
 // NEW
 - (void)patchScanAndUpdate:(MPPatchContentType)contentType bundleID:(NSString *)bundleID
 {
+    [self iLoadStatus:@"Status: Scanning for patches."];
 	NSArray *updatesArray = [NSArray array];
 	if (bundleID != NULL) {
 		updatesArray = [self scanForPatchUsingBundleID:bundleID];
@@ -281,8 +280,9 @@
 	if (updatesArray.count <= 0)
 	{
 		qlinfo( @"No approved patches to install.");
+        [self iLoadStatus:@"Completed: No approved patches to install."];
 		return;
-	}
+    }
 	
 	// -------------------------------------------
 	// Sort Array by patch install weight
@@ -294,8 +294,6 @@
 	qlinfo( @"Checking system patching requirments.");
 	NSDictionary *systeInfo = [MPSystemInfo osVersionInfo];
 	NSString *_osType = systeInfo[@"ProductName"];
-	//qlinfo( @"OS Full Info: (%@)",systeInfo);
-	//qlinfo( @"OS Info: (%@)",_osType);
 	if ([_osType.lowercaseString isEqualToString:@"mac os x"] || [_osType.lowercaseString isEqualToString:@"macos"])
 	{
 		if (settings.agent.patchClient)
@@ -327,7 +325,7 @@
 	// -------------------------------------------
 	// iLoad / Provisioning
 	BOOL hasConsoleUserLoggedIn = TRUE;
-	[self iLoadStatus:@"Updates to install: %d\n", (int)updatesArray.count];
+	[self iLoadStatus:@"Status: %d updates to install.", (int)updatesArray.count];
 	
 	if (!iLoadMode)
 	{
@@ -364,8 +362,10 @@
 	// -------------------------------------------
 	// Begin Patching
 	MPPatching *patching = [MPPatching new];
+    patching.delegate = self;
+    if (iLoadMode) patching.iLoadMode = YES;
+    
 	NSDictionary *patchingResult = [patching installPatchesUsingTypeFilter:updatesArray typeFilter:contentType];
-	
 	NSInteger patchesNeedingReboot = [patchingResult[@"patchesNeedingReboot"] integerValue];
 	NSInteger rebootPatchesNeeded = [patchingResult[@"rebootPatchesNeeded"] integerValue];
 	
@@ -409,6 +409,36 @@
 		[@"reboot" writeToFile:MP_PATCH_ON_LOGOUT_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
 		[fm setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_PATCH_ON_LOGOUT_FILE error:NULL];
 	}
+    [self iLoadStatus:@"Status: Scanning and Patching completed."];
+}
+
+#pragma mark - MPPatching Delegates
+
+- (void)patchProgress:(NSString *)progressStr
+{
+    if (iLoadMode)
+    {
+        if([progressStr hasPrefix:@"Begin:"]) {
+            [self iLoadStatus:@"%@",progressStr];
+            
+        } else if([progressStr hasPrefix:@"Install completed for "]) {
+            [self iLoadStatus:@"Completed: %@",progressStr];
+            
+        } else if([progressStr hasPrefix:@"Completed:"]) {
+            [self iLoadStatus:@"%@",progressStr];
+            
+        } else if([progressStr hasPrefix:@"Progress:"]) {
+            [self iLoadStatus:@"%@",progressStr];
+            
+        } else {
+            [self iLoadStatus:@"Status: %@",progressStr];
+        }
+    }
+}
+
+- (void)patchingProgress:(MPPatching *)mpPatching progress:(NSString *)progressStr
+{
+    //qlinfo(@"[patchingProgress]: %@",progressStr);
 }
 
 // Download and Stage approved patches

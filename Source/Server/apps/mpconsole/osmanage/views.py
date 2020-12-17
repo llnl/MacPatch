@@ -365,7 +365,20 @@ def editProfileInGroup(group_id, policy_id):
 	for c in criteriaQuery:
 		cri[c.type] = c.type_data
 
-	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri)
+	userHasRights = 0
+	if accessToGroup(group_id):
+		userHasRights = 1
+
+	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri, isAdmin=userHasRights)
+
+
+def accessToGroup(groupID):
+	usid = session.get('_user_id')
+	_hasAccess = MpClientGroupAdmins.query.filter(MpClientGroupAdmins.group_id == groupID, MpClientGroupAdmins.group_admin == usr.user_id).first()
+	if _hasAccess is not None:
+		return True
+	else:
+		return False
 
 ''' AJAX Method '''
 @osmanage.route('/profile/<gprofile_id>',methods=['GET','DELETE'])

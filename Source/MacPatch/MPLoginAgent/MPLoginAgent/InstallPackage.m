@@ -30,36 +30,6 @@
 #undef  ql_component
 #define ql_component lcl_cMain
 
-@interface NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError;
-@end
-
-@implementation NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError
-{
-    for(;;)
-    {
-        @try
-        {
-            return [self availableData];
-        }
-        @catch (NSException *e)
-        {
-            if ([[e name] isEqualToString:NSFileHandleOperationException]) {
-                if ([[e reason] isEqualToString:@"*** -[NSConcreteFileHandle availableData]: Interrupted system call"]) {
-                    continue;
-                }
-                if (returnError) {
-                    *returnError = e;
-                }
-                return nil;
-            }
-            @throw;
-        }
-    }
-}
-@end
-
 @interface InstallPackage ()
 
 @property (nonatomic,strong)             NSThread *timeoutThread;

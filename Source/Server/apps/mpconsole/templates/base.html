@@ -47,7 +47,7 @@
 		}
 
 		function aboutConsole() {
-			alert("MacPatch Console 3.5.0")
+			alert("MacPatch Console 3.5.1")
 		}
 	</script>
 </head>
@@ -186,7 +186,7 @@
 						</li>
                         {% if intune == 1 %}
 						<li id="mdm">
-                            <a href="#"><i class="fa fa-cloud fa-fw"></i> MDM - inTune <span class="fa arrow"></span></a>
+                            <a href="#" id="mdmLink"><i class="fa fa-cloud fa-fw"></i> MDM - inTune <span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level">
                                 <li>
                                     <a href="{{ url_for('mdm.enrolledDevices') }}"><i class="fa fa-id-badge fa-fw fa-lg"></i> Enrolled Devices</a>

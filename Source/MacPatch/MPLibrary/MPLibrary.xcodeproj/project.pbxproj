@@ -51,8 +51,6 @@
 		8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6222494D0600FDFBCA /* AgentData.m */; };
 		8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6522494D5000FDFBCA /* UAObfuscatedString.h */; };
 		8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6622494D5000FDFBCA /* UAObfuscatedString.m */; };
-		8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6922494D8600FDFBCA /* Base64.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6A22494D8600FDFBCA /* Base64.m */; };
 		8F60AD6F22494D8600FDFBCA /* CocoaSecurity.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD6B22494D8600FDFBCA /* CocoaSecurity.m */; };
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */; };
@@ -104,10 +102,10 @@
 		8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC0A8CC2181112F006C7FCB /* libz.tbd */; };
 		8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC0A9A321838A0A006C7FCB /* MPDownloadManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */; };
+		8FC1CF52252690B600DAD699 /* NSString+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC444161D00921900EF328C /* NSString+Base64.m */; };
+		8FC1CF542526920900DAD699 /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F2916DE639100E15A9E /* NSData+Base64.m */; };
 		8FC444171D00921900EF328C /* NSString+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FC444151D00921900EF328C /* NSString+Base64.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FC444181D00921900EF328C /* NSString+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC444161D00921900EF328C /* NSString+Base64.m */; };
 		8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4B1F2816DE639100E15A9E /* NSData+Base64.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FE03DCD1B60020E005D39EE /* NSData+Base64.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4B1F2916DE639100E15A9E /* NSData+Base64.m */; };
 		8FE5609816DE6D6300BB7600 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE5609516DE6CFD00BB7600 /* Security.framework */; };
 		8FE5609916DE6D6600BB7600 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE5609316DE6CF700BB7600 /* Foundation.framework */; };
 		8FE5609A16DE6D6800BB7600 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE5609116DE6CF100BB7600 /* SystemConfiguration.framework */; };
@@ -197,6 +195,8 @@
 		8FF3D73D21701AB600059ACD /* NSFileManager+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72F21701AB600059ACD /* NSFileManager+Helper.m */; };
 		8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D73021701AB600059ACD /* NSString+Helper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF5B5001FC65861006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B4FF1FC6585D006F5FB2 /* Python.framework */; };
+		8FFC7E3625084950009671AD /* NSFileHandle-Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FFC7E342508494F009671AD /* NSFileHandle-Helper.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8FFC7E3725084950009671AD /* NSFileHandle-Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC7E352508494F009671AD /* NSFileHandle-Helper.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -402,6 +402,8 @@
 		8FF3D72F21701AB600059ACD /* NSFileManager+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSFileManager+Helper.m"; sourceTree = "<group>"; };
 		8FF3D73021701AB600059ACD /* NSString+Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Helper.h"; sourceTree = "<group>"; };
 		8FF5B4FF1FC6585D006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
+		8FFC7E342508494F009671AD /* NSFileHandle-Helper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSFileHandle-Helper.h"; sourceTree = "<group>"; };
+		8FFC7E352508494F009671AD /* NSFileHandle-Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSFileHandle-Helper.m"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -748,6 +750,8 @@
 		8FCB77A3140C314C00D86586 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				8FFC7E342508494F009671AD /* NSFileHandle-Helper.h */,
+				8FFC7E352508494F009671AD /* NSFileHandle-Helper.m */,
 				8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */,
 				8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */,
 				8FF3D72621701AB500059ACD /* NSDictionary+Helper.h */,
@@ -986,7 +990,6 @@
 				8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */,
 				8F8019EE22848A29006E6BC5 /* MPGCDTask.h in Headers */,
 				8F60AD6722494D5000FDFBCA /* UAObfuscatedString.h in Headers */,
-				8F60AD6D22494D8600FDFBCA /* Base64.h in Headers */,
 				8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */,
 				8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */,
 				8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */,
@@ -1006,6 +1009,7 @@
 				8FEC938717CBFEFB00AA9C1C /* MPApplePatch.h in Headers */,
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
+				8FFC7E3625084950009671AD /* NSFileHandle-Helper.h in Headers */,
 				8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */,
 				8FC444171D00921900EF328C /* NSString+Base64.h in Headers */,
 				8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */,
@@ -1039,7 +1043,7 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1000;
+				LastUpgradeCheck = 1200;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
 			compatibilityVersion = "Xcode 8.0";
@@ -1088,7 +1092,6 @@
 				8FF3D67C217011E700059ACD /* MPRESTfull.m in Sources */,
 				8FF3D679217011E700059ACD /* MPHTTPRequest.m in Sources */,
 				8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */,
-				8FE03DCD1B60020E005D39EE /* NSData+Base64.m in Sources */,
 				8FF3D6B4217012D600059ACD /* MPClientKey.m in Sources */,
 				8FA28F0221939EF8005D5E92 /* FMXHelpers.m in Sources */,
 				8FE663FE22287A4F00F12AC8 /* MPPatching.m in Sources */,
@@ -1104,12 +1107,14 @@
 				8FF3D73721701AB600059ACD /* NSString+Helper.m in Sources */,
 				8F03BE982362334800987AD7 /* History.m in Sources */,
 				8F4B1DFC16DD1D6400E15A9E /* MPASUSCatalogs.m in Sources */,
+				8FC1CF542526920900DAD699 /* NSData+Base64.m in Sources */,
 				8FA28EFC21939EF8005D5E92 /* FMXDatabaseConfiguration.m in Sources */,
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
 				8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */,
+				8FFC7E3725084950009671AD /* NSFileHandle-Helper.m in Sources */,
 				8FBC25622407417600996F5B /* DHCachedPasswordUtil.m in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
@@ -1119,6 +1124,7 @@
 				8FF3D66A2170113900059ACD /* MPSystemInfo.m in Sources */,
 				8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */,
 				8FA28F0721939EF8005D5E92 /* FMXTableMap.m in Sources */,
+				8FC1CF52252690B600DAD699 /* NSString+Base64.m in Sources */,
 				8FF3D66D2170113900059ACD /* MPDiskUtil.m in Sources */,
 				8FA28EE021939EE2005D5E92 /* FMDatabase.m in Sources */,
 				8FA28EE121939EE2005D5E92 /* FMDatabaseAdditions.m in Sources */,
@@ -1126,13 +1132,11 @@
 				8FF3D6622170113900059ACD /* MPDate.m in Sources */,
 				8FF3D6692170113900059ACD /* MPNSTask.m in Sources */,
 				8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */,
-				8FC444181D00921900EF328C /* NSString+Base64.m in Sources */,
 				8FF3D6B7217012D600059ACD /* MPCodeSign.m in Sources */,
 				8FF3D6C42170131700059ACD /* MPSWTasks.m in Sources */,
 				8FF3D69C2170127D00059ACD /* Suserver.m in Sources */,
 				8F2E697C19229A85001BF9D6 /* MPFailedRequests.m in Sources */,
 				8FF3D6AD217012D600059ACD /* MPKeyItem.m in Sources */,
-				8F60AD6E22494D8600FDFBCA /* Base64.m in Sources */,
 				8F1B08032231F2F8004D2ACF /* MPTimer.m in Sources */,
 				8FA139F521B7857D00124016 /* MPConfigProfiles.m in Sources */,
 				8FEC938817CBFEFB00AA9C1C /* MPApplePatch.m in Sources */,
@@ -1188,6 +1192,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -1230,6 +1235,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

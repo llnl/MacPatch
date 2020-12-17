@@ -67,6 +67,7 @@
 		8FE8A7F22112564500E8796E /* Software.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF7E9CF210A558B00678B93 /* Software.m */; };
 		8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50B1FC658EC006F5FB2 /* Python.framework */; };
 		8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF93F9219959206005A4EEB /* MPAgentRegister.m */; };
+		8FFC7E3324FEC753009671AD /* SPSmartCard.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC7E3224FEC753009671AD /* SPSmartCard.m */; };
 		8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */; };
 /* End PBXBuildFile section */
 
@@ -190,6 +191,8 @@
 		8FF7E9CF210A558B00678B93 /* Software.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Software.m; sourceTree = "<group>"; };
 		8FF93F9119959206005A4EEB /* MPAgentRegister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentRegister.h; sourceTree = "<group>"; };
 		8FF93F9219959206005A4EEB /* MPAgentRegister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentRegister.m; sourceTree = "<group>"; };
+		8FFC7E3124FEC753009671AD /* SPSmartCard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SPSmartCard.h; sourceTree = "<group>"; };
+		8FFC7E3224FEC753009671AD /* SPSmartCard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SPSmartCard.m; sourceTree = "<group>"; };
 		8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SysInfoCacheGen.h; sourceTree = "<group>"; };
 		8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SysInfoCacheGen.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -391,6 +394,8 @@
 				8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */,
 				8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */,
 				8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */,
+				8FFC7E3124FEC753009671AD /* SPSmartCard.h */,
+				8FFC7E3224FEC753009671AD /* SPSmartCard.m */,
 			);
 			path = Inventory;
 			sourceTree = "<group>";
@@ -469,7 +474,7 @@
 		8F4B1EE116DD77BD00E15A9E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = LLNL;
 				TargetAttributes = {
 					8F4B1EE816DD77BD00E15A9E = {
@@ -520,6 +525,7 @@
 				8F4B1F0716DD77FF00E15A9E /* AgentController.m in Sources */,
 				8FE8A7F22112564500E8796E /* Software.m in Sources */,
 				8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */,
+				8FFC7E3324FEC753009671AD /* SPSmartCard.m in Sources */,
 				8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */,
 				8FA6A8801B9621BF006A329B /* NSDirectoryServices.m in Sources */,
 				8F4B1F1716DE634600E15A9E /* ClientCheckInOperation.m in Sources */,
@@ -566,6 +572,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -623,6 +630,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;

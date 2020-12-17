@@ -27,36 +27,6 @@
 #import "MacPatch.h"
 #import "MPTimer.h"
 
-@interface NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError;
-@end
-
-@implementation NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError
-{
-	for(;;)
-	{
-		@try
-		{
-			return [self availableData];
-		}
-		@catch (NSException *e)
-		{
-			if ([[e name] isEqualToString:NSFileHandleOperationException]) {
-				if ([[e reason] isEqualToString:@"*** -[NSConcreteFileHandle availableData]: Interrupted system call"]) {
-					continue;
-				}
-				if (returnError) {
-					*returnError = e;
-				}
-				return nil;
-			}
-			@throw;
-		}
-	}
-}
-@end
-
 #undef  ql_component
 #define ql_component lcl_cMPNSTask
 
@@ -70,6 +40,7 @@
 @property (nonatomic, assign, readwrite) BOOL        taskIsRunning;
 
 @property (nonatomic, strong) NSData *taskData;
+@property (nonatomic, weak) NSString *taskDataLastLine;
 
 @end
 
@@ -126,7 +97,6 @@
 		[task setEnvironment:aEnv];
 	}
 	
-	// CEH - Debug
 	[task setLaunchPath:aBinPath];
 	qldebug(@"[task][setLaunchPath]: %@",aBinPath);
 	[task setArguments:aArgs];
@@ -180,7 +150,11 @@
 		if ([[tmpStr trim] length] != 0)
 		{
 			[self postStatusToDelegate:tmpStr];
-			qlinfo(@"%@",[tmpStr trim]);
+			if (![_taskDataLastLine isEqualToString:tmpStr]){
+				qldebug(@"[mpTaskDataAvailable]: %@",[tmpStr trim]);
+				_taskDataLastLine = tmpStr.copy;
+			}
+			
 		}
 		[_data appendData:newData];
 		_taskData = (NSData *)[_data copy];

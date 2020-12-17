@@ -185,7 +185,7 @@ static NSDateFormatter *_displayFormatter = nil;
 }
 
 + (NSString *)stringForDisplayFromDate:(NSDate *)date prefixed:(BOOL)prefixed alwaysDisplayTime:(BOOL)displayTime {
-	/*a
+	/*
 	 * if the date is in today, display 12-hour time with meridian,
 	 * if it is within the last 7 days, display weekday name (Friday)
 	 * if within the calendar year, display as Jan 23

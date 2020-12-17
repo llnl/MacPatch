@@ -102,7 +102,8 @@ NSString * const MPPatchContentType_toString[] = {
 	[kApplePatches] = @"Apple",
 	[kCustomPatches ] = @"Custom",
 	[kAllPatches] = @"All",
-	[kCriticalPatches] = @"Critical"
+	[kCriticalPatches] = @"Critical",
+	[kAllActivePatches] = @"AllActive" // All Patches ignore patch group, only for GUI
 };
 
 @implementation Constants

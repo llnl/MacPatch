@@ -98,7 +98,8 @@ typedef enum {
 	kApplePatches = 1,
 	kCustomPatches,
 	kAllPatches,
-	kCriticalPatches
+	kCriticalPatches,
+	kAllActivePatches
 } MPPatchContentType;
 
 extern NSString * const MPPatchContentType_toString[];

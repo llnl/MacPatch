@@ -119,6 +119,7 @@
         [agentDict setObject:@"false" forKey:@"needsreboot"];
 		[agentDict setObject:[self fileVaultStatus] forKey:@"fileVault"];
 		[agentDict setObject:[self hwModel] forKey:@"model"];
+		[agentDict setObject:[MPPatching isPatchingForHostIsPausedAsString] forKey:@"hasPausedPatching" defaultObject:@"0"];
 		
 		NSDictionary *depMdm = [self depMDMStatus];
 		[agentDict setObject:depMdm[@"depEnrollment"] forKey:@"depEnrolled" defaultObject:@"NA"];

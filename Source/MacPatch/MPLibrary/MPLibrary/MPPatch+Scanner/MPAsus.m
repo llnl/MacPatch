@@ -30,36 +30,6 @@
 #undef  ql_component
 #define ql_component lcl_cMPAsus
 
-@interface NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError;
-@end
-
-@implementation NSFileHandle (MPNSFileHandleAdditions)
-- (NSData *)availableDataOrError:(NSException **)returnError
-{
-	for(;;)
-	{
-		@try
-		{
-			return [self availableData];
-		}
-		@catch (NSException *e)
-		{
-			if ([[e name] isEqualToString:NSFileHandleOperationException]) {
-				if ([[e reason] isEqualToString:@"*** -[NSConcreteFileHandle availableData]: Interrupted system call"]) {
-					continue;
-				}
-				if (returnError) {
-					*returnError = e;
-				}
-				return nil;
-			}
-			@throw;
-		}
-	}
-}
-@end
-
 @interface MPAsus ()
 {
     NSFileManager	*fm;
@@ -140,7 +110,8 @@
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	
-	qltrace(@"%@",string);
+	//qltrace(@"%@",string);
+    qlinfo(@"postStringToDelegate: %@",string);
 	[self.delegate asusProgress:string];
 }
 
@@ -259,8 +230,6 @@
 
 - (BOOL)installAppleSoftwareUpdate:(NSString *)approvedUpdate
 {
-	static BOOL called = NO; // If failed run, allow to try again
-	
 	[self postStringToDelegate:@"Install %@",approvedUpdate];
 	[self setPatchMustShutdown:NO];
 	BOOL result = FALSE;
@@ -277,29 +246,15 @@
 		qlerror(@"Error installing %@.",approvedUpdate);
 		qlerror(@"%@.",taskErr.localizedDescription);
 	} else {
-		// Scan for the word error ...
-		if ([taskStr containsString:@"error" ignoringCase:YES]) {
-			qlerror(@"Softwareupdate task completed with an error. Update did not get installed.");
-			qlerror(@"Softwareupdate output: %@",taskStr);
-			if (called == NO)
-			{
-				called = YES;
-				qlinfo(@"There was an error installing the update, will try one more time.");
-				[self installAppleSoftwareUpdate:[approvedUpdate copy]];
-			} else {
-				called = NO;
-			}
-			return FALSE;
-		}
-		
 		qltrace(@"%@",taskStr);
 		result = TRUE;
 		if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
 		{
 			[self setPatchMustShutdown:YES];
 		} else if ([taskStr containsString:@"Error installing updates." ignoringCase:YES]) {
- 			result = FALSE;
+			result = FALSE;
 		}
+		
 	}
 
 	return result;
@@ -350,9 +305,9 @@
 	{
 		if ([statusStr containsString:@"PackageKit: Missing bundle path"] == NO)
 		{
-			[self postStringToDelegate:statusStr];
+			[self postStringToDelegate:[statusStr trim]];
 		} else {
-			logit(lcl_vDebug,@"%@",statusStr);
+			qldebug(@"%@",statusStr);
 		}
 	}
 }

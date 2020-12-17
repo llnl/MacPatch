@@ -27,7 +27,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 * 4 GB of RAM, 8 GB is recommended
 * Python 3.6 or higher
 * Nodejs version 8 or higher **(Note: CentOS/RHEL 7 install a older version of node)**
-* MySQL 5.7.x **(Note: MySQL 8 has not been tested.)**	
+* MySQL 5.7.x 
 
 ## Documentation - [MacPatch Docs](https://macpatch-docs.llnl.gov)
 

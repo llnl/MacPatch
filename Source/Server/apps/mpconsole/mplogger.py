@@ -20,6 +20,7 @@ def log_Crit(logString):
 
 def log_Error(logString):
 	current_app.logger.error(logString)
+	sendMsgOnError(logString)
 
 def log_Warn(logString):
 	current_app.logger.warning(logString)

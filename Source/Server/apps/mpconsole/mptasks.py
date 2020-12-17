@@ -7,7 +7,129 @@ from sqlalchemy import text
 
 from . model import MDMIntuneCorporateDevices, MDMIntuneDevices, MDMIntuneConfigProfiles, MDMIntuneLastSync
 from . import db
-from . mplogger import *
+
+class MPIntune():
+
+	def __init__(self):
+		self.app = None
+		self.token = None
+
+	def init_app(self, app, user=None):
+		self.app = app
+
+	def getAccessToken(self):
+		AUTHORITY_URL = self.app.config.get('INTUNE_AUTHORITY_HOST_URL') + '/' + self.app.config.get('INTUNE_TENANT')
+		auth_context = adal.AuthenticationContext(AUTHORITY_URL)
+		token_response = auth_context.acquire_token_with_username_password(self.app.config.get('INTUNE_RESOURCE'),
+		self.app.config.get('INTUNE_USER'),
+		self.app.config.get('INTUNE_USER_PASS'),
+		self.app.config.get('INTUNE_CLIENT_ID'))
+
+		self.token = token_response['accessToken']
+
+	def getHTTPHeader(self):
+		return {'Authorization': 'Bearer ' + self.token,
+				'User-Agent': 'adal-python-sample',
+				'Accept': 'application/json',
+				'Content-Type': 'application/json',
+				'client-request-id': str(uuid.uuid4())}
+
+	def getNextLink(self,url,nextLink):
+		endpoint = url + "?" + nextLink
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False).json()
+
+		nxtLink = None
+		if "@odata.nextLink" in graph_data:
+			nxtLink = graph_data["@odata.nextLink"]
+
+		return graph_data["value"], nxtLink
+
+	def GetGroups(self):
+		self.getAccessToken()
+		groups = []
+		macPatchGroupNameFilter='mp_mdm_'
+
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/groups?$filter=startswith(mailNickname,\'mpt\')'
+		self.app.logger.info("[GetGroups]: Start Get Groups")
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
+			self.app.logger.error("[GetGroups]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
+		json_data = json.loads(graph_data.content)
+		groups = json_data['value']
+		self.app.logger.info("[GetGroups]: Groups found {}".format(len(groups)))
+
+		# Get all of the paged records
+		if "@odata.nextLink" in graph_data:
+			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
+			while True:
+				res = self.getNextLink(endpoint,_qryStr)
+				groups.extend(res[0])
+				if res[1] is not None:
+					_qryStr = res[1].split("?")[1]
+				else:
+					break
+
+		return groups
+
+	def GetGroup(self, groupID):
+		self.getAccessToken()
+		group = {}
+
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/groups/' + groupID
+		self.app.logger.info("[GetGroup]: Start Get Group")
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
+			self.app.logger.error("[GetGroup]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
+		json_data = json.loads(graph_data.content)
+		group = json_data['displayName']
+		self.app.logger.info("[GetGroup]: Group found ")
+
+		return group
+
+	def GetGroupMembers(self, groupID):
+		self.getAccessToken()
+		members = []
+
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/groups/'+groupID+'/members'
+		self.app.logger.info("[GetGroupMembers]: Start Get Group Members")
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
+			self.app.logger.error("[GetGroupMembers]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
+		json_data = json.loads(graph_data.content)
+		members = json_data['value']
+		self.app.logger.info("[GetGroupMembers]: Group members found {}".format(len(members)))
+
+		# Get all of the paged records
+		if "@odata.nextLink" in graph_data:
+			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
+			while True:
+				res = self.getNextLink(endpoint,_qryStr)
+				members.extend(res[0])
+				if res[1] is not None:
+					_qryStr = res[1].split("?")[1]
+				else:
+					break
+
+		return members
+
+	def DeleteMemberFromGroup(self, groupID, deviceID):
+		self.getAccessToken()
+
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/groups/' + groupID + '/members/' + deviceID + '/$ref'
+		self.app.logger.info("[DeleteMemberFromGroup]: " + endpoint)
+		self.app.logger.info("[DeleteMemberFromGroup]: Start Delete")
+		graph_data = requests.delete(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
+			self.app.logger.error("[DeleteMemberFromGroup]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
+		return
 
 class MPTaskJobs():
 
@@ -43,36 +165,36 @@ class MPTaskJobs():
 # MS Graph API uri: /beta/deviceManagement/managedDevices
 # CEH: This method is slow, needs to be changed to sql string in future
 #
-	def GetEnrolledDevices(self):
+	def GetEnrolledDevicesOrig(self):
 		self.getAccessToken()
 		devices = []
 
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices'
-		log("[GetEnrolledDevices]: Start Get Records")
+		self.app.logger.info("[GetEnrolledDevices]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
-			log_Error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
+			self.app.logger.error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
 		json_data = json.loads(graph_data.content)
 		devices = json_data['value']
-		log("[GetEnrolledDevices]: Devices found {}".format(len(devices)))
+		self.app.logger.info("[GetEnrolledDevices]: Devices found {}".format(len(devices)))
 
 		# Get all of the paged records
 		if "@odata.nextLink" in graph_data:
 			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
 			while True:
-				res = self.getNextLink(endpoint,_qryStr)
+				res = self.getNextLink(endpoint, _qryStr)
 				devices.extend(res[0])
 				if res[1] is not None:
 					_qryStr = res[1].split("?")[1]
 				else:
 					break
 
-		log("[GetEnrolledDevices]: Delete all records in db")
+		self.app.logger.info("[GetEnrolledDevices]: Delete all records in db")
 		num_rows_deleted = MDMIntuneDevices.query.delete()
-		log("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
-		log("[GetEnrolledDevices]: Start Adding Rows")
+		self.app.logger.info("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
+		self.app.logger.info("[GetEnrolledDevices]: Start Adding Rows")
 		for device in devices:
 			udid = None
 			new_device = MDMIntuneDevices()
@@ -85,7 +207,91 @@ class MPTaskJobs():
 			db.session.add(new_device)
 		db.session.commit()
 
-		log("[GetEnrolledDevices]: Stop Adding Rows")
+		self.app.logger.info("[GetEnrolledDevices]: Stop Adding Rows")
+		self.AddLastSync(MDMIntuneDevices.__tablename__, 'MDMIntuneDevices', self.user)
+
+	def GetEnrolledDevices(self):
+		self.getAccessToken()
+		devices = []
+
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices'
+		self.app.logger.info("[GetEnrolledDevices]: Start Get Records")
+		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
+		if graph_data.ok != True:
+			self.app.logger.error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
+			return
+
+		json_data = json.loads(graph_data.content)
+		devices = json_data['value']
+		self.app.logger.info("[GetEnrolledDevices]: Devices found {}".format(len(devices)))
+
+		# Get all of the paged records
+		if "@odata.nextLink" in graph_data:
+			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
+			while True:
+				res = self.getNextLink(endpoint,_qryStr)
+				devices.extend(res[0])
+				if res[1] is not None:
+					_qryStr = res[1].split("?")[1]
+				else:
+					break
+
+		self.app.logger.info("[GetEnrolledDevices]: Delete all records in db")
+		num_rows_deleted = MDMIntuneDevices.query.delete()
+		self.app.logger.info("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
+		self.app.logger.info("[GetEnrolledDevices]: Start Adding Rows")
+
+		isFirst = True
+		idList = []
+		table_columns = MDMIntuneDevices.__table__.columns
+		'''
+		sqlInsertStr = ""
+		
+		for i, device in enumerate(devices):
+			print(i)
+
+			idList.append(device['id'])
+			if isFirst:
+				i = i + 1
+				sqlInsertStr = self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device)
+				isFirst = False
+			else:
+				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device, onlyData=True)
+
+			if i % 1000 == 0:
+				sqlInsertStr = sqlInsertStr + ";"
+				print(sqlInsertStr)
+				db.engine.execute(text(sqlInsertStr))
+				isFirst = True
+		print("Run it")
+		sqlInsertStr = sqlInsertStr + ";"
+		print(sqlInsertStr)
+		db.engine.execute(sqlInsertStr)
+		# Build the uuid quey str now
+		print("commit")
+		db.session.commit()
+		print("commited")
+ 		'''
+		#for i, device in enumerate(devices):
+
+		for device in devices:
+			if isFirst:
+				sqlInsertStr = self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device)
+				isFirst = False
+
+			udid = None
+			new_device = MDMIntuneDevices()
+			for key in device:
+				setattr(new_device, key, device[key])
+
+			udid = self.getUDIDForDeviceID(device['id'])
+			if udid is not None:
+				setattr(new_device, 'udid', udid)
+			db.session.add(new_device)
+		db.session.commit()
+
+
+		self.app.logger.info("[GetEnrolledDevices]: Stop Adding Rows")
 		self.AddLastSync(MDMIntuneDevices.__tablename__,'MDMIntuneDevices',self.user)
 
 #
@@ -99,17 +305,17 @@ class MPTaskJobs():
 
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities'
-		log("[GetCorpDevices]: Start Get Records")
+		self.app.logger.info("[SA][GetCorpDevices]: Start Get Records")
+		#self.app.logger.info("[GetCorpDevices]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
-			log_Error("[GetCorpDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
+			self.app.logger.error("[GetCorpDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
 		json_data = json.loads(graph_data.content)
 		devices = json_data['value']
 		if "@odata.nextLink" in json_data:
 			_qryStr = json_data["@odata.nextLink"].split("?")[1]
-			print(_qryStr)
 			while True:
 				res = self.getNextLink(endpoint,_qryStr)
 				devices.extend(res[0])
@@ -117,11 +323,11 @@ class MPTaskJobs():
 					_qryStr = res[1].split("?")[1]
 				else:
 					break
-		log("[GetCorpDevices]: Delete all records in db")
+		self.app.logger.info("[GetCorpDevices]: Delete all records in db")
 		num_rows_deleted = MDMIntuneCorporateDevices.query.delete()
 		db.session.commit()
-		log("[GetCorpDevices] Deleted rows: " + str(num_rows_deleted))
-		log("[GetCorpDevices]: Start Adding Rows")
+		self.app.logger.info("[GetCorpDevices] Deleted rows: " + str(num_rows_deleted))
+		self.app.logger.info("[GetCorpDevices]: Start Adding Rows")
 		sqlInsertStr = ""
 		isFirst = True
 
@@ -139,7 +345,7 @@ class MPTaskJobs():
 		sqlInsertStr = sqlInsertStr + ";"
 		db.engine.execute(text(sqlInsertStr))
 		db.session.commit()
-		log("[GetCorpDevices]: Stop Adding Rows")
+		self.app.logger.info("[GetCorpDevices]: Stop Adding Rows")
 
 		self.AddLastSync(MDMIntuneCorporateDevices.__tablename__,'MDMIntuneCorporateDevices',self.user)
 
@@ -152,10 +358,10 @@ class MPTaskJobs():
 
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/beta/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
-		log("[GetDeviceConfigProfiles]: Start Get Records")
+		self.app.logger.info("[GetDeviceConfigProfiles]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
-			log_Error("[GetDeviceConfigProfiles]: Error getting InTune data error code {}".format(graph_data.status_code))
+			self.app.logger.error("[GetDeviceConfigProfiles]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 
 		json_data = json.loads(graph_data.content)
@@ -169,12 +375,12 @@ class MPTaskJobs():
 					_qryStr = res[1].split("?")[1]
 				else:
 					break
-		log("[GetDeviceConfigProfiles]: Delete all records in db")
+		self.app.logger.info("[GetDeviceConfigProfiles]: Delete all records in db")
 		num_rows_deleted = MDMIntuneConfigProfiles.query.delete()
 		db.session.commit()
 
-		log("[GetDeviceConfigProfiles] Deleted rows: " + str(num_rows_deleted))
-		log("[GetDeviceConfigProfiles]: Start Adding Rows")
+		self.app.logger.info("[GetDeviceConfigProfiles] Deleted rows: " + str(num_rows_deleted))
+		self.app.logger.info("[GetDeviceConfigProfiles]: Start Adding Rows")
 		sqlInsertStr = ""
 		isFirst = True
 
@@ -192,7 +398,7 @@ class MPTaskJobs():
 		sqlInsertStr = sqlInsertStr + ";"
 		db.engine.execute(text(sqlInsertStr))
 		db.session.commit()
-		log("[GetDeviceConfigProfiles]: Stop Adding Rows")
+		self.app.logger.info("[GetDeviceConfigProfiles]: Stop Adding Rows")
 
 		self.AddLastSync(MDMIntuneConfigProfiles.__tablename__,'MDMIntuneConfigProfiles',self.user)
 
@@ -237,6 +443,10 @@ class MPTaskJobs():
 					_valStr = "{}".format(value)
 				elif isinstance(value, int):
 					_valStr = "'{}'".format(str(value))
+				elif isinstance(value, list):
+					_valStr = "null"
+				elif isinstance(value, dict):
+					continue
 				else:
 					if value is None:
 						_valStr = "null"
@@ -253,6 +463,49 @@ class MPTaskJobs():
 
 		return _sqlStr
 
+	def genSQLInsertAlt(self, tableName, columns, row, onlyData=False):
+
+		_sqlArrCol = []
+		_sqlArrVal = []
+		_sqlStrPre = "INSERT INTO {}".format(tableName)
+		_sqlStr = ''
+
+		for col in columns:
+			col = col.name
+			if col == 'rid':
+				continue
+			else:
+				if col in row:
+					if not onlyData:
+						_sqlArrCol.append(col)
+
+					value = row[col]
+					if isinstance(value, bool):
+						_valStr = "{}".format(value)
+					elif isinstance(value, int):
+						_valStr = "'{}'".format(str(value))
+					elif isinstance(value, list):
+						continue
+					elif isinstance(value, dict):
+						continue
+					else:
+						if value is None:
+							_valStr = "null"
+						else:
+							_valStr = "'%s'" % (value.replace("'", "\\'"))
+
+					_sqlArrVal.append(_valStr)
+
+		# Loop through and add the rest
+
+		# Build the SQL string
+		if onlyData:
+			_sqlStr = "(%s)" % (','.join(_sqlArrVal))
+		else:
+			_sqlStr = "%s (%s) Values (%s)" % (_sqlStrPre, ','.join(_sqlArrCol),','.join(_sqlArrVal))
+
+		return _sqlStr
+
 	# Work around function as managedDevice does not return a value for udid
 	# Eventually this will no longer be needed
 	# /beta/deviceManagement/managedDevices('483fe593-8556-4d06-856c-a66d43628c08')?select=udid
@@ -260,7 +513,7 @@ class MPTaskJobs():
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices(\''+deviceID+'\')?select=udid'
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
-			log_Error("[getUDIDForDeviceID]: Error getting InTune data error code {}".format(graph_data.status_code))
+			self.app.logger.error("[getUDIDForDeviceID]: Error getting InTune data error code {}".format(graph_data.status_code))
 			return
 		else:
 			graph_data = graph_data.json()
@@ -289,7 +542,7 @@ class MPTaskJobs():
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities/importDeviceIdentityList'
 		graph_data = requests.post(endpoint, headers=self.getHTTPHeader(), stream=False, data=json.dumps(deviceData))
 		if graph_data.ok != True:
-			log_Error("[AddCorporateDevice]: Error adding InTune data error code {}".format(graph_data.status_code))
+			self.app.logger.error("[AddCorporateDevice]: Error adding InTune data error code {}".format(graph_data.status_code))
 			return None
 
 		return graph_data.json()
