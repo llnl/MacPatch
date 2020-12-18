@@ -5,7 +5,7 @@ from datetime import datetime
 from distutils.version import LooseVersion
 import base64
 
-from flask_sqlalchemy_cache import FromCache
+#from flask_sqlalchemy_cache import FromCache
 
 from . import *
 from .. import db
@@ -99,13 +99,17 @@ def tasksForGroup(group, osFilter='*'):
 		_qTasks.append(t.asDict)
 
 	# Get All SW
-	qSW = MpSoftware.query.options(FromCache(cache)).all()
+	# Flask SQLAlchemy Cache - Experimental
+	#qSW = MpSoftware.query.options(FromCache(cache)).all()
+	qSW = MpSoftware.query.all()
 	_qSW = []
 	for s in qSW:
 		_qSW.append(s.asDict)
 
 	# Get All Criteria
-	qSWCri = MpSoftwareCriteria.query.options(FromCache(cache)).all()
+	# Flask SQLAlchemy Cache - Experimental
+	#qSWCri = MpSoftwareCriteria.query.options(FromCache(cache)).all()
+	qSWCri = MpSoftwareCriteria.query.all()
 	_qSWC = []
 	for c in qSWCri:
 		_qSWC.append(c.asDict)
