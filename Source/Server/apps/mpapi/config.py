@@ -29,9 +29,9 @@ class BaseConfig:
 	SQLALCHEMY_DATABASE_URI         = DB_CONNECTOR+'://'
 	SQLALCHEMY_TRACK_MODIFICATIONS  = False
 	SQLALCHEMY_ENGINE_OPTIONS = {  'pool_size' : 200,
-                                   'pool_recycle':120,
-                                   'pool_timeout':15,
-                                   'pool_pre_ping': True }
+								   'pool_recycle':120,
+								   'pool_timeout':15,
+								   'pool_pre_ping': True }
 
 	# App Options
 	SECRET_KEY              		= '~t\x86\xc9\x1ew\x8bOcX\x85O\xb6\xa2\x11kL\xd1\xce\x7f\x14<y\x9e'
@@ -80,12 +80,10 @@ class BaseConfig:
 
 class DevelopmentConfig(BaseConfig):
 	pass
-	#DEBUG               = True
 
 
 class ProductionConfig(BaseConfig):
 	pass
-	#DEBUG               = False
 
 
 config = {

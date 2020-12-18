@@ -1,7 +1,6 @@
 from flask import render_template, session, request, current_app, redirect, url_for
 from flask_security import login_required
 from flask_cors import cross_origin
-from flask_breadcrumbs import register_breadcrumb
 from sqlalchemy import text, or_, desc
 from datetime import datetime
 
