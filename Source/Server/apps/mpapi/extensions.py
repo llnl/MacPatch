@@ -1,4 +1,4 @@
-useSACache = false
+useSACache = False
 
 if useSACache:
     # Use Flask SQLAlchemy Cache, experimantal
