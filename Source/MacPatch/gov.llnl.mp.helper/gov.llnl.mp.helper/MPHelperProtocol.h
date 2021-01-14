@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 3.0
+// Rev 36
 
 #import <Foundation/Foundation.h>
 
@@ -167,11 +167,24 @@ enum {
 - (void)scanForInstalledConfigProfiles:(nullable void(^)(NSArray * _Nullable profiles))reply;
 - (void)getInstalledConfigProfilesWithReply:(nullable void(^)(NSString * _Nullable aString, NSData * _Nullable aProfilesData))reply;
 
+// ----------------------------------------
+// FileVault			         ----------
+// ----------------------------------------
+- (void)setAuthrestartDataForUser:(NSString * _Nullable )userName userPass:(NSString * _Nullable)userPass useRecoveryKey:(BOOL)useKey  withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+
+- (void)enableAuthRestartWithReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+
+- (void)getAuthRestartDataWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nullable result))reply;
+- (void)clearAuthrestartData:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
+- (void)fvAuthrestartAccountIsValid:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
+- (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
+
+
 @end
 
 @protocol MPHelperProgress
 
-- (void)patchProgress:(NSString *)progressStr;
+- (void)patchProgress:(nullable NSString *)progressStr;
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
 - (void)postPatchInstallStatus:(nullable NSString *)patchID type:(MPPostDataType)type;
 

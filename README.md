@@ -1,4 +1,4 @@
-# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.3.x
+# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.5.x
 
 ## Overview
 MacPatch simplifies the act of patching and installing software on Mac OS X based systems. The client relies on using the built-in software update application for patching the Mac OS X system updates and it's own scan and patch engine for custom patches. 
@@ -26,7 +26,8 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 * Linux: RHEL 7, CentOS 7, Ubuntu 16.x
 * 4 GB of RAM, 8 GB is recommended
 * Python 3.6 or higher
-* MySQL 5.7.x **(Note: MySQL 8 has not been tested.)**	
+* Nodejs version 8 or higher **(Note: CentOS/RHEL 7 install a older version of node)**
+* MySQL 5.7.x 
 
 ## Documentation - [MacPatch Docs](https://macpatch-docs.llnl.gov)
 

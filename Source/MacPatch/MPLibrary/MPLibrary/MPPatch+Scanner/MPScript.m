@@ -109,6 +109,62 @@
 	return result;
 }
 
+- (NSString *)runScriptReturningResult:(NSString *)aScript
+{
+    NSString *cleanScript = [aScript stringByReplacingOccurrencesOfString:@"\r\n" withString:@"\n"];
+	
+	CFUUIDRef uuid = CFUUIDCreate(NULL);
+	NSString *tmpID = (NSString *)CFBridgingRelease(CFUUIDCreateString(NULL, uuid));
+	CFRelease(uuid);
+	
+	NSString *tmpFile = [NSTemporaryDirectory() stringByAppendingPathComponent:tmpID];
+	NSError *err = nil;
+	[cleanScript writeToFile:tmpFile atomically:YES encoding:NSStringEncodingConversionAllowLossy error:&err];
+	if (err) {
+		return @"ERROR";
+	}
+	
+	// Fix line endings
+	if ([self fixLineEndingsInFile:tmpFile] == NO)
+		qlerror(@"Warnning, did not get a return code of 0 when fixing line endings in %@. Script may not run.",tmpFile);
+	
+	NSTask *task = [[NSTask alloc] init];
+	NSPipe *pipe = [NSPipe pipe];
+	
+	[task setLaunchPath:@"/bin/bash"];
+	[task setArguments:[NSArray arrayWithObjects:@"-C",tmpFile,nil]];
+	
+    [task setStandardOutput: pipe];
+    [task setStandardError: pipe];
+	
+	NSFileHandle *file = [pipe fileHandleForReading];
+	
+	[task launch];
+	[task waitUntilExit];
+	
+	NSData *data = [file readDataToEndOfFile];
+    NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
+	
+	int status = [task terminationStatus];
+	
+	qldebug(@"Script = %@ \n %@ \n Exit Code: %d",tmpFile,[NSString stringWithContentsOfFile:tmpFile encoding:NSUTF8StringEncoding error:NULL], status);
+	qldebug(@"Script Result = %@",string);
+	
+	if (status == 0) {
+        NSError *delErr = nil;
+        [[NSFileManager defaultManager] removeItemAtPath:tmpFile error:&delErr];
+        if (delErr) {
+            qlerror(@"Error removing file %@",tmpFile);
+        }
+		return string;
+	} else {
+		qldebug(@"Exit Code: %d.\nScript Result: %@\nScript: %@",status,string,tmpFile);
+		return @"ERROR";
+	}
+	
+	return @"ERROR";
+}
+
 - (BOOL)runScriptsFromDirectory:(NSString *)aDirectory
 {
 	return [self runScriptsFromDirectory:aDirectory error:NULL];

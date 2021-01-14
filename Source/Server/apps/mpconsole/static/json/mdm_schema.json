@@ -1,6 +1,7 @@
 {
-    "tables": {
-      "mdm_intune_devices_config_profiles": {
+    "tables":
+    {
+        "mdm_intune_devices_config_profiles": {
         "columns":
         [
             {
@@ -95,9 +96,9 @@
             }
         ]
       },
-      "mdm_intune_corporate_devices": {
-        "columns":
-        [
+        "mdm_intune_corporate_devices": {
+            "columns":
+            [
             {
                 "column": "rid",
                 "displayName": "RowID",
@@ -159,6 +160,70 @@
                 "visible": 1
             }
         ]
-      }
+        },
+        "mdm_intune_groups": {
+            "columns":
+            [
+            {
+                "column": "id",
+                "displayName": "Group ID",
+                "order": 1,
+                "visible": 0
+            },
+            {
+                "column": "displayName",
+                "displayName": "Name",
+                "order": 2,
+                "visible": 1
+            },
+            {
+                "column": "description",
+                "displayName": "Description",
+                "order": 3,
+                "visible": 1
+            },
+            {
+                "column": "mailNickname",
+                "displayName": "mailNickname",
+                "order": 4,
+                "visible": 0
+            },
+            {
+                "column": "securityEnabled",
+                "displayName": "Security Group",
+                "order": 5,
+                "visible": 1
+            }
+        ]
+        },
+        "mdm_intune_group_membership": {
+            "columns":
+            [
+                {
+                    "column": "id",
+                    "displayName": "ID",
+                    "order": 1,
+                    "visible": 0
+                },
+                {
+                    "column": "deviceId",
+                    "displayName": "Device ID",
+                    "order": 2,
+                    "visible": 0
+                },
+                {
+                    "column": "displayName",
+                    "displayName": "Name",
+                    "order": 3,
+                    "visible": 1
+                },
+                {
+                    "column": "operatingSystemVersion",
+                    "displayName": "OS Version",
+                    "order": 4,
+                    "visible": 1
+                }
+            ]
+        }
     }
 }

@@ -82,6 +82,14 @@
 - (NSDictionary *)getApprovedPatchesForClient:(NSError **)err;
 
 /**
+ Get a dictionary containing all active apple and custom patches
+ 
+ @param err Error object
+ @return a dictioanary containg two arrays "AppleUpdates, CustomUpdates"
+ */
+- (NSDictionary *)getAllPatchesForClient:(NSError **)err;
+
+/**
  Post patch install using patch and type
 
  @param patch patch id or name depending on type
@@ -199,4 +207,22 @@
  @return Dictionary of the revision and rules
  */
 - (NSDictionary *)getSoftwareRestrictions:(NSError **)err;
+
+/**
+ Get S3 url for package type
+
+ @param type (patch, sw)
+ @param id ID of the package to download
+ @return Dictionary (url is the key)
+ */
+- (NSDictionary *)getS3URLForType:(NSString *)type id:(NSString *)packageID;
+
+/**
+ Post agent install
+ 
+ @param agentVer agent version installed
+ @param err Error object
+ @return BOOL
+ */
+- (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err;
 @end

@@ -457,9 +457,6 @@ done:
         return nil;
     }
     
-    // For 10.9 and higher
-    //return [(__bridge NSData *)encryptedData base64EncodedStringWithOptions:NSDataBase64EncodingEndLineWithLineFeed];
-    
     // Switch to Apple method when 10.9 is min OS
     return [(__bridge NSData *)encryptedData base64EncodedString];
 }
@@ -471,8 +468,6 @@ done:
 
 - (NSString *)secKeyDecrypt:(SecKeyRef)aKey padding:(SecPadding)aSecPadding stringToDecrypt:(NSString *)AstringToDecrypt error:(NSError **)err
 {
-    // For 10.9 and higher
-    //NSData *encData = [[NSData alloc] initWithBase64EncodedString:AstringToDecrypt options:0];
     
     // Switch to Apple method when 10.9 is min OS
     NSData *encData = [NSData dataFromBase64String:AstringToDecrypt];

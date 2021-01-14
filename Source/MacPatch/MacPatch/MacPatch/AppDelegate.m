@@ -1,10 +1,28 @@
 //
 //  AppDelegate.m
 //  MacPatch
-//
-//  Created by Heizer, Charles on 12/15/14.
-//  Copyright (c) 2014 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "AppDelegate.h"
 #import "SoftwareViewController.h"
@@ -31,6 +49,8 @@
 @property (weak) IBOutlet NSButton *UpdatesToolbarButton;
 @property (weak) IBOutlet NSButton *HistoryToolbarButton;
 @property (weak) IBOutlet NSButton *AgentToolbarButton;
+
+@property (weak) NSString *eventAction;
 
 
 // Helper Setup
@@ -111,6 +131,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+	[[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
+													   andSelector:@selector(handleURLEvent:withReplyEvent:)
+													 forEventClass:kInternetEventClass
+														andEventID:kAEGetURL];
+	
     // Insert code here to initialize your application
     self.toolBar.delegate = self;
     
@@ -219,6 +244,12 @@
     
     [view setNextResponder:controller];
     [controller setNextResponder:viewHolder];
+	if (_eventAction) {
+		if ([_eventAction isEqualToString:@"PatchScan"]) {
+			[[NSNotificationCenter defaultCenter] postNotificationName:@"PatchScanNotification" object:nil userInfo:@{}];
+			_eventAction = nil;
+		}
+	}
 }
 
 -(IBAction)showPreferences:(id)sender
@@ -235,9 +266,12 @@
         _preferencesWindowController = [[RHPreferencesWindowController alloc] initWithViewControllers:controllers];
     }
     
+    
+	if ([_eventAction isEqualToString:@"PatchPrefs"]) {
+		[_preferencesWindowController setSelectedIndex:2];
+	}
     [_preferencesWindowController showWindow:self];
 	[_preferencesWindowController setWindowTitle:@"Preferences"];
-    
 }
 
 - (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
@@ -307,7 +341,9 @@
 	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
 	 error = SendAppleEventToSystemProcess(kAEShutDown);
 	 */
-	
+    
+    [self setAuthRestart];
+    
 	OSStatus error = noErr;
 	error = SendAppleEventToSystemProcess(kAERestart);
 }
@@ -317,9 +353,7 @@
 	if (action == 1) {
 		[@"HALT" writeToFile:@"/private/tmp/.asusHalt" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
 	}
-	//dispatch_async(dispatch_get_main_queue(), ^{
-	//	[NSApp runModalForWindow:self.restartWindow];
-	//});
+	
 	[self.restartWindow makeKeyAndOrderFront:self];
 	[self.restartWindow setLevel:NSStatusWindowLevel];
 }
@@ -330,17 +364,20 @@
 	
 	int action = 0; // 0 = normal reboot, 1 = shutdown
 	NSFileManager *fm = [NSFileManager defaultManager];
-	if (![fm fileExistsAtPath:@"/private/tmp/.asusHalt"]) {
+	if ([fm fileExistsAtPath:@"/private/tmp/.asusHalt"]) {
+        qlinfo(@"MacPatch issued a launchctl kAEShutDown.");
 		action = 1;
 	}
-	
+    
 	switch ( action )
 	{
 		case 0:
+            [self setAuthRestart];
 			error = SendAppleEventToSystemProcess(kAERestart);
 			qlinfo(@"MacPatch issued a launchctl kAERestart.");
 			break;
 		case 1:
+            [self setAuthRestart];
 			error = SendAppleEventToSystemProcess(kAEShutDown);
 			qlinfo(@"MacPatch issued a kAEShutDown.");
 			break;
@@ -349,6 +386,27 @@
 			exit(0);
 			break;
 	}
+}
+
+- (void)setAuthRestart
+{
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    if ([d boolForKey:@"authRestartEnabled"]) {
+        [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+            if (connectError != nil) {
+                qlerror(@"connectError: %@",connectError.localizedDescription);
+            } else {
+                [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                    qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                }] enableAuthRestartWithReply:^(NSError *error, NSInteger result) {
+                    if (error) {
+                        qlerror(@"Error, unable to enable FileVault auth restart");
+                    }
+                    qlinfo(@"MacPatch Database created and updated.");
+                }];
+            }
+        }];
+    }
 }
 
 #pragma mark - DockTile
@@ -371,6 +429,30 @@
 		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 	}
 	
+}
+
+#pragma mark - URL Scheme
+
+- (void)handleURLEvent:(NSAppleEventDescriptor*)event withReplyEvent:(NSAppleEventDescriptor*)replyEvent
+{
+	id urlDescriptor = [event paramDescriptorForKeyword:keyDirectObject];
+    NSString *urlStr = [urlDescriptor stringValue];
+	NSURL *url = [NSURL URLWithString:urlStr];
+	NSString *query = url.query;
+	if ([query isEqualToString:@"openAndScan"])
+	{
+		qlinfo(@"openAndScan");
+		_eventAction = @"PatchScan";
+		[self changeView:self->_UpdatesToolbarButton];
+		dispatch_async(dispatch_get_main_queue(), ^{
+			//[NSThread sleepForTimeInterval:0.5];		
+		});
+	}
+	else if ([query isEqualToString:@"openAndPatchPrefs"])
+	{
+		_eventAction = @"PatchPrefs";
+		[self showPreferences:nil];
+	}
 }
 
 

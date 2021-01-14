@@ -7,7 +7,6 @@
 //
 
 #import "MPHTTPRequest.h"
-
 #import "MacPatch.h"
 #import "MPWSResult.h"
 #import "STHTTPRequest.h"
@@ -199,6 +198,7 @@
     [r setHeaderWithName:@"X-API-TS" value:ts];
     [r setHeaderWithName:@"X-API-Signature" value:sg];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
+	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
     
     
     __weak STHTTPRequest *wr = r;
@@ -254,6 +254,7 @@
     [r setHeaderWithName:@"content-type" value:@"application/json; charset=utf-8"];
     [r setHeaderWithName:@"Accept" value:@"application/json"];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
+	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
     
     NSError *jerror = nil;
     // Convert body to JSON Data
@@ -375,96 +376,6 @@
 		NSError *sError = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
 		if (err != NULL) *err = sError;
 	}
-	return dlFilePath;
-}
-
-// CEH - Needs to be updated to MPDownloadManager
-- (NSString *)runS3SyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
-{
-	qlinfo(@"[runS3SyncFileDownload][urlPath], %@", urlPath);
-	
-	// Create Download Directory if it does not exist
-	if (![fm fileExistsAtPath:dlDir]) {
-		[fm createDirectoryAtPath:dlDir withIntermediateDirectories:YES attributes:NULL error:NULL];
-	}
-	
-	// Set File name and File path
-	__block NSString *flName = [urlPath lastPathComponent];
-	__block NSString *flPath = [dlDir stringByAppendingPathComponent:flName];
-	
-	// If downloaded file exists, remove it first
-	if ([fm fileExistsAtPath:flPath]) [fm removeItemAtPath:flPath error:NULL];
-	
-	dispatch_semaphore_t    sem;
-	__block NSString        *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
-	__block NSURLResponse   *responsePtr;
-	__block NSError         *urlErr = nil;
-	
-	sem = dispatch_semaphore_create(0);
-	
-	NSURLSessionDownloadTask *downloadTask;
-	NSURLSessionConfiguration *sessionConfiguration = [NSURLSessionConfiguration defaultSessionConfiguration];
-	sessionConfiguration.timeoutIntervalForRequest = 10;
-	sessionConfiguration.timeoutIntervalForResource = 120.0;
-	
-	NSURLSession *session = [NSURLSession sessionWithConfiguration:sessionConfiguration];
-	
-	downloadTask = [session downloadTaskWithURL:[NSURL URLWithString:urlPath]
-							  completionHandler:^(NSURL *location, NSURLResponse *response, NSError *dlerr)
-	{
-		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *) response;
-		qlinfo(@"HTTP Status code: %ld", (long)[httpResponse statusCode]);
-
-		if (dlerr) {
-			urlErr = dlerr;
-			qlerror(@"Error %ld. File download error %@", (long)dlerr.code, dlerr.localizedDescription);
-		}
-		else if ([httpResponse statusCode] >= 300)
-		{
-			urlErr = dlerr;
-			qlerror(@"File download error, status code %ld", (long)[httpResponse statusCode]);
-		}
-		else
-		{
-			if (responsePtr != NULL) responsePtr = response;
-			
-			qldebug(@"dlFilePath, %@", dlFilePath);
-			qldebug(@"location, %@", location.path);
-			
-			NSFileManager *fileManager = [NSFileManager defaultManager];
-			NSError *cperror;
-			BOOL fileOKToMove = YES;
-			if ([fileManager fileExistsAtPath:dlFilePath]) {
-				cperror = nil;
-				[fileManager removeItemAtPath:dlFilePath error:&cperror];
-				if (cperror) {
-					fileOKToMove = NO;
-					qlerror(@"Error removing old downloaded file.");
-					qlerror(@"%@",cperror.localizedDescription);
-				}
-			}
-			
-			//moving the file from temp location to app's own directory
-			if (fileOKToMove)
-			{
-				cperror = nil;
-				BOOL fileCopied = [fileManager moveItemAtPath:[location path] toPath:dlFilePath error:&cperror];
-				
-				if (cperror) {
-					qlinfo(@"cperror, %@", cperror.localizedDescription);
-				}
-				
-				NSLog(fileCopied ? @"Yes" : @"No");
-			}
-		}
-		
-		dispatch_semaphore_signal(sem);
-	}];
-	
-	[downloadTask resume];
-	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-	
-	if (urlErr) *err = urlErr;
 	return dlFilePath;
 }
 
@@ -673,6 +584,7 @@
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"GET";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
+	[request setValue:settings.clientVer forHTTPHeaderField:@"X-Agent-VER"];
     
     NSString *sg;
     NSString *ts = [self generateTimeStampForSignature];
@@ -750,6 +662,7 @@
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
+	[request setValue:settings.clientVer forHTTPHeaderField:@"X-Agent-VER"];
     
     // Generate Signture
     NSString *sg;
@@ -913,30 +826,7 @@
         completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
     }
 }
-/*
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
-{
-	completionHandler(NSURLSessionResponseAllow);
-	_downloadSize=[response expectedContentLength];
-	_dataToDownload=[[NSMutableData alloc]init];
-}
 
-- (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data
-{
-	[_dataToDownload appendData:data];
-	float progress = [ _dataToDownload length ]/_downloadSize;
-	
-	if([delegate respondsToSelector:@selector(downloadProgress:)])
-	{
-		[self postStatusToDelegate:[NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progress]];
-	}
-}
-
--(void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
-{
-	qlerror(@"completed; error: %@", error);
-}
-*/
 - (void)postStatusToDelegate:(NSString *)str, ...
 {
 	va_list va;

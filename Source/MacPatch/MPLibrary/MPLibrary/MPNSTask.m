@@ -40,6 +40,7 @@
 @property (nonatomic, assign, readwrite) BOOL        taskIsRunning;
 
 @property (nonatomic, strong) NSData *taskData;
+@property (nonatomic, weak) NSString *taskDataLastLine;
 
 @end
 
@@ -96,7 +97,6 @@
 		[task setEnvironment:aEnv];
 	}
 	
-	// CEH - Debug
 	[task setLaunchPath:aBinPath];
 	qldebug(@"[task][setLaunchPath]: %@",aBinPath);
 	[task setArguments:aArgs];
@@ -150,7 +150,11 @@
 		if ([[tmpStr trim] length] != 0)
 		{
 			[self postStatusToDelegate:tmpStr];
-			qlinfo(@"%@",[tmpStr trim]);
+			if (![_taskDataLastLine isEqualToString:tmpStr]){
+				qldebug(@"[mpTaskDataAvailable]: %@",[tmpStr trim]);
+				_taskDataLastLine = tmpStr.copy;
+			}
+			
 		}
 		[_data appendData:newData];
 		_taskData = (NSData *)[_data copy];

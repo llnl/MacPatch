@@ -17,6 +17,7 @@ from .. model import *
 from .. modes import *
 from .. mplogger import *
 from .. mputil import *
+from .. aws import *
 
 '''
 	-------------------------------------------------
@@ -347,7 +348,7 @@ def tasks():
 def taskEdit(id):
 
 	mpst = MpSoftwareTask.query.filter(MpSoftwareTask.tuuid == id).first()
-	mps = MpSoftware.query.all()
+	mps = MpSoftware.query.filter( (MpSoftware.sState == 2) | (MpSoftware.sState == 3) ).order_by(MpSoftware.sName.asc()).all()
 	_data = {}
 	_swPkgs = []
 	for s in mps:
@@ -606,7 +607,6 @@ def swTaskData(taskID):
 		return None
 
 def swPackageData(swID):
-
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == swID).first()
 	if qSW is not None:
 		sw = {"name":qSW.sName,
@@ -916,7 +916,16 @@ def saveSWPackage():
 	_fileData = None
 	if 'mainPackage' in request.files:
 		mainFile = request.files['mainPackage']
-		_fileData = saveSoftwareFile(_suuid, mainFile)
+
+		if request.form['sw_useS3'] == '1':
+			aws = MPaws()
+			_fileData = saveSoftwareFileToTMP(_suuid, mainFile)
+			print(_fileData['filePath'])
+			print(_fileData['fileURL'])
+			aws.uploadFileToS3(_fileData['filePath'], _fileData['fileURL'])
+			shutil.rmtree(os.path.join('/tmp/sw', request.form['suuid']))
+		else:
+			_fileData = saveSoftwareFile(_suuid, mainFile)
 
 	# Save SW Package Info
 	if _fileData is not None:
@@ -966,6 +975,39 @@ def saveSoftwareFile(suuid, file):
 				md5.update(chunk)
 
 		result['fileHash'] = md5.hexdigest()
+		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
+
+	return result
+
+def saveSoftwareFileToTMP(suuid, file):
+
+	result = {}
+	result['fileName'] = None
+	result['filePath'] = None
+	result['fileURL']  = None
+	result['fileHash'] = None
+	result['fileSize'] = 0
+
+	# Save uploaded files
+	upload_dir = os.path.join('/tmp/sw', suuid)
+	if not os.path.isdir(upload_dir):
+		os.makedirs(upload_dir)
+
+	if file is not None and len(file.filename) > 4:
+		filename = secure_filename(file.filename)
+		_file_path = os.path.join(upload_dir, filename)
+		result['fileName'] = filename
+		result['filePath'] = _file_path
+		result['fileURL']  = os.path.join('/sw', suuid, filename)
+
+		if os.path.exists(_file_path):
+			log_Info('Removing existing file (%s)' % (_file_path))
+			os.remove(_file_path)
+
+		log_Info('Saving file to (%s)' % (_file_path))
+		file.save(_file_path)
+
+		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read()).hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
@@ -1039,15 +1081,22 @@ def deleteSWPackage(id):
 	qSWC = MpSoftwareCriteria.query.filter(MpSoftwareCriteria.suuid == id).all()
 	qSWR = MpSoftwareRequisits.query.filter(MpSoftwareRequisits.suuid == id).all()
 
-	sw_path = qSW.sw_path
-	if os.path.exists(sw_path):
-		parDir = os.path.dirname(sw_path)
-		log_Info('Removing sw package file (%s)' % (sw_path))
-		if os.path.exists(parDir):
-			try:
-				shutil.rmtree(parDir)
-			except OSError as e:
-				log_Error("Error Delete Dir: %s - %s." % (e.filename, e.strerror))
+
+	if qSW is not None:
+		# Need to delete from file system
+		try:
+			if qSW.sw_useS3 == 1:
+				aws = MPaws()
+				aws.deleteS3File(qSW.sw_url)
+			else:
+				sw_path = qSW.sw_path
+				if os.path.exists(sw_path):
+					parDir = os.path.dirname(sw_path)
+					log_Info('Removing sw package file (%s)' % (sw_path))
+					if os.path.exists(parDir):
+						shutil.rmtree(parDir)
+		except OSError as e:
+			log_Error("Error Delete Dir: %s - %s." % (e.filename, e.strerror))
 
 	db.session.delete(qSW)
 
@@ -1063,6 +1112,14 @@ def deleteSWPackage(id):
 
 	return json.dumps({'error': 0}), 200
 
+@software.route('/s3url/<id>', methods=['GET'])
+def getS3URL(id):
+	aws = MPaws()
+	sw_S3path = aws.getS3UrlForSoftware(id)
+	if sw_S3path is not None:
+		return json.dumps({'url': sw_S3path, 'error': 0}), 200
+	else:
+		return json.dumps({'error': 1, 'errormsg': 'Error getting url for software.'}), 200
 
 '''
 -------------------------------------------------

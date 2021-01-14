@@ -25,6 +25,7 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MPOSCheck.h"
+#include "TargetConditionals.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPOSCheck
@@ -87,20 +88,37 @@
 	return self;
 }
 
+
+
 -(BOOL)checkOSArch:(NSString *)osArchString
 {
-	BOOL result = NO;
-	
-#if defined __i386__ || defined __x86_64__
-	NSString *procType = @"X86";
-#elif defined __ppc__ || defined __ppc64__
-	NSString *procType = @"PPC";
-#elif defined __arm__
-	NSString *procType = @"ARM";
+    // CEH: Allow all right now.
+	BOOL result = YES;
+    
+#if TARGET_OS_OSX
+  // Put CPU-independent macOS code here.
+  #if TARGET_CPU_ARM64
+    // Put 64-bit Apple silicon macOS code here.
+    qldebug(@"checkOSArch: TARGET_CPU_ARM64");
+    NSString *procType = @"ARM";
+  #elif TARGET_CPU_X86_64
+    qldebug(@"checkOSArch: TARGET_CPU_X86_64");
+    NSString *procType = @"X86";
+  #else
+    NSString *procType = @"Unknown Architecture";
+  #endif
+#elif TARGET_OS_MACCATALYST
+   // Put Mac Catalyst-specific code here.
+    qldebug(@"checkOSArch: TARGET_OS_MACCATALYST");
+    NSString *procType = @"Unknown Architecture";
+#elif TARGET_OS_IOS
+  // Put iOS-specific code here.
+    qldebug(@"checkOSArch: TARGET_OS_IOS");
+    NSString *procType = @"Unknown Architecture";
 #else
-	NSString *procType = @"Unknown Architecture";
+    NSString *procType = @"Unknown Architecture";
 #endif
-	
+    
 	NSArray *reqOSArchArray = [osArchString componentsSeparatedByString:@","];
 	for (int i = 0;i < [reqOSArchArray count]; i++) {
 		NSString *_arch = [NSString stringWithString:[[reqOSArchArray objectAtIndex:i] uppercaseString]];
@@ -116,12 +134,52 @@ done:
 	return result;
 }
 
+-(BOOL)checkOSArchPreBS:(NSString *)osArchString
+{
+    BOOL result = NO;
+    
+#if defined __i386__ || defined __x86_64__
+    NSString *procType = @"X86";
+#elif defined __ppc__ || defined __ppc64__
+    NSString *procType = @"PPC";
+#elif defined __arm__
+    NSString *procType = @"ARM";
+#elif defined __APPLE__
+    NSString *procType = @"ARM";
+#else
+    NSString *procType = @"Unknown Architecture";
+#endif
+    
+    qlinfo(@"checkOSArch: %@",procType);
+    
+    NSArray *reqOSArchArray = [osArchString componentsSeparatedByString:@","];
+    for (int i = 0;i < [reqOSArchArray count]; i++) {
+        NSString *_arch = [NSString stringWithString:[[reqOSArchArray objectAtIndex:i] uppercaseString]];
+        _arch = [_arch stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+        if ([_arch isEqualToString:procType] == TRUE)
+        {
+            result = TRUE;
+            goto done;
+        }
+    }
+    
+done:
+    return result;
+}
+
 -(BOOL)checkOSType:(NSString *)osTypeString
 {
+    // CEH: Disable for now, not really needed since there is no server any more
+    return TRUE;
+    
 	BOOL osTypePass	= FALSE;
 	NSDictionary *sysInfo = [self getSWVers];
 	NSString *osTypeVal = [[sysInfo objectForKey:@"ProductName"] uppercaseString];
-	// 					   
+
+    if ([osTypeVal isEqualToString:@"MACOS"]) {
+        osTypeVal = @"MAC OS X";
+    }
+
 	NSArray *reqOSTypeArray = [osTypeString componentsSeparatedByString:@","];
 	for (int i = 0;i < [reqOSTypeArray count]; i++) {
 		NSString *_osType = [NSString stringWithString:[[reqOSTypeArray objectAtIndex:i] uppercaseString]];

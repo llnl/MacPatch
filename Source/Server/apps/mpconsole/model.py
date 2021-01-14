@@ -834,6 +834,7 @@ class MpSoftware(CommonBase):
 	sw_type             	= Column(String(10), info="SW Type")
 	sw_path             	= Column(String(255), info="Patch")
 	sw_url              	= Column(String(255), info="URL")
+	sw_useS3 				= Column(Integer, server_default='1', info="Use S3")
 	sw_size             	= Column(BigInteger, server_default='0', info="Size")
 	sw_hash             	= Column(String(50), info="Hash")
 	sw_pre_install_script   = Column(LONGTEXT(), info="Preinstall Script")

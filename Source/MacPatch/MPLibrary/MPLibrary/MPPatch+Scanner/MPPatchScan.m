@@ -257,7 +257,10 @@
 			}
 		}
 		
+        /* CEH: Dsable for now, no longer needed. */
 		if ([@"OSType" isEqualToString:[qryArr objectAtIndex:0]]) {
+            count++;
+            /*
 			mpos = [[MPOSCheck alloc] init];
 			if ([mpos checkOSType:[qryArr objectAtIndex:1]]) {
 				qlinfo(@"OSType=TRUE: %@",[qryArr objectAtIndex:1]);
@@ -265,6 +268,7 @@
 			} else {
 				qlinfo(@"OSType=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
+             */
 		}
 		
 		if ([@"OSVersion" isEqualToString:[qryArr objectAtIndex:0]]) {

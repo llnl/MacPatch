@@ -17,6 +17,7 @@ MDM - Corporate Devices
 	<table id="table" data-toolbar="#toolbar" data-show-export="true">
 		<div id="toolbar">
             {% if session.role[0] == 1 %}
+                <button id="queryButton" type="button" class="btn btn-default" title="Search InTune For A Device"><i class="glyphicon glyphicon-search"></i></button>
 			    <button id="addButton" type="button" class="btn btn-default" title="Add New Corporate Device"><i class="glyphicon glyphicon-plus"></i></button>
                 <button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
             {% endif %}
@@ -100,6 +101,23 @@ MDM - Corporate Devices
                 }).fail(function() {
                     document.getElementById("lastSync").innerHTML = "Error getting sync data. ";
                 });
+        });
+
+        $('#queryButton').click(function ()
+        {
+            $('#myContent').remove();
+            var _url = "/mdm/corporateDevice/live/query";
+            var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+             ' frameborder="0" allowtransparency="true"' +
+             ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+            $('#modalTitle').html("Live Corporate Device Search");
+            $('#modalBody').html(innerHTML);
+            $('#modalBody').css({'height':'60vh'});
+            $('#modalDialog').addClass("modal-mid");
+            $('#modalSaveButton').remove();
+            $('#modalCancelButton').remove();
+            $('#modalDialog').modal('show');
         });
 	});
 

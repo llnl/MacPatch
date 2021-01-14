@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.2
+# Version: 2.4
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -20,6 +20,9 @@
 #   2.0		Updated to support new 3.2 agent and package name
 #   2.1     Add support external scripts for customizing
 #   2.2     Added planB save server address
+#   2.3     Update variables for version 3.5
+#	2.4		Added option for MDM type installer, dont want MP to install
+#			On existsing MP installs unless the apent is older.
 #
 # -------------------------------------------------------------
 
@@ -27,19 +30,19 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client32/$DATETIME"
+BUILDROOT="/private/var/tmp/MP/Client35/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.3.1.1"
-UPDATEVER="3.3.1.1"
+AGENTVER="3.5.0.1"
+UPDATEVER="3.5.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
 MIN_OS="10.12"
 INCPlanBSource=false
 MPPLANB_SRV_ADDR="localhost"
-BUILDPLIST="/Library/Preferences/mp.build.client32.plist"
+BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
 
 # Extenral scripts run pre xcode compile
 EXTERNALSCRIPTS=false
@@ -47,13 +50,14 @@ EXTERNALSCRIPTSDIR="/tmp/foo"
 # Post Extenral script, just befor pkg build
 PEXTERNALSCRIPTS=false
 PEXTERNALSCRIPTSDIR="/tmp/foo"
+MDMPACKAGE=false
 
 
 # Script Input Args ----------------------------------------------------------
 
-usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-m Is MDM PKG]" 1>&2; exit 1; }
 
-while getopts "hs:p:" opt; do
+while getopts "hs:p:m" opt; do
     case $opt in
         s)
             EXTERNALSCRIPTS=true
@@ -63,6 +67,9 @@ while getopts "hs:p:" opt; do
             PEXTERNALSCRIPTS=true
             PEXTERNALSCRIPTSDIR=${OPTARG}
             ;;
+		m)
+			MDMPACKAGE=true
+			;;
         h)
             echo
             usage
@@ -431,6 +438,13 @@ mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/Privi
 
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
 
+if $MDMPACKAGE; then
+	if [ -f "$PKGROOT/MDM/Distribution" ]; then
+		cp ${PKGROOT}/MDM/Distribution ${BUILDROOT}/Combined/Distribution
+	else
+		echo "ERROR: Unable to copy ${PKGROOT}/MDM/Distribution to Combined"
+	fi
+fi
 
 # ------------------------------------------------------------
 # Copy PlanB files to base package root
@@ -537,6 +551,8 @@ echo "MP-$AGENT_VER_BUILD-$BUILD_NO_STR$PKG_STATE" > "${BUILD_FILE}"
 # Create the almost final package
 # --sign "Developer ID Installer: Charles Heizer" \
 # ------------------------------------------------------------
+echo "productbuild --distribution ${BUILDROOT}/Combined/Distribution --resources ${BUILDROOT}/Combined/Resources --package-path ${BUILDROOT}/Combined/Packages ${BUILDROOT}/Combined/MacPatchDist.pkg"
+
 productbuild --distribution ${BUILDROOT}/Combined/Distribution \
 --resources ${BUILDROOT}/Combined/Resources \
 --package-path ${BUILDROOT}/Combined/Packages \

@@ -276,6 +276,43 @@
 }
 
 /**
+ Get a dictionary containing all active apple and custom patches
+ 
+ @param err Error object
+ @return a dictioanary containg two arrays "AppleUpdates, CustomUpdates"
+ */
+- (NSDictionary *)getAllPatchesForClient:(NSError **)err
+{
+	NSError *ws_err = nil;
+	NSDictionary *ws_result;
+	NSDictionary *result = nil;
+	
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/all/%@",self.ccuid];
+	
+	ws_result = [self getDataFromWS:urlPath error:&ws_err];
+	if (ws_err) {
+		*err = ws_err;
+		return nil;
+	}
+	
+	if ([ws_result objectForKey:@"data"])
+	{
+		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+		{
+			qldebug(@"Web Servce result: %@",ws_result);
+			result = [ws_result objectForKey:@"data"];
+		}
+		else
+		{
+			qlerror(@"Result was not of type dictionary.");
+			qlerror(@"Result: %@", ws_result);
+		}
+	}
+	
+	return result;
+}
+
+/**
  Post patch install using patch and type
  
  @param patch patch id or name depending on type
@@ -447,7 +484,8 @@
     NSDictionary *ws_result;
     NSArray *result = nil;
     
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+    //NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
     qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -736,6 +774,74 @@
 	}
 	
 	return result;
+}
+
+
+/**
+ Get S3 url for package type
+
+ @param type (patch, sw)
+ @param id ID of the package to download
+ @return Dictionary (url is the key)
+ */
+- (NSDictionary *)getS3URLForType:(NSString *)type id:(NSString *)packageID
+{
+	// /url/<string:type>/<string:id>/<string:cuuid>
+	
+	NSError *ws_err = nil;
+	NSDictionary *ws_result;
+	NSDictionary *result = nil;
+	
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.ccuid];
+	qldebug(@"[getS3URLForType][urlPath] %@",urlPath);
+	
+	ws_result = [self getDataFromWS:urlPath error:&ws_err];
+	if (ws_err) {
+		qlerror(@"%@",ws_err.localizedDescription);
+		//*err = ws_err;
+		return nil;
+	}
+	
+	if ([ws_result objectForKey:@"result"])
+	{
+		if ([[ws_result objectForKey:@"result"] isKindOfClass:[NSDictionary class]])
+		{
+			qldebug(@"Web Servce result: %@",ws_result);
+			result = [ws_result objectForKey:@"result"];
+		}
+		else
+		{
+			qlerror(@"Result was not of type dictionary.");
+			qlerror(@"Result: %@", ws_result);
+		}
+	}
+	
+	return result;
+}
+
+/**
+ Post agent install
+ 
+ @param agentVer agent version installed
+ @param err Error object
+ @return BOOL
+ */
+- (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err
+{
+    BOOL result = NO;
+    NSError *error = nil;
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/agent/install/%@/%@",self.ccuid,agentVer];
+    qldebug(@"[postAgentInstall][urlPath] %@",urlPath);
+    
+    result = [self postDataToWS:urlPath data:nil error:&error];
+    if (error) {
+        *err = error;
+    }
+    if (result) {
+        qlinfo(@"Agent install data was posted to webservice.");
+    }
+    
+    return result;
 }
 
 @end

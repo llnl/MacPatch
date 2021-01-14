@@ -10,6 +10,7 @@
 		8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */; };
 		8F22E84822B98D7600A27786 /* html in Resources */ = {isa = PBXBuildFile; fileRef = 8F22E84722B98D7600A27786 /* html */; };
 		8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F22E84922B9980800A27786 /* WebKit.framework */; };
+		8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F730CC0240B09FA00876026 /* OpenDirectory.framework */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
@@ -43,6 +44,7 @@
 		8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F22E84722B98D7600A27786 /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; path = html; sourceTree = "<group>"; };
 		8F22E84922B9980800A27786 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		8F730CC0240B09FA00876026 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
 		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
@@ -96,6 +98,7 @@
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
 				8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */,
 				8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */,
+				8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */,
 				8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */,
 				8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */,
 				8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */,
@@ -131,6 +134,7 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F730CC0240B09FA00876026 /* OpenDirectory.framework */,
 				8FD5E10023A9729D00A47F7C /* libiconv.tbd */,
 				8F22E84922B9980800A27786 /* WebKit.framework */,
 				8F0174CF225D60270035A703 /* UserNotifications.framework */,
@@ -236,7 +240,7 @@
 		8FD8903F16DFE84600A870A3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = LLNL;
 				TargetAttributes = {
 					8FD8904616DFE84600A870A3 = {
@@ -329,6 +333,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -385,6 +390,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -429,7 +435,7 @@
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -454,7 +460,7 @@
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4;
+				MARKETING_VERSION = 3.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

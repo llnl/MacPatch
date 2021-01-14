@@ -19,7 +19,6 @@ _lcl_component(MPSystemInfo,        "MPSystemInfo",         "MPSystemInfo")
 _lcl_component(MPDate,              "MPDate",               "MPDate")
 _lcl_component(MPDefaults,          "MPDefaults",       	"MPDefaults")
 
-_lcl_component(MPWEBServices,       "MPWEBServices",        "MPWEBServices")
 _lcl_component(MPNetwork,           "MPNetwork",            "MPNetwork")
 
 _lcl_component(MPDirectoryServices, "MPDirectoryServices",  "MPDirectoryServices")

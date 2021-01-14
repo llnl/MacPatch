@@ -145,6 +145,9 @@
         case 13:
             [self runGetSUServerListOperation];
             break;
+        case 8888:
+            [self authRestartCheck];
+            break;
         case 99:
             // Run as daemon
             [self runAsDaemon];
@@ -255,14 +258,12 @@
             @autoreleasepool
             {
                 //@try
-                //{
-                    
+                //{                    
                     NSDictionary *taskDict;
                     NSTimeInterval _now = 0;
                     // Need to begin loop for tasks
                     for (taskDict in self.tasksArray)
                     {
-						//qlinfo(@"CEH: %@",taskDict);
                         // If task is Active
                         if ([[taskDict objectForKey:@"active"] isEqualToString:@"1"])
                         {
@@ -832,7 +833,7 @@
 			}
 		}
 	}
-	qlinfo(@"clientCheckInInterval: %lu",(unsigned long)result);
+	qldebug(@"clientCheckInInterval: %lu",(unsigned long)result);
 	return result;
 }
 
@@ -936,5 +937,101 @@
 	}
 }
 
+- (void)authRestartCheck
+{
+    NSError *err = nil;
+    BOOL isValid = NO;
+    MPFileCheck *fu = [MPFileCheck new];
+    if ([fu fExists:MP_AUTHSTATUS_FILE])
+    {
+        NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+        if ([d[@"enabled"] boolValue])
+        {
+            [self cliPrint:@"AuthRestart is enabled."];
+            
+            if ([d[@"useRecovery"] boolValue])
+            {
+                [self cliPrint:@"AuthRestart is using recovery key."];
+                MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+                MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+                if (!err)
+                {
+                    isValid = [self recoveryKeyIsValid:pi.userPass];
+                    [self cliPrint:@"AuthRestart Recovery Key %@ valid.",isValid ? @"is":@"is not"];
+                } else {
+                    [self cliPrint:@"Error retrieving password item for service."];
+                    [self cliPrint:@"Error: %@",err.localizedDescription];
+                }
+            } else {
+                DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
+                MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+                MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+                if (!err)
+                {
+                    isValid = [dh checkPassword:pi.userPass forUserWithName:pi.userName];
+                    [self cliPrint:@"AuthRestart UserName and Password %@ valid.",isValid ? @"is":@"is not"];
+                } else {
+                    [self cliPrint:@"Error retrieving password item for service."];
+                    [self cliPrint:@"Error: %@",err.localizedDescription];
+                }
+            }
+        } else {
+            [self cliPrint:@"AuthRestart is not enabled."];
+        }
+    }
+}
+
+- (BOOL)recoveryKeyIsValid:(NSString *)rKey
+{
+    BOOL isValid = NO;
+
+    NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
+    "/usr/bin/expect -f- << EOT \n"
+    "spawn /usr/bin/fdesetup validaterecovery; \n"
+    "expect \"Enter the current recovery key:*\" \n"
+    "send -- %@ \n"
+    "send -- \"\\r\" \n"
+    "expect \"true\" \n"
+    "expect eof; \n"
+    "EOT",rKey];
+    
+    MPScript *mps = [MPScript new];
+    NSString *res = [mps runScriptReturningResult:script];
+    // Now Look for our result ...
+    NSArray *arr = [res componentsSeparatedByString:@"\n"];
+    for (NSString *l in arr) {
+        if ([l containsString:@"fdesetup"]) {
+            continue;
+        }
+        if ([l containsString:@"Enter the "]) {
+            continue;
+        }
+        if ([[l trim] isEqualToString:@"false"]) {
+            isValid = NO;
+            break;
+        }
+        if ([[l trim] isEqualToString:@"true"]) {
+            isValid = YES;
+            break;
+        }
+    }
+
+    return isValid;
+}
+
+- (void)cliPrint:(NSString *)text,...
+{
+    @try {
+        va_list args;
+        va_start(args, text);
+        NSString *textStr = [[NSString alloc] initWithFormat:text arguments:args];
+        va_end(args);
+        
+        printf("%s\n", [textStr cStringUsingEncoding:[NSString defaultCStringEncoding]]);
+    }
+    @catch (NSException *exception) {
+        qlerror(@"%@",exception);
+    }
+}
 
 @end

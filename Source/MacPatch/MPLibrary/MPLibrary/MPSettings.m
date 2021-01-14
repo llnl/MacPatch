@@ -31,6 +31,8 @@ static MPSettings *_instance;
 @property (nonatomic, strong, readwrite) NSString *serialno;
 @property (nonatomic, strong, readwrite) NSString *osver;
 @property (nonatomic, strong, readwrite) NSString *ostype;
+@property (nonatomic, strong, readwrite) NSString *agentVer;
+@property (nonatomic, strong, readwrite) NSString *clientVer;
 
 @property (nonatomic, strong, readwrite) Agent *agent;
 @property (nonatomic, strong, readwrite) NSArray *servers;
@@ -47,6 +49,8 @@ static MPSettings *_instance;
 @synthesize serialno;
 @synthesize osver;
 @synthesize ostype;
+@synthesize agentVer;
+@synthesize clientVer;
 
 @synthesize agent;
 @synthesize servers;
@@ -73,6 +77,7 @@ static MPSettings *_instance;
             [_instance setSerialno:[_instance clientSerialNumber]];
             [_instance collectOSInfo];
             [_instance settings];
+			[_instance collectAgentVersionData];
         }
     }
     return _instance;
@@ -122,6 +127,8 @@ static MPSettings *_instance;
     self.servers    = [self serversFromDictionary:_settings[@"settings"][@"servers"]];
     self.suservers  = [self suServersFromDictionary:_settings[@"settings"][@"suservers"]];
     self.tasks      = [self tasksFromDictionary:_settings[@"settings"][@"tasks"]];
+	
+	[self collectAgentVersionData];
     
     return YES;
 }
@@ -485,5 +492,24 @@ static MPSettings *_instance;
 	}
 	[res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
 	return YES;
+}
+
+- (void)collectAgentVersionData
+{
+	NSDictionary *verData = nil;
+	if ([fm fileExistsAtPath:AGENT_VER_PLIST]) {
+		if ([fm isReadableFileAtPath:AGENT_VER_PLIST] == NO ) {
+			[fm setAttributes:[NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:0664UL] forKey:NSFilePosixPermissions]
+				 ofItemAtPath:AGENT_VER_PLIST
+						error:NULL];
+		}
+		verData = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
+	} else {
+		verData = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:@"NA",@"NA",@"NA",@"NA",@"NA",@"NA",nil]
+											   forKeys:[NSArray arrayWithObjects:@"version",@"major",@"minor",@"bug",@"build",@"framework",nil]];
+	}
+	
+	agentVer = [NSString stringWithFormat:@"%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"]];
+	clientVer = [NSString stringWithFormat:@"%@.%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"],verData[@"build"]];
 }
 @end

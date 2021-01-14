@@ -16,6 +16,8 @@
 @property (nonatomic, strong, readonly) NSString *serialno;
 @property (nonatomic, strong, readonly) NSString *osver;
 @property (nonatomic, strong, readonly) NSString *ostype;
+@property (nonatomic, strong, readonly) NSString *agentVer;
+@property (nonatomic, strong, readonly) NSString *clientVer;
 
 @property (nonatomic, strong, readonly) Agent *agent;
 @property (nonatomic, strong, readonly) NSArray *servers;

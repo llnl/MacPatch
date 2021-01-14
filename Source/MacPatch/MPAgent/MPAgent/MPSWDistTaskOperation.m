@@ -25,7 +25,6 @@
 
 #import "MPSWDistTaskOperation.h"
 #import "MPSWTasks.h"
-//#import "MPSWInstaller.h"
 #import "MPSettings.h"
 
 #define K_INSTALLED_FILE    @".installed.plist"
@@ -148,7 +147,6 @@
         return;
     }
 
-    //MPSWInstaller  *mpCatalogD;
     MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
     
     // Install the mandatory software 
@@ -338,12 +336,14 @@
                 c++;
             }
             // OSType
+            /* CEH: Dsable for now, no longer needed.
             if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
                 logit(lcl_vInfo,@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
             } else {
                 logit(lcl_vInfo,@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
                 c++;
             }
+             */
             // OSVersion
             if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
                 logit(lcl_vInfo,@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);

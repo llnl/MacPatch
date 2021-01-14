@@ -13,7 +13,7 @@ from .. model import *
 from .. mplogger import *
 from .. wsresult import *
 from .. shared.patches import *
-from .. aws import *
+from .. mpaws import *
 
 parser = reqparse.RequestParser()
 
@@ -25,8 +25,9 @@ class PatchGroupPatches(MPResource):
 		self.reqparse = reqparse.RequestParser()
 		super(PatchGroupPatches, self).__init__()
 
-	def get(self, client_id):
+	def get(self, client_id, all=None):
 
+		aws = MPaws()
 		wsResult = WSResult()
 		wsData = WSData()
 		wsData.data = {}
@@ -60,35 +61,56 @@ class PatchGroupPatches(MPResource):
 			_third_all = self.allCustomActiveContent()
 
 			# Get Patch Group Patches
-			q_data = MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all()
+			if all == 'all':
+				# Apple
+				for x in _apple_all:
+					_apple_patches.append(x)
 
-			if q_data is not None:
-				if len(q_data) >= 1:
-					for row in q_data:
-						rowDict = row.asDict
+				# Custom
+				for t in _third_all:
+					patch = t.asDict
+					# Add S3 Support
+					if 'pkg_useS3' in patch:
+						if patch['pkg_useS3'] == 1:
+							s3url = aws.getS3UrlForPatch(patch['puuid'])
+							patch['pkg_url'] = s3url
 
-						# Parse Apple Patches
-						aPatchResult = self.getApplePatchData(row.patch_id, _apple_all)
-						if aPatchResult is not None:
-							_apple_patches.append(aPatchResult)
-							continue
+					del patch['pkg_path']
+					del patch['cve_id']
+					del patch['patch_severity']
+					del patch['cdate']
+					_thrid_patches.append(patch)
 
-						# Parse Custom Patches
-						for tRow in _third_all:
-							if row.patch_id == tRow.puuid:
-								patch = tRow.asDict
-								# Add S3 Support
-								if 'pkg_useS3' in patch:
-									if patch['pkg_useS3'] == 1:
-										s3url = getS3UrlForPatch(patch['puuid'])
-										patch['pkg_url'] = s3url
+			else:
+				q_data = MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all()
 
-								del patch['pkg_path']
-								del patch['cve_id']
-								del patch['patch_severity']
-								del patch['cdate']
-								_thrid_patches.append(patch)
-								break
+				if q_data is not None:
+					if len(q_data) >= 1:
+						for row in q_data:
+							rowDict = row.asDict
+
+							# Parse Apple Patches
+							aPatchResult = self.getApplePatchData(row.patch_id, _apple_all)
+							if aPatchResult is not None:
+								_apple_patches.append(aPatchResult)
+								continue
+
+							# Parse Custom Patches
+							for tRow in _third_all:
+								if row.patch_id == tRow.puuid:
+									patch = tRow.asDict
+									# Add S3 Support
+									if 'pkg_useS3' in patch:
+										if patch['pkg_useS3'] == 1:
+											s3url = aws.getS3UrlForPatch(patch['puuid'])
+											patch['pkg_url'] = s3url
+
+									del patch['pkg_path']
+									del patch['cve_id']
+									del patch['patch_severity']
+									del patch['cdate']
+									_thrid_patches.append(patch)
+									break
 
 			_data['Apple'] = _apple_patches
 			_data['Custom'] = _thrid_patches
@@ -327,7 +349,10 @@ class PatchGroupPatchesDyn(MPResource):
 # MP Agent 3.4
 # Add S3 Support
 
-patches_4_api.add_resource(PatchGroupPatches,		'/client/patch/group/<string:client_id>')
+patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/group/<string:client_id>', endpoint='patchGroup')
+patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/<string:all>/<string:client_id>', endpoint='patchAll')
+
+patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
 
 patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
 

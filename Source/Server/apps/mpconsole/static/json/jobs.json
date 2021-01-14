@@ -1,6 +1,6 @@
 [
   {
-    "enabled": false,
+    "enabled": true,
     "id": "GetCorpDevices",
     "func": "mpTaskJobs.GetCorpDevices",
     "trigger": "interval",

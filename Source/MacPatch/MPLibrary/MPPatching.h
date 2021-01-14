@@ -57,6 +57,7 @@
 // Scan for Patches
 - (NSArray *)scanForPatchUsingBundleID:(NSString *)aBundleID;
 - (NSArray *)scanForPatchesUsingTypeFilter:(MPPatchContentType)contentType forceRun:(BOOL)forceRun;
+- (NSArray *)scanForPatchesUsingTypeFilterOrBundleIDWithPatchAll:(MPPatchContentType)contentType bundleID:(NSString *)bundleID forceRun:(BOOL)forceRun patchAllFound:(BOOL)patchAll;
 
 // Patch System
 

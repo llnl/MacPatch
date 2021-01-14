@@ -40,12 +40,14 @@
 #import "MPNSTask.h"
 #import "MPClientInfo.h"
 #import "MPDownloadManager.h"
+#import "DHCachedPasswordUtil.h"
 
 // NEW
 #import "MPFileUtils.h"
 #import "MPSoftware.h"
 #import "MPPatching.h"
 #import "MPClientDB.h"
+#import "MPFileVaultInfo.h"
 
 // Networking Add for MP 3.1.0
 #import "MPHTTPRequest.h"
@@ -72,7 +74,6 @@
 
 // Software Distribution
 #import "MPSWTasks.h"
-// #import "MPSWInstaller.h"
 
 // WebServices
 #import "MPDataMgr.h"
@@ -87,6 +88,7 @@
 #import "MPCodeSign.h"
 #import "MPKeychain.h"
 #import "MPKeyItem.h"
+#import "MPPassItem.h"
 #import "MPSimpleKeychain.h"
 #import "MPRemoteFingerprint.h"
 
@@ -94,7 +96,7 @@
 #import "FMDB.h"
 #import "FMDBx.h"
 
-// Helpers
+// Helpers - Extensions
 #import "NSString+Helper.h"
 #import "NSString+Hash.h"
 #import "NSFileManager+Helper.h"

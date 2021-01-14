@@ -17,7 +17,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 
-from base64 import b64encode, b64decode, encodestring
+from base64 import b64encode, b64decode
 
 from . import db
 from . model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
@@ -184,7 +184,7 @@ def b64EncodeAsString(data, defaultValue=None):
 			result = defaultValue
 
 	if data is not None:
-			if data.__class__ is not 'bytes':
+			if data.__class__ != 'bytes':
 					if len(data) > 0:
 							data = data.encode('utf-8')
 							result = b64encode(data).decode('utf-8')

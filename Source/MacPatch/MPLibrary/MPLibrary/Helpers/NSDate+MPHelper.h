@@ -54,7 +54,7 @@
 
 // Extend Other NSDate Category
 
-+ (NSString *)stringForDisplayFromDate:(NSDate *)date prefixed:(BOOL)prefixed alwaysDisplayTime:(BOOL)displayTime;
+// + (NSString *)stringForDisplayFromDate:(NSDate *)date prefixed:(BOOL)prefixed alwaysDisplayTime:(BOOL)displayTime;
 
 // NSDateFormatter for bindings search
 - (NSString *)searchString;

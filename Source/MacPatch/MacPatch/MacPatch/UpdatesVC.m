@@ -1,17 +1,35 @@
 //
 //  UpdatesVC.m
-//  MacPatch
-//
-//  Created by Charles Heizer on 11/15/18.
-//  Copyright © 2018 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "UpdatesVC.h"
 #import "UpdatesCellView.h"
 #import "AppDelegate.h"
 #import "GlobalQueueManager.h"
+#import "MPFileMonitor.h"
 
-@interface UpdatesVC ()
+@interface UpdatesVC () <MPFileMonitorDelegate>
 
 @property (nonatomic)         IBOutlet NSButton                *scanButton;
 @property (nonatomic)         IBOutlet NSButton                *updateAllButton;
@@ -32,6 +50,7 @@
 @property (nonatomic, assign) BOOL isPatchingPaused;
 
 @property (weak) IBOutlet NSScrollView *scrollview;
+@property (nonatomic) NSTask *task;
 
 // XPC Connection
 @property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
@@ -46,6 +65,15 @@
 	NSMutableArray* _content;
 }
 
+- (IBAction)resizeIt:(id)sender
+{
+	[self resizeTableViewForPatchAll];
+}
+
+-(IBAction)backToDefault:(id)sender
+{
+	[self resizeTableViewToDefaultSize];
+}
 
 - (void)viewDidLoad
 {
@@ -56,6 +84,11 @@
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(patchingStateChanged:)
 												 name:@"PatchingStateChangedNotification"
+											   object:nil];
+	
+	[[NSNotificationCenter defaultCenter] addObserver:self
+											 selector:@selector(scanForPatches:)
+												 name:@"PatchScanNotification"
 											   object:nil];
 }
 
@@ -122,6 +155,13 @@
 	*/
 	//[self stopScan];
 	//return;
+	__block MPPatchContentType patchContentType = kAllPatches;
+	
+	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	BOOL allPatches = [defaults boolForKey:@"showAllPatches"];
+	if (allPatches) {
+		patchContentType = kAllActivePatches;
+	}
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
@@ -131,7 +171,7 @@
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 				qlerror(@"%@",proxyError);
 				[self stopScan];
-			}] scanForPatchesUsingFilter:kAllPatches withReply:^(NSError *error, NSData *patches,
+			}] scanForPatchesUsingFilter:patchContentType withReply:^(NSError *error, NSData *patches,
 																 NSData *patchGroupData) {
 				
 				if (error) {
@@ -197,14 +237,16 @@
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[cell.updateButton setHidden:YES];
 			});
-		} else {
+		} else if ([cell.rowData[@"restart"] isEqualToString:@"Yes"]) {
 			hasRebootPatch = YES;
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[cell.updateButton setTitle:@"On Reboot"];
 				[cell.updateButton setEnabled:NO];
 			});
+		} else {
+			qlerror(@"Error, restart attribute value was not set properly.");
+			qlerror(@"Row Data: %@",cell.rowData);
 		}
-		
 	}
 	
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -213,7 +255,6 @@
 		[self.patchAllProgressBar setMaxValue:allPatches.count];
 		[self resizeTableViewForPatchAll];
 	});
-	
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
@@ -224,13 +265,15 @@
 				qlerror(@"%@",proxyError);
 			}] installPatches:(NSArray *)allPatches userInstallRebootPatch:allowInstallInt withReply:^(NSError *error, NSInteger resultCode) {
 
+                [self->_task terminate];
+                [[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleDataAvailableNotification object:nil];
+                
 				if (error) {
 					qlerror(@"Result Code(%ld): %@",resultCode,error.localizedDescription);
 				}
 				
 				if (resultCode == 0) {
 					qlinfo(@"Install was sucessful");
-					[self resizeTableViewToDefaultSize];
 				} else {
 					qlerror(@"resultCode: %ld",resultCode);
 					if (!error) {
@@ -260,6 +303,25 @@
 	}];
 	
 }
+
+- (void)progressData:(NSNotification *)notification
+{
+    NSData *newData = [notification.object availableData];
+    if (newData && newData.length)
+    {
+        NSString *tmpStr = [[NSString alloc] initWithData:newData encoding:NSUTF8StringEncoding];
+        if ([[tmpStr trim] length] != 0)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self->_patchAllPatchStatusText setStringValue:tmpStr];
+            });
+        }
+        tmpStr = nil;
+    }
+    
+    [notification.object waitForDataInBackgroundAndNotify];
+}
+
 
 - (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification
 {
@@ -358,6 +420,42 @@
 			} else {
 				[self->_mainScanStatusText setStringValue:@"Patch scan completed. No patches needed."];
 				[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
+			}
+		}
+		
+		MPFileCheck *fu = [MPFileCheck new];
+		if ([fu fExists:MP_AUTHSTATUS_FILE])
+		{
+			NSMutableDictionary *d = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+			if ([d[@"enabled"] boolValue])
+			{
+				dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+				[self connectAndExecuteCommandBlock:^(NSError * connectError)
+				{
+					if (connectError != nil)
+					{
+						qlerror(@"connectError: %@",connectError.localizedDescription);
+					}
+					else
+					{
+						[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+							qlerror(@"proxyError: %@",proxyError.localizedDescription);
+						}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
+							if (err) {
+								qlerror(@"%@",err.localizedDescription);
+							}
+							// User account is out of sync, post notification.
+							if (!result) {
+								[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kFileVaultUserOutOfSync"
+																							   object:nil
+																							 userInfo:nil
+																							  options:NSNotificationPostToAllSessions];
+							}
+							dispatch_semaphore_signal(sem);
+						}];
+					}
+				}];
+				dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 			}
 		}
 
@@ -480,6 +578,8 @@
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
+    //qlinfo(@"postStatus[%d]: %@",type,status);
+    
 	if (type == kMPPatchProcessStatus)
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -494,45 +594,73 @@
 	}
 	else if (type == kMPPatchAllProcessProgress)
 	{
+        //qlinfo(@"postStatus[kMPPatchAllProcessProgress]: %@",status);
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_patchAllProgressBar setDoubleValue:[status doubleValue]];
 		});
 	}
 	else if (type == kMPPatchAllProcessStatus)
 	{
+        //qlinfo(@"postStatus[kMPPatchAllProcessStatus]: %@",status);
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_patchAllPatchStatusText setStringValue:status];
 		});
-	}
+    }
 }
 
 - (void)postPatchInstallStatus:(NSString *)patchID type:(MPPostDataType)type
 {
-	if (type == kMPPatchAllInstallComplete)
-	{
-		dispatch_async(dispatch_get_main_queue(), ^{
-			
+    //qlinfo(@"postPatchInstallStatus: %@",patchID);
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    __block NSInteger pCount = [defaults integerForKey:@"PatchCount"];
+    __block NSString *cellPatchID = @"";
+    __block UpdatesCellView *cell;
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (type == kMPPatchAllInstallComplete)
+        {
+            
 			for (int i = 0; i < self->_tableView.numberOfRows; i++)
 			{
-				UpdatesCellView *cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-				if ([cell.rowData[@"patch_id"] isEqual:patchID]) {
-					[cell.updateButton setTitle:@"Installed"];
-					[cell.updateButton setHidden:NO];
-					[cell.updateButton setEnabled:NO];
-					cell.patchCompletionIcon.hidden = NO;
-					cell.patchCompletionIcon.image = [NSImage imageNamed:@"GoodImage"];
-				}
+				cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+                if ([[cell.rowData[@"type"] uppercaseString] isEqualToString:@"APPLE"]) {
+                    cellPatchID = cell.rowData[@"patch"];
+                } else {
+                    cellPatchID = cell.rowData[@"patch_id"];
+                }
+                
+                if ([cellPatchID isEqual:patchID]) {
+                    [cell.updateButton setTitle:@"Installed"];
+                    [cell.updateButton setHidden:NO];
+                    [cell.updateButton setEnabled:NO];
+                    cell.patchCompletionIcon.hidden = NO;
+                    cell.patchCompletionIcon.image = [NSImage imageNamed:@"GoodImage"];
+                }
 			}
-		});
-	}
-	else if (type == kMPPatchAllInstallError)
-	{
-		dispatch_async(dispatch_get_main_queue(), ^{
-			
+            
+            pCount = pCount - 1;
+            [defaults setInteger:pCount forKey:@"PatchCount"];
+            [defaults synchronize];
+            
+            // Now update the dock tile. Note that a more general way to do this would be to observe the highScore property, but we're just keeping things short and sweet here, trying to demo how to write a plug-in.
+            if (pCount >= 1) {
+                [[[NSApplication sharedApplication] dockTile] setBadgeLabel:[NSString stringWithFormat:@"%ld", (long)pCount]];
+            } else {
+                [[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
+            }
+            
+        } else if (type == kMPPatchAllInstallError) {
+            
 			for (int i = 0; i < self->_tableView.numberOfRows; i++)
 			{
-				UpdatesCellView *cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-				if ([cell.rowData[@"patch_id"] isEqual:patchID]) {
+				cell = [self->_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+                if ([[cell.rowData[@"type"] uppercaseString] isEqualToString:@"APPLE"]) {
+                    cellPatchID = cell.rowData[@"patch"];
+                } else {
+                    cellPatchID = cell.rowData[@"patch_id"];
+                }
+                
+                if ([cellPatchID isEqual:patchID]) {
 					[cell.updateButton setTitle:@"Error"];
 					[cell.updateButton setHidden:NO];
 					[cell.updateButton setEnabled:NO];
@@ -540,8 +668,8 @@
 					cell.patchCompletionIcon.image = [NSImage imageNamed:@"ErrorImage"];
 				}
 			}
-		});
-	}
+        }
+    });
 }
 
 - (NSString*)formatTypeToString:(MPPostDataType)formatType
@@ -620,5 +748,6 @@
 		});
 	}
 }
+
 
 @end

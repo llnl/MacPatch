@@ -25,7 +25,7 @@
 
 '''
   MacPatch Patch Loader Setup Script
-  MacPatch Version 3.3.x
+  MacPatch Version 3.5.x
 
   Script Version 2.4.2
 '''

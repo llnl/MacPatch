@@ -105,11 +105,7 @@
     NSError *err = nil;
     NSString *downloadURL;
     NSString *downloadFileLoc;
-	
-	
-	
-	
-	
+
     // *****************************
     // First we need to download the update
     @try

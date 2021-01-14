@@ -54,6 +54,8 @@ class AgentBase(MPResource):
 							setattr(client_obj, 'fileVaultStatus', args['fileVaultStatus'])
 						elif _body['fileVault'] is not None:
 							setattr(client_obj, 'fileVaultStatus', _body['fileVault'])
+						else:
+							setattr(client_obj, 'fileVaultStatus', "NA")
 					else:
 						if args[col] is not None:
 							_args_Val = args[col]
@@ -89,6 +91,8 @@ class AgentBase(MPResource):
 							setattr(client_obj, 'fileVaultStatus', args['fileVaultStatus'])
 						elif _body['fileVault'] is not None:
 							setattr(client_obj, 'fileVaultStatus', _body['fileVault'])
+						else:
+							setattr(client_obj, 'fileVaultStatus', "NA")
 					else:
 						if args[col] is not None:
 							_args_Val = args[col]

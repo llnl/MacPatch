@@ -1,9 +1,11 @@
-from flask import request
+from flask import request,current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
 from distutils.version import LooseVersion
 import base64
+
+#from flask_sqlalchemy_cache import FromCache
 
 from . import *
 from .. import db
@@ -11,6 +13,7 @@ from .. mputil import *
 from .. model import *
 from .. mplogger import *
 from .. wsresult import *
+from .. extensions import cache
 #from .. shared.software import *
 
 parser = reqparse.RequestParser()
@@ -62,7 +65,7 @@ class SoftwareTasksForGroup(MPResource):
 				log_Error('[SoftwareTasksForGroup][Get][%s] Group (%s) Not Found' % (clientID, groupName))
 				return wsResult.resultNoSignature(errorno=404, errormsg='Group Not Found'), 404
 
-			tData = tasksForGroup(_group_id)
+			tData = tasksForGroup(_group_id, osver)
 			wsData.data = tData
 			wsResult.data = wsData.toDict()
 			return wsResult.resultNoSignature(), 202
@@ -77,8 +80,10 @@ class SoftwareTasksForGroup(MPResource):
 # Private
 # ----------------------------------
 
-def tasksForGroup(group):
+def tasksForGroup(group, osFilter='*'):
+
 	_tasks = []
+	_curApp = current_app
 	qGetSel = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == group, MpSoftwareGroupTasks.selected == 1).all()
 
 	_selected = []
@@ -87,17 +92,23 @@ def tasksForGroup(group):
 
 	# Get All SW Tasks
 	qSWTasks = MpSoftwareTask.query.filter(MpSoftwareTask.active == 1).all()
+
+
 	_qTasks = []
 	for t in qSWTasks:
 		_qTasks.append(t.asDict)
 
 	# Get All SW
+	# Flask SQLAlchemy Cache - Experimental
+	#qSW = MpSoftware.query.options(FromCache(cache)).all()
 	qSW = MpSoftware.query.all()
 	_qSW = []
 	for s in qSW:
 		_qSW.append(s.asDict)
 
 	# Get All Criteria
+	# Flask SQLAlchemy Cache - Experimental
+	#qSWCri = MpSoftwareCriteria.query.options(FromCache(cache)).all()
 	qSWCri = MpSoftwareCriteria.query.all()
 	_qSWC = []
 	for c in qSWCri:
@@ -123,13 +134,36 @@ def tasksForGroup(group):
 			_task['SoftwareCriteria'] = {}
 			swCrit = swPackageCriteriaNew(taskData['primary_suuid'],_qSWC)
 
+			_addSwTask = 0
 			if swCrit is not None:
+				if 'os_vers' in swCrit:
+					_os_vers = swCrit['os_vers']
+					if osFilter != '*':
+						_osFilter=osFilter.replace('*','')
+						for allowedOS in _os_vers.split(','):
+							if allowedOS == '*':
+								_addSwTask=_addSwTask+1
+								break
+							else:
+								allowedOS = allowedOS.replace(".*","")
+								#print("{} in {}".format(allowedOS,_osFilter))
+								if allowedOS in _osFilter:
+									_addSwTask = _addSwTask + 1
+									break
+					else:
+						_addSwTask = _addSwTask + 1
+				else:
+					continue
 				_task['SoftwareCriteria'] = swCrit
+			else:
+				_task['SoftwareCriteria'] = {}
+
 
 			_task['SoftwareRequisistsPre'] = {}
 			_task['SoftwareRequisistsPost'] = {}
 
-			_tasks.append(_task)
+			if _addSwTask >= 1:
+				_tasks.append(_task)
 
 	return _tasks
 

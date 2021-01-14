@@ -299,7 +299,7 @@
 			err = nil;
 			[self postStatusToDelegate:@"Patching enabled for %@",swTask[@"name"]];
 			// CEH - Needs to be completed
-			// Install Pathes If Enabled
+			// Install Patches If Enabled
 			sleep(2);
 		}
 	}
@@ -314,7 +314,6 @@
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
-	//NSString *dlPath = [req runSyncFileDownloadAlt:_url downloadDirectory:toPath error:&dlErr];
 	qldebug(@"Downloaded software to %@",dlPath);
 	return YES;
 }

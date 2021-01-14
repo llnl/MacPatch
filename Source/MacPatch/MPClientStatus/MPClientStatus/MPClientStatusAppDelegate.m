@@ -176,6 +176,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 															name: kRequiredPatchesChangeNotification
 														  object: nil];
 	
+	[[NSDistributedNotificationCenter defaultCenter] addObserver: self
+														selector: @selector(userNotificationReceived:)
+															name: @"kFileVaultUserOutOfSync"
+														  object: nil];
+	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
 }
@@ -231,6 +236,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	{
 		_swResHelpMessage = [prefs stringForKey:@"denyHelpStringMessage"];
 	}
+	
+	// Run FileVault User Password Check Sync
+	[self fvUserCheck];
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	if ([defaults boolForKey:@"showWhatsNew"]) {
@@ -475,6 +483,68 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     }
 }
 
+- (void)fvUserCheck
+{
+    double secondsToFire = 120.0; // Every 5 min
+    logit(lcl_vInfo, @"Start FileVault User Check Thread");
+    logit(lcl_vInfo, @"Run every %f", secondsToFire);
+    
+    // Show Menu Once, then use timer
+    [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
+                           withObject:nil
+                        waitUntilDone:NO
+                                modes:@[NSRunLoopCommonModes]];
+    
+    dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+        [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
+                               withObject:nil
+                            waitUntilDone:NO
+                                    modes:@[NSRunLoopCommonModes]];
+    });
+}
+
+- (void)fvUserCheckMethod
+{
+	@autoreleasepool
+	{
+		MPFileCheck *fu = [MPFileCheck new];
+		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
+		
+		__block BOOL res = NO;
+		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+		
+		[self connectAndExecuteCommandBlock:^(NSError * connectError)
+		{
+			if (connectError != nil)
+			{
+				qlerror(@"connectError: %@",connectError.localizedDescription);
+			}
+			else
+			{
+				[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+					qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                    dispatch_semaphore_signal(sem);
+				}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
+					if (err) {
+						qlerror(@"%@",err.localizedDescription);
+					}
+					
+					// User account is out of sync, post notification.
+					if (!result) {
+						[self postUserNotificationForFVAuthRestart];
+					}
+					dispatch_semaphore_signal(sem);
+				}];
+			}
+		}];
+		
+		dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+	}
+}
+
+
 #pragma mark Show Patch Status
 
 - (void)displayPatchData
@@ -661,10 +731,28 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 #pragma mark Open MacPatch
 - (IBAction)openMacPatchApplication:(id)sender
 {
+//	[[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"gov.llnl.mp.MacPatch"
+//														 options:NSWorkspaceLaunchDefault
+//								  additionalEventParamDescriptor:nil
+//												launchIdentifier:NULL];
+	[self openMacPatchAppWithAction:@""];
+}
+
+- (void)openMacPatchAppWithAction:(NSString *)action
+{
+	NSString *cURL = @"macpatch://";
+	if ([action isEqualToString:@"PatchScan"]) {
+		cURL = @"macpatch://?openAndScan";
+	} else if ([action isEqualToString:@"PatchPrefs"]) {
+		cURL = @"macpatch://?openAndPatchPrefs";
+	}
+	
 	[[NSWorkspace sharedWorkspace] launchAppWithBundleIdentifier:@"gov.llnl.mp.MacPatch"
-														 options:NSWorkspaceLaunchDefault
-								  additionalEventParamDescriptor:nil
-												launchIdentifier:NULL];
+															 options:NSWorkspaceLaunchDefault
+									  additionalEventParamDescriptor:nil
+													launchIdentifier:NULL];
+	[NSThread sleepForTimeInterval:1.0];
+	[[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:cURL]];
 }
 
 #pragma mark -
@@ -1013,9 +1101,56 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
 }
 
+- (void)postUserNotificationForFVAuthRestart
+{
+	qldebug(@"postUserNotificationForFVAuthRestart");
+	// Look to see if we have posted already, if we have, no need to do it again
+	
+	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
+	{
+		qlinfo(@"deliveredNote: %@",deliveredNote.title);
+		if ([deliveredNote.title isEqualToString:@"Credentials Need Updating"]) {
+			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
+			return;
+		}
+		if ([deliveredNote.title isEqualToString:@"Recovery Key Need Updating"]) {
+			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
+			return;
+		}
+	}
+	
+	NSDictionary *prefs;
+	if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
+		prefs = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+		if (![prefs[@"enabled"] boolValue]) {
+			return; // Dont post any notifications if not enabled.
+		}
+    } else {
+        return; // Dont post any notifications, not setup.
+    }
+	
+	NSUserNotification *userNote = [[NSUserNotification alloc] init];
+	if (prefs[@"outOfSync"]) {
+		userNote.title = @"Credentials Need Updating";
+		userNote.informativeText = @"The FileVault authrestart credentials are out of sync.";
+	}
+	if (prefs[@"keyOutOfSync"]) {
+		userNote.title = @"Recovery Key Need Updating";
+		userNote.informativeText = @"The FileVault authrestart recovery key is out of sync.";
+	}
+	userNote.actionButtonTitle = @"Update";
+	userNote.hasActionButton = YES;
+	userNote.userInfo = @{ @"originalPointer": @((NSUInteger)userNote) };
+	[userNote setValue:@YES forKey:@"_showsButtons"];
+
+	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
+	[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
+	qlinfo(@"postUserNotificationForFVAuthRestart deliverNotification");
+}
+
 - (void)userNotificationReceived:(NSNotification *)notification
 {
-	qlinfo(@"[userNotificationReceived]: %@",notification.name);
+	qldebug(@"[userNotificationReceived]: %@",notification.name);
     if ([notification.name isEqualToString: kShowPatchesRequiredNotification])
     {
         NSString *pc = [@(self.patchCount) stringValue];
@@ -1033,6 +1168,10 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	{
 		[self displayPatchDataMethod];
 	}
+	else if ([notification.name isEqualToString: @"kFileVaultUserOutOfSync"])
+	{
+		[self postUserNotificationForFVAuthRestart];
+	}
     else
     {
         return;
@@ -1046,24 +1185,38 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)notification
 {
+	qlinfo(@"didActivateNotification");
     if (notification.activationType == NSUserNotificationActivationTypeActionButtonClicked)
     {
         if ([notification.actionButtonTitle isEqualToString:@"Patch"])
 		{
+			qlinfo(@"didActivateNotification openMacPatchApplication:nil");
+			
 			NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 			[ud setBool:NO forKey:@"patch"];
 			ud = nil;
-			[self openMacPatchApplication:nil];
+			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchScan");
+			[self openMacPatchAppWithAction:@"PatchScan"];
         }
 		
-        if ([notification.actionButtonTitle isEqualToString:@"Reboot"]) [self logoutNow];
+		if ([notification.actionButtonTitle isEqualToString:@"Reboot"])
+		{
+			[self logoutNow];
+		}
+		
+		if ([notification.actionButtonTitle isEqualToString:@"Update"])
+		{
+			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchPrefs");
+			[self openMacPatchAppWithAction:@"PatchPrefs"];
+        }
     }
 }
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)notification
 {
-    if ([notification.actionButtonTitle isEqualToString:@"Patch"])
-	{
+	//qlinfo(@"didDeliverNotification");
+    //if ([notification.actionButtonTitle isEqualToString:@"Patch"])
+	//{
         // Dont show patch info if reboot is required.
 		/*
         if ([[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
@@ -1071,7 +1224,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             [[NSUserNotificationCenter defaultUserNotificationCenter] removeDeliveredNotification:notification];
         }
 		 */
-    }
+    //}
 }
 
 - (IBAction)loadWhatsNewWebView:(id)sender

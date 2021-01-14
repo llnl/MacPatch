@@ -46,7 +46,6 @@
 		8FA6A8791B9621BF006A329B /* CHDiskInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8641B9621BF006A329B /* CHDiskInfo.m */; };
 		8FA6A87A1B9621BF006A329B /* MacAppStoreDataItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */; };
 		8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */; };
-		8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */; };
 		8FA6A87D1B9621BF006A329B /* MPInv.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86C1B9621BF006A329B /* MPInv.m */; };
 		8FA6A87E1B9621BF006A329B /* MPServerEntry.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A86E1B9621BF006A329B /* MPServerEntry.m */; };
 		8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8701B9621BF006A329B /* MPUsersAndGroups.m */; };
@@ -68,6 +67,7 @@
 		8FE8A7F22112564500E8796E /* Software.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF7E9CF210A558B00678B93 /* Software.m */; };
 		8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50B1FC658EC006F5FB2 /* Python.framework */; };
 		8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF93F9219959206005A4EEB /* MPAgentRegister.m */; };
+		8FFC7E3324FEC753009671AD /* SPSmartCard.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC7E3224FEC753009671AD /* SPSmartCard.m */; };
 		8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */; };
 /* End PBXBuildFile section */
 
@@ -154,8 +154,6 @@
 		8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MacAppStoreDataItem.m; sourceTree = "<group>"; };
 		8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPDirectoryServices.h; sourceTree = "<group>"; };
 		8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDirectoryServices.m; sourceTree = "<group>"; };
-		8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
-		8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
 		8FA6A86B1B9621BF006A329B /* MPInv.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInv.h; sourceTree = "<group>"; };
 		8FA6A86C1B9621BF006A329B /* MPInv.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInv.m; sourceTree = "<group>"; };
 		8FA6A86D1B9621BF006A329B /* MPServerEntry.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPServerEntry.h; sourceTree = "<group>"; };
@@ -193,6 +191,8 @@
 		8FF7E9CF210A558B00678B93 /* Software.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Software.m; sourceTree = "<group>"; };
 		8FF93F9119959206005A4EEB /* MPAgentRegister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentRegister.h; sourceTree = "<group>"; };
 		8FF93F9219959206005A4EEB /* MPAgentRegister.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentRegister.m; sourceTree = "<group>"; };
+		8FFC7E3124FEC753009671AD /* SPSmartCard.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SPSmartCard.h; sourceTree = "<group>"; };
+		8FFC7E3224FEC753009671AD /* SPSmartCard.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SPSmartCard.m; sourceTree = "<group>"; };
 		8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SysInfoCacheGen.h; sourceTree = "<group>"; };
 		8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SysInfoCacheGen.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -372,8 +372,6 @@
 				8FA6A8661B9621BF006A329B /* MacAppStoreDataItem.m */,
 				8FA6A8671B9621BF006A329B /* MPDirectoryServices.h */,
 				8FA6A8681B9621BF006A329B /* MPDirectoryServices.m */,
-				8FA6A8691B9621BF006A329B /* MPFileVaultInfo.h */,
-				8FA6A86A1B9621BF006A329B /* MPFileVaultInfo.m */,
 				8FA6A86D1B9621BF006A329B /* MPServerEntry.h */,
 				8FA6A86E1B9621BF006A329B /* MPServerEntry.m */,
 				8FA6A86F1B9621BF006A329B /* MPUsersAndGroups.h */,
@@ -396,6 +394,8 @@
 				8F53E2071FDA0E4A004D4C32 /* SmartCardReaderList.m */,
 				8FFEF38F224D391A00D9BF8E /* SysInfoCacheGen.h */,
 				8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */,
+				8FFC7E3124FEC753009671AD /* SPSmartCard.h */,
+				8FFC7E3224FEC753009671AD /* SPSmartCard.m */,
 			);
 			path = Inventory;
 			sourceTree = "<group>";
@@ -474,7 +474,7 @@
 		8F4B1EE116DD77BD00E15A9E /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1110;
+				LastUpgradeCheck = 1200;
 				ORGANIZATIONNAME = LLNL;
 				TargetAttributes = {
 					8F4B1EE816DD77BD00E15A9E = {
@@ -523,9 +523,9 @@
 				8FA6A87B1B9621BF006A329B /* MPDirectoryServices.m in Sources */,
 				8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */,
 				8F4B1F0716DD77FF00E15A9E /* AgentController.m in Sources */,
-				8FA6A87C1B9621BF006A329B /* MPFileVaultInfo.m in Sources */,
 				8FE8A7F22112564500E8796E /* Software.m in Sources */,
 				8F9C2B531DDA1D0E002A39D2 /* MPAppStore.m in Sources */,
+				8FFC7E3324FEC753009671AD /* SPSmartCard.m in Sources */,
 				8FA6A87F1B9621BF006A329B /* MPUsersAndGroups.m in Sources */,
 				8FA6A8801B9621BF006A329B /* NSDirectoryServices.m in Sources */,
 				8F4B1F1716DE634600E15A9E /* ClientCheckInOperation.m in Sources */,
@@ -572,6 +572,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -629,6 +630,7 @@
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -666,8 +668,9 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.3.4.4;
+				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
@@ -685,7 +688,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4.4;
+				MARKETING_VERSION = 3.5.0.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -710,8 +713,9 @@
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.3.4.4;
+				CURRENT_PROJECT_VERSION = 3.5.0.1;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
@@ -729,7 +733,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 3.3.4.4;
+				MARKETING_VERSION = 3.5.0.1;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

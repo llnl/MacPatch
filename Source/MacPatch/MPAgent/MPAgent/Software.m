@@ -386,8 +386,8 @@
 
 - (BOOL)recordInstalledRequiredSoftware:(NSString *)tuuid
 {
-	[settings refresh];
-	NSString *cGroupID = settings.agent.groupId;
+	// [settings refresh];
+	// NSString *cGroupID = settings.agent.groupId;
 	// CEH Not implemented
 	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
@@ -462,12 +462,14 @@
 	}
 	
 	// OSType
+    /* CEH: Dsable for now, no longer needed.
 	if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
 		logit(lcl_vDebug,@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 	} else {
 		logit(lcl_vInfo,@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 		return NO;
 	}
+     */
 	// OSVersion
 	if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
 		logit(lcl_vDebug,@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
@@ -1244,7 +1246,8 @@ done:
 			logit(lcl_vError,@"%@", e);
 		}
 		
-		logit(lcl_vInfo,@"Patch install completed.");
+		//logit(lcl_vInfo,@"Patch install completed.");
+        qlinfo(@"Install completed for %@",patch[@"patch"]);
 	}
 	else
 	{

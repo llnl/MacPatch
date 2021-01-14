@@ -15,20 +15,9 @@ import logging.handlers
 from .config import DevelopmentConfig, ProductionConfig
 
 from flask_cors import CORS, cross_origin
-from flask_apscheduler import APScheduler
 from . mplogger import *
 
-class SchedulerConfig(object):
-	
-	SCHEDULER_JOB_DEFAULTS = {
-		'coalesce': False,
-		'max_instances': 1
-	}
-
-	SCHEDULER_API_ENABLED = True
-
 db = SQLAlchemy()
-scheduler = APScheduler()
 
 # Configure authentication
 login_manager = LoginManager()
@@ -38,12 +27,10 @@ if os.getenv("MPCONSOLE_ENV") == 'prod':
 else:
 	DefaultConfig = DevelopmentConfig
 
-def create_app(config_object=DefaultConfig):
 
+def create_app(config_object=DefaultConfig):
 	app = Flask(__name__)
 	cors = CORS(app)
-
-	app.config.from_object(SchedulerConfig())
 
 	app.config.from_object(config_object)
 	app.config.from_pyfile('../config.cfg', silent=True)
@@ -160,14 +147,7 @@ def create_app(config_object=DefaultConfig):
 	from .mdm import mdm as mdm_blueprint
 	app.register_blueprint(mdm_blueprint, url_prefix='/mdm')
 
-	from .mptasks import MPTaskJobs
-	mpTaskJobs = MPTaskJobs()
-	mpTaskJobs.init_app(app)
-
-	jData = None
-	with open(app.config['JOBS_FILE']) as json_data:
-		jData = json.load(json_data)
-
+	# MDM Schema Setup
 	if app.config['ENABLE_INTUNE']:
 		# Read Schema File and Store In App Var
 		mdm_schema_file = app.config['STATIC_JSON_DIR']+"/mdm_schema.json"
@@ -181,19 +161,6 @@ def create_app(config_object=DefaultConfig):
 			except OSError:
 				print('Well darn.')
 				return
-
-		if jData:
-			for j in jData:
-				if j['enabled']:
-					if j['trigger'] == "interval":
-						app.logger.info("Add interval job ({})".format(j['id']))
-						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], seconds=j['seconds'], coalesce=False, max_instances=1)
-					elif j['trigger'] == "cron":
-						app.logger.info("Add cron job ({})".format(j['id']))
-						scheduler.add_job(j['id'], eval(j['func']), trigger=j['trigger'], minute=j['minute'], coalesce=False, max_instances=1)
-
-	scheduler.init_app(app)
-	scheduler.start()
 
 	@app.errorhandler(InternalServerError)
 	def handle_exception1(e):

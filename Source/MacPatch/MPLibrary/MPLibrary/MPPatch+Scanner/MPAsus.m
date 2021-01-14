@@ -110,7 +110,8 @@
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	
-	qltrace(@"%@",string);
+	//qltrace(@"%@",string);
+    qlinfo(@"postStringToDelegate: %@",string);
 	[self.delegate asusProgress:string];
 }
 
@@ -304,9 +305,9 @@
 	{
 		if ([statusStr containsString:@"PackageKit: Missing bundle path"] == NO)
 		{
-			[self postStringToDelegate:statusStr];
+			[self postStringToDelegate:[statusStr trim]];
 		} else {
-			logit(lcl_vDebug,@"%@",statusStr);
+			qldebug(@"%@",statusStr);
 		}
 	}
 }

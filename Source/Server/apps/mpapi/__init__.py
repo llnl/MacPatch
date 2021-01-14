@@ -71,7 +71,8 @@ def create_app(config_object=DefaultConfig):
 		_log_level = logging.INFO
 
 	# Set and Enable Logging
-	handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=30)
+	# handler = logging.handlers.TimedRotatingFileHandler(log_file, when='midnight', interval=1, backupCount=30)
+	handler = logging.handlers.RotatingFileHandler(log_file, maxBytes=10485760, backupCount=30)
 	handler.setLevel(_log_level) # This is needed for log rotation
 	# Set log file formatting
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
@@ -90,7 +91,7 @@ def create_app(config_object=DefaultConfig):
 		req = request.environ
 		pathInfo = req['PATH_INFO']
 		if '/v1/auth/' in pathInfo or '/v1/token/' in pathInfo or '/agent/config/' in pathInfo or '/agent/update/' in pathInfo or '/agent/upload/' in pathInfo:
-			app.logger.info("Bypass before_request for " + req['REQUEST_URI'])
+			app.logger.info("Bypass before_request for " + pathInfo)
 		else:
 			_req_agent = req['HTTP_X_AGENT_ID']
 			_req_agent_ver = '0'
@@ -149,11 +150,17 @@ def register_blueprints(app):
 	from .antivirus import antivirus as bp_antivirus
 	app.register_blueprint(bp_antivirus, url_prefix=app.config['URL_PREFIX'])
 
+	from .antivirus_2 import antivirus_2 as bp_antivirus_2
+	app.register_blueprint(bp_antivirus_2, url_prefix='/api/v2')
+
 	from .auth import auth as bp_auth
 	app.register_blueprint(bp_auth, url_prefix=app.config['URL_PREFIX'])
 
 	from .autopkg import autopkg as bp_autopkg
 	app.register_blueprint(bp_autopkg, url_prefix=app.config['URL_PREFIX'])
+
+	from .aws import aws as bp_aws
+	app.register_blueprint(bp_aws, url_prefix=app.config['URL_PREFIX'])
 
 	from .checkin import checkin as bp_checkin
 	app.register_blueprint(bp_checkin, url_prefix=app.config['URL_PREFIX'])

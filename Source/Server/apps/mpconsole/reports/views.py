@@ -160,7 +160,7 @@ def showReportPaged(id,limit,offset,search,sort,order):
 	for p in query:
 		row = {}
 		for x in colsForQuery:
-			y = "p."+x
+			y = "p."+x.replace('mp_clients.','').strip()
 			if x == 'mdate':
 				row[x] = eval(y)
 			elif x == 'type':
@@ -173,7 +173,7 @@ def showReportPaged(id,limit,offset,search,sort,order):
 	return json.dumps({'data': _results, 'total': qResult[1]}, default=json_serial), 200
 
 # Private
-def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='mdate', order='desc', getCount=True):
+def requiredQueryOrig(queryInfo, filterStr='undefined', page=0, page_size=0, sort='mdate', order='desc', getCount=True):
 
 	rowCounter = 0
 
@@ -211,6 +211,69 @@ def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='m
 	_end = page_size
 
 	sql = 'SELECT {} FROM {} {} ORDER BY {} {} LIMIT {},{};'.format(",".join(queryInfo['columns']), queryInfo['table'], sql_where, sort, order, _start, _end)
+	query = db.engine.execute(text(sql.strip()))
+	return (query, rowCounter)
+
+def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='mdate', order='desc', getCount=True):
+
+	useMpClients = False
+	rowCounter = 0
+	if 'mp_clients.' in ','.join(queryInfo['columns']):
+		useMpClients = True
+
+
+	sql_where = ""
+	sql_and = []
+	if queryInfo['query'] != "":
+		sql_where = "WHERE " + queryInfo['query']
+		if filterStr != "undefined":
+			sql_where = '{} AND ('.format(sql_where)
+			for col in queryInfo['columns']:
+				sql_and.append('{} LIKE \'%{}%\''.format(col,filterStr))
+				sql_and.append('OR')
+
+			if len(sql_and) > 1:
+				sql_and.pop()
+
+			sql_where = '{} {})'.format(sql_where," ".join(sql_and))
+	else:
+		if filterStr != "undefined":
+			sql_where = 'WHERE '
+			for col in queryInfo['columns']:
+				sql_and.append('{} LIKE \'%{}%\''.format(col,filterStr))
+				sql_and.append('OR')
+
+			if len(sql_and) > 1:
+				sql_and.pop()
+
+			sql_where = '{} {}'.format(sql_where," ".join(sql_and))
+
+	# Get row count
+	if useMpClients:
+		sql_rows = (
+					f"SELECT 1 FROM {queryInfo['table']}"
+					f" LEFT JOIN mp_clients ON {queryInfo['table']}.cuuid = mp_clients.cuuid"
+					f" {sql_where};"
+					)
+	else:
+		sql_rows = 'SELECT 1 FROM {} {};'.format(queryInfo['table'], sql_where)
+
+	query_rows = db.engine.execute(text(sql_rows.strip()))
+	rowCounter = query_rows.rowcount
+
+	_start = page*page_size
+	_end = page_size
+	if useMpClients:
+		sql = (
+				f"SELECT {','.join(queryInfo['columns'])}"
+				f" FROM {queryInfo['table']}"
+				f" LEFT JOIN mp_clients ON {queryInfo['table']}.cuuid = mp_clients.cuuid"
+				f" {sql_where}"
+				f" ORDER BY {queryInfo['table']}.{sort} {order}" 
+				f" LIMIT {_start},{_end};"
+				)
+	else:
+		sql = 'SELECT {} FROM {} {} ORDER BY {} {} LIMIT {},{};'.format(",".join(queryInfo['columns']), queryInfo['table'], sql_where, sort, order, _start, _end)
 	query = db.engine.execute(text(sql.strip()))
 	return (query, rowCounter)
 
@@ -281,6 +344,7 @@ def saveReport():
 def tableFields(table_name):
 	_results = []
 	_total = 0
+	mp_clients_cols = None
 
 	sql_columns = """
 		Select COLUMN_NAME, DATA_TYPE
@@ -288,6 +352,14 @@ def tableFields(table_name):
 		WHERE TABLE_NAME = \'""" + table_name + """\'
 		AND table_schema = 'MacPatchDB3'
 		order by ordinal_position;"""
+
+	if table_name != 'mp_clients':
+		mp_clients_cols = """
+				Select COLUMN_NAME, DATA_TYPE
+				FROM information_schema.columns
+				WHERE TABLE_NAME = 'mp_clients'
+				AND table_schema = 'MacPatchDB3'
+				order by ordinal_position;"""
 
 	query_result = db.engine.execute(sql_columns)
 	for row in query_result:
@@ -298,10 +370,22 @@ def tableFields(table_name):
 			_row['type'] = typeForColumn(row.DATA_TYPE)
 			_results.append(_row)
 
+	if mp_clients_cols is not None:
+		query_result = db.engine.execute(mp_clients_cols)
+		for row in query_result:
+			if row[0] != 'rid' or row[0] != 'cuuid' or row[0] != 'mdate':
+				_total = _total + 1
+				_row = {}
+				_row['id'] = f'mp_clients.{row.COLUMN_NAME}'
+				_row['type'] = typeForColumn(row.DATA_TYPE)
+				_results.append(_row)
+
 	return json.dumps({'data': _results, 'total': _total}), 200
 
 @reports.route('/table/preview/<table_name>', methods=['POST'])
 def previewTableData(table_name):
+	from ast import literal_eval
+
 	_form = request.form.to_dict()
 	_cols = 'Select * FROM '
 	_limitCols=False
@@ -313,12 +397,19 @@ def previewTableData(table_name):
 	if _form['sql'] == "":
 		qStr = [_cols, ' LIMIT 0, 10;']
 		qStr.insert(1, table_name)
+		if 'mp_clients.' in " ".join(qStr):
+			qStr.insert(2, f' LEFT JOIN mp_clients ON {table_name}.cuuid = mp_clients.cuuid ')
 	else:
 		qStr = [_cols,' WHERE ', ' LIMIT 0, 10;']
 		qStr.insert(1, table_name)
-		qStr.insert(3, _form['sql'])
+		if 'mp_clients.' in " ".join(qStr):
+			qStr.insert(2, f' LEFT JOIN mp_clients ON {table_name}.cuuid = mp_clients.cuuid ')
+			qStr.insert(4, _form['sql'])
+		else:
+			qStr.insert(3, _form['sql'])
 
-	sql_query = ''.join(qStr)
+	sql_query = " ".join(qStr)
+	sql_query = sql_query.replace('%', '%%') # pymysql addition
 	query_result = db.engine.execute(sql_query)
 
 	_columns = []
@@ -343,7 +434,8 @@ def previewTableData(table_name):
 				_columns.append(col.COLUMN_NAME)
 				_jColumns.append({'field':col.COLUMN_NAME, 'title':col.COLUMN_NAME})
 
-		_jColumns = sorted(_jColumns)
+		# Python3 does not support sorted properly anymore
+		#_jColumns = sorted(_jColumns)
 
 	# Query Preview Data
 	_results = []

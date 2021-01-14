@@ -1,6 +1,6 @@
 #!/bin/sh
 
-Version="2.1.0"
+Version="2.2.0"
 mpBaseDir="/Library/MacPatch"
 mpClientDir="${mpBaseDir}/Client"
 mpUpdateDir="${mpBaseDir}/Updater"
@@ -184,6 +184,9 @@ if [ -d $mpBaseDir ]; then
 	# Remove Config Plist
 	findAndDelete "/Library/Preferences" "gov.llnl.mpagent.*"
 	
+   # Delete MacPatch app
+	existsAndDelete "/Applications/MacPatch.app"
+
 	# Delete MacPatch Client Files
 	existsAndDelete "$mpClientDir"
 	

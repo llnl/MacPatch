@@ -286,6 +286,9 @@ class MPTaskJobs():
 		'enrollmentState': 'notContacted',
 		'platform': 'unknown' } ] }
 
+		self.app.logger.info("Add Corporate Device to InTune")
+		self.app.logger.info("Adding serial no {} for {}".format(serialno, description))
+
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities/importDeviceIdentityList'
 		http_headers = {'Authorization': 'Bearer ' + self.token,
 						'User-Agent': 'adal-python-sample',
@@ -294,6 +297,7 @@ class MPTaskJobs():
 						'client-request-id': str(uuid.uuid4())}
 
 		graph_data = requests.post(endpoint, headers=http_headers, stream=False, data=json.dumps(deviceData)).json()
+		self.app.logger.info("POST Result: {}".format(graph_data))
 		return graph_data
 
 	def AddLastSync(self,table,modelTable,user):

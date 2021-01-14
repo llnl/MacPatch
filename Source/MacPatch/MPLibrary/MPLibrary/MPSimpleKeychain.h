@@ -26,6 +26,7 @@
 #import <Foundation/Foundation.h>
 
 @class MPKeyItem;
+@class MPPassItem;
 
 typedef NS_ENUM(NSUInteger, ServiceType) {
     kMPServerService = 0, // Client[uuid]
@@ -45,18 +46,30 @@ typedef NS_ENUM(NSUInteger, ServiceType) {
 - (BOOL)saveKeyItemWithService:(MPKeyItem *)aPasswordObj service:(ServiceType)aService error:(NSError **)error;
 - (BOOL)saveKeyItemWithServiceAndAccount:(MPKeyItem *)aPasswordObj service:(ServiceType)aService account:(NSString *)aAccount error:(NSError **)error;
 
+// Save MPPassItem in Keychain
+- (BOOL)savePassItemWithService:(MPPassItem *)aPasswordObj service:(NSString *)aService error:(NSError **)error;
+
 // Retrieve MPKeyItem in Keychain
 - (MPKeyItem *)retrieveKeyItemForService:(ServiceType)aService error:(NSError **)error;
 - (MPKeyItem *)retrieveKeyItemForServiceAndAccount:(ServiceType)aService account:(NSString *)aAccount error:(NSError **)error;
 - (MPKeyItem *)retrieveKeyItemForServiceAndAccountWithKeychainItem:(ServiceType)aService account:(NSString *)aAccount keychainItem:(SecKeychainItemRef *)item error:(NSError **)error;
 
+// Retrieve MPPassItem in Keychain
+- (MPPassItem *)retrievePassItemForService:(NSString *)aService error:(NSError **)error;
+
 // Update MPKeyItem in Keychain
 - (BOOL)updateKeyItemWithService:(MPKeyItem *)aPasswordObj service:(ServiceType)aService error:(NSError **)error;
 - (BOOL)updateKeyItemWithServiceAndAccount:(MPKeyItem *)aPasswordObj service:(ServiceType)aService account:(NSString *)aAccount error:(NSError **)error;
 
+// Update MPPassItem in Keychain
+- (BOOL)updatePassItemForService:(MPPassItem *)aPasswordObj service:(NSString *)aService error:(NSError **)error;
+
 // Delete MPKeyItem in Keychain
 - (BOOL)deleteKeyItemWithService:(ServiceType)aService error:(NSError **)error;
 - (BOOL)deleteKeyItemWithServiceAndAccount:(ServiceType)aService account:(NSString *)aAccount error:(NSError **)error;
+
+// Delete MPPassItem in Keychain
+- (BOOL)deletePassItemforService:(NSString *)aService error:(NSError **)error;
 
 - (NSError *)errorForOSStatus:(OSStatus)OSStatus;
 @end

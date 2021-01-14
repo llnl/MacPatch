@@ -1,10 +1,27 @@
 //
 //  SoftwareViewController.m
-//  MPPortal
-//
-//  Created by Heizer, Charles on 12/13/12.
-//  Copyright (c) 2012 LLNL. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "SoftwareViewController.h"
 #import "SWInstallItem.h"
@@ -36,6 +53,7 @@
 
 // Private
 @property (nonatomic, strong) NSURL *SOFTWARE_DATA_DIR;
+@property (nonatomic, strong) NSArray *SP_APPS;
 
 // WebView
 @property (strong, nonatomic) IBOutlet NSProgressIndicator *webSpinner;
@@ -336,7 +354,9 @@
 			});
 			return;
 		} else {
-			[self->swTasks removeAllObjects];
+			dispatch_async(dispatch_get_main_queue(), ^{
+				[self->swTasks removeAllObjects];
+			});
 			[self->swTasks addObjectsFromArray:[self filterSoftwareTasks:tasks]];
 			//[self filterSoftwareTasks:tasks];
 		}
@@ -414,12 +434,14 @@
 				c++;
 			}
 			// OSType
+            /* CEH: Dsable for now, no longer needed.
 			if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
 				qldebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 			} else {
 				qldebug(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 				c++;
 			}
+             */
 			// OSVersion
 			if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
 				qldebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
@@ -667,42 +689,19 @@
         NSFileManager *fm = [NSFileManager defaultManager];
         NSURL *appSupportDir = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSSystemDomainMask] objectAtIndex:0];
         NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch/SW_Data"];
-        
-		NSString *appImage = sw[@"image"]?:@"AppStore";
 
         SoftwareCellView *cellView = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
+		cellView.serverArray = [settings.servers copy];
         cellView.mp_SOFTWARE_DATA_DIR = appSupportMPDir;
         cellView.rowData = [sw copy];
 		cellView.actionButton.title = @"Install";
 		[cellView.actionButton setState:0];
 		[cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
 		
-		if (![sw[@"Software"][@"sw_img_path"] isEqualToString:@"None"]) {
-			MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-			NSString *imgURL = sw[@"Software"][@"sw_img_path"];
-			if (imgURL.length > 2)
-			{
-				if (!sw[@"swImgData"])
-				{
-					NSData *imgData = [req dataForURLPath:[NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode]];
-					if (imgData) {
-						NSImage *image = [[NSImage alloc] initWithData:imgData];
-						[cellView.swIcon setImage:image];
-						sw[@"swImgData"] = imgData;
-					} else {
-						[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-					}
-				} else {
-					NSImage *image = [[NSImage alloc] initWithData:sw[@"swImgData"]];
-					[cellView.swIcon setImage:image];
-				}
-			}
-		} else {
-			[cellView.swIcon setImage:[NSImage imageNamed:appImage]];
-		}
-		
+		//NSString *appImage = sw[@"image"]?:@"AppStore";
+		[cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
         
-        [cellView.swTitle setStringValue:sw[@"name"]];
+		[cellView.swTitle setStringValue:sw[@"name"]];
 		[cellView.swCompany setPlaceholderString:@""];
 		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
         [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
@@ -737,10 +736,21 @@
 			}
 		}
 		
+		// if sw_app_path exists and is does not have a value of None
+		if (sw[@"Software"][@"sw_app_path"]) {
+			if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
+			{
+				if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
+					cellView.isAppInstalled = YES;
+				}
+			}
+		}
+		
         return cellView;
     }
     return nil;
 }
+
 
 #pragma mark - Search
 - (IBAction)searchString:(id)sender
@@ -816,6 +826,30 @@
 		[[SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
 	}
 }
+
+- (void)readSystemApps
+{
+	if (![fm fileExistsAtPath:@"/private/tmp/sp_temp.plist"]) {
+		NSLog(@"Need to add collection here...");
+		return;
+	}
+	
+	[self setSP_APPS:[NSArray arrayWithContentsOfFile:@"/tmp/sp_app.plist"]];
+}
+
+- (BOOL)isAppInstalledOnSystem:(NSString *)appPath
+{
+	if ([fm fileExistsAtPath:appPath]) {
+		qldebug(@"%@, was found.",appPath);
+		return YES;
+	} else {
+		qldebug(@"%@, was not found.",appPath);
+	}
+	
+	return NO;
+}
+
+// Will want a method to show a update needed if the app is OLD
 
 #pragma mark - HUD Views
 

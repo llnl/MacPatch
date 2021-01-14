@@ -9,7 +9,8 @@
 #import "CocoaSecurity.h"
 #import <CommonCrypto/CommonHMAC.h>
 #import <CommonCrypto/CommonCryptor.h>
-#import "Base64.h"
+#import "NSData+Base64.h"
+//#import "Base64.h"
 
 #pragma mark - CocoaSecurity
 @implementation CocoaSecurity
@@ -467,7 +468,8 @@
 @implementation CocoaSecurityDecoder
 - (NSData *)base64:(NSString *)string
 {
-    return [NSData dataWithBase64EncodedString:string];
+    //return [NSData dataWithBase64EncodedString:string];
+    return [NSData dataFromBase64String:string];
 }
 - (NSData *)hex:(NSString *)data
 {

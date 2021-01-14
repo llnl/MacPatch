@@ -8,7 +8,7 @@
 #import "MPDownloadManager.h"
 
 const NSInteger		 kSessionMaxConnection		= 1;
-const NSTimeInterval kSessionResourceTimeout	= 1800; // 30min
+const NSTimeInterval kSessionResourceTimeout	= 5400; // 30min
 const NSTimeInterval kSessionRequestTimeout		= 300; // 5min
 
 NSString * const 	 kDownloadDirectory 		= @"/private/tmp";

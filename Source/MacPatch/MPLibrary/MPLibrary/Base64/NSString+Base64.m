@@ -25,15 +25,21 @@
  */
 
 #import "NSString+Base64.h"
-#import "NSData+Base64.h"
+//#import "NSData+Base64.h"
 
 @implementation NSString (Base64String)
 
 - (NSString *)decodeBase64AsString
 {
+	NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:self options:0];
+	NSString *decodedString = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+	return decodedString;
+	
+	/*
     NSData *decodedData = [NSData dataFromBase64String:self];
     NSString *decodedString = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
     return decodedString;
+	 */
 }
 
 @end

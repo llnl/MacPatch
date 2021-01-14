@@ -88,16 +88,19 @@ def extensions_p():
 	for x in clients:
 		_clients.append(x.cuuid)
 
-	sql = text("SELECT Distinct cuuid from mpi_SPExtensions")
+	sql = text("SELECT Distinct cuuid from av_info")
 	_sql_result = db.engine.execute(sql)
 	for r in _sql_result:
 		_row = dict(r)
 		_ext_clients.append(_row['cuuid'])
 
 	result = set(_ext_clients).difference(_clients)
-
+	x = 0
 	for c in result:
-		sql = text("Delete from mpi_SPExtensions Where cuuid = '" + c +"'")
+		x = x + 1
+		sql = text("Delete from av_info Where cuuid = '" + c +"'")
+		print(sql)
+
 		_sql_result = db.engine.execute(sql)
 
 

@@ -1,10 +1,27 @@
 //
 //  UpdateInstallOperation.m
-//  MacPatch
-//
-//  Created by Charles Heizer on 11/21/18.
-//  Copyright © 2018 Heizer, Charles. All rights reserved.
-//
+/*
+Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+Written by Charles Heizer <heizer1 at llnl.gov>.
+LLNL-CODE-636469 All rights reserved.
+
+This file is part of MacPatch, a program for installing and patching
+software.
+
+MacPatch is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License (as published by the Free
+Software Foundation) version 2, dated June 1991.
+
+MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+License for more details.
+
+You should have received a copy of the GNU General Public License along
+with MacPatch; if not, write to the Free Software Foundation, Inc.,
+59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+*/
 
 #import "UpdateInstallOperation.h"
 #import "LongPatchWindow.h"
@@ -162,21 +179,23 @@
 			self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
 			[self didChangeValueForKey:@"userInfo"];
 			dispatch_semaphore_signal(sem);
+			
 		} else {
 
-			int aRebPtch = [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? 1 : 0;
+			int allowRebPtch = [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? 1 : 0;
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 				qlerror(@"%@",proxyError);
 				dispatch_semaphore_signal(sem);
-			}] installPatch:self->patch userInstallRebootPatch:aRebPtch withReply:^(NSError *error, NSInteger resultCode) {
+			}] installPatch:self->patch userInstallRebootPatch:allowRebPtch withReply:^(NSError *error, NSInteger resultCode) {
 				
 				qldebug(@"installPatch:self->patch withReply");
 				qldebug(@"resultCode: %ld",resultCode);
-
+				
 				if (error) {
 					qlerror(@"%@",error.localizedDescription);
 				}
+				NSString *_needsReboot = self->patch[@"restart"];
 				
 				if (resultCode == 0 || resultCode == 1000) // 1000 is a signal for patch that needs a halt
 				{
@@ -184,17 +203,20 @@
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
-					if (aRebPtch == 1)
+					if (allowRebPtch == 1)
 					{
 						//AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
-						if (resultCode == 1000) {
-							qlinfo(@"resultCode == 1000");
-							self->showRebootWindow = 2;
-							qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
-						} else {
-							qlinfo(@"resultCode == 0");
-							self->showRebootWindow = 1;
-							qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+						if ([_needsReboot.lowercaseString isEqualToString:@"yes"])
+						{
+							if (resultCode == 1000) {
+								qlinfo(@"resultCode == 1000");
+								self->showRebootWindow = 2;
+								qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+							} else {
+								qlinfo(@"resultCode == 0");
+								self->showRebootWindow = 1;
+								qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+							}
 						}
 					}
 				} else {
@@ -285,13 +307,14 @@
 
 - (void)patchProgress:(NSString *)progressStr
 {
-	qlinfo(@"patchProgress: %@",progressStr);
+	//qlinfo(@"patchProgress: %@",progressStr);
 	[self postPatchStatus:progressStr];
 }
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
 	if (type == kMPProcessStatus) {
+		qlinfo(@"%@",status);
 		[self postPatchStatus:status];
 	}
 }

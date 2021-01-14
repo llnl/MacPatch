@@ -1,0 +1,122 @@
+{% block styles %}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+<div class="form-group">
+
+	<form method='post' action='/mdm/corporateDevice/add' id="myForm">
+
+            <div class="well">
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Look up Serial Number using Computername</label>
+                    <div class="col-sm-6">
+                        <input class="typeahead" id="device"  type="text" data-provide="typeahead">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Serial Number</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="serialNumber" type="text" value="" name="importedDeviceIdentifier">
+                    </div>
+                </div>
+                <!--
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Device ID</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="description" type="text" value="" name="description">
+                    </div>
+                </div>
+                -->
+            </div>
+            <button type="button" class="btn btn-primary" id="queryButton">Search in MDM ...</button>
+
+            <div id="result"></div>
+	</form>
+</div>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='yarn_components/bootstrap-typeahead/bootstrap-typeahead.js') }}"></script>
+
+<script type="text/javascript">
+	$(document).ready(function()
+    {
+	    $('#device').typeahead(
+        {
+            items: 8,
+            minLength: 3,
+            source: function (query, result)
+            {
+                $.ajax({
+                    url: "/mdm/corporateDevice/search",
+					data: { 'device' : query },
+                    dataType: "json",
+                    type: "POST",
+                    success: function (data) {
+                        result(data.options);
+                    }
+                });
+            },
+            updater: function(item)
+            {
+                $.ajax({
+                    url: "/mdm/corporateDevice/search/host",
+                    type: 'post',
+                    data: { 'device': item },
+                    dataType: 'json',
+                    success: function (response)
+                    {
+                        var description = response.device.cuuid;
+                        var serialno = response.device.serialno;
+                        // Set value to textboxes
+                        //document.getElementById('description').setAttribute('value', description);
+                        document.getElementById('serialNumber').setAttribute('value', serialno);
+                    }
+                });
+
+                return item;
+            },
+            query: function(item)
+            {
+                $.ajax({
+                    url: "/mdm/corporateDevice/query",
+                    type: 'post',
+                    data: { 'device': item },
+                    dataType: 'json',
+                    success: function (response)
+                    {
+                        var description = response.device.cuuid;
+                        var serialno = response.device.serialno;
+                        // Set value to textboxes
+                        document.getElementById('description').setAttribute('value', description);
+                        document.getElementById('serialNumber').setAttribute('value', serialno);
+                    }
+                });
+
+                return item;
+            }
+        });
+
+	   $('#queryButton').click(function ()
+        {
+            $('#myContent').remove();
+            var _url = "/mdm/corporateDevice/add";
+            var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+             ' frameborder="0" allowtransparency="true"' +
+             ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+            $('#modalTitle').html("New Corporate Device");
+            $('#modalBody').html(innerHTML);
+            $('#modalBody').css({'height':'40vh'});
+            $('#modalDialog').addClass("modal-mid");
+            $('#modalSaveButton').remove();
+            $('#modalCancelButton').remove();
+            $('#modalDialog').modal('show');
+        });
+	});
+</script>
+

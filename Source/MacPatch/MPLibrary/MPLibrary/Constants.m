@@ -88,7 +88,11 @@ NSString * const MP_AGENT_SETTINGS          = @"/Library/Application Support/Mac
 NSString * const MP_AGENT_DB 				= @"/private/var/db/.MacPatch.db";
 
 NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun";
-NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun"; //NEW
+NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun";
+NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain"; // New
+NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist"; // New
+
+
 
 
 // In a source file
@@ -98,7 +102,8 @@ NSString * const MPPatchContentType_toString[] = {
 	[kApplePatches] = @"Apple",
 	[kCustomPatches ] = @"Custom",
 	[kAllPatches] = @"All",
-	[kCriticalPatches] = @"Critical"
+	[kCriticalPatches] = @"Critical",
+	[kAllActivePatches] = @"AllActive" // All Patches ignore patch group, only for GUI
 };
 
 @implementation Constants

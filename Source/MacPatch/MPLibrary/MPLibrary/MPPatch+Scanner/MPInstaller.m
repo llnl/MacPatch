@@ -117,7 +117,7 @@
 	}
 	// CEH - Improvement, add setting to allow configuration of install from unsigned pkgs -allowUntrusted
 	NSArray *appArgs = @[@"-verboseR", @"-allow", @"-pkg", pkg, @"-target", target];
-	qlinfo(@"Pkg Install Args: %@",appArgs);
+	qldebug(@"Pkg Install Args: %@",appArgs);
 	
 	NSError *taskErr = nil;
 	MPNSTask *mpTask = [MPNSTask new];

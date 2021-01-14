@@ -30,8 +30,13 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 @interface MPClientDB ()
 {
 	NSFileManager *fm;
-	NSMutableDictionary *dbDict;
 }
+
+@property (nonatomic, strong) NSMutableArray *installedPatches;
+@property (nonatomic, strong) NSMutableArray *installedSoftware;
+@property (nonatomic, strong) NSMutableArray *requiredPatches;
+@property (nonatomic, strong) NSMutableArray *history;
+
 - (void)setupFile;
 - (void)save;
 
@@ -52,14 +57,13 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 - (void)setupFile
 {
-	
 	if (![fm fileExistsAtPath:dbFile]) // Does not exist
 	{
-		dbDict = [NSMutableDictionary new];
-		dbDict = (NSMutableDictionary *)@{ @"history":[NSArray array],
-			   @"installed_patches":[NSArray array],
-			   @"installed_software":[NSArray array],
-			   @"required_patches":[NSArray array] };
+        self.installedPatches = [NSMutableArray new];
+        self.installedSoftware = [NSMutableArray new];
+        self.requiredPatches = [NSMutableArray new];
+        self.history = [NSMutableArray new];
+        
 		[self save];
 	} else {
 		// Maybe add check for each section
@@ -80,13 +84,12 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	BOOL result = NO;
 	@try
 	{
-		NSMutableArray *installedSoftwareArray = [dbDict[@"installed_software"] mutableCopy];
 		BOOL add = NO;
 		NSUInteger index;
 		InstalledSoftware *sw;
-		sw = [self findValueForKeyInArray:swTask[@"id"] key:@"tuuid" array:installedSoftwareArray];
+		sw = [self findValueForKeyInArray:swTask[@"id"] key:@"tuuid" array:self.installedSoftware];
 		if (sw) {
-			index = [installedSoftwareArray indexOfObject:sw];
+			index = [self.installedSoftware indexOfObject:sw];
 			// Found, need to update
 			if (swTask[@"Software"][@"sw_uninstall"]) {
 				sw.has_uninstall = 1;
@@ -125,13 +128,12 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		
 		if (add) {
 			// Add new
-			[installedSoftwareArray addObject:sw];
+            [self.installedSoftware addObject:sw];
 		} else {
 			// Update current
-			[installedSoftwareArray replaceObjectAtIndex:index withObject:sw];
+            [self.installedSoftware replaceObjectAtIndex:index  withObject:sw];
 		}
-		// Add new values to main dictionary
-		[dbDict setObject:installedSoftwareArray forKey:@"installed_software"];
+		
 		// Save dictionary to file
 		[self save];
 		
@@ -158,14 +160,12 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 - (BOOL)recordSoftwareUninstall:(NSString *)swTaskName taskID:(NSString *)swTaskID
 {
 	NSUInteger index;
-	InstalledSoftware *sw;
-	NSMutableArray *installedSoftwareArray = [dbDict[@"installed_software"] mutableCopy];
-	sw = [self findValueForKeyInArray:swTaskID key:@"tuuid" array:installedSoftwareArray];
+    InstalledSoftware *sw = [self findValueForKeyInArray:swTaskID key:@"tuuid" array:self.installedSoftware];
 	if (sw) {
-		index = [installedSoftwareArray indexOfObject:sw];
-		[installedSoftwareArray removeObjectAtIndex:index];
-		[dbDict setObject:installedSoftwareArray forKey:@"installed_software"];
-		// Save dictionary to file
+        index = [self.installedSoftware indexOfObject:sw];
+        [self.installedSoftware removeObjectAtIndex:index];
+        
+        // Save dictionary to file
 		[self save];
 	}
 	
@@ -184,7 +184,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	NSMutableArray *swTasks = [NSMutableArray new];
 	@try
 	{
-		NSMutableArray *installedSoftwareArray = [dbDict[@"installed_software"] mutableCopy];
+		NSMutableArray *installedSoftwareArray = [self.installedSoftware mutableCopy];
 		
 		for (InstalledSoftware *sw in installedSoftwareArray) {
 			[swTasks addObject:sw.tuuid];
@@ -208,7 +208,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 - (BOOL)isSoftwareTaskInstalled:(NSString *)swTaskID
 {
 	InstalledSoftware *sw;
-	NSMutableArray *installedSoftwareArray = [dbDict[@"installed_software"] mutableCopy];
+	NSMutableArray *installedSoftwareArray = [self.installedSoftware mutableCopy];
 	sw = [self findValueForKeyInArray:swTaskID key:@"tuuid" array:installedSoftwareArray];
 	if (sw) {
 		return YES;
@@ -225,7 +225,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (InstalledSoftware *)getSoftwareTaskUsingID:(NSString *)swTaskID
 {
-	NSMutableArray *installedSoftwareArray = [dbDict[@"installed_software"] mutableCopy];
+	NSMutableArray *installedSoftwareArray = [self.installedSoftware mutableCopy];
 	InstalledSoftware *sw = [self findValueForKeyInArray:swTaskID key:@"tuuid" array:installedSoftwareArray];
 	if (sw) {
 		return sw;
@@ -289,6 +289,8 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		NSString *patchVersion = @"0";
 		NSString *patchID = [patch[@"type"] isEqualToString:@"Apple"] ? patch[@"patch"] : patch[@"patch_id"];
 		
+        //qlinfo(@"[addRequiredPatch]: patchID=%@",patchID);
+    
 		if ([patch[@"restart"] isEqualToString:@"Yes"]) patchReboot = @(1);
 		if (![patch[@"version"] isKindOfClass:[NSNull class]]) patchVersion = patch[@"version"];
 		
@@ -302,21 +304,19 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		rp.patch_scandate = [NSDate date];
 	
 		// Add new entry to history array
-		NSMutableArray *rpArray = [[dbDict objectForKey:@"required_patches"] mutableCopy];
-		[rpArray addObject:rp];
+        [self.requiredPatches addObject:rp];
 		
-		// Add new values to main dictionary
-		[dbDict setObject:rpArray forKey:@"required_patches"];
-		// Save dictionary to file
+        // Save dictionary to file
 		[self save];
 		
 		result = YES;
 		return result;
-	}
+    }
 	@catch (NSException *exception)
 	{
 		qlerror(@"%@",exception);
 	}
+
 	return result;
 }
 
@@ -333,23 +333,21 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 {
 	@try
 	{
-		
-		qltrace(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
 		NSMutableArray *toDelete = [NSMutableArray array];
-		NSMutableArray *rpArray = [dbDict[@"required_patches"] mutableCopy];
+		NSMutableArray *rpArray = [self.requiredPatches mutableCopy];
 		for (RequiredPatch *p in rpArray)
 		{
 			if ([p.type isEqualToString:type] && [p.patch_id isEqualToString:patchID] && [p.patch isEqualToString:patch])
 			{
-				qlinfo(@"Removing required patch %@",p.patch);
 				[toDelete addObject:p];
-				//[rpArray removeObject:p];
 			}
 		}
-		qltrace(@"Setting new array.");
-		[rpArray removeObjectsInArray:toDelete];
-		[dbDict setObject:rpArray forKey:@"required_patches"];
-		qltrace(@"Save");
+		
+        [self.requiredPatches removeAllObjects];
+        [rpArray removeObjectsInArray:toDelete];
+        self.requiredPatches = [rpArray mutableCopy];
+		
+        qltrace(@"Save");
 		[self save];
 		
 		return YES;
@@ -369,7 +367,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (NSArray *)retrieveRequiredPatches
 {
-	NSArray *rpArray = [dbDict[@"required_patches"] copy];
+	NSArray *rpArray = [self.requiredPatches copy];
 	return rpArray;
 }
 
@@ -381,7 +379,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (BOOL)clearRequiredPatches
 {
-	[dbDict setObject:[NSArray array] forKey:@"required_patches"];
+    [self.requiredPatches removeAllObjects];
 	[self save];
 	return YES;
 }
@@ -406,9 +404,6 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 {
 	@try
 	{
-		// Add new entry to history array
-		NSMutableArray *historyArray = [[dbDict objectForKey:@"history"] mutableCopy];
-		
 		History *hst = [History new];
 		hst.id = [[NSUUID UUID] UUIDString];
 		hst.type = (NSInteger)hstType;
@@ -423,10 +418,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 			hst.error_msg = @"";
 		}
 		hst.cdate = [NSDate date];
-		[historyArray addObject:hst];
-		
-		// Add new values to main dictionary
-		[dbDict setObject:historyArray forKey:@"history"];
+        [self.history addObject:hst];
 
 		// Save dictionary to file
 		[self save];
@@ -446,17 +438,16 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (NSArray *)retrieveHistory
 {
-	NSMutableArray *historyArray = [NSMutableArray new];
 	@try
 	{
-		NSArray *hstArr = [dbDict objectForKey:@"history"];
+        NSArray *hstArr = [self.history copy];
 		return hstArr;
 	}
 	@catch (NSException *exception) {
 		qlerror(@"%@",exception);
 	}
 	
-	return [historyArray copy];
+	return [NSArray array];
 }
 
 
@@ -465,7 +456,12 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 - (void)open
 {
 	NSError *err = nil;
-	dbDict = [[NSKeyedUnarchiver unarchiveObjectWithFile:dbFile] mutableCopy];
+	NSMutableDictionary *dbDict = [[NSKeyedUnarchiver unarchiveObjectWithFile:dbFile] mutableCopy];
+    
+    self.requiredPatches = [[dbDict objectForKey:@"required_patches"] mutableCopy];
+    self.installedPatches = [[dbDict objectForKey:@"installed_patches"] mutableCopy];
+    self.installedSoftware = [[dbDict objectForKey:@"installed_software"] mutableCopy];
+    self.history = [[dbDict objectForKey:@"history"] mutableCopy];
 	
 	// 10.13 and higher
 	//NSData *data = [NSData dataWithContentsOfFile:dbFile];
@@ -478,10 +474,16 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 - (void)save
 {
-	BOOL result = [NSKeyedArchiver archiveRootObject:dbDict toFile:dbFile];
+    NSDictionary *d = @{ @"history":self.history,
+           @"installed_patches":self.installedPatches,
+           @"installed_software":self.installedSoftware,
+           @"required_patches":self.requiredPatches };
+
+	BOOL result = [NSKeyedArchiver archiveRootObject:d toFile:dbFile];
 	if (!result) {
 		qlerror(@"Error writing data to %@.",dbFile);
 	}
+    
 	/* 10.13 and higher
 	NSError *err = nil;
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:dbDict requiringSecureCoding:YES error:&err];
@@ -494,6 +496,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		}
 	}
 	*/
+    
 	return;
 }
 

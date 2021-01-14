@@ -270,14 +270,15 @@ static NSString *kNSDateHelperFormatSQLDate             = @"yyyy-MM-dd";
 static NSString *kNSDateHelperFormatSQLTime             = @"HH:mm:ss";
 static NSString *kNSDateHelperFormatSQLDateWithTime     = @"yyyy-MM-dd HH:mm:ss";
 
+/*
+ * if the date is in today, display 12-hour time with meridian,
+ * if it is within the last 7 days, display weekday name (Friday)
+ * if within the calendar year, display as Jan 23
+ * else display as Nov 11, 2008
+ */
+/*
 + (NSString *)stringForDisplayFromDate:(NSDate *)date prefixed:(BOOL)prefixed alwaysDisplayTime:(BOOL)displayTime
 {
-	/*
-	 * if the date is in today, display 12-hour time with meridian,
-	 * if it is within the last 7 days, display weekday name (Friday)
-	 * if within the calendar year, display as Jan 23
-	 * else display as Nov 11, 2008
-	 */
 	NSDate *today = [NSDate date];
 	NSDateComponents *offsetComponents = [[self sharedCalendar] components:(NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit)
 																  fromDate:today];
@@ -338,7 +339,7 @@ static NSString *kNSDateHelperFormatSQLDateWithTime     = @"yyyy-MM-dd HH:mm:ss"
 	displayString = [[self sharedDateFormatter] stringFromDate:date];
 	return displayString;
 }
-
+*/
 static NSDateFormatter *searchDateFormatter = nil;
 
 - (NSString *)searchString

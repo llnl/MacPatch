@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Installer
-# ver 2.0
+# ver 2.1
 # Created By Charles Heizer
 # LLNL
 #
@@ -20,6 +20,14 @@ SRC="$(dirname "$0")"
 # Current logged in User ID
 # consoleUserID at login window is 0
 consoleUserID=$(stat -f%u /dev/console)
+
+clientStatusPID=$(ps -ae | grep MPClientStatus | grep -v grep | awk '{ print $1 }')
+if [ $? == 1 ]; then
+	if [ -f "/private/tmp/clientStatusPID" ]; then
+		rm -f "/private/tmp/clientStatusPID"
+	fi
+	echo $clientStatusPID > /private/tmp/clientStatusPID
+fi
 
 # ***************************************************************************************
 # Kill the running MP processes

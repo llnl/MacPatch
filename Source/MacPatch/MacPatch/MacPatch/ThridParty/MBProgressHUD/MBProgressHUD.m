@@ -44,7 +44,8 @@ sizeWithFont:font constrainedToSize:maxSize lineBreakMode:mode] : CGSizeZero;
 
 #else   // !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE)
 
-#define MBLabelAlignmentCenter NSCenterTextAlignment
+//#define MBLabelAlignmentCenter NSCenterTextAlignment
+#define MBLabelAlignmentCenter NSTextAlignmentCenter
 #define MB_TEXTSIZE(text, font) [text length] > 0 ? [text \
 sizeWithAttributes:@{NSFontAttributeName:font}] : CGSizeZero;
 #define MB_MULTILINE_TEXTSIZE(text, font, maxSize, mode) [text length] > 0 ? [text \
@@ -758,7 +759,7 @@ static const CGFloat kDetailsLabelFontSize = 12.0f;
 	// label.adjustsFontSizeToFitWidth = NO;
     label.editable = NO;
     // label.bezeled = NO;  // if NSTextView
-	label.alignment = MBLabelAlignmentCenter;
+    label.alignment = MBLabelAlignmentCenter;
 	label.layer.opaque = NO;
 	label.backgroundColor = [NSColor clearColor];
 	label.textColor = self.labelColor;
