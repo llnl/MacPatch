@@ -91,7 +91,7 @@ def create_app(config_object=DefaultConfig):
 		req = request.environ
 		pathInfo = req['PATH_INFO']
 		if '/v1/auth/' in pathInfo or '/v1/token/' in pathInfo or '/agent/config/' in pathInfo or '/agent/update/' in pathInfo or '/agent/upload/' in pathInfo:
-			app.logger.info("Bypass before_request for " + req['REQUEST_URI'])
+			app.logger.info("Bypass before_request for " + pathInfo)
 		else:
 			_req_agent = req['HTTP_X_AGENT_ID']
 			_req_agent_ver = '0'
