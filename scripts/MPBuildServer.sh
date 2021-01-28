@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.5.0
+# Version: 3.6.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -39,6 +39,7 @@
 # 3.4.0     Added a node version check for yarn packages
 # 3.5.0     All python now ref as python3
 #           Changed Linux dist detection to /etc/os-release
+# 3.6.0     M2Crypto has been updated to install without special flags
 #
 # ----------------------------------------------------------------------------
 
@@ -386,7 +387,7 @@ if $USELINUX; then
 
         ubuntuVer=`cat /etc/lsb_release | grep DISTRIB_RELEASE | awk -F= '{print $2}'`
 
-        # Yarn not getting installed  
+        # Yarn not getting installed
         # Add the Yarn repo
         curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
@@ -394,8 +395,8 @@ if $USELINUX; then
         pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
         for i in "${pkgs[@]}"
         do
-            if [ $i == "yarn" ]; then 
-                if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then  
+            if [ $i == "yarn" ]; then
+                if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then
                     curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
                     echo
                     echo "Install nodejs 10.x"
@@ -466,7 +467,7 @@ else
     --without-http_ssi_module \
     --with-http_ssl_module \
     --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
-    
+
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
@@ -578,7 +579,7 @@ fi
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
     OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
-    
+
     # Server venv
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
@@ -589,10 +590,10 @@ if $USEMACOS; then
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
 
-    env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    CFLAGS="-I${OPENSSLPWD}/include" \
-    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    #env LDFLAGS="-L${OPENSSLPWD}/lib" \
+    #CFLAGS="-I${OPENSSLPWD}/include" \
+    #SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    #${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
@@ -604,10 +605,10 @@ if $USEMACOS; then
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
      # Install M2Crypto first
-    env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    CFLAGS="-I${OPENSSLPWD}/include" \
-    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    #env LDFLAGS="-L${OPENSSLPWD}/lib" \
+    #CFLAGS="-I${OPENSSLPWD}/include" \
+    #SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
+    #${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
     -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
@@ -644,14 +645,14 @@ else
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    #${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
     ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    #${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
     ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 fi
