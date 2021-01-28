@@ -686,35 +686,38 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     NSString *identifier = [tableColumn identifier];
     if ([identifier isEqualToString:@"MainCell"])
     {
+        BOOL isMandatory = NO;
         NSFileManager *fm = [NSFileManager defaultManager];
         NSURL *appSupportDir = [[fm URLsForDirectory:NSApplicationSupportDirectory inDomains:NSSystemDomainMask] objectAtIndex:0];
         NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch/SW_Data"];
 
         SoftwareCellView *cellView = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
-		cellView.serverArray = [settings.servers copy];
+        cellView.serverArray = [settings.servers copy];
         cellView.mp_SOFTWARE_DATA_DIR = appSupportMPDir;
         cellView.rowData = [sw copy];
-		cellView.actionButton.title = @"Install";
-		[cellView.actionButton setState:0];
-		[cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
-		
-		//NSString *appImage = sw[@"image"]?:@"AppStore";
-		[cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
+        cellView.actionButton.title = @"Install";
+        [cellView.actionButton setState:0];
+        [cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
         
-		[cellView.swTitle setStringValue:sw[@"name"]];
-		[cellView.swCompany setPlaceholderString:@""];
-		[cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
+        //NSString *appImage = sw[@"image"]?:@"AppStore";
+        [cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
+        
+        [cellView.swTitle setStringValue:sw[@"name"]];
+        [cellView.swCompany setPlaceholderString:@""];
+        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
         [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
-		
-		long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
-		NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
-		[cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
-		[cellView.swDescription setPlaceholderString:@""];
+        
+        long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
+        NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
+        [cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
+        [cellView.swDescription setPlaceholderString:@""];
         [cellView.swDescription setStringValue:sw[@"Software"][@"description"]];
         
         if ([sw[@"sw_task_type"] isEqualToString:@"om"]) {
             NSString *istBy = [NSString stringWithFormat:@"Install by: %@",sw[@"sw_end_datetime"]];
             [cellView.swInstallBy setStringValue:istBy];
+        } else if ([sw[@"sw_task_type"] isEqualToString:@"m"]) {
+            isMandatory = YES;
         } else {
             [cellView.swInstallBy setStringValue:@""];
         }
@@ -725,27 +728,33 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             [cellView.swRebootTextFlag setStringValue:@"Reboot Required"];
             [cellView.installedStateImage setImage:[NSImage imageNamed:@"RebootImage"]];
         }
-		
-		cellView.isAppInstalled = NO;
-		
-		for (NSString *_tid in installedItems) {
-			if ([_tid isEqualToString:sw[@"id"]])
-			{
-				cellView.isAppInstalled = YES;
-				break;
-			}
-		}
-		
-		// if sw_app_path exists and is does not have a value of None
-		if (sw[@"Software"][@"sw_app_path"]) {
-			if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
-			{
-				if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
-					cellView.isAppInstalled = YES;
-				}
-			}
-		}
-		
+        
+        cellView.isAppInstalled = NO;
+        
+        for (NSString *_tid in installedItems) {
+            if ([_tid isEqualToString:sw[@"id"]])
+            {
+                cellView.isAppInstalled = YES;
+                break;
+            }
+        }
+        
+        // if sw_app_path exists and is does not have a value of None
+        if (sw[@"Software"][@"sw_app_path"]) {
+            if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
+            {
+                if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
+                    cellView.isAppInstalled = YES;
+                }
+            }
+        }
+        
+        if (isMandatory) {
+            if (!cellView.isAppInstalled) {
+                [cellView runInstall:cellView.actionButton];
+            }
+        }
+        
         return cellView;
     }
     return nil;

@@ -33,6 +33,8 @@
 #import "EventToSend.h"
 //#import <UserNotifications/UserNotifications.h>
 
+#import "Provisioning.h"
+
 
 NSString * const kMenuIconNorml		= @"mp3Image";
 NSString * const kMenuIconAlert		= @"mp3ImageAlert";
@@ -40,8 +42,12 @@ NSString * const kMenuIconAlert		= @"mp3ImageAlert";
 // Private Methods
 @interface MPClientStatusAppDelegate ()
 {
+    NSFileManager *fm;
 	MPSettings *settings;
+    NSWindowController *windowController;
 }
+
+@property (strong, nonatomic) NSWindowController *provisionWindowController;
 
 // Helper
 // XPC Connection
@@ -141,6 +147,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 #pragma mark UI Events
 -(void)awakeFromNib
 {
+    fm = [NSFileManager defaultManager];
 	settings = [MPSettings sharedInstance];
 	[settings refresh];
 	
@@ -183,6 +190,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
+    
+    //self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
+    //[self.provisionWindowController showWindow:self];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
@@ -239,14 +249,19 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	// Run FileVault User Password Check Sync
 	[self fvUserCheck];
-	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	if ([defaults boolForKey:@"showWhatsNew"]) {
-		[self loadWhatsNewWebView:nil];
-		[whatsNewWindow makeKeyAndOrderFront:nil];
-		[whatsNewWindow center];
-		[NSApp activateIgnoringOtherApps:YES];
-	}
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/var/db/.MPProvisionBegin"]) {
+        self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
+        [self.provisionWindowController showWindow:self];
+    } else {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults boolForKey:@"showWhatsNew"]) {
+            [self loadWhatsNewWebView:nil];
+            [whatsNewWindow makeKeyAndOrderFront:nil];
+            [whatsNewWindow center];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
+    }
 }
 
 #pragma mark -
@@ -416,8 +431,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 			 }];
 		 }
 	 }];
-	
-	
+
 }
 
 #pragma mark Show Last CheckIn Menu
@@ -512,7 +526,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		MPFileCheck *fu = [MPFileCheck new];
 		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
 		
-		__block BOOL res = NO;
 		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 		
 		[self connectAndExecuteCommandBlock:^(NSError * connectError)
@@ -1092,7 +1105,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     NSUserNotification *userNote = [[NSUserNotification alloc] init];
     userNote.title = @"Patches Required";
     userNote.informativeText = [NSString stringWithFormat:@"This system requires %@ %@.",aCount,
-								(aCount == 1) ? @"Patch" : @"Patches"];
+								([aCount intValue] == 1) ? @"Patch" : @"Patches"];
     userNote.actionButtonTitle = @"Patch";
     userNote.hasActionButton = YES;
 	[userNote setValue:@YES forKey:@"_showsButtons"];

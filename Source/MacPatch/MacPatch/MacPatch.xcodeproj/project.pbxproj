@@ -842,7 +842,7 @@
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 1.3.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -874,7 +874,7 @@
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 1.3.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",

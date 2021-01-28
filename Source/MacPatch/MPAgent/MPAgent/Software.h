@@ -17,7 +17,7 @@
 
 - (BOOL)isSoftwareTaskInstalled:(NSString *)tuuid;
 - (BOOL)recordRequiredSoftware:(NSArray *)ids;
-- (BOOL)recordInstalledRequiredSoftware:(NSString *)tuuid;
+- (BOOL)recordInstalledRequiredSoftware:(NSDictionary *)swTask;
 
 @end
 

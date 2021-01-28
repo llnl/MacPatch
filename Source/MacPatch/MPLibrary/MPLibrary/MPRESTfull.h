@@ -225,4 +225,14 @@
  @return BOOL
  */
 - (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err;
+
+/**
+ Get provisioning dictionary to provision a host
+ 
+ @param clientID client ID, used for determingin if QA scope can be used.
+ @param err Error object
+ 
+ @return NSDictionary
+ */
+- (NSDictionary *)getProvisioningDataForHost:(NSString *)clientID error:(NSError **)err;
 @end

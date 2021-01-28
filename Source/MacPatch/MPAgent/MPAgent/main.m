@@ -33,12 +33,13 @@
 #import "MPOSUpgrade.h"
 #import "AgentData.h"
 #import "MPAgent.h"
+#import "MPProvision.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.5.0.5"
+#define APPVERSION	@"3.6.0.1"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -125,11 +126,15 @@ int main (int argc, char * argv[])
 				
 				// Mandatory Software Tasks for Client group
                 {"SWScanUpdate" 		,no_argument	    ,0, 'S'},
+                {"mandatorySoftware"    ,no_argument        ,0, 'M'},
 				
 				// Software Dist
 				{"installSWUsingGRP"    ,required_argument	,0, 'g'},
 				{"installSWUsingSID"    ,required_argument	,0, 'd'},
 				{"installSWUsingPLIST"  ,required_argument	,0, 'P'},
+                
+                // Provisioning
+                {"provision"            ,no_argument        ,0, 'L'},
 				
 				// Profiles
                 {"Profile"          	,no_argument	    ,0, 'p'},
@@ -160,7 +165,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSg:d:P:pr::R::X:k:l:m:Kvbh:Z", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSMg:d:P:Lpr::R::X:k:l:m:Kvbh:Z", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -244,6 +249,9 @@ int main (int argc, char * argv[])
 				case 'S':
 					a_Type = 8;
 					break;
+                case 'M':
+                    a_Type = 21;
+                    break;
 				case 'g':
 					swArg = [NSString stringWithUTF8String:optarg];
 					a_Type = 13;
@@ -252,10 +260,13 @@ int main (int argc, char * argv[])
 					swArg = [NSString stringWithUTF8String:optarg];
 					a_Type = 14;
 					break;
-				case 'P':
+                case 'P':
 					swArg = [NSString stringWithUTF8String:optarg];
 					a_Type = 15;
 					break;
+                case 'L':
+                    a_Type = 20;
+                    break;
                 case 'p':
 					a_Type = 9;
 					break;
@@ -380,6 +391,7 @@ int main (int argc, char * argv[])
 		MPAgentRegister *mpar;
 		AgentData *mpad;
 		MPAgent *mpAgent;
+        MPProvision *mpProv;
         
 		int result = 1;
 		switch (a_Type)
@@ -557,6 +569,18 @@ int main (int argc, char * argv[])
 				[mpAgent postAgentHasBeenInstalled];
 				exit(0);
 				break;
+            case 20:
+                // Provison Host
+                mpProv = [MPProvision new];
+                [mpProv provisionHost];
+                exit(0);
+                break;
+            case 21:
+                // Mandatory Software
+                swc = [SoftwareController new];
+                result = [swc installMandatorySoftware];
+                return result;
+                break;
             case 8888:
                 mpac = [[AgentController alloc] init];
                 [mpac runWithType:a_Type];

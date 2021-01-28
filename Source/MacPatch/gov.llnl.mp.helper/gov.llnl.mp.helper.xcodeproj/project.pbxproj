@@ -344,7 +344,7 @@
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -374,7 +374,7 @@
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

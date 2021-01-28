@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 36
+// Rev 37
 
 #import <Foundation/Foundation.h>
 
@@ -179,7 +179,8 @@ enum {
 - (void)fvAuthrestartAccountIsValid:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
 - (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
 
-
+// Provisioning
+- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
 @end
 
 @protocol MPHelperProgress

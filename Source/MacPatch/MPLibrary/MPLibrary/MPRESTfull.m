@@ -844,4 +844,44 @@
     return result;
 }
 
+/**
+ Get provisioning dictionary to provision a host
+ 
+ @param clientID client ID, used for determingin if QA scope can be used.
+ @param err Error object
+ 
+ @return NSDictionary
+ */
+- (NSDictionary *)getProvisioningDataForHost:(NSString *)clientID error:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSDictionary *result = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/data/%@",self.ccuid];
+    qldebug(@"[getProvisioningDataForHost][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+    
+    
+    if ([ws_result objectForKey:@"data"])
+    {
+        if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+        {
+            qldebug(@"Web Servce result: %@",ws_result);
+            result = [ws_result objectForKey:@"data"];
+        }
+        else
+        {
+            qlerror(@"Result was not of type dictionary.");
+            qlerror(@"Result: %@", ws_result);
+        }
+    }
+    
+    return result;
+}
 @end

@@ -2084,7 +2084,7 @@ done:
     OSStatus delRes = [kc deleteKeyChain];
     if (delRes != noErr) {
         qlerror(@"Error deleteing keychain.");
-        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:@[]];
+        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:NULL];
         result = NO;
     }
     
@@ -2394,6 +2394,40 @@ done:
 {
 	//[self postPatchStatus:progressStr];
 	[self postStatus:progressStr];
+}
+
+#pragma mark - Provisioning
+
+- (void)postProvisioningData:(NSString *)key dataForKey:(id)data withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    MPFileCheck *fu = [MPFileCheck new];
+    
+    NSMutableDictionary *_pFile;
+    if ([fu fExists:MP_PROVISION_FILE]) {
+        _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
+    } else {
+        _pFile = [NSMutableDictionary new];
+    }
+    
+    if ([key isEqualToString:@"status"])
+    {
+        NSMutableArray *_status = [NSMutableArray new];
+        if (_pFile[@"status"]) {
+            _status = [_pFile[@"status"] mutableCopy];
+        }
+        [_status addObject:data];
+        _pFile[key] = _status;
+    } else {
+        _pFile[key] = data;
+    }
+    
+    NSURL *urlFilePath = [NSURL URLWithString:MP_PROVISION_FILE];
+    [_pFile writeToURL:urlFilePath error:&err];
+    if (err) {
+        qlerror(@"%@",err.localizedDescription);
+    }
+    reply(err);
 }
 
 

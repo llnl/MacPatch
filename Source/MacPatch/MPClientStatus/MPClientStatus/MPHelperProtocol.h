@@ -6,32 +6,32 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 35
+// Rev 37
 
 #import <Foundation/Foundation.h>
 
 enum {
-	kMPInstallStatus = 0,
-	kMPProcessStatus = 1,
-	kMPProcessProgress = 2,
-	kMPPatchProcessStatus = 3,
-	kMPPatchProcessProgress = 4,
-	kMPPatchAllProcessProgress = 5,
-	kMPPatchAllProcessStatus = 6,
-	kMPPatchAllInstallComplete = 7,
-	kMPPatchAllInstallError = 8
+    kMPInstallStatus = 0,
+    kMPProcessStatus = 1,
+    kMPProcessProgress = 2,
+    kMPPatchProcessStatus = 3,
+    kMPPatchProcessProgress = 4,
+    kMPPatchAllProcessProgress = 5,
+    kMPPatchAllProcessStatus = 6,
+    kMPPatchAllInstallComplete = 7,
+    kMPPatchAllInstallError = 8
 };
 typedef NSUInteger MPPostDataType;
 
 enum {
-	kMPCopyFile = 0,
-	kMPMoveFile = 1
+    kMPCopyFile = 0,
+    kMPMoveFile = 1
 };
 typedef NSUInteger MPFileMoveAction;
 
 enum {
-	kPatchingPausedOff = 0,
-	kPatchingPausedOn = 1
+    kPatchingPausedOff = 0,
+    kPatchingPausedOn = 1
 };
 typedef NSUInteger MPPatchingPausedState;
 
@@ -42,16 +42,16 @@ FOUNDATION_EXPORT NSString *const MPXPCErrorDomain;
 NS_ASSUME_NONNULL_END
 
 enum {
-	MPGeneralError = 1000,
-	MPFileHashCheckError = 1001,
-	MPFileUnZipError = 1002,
-	MPPreInstallScriptError = 1003,
-	MPPostInstallScriptError = 1004,
-	MPRemoveFileError = 1005,
-	MPCopyFileError = 1006,
-	MPMountDMGError = 1007,
-	MPUnMountDMGError = 1008
-	
+    MPGeneralError = 1000,
+    MPFileHashCheckError = 1001,
+    MPFileUnZipError = 1002,
+    MPPreInstallScriptError = 1003,
+    MPPostInstallScriptError = 1004,
+    MPRemoveFileError = 1005,
+    MPCopyFileError = 1006,
+    MPMountDMGError = 1007,
+    MPUnMountDMGError = 1008
+    
 };
 
 
@@ -94,7 +94,7 @@ enum {
 
 /**
  Scan host for patches
-
+ 
  @param patchType - filter scan based on type All, Apple, Custom
  @param reply foundPatches, patchGroupData
  */
@@ -149,11 +149,11 @@ enum {
 - (void)recordPatchInstall:(NSDictionary *_Nonnull)patch withReply:(nullable void(^)(NSInteger result))reply;
 
 - (void)recordHistoryWithType:(DBHistoryType)hstType name:(NSString *_Nonnull)aName
-						 uuid:(NSString *_Nonnull)aUUID
-					   action:(DBHistoryAction)aAction
-					   result:(NSInteger)code
-					 errorMsg:(NSString * _Nullable)aErrMsg
-					withReply:(nullable void(^)(BOOL result))reply;
+                         uuid:(NSString *_Nonnull)aUUID
+                       action:(DBHistoryAction)aAction
+                       result:(NSInteger)code
+                     errorMsg:(NSString * _Nullable)aErrMsg
+                    withReply:(nullable void(^)(BOOL result))reply;
 
 - (void)retrieveInstalledSoftwareTasksWithReply:(nullable void(^)(NSData * _Nullable result))reply;
 
@@ -161,33 +161,35 @@ enum {
 - (void)removeRequiredPatch:(NSString *_Nonnull)type patchID:(NSString *_Nonnull)patchID patch:(NSString *_Nonnull)patch withReply:(nullable void(^)(BOOL result))reply;
 
 // ----------------------------------------
-// OS Config Profiles	         ----------
+// OS Config Profiles             ----------
 // ----------------------------------------
 
 - (void)scanForInstalledConfigProfiles:(nullable void(^)(NSArray * _Nullable profiles))reply;
 - (void)getInstalledConfigProfilesWithReply:(nullable void(^)(NSString * _Nullable aString, NSData * _Nullable aProfilesData))reply;
 
 // ----------------------------------------
-// FileVault			         ----------
+// FileVault                     ----------
 // ----------------------------------------
 - (void)setAuthrestartDataForUser:(NSString * _Nullable )userName userPass:(NSString * _Nullable)userPass useRecoveryKey:(BOOL)useKey  withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+
+- (void)enableAuthRestartWithReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
 - (void)getAuthRestartDataWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nullable result))reply;
 - (void)clearAuthrestartData:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
 - (void)fvAuthrestartAccountIsValid:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
 - (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
 
-
+// Provisioning
+- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
 @end
 
 @protocol MPHelperProgress
 
-- (void)patchProgress:(NSString *)progressStr;
+- (void)patchProgress:(nullable NSString *)progressStr;
 - (void)postStatus:(nullable NSString *)status type:(MPPostDataType)type;
 - (void)postPatchInstallStatus:(nullable NSString *)patchID type:(MPPostDataType)type;
 
 @end
-
 
 
 

@@ -53,5 +53,4 @@
 - (void)runGetServerListOperation;
 - (void)runPostFailedWSRequests;
 
-- (void)fileVaultKeyChainCheck;
 @end

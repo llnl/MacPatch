@@ -94,7 +94,7 @@
 {
 	needsReboot = 0;
 	int result = 1;
-	
+    
 	NSArray *tasks;
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",settings.ccuid, aGroupName];
 	NSDictionary *data = [self getDataFromWS:urlPath];
@@ -115,19 +115,11 @@
 	
 	for (NSDictionary *task in tasks)
 	{
-        NSString *aTask = task[@"id"];
         if (![self installSoftwareUsingTaskDictionary:task])
         {
             qlinfo(@"Software has been installed that requires a reboot.");
             result++;
         }
-		/*MPSoftware *software = [MPSoftware new];
-		if (![software installSoftwareTask:task])
-		{
-			qlerror(@"FAILED to install task %@",[task objectForKey:@"name"]);
-			result = 1;
-		}
-         */
 	}
 	
 	if (needsReboot >= 1) {
@@ -181,6 +173,57 @@
 	}
 	
 	return result;
+}
+/**
+ Install Mandatory Software
+ 
+ @return INT
+ */
+- (int)installMandatorySoftware
+{
+    needsReboot = 0;
+    int result = 1;
+    
+    Agent *agent = [settings agent];
+    NSString *clientGroup = agent.clientGroup;
+    
+    NSArray *tasks;
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",settings.ccuid, clientGroup];
+    NSDictionary *data = [self getDataFromWS:urlPath];
+    
+    if (data[@"data"])
+    {
+        tasks = data[@"data"];
+        if ([tasks count] <= 0) {
+            qlerror(@"Group (%@) contains no tasks.",clientGroup);
+            return 0;
+        }
+    }
+    else
+    {
+        qlerror(@"No tasks for group %@ were found.",clientGroup);
+        return result;
+    }
+    
+    for (NSDictionary *task in tasks)
+    {
+        if ([task[@"sw_task_type"] isEqualToString:@"m"])
+        {
+            qlinfo(@"Installing mandarory software task %@ (%@)",task[@"name"],task[@"id"]);
+            if (![self installSoftwareUsingTaskDictionary:task])
+            {
+                qlinfo(@"Software has been installed that requires a reboot.");
+                result++;
+            }
+        }
+    }
+    
+    if (needsReboot >= 1) {
+        qlinfo(@"Software has been installed that requires a reboot.");
+        result = 2;
+    }
+    
+    return result;
 }
 
 /**

@@ -435,7 +435,7 @@
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -465,7 +465,7 @@
 				);
 				INFOPLIST_FILE = MPLoginAgent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 2.1.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",

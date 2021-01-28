@@ -440,11 +440,16 @@ done:
         return nil;
     }
     
+    /*
     SecTransformSetAttribute(encrypt,
                              kSecPaddingKey,
                              NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and
                              // kSecPaddingPKCS1Key fails horribly)
                              &error);
+    */
+    
+    // Switched to kSecPaddingOAEPKey
+    SecTransformSetAttribute(encrypt, kSecPaddingKey, kSecPaddingOAEPKey, &error);
     
     CFDataRef sourceData = CFDataCreate(kCFAllocatorDefault, plainText, plainTextLen);
     SecTransformSetAttribute(encrypt, kSecTransformInputAttributeName, sourceData, &error);
@@ -487,12 +492,15 @@ done:
         qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
-    
+    /*
     SecTransformSetAttribute(decrypt,
                              kSecPaddingKey,
-                             NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and
-                             // kSecPaddingPKCS1Key fails horribly)
+                             NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and kSecPaddingPKCS1Key fails horribly)
                              &error);
+    */
+    
+    // Switched to kSecPaddingOAEPKey
+    SecTransformSetAttribute(encrypt, kSecPaddingKey, kSecPaddingOAEPKey, &error);
     
     SecTransformSetAttribute(decrypt, kSecTransformInputAttributeName, (CFDataRef)encData, &error);
     

@@ -33,8 +33,6 @@
 	MPSettings *settings;
 }
 
-- (void)runPatchScan;
-- (void)runPatchScanAndUpdate;
 - (void)runCritialPatchScanAndUpdate;
 
 @end

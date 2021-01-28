@@ -89,10 +89,11 @@ NSString * const MP_AGENT_DB 				= @"/private/var/db/.MacPatch.db";
 
 NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun";
 NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun";
-NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain"; // New
-NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist"; // New
+NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain";
+NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist";
 
-
+NSString * const MP_PROVISION_FILE         = @"/Library/LLNL/.MPProvision.plist"; // New - Provisioning Status and details
+NSString * const MP_PROVISION_DATA_FILE    = @"/Library/Library/Application Support/MacPatch/Provision/provision.json"; // New - Provisioning Status and details
 
 
 // In a source file
