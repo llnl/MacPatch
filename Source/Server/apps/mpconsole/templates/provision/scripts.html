@@ -1,0 +1,177 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+	Provisioning - Scripts
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" class="table table-condensed" data-toolbar="#toolbar">
+		<div id="toolbar">
+			{% if session.role[0] == 1 %}
+			<button id="addButton" type="button" class="btn btn-default" title="New Software Task"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="deleteButton" type="button" class="btn btn-default" title="Delete Software Task"><i class="glyphicon glyphicon-trash"></i></button>
+			{% endif %}
+		</div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script>
+
+	function operateFormatter(value, row, index)
+	{
+		return [
+			{% if session.role[0] == 1 %}
+			'<a class="edit" href="javascript:void(0)" title="Edit">',
+			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
+			'</a>&nbsp;'
+			{% endif %}
+		].join('');
+	}
+
+	window.operateEvents =
+	{
+		'click .edit': function (e, value, row, index)
+		{
+			var _url = "/provision/script/edit/" + row['sid'];
+			$.get(_url).done(function(data)
+			{
+				resetModalWindow();
+				$('#modalTitle').html('New Provisioning Script');
+				$('#modalCancelButton').html('Cancel');
+				$('#modalBody').html(data);
+				//$('#modalBody').css({'height':'88vh'});
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					//$profilesTable.bootstrapTable('refresh');
+				});
+			});
+		}
+	};
+
+	var _cols = [{
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle',
+					width: 60,
+					{% if session.role[0] != 1 %}
+					visible: false,
+					{% endif %}
+				},
+					{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: operateEvents,
+					formatter: operateFormatter,
+					width: 60,
+					{% if session.role[0] != 1 %}
+					visible: false,
+					{% endif %}
+				},];
+
+	_cols.push.apply(_cols, {{data["columns"] | tojson}});
+	var _rows = {{data["rows"] | tojson}};
+
+	$( document ).ready(function()
+	{
+			$('#table').bootstrapTable(
+			{
+				striped: true,
+				pagination: true,
+				sidePagination: 'client',
+				pageList: ['10', '20', '50', '100', 'All'],
+				search: true,
+				showRefresh: false,
+				resizable: true,
+				sortable: true,
+				showColumns: false,
+				icons: {
+					refresh: 'fa fa-refresh',
+					toggle: 'fa fa-th-list',
+					columns: 'fa fa-columns',
+					detailOpen: 'glyphicon glyphicon-info-sign',
+					detailClose: 'glyphicon glyphicon-minus-sign'
+				},
+				idField: 'tuuid',
+				columns: _cols,
+				data: _rows
+			});
+	});
+
+	var $table = $('#table'), $delBut = $('#deleteButton'), $addBut = $('#addButton'), $expBut = $('#exportButton'), $impBut = $('#importButton');
+	$(function () {
+
+		$delBut.click(function ()
+		{
+			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _sID = rows[x]['sid'];
+				rowsArr.push(_sID);
+			}
+
+			var _url = "/provision/script/remove";
+			$.ajax({
+				url: _url,
+				type: 'DELETE',
+				cache: false,
+				data: {'sids':rowsArr.toString()},
+				error: function (request, status, error)
+				{
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					$('#table').bootstrapTable('remove', {
+						field: 'sid',
+						values: rowsArr
+					});
+					alert("Script(s) removed successfully.");
+				}
+			});
+		});
+
+		$addBut.click(function ()
+		{
+			$.get("/provision/script/new").done(function(data)
+			{
+				resetModalWindow();
+				$('#modalTitle').html('New Provisioning Script');
+				$('#modalCancelButton').html('Cancel');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'60vh'});
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+				});
+			});
+		});
+
+	});
+
+
+	</script>
+{% endblock %}
