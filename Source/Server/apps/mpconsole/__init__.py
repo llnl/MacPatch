@@ -135,6 +135,9 @@ def create_app(config_object=DefaultConfig):
 	from .osmanage import osmanage as osmanage_blueprint
 	app.register_blueprint(osmanage_blueprint, url_prefix='/osmanage')
 
+	from .provision import provision as provision_blueprint
+	app.register_blueprint(provision_blueprint, url_prefix='/provision')
+
 	from .console import console as console_blueprint
 	app.register_blueprint(console_blueprint, url_prefix='/console')
 

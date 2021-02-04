@@ -175,6 +175,17 @@
 							</ul>
 							<!-- /.nav-second-level -->
 						</li>
+						<li id="provisioning">
+							<a href="#"><i class="glyphicon glyphicon-transfer"></i> Provisioning<span class="fa arrow"></span></a>
+							<ul class="nav nav-second-level" id="provisioning_list">
+								<li>
+									<a href="{{ url_for('provision.tasks') }}"><i class="fa fa-archive fa-fw"></i> Software</a>
+								</li>
+								<li>
+									<a href="{{ url_for('provision.scripts') }}"><i class="fa fa-file-code-o fa-fw"></i> Scripts</a>
+								</li>
+							</ul>
+						</li>
 						<li id="reports">
 							<a href="#"><i class="fa fa-list fa-fw"></i> Reports<span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level" id="reports_list">
