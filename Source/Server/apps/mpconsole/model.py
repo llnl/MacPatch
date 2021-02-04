@@ -1,6 +1,6 @@
 from mpconsole import db
 
-# Rev 18
+# Rev 20
 #
 
 from datetime import *
@@ -959,6 +959,37 @@ class MpUploadRequest(CommonBase):
 	requestid   = Column(String(50), nullable=False)
 	enabled     = Column(Integer, server_default='1')
 	cdate       = Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# mp_provision_task
+class MpProvisionTask(CommonBase):
+	__tablename__ = 'mp_provision_task'
+
+	rid                 = Column(BigInteger, primary_key=True, autoincrement=True)
+	tuuid               = Column(String(50), nullable=False)
+	name                = Column(String(255), nullable=False)
+	primary_suuid       = Column(String(50))
+	active              = Column(Integer, server_default='0')
+	scope				= Column(Integer, server_default='0')
+	sw_start_datetime   = Column(DateTime, server_default='2021-01-01 00:00:00')
+	sw_end_datetime     = Column(DateTime, server_default='2050-01-01 00:00:00')
+	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
+	cdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# mp_provision_script
+class MpProvisionScript(CommonBase):
+	__tablename__ = 'mp_provision_script'
+
+	rid = Column(BigInteger, primary_key=True, autoincrement=True)
+	sid = Column(String(50), nullable=False)
+	name = Column(String(255), nullable=False)
+	script = Column(Text, nullable=False)
+	active = Column(Integer, server_default='0')
+	scope = Column(Integer, server_default='0')
+	type = Column(Integer, server_default='1')
+	order = Column(Integer, server_default='99')
+	sw_start_datetime = Column(DateTime, server_default='2021-01-01 00:00:00')
+	sw_end_datetime = Column(DateTime, server_default='2050-01-01 00:00:00')
+	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # ------------------------------------------
 ## Plugins
