@@ -130,7 +130,7 @@ class PatchGroupPatches(MPResource):
 	def appleContent(self):
 
 		# Combine, apple additions with apple patch
-		sql_str = text("""select ap.akey, ap.title, ap.postdate, ap.restartaction, ap.supatchname, ap.version, 
+		sql_str = text("""select ap.akey, ap.title, ap.postdate, ap.restartaction, ap.supatchname, ap.version,
 							mpa.severity, mpa.severity_int, mpa.patch_state, mpa.patch_install_weight, mpa.patch_reboot
 							from apple_patches ap
 							LEFT JOIN apple_patches_mp_additions mpa ON
@@ -353,6 +353,3 @@ patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/group/<string:cli
 patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/<string:all>/<string:client_id>', endpoint='patchAll')
 
 patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
-
-patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
-
