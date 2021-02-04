@@ -614,6 +614,9 @@ typedef enum {
         [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
         qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
         result = [NSArray arrayWithArray:approvedUpdatesArray];
+    } else {
+        MPClientDB *cdb = [MPClientDB new];
+        [cdb clearRequiredPatches];
     }
 	
 	[self patchScanCompleted];
