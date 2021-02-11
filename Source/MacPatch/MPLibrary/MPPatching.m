@@ -1330,8 +1330,10 @@ typedef enum {
 
     for (NSDictionary *p in patches)
     {
-        [cdb addRequiredPatch:p];
-        qldebug(@"Added %@",p[@"patch"]);
+        if (p) {
+            [cdb addRequiredPatch:p];
+            qldebug(@"Added %@",p[@"patch"]);
+        }
     }
     return;
 }

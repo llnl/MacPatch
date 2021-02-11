@@ -10,6 +10,7 @@
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="Provisioning">
             <connections>
+                <outlet property="closeWindowButton" destination="khR-Mb-dBj" id="Yah-aC-d2s"/>
                 <outlet property="collectionWebView" destination="5jw-mC-Q8i" id="YiH-T4-xHK"/>
                 <outlet property="finishWebView" destination="Lga-HX-LI8" id="ZJt-Oa-Ify"/>
                 <outlet property="installWebView" destination="bOf-Ru-8UJ" id="JIN-EW-Inq"/>
@@ -35,6 +36,32 @@
                 <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
+                    <button verticalHuggingPriority="750" id="khR-Mb-dBj">
+                        <rect key="frame" x="0.0" y="50" width="22" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="round" title="Win" bezelStyle="circular" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ef0-AA-pL6">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                            <string key="keyEquivalent">Z</string>
+                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="closeWindow:" target="-2" id="4Qt-3m-rbc"/>
+                        </connections>
+                    </button>
+                    <button verticalHuggingPriority="750" id="4yz-1k-bRj">
+                        <rect key="frame" x="0.0" y="50" width="22" height="21"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="round" title="Background" bezelStyle="circular" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="p81-wz-tPw">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="miniSystem"/>
+                            <string key="keyEquivalent">T</string>
+                            <modifierMask key="keyEquivalentModifierMask" option="YES"/>
+                        </buttonCell>
+                        <connections>
+                            <action selector="closeBackground:" target="-2" id="nyb-mB-ghZ"/>
+                        </connections>
+                    </button>
                     <tabView fixedFrame="YES" type="noTabsNoBorder" initialItem="LeI-S5-QJc" translatesAutoresizingMaskIntoConstraints="NO" id="6xI-mn-rpk">
                         <rect key="frame" x="-19" y="39" width="838" height="563"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -100,7 +127,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
                                             <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="7lf-r5-nG1">
                                                 <rect key="frame" x="1" y="1" width="602" height="262"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <textView importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="4n1-zl-c8U">
                                                         <rect key="frame" x="0.0" y="0.0" width="602" height="262"/>

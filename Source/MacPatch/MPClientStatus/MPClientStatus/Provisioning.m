@@ -55,6 +55,8 @@
 @property (strong) NSArray *swForGroup;
 @property (strong) NSDictionary *provisionData;
 
+@property (strong, nonatomic) NSWindow *backwindow;
+@property (weak) IBOutlet NSButton *closeWindowButton;
 
 // Helper
 // XPC Connection
@@ -72,6 +74,14 @@
 - (void)windowDidLoad
 {
     [super windowDidLoad];
+    
+    NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
+    self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
+                                                     backing:NSBackingStoreBuffered defer:NO];
+    //[self.backwindow setOpaque:NO];
+    [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
+    [self.backwindow setLevel:NSStatusWindowLevel];
+    [self.backwindow makeKeyAndOrderFront:NSApp];
     
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
     [_stepperButton setTitle:@"Begin"];
@@ -98,6 +108,20 @@
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
 }
 
+// Close the Grey (Transparent) Full Screen Bacround Window
+- (IBAction)closeBackground:(NSButton *)sender
+{
+    [self.backwindow orderOut:self];
+}
+
+// Close the provisioning window, will only work on first tab.
+- (IBAction)closeWindow:(NSButton *)sender
+{
+    [self.backwindow orderOut:self];
+    [self.window orderOut:self];
+}
+
+
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector { return NO; }
 
 
@@ -120,6 +144,7 @@
             // Get All Values
             NSError *err = nil;
             __block NSDictionary *vals = [self getHTMLValues:&err];
+            NSLog(@"%@",vals);
             if (err) {
                 NSLog(@"Error: %@",err.localizedDescription);
                 NSAlert *alert = [NSAlert alertWithMessageText:@"Input Required"
@@ -206,10 +231,13 @@
         __block NSString *field = f[@"field"];
         NSString *fieldJS = [NSString stringWithFormat:@"document.getElementById('%@').value;",f[@"field"]];
         NSString *res = [self.collectionWebView stringByEvaluatingJavaScriptFromString:fieldJS];
-        if ([res length] > 3) {
+        NSLog(@"res: %@",res);
+        if ([res length] >= [f[@"fieldLen"] intValue]) {
             [result setObject:res forKey:field];
         } else {
-            i++;
+            if ([f[@"required"] boolValue]) {
+                i++;
+            }
         }
     }
     
@@ -237,6 +265,8 @@
     
     return result;
 }
+
+#pragma mark - Tab Delegates
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
@@ -281,11 +311,27 @@
         _collectionWebView.allowsBackForwardNavigationGestures = NO;
         [_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Continue"];
+        [_closeWindowButton setEnabled:NO]
     } else if ([tabViewItem.identifier isEqualToString:@"2"]) {
-        //[collectionWebView setMainFrameURL:[self urlForFile:@"collection"]];
         [_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
-        //_softwareTextView.drawsBackground = NO;
-        [self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
+        /*[self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
+         */
+        NSString *text = [self textForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
+        
+        // Calc size and count
+        NSInteger swCount = 0;
+        NSInteger swSize = 0;
+        for (NSDictionary *s in _swForGroup) {
+            swCount++;
+            swSize = swSize + [[s valueForKeyPath:@"Software.sw_size"] integerValue];
+        }
+        long lSize = (swSize * 1000);
+        NSString *swSizeTXT = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
+        
+        text = [text replace:@"[SIZE]" replaceString:swSizeTXT];
+        text = [text replace:@"[COUNT]" replaceString:[@(swCount) stringValue]];
+        [self writeSoftwareView:text];
+        
         for (NSDictionary *s in _swForGroup) {
             [self writeSoftwareView:[NSString stringWithFormat:@"- %@",s[@"name"]]];
         }
@@ -350,6 +396,31 @@
     return htmlString;
 }
 
+- (NSString *)textForTab:(NSInteger)tabID data:(NSArray *)data
+{
+    NSDictionary *tabData = nil;
+    for (NSDictionary *d in data)
+    {
+        if ([[d objectForKey:@"id"] integerValue] == tabID)
+        {
+            tabData = [d copy];
+            break;
+        }
+    }
+    
+    if (!tabData) {
+        NSLog(@"No Data for tab");
+        return @"";
+    }
+
+    NSString *result = @"";
+    if (tabData[@"text"]) {
+        result = tabData[@"text"];
+    }
+    
+    return result;
+}
+
 - (NSString *)htmlTitleForTab:(NSDictionary *)data
 {
     NSMutableString *s = [NSMutableString new];
@@ -373,9 +444,21 @@
     {
         [s appendString:@"<div class=\"form-group\">"];
         [s appendFormat:@"<label for=\"%@\">%@</label>",d[@"field"],d[@"label"]];
-        
+        if ([d[@"type"] isEqualToString:@"textField"]) {
         [s appendFormat:@"<input type=\"text\" class=\"form-control\" id=\"%@\" placeholder=\"%@\" data-toggle=\"tooltip\" alt=\"tooltip\" onfocus=\"%@\">",d[@"field"],d[@"placeholder"],d[@"help"]];
-        
+        } else if ([d[@"type"] isEqualToString:@"selectField"]) {
+            [s appendFormat:@"<select class=\"form-control\" id=\"%@\">",d[@"field"]];
+            NSArray *opts = d[@"selectValues"];
+            if (opts.count >= 1)
+            {
+                for (NSString *o in opts)
+                {
+                    [s appendFormat:@"<option>%@</option>",o];
+                }
+            }
+            [s appendString:@"</select>"];
+            
+        }
         [s appendString:@"</div>"];
     }
     [s appendString:@"</form>"];
@@ -387,6 +470,8 @@
     </div>
      */
 }
+
+#pragma mark - Required Software Install
 
 #pragma mark - Software
 
@@ -418,7 +503,8 @@
             self->_progressBar.doubleValue = 0.0;
             self->_progressBar.maxValue = self->_swForGroup.count;
         });
-        for (NSDictionary *s in _swForGroup) {
+        for (NSDictionary *s in _swForGroup)
+        {
             [self appendToSoftwareView:[NSString stringWithFormat:@"Installing (%d/%lu) %@",i, (unsigned long)self->_swForGroup.count,s[@"name"]]];
             [self runInstallForTask:s];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -473,26 +559,17 @@
         if (connectError != nil) {
             qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@",connectError.localizedDescription]];
-            //[self willChangeValueForKey:@"userInfo"];
-            //self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
-            //[self didChangeValueForKey:@"userInfo"];
             dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                 qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@",proxyError.localizedDescription]];
-                //[self willChangeValueForKey:@"userInfo"];
-                //self->userInfo = @{@"status":proxyError.localizedDescription, @"error":proxyError};
-                //[self didChangeValueForKey:@"userInfo"];
                 dispatch_semaphore_signal(sem);
                 
             }] installSoftware:swTask withReply:^(NSError *error, NSInteger resultCode, NSData *installData) {
 
                 if (resultCode == 0) {
                     [self appendToSoftwareView:[NSString stringWithFormat:@"%@ was installed.",swTask[@"Software"][@"name"]]];
-                    //[self willChangeValueForKey:@"userInfo"];
-                    //self->userInfo = nil;
-                    //[self didChangeValueForKey:@"userInfo"];
                 } else {
                     [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@ was not installed.",swTask[@"Software"][@"name"]]];
                     qlerror(@"Error installing software task %@",swTask[@"Software"][@"name"]);

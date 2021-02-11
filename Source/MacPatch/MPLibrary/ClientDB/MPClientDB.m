@@ -295,10 +295,31 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		if (![patch[@"version"] isKindOfClass:[NSNull class]]) patchVersion = patch[@"version"];
 		
 		RequiredPatch *rp = [RequiredPatch new];
-		rp.type = patch[@"type"];
-		rp.patch_id = patchID;
-		rp.patch = patch[@"patch"];
-		rp.patch_version = patchVersion;
+        if (patch[@"type"]) {
+            rp.type = patch[@"type"];
+        } else {
+            qlerror(@"Required patch is missing type.");
+            return result;
+        }
+        if (patch[@"type"]) {
+            rp.patch_id = patchID;
+        } else {
+            qlerror(@"Required patch is missing patch ID.");
+            return result;
+        }
+        if (patch[@"patch"]) {
+            rp.patch = patch[@"patch"];
+        } else {
+            qlerror(@"Required patch is missing patch.");
+            return result;
+        }
+        if (patchVersion) {
+            rp.patch_version = patchVersion;
+        } else {
+            qlerror(@"Required patch is missing patchVersion.");
+            rp.patch_version = @"0";
+        }
+
 		rp.patch_reboot = [patchReboot integerValue];
 		rp.patch_data = [NSKeyedArchiver archivedDataWithRootObject:patch];
 		rp.patch_scandate = [NSDate date];
