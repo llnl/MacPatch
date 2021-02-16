@@ -33,100 +33,112 @@
     if (self)
     {
         fm = [NSFileManager defaultManager];
+        [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+            if (connectError != nil) {
+                qlerror(@"workerConnection[connectError][ProvisionHost][init]: %@",connectError.localizedDescription);
+            } else {
+                [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                    qlerror(@"workerConnection[proxyError][ProvisionHost][init]: %@",proxyError.localizedDescription);
+                }] createDirectory:MP_PROVISION_DIR withReply:^(NSError *error) {
+                    if (error) {
+                        qlerror(@"%@",error.localizedDescription);
+                    } else {
+                        qlinfo(@"MP_PROVISION_DIR created");
+                    }
+                }];
+            }
+        }];
     }
     return self;
 }
 
-- (int)provisionHostThread
+- (int)provisionHost
 {
-    @autoreleasepool
-    {
-        int res = 0;
-        
-        [self writeToKeyInProvisionFile:@"startDT" data:[MPDate dateTimeStamp]];
-        [self writeToKeyInProvisionFile:@"stage" data:@"getData"];
-        [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:NO]];
-        
-        // Get Data
-        NSDictionary *provisionData = [self getProvisionData];
-        if (!provisionData) {
-            qlerror(@"Provisioning data from web service is nil. Now exiting.");
-            res = 1;
-            [self writeToKeyInProvisionFile:@"endDT" data:[MPDate dateTimeStamp]];
-            [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:YES]];
-            [self writeToKeyInProvisionFile:@"failed" data:[NSNumber numberWithBool:YES]];
-            return res;
-        } else {
-            // Write Provision Data to File
-            [self writeToKeyInProvisionFile:@"data" data:provisionData];
-        }
-        
-        // Run Pre Scripts
-        [self writeToKeyInProvisionFile:@"stage" data:@"preScripts"];
-        NSArray *_pre = provisionData[@"scriptsPre"];
-        if (_pre) {
-            if (_pre.count >= 1) {
-                for (NSDictionary *s in _pre)
-                {
-                    qlinfo(@"Pre Script: %@",s[@"name"]);
-                    @try {
-                        [self runScript:s[@"script"]];
-                    } @catch (NSException *exception) {
-                        qlerror(@"[PreScript]: %@",exception);
-                    }
-                    
-                }
-            } else {
-                qlinfo(@"No, pre scripts to run.");
-            }
-        }
-        
-        // Run Software Tasks
-        [self writeToKeyInProvisionFile:@"stage" data:@"Software"];
-        NSArray *_sw = provisionData[@"tasks"];
-        if (_sw) {
-            if (_sw.count >= 1) {
-                for (NSDictionary *s in _sw)
-                {
-                    qlinfo(@"Install Software Task: %@",s[@"name"]);
-                    @try {
-                        int res = [self installSoftware:s];
-                        if (res != 0) {
-                            [self writeToKeyInProvisionFile:@"status" data:[NSString stringWithFormat:@"Software: Failed to install %@ (%@)",s[@"name"],s[@"tuuid"]]];
-                        }
-                    } @catch (NSException *exception) {
-                        qlerror(@"[Software]: %@",exception);
-                    }
-                    
-                }
-            } else {
-                qlinfo(@"No, software tasks to run.");
-            }
-        }
-        
-        // Run Post Scripts
-        [self writeToKeyInProvisionFile:@"stage" data:@"postScripts"];
-        NSArray *_post = provisionData[@"scriptsPost"];
-        if (_post) {
-            if (_post.count >= 1) {
-                for (NSDictionary *s in _post)
-                {
-                    qlinfo(@"Post Script: %@",s[@"name"]);
-                    @try {
-                        [self runScript:s[@"script"]];
-                    } @catch (NSException *exception) {
-                        qlerror(@"[PostScript]: %@",exception);
-                    }
-                    
-                }
-            } else {
-                qlinfo(@"No, post scripts to run.");
-            }
-        }
-        
-        
+    int res = 0;
+    
+    [self writeToKeyInProvisionFile:@"startDT" data:[MPDate dateTimeStamp]];
+    [self writeToKeyInProvisionFile:@"stage" data:@"getData"];
+    [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:NO]];
+    
+    // Get Data
+    NSDictionary *provisionData = [self getProvisionData];
+    if (!provisionData) {
+        qlerror(@"Provisioning data from web service is nil. Now exiting.");
+        res = 1;
+        [self writeToKeyInProvisionFile:@"endDT" data:[MPDate dateTimeStamp]];
+        [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:YES]];
+        [self writeToKeyInProvisionFile:@"failed" data:[NSNumber numberWithBool:YES]];
         return res;
+    } else {
+        // Write Provision Data to File
+        [self writeToKeyInProvisionFile:@"data" data:provisionData];
     }
+    
+    // Run Pre Scripts
+    [self writeToKeyInProvisionFile:@"stage" data:@"preScripts"];
+    NSArray *_pre = provisionData[@"scriptsPre"];
+    if (_pre) {
+        if (_pre.count >= 1) {
+            for (NSDictionary *s in _pre)
+            {
+                qlinfo(@"Pre Script: %@",s[@"name"]);
+                @try {
+                    [self runScript:s[@"script"]];
+                } @catch (NSException *exception) {
+                    qlerror(@"[PreScript]: %@",exception);
+                }
+                
+            }
+        } else {
+            qlinfo(@"No, pre scripts to run.");
+        }
+    }
+    
+    // Run Software Tasks
+    [self writeToKeyInProvisionFile:@"stage" data:@"Software"];
+    NSArray *_sw = provisionData[@"tasks"];
+    if (_sw) {
+        if (_sw.count >= 1) {
+            for (NSDictionary *s in _sw)
+            {
+                qlinfo(@"Install Software Task: %@",s[@"name"]);
+                @try {
+                    int res = [self installSoftware:s];
+                    if (res != 0) {
+                        [self writeToKeyInProvisionFile:@"status" data:[NSString stringWithFormat:@"Software: Failed to install %@ (%@)",s[@"name"],s[@"tuuid"]]];
+                    }
+                } @catch (NSException *exception) {
+                    qlerror(@"[Software]: %@",exception);
+                }
+                
+            }
+        } else {
+            qlinfo(@"No, software tasks to run.");
+        }
+    }
+    
+    // Run Post Scripts
+    [self writeToKeyInProvisionFile:@"stage" data:@"postScripts"];
+    NSArray *_post = provisionData[@"scriptsPost"];
+    if (_post) {
+        if (_post.count >= 1) {
+            for (NSDictionary *s in _post)
+            {
+                qlinfo(@"Post Script: %@",s[@"name"]);
+                @try {
+                    [self runScript:s[@"script"]];
+                } @catch (NSException *exception) {
+                    qlerror(@"[PostScript]: %@",exception);
+                }
+                
+            }
+        } else {
+            qlinfo(@"No, post scripts to run.");
+        }
+    }
+    
+    
+    return res;
 }
 
 #pragma mark Private
@@ -153,6 +165,8 @@
 // Helper
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data
 {
+    qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
+    
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
             qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);;
@@ -186,8 +200,8 @@
             }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
                 res = result;  
                 if (error) {
-                    qlerror(@"Error posting data to key %@",key);
-                    qlerror(@"Data %@",data);
+                    qlerror(@"Error running script.");
+                    qlerror(@"%@",error.localizedDescription);
                 }
                 dispatch_semaphore_signal(sem);
             }];
@@ -215,8 +229,8 @@
             }] installSoftware:swDict withReply:^(NSError *error, NSInteger resultCode, NSData *installData ) {
                 res = resultCode;
                 if (error) {
-                    qlerror(@"Error posting data to key %@",key);
-                    qlerror(@"Data %@",data);
+                    qlerror(@"Error installing %@.",swDict[@"name"]);
+                    qlerror(@"%@",error);
                 }
                 dispatch_semaphore_signal(sem);
             }];
@@ -309,7 +323,7 @@
 {
     if (type == kMPProcessStatus) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            self->_progressStatus.stringValue = status;
+            //self->_progressStatus.stringValue = status;
         });
         //[self postSWStatus:status];
     }
@@ -320,6 +334,7 @@
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
     qlinfo(@"postStopHasError called %@",arg2);
+    /*
     NSError *err = nil;
     if (arg1) {
         //err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
@@ -327,5 +342,6 @@
     } else {
         //[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
     }
+     */
 }
 @end

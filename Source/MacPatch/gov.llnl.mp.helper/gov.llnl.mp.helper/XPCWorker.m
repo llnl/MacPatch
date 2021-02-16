@@ -2398,6 +2398,18 @@ done:
 
 #pragma mark - Provisioning
 
+- (void)createDirectory:(NSString *)path withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    NSFileManager *dfm = [NSFileManager defaultManager];
+    [dfm createDirectoryRecursivelyAtPath:path];
+    if (![dfm isDirectoryAtPath:path]) {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:[NSString stringWithFormat:@"%@ is not a directory.",path]};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+    }
+    reply(err);
+}
+
 - (void)postProvisioningData:(NSString *)key dataForKey:(id)data withReply:(void(^)(NSError *error))reply
 {
     NSError *err = nil;
@@ -2422,11 +2434,23 @@ done:
         _pFile[key] = data;
     }
     
+    /* This Fails for some reason.
+    // The Error is "The file couldn’t be saved because the specified URL type isn’t supported."
+     
     NSURL *urlFilePath = [NSURL URLWithString:MP_PROVISION_FILE];
+    qlinfo(@"urlFilePath: %@",urlFilePath);
+    qlinfo(@"_pFile: %@",_pFile);
     [_pFile writeToURL:urlFilePath error:&err];
     if (err) {
         qlerror(@"%@",err.localizedDescription);
     }
+    */
+    
+    if (![_pFile writeToFile:MP_PROVISION_FILE atomically:NO]) {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file."};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+    }
+
     reply(err);
 }
 

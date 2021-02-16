@@ -8,6 +8,8 @@
 
 #import "Provisioning.h"
 #import <WebKit/WebKit.h>
+#import "ProvisionHost.h"
+#import <dispatch/dispatch.h>
 
 @interface WKWebView(SynchronousEvaluateJavaScript)
 - (NSString *)stringByEvaluatingJavaScriptFromString:(NSString *)script;
@@ -42,6 +44,9 @@
 
 
 @interface Provisioning ()
+{
+    NSFileManager *fm;
+}
 
 @property (strong) IBOutlet NSWindow *window;
 @property (weak) IBOutlet NSTabView *tabBar;
@@ -74,7 +79,9 @@
 - (void)windowDidLoad
 {
     [super windowDidLoad];
+    fm = [NSFileManager defaultManager];
     
+    /*
     NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
     self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
                                                      backing:NSBackingStoreBuffered defer:NO];
@@ -82,16 +89,24 @@
     [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
     [self.backwindow setLevel:NSStatusWindowLevel];
     [self.backwindow makeKeyAndOrderFront:NSApp];
+    */
     
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+    
     [_stepperButton setTitle:@"Begin"];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_stepperButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
+    });
     
     NSError *err = nil;
-    NSData *data = [NSData dataWithContentsOfFile:@"/Users/heizer1/Downloads/provision.json"];
+    //NSData *data = [NSData dataWithContentsOfFile:@"/Users/heizer1/Downloads/provision.json"];
+    NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_DATA_FILE];
     NSDictionary *jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     if (err) {
-        NSLog(@"%@",err.description);
+        qlerror(@"MP_PROVISION_DATA_FILE contents are null. Unable to provision this system.");
+        qlerror(@"%@",err.localizedDescription);
         _provisionData = nil;
+        [self.window close];
     } else {
         _provisionData = [jdata copy];
     }
@@ -106,6 +121,89 @@
     }
     
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
+    [self performSelectorInBackground:@selector(runProvisionHostThread) withObject:nil];
+}
+
+- (void)runProvisionHostThread
+{
+    @autoreleasepool
+    {
+        BOOL beginProvision = NO;
+        NSDictionary *provisionFileData = [self readProvisioningFile];
+        if (provisionFileData[@"stage"])
+        {
+            if ([[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
+            {
+                beginProvision = YES;
+            }
+        } else {
+            // File is empty 
+            beginProvision = YES;
+        }
+        
+        // Host need initial required provisioning software installed.
+        if (beginProvision)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
+            });
+            [NSThread sleepForTimeInterval:1.5];
+            NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
+            [self writeStatusToHTML:jsTxt];
+            
+            ProvisionHost *ph = [ProvisionHost new];
+            int result = 99;
+            result = [ph provisionHost];
+            
+            if (result == 0 ) {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self writeStatusToHTML:@""];
+                    [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+                    [self->_closeWindowButton setEnabled:YES];
+                });
+            }
+        }
+    }
+}
+
+- (NSDictionary *)readProvisioningFile
+{
+    NSMutableDictionary *_pFile;
+    if ( [fm fileExistsAtPath:MP_PROVISION_FILE] ) {
+        _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
+    } else {
+        _pFile = [NSMutableDictionary new];
+    }
+    return [_pFile copy];
+}
+
+- (IBAction)writeJS:(NSButton *)sender
+{
+    //[self writeStatusToHTML:@"Required software needs to be installed. Once completed, you may begin."];
+    /*
+    NSString *jsTxt = [NSString stringWithFormat:@"addStatus(\"%@\");",@"Required software needs to be installed. Once completed, you may begin."];
+    [_welcomeWebView evaluateJavaScript:jsTxt completionHandler:^(id Result, NSError * error) {
+        NSLog(@"Error -> %@", error);
+    }];
+     */
+    [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+        qlerror(@"proxyError: %@",proxyError.localizedDescription);
+    }] postProvisioningData:@"userInfoData" dataForKey:@{@"testKey":@"testVal",@"testKey2":@"testVal2"} withReply:^(NSError *error) {
+       dispatch_sync(dispatch_get_main_queue(), ^()
+          {
+              
+              if (error) {
+                  NSAlert *alert = [[NSAlert alloc] init];
+                  [alert addButtonWithTitle:@"OK"];
+                  [alert setMessageText:@"Error with check-in"];
+                  [alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
+                  [alert setAlertStyle:NSCriticalAlertStyle];
+                  [alert runModal];
+              } else {
+                  [self->_tabBar selectNextTabViewItem:NULL];
+              }
+          });
+    }];
 }
 
 // Close the Grey (Transparent) Full Screen Bacround Window
@@ -136,7 +234,7 @@
     if ([sender.title isEqualToString:@"Install"]) {
         [_stepperButton setEnabled:NO];
         [_stepperButton setTitle:@"Continue"];
-        [self performSelectorInBackground:@selector(installSoftware) withObject:nil];
+        [self performSelectorInBackground:@selector(installSoftwareThread) withObject:nil];
         // Start installs
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
@@ -167,7 +265,7 @@
                      else
                      {
                          [self->_tabBar selectNextTabViewItem:NULL];
-                         /*
+                         
                          [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                              qlerror(@"proxyError: %@",proxyError.localizedDescription);
                          }] postProvisioningData:@"userInfoData" dataForKey:vals withReply:^(NSError *error) {
@@ -186,7 +284,6 @@
                                    }
                                });
                          }];
-                          */
                      }
                  }];
             }
@@ -207,7 +304,7 @@
         informativeTextWithFormat:@"Are you sure you want to skip the software installs? If you do, you can always launch the MacPatch application and install them at a later time."];
     [alert setAlertStyle:NSCriticalAlertStyle];
     [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
-        NSLog(@"%d",result);
+        NSLog(@"%ld",(long)result);
         if (result == 1) {
             [self->_tabBar selectNextTabViewItem:NULL];
         }
@@ -248,6 +345,21 @@
     }
     return [result copy];
     //[self->_tabBar selectNextTabViewItem:NULL];
+}
+
+- (void)writeStatusToHTML:(NSString *)status
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if ([status isEqual:@""]) {
+            [self->_welcomeWebView evaluateJavaScript:@"clearStatus();" completionHandler:^(id Result, NSError * error) {
+                NSLog(@"Error -> %@", error);
+            }];
+        } else {
+            [self->_welcomeWebView evaluateJavaScript:[NSString stringWithFormat:@"addStatus(\"%@\");",status] completionHandler:^(id Result, NSError * error) {
+                NSLog(@"Error -> %@", error);
+            }];
+        }
+    });
 }
 
 // Convience method to get the data for a given tab
@@ -311,7 +423,7 @@
         _collectionWebView.allowsBackForwardNavigationGestures = NO;
         [_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Continue"];
-        [_closeWindowButton setEnabled:NO]
+        [_closeWindowButton setEnabled:NO];
     } else if ([tabViewItem.identifier isEqualToString:@"2"]) {
         [_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         /*[self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
@@ -669,7 +781,7 @@
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
     qlinfo(@"postStopHasError called %@",arg2);
-    NSError *err = nil;
+    //NSError *err = nil;
     if (arg1) {
         //err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
         //[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err}];

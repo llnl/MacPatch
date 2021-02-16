@@ -301,7 +301,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
             qlerror(@"Required patch is missing type.");
             return result;
         }
-        if (patch[@"type"]) {
+        if (patchID) {
             rp.patch_id = patchID;
         } else {
             qlerror(@"Required patch is missing patch ID.");

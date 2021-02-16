@@ -6,7 +6,7 @@
 //  Copyright © 2017 Lawrence Livermore Nat'l Lab. All rights reserved.
 //
 
-// Rev 37
+// Rev 38
 
 #import <Foundation/Foundation.h>
 
@@ -180,6 +180,7 @@ enum {
 - (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
 
 // Provisioning
+- (void)createDirectory:(NSString * _Nullable )path withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
 @end
 

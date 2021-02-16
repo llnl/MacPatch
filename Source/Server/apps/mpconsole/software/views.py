@@ -122,7 +122,7 @@ def swGroupSave():
 
 		if session.get('role')[0] == 1:
 			is_admin = 2
-			
+
 		# Set rights for standard group admin
 		if mpsgpUsr is not None:
 			is_admin = 1
@@ -926,6 +926,7 @@ def saveSWPackage():
 			shutil.rmtree(os.path.join('/tmp/sw', request.form['suuid']))
 		else:
 			_fileData = saveSoftwareFile(_suuid, mainFile)
+			log_Info('_fileData')
 
 	# Save SW Package Info
 	if _fileData is not None:
@@ -953,6 +954,7 @@ def saveSoftwareFile(suuid, file):
 
 	# Save uploaded files
 	upload_dir = os.path.join(current_app.config['SW_CONTENT_DIR'], suuid)
+	log_Info('UploadDir (%s)' % (upload_dir))
 	if not os.path.isdir(upload_dir):
 		os.makedirs(upload_dir)
 
@@ -963,22 +965,31 @@ def saveSoftwareFile(suuid, file):
 		result['filePath'] = _file_path
 		result['fileURL']  = os.path.join('/sw', suuid, filename)
 
+		log_Info('fileName (%s)' % (result['fileName']))
+		log_Info('filePath (%s)' % (result['filePath']))
+		log_Info('fileURL (%s)' % (result['fileURL']))
 		if os.path.exists(_file_path):
 			log_Info('Removing existing file (%s)' % (_file_path))
 			os.remove(_file_path)
 
+		log_Info('_file_path (%s)' % (_file_path))
 		file.save(_file_path)
 
 		md5 = hashlib.md5()
-		with open(_file_path,'rb') as f: 
-			for chunk in iter(lambda: f.read(8192), b''): 
+		with open(_file_path,'rb') as f:
+			for chunk in iter(lambda: f.read(8192), b''):
 				md5.update(chunk)
 
+		log_Info('Done with MD5 Hash')
 		result['fileHash'] = md5.hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
+	else:
+		log_Error('File name is none or small len')
 
+	log_Info('result ({})'.format(result))
 	return result
 
+# This method is used when saving file to AWS
 def saveSoftwareFileToTMP(suuid, file):
 
 	result = {}

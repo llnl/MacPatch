@@ -91,7 +91,10 @@ extern NSString * const MP_AUTHRUN_FILE;
 extern NSString * const MP_PATCH_ON_LOGOUT_FILE;
 extern NSString * const MP_AUTHSTATUS_KEYCHAIN;
 extern NSString * const MP_AUTHSTATUS_FILE;
+
+extern NSString * const MP_PROVISION_DIR;
 extern NSString * const MP_PROVISION_FILE;
+extern NSString * const MP_PROVISION_DATA_FILE;
 
 #pragma mark - ENUMS
 

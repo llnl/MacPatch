@@ -254,44 +254,14 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     // Run Provisioning
     if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/var/db/.MPProvisionBegin"])
     {
+        qlinfo(@".MPProvisionBegin found. Begin provisioning.");
         self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
+        [self.provisionWindowController showWindow:self];
         [self.provisionWindowController.window makeKeyAndOrderFront:nil];
         [self.provisionWindowController.window setLevel:NSScreenSaverWindowLevel];
-        [self.provisionWindowController showWindow:self];
         
-        /*
-        NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
-        self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
-                                                         backing:NSBackingStoreBuffered defer:NO];
-        //[self.backwindow setOpaque:NO];
-        [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
-        [self.backwindow setLevel:NSStatusWindowLevel];
-        [self.backwindow makeKeyAndOrderFront:NSApp];
+        //[NSApp activateIgnoringOtherApps:YES];
         
-        
-     
-        // Key Event for Provisioning Window
-        [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskFlagsChanged|NSEventMaskKeyDown handler:^NSEvent * (NSEvent * theEvent) {
-            if ([theEvent modifierFlags] & (NSEventModifierFlagControl & NSEventModifierFlagOption) )
-            {
-                if (theEvent.keyCode == 6) { // this is Z key
-                    // Control - Option - Z = Quit
-                    [self.provisionWindowController close];
-                    [self.backwindow close];
-                } else if (theEvent.keyCode == 17) { // this is t key
-                    // Control - Option - t = Close transparent window
-                    @try {
-                        [self.backwindow orderOut:self];
-                    } @catch (NSException *exception) {
-                        NSLog(@"%@",exception);
-                    }
-                }
-            }
-
-            return theEvent;
-        }];
-         */
-
     } else {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         if ([defaults boolForKey:@"showWhatsNew"]) {
