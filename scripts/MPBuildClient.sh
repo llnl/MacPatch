@@ -30,12 +30,12 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client35/$DATETIME"
+BUILDROOT="/private/var/tmp/MP/Client36/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.5.0.1"
-UPDATEVER="3.5.0.1"
+AGENTVER="3.6.0.1"
+UPDATEVER="3.6.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -90,7 +90,7 @@ while getopts "hs:p:m" opt; do
     esac
 done
 
-runExternalScripts () 
+runExternalScripts ()
 {
     if [ -z "$1" ]; then
         # Scripts path is blank
@@ -98,9 +98,9 @@ runExternalScripts ()
     fi
 
    spath="$1"
-   
+
     FILES="$1/*.sh"
-    for f in $FILES 
+    for f in $FILES
     do
         echo "Processing $f file..."
         bash $f "$SCRIPT_PARENT" "$BUILDROOT"
@@ -152,7 +152,7 @@ if [ -f "$BUILDPLIST" ]; then
 	else
 		if [[ $INC_PLANB_VAR == 1 ]]; then
 			INC_PLANB_VAR="Y"
-		else	
+		else
 			INC_PLANB_VAR="N"
 		fi
 	fi
@@ -166,14 +166,14 @@ INC_PLANB_TXT=`echo $INC_PLANB_TXT | awk '{print toupper($0)}'`
 if [ "$INC_PLANB_TXT" != "$INC_PLANB_VAR" ]; then
 	if [[ "$INC_PLANB_TXT" == "Y" ]]; then
 		defaults write ${BUILDPLIST} incPlanB -bool YES
-	else 
+	else
 		defaults write ${BUILDPLIST} incPlanB -bool NO
 	fi
 fi
 
 if [[ "$INC_PLANB_TXT" == "Y" ]]; then
 	INCPlanBSource=true
-else 
+else
 	INCPlanBSource=false
 fi
 
@@ -380,7 +380,7 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
         fi
 
 		# Compile the agent components
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release 
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
 		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
@@ -599,5 +599,3 @@ if $SHOW_MASTER_KEY; then
     echo "$ClientMasterKey"
     echo
 fi
-
-
