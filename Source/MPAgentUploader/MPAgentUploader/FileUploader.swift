@@ -29,7 +29,7 @@
 
 import Foundation
 import Alamofire
-
+/*
 class AlamofireSynchronous
 {
     class func uploadRequest(multipartFormData: @escaping (MultipartFormData) -> Void, to: URLConvertible, method: HTTPMethod, headers: HTTPHeaders? = nil) -> UploadRequest? {
@@ -38,7 +38,9 @@ class AlamofireSynchronous
         var result: UploadRequest? = nil
         var intResult = 2
         
-        MPAlamofire.upload(multipartFormData: multipartFormData, to: to, method: method, headers: headers) { (res: Alamofire.SessionManager.MultipartFormDataEncodingResult) in
+        
+        
+        MPAlamofire.upload(multipartFormData: multipartFormData, to: to, method: method, headers: headers) { (res: Alamofire.Session.MultipartFormDataEncodingResult) in
             
             switch res {
                 case .success(let upload, _, _):
@@ -71,3 +73,4 @@ class AlamofireSynchronous
         return result
     }
 }
+*/

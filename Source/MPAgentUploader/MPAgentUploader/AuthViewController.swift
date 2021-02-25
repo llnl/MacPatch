@@ -55,10 +55,12 @@ class AuthViewController: NSViewController
         super.viewDidLoad()
         
         if defaults.bool(forKey: "selfSigned") {
-            MPAlamofire={ ()->Alamofire.SessionManager in
-                let policies:[String:ServerTrustPolicy]=[self.x_mpServer!: .disableEvaluation]
-                let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
-                return manager
+            MPAlamofire={ ()->Alamofire.Session in
+                //let policies:[String:ServerTrustPolicy]=[self.x_mpServer!: .disableEvaluation]
+                //let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
+                let manager = ServerTrustManager(evaluators: [self.x_mpServer!: DisabledTrustEvaluator()])
+                let session = Session(serverTrustManager: manager)
+                return session
             }()
         }
     }

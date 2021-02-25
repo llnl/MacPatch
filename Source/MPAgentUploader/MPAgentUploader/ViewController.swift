@@ -128,7 +128,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         openPanel.allowedFileTypes = ["plist"]
         
         openPanel.begin { (result) -> Void in
-            if result.rawValue == NSFileHandlingPanelOKButton {
+            if result.rawValue == NSApplication.ModalResponse.OK.rawValue {
                 self.migration_plist = (openPanel.url?.path)!
                 self.writeConfigStatus.stringValue = "Migration plist will be added."
 				log.info("choosePlist: \(String(describing: openPanel.url?.path))")
@@ -155,7 +155,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         openPanel.allowedFileTypes = ["zip"]
         
         openPanel.begin { (result) -> Void in
-            if result.rawValue == NSFileHandlingPanelOKButton {
+            if result.rawValue == NSApplication.ModalResponse.OK.rawValue {
                 self.agentPackage.stringValue = (openPanel.url?.path)!
                 self.uploadButton.isEnabled = true
 				log.info("choosePackage: \(String(describing: openPanel.url?.path))")
@@ -175,7 +175,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         openPanel.canChooseFiles = false
         
         openPanel.begin { (result) -> Void in
-            if result.rawValue == NSFileHandlingPanelOKButton {
+            if result.rawValue == NSApplication.ModalResponse.OK.rawValue {
                 self.pluginsPath.stringValue = (openPanel.url?.path)!
 				self.defaults.set(self.pluginsPath.stringValue, forKey: "pluginsFolder")
 				self.defaults.synchronize()
@@ -194,7 +194,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 		openPanel.canChooseFiles = false
 		
 		openPanel.begin { (result) -> Void in
-			if result.rawValue == NSFileHandlingPanelOKButton {
+            if result.rawValue == NSApplication.ModalResponse.OK.rawValue {
 				self.profilesPath.stringValue = (openPanel.url?.path)!
 				self.defaults.set(self.profilesPath.stringValue, forKey: "profiles")
 				self.defaults.synchronize()
@@ -223,10 +223,12 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     {
         // Check to see if we need to enable Self-Signed Certs
         if defaults.bool(forKey: "selfSigned") {
-            MPAlamofire={ ()->Alamofire.SessionManager in
-                let policies:[String:ServerTrustPolicy]=[self.mpServerHost.stringValue: .disableEvaluation]
-                let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
-                return manager
+            MPAlamofire={ ()->Alamofire.Session in
+                //let policies:[String:ServerTrustPolicy]=[self.mpServerHost.stringValue: .disableEvaluation]
+                //let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
+                let manager = ServerTrustManager(evaluators: [self.mpServerHost.stringValue: DisabledTrustEvaluator()])
+                let session = Session(serverTrustManager: manager)
+                return session
             }()
         }
 		
@@ -1257,93 +1259,89 @@ class ViewController: NSViewController, AuthViewControllerDelegate
      
      - returns: Bool
      */
-	func uploadPackagesToServer(packages: [String], formData: [String: Any]) -> Bool
-	{
-		let aid: String = UUID.init().uuidString
-		let _ssl = (self.useSSL.state == .on) ? "https" : "http"
-		let _url: String = "\(_ssl)://\(self.mpServerHost.stringValue):\(self.mpServerPort.stringValue)/api/v2/agent/upload/\(aid)/\(api_token)"
-		log.info("API URL: \(_url)")
-		
-		var pkgs = [[String:Any]]()
-		var fileData: NSData
-		
-		for p in packages
-		{
-			fileData = try! NSData.init(contentsOfFile: p)
-			let d: [String: Any]
-			
-			if (p.lastPathComponent.contains("Base.pkg") || p.lastPathComponent.contains("Client.pkg"))
-			{
-				d = ["name": "fBase", "fileName": p.lastPathComponent, "data": fileData as Data]
-			}
-			else if (p.lastPathComponent.contains("MacPatch.pkg"))
-			{
-				d = ["name": "fComplete", "fileName": p.lastPathComponent, "data": fileData as Data]
-			}
-			else if (p.lastPathComponent.contains("Updater.pkg"))
-			{
-				d = ["name": "fUpdate", "fileName": p.lastPathComponent, "data": fileData as Data]
-			}
-			else
-			{
-				continue
-			}
-			pkgs.append(d)
-		}
-		var didUpload = false
-		let jsonData = try! JSONSerialization.data(withJSONObject: formData, options: [])
-		let semaphore = DispatchSemaphore(value: 0)
-		
-		let jstring = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
-		log.info("JSON Data: \(jstring ?? "{}")")
-		
-		Alamofire.upload(multipartFormData: { multipartFormData in
-			
-			for f in pkgs {
-				multipartFormData.append(f["data"] as! Data,
-										 withName: f["name"] as! String,
-										 fileName: f["fileName"] as! String,
-										 mimeType: "application/octet-stream")
-			}
+    func uploadPackagesToServer(packages: [String], formData: [String: Any]) -> Bool
+    {
+        let aid: String = UUID.init().uuidString
+        let _ssl = (self.useSSL.state == .on) ? "https" : "http"
+        let _url: String = "\(_ssl)://\(self.mpServerHost.stringValue):\(self.mpServerPort.stringValue)/api/v2/agent/upload/\(aid)/\(api_token)"
+        log.info("API URL: \(_url)")
+        
+        var pkgs = [[String:Any]]()
+        var fileData: NSData
+        
+        for p in packages
+        {
+            fileData = try! NSData.init(contentsOfFile: p)
+            let d: [String: Any]
+            
+            if (p.lastPathComponent.contains("Base.pkg") || p.lastPathComponent.contains("Client.pkg"))
+            {
+                d = ["name": "fBase", "fileName": p.lastPathComponent, "data": fileData as Data]
+            }
+            else if (p.lastPathComponent.contains("MacPatch.pkg"))
+            {
+                d = ["name": "fComplete", "fileName": p.lastPathComponent, "data": fileData as Data]
+            }
+            else if (p.lastPathComponent.contains("Updater.pkg"))
+            {
+                d = ["name": "fUpdate", "fileName": p.lastPathComponent, "data": fileData as Data]
+            }
+            else
+            {
+                continue
+            }
+            pkgs.append(d)
+        }
+        var didUpload = false
+        let jsonData = try! JSONSerialization.data(withJSONObject: formData, options: [])
+        let semaphore = DispatchSemaphore(value: 0)
+        
+        let jstring = NSString(data: jsonData, encoding: String.Encoding.utf8.rawValue)
+        log.info("JSON Data: \(jstring ?? "{}")")
+        
+        let headers: HTTPHeaders = ["Content-type": "multipart/form-data", "Accept": "application/json"]
+        AF.upload(
+            multipartFormData: { multipartFormData in
+                
+                for f in pkgs {
+                    multipartFormData.append(f["data"] as! Data,
+                                             withName: f["name"] as! String,
+                                             fileName: f["fileName"] as? String,
+                                             mimeType: "application/octet-stream")
+                }
 
-			multipartFormData.append(jsonData, withName: "data")
-
-		}, to: _url, encodingCompletion: { encodingResult in
-			switch encodingResult {
-			case .success(let upload, _, _):
-				upload.validate()
-					.responseJSON { response in
-						switch response.result {
-						case .success( _):
-							didUpload = true
-						case .failure(let responseError):
-							let error = responseError as? AFError
-							let message : String
-							if let httpStatusCode = error?.responseCode {
-								switch(httpStatusCode) {
-								case 424:
-									message = "Failed to verify user rights or bad token."
-								case 426:
-									message = "Agent Exists"
-								default:
-									message = responseError as! String
-								}
-							} else {
-								message = responseError as! String
-							}
-							log.error("Upload error: \(message)")
-						}
-						semaphore.signal()
-				}
-			case .failure(let encodingError):
-				log.error("encodingError: \(encodingError)")
-				semaphore.signal()
-			}
-		})
-		
-		_ = semaphore.wait(timeout: .distantFuture)
-		return didUpload
-	}
+                multipartFormData.append(jsonData, withName: "data")
+                
+            }, to: _url, //URL Here
+                method: .post,
+                headers: headers
+        ).validate(statusCode: 200..<300).responseJSON { (resp) in
+        
+            let _statusCode = resp.response?.statusCode
+            
+            switch (resp.result)
+            {
+                case .success( _):
+                    didUpload = true
+                case .failure(let responseError):
+                    let message : String
+                    switch(_statusCode) {
+                        case 424:
+                            message = "Failed to verify user rights or bad token."
+                        case 426:
+                            message = "Agent Exists"
+                        default:
+                            message = responseError.localizedDescription
+                    }
+                    log.error("Upload error[\(String(describing: _statusCode))]: \(message)")
+            }
+            
+            semaphore.signal()
+        }
+        
+        _ = semaphore.wait(timeout: .distantFuture)
+        return didUpload
+    }
 	
 // MARK: - Plugins and Profile Data
 	

@@ -35,7 +35,7 @@ var log = LXLogger()
 //import SwiftyBeaver
 //let log = SwiftyBeaver.self
 
-var MPAlamofire = Alamofire.SessionManager()
+var MPAlamofire = Alamofire.Session()
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
