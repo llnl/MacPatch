@@ -219,7 +219,8 @@ class ProvisionData(MPResource):
 			agentSettings.populateSettings(client_id)
 			scope = 1 # production only
 			if agentSettings.patch_state is not None:
-				scope = agentSettings.patch_state
+				if agentSettings.patch_state == 'QA':
+					scope = 0
 
 			qGetSW = MpProvisionTask.query.filter(MpProvisionTask.active == 1, MpProvisionTask.scope == scope).all()
 			qGetSCPre = MpProvisionScript.query.filter(MpProvisionScript.active == 1, MpProvisionScript.scope == scope, MpProvisionScript.type == 0).order_by(MpProvisionScript.order.asc()).all()
@@ -261,6 +262,24 @@ class ProvisionData(MPResource):
 			log_Error('[ProvisionData][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
 			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
+class ProvisionConfig(MPResource):
+
+	def __init__(self):
+		self.reqparse = reqparse.RequestParser()
+		super(ProvisionConfig, self).__init__()
+
+	def get(self, clientID):
+		_data = {'config': ''}
+		qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
+		if qGet is not None:
+			rawData = qGet.config
+			script = base64.b64decode(rawData.encode('utf-8'))
+			_data['script'] = script.decode("utf-8")
+
+		return {"errorno": 0, "errormsg": '',
+				"result": {'type': 'MpProvisionConfig', 'data': rawData},
+				'signature': signData(rawData)}, 200
+
 
 # Add Routes Resources
 provisioning_api.add_resource(PatchGroups,     '/provisioning/groups/patch/<string:cuuid>')
@@ -272,3 +291,5 @@ provisioning_api.add_resource(OSMigration,		'/provisioning/migration/<string:cuu
 # Provisioning Software Tasks
 provisioning_api.add_resource(SWProvTasks,		'/provisioning/tasks/<string:client_id>')
 provisioning_api.add_resource(ProvisionData,	'/provisioning/data/<string:client_id>')
+
+provisioning_api.add_resource(ProvisionConfig,	'/provisioning/config/<string:client_id>')

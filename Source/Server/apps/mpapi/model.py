@@ -991,6 +991,17 @@ class MpProvisionScript(CommonBase):
 	sw_end_datetime = Column(DateTime, server_default='2050-01-01 00:00:00')
 	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
 
+# mp_provision_ui_config
+class MpProvisionConfig(CommonBase):
+	__tablename__ = 'mp_provision_ui_config'
+
+	rid = Column(BigInteger, primary_key=True, autoincrement=True)
+	configName = Column(String(255), nullable=False)
+	config = Column(Text, nullable=False)
+	active = Column(Integer, server_default='1')
+	scope = Column(Integer, server_default='0')
+	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
+
 # ------------------------------------------
 ## Plugins
 

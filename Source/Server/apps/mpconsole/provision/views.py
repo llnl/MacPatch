@@ -260,3 +260,69 @@ def scriptRemove():
 				db.session.commit()
 
 	return json.dumps({'error':0}), 201
+
+@provision.route('/ui/config')
+@login_required
+def uiConfig():
+
+	_data = {'script':''}
+	qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
+	if qGet is not None:
+		rawData = qGet.config
+		script = base64.b64decode(rawData.encode('utf-8'))
+		_data['script'] = script.decode("utf-8")
+
+	return render_template('provision/ui_config.html', data=_data, isAdmin=True)
+
+''' AJAX Request '''
+@provision.route('/ui/config/upload',methods=['POST'])
+def uiConfigUpload():
+	# Get Patch ID
+	try:
+		req = request
+
+		# Check Permissions
+		if not localAdmin() and not adminRole():
+			log_Error("{} does not have permission to change custom patch {}.".format(session.get('user'), puuid))
+			return {'data': {}}, 403
+
+		# Save File, returns path to file
+		_file = None
+		_fileData = None
+		_fileDataB64 = 'None'
+		# MpProvisionConfig
+		if 'file' not in request.files:
+			return {'errorno': 404, 'errormsg': 'Error, upload file not found.', 'result': {}}, 404
+		if "file" in request.files:
+			_file = request.files['file']
+			_fileName = _file.filename
+			if _fileName == '':
+				return {'errorno': 403, 'errormsg': 'Error, upload file is blank.', 'result': {}}, 403
+			if allowed_file(_fileName):
+				_fileData = _file.read()
+				# print(_fileData.decode("utf-8"))
+
+				qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
+				if qGet is not None:
+					setattr(qGet, 'active', 0)
+					#db.session.commit()
+
+				mpc = MpProvisionConfig()
+				setattr(mpc, 'configName', _fileName)
+				setattr(mpc, 'config', base64.b64encode(_fileData))
+				setattr(mpc, 'mdate', datetime.now())
+				db.session.add(mpc)
+				db.session.commit()
+
+
+
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		log_Error('Message: %s' % (e))
+		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
+
+	return {'data': {}}, 200
+
+def allowed_file(filename):
+	extensions = ['json']
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in extensions
