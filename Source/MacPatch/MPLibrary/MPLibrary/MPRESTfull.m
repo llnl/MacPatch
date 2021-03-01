@@ -884,4 +884,46 @@
     
     return result;
 }
+
+/**
+ Get provisioning config json data, needs to be written to file.
+ Will return NSString of JSON data
+ 
+ @param err Error object
+ 
+ @return NSString
+ */
+- (NSString *)getProvisioningConfig:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSString *result = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/config/%@",self.clientID];
+    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+    
+    
+    if ([ws_result objectForKey:@"data"])
+    {
+        if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+        {
+            qldebug(@"Web Servce result: %@",ws_result);
+            NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[ws_result objectForKey:@"data"] options:0];
+            result = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+        }
+        else
+        {
+            qlerror(@"Result was not of type dictionary.");
+            qlerror(@"Result: %@", ws_result);
+        }
+    }
+    
+    return result;
+}
 @end

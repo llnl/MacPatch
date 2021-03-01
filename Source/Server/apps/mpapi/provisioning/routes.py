@@ -268,13 +268,14 @@ class ProvisionConfig(MPResource):
 		self.reqparse = reqparse.RequestParser()
 		super(ProvisionConfig, self).__init__()
 
-	def get(self, clientID):
+	def get(self, client_id):
 		_data = {'config': ''}
 		qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
 		if qGet is not None:
 			rawData = qGet.config
-			script = base64.b64decode(rawData.encode('utf-8'))
-			_data['script'] = script.decode("utf-8")
+			#script = base64.b64decode(rawData.encode('utf-8'))
+			#_data['script'] = script.decode("utf-8")
+			#_data['scriptb64'] = script.decode("utf-8")
 
 		return {"errorno": 0, "errormsg": '',
 				"result": {'type': 'MpProvisionConfig', 'data': rawData},

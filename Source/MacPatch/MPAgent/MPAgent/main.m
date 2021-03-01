@@ -135,6 +135,7 @@ int main (int argc, char * argv[])
                 
                 // Provisioning
                 {"provision"            ,no_argument        ,0, 'L'},
+                {"provisionConfig"      ,no_argument        ,0, 'z'},
 				
 				// Profiles
                 {"Profile"          	,no_argument	    ,0, 'p'},
@@ -266,6 +267,9 @@ int main (int argc, char * argv[])
 					break;
                 case 'L':
                     a_Type = 20;
+                    break;
+                case 'z':
+                    a_Type = 22;
                     break;
                 case 'p':
 					a_Type = 9;
@@ -580,6 +584,11 @@ int main (int argc, char * argv[])
                 swc = [SoftwareController new];
                 result = [swc installMandatorySoftware];
                 return result;
+                break;
+            case 22:
+                // Download Provisioning Config
+                mpac = [[AgentController alloc] init];
+                exit([mpac getProvisioningConfig]);
                 break;
             case 8888:
                 mpac = [[AgentController alloc] init];

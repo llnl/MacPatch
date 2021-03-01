@@ -1034,4 +1034,58 @@
     }
 }
 
+#pragma mark - Provisioning
+
+- (int)getProvisioningConfig
+{
+    NSString *configJSON = nil;
+    NSError *err = nil;
+    MPRESTfull *mpr = [MPRESTfull new];
+    configJSON = [mpr getProvisioningConfig:&err];
+    if (err) {
+        qlerror(@"Error downloading provisioning configuration.");
+        qlerror(@"%@",err.localizedDescription);
+        return 1;
+    }
+    
+    NSFileManager *fm = [NSFileManager defaultManager];
+    BOOL isDir;
+    BOOL exists = [fm fileExistsAtPath:MP_PROVISION_DIR isDirectory:&isDir];
+    if (exists) {
+        /* file exists */
+        if (!isDir) {
+            qlerror(@"Error, %@ exists but is not a directory.",MP_PROVISION_DIR);
+            qlerror(@"%@",err.localizedDescription);
+            return 1;
+        } else {
+            if ([fm fileExistsAtPath:MP_PROVISION_DATA_FILE])
+            {
+                [fm removeItemAtPath:MP_PROVISION_DATA_FILE error:&err]; // File exists, remove it
+                if (err) {
+                    qlerror(@"Error, unable to remove existsing %@ file.",[MP_PROVISION_DATA_FILE lastPathComponent]);
+                    qlerror(@"%@",err.localizedDescription);
+                    return 1;
+                }
+            }
+            
+            // Write new config file
+            [configJSON writeToFile:MP_PROVISION_DATA_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
+            if (err) {
+                qlerror(@"Error writing provisioning configuration to disk.");
+                qlerror(@"%@",err.localizedDescription);
+            }
+        }
+    } else {
+        [fm createDirectoryRecursivelyAtPath:MP_PROVISION_DIR];
+        [configJSON writeToFile:MP_PROVISION_DATA_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
+        if (err) {
+            qlerror(@"Error writing provisioning configuration to disk.");
+            qlerror(@"%@",err.localizedDescription);
+            return 1;
+        }
+    }
+    
+    return 0;
+}
+
 @end

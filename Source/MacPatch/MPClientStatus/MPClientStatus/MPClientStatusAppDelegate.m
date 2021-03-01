@@ -259,8 +259,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         [self.provisionWindowController showWindow:self];
         [self.provisionWindowController.window makeKeyAndOrderFront:nil];
         [self.provisionWindowController.window setLevel:NSScreenSaverWindowLevel];
-        
-        //[NSApp activateIgnoringOtherApps:YES];
+        [NSApp activateIgnoringOtherApps:YES];
         
     } else {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];

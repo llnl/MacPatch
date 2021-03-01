@@ -181,7 +181,7 @@ enum {
 
 // Provisioning
 - (void)createDirectory:(NSString * _Nullable )path withReply:(nullable void(^)(NSError * _Nullable error))reply;
-- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
+- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(NSData * _Nullable)data dataType:(NSString * _Nullable)dataType withReply:(nullable void(^)(NSError * _Nullable error))reply;
 @end
 
 @protocol MPHelperProgress

@@ -95,11 +95,10 @@
     
     [_stepperButton setTitle:@"Begin"];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self->_stepperButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
+        [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
     });
     
     NSError *err = nil;
-    //NSData *data = [NSData dataWithContentsOfFile:@"/Users/heizer1/Downloads/provision.json"];
     NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_DATA_FILE];
     NSDictionary *jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     if (err) {
@@ -128,27 +127,33 @@
 {
     @autoreleasepool
     {
+        qlinfo(@"runProvisionHostThread");
         BOOL beginProvision = NO;
         NSDictionary *provisionFileData = [self readProvisioningFile];
+        qlinfo(@"provisionFileData: %@", provisionFileData);
         if (provisionFileData[@"stage"])
         {
             if ([[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
             {
                 beginProvision = YES;
+                qlinfo(@"beginProvision = YES");
             }
         } else {
             // File is empty 
             beginProvision = YES;
+            qlinfo(@"beginProvision = YES, File is empty");
         }
         
         // Host need initial required provisioning software installed.
         if (beginProvision)
         {
+            qlinfo(@"beginProvision");
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
             });
             [NSThread sleepForTimeInterval:1.5];
             NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
+            qlinfo(@"%@",jsTxt);
             [self writeStatusToHTML:jsTxt];
             
             ProvisionHost *ph = [ProvisionHost new];
@@ -161,6 +166,8 @@
                     [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
                     [self->_closeWindowButton setEnabled:YES];
                 });
+            } else {
+                qlinfo(@"result != 0");
             }
         }
     }
@@ -186,6 +193,42 @@
         NSLog(@"Error -> %@", error);
     }];
      */
+    qlinfo(@"writeJS");
+    
+    [self connectAndExecuteCommandBlock:^(NSError * connectError)
+     {
+         if (connectError != nil)
+         {
+             qlerror(@"connectError: %@",connectError.localizedDescription);
+         }
+         else
+         {
+             NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:@{@"testKey":@"testVal",@"testKey2":@"testVal2"}];
+             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+             }] postProvisioningData:@"userInfoData" dataForKey:myData dataType:@"dict" withReply:^(NSError *err) {
+                dispatch_sync(dispatch_get_main_queue(), ^()
+                   {
+                       NSAlert *alert = [[NSAlert alloc] init];
+                       [alert addButtonWithTitle:@"OK"];
+                       if (err) {
+                           [alert setMessageText:@"Error with check-in"];
+                           [alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
+                           [alert setAlertStyle:NSCriticalAlertStyle];
+                       } else {
+                           [alert setMessageText:@"Client check-in"];
+                           [alert setInformativeText:@"Client check-in was successful."];
+                           [alert setAlertStyle:NSInformationalAlertStyle];
+                           
+                       }
+                       
+                       [alert runModal];
+                   });
+             }];
+         }
+     }];
+    
+    /*
     [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
         qlerror(@"proxyError: %@",proxyError.localizedDescription);
     }] postProvisioningData:@"userInfoData" dataForKey:@{@"testKey":@"testVal",@"testKey2":@"testVal2"} withReply:^(NSError *error) {
@@ -204,6 +247,7 @@
               }
           });
     }];
+     */
 }
 
 // Close the Grey (Transparent) Full Screen Bacround Window
@@ -219,9 +263,7 @@
     [self.window orderOut:self];
 }
 
-
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector { return NO; }
-
 
 - (NSURL *)urlForFile:(NSString *)name
 {
@@ -231,18 +273,26 @@
 
 - (IBAction)changeTab:(NSButton *)sender
 {
+    __block NSInteger _selectedIndex = [self.selectedTabViewItem integerValue];
+    
     if ([sender.title isEqualToString:@"Install"]) {
         [_stepperButton setEnabled:NO];
         [_stepperButton setTitle:@"Continue"];
         [self performSelectorInBackground:@selector(installSoftwareThread) withObject:nil];
         // Start installs
+    } else if ([sender.title isEqualToString:@"Install"]) {
+        // Code to reboot host
+        [self closeWindow:nil];
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
         {
+            qlinfo(@"Get All Values");
             // Get All Values
             NSError *err = nil;
-            __block NSDictionary *vals = [self getHTMLValues:&err];
-            NSLog(@"%@",vals);
+            NSDictionary *vals = [self getHTMLValues:&err];
+            __block NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:vals];
+            qlinfo(@"vals: %@",vals);
+            
             if (err) {
                 NSLog(@"Error: %@",err.localizedDescription);
                 NSAlert *alert = [NSAlert alertWithMessageText:@"Input Required"
@@ -255,7 +305,6 @@
                     
                 }];
             } else {
-                
                 [self connectAndExecuteCommandBlock:^(NSError * connectError)
                  {
                      if (connectError != nil)
@@ -268,7 +317,7 @@
                          
                          [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                              qlerror(@"proxyError: %@",proxyError.localizedDescription);
-                         }] postProvisioningData:@"userInfoData" dataForKey:vals withReply:^(NSError *error) {
+                         }] postProvisioningData:@"userInfoData" dataForKey:myData dataType:@"dict" withReply:^(NSError *error) {
                             dispatch_sync(dispatch_get_main_queue(), ^()
                                {
                                    
@@ -280,16 +329,19 @@
                                        [alert setAlertStyle:NSCriticalAlertStyle];
                                        [alert runModal];
                                    } else {
-                                       [self->_tabBar selectNextTabViewItem:NULL];
+                                       //[self->_tabBar selectNextTabViewItem:NULL];
+                                       [self->_tabBar selectTabViewItemAtIndex:(_selectedIndex + 1)];
                                    }
                                });
                          }];
                      }
                  }];
             }
-        } else {
-        
-            [_tabBar selectNextTabViewItem:NULL];
+        }
+        else
+        {
+            //[_tabBar selectNextTabViewItem:NULL];
+            [self->_tabBar selectTabViewItemAtIndex:(_selectedIndex + 1)];
         }
     }
     
@@ -385,25 +437,6 @@
     self.selectedTabViewItem = tabViewItem.identifier;
 }
 
-/*
-- (BOOL)tabView:(NSTabView *)tabView shouldSelectTabViewItem:(NSTabViewItem *)tabViewItem
-{
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    if ([tabViewItem.identifier isEqualToString:@"2"]) {
-        [self.collectionWebView evaluateJavaScript:@"document.getElementById('oun').value;" completionHandler:^(id Result, NSError *error) {
-            NSLog(@"Error -> %@", error);
-            NSLog(@"%@", Result);
-            dispatch_semaphore_signal(sem);
-            
-        }];
-        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        return YES;
-    }
-    
-    return YES;
-}
-*/
-
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
     //NSLog(@"%@",tabViewItem.identifier);
@@ -415,16 +448,21 @@
         htmlString = [self htmlForFile:@"blank"];
     }
     
-    if ([tabViewItem.identifier isEqualToString:@"0"]) {
+    if ([tabViewItem.identifier isEqualToString:@"0"])
+    {
         _welcomeWebView.allowsBackForwardNavigationGestures = NO;
         [_welcomeWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Begin"];
-    } else if ([tabViewItem.identifier isEqualToString:@"1"]) {
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"1"])
+    {
         _collectionWebView.allowsBackForwardNavigationGestures = NO;
         [_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Continue"];
         [_closeWindowButton setEnabled:NO];
-    } else if ([tabViewItem.identifier isEqualToString:@"2"]) {
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"2"])
+    {
         [_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         /*[self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
          */
@@ -450,8 +488,9 @@
         
         [_skipButton setHidden:NO];
         [_stepperButton setTitle:@"Install"];
-    } else if ([tabViewItem.identifier isEqualToString:@"3"]) {
-        //[finishWebView setMainFrameURL:[self urlForFile:@"finish"]];
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"3"])
+    {
         _finishWebView.allowsBackForwardNavigationGestures = NO;
         [_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setEnabled:YES];

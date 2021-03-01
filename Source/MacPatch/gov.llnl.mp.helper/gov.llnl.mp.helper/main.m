@@ -55,7 +55,9 @@ static void setUpLogging ()
         logit(lcl_vInfo,@"***** gov.llnl.mp.helper started -- Debug Enabled *****");
     } else {
         // enable logging for all components up to level Info
-        lcl_configure_by_name("*", lcl_vInfo);
+        //lcl_configure_by_name("*", lcl_vInfo);
+        lcl_configure_by_name("*", lcl_vDebug);
+        [MPLog MirrorMessagesToStdErr:YES];
         logit(lcl_vInfo,@"***** gov.llnl.mp.helper started *****");
     }
 }

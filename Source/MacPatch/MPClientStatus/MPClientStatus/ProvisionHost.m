@@ -12,6 +12,7 @@
 @interface ProvisionHost()
 {
     NSFileManager *fm;
+    MPSettings *settings;
 }
 
 - (NSDictionary *)getProvisionData;
@@ -23,6 +24,9 @@
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
 
+- (NSDictionary *)getSoftwareTaskForID:(NSString *)swTaskID;
+- (NSDictionary *)getDataFromWS:(NSString *)urlPath;
+
 @end
 
 @implementation ProvisionHost
@@ -33,6 +37,8 @@
     if (self)
     {
         fm = [NSFileManager defaultManager];
+        settings = [MPSettings sharedInstance];
+        
         [self connectAndExecuteCommandBlock:^(NSError * connectError) {
             if (connectError != nil) {
                 qlerror(@"workerConnection[connectError][ProvisionHost][init]: %@",connectError.localizedDescription);
@@ -103,7 +109,7 @@
             {
                 qlinfo(@"Install Software Task: %@",s[@"name"]);
                 @try {
-                    int res = [self installSoftware:s];
+                    int res = [self installSoftwareProvisonTask:s];
                     if (res != 0) {
                         [self writeToKeyInProvisionFile:@"status" data:[NSString stringWithFormat:@"Software: Failed to install %@ (%@)",s[@"name"],s[@"tuuid"]]];
                     }
@@ -148,7 +154,6 @@
     // Call Web Service for all data to povision
     NSDictionary *result = nil;
     NSError *err = nil;
-    MPSettings *settings = [MPSettings sharedInstance];
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     NSDictionary *data = [mprest getProvisioningDataForHost:settings.ccuid error:&err];
     if (err) {
@@ -166,6 +171,28 @@
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data
 {
     qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
+    NSString *_type;
+    NSData *myData; = [NSKeyedArchiver archivedDataWithRootObject:data];
+    
+    NSString *_class = NSStringFromClass([data class]);
+    if ([_class containsString:@"String"]) {
+        _type = @"string";
+        myData = [NSKeyedArchiver archivedDataWithRootObject:data];
+    } else if ([_class containsString:@"Dictionary"]) {
+        _type = @"dict";
+        myData = [NSKeyedArchiver archivedDataWithRootObject:data];
+    } else if ([_class containsString:@"Array"]) {
+        _type = @"array";
+        myData = [NSKeyedArchiver archivedDataWithRootObject:data];
+    } else if ([_class containsString:@"Bool"]) {
+        _type = @"bool";
+        myData = [NSKeyedArchiver archivedDataWithRootObject:[NSNumber numberWithBool:data]];
+    } else {
+        qlerror(@"Type (%@) not known, data will not be written.",[data class]);
+        return;
+    }
+    
+    
     
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
@@ -173,7 +200,7 @@
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                 qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
-            }] postProvisioningData:key dataForKey:data withReply:^(NSError *error) {
+            }] postProvisioningData:key dataForKey:myData dataType:_type withReply:^(NSError *error) {
                 if (error) {
                     qlerror(@"Error posting data to key %@",key);
                     qlerror(@"Data %@",data);
@@ -213,9 +240,12 @@
 }
 
 // Helper
-- (int)installSoftware:(NSDictionary *)swDict
+- (int)installSoftwareProvisonTask:(NSDictionary *)swTask
 {
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    
+    NSDictionary *swDict = [self getSoftwareTaskForID:swTask[@"tuuid"]];
+    
     
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
@@ -229,7 +259,7 @@
             }] installSoftware:swDict withReply:^(NSError *error, NSInteger resultCode, NSData *installData ) {
                 res = resultCode;
                 if (error) {
-                    qlerror(@"Error installing %@.",swDict[@"name"]);
+                    qlerror(@"Error installing %@.",swTask[@"name"]);
                     qlerror(@"%@",error);
                 }
                 dispatch_semaphore_signal(sem);
@@ -343,5 +373,43 @@
         //[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
     }
      */
+}
+
+#pragma mark - Private
+
+- (NSDictionary *)getSoftwareTaskForID:(NSString *)swTaskID
+{
+    NSDictionary *task = nil;
+    NSDictionary *data = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/provision/task/%@/%@", swTaskID, settings.ccuid];
+    data = [self getDataFromWS:urlPath];
+    if (data[@"data"])
+    {
+        task = data[@"data"];
+    }
+    
+    return task;
+}
+
+- (NSDictionary *)getDataFromWS:(NSString *)urlPath
+{
+    NSDictionary *result = nil;
+    MPHTTPRequest *req;
+    MPWSResult *wsresult;
+    
+    req = [[MPHTTPRequest alloc] init];
+    wsresult = [req runSyncGET:urlPath];
+    
+    if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
+        qldebug(@"Get Data from web service (%@) returned true.",urlPath);
+        qldebug(@"Data Result: %@",wsresult.result);
+        result = wsresult.result;
+    } else {
+        qlerror(@"Get Data from web service (%@), returned false.", urlPath);
+        qldebug(@"%@",wsresult.toDictionary);
+    }
+    
+    return result;
 }
 @end

@@ -53,4 +53,5 @@
 - (void)runGetServerListOperation;
 - (void)runPostFailedWSRequests;
 
+- (int)getProvisioningConfig;
 @end

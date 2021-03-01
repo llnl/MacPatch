@@ -1082,6 +1082,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 - (BOOL)downloadSoftware:(NSDictionary *)swTask toDestination:(NSString *)toPath
 {
+    qlinfo(@"downloadSoftware for task %@",swTask[@"name"]);
 	NSString *_url;
 	NSInteger useS3 = [[swTask valueForKeyPath:@"Software.sw_useS3"] integerValue];
 	if (useS3 == 1) {
@@ -2410,9 +2411,23 @@ done:
     reply(err);
 }
 
-- (void)postProvisioningData:(NSString *)key dataForKey:(id)data withReply:(void(^)(NSError *error))reply
+- (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
 {
     NSError *err = nil;
+    id _data = nil;
+    
+    if ([[dataType lowercaseString] isEqualToString:@"string"]) {
+        _data = (NSString*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"dict"]) {
+        _data = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"array"]) {
+        _data = (NSArray*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file. Type not supported."};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+        reply(err);
+    }
+
     MPFileCheck *fu = [MPFileCheck new];
     
     NSMutableDictionary *_pFile;
@@ -2428,10 +2443,10 @@ done:
         if (_pFile[@"status"]) {
             _status = [_pFile[@"status"] mutableCopy];
         }
-        [_status addObject:data];
+        [_status addObject:_data];
         _pFile[key] = _status;
     } else {
-        _pFile[key] = data;
+        _pFile[key] = _data;
     }
     
     /* This Fails for some reason.

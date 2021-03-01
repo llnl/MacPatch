@@ -134,6 +134,17 @@ function setupPyVirtEnv
 }
 
 # ******************************************************************
+# Check for Provision Done file
+if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
+	touch "/private/var/db/.MPProvisionBegin"
+	/Library/MacPatch/Client/MPAgent --provisionConfig
+	if [ $? != 0 ]; then
+		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
+		rm /private/var/db/.MPProvisionBegin
+	fi
+fi
+
+# ******************************************************************
 # Copy in client version info
 if [ -e "${SRC}/.mpVersion.plist" ]; then
     rm -f "${MP_ROOT_CLIENT}/.mpVersion.plist"
@@ -310,7 +321,7 @@ fi
 # Launch PlanB		    ********************************************
 #
 if [ -f "/Library/LaunchDaemons/gov.llnl.mp.planb.plist" ]; then
-	
+
 	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.planb.plist
 	sleep 2
 fi

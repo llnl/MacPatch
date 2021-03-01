@@ -235,4 +235,14 @@
  @return NSDictionary
  */
 - (NSDictionary *)getProvisioningDataForHost:(NSString *)clientID error:(NSError **)err;
+
+/**
+ Get provisioning config json data, needs to be written to file.
+ Will return NSString of JSON data
+ 
+ @param err Error object
+ 
+ @return NSString
+ */
+- (NSString *)getProvisioningConfig:(NSError **)err;
 @end
