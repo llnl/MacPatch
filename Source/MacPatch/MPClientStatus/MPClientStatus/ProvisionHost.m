@@ -64,7 +64,7 @@
     
     [self writeToKeyInProvisionFile:@"startDT" data:[MPDate dateTimeStamp]];
     [self writeToKeyInProvisionFile:@"stage" data:@"getData"];
-    [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:NO]];
+    [self writeToKeyInProvisionFile:@"completed" data:@{@"completed":[NSNumber numberWithBool:NO]} type:@"bool"];
     
     // Get Data
     NSDictionary *provisionData = [self getProvisionData];
@@ -72,8 +72,8 @@
         qlerror(@"Provisioning data from web service is nil. Now exiting.");
         res = 1;
         [self writeToKeyInProvisionFile:@"endDT" data:[MPDate dateTimeStamp]];
-        [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:YES]];
-        [self writeToKeyInProvisionFile:@"failed" data:[NSNumber numberWithBool:YES]];
+        [self writeToKeyInProvisionFile:@"completed" data:@{@"completed":[NSNumber numberWithBool:YES]} type:@"bool"];
+        [self writeToKeyInProvisionFile:@"failed" data:@{@"failed":[NSNumber numberWithBool:NO]} type:@"bool"];
         return res;
     } else {
         // Write Provision Data to File
@@ -170,9 +170,14 @@
 // Helper
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data
 {
+    return [self writeToKeyInProvisionFile:key data:data type:@"NA"];
+}
+
+- (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data type:(NSString *)type
+{
     qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
     NSString *_type;
-    NSData *myData; = [NSKeyedArchiver archivedDataWithRootObject:data];
+    NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:data];
     
     NSString *_class = NSStringFromClass([data class]);
     if ([_class containsString:@"String"]) {
@@ -184,12 +189,14 @@
     } else if ([_class containsString:@"Array"]) {
         _type = @"array";
         myData = [NSKeyedArchiver archivedDataWithRootObject:data];
-    } else if ([_class containsString:@"Bool"]) {
-        _type = @"bool";
-        myData = [NSKeyedArchiver archivedDataWithRootObject:[NSNumber numberWithBool:data]];
     } else {
-        qlerror(@"Type (%@) not known, data will not be written.",[data class]);
-        return;
+        if ([type isEqualToString:@"bool"]) {
+            _type = @"bool";
+            myData = [NSKeyedArchiver archivedDataWithRootObject:data];
+        } else {
+            qlerror(@"Type (%@) not known, data will not be written.",[data class]);
+            return;
+        }
     }
     
     

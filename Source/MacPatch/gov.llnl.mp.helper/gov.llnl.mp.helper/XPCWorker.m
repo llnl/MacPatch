@@ -2422,6 +2422,10 @@ done:
         _data = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
     } else if ([[dataType lowercaseString] isEqualToString:@"array"]) {
         _data = (NSArray*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"bool"]) {
+        // Bools are wrapped in NSDict key = key
+        NSDictionary *x = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        _data = x[key];
     } else {
         NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file. Type not supported."};
         err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];

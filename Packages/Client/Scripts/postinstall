@@ -53,6 +53,10 @@ function runClientActions
 	/Library/MacPatch/Client/MPAgent -c
 	sleep 1
 
+	# Get Provisioning Config
+	/Library/MacPatch/Client/MPAgent --provisionConfig
+	sleep 1
+
 	# Run Profile Installs
 	/Library/MacPatch/Client/MPAgent -p
 }
