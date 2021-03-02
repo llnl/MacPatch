@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Installer
-# ver 2.1
+# ver 2.2
 # Created By Charles Heizer
 # LLNL
 #
@@ -111,5 +111,24 @@ rm -rf "/Library/MacPatch/Client/Tools"
 # Clear Softwareupdate catalog url, prevents incorrect url's from being maintained.
 #
 /usr/sbin/softwareupdate --clear-catalog
+
+# ******************************************************************
+# Set Agent Plist data ...
+# Moved this to pre-install to make sure the plist is there.
+#
+if [ ! -d /Library/Application\ Support/MacPatch ]; then
+	mkdir -p /Library/Application\ Support/MacPatch
+fi
+
+# Add Initial Agent Config Data
+cp "${SRC}/gov.llnl.mpagent.plist" /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+
+if [ -e "/Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist" ]; then
+	echo "/L/AS/M/gov.llnl.mpagent.plist missing"
+fi
+
+# Set Permissions
+chown -R root:admin "/Library/Application Support/MacPatch"
+chmod -R 775 "/Library/Application Support/MacPatch"
 
 exit 0

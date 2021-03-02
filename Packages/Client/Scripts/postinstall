@@ -1,8 +1,8 @@
-#!/bin/sh -x
+#!/bin/sh
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
-# ver 3.5.0
+# ver 3.5.1
 # Created By Charles Heizer @ LLNL
 #
 # ***************************************************************************************
@@ -53,10 +53,6 @@ function runClientActions
 	/Library/MacPatch/Client/MPAgent -c
 	sleep 1
 
-	# Get Provisioning Config
-	/Library/MacPatch/Client/MPAgent --provisionConfig
-	sleep 1
-
 	# Run Profile Installs
 	/Library/MacPatch/Client/MPAgent -p
 }
@@ -68,6 +64,7 @@ function removeOldRegFiles
 	existsAndDelete "/Library/Application Support/MacPatch/.MacPatch.keychain"
 	existsAndDelete "/Library/Application Support/MacPatch/gov.llnl.mp.plist"
 }
+
 # ******************************************************************
 # Set Up Python Virtualenv
 
@@ -138,17 +135,6 @@ function setupPyVirtEnv
 }
 
 # ******************************************************************
-# Check for Provision Done file
-if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
-	touch "/private/var/db/.MPProvisionBegin"
-	/Library/MacPatch/Client/MPAgent --provisionConfig
-	if [ $? != 0 ]; then
-		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
-		rm /private/var/db/.MPProvisionBegin
-	fi
-fi
-
-# ******************************************************************
 # Copy in client version info
 if [ -e "${SRC}/.mpVersion.plist" ]; then
     rm -f "${MP_ROOT_CLIENT}/.mpVersion.plist"
@@ -174,12 +160,15 @@ agentPrefsPlist="/Library/Application Support/MacPatch/gov.llnl.mpagent.plist"
 # ******************************************************************
 # Set Agent Plist data ...
 #
+
 if [ ! -d /Library/Application\ Support/MacPatch ]; then
 	mkdir -p /Library/Application\ Support/MacPatch
 fi
 
 # Add Initial Agent Config Data
-cp "${SRC}/gov.llnl.mpagent.plist" /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+if [ ! -f "/Library/Application Support/MacPatch/gov.llnl.mpagent.plist" ]; then
+	cp "${SRC}/gov.llnl.mpagent.plist" /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+fi
 
 # Add new option to stage patches
 # defaults write "${agentPrefsPlist}" PreStageUpdates -bool YES
@@ -232,6 +221,17 @@ fi
 if [ -f "${SRC}/ServerPub.pem" ]; then
 	mkdir -p "/Library/Application Support/MacPatch/.keys"
 	cp "${SRC}/ServerPub.pem" "/Library/Application Support/MacPatch/.keys/ServerPub.pem"
+fi
+
+# ******************************************************************
+# Check for Provision Done file
+if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
+	touch "/private/var/db/.MPProvisionBegin"
+	/Library/MacPatch/Client/MPAgent --provisionConfig
+	if [ $? != 0 ]; then
+		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
+		rm /private/var/db/.MPProvisionBegin
+	fi
 fi
 
 # ******************************************************************
@@ -302,9 +302,6 @@ fi
 # ******************************************************************
 # Launch the Helper service  ***************************************
 #
-
-#/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
-#/bin/sleep 2
 
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 /bin/sleep 2
