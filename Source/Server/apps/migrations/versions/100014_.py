@@ -20,6 +20,7 @@ def upgrade():
 
 	op.create_table('mp_provision_ui_config',
 					sa.Column('rid', sa.BigInteger(), nullable=False, autoincrement=True),
+					sa.Column('configName', sa.String(length=255), nullable=False),
 					sa.Column('config', mysql.TEXT(), nullable=False),
 					sa.Column('active', sa.Integer(), server_default='1', nullable=True),
 					sa.Column('scope', sa.Integer(), server_default='0', nullable=True),
