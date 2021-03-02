@@ -11,7 +11,7 @@ from .. wsresult import *
 from .. shared.agentRegistration import *
 from .. MSIntune import MPTaskJobs
 
-from M2Crypto import RSA
+import M2Crypto
 import hashlib
 import base64
 import uuid
@@ -190,7 +190,11 @@ class RegistrationStatus(MPResource):
 ''' Private Methods '''
 def verifyClientHash(encodedKey, hash):
 	if encodedKey is not None:
-		_lHash = hashlib.sha1(str(encodedKey).encode('utf-8')).hexdigest()
+		if isinstance(encodedKey, (bytes, bytearray)) == False:
+			# Object is not encoded, needs to be
+			encodedKey = encodedKey.encode('utf-8')
+
+		_lHash = hashlib.sha1(encodedKey).hexdigest()
 		if _lHash.lower() == hash.lower():
 			return True
 		else:
@@ -206,8 +210,13 @@ def decodeClientKey(encodedKey):
 		f.write(qKeys.priKey)
 		f.close()
 
-		priv = RSA.load_key(priKeyFile)
-		decrypted = priv.private_decrypt(base64.b64decode(encodedKey), RSA.pkcs1_padding)
+		priv = M2Crypto.RSA.load_key(priKeyFile)
+
+		# old
+		#decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_padding)
+		# new
+		decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_oaep_padding)
+
 		os.remove(priKeyFile)
 		return decrypted
 
