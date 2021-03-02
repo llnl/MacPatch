@@ -2,7 +2,7 @@
 //  main.m
 //  MPAgent
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -588,7 +588,8 @@ int main (int argc, char * argv[])
             case 22:
                 // Download Provisioning Config
                 mpac = [[AgentController alloc] init];
-                exit([mpac getProvisioningConfig]);
+                result = [mpac getProvisioningConfig];
+                exit(result);
                 break;
             case 8888:
                 mpac = [[AgentController alloc] init];

@@ -3,7 +3,7 @@
 //  gov.llnl.mp.worker
 //
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -868,7 +868,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Install PKG
 		// ------------------------------------------------
-		[self postStatus:@"Installing %@",[dlSoftwareFile stringByDeletingLastPathComponent]];
+		[self postStatus:@"Installing %@",dlSoftwareFile.lastPathComponent];
 		result = [self installPkgFromZIP:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swItem[@"pkgEnv"]];
 		
 		// ------------------------------------------------
@@ -2473,6 +2473,16 @@ done:
     reply(err);
 }
 
+- (void)touchFile:(NSString *)filePath withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if (![fm fileExistsAtPath:filePath]) {
+        [@"NA" writeToFile:filePath atomically:NO encoding:NSUTF8StringEncoding error:&err];
+    }
+    
+    reply(err);
+}
 
 #pragma mark - Test Code
 

@@ -911,17 +911,9 @@
     
     if ([ws_result objectForKey:@"data"])
     {
-        if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
-        {
-            qldebug(@"Web Servce result: %@",ws_result);
-            NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[ws_result objectForKey:@"data"] options:0];
-            result = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
-        }
-        else
-        {
-            qlerror(@"Result was not of type dictionary.");
-            qlerror(@"Result: %@", ws_result);
-        }
+        qldebug(@"Web Servce result: %@",ws_result);
+        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[ws_result objectForKey:@"data"] options:0];
+        result = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
     }
     
     return result;

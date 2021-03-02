@@ -49,7 +49,7 @@
                     if (error) {
                         qlerror(@"%@",error.localizedDescription);
                     } else {
-                        qlinfo(@"MP_PROVISION_DIR created");
+                        qldebug(@"MP_PROVISION_DIR created");
                     }
                 }];
             }
@@ -87,7 +87,7 @@
         if (_pre.count >= 1) {
             for (NSDictionary *s in _pre)
             {
-                qlinfo(@"Pre Script: %@",s[@"name"]);
+                qldebug(@"Pre Script: %@",s[@"name"]);
                 @try {
                     [self runScript:s[@"script"]];
                 } @catch (NSException *exception) {
@@ -130,7 +130,7 @@
         if (_post.count >= 1) {
             for (NSDictionary *s in _post)
             {
-                qlinfo(@"Post Script: %@",s[@"name"]);
+                qldebug(@"Post Script: %@",s[@"name"]);
                 @try {
                     [self runScript:s[@"script"]];
                 } @catch (NSException *exception) {
@@ -175,7 +175,7 @@
 
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data type:(NSString *)type
 {
-    qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
+    //qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
     NSString *_type;
     NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:data];
     

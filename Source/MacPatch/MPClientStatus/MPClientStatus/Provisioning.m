@@ -54,6 +54,7 @@
 @property (weak) IBOutlet NSButton *skipButton;
 @property (weak) IBOutlet NSTextView *softwareTextView;
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
+@property (weak) IBOutlet NSProgressIndicator *progressWheel;
 @property (weak) IBOutlet NSTextField *progressStatus;
 @property (weak) NSString *selectedTabViewItem;
 @property (weak) NSString *swGroup;
@@ -127,33 +128,31 @@
 {
     @autoreleasepool
     {
-        qlinfo(@"runProvisionHostThread");
         BOOL beginProvision = NO;
         NSDictionary *provisionFileData = [self readProvisioningFile];
-        qlinfo(@"provisionFileData: %@", provisionFileData);
+        qldebug(@"provisionFileData: %@", provisionFileData);
         if (provisionFileData[@"stage"])
         {
             if ([[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
             {
                 beginProvision = YES;
-                qlinfo(@"beginProvision = YES");
+                qldebug(@"beginProvision = YES");
             }
         } else {
             // File is empty 
             beginProvision = YES;
-            qlinfo(@"beginProvision = YES, File is empty");
+            qldebug(@"beginProvision = YES, File is empty");
         }
         
         // Host need initial required provisioning software installed.
         if (beginProvision)
         {
-            qlinfo(@"beginProvision");
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
             });
             [NSThread sleepForTimeInterval:1.5];
+            
             NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
-            qlinfo(@"%@",jsTxt);
             [self writeStatusToHTML:jsTxt];
             
             ProvisionHost *ph = [ProvisionHost new];
@@ -167,7 +166,7 @@
                     [self->_closeWindowButton setEnabled:YES];
                 });
             } else {
-                qlinfo(@"result != 0");
+                qlerror(@"result != 0");
             }
         }
     }
@@ -184,17 +183,9 @@
     return [_pFile copy];
 }
 
+// Test Method, button is hidden
 - (IBAction)writeJS:(NSButton *)sender
 {
-    //[self writeStatusToHTML:@"Required software needs to be installed. Once completed, you may begin."];
-    /*
-    NSString *jsTxt = [NSString stringWithFormat:@"addStatus(\"%@\");",@"Required software needs to be installed. Once completed, you may begin."];
-    [_welcomeWebView evaluateJavaScript:jsTxt completionHandler:^(id Result, NSError * error) {
-        NSLog(@"Error -> %@", error);
-    }];
-     */
-    qlinfo(@"writeJS");
-    
     [self connectAndExecuteCommandBlock:^(NSError * connectError)
      {
          if (connectError != nil)
@@ -280,18 +271,31 @@
         [_stepperButton setTitle:@"Continue"];
         [self performSelectorInBackground:@selector(installSoftwareThread) withObject:nil];
         // Start installs
-    } else if ([sender.title isEqualToString:@"Install"]) {
-        // Code to reboot host
+    } else if ([sender.title isEqualToString:@"Reboot"]) {
+        // Write Done file and Code to reboot host
+        [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+             if (connectError != nil) {
+                 qlerror(@"connectError: %@",connectError.localizedDescription);
+             } else {
+                 [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                     qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                 }] touchFile:MP_PROVISION_DONE withReply:^(NSError *error) {
+                    dispatch_sync(dispatch_get_main_queue(), ^() {
+                       if (error) {
+                           qlerror(@"Error writing provisioning done file.");
+                       }
+                    });
+                 }];
+             }
+        }];
         [self closeWindow:nil];
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
         {
-            qlinfo(@"Get All Values");
             // Get All Values
             NSError *err = nil;
             NSDictionary *vals = [self getHTMLValues:&err];
             __block NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:vals];
-            qlinfo(@"vals: %@",vals);
             
             if (err) {
                 NSLog(@"Error: %@",err.localizedDescription);
@@ -651,6 +655,8 @@
             [self->_skipButton setHidden:YES];
             [self->_progressBar setHidden:NO];
             [self->_progressStatus setHidden:NO];
+            [self->_progressWheel setHidden:NO];
+            [self->_progressWheel startAnimation:nil];
             self->_progressBar.doubleValue = 0.0;
             self->_progressBar.maxValue = self->_swForGroup.count;
         });
@@ -667,6 +673,8 @@
         }
         
         dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_progressWheel stopAnimation:nil];
+            [self->_progressWheel setHidden:YES];
             self->_progressStatus.stringValue = @"Install(s) complete.";
             [self->_stepperButton setEnabled:YES];
             [self->_stepperButton setTitle:@"Continue"];
@@ -809,6 +817,15 @@
 {
     if (type == kMPProcessStatus) {
         dispatch_async(dispatch_get_main_queue(), ^{
+            qlinfo(@"status: %@",status);
+            /*
+            if ([status containsString:@"Installing /Lib"]) {
+                NSString *st = [NSString stringWithFormat:@"Installing %@",status.lastPathComponent];
+                self->_progressStatus.stringValue = st;
+            } else {
+                
+            }
+             */
             self->_progressStatus.stringValue = status;
         });
         //[self postSWStatus:status];

@@ -16,6 +16,7 @@
                 <outlet property="installWebView" destination="bOf-Ru-8UJ" id="JIN-EW-Inq"/>
                 <outlet property="progressBar" destination="yec-6T-3fB" id="5KF-LP-beY"/>
                 <outlet property="progressStatus" destination="sTi-wd-hM0" id="zXH-B2-utF"/>
+                <outlet property="progressWheel" destination="ryw-rD-BpA" id="SF9-6c-UhN"/>
                 <outlet property="skipButton" destination="qAo-IL-BAW" id="m6W-MF-JSk"/>
                 <outlet property="softwareTextView" destination="4n1-zl-c8U" id="kr4-Bi-hDA"/>
                 <outlet property="stepperButton" destination="rLL-XP-B38" id="a5B-Uh-ukI"/>
@@ -127,7 +128,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
                                             <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="7lf-r5-nG1">
                                                 <rect key="frame" x="1" y="1" width="602" height="262"/>
-                                                <autoresizingMask key="autoresizingMask"/>
+                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
                                                     <textView importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="4n1-zl-c8U">
                                                         <rect key="frame" x="0.0" y="0.0" width="602" height="262"/>
@@ -150,6 +151,10 @@
                                                 <autoresizingMask key="autoresizingMask"/>
                                             </scroller>
                                         </scrollView>
+                                        <progressIndicator hidden="YES" wantsLayer="YES" fixedFrame="YES" maxValue="100" indeterminate="YES" controlSize="small" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="ryw-rD-BpA">
+                                            <rect key="frame" x="411" y="34" width="16" height="16"/>
+                                            <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                        </progressIndicator>
                                         <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sTi-wd-hM0">
                                             <rect key="frame" x="126" y="58" width="587" height="16"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>

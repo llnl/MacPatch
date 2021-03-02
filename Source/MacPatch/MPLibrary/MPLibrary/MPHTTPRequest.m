@@ -352,6 +352,7 @@
 	NSString *url;
 	NSString *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
 	NSString *res;
+    
 	for (Server *s in self.serverArray)
 	{
 		self.allowSelfSignedCert = (s.allowSelfSigned == 1) ? YES : NO;
@@ -484,6 +485,7 @@
 	Server *server = [self.serverArray objectAtIndex:self.requestCount];
 	self.allowSelfSignedCert = (server.allowSelfSigned == 1) ? YES : NO;
 	
+    
 	NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
 	qlinfo(@"URL: %@",url);
 	
@@ -538,6 +540,7 @@
 {
 	NSData *result = nil;
 	NSString *url;
+    
 	for (Server *server in self.serverArray)
 	{
 		self.allowSelfSignedCert = NO;

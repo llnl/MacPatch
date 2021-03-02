@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -252,7 +252,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	[self fvUserCheck];
     
     // Run Provisioning
-    if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/var/db/.MPProvisionBegin"])
+    if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
     {
         qlinfo(@".MPProvisionBegin found. Begin provisioning.");
         self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
@@ -597,7 +597,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     @autoreleasepool
     {
-        logit(lcl_vInfo, @"Running client patch status request.");
+        qlinfo(@"Running client patch status request.");
         
         self.patchNeedsReboot = NO;
         self.patchCount = 0;

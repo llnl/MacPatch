@@ -1,7 +1,7 @@
 //
 //  Constants.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -96,6 +96,9 @@ NSString * const MP_PROVISION_DIR          = @"/Library/Application Support/MacP
 NSString * const MP_PROVISION_FILE         = @"/Library/Application Support/MacPatch/Provision/MPProvision.plist"; // New - Provisioning Status and details
 NSString * const MP_PROVISION_DATA_FILE    = @"/Library/Application Support/MacPatch/Provision/provision.json"; // New - Provisioning Status and details
 //NSString * const MP_PROVISION_DATA_FILE    = @"/Library/MacPatch/Client/Data/provision.json"; // New - Provisioning Status and details
+
+NSString * const MP_PROVISION_BEGIN        = @"/private/var/db/.MPProvisionBegin";
+NSString * const MP_PROVISION_DONE         = @"/private/var/db/.MPProvisionDone";
 
 
 // In a source file

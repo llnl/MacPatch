@@ -1,7 +1,7 @@
 //
 //  Constants.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -95,6 +95,8 @@ extern NSString * const MP_AUTHSTATUS_FILE;
 extern NSString * const MP_PROVISION_DIR;
 extern NSString * const MP_PROVISION_FILE;
 extern NSString * const MP_PROVISION_DATA_FILE;
+extern NSString * const MP_PROVISION_BEGIN;
+extern NSString * const MP_PROVISION_DONE;
 
 #pragma mark - ENUMS
 

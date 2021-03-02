@@ -1,7 +1,7 @@
 //
 //  AgentController.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -1058,6 +1058,7 @@
             qlerror(@"%@",err.localizedDescription);
             return 1;
         } else {
+            // if config exists, remove so we can write a new one
             if ([fm fileExistsAtPath:MP_PROVISION_DATA_FILE])
             {
                 [fm removeItemAtPath:MP_PROVISION_DATA_FILE error:&err]; // File exists, remove it
@@ -1074,6 +1075,8 @@
                 qlerror(@"Error writing provisioning configuration to disk.");
                 qlerror(@"%@",err.localizedDescription);
             }
+            qlinfo(@"Wrote %@ config file.1",MP_PROVISION_DATA_FILE);
+            qlinfo(@"%@",configJSON);
         }
     } else {
         [fm createDirectoryRecursivelyAtPath:MP_PROVISION_DIR];
@@ -1083,6 +1086,8 @@
             qlerror(@"%@",err.localizedDescription);
             return 1;
         }
+        qlinfo(@"Wrote %@ config file.2",MP_PROVISION_DATA_FILE);
+        qlinfo(@"%@",configJSON);
     }
     
     return 0;
