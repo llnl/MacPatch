@@ -1,6 +1,6 @@
 from mpapi import db
 
-# Rev 20
+# Rev 22
 #
 
 from datetime import *
@@ -1000,6 +1000,19 @@ class MpProvisionConfig(CommonBase):
 	config = Column(Text, nullable=False)
 	active = Column(Integer, server_default='1')
 	scope = Column(Integer, server_default='0')
+	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# mp_provision_criteria
+class MpProvisionCriteria(CommonBase):
+
+	__tablename__ = 'mp_provision_criteria'
+
+	rid = Column(BigInteger, primary_key=True, autoincrement=True)
+	type = Column(String(50), nullable=False)
+	type_data = Column(Text, nullable=False)
+	order = Column(Integer, server_default='99')
+	active = Column(Integer, server_default='0')
+	scope = Column(String(50), nullable=False, server_default='prod')
 	mdate = Column(DateTime, server_default='1970-01-01 00:00:00')
 
 # ------------------------------------------

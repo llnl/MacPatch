@@ -24,6 +24,18 @@
   width: 900px;
 }
 
+.modal.modal-mid-60 .modal-dialog {
+  width: 60%;
+}
+
+.modal.modal-mid-70 .modal-dialog {
+  width: 70%;
+}
+
+.modal.modal-mid-80 .modal-dialog {
+  width: 80%;
+}
+
 .modal.modal-wide .modal-dialog {
   width: 90%;
 }

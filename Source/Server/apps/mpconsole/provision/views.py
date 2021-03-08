@@ -326,3 +326,130 @@ def uiConfigUpload():
 def allowed_file(filename):
 	extensions = ['json']
 	return '.' in filename and filename.rsplit('.', 1)[1].lower() in extensions
+
+@provision.route('/test')
+@login_required
+def testTask():
+
+	_data = {}
+	mps = MpSoftware.query.filter(MpSoftware.sState == 2).all()
+
+	_swPkgs = []
+	for s in mps:
+		_swPkgs.append((s.suuid, s.sName, s.sVersion))
+
+	_data["SoftwareList"] = _swPkgs
+
+	return render_template('provision/test.html', data=_data, isAdmin=True)
+
+@provision.route('/criteria')
+@login_required
+def criteria():
+	cList = MpProvisionCriteria.query.order_by(MpProvisionCriteria.order.asc()).all()
+	cListCols = MpProvisionCriteria.__table__.columns
+	cListColsLimited = ['rid', 'type', 'type_data', 'order', 'active', 'mdate']
+
+	return render_template('provision/criteria.html', data={}, columns=cListColsLimited, columnsAll=cListCols)
+
+''' AJAX Request '''
+@provision.route('/criteria/list', methods=['GET'])
+@login_required
+def criteriaList():
+	_results = []
+	pc = MpProvisionCriteria.query.all()
+
+	colNames = [{'name': 'cuuid', 'label': 'CUUID'}, {'name': 'client_group', 'label': 'Client Group'},
+				{'name': 'hostname', 'label': 'Host Name'}, {'name': 'computername', 'label': 'Computer Name'},
+				{'name': 'addomain', 'label': 'AD-Domain'}, {'name': 'addn', 'label': 'AD-DistinguishedName'},
+				{'name': 'ipaddr', 'label': 'IP Address'}, {'name': 'macaddr', 'label': 'MAC Address'},
+				{'name': 'serialno', 'label': 'Serial No'}, {'name': 'fileVaultStatus', 'label': 'FileVault'},
+				{'name': 'firmwareStatus', 'label': 'Firmware'}, {'name': 'osver', 'label': 'OS Ver'},
+				{'name': 'consoleuser', 'label': 'Console User'}, {'name': 'needsreboot', 'label': 'Needs Reboot'},
+				{'name': 'client_version', 'label': 'Client Ver'},
+				{'name': 'hasPausedPatching', 'label': 'Paused Patching'},
+				{'name': 'mdate', 'label': 'Mod Date'}]
+
+	_groups = []
+
+	for c in pc:
+		_dict = c.asDict
+		_dict['rid'] = c.rid
+		_results.append(_dict)
+
+	return json.dumps(_results, default=json_serial), 200
+
+@provision.route('/criteria/add')
+@login_required
+def criteriaAdd():
+	return render_template('provision/criteriaAdd.html', data={})
+
+@provision.route('/criteria/edit/<id>')
+@login_required
+def criteriaEdit(id):
+	_data = {}
+	pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.rid == id).first()
+	if pc is not None:
+		_data = pc.asDict
+		_data['rid'] = pc.rid
+
+	return render_template('provision/criteriaAdd.html', data=_data)
+
+''' AJAX Request '''
+@provision.route('/criteria/save', methods=['POST'])
+@login_required
+def criteriaSave():
+	_form = request.form.to_dict()
+	_isNew = False
+
+	if _form['rid'] == 'NA':
+		_isNew = True
+		pc = MpProvisionCriteria()
+	else:
+		pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.rid == _form['rid']).first()
+		if pc is None:
+			_isNew = True
+			pc = MpProvisionCriteria()
+
+	for key, value in list(_form.items()):
+		if key == 'rid':
+			continue
+		else:
+			setattr(pc, key, value)
+
+	setattr(pc, 'mdate', datetime.now())
+
+	if _isNew:
+		db.session.add(pc)
+
+	db.session.commit()
+	return json.dumps({'error': 0}), 201
+
+
+''' AJAX Request '''
+@provision.route('/criteria/active', methods=['POST'])
+@login_required
+def criteriaActive():
+	_form = request.form.to_dict()
+	pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.rid == _form['pk']).first()
+	if pc is not None:
+		setattr(pc, 'active', _form['value'])
+		setattr(pc, 'mdate', datetime.now())
+		db.session.commit()
+
+	return json.dumps({'error': 0}), 201
+
+''' AJAX Request '''
+@provision.route('/criteria/order', methods=['POST'])
+@login_required
+def criteriaOrder():
+	_form = request.form.to_dict()
+	pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.rid == _form['pk']).first()
+	if pc is not None:
+		if _form['value'].isnumeric():
+			setattr(pc, 'order', _form['value'])
+			setattr(pc, 'mdate', datetime.now())
+			db.session.commit()
+		else:
+			return json.dumps("Must be a number."), 409
+
+	return json.dumps({'error': 0}), 201

@@ -9,6 +9,8 @@ from .. model import *
 from .. mplogger import *
 from .. shared.client import *
 
+import base64
+
 parser = reqparse.RequestParser()
 
 class PatchGroups(MPResource):
@@ -273,24 +275,52 @@ class ProvisionConfig(MPResource):
 		qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
 		if qGet is not None:
 			rawData = qGet.config
-			#script = base64.b64decode(rawData.encode('utf-8'))
-			#_data['script'] = script.decode("utf-8")
-			#_data['scriptb64'] = script.decode("utf-8")
 
 		return {"errorno": 0, "errormsg": '',
 				"result": {'type': 'MpProvisionConfig', 'data': rawData},
 				'signature': signData(rawData)}, 200
 
+class ProvisionCriteria(MPResource):
+
+	def __init__(self):
+		self.reqparse = reqparse.RequestParser()
+		super(ProvisionCriteria, self).__init__()
+
+	def get(self, client_id, scope="prod"):
+		_data = {"query":[]}
+		_criteria = []
+		if scope == "prod":
+			pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.active == 1, MpProvisionCriteria.scope == 'prod').order_by(MpProvisionCriteria.order.asc()).all()
+		else:
+			pc = MpProvisionCriteria.query.filter(MpProvisionCriteria.active == 1, MpProvisionCriteria.scope == scope).order_by(MpProvisionCriteria.order.asc()).all()
+
+		if pc is not None:
+			for c in pc:
+				if c.type.lower() == 'script':
+					script_bytes = base64.b64encode(c.type_data.encode('utf-8'))
+					_criteria.append({'id': c.order, 'qstr': ("{}@{}").format(c.type, script_bytes.decode('utf-8'))})
+				else:
+					_criteria.append({'id':c.order,'qstr':("{}@{}").format(c.type,c.type_data)})
+
+			_data['query'] = _criteria
+
+		return {"errorno": 0, "errormsg": '',
+				"result": {'type': 'MpProvisionCriteria', 'data': _data},
+				'signature': signData(_data)}, 200
 
 # Add Routes Resources
-provisioning_api.add_resource(PatchGroups,     '/provisioning/groups/patch/<string:cuuid>')
-provisioning_api.add_resource(ClientGroups,    '/provisioning/groups/client/<string:cuuid>')
+provisioning_api.add_resource(PatchGroups,			'/provisioning/groups/patch/<string:cuuid>')
+provisioning_api.add_resource(ClientGroups,			'/provisioning/groups/client/<string:cuuid>')
 
 # Provisioning Status Data
-provisioning_api.add_resource(OSMigration,		'/provisioning/migration/<string:cuuid>')
+provisioning_api.add_resource(OSMigration,			'/provisioning/migration/<string:cuuid>')
 
 # Provisioning Software Tasks
-provisioning_api.add_resource(SWProvTasks,		'/provisioning/tasks/<string:client_id>')
-provisioning_api.add_resource(ProvisionData,	'/provisioning/data/<string:client_id>')
+provisioning_api.add_resource(SWProvTasks,			'/provisioning/tasks/<string:client_id>')
+provisioning_api.add_resource(ProvisionData,		'/provisioning/data/<string:client_id>')
 
-provisioning_api.add_resource(ProvisionConfig,	'/provisioning/config/<string:client_id>')
+# Provisioning UI Config Data
+provisioning_api.add_resource(ProvisionConfig,		'/provisioning/config/<string:client_id>')
+# Provisioning Criteria
+provisioning_api.add_resource(ProvisionCriteria,	'/provisioning/criteria/<string:client_id>', endpoint="base")
+provisioning_api.add_resource(ProvisionCriteria,	'/provisioning/criteria/<string:client_id>/<string:scope>', endpoint="filter")

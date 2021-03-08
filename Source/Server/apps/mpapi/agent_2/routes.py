@@ -179,7 +179,7 @@ class _AgentConfig(MPResource):
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error('[AgentConfig][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			log_Error('[AgentConfig][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
 			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def agentSettingsRev(self,group_id):
