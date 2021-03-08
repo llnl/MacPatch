@@ -67,6 +67,13 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     @IBOutlet weak var headerView: NSView!
     @IBOutlet weak var headerViewVersionLabel: NSTextField!
     
+    @IBOutlet weak var authUserID: NSTextField!
+    @IBOutlet weak var authUserPass: NSSecureTextField!
+    @IBOutlet weak var authStatusField: NSTextField!
+    @IBOutlet weak var choosePKGButton: NSButton!
+    @IBOutlet weak var choosePluginsButton: NSButton!
+    @IBOutlet weak var chooseProfilesButton: NSButton!
+    
     let defaults = UserDefaults.standard
     let fm = FileManager.default
     
@@ -221,22 +228,26 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     
     @IBAction func processAndUploadAgent(sender: AnyObject)
     {
+        self.resetUI()
+        
+        
+        
         // Check to see if we need to enable Self-Signed Certs
         if defaults.bool(forKey: "selfSigned") {
             MPAlamofire={ ()->Alamofire.Session in
-                //let policies:[String:ServerTrustPolicy]=[self.mpServerHost.stringValue: .disableEvaluation]
-                //let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
                 let manager = ServerTrustManager(evaluators: [self.mpServerHost.stringValue: DisabledTrustEvaluator()])
                 let session = Session(serverTrustManager: manager)
                 return session
             }()
         }
-		
+        
+        self.makeAuthRequest()
+		/*
 		if (UserDefaults.standard.string(forKey: "server") != self.mpServerHost.stringValue) {
 			self.displayAuthSheet(sender: self)
 			return
 		}
-        
+    
         // Check for api_token, if no token then display auth dialog
         if (self.api_token.isEmpty || self.api_token == "NA") {
             self.displayAuthSheet(sender: self)
@@ -248,8 +259,9 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             self.displayAuthSheet(sender: self)
             return
         }
-
-        self.processAgentPackage()
+        */
+        
+        //self.processAgentPackage()
     }
     
 // MARK: - Methods
@@ -534,6 +546,11 @@ class ViewController: NSViewController, AuthViewControllerDelegate
 	{
         DispatchQueue.main.async
         {
+            self.authStatusField.stringValue = ""
+            self.choosePKGButton.isEnabled = false
+            self.choosePluginsButton.isEnabled = false
+            self.chooseProfilesButton.isEnabled = false
+            
             self.uploadButton.isEnabled = false
             self.progressBar.isHidden = false
             self.progressBar.isIndeterminate = true
@@ -549,6 +566,10 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             self.uploadButton.isEnabled = true
             self.progressBar.stopAnimation(nil)
             self.progressBar.isHidden = true
+            
+            self.choosePKGButton.isEnabled = true
+            self.choosePluginsButton.isEnabled = true
+            self.chooseProfilesButton.isEnabled = true
         }
     }
     
@@ -588,6 +609,35 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         }
     }
     
+    func makeAuthRequest()
+    {
+        let _ssl = (useSSL.state == .on) ? "https" : "http"
+        let _url: String = "\(_ssl)://\(self.mpServerHost.stringValue):\(self.mpServerPort.stringValue)\(URI_PREFIX)/auth/token"
+        log.debug("Auth Request URL: \(_url)")
+        
+        let _params: Parameters = ["authUser":authUserID.stringValue, "authPass":authUserPass.stringValue]
+        
+        MPAlamofire.request(_url, method: .post, parameters: _params, encoding: JSONEncoding.default).validate().responseJSON
+        { response in
+
+            switch response.result
+            {
+            case .failure(let error):
+                log.error("\(error.localizedDescription)")
+                self.toggleUIEnd()
+                self.authStatusField.stringValue = error.localizedDescription
+            case .success(let resultData):
+                
+                if let resultDict = resultData as? [String: Any] {
+                    if let res = resultDict["result"] as? [String: Any] {
+                        self.api_token = res["token"] as! String? ?? "NA"
+                    }
+                }
+                self.toggleUIBegin()
+                self.processAgentPackage()
+            }
+        }
+    }
     
     /**
      Create modal alert window with OK button
