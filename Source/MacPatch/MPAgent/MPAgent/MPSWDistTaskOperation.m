@@ -118,7 +118,11 @@
 {
     logit(lcl_vInfo,@"Run Mandatory Software Installs");
     @try {
-		[self checkAndInstallMandatoryApplications];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Install mandatory applications operation is deferred while provisioning.");
+        } else {
+            [self checkAndInstallMandatoryApplications];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

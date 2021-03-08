@@ -108,22 +108,26 @@
 {
 	@try
 	{
-		switch (scanType)
-		{
-			case 0:
-				[self scanForPatches:patchFilter forceRun:forceRun];
-				break;
-			case 1:
-                NSAssert(patchFilter,@"patchFilter failed");
-				[self patchScanAndUpdate:patchFilter bundleID:bundleID];
-				break;
-			case 2:
-				// [self runCritialPatchScanAndUpdate];
-				break;
-			default:
-				[self scanForPatches:kAllPatches forceRun:NO];
-				break;
-		}
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Patch scan and update operations is deferred while provisioning.");
+        } else {
+            switch (scanType)
+            {
+                case 0:
+                    [self scanForPatches:patchFilter forceRun:forceRun];
+                    break;
+                case 1:
+                    NSAssert(patchFilter,@"patchFilter failed");
+                    [self patchScanAndUpdate:patchFilter bundleID:bundleID];
+                    break;
+                case 2:
+                    // [self runCritialPatchScanAndUpdate];
+                    break;
+                default:
+                    [self scanForPatches:kAllPatches forceRun:NO];
+                    break;
+            }
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

@@ -2484,6 +2484,14 @@ done:
     reply(err);
 }
 
+- (void)rebootHost:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    qlinfo(@"Provisioning issued a launchctl reboot.");
+    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+    reply(err);
+}
+
 #pragma mark - Test Code
 
 @end

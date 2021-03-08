@@ -1036,6 +1036,107 @@
 
 #pragma mark - Provisioning
 
+- (int)provisionSetupAndConfig
+{
+    int result = 1;
+    NSArray *provCriteria = [NSArray array];
+    NSError *err = nil;
+    
+    MPRESTfull *mpr = [MPRESTfull new];
+    provCriteria = [mpr getProvisioningCriteriaUsingScope:@"prod" error:&err];
+    if (err) {
+        qlerror(@"Error downloading provisioning criteria.");
+        qlerror(@"%@",err.localizedDescription);
+    } else {
+        if (provCriteria.count >= 1)
+        {
+            MPBundle    *mpbndl;
+            MPFileCheck *mpfile;
+            MPScript    *mpscript;
+            
+            int count = 0; // Copunt must equal the array length for all to be true.
+            // Loop vars
+            /*
+             typeQuery       = [qryArr objectAtIndex:1];
+             typeQueryString = [qryArr objectAtIndex:2];
+             typeResult      = [qryArr objectAtIndex:3];
+             */
+            
+            for (NSDictionary *q in provCriteria)
+            {
+                qlinfo(@"Process %@",q);
+                NSArray *qryArr = [[q objectForKey:@"qstr"] componentsSeparatedByString:@"@" escapeString:@"@@"];
+                qlinfo(@"qryArr %@",qryArr);
+                
+                if ([@"BundleID" isEqualToString:[qryArr objectAtIndex:0]]) {
+                    mpbndl = [[MPBundle alloc] init];
+                    if ([qryArr count] != 4) {
+                        qlerror(@"Error, not enough args for BundleID criteria query.");
+                        continue;
+                    }
+
+                    if ([mpbndl queryBundleID:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] result:[qryArr objectAtIndex:3]]) {
+                        qlinfo(@"BundleID=TRUE: %@",[qryArr objectAtIndex:1]);
+                        count++;
+                    } else {
+                        qlinfo(@"BundleID=FALSE: %@",[qryArr objectAtIndex:1]);
+                    }
+                }
+                
+                if ([@"File" isEqualToString:[qryArr objectAtIndex:0]]) {
+                    mpfile = [[MPFileCheck alloc] init];
+                    if ([qryArr count] != 4) {
+                        qlerror(@"Error, not enough args for File criteria query.");
+                        continue;
+                    }
+                    // CEH
+                    qlinfo(@"File Query Array: %@",qryArr);
+                    
+                    if ([mpfile queryFile:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] param:[qryArr objectAtIndex:3]]) {
+                        qlinfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
+                        count++;
+                    } else {
+                        qlinfo(@"File=FALSE: %@",[qryArr objectAtIndex:1]);
+                    }
+                }
+                
+                if ([@"Script" isEqualToString:[qryArr objectAtIndex:0]]) {
+                    mpscript = [[MPScript alloc] init];
+                    if ([qryArr count] > 2) {
+                        qlerror(@"Error, too many args. Sript will not be run.");
+                        continue;
+                    }
+                    NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[qryArr objectAtIndex:1] options:0];
+                    NSString *decodedString = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+                    qldebug(@"Script: %@",decodedString);
+                    if ([mpscript runScript:decodedString]) {
+                        qlinfo(@"SCRIPT=TRUE");
+                        count++;
+                    } else {
+                        qlinfo(@"SCRIPT=FALSE");
+                    }
+                }
+            }
+            qlinfo(@"provCriteria.count %d == %d count",provCriteria.count,count);
+            if (provCriteria.count == count)
+            {
+                // Criteria is a pass, write .MPProvisionBegin file
+                err = nil;
+                [@"GO" writeToFile:MP_PROVISION_BEGIN atomically:NO encoding:NSUTF8StringEncoding error:&err];
+                if (err) {
+                    qlerror(@"Error writing %@ file.",MP_PROVISION_BEGIN);
+                    qlerror(@"%@",err.localizedDescription);
+                }
+            }
+        }
+    }
+    
+    // This can be downloaded any time
+    result = [self getProvisioningConfig];
+    return result;
+    
+}
+
 - (int)getProvisioningConfig
 {
     NSString *configJSON = nil;
@@ -1075,8 +1176,8 @@
                 qlerror(@"Error writing provisioning configuration to disk.");
                 qlerror(@"%@",err.localizedDescription);
             }
-            qlinfo(@"Wrote %@ config file.1",MP_PROVISION_DATA_FILE);
-            qlinfo(@"%@",configJSON);
+            
+            qldebug(@"%@",configJSON);
         }
     } else {
         [fm createDirectoryRecursivelyAtPath:MP_PROVISION_DIR];
@@ -1086,8 +1187,7 @@
             qlerror(@"%@",err.localizedDescription);
             return 1;
         }
-        qlinfo(@"Wrote %@ config file.2",MP_PROVISION_DATA_FILE);
-        qlinfo(@"%@",configJSON);
+        qldebug(@"%@",configJSON);
     }
     
     return 0;

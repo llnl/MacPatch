@@ -918,4 +918,39 @@
     
     return result;
 }
+
+/**
+ Get provisioning criteria
+ Will return an array of query strings
+ 
+ @param scope NSString object - prod is default
+ @param err Error object
+ 
+ @return NSArray
+ */
+- (NSArray *)getProvisioningCriteriaUsingScope:(NSString *)scope error:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSArray *result = [NSArray array];
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/criteria/%@/%@",self.clientID,scope];
+    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+
+    if ([ws_result objectForKey:@"data"])
+    {
+        NSDictionary *_data = [ws_result objectForKey:@"data"];
+        if([_data objectForKey:@"query"]) {
+            result = (NSArray *)_data[@"query"];
+        }
+    }
+    
+    return result;
+}
 @end

@@ -251,6 +251,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	// Run FileVault User Password Check Sync
 	[self fvUserCheck];
     
+    // Provisioning Check, write out MP_PROVISION_BEGIN file if criteria is meet
+    
     // Run Provisioning
     if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
     {

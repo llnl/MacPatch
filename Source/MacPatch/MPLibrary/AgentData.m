@@ -2,7 +2,9 @@
 #import "CocoaSecurity.h"
 #import "UAObfuscatedString.h"
 
-@interface AgentData ()
+@interface AgentData () {
+    NSFileManager *fm;
+}
 
 @property (nonatomic, strong, readwrite) NSDictionary  *dataDict;
 
@@ -38,6 +40,7 @@
 					 @"agentPrivateKey":[NSData data],
 					 @"serverPublicKey":[NSData data]};
 		agentDataKey = nil;
+        fm = [NSFileManager defaultManager];
 	}
 	return self;
 }
@@ -108,6 +111,10 @@
 
 - (id)readDataForKey:(NSString *)aKey
 {
+    if (![fm fileExistsAtPath:AGENT_REG_FILE]) {
+        return nil;
+    }
+    
 	NSDictionary *k = [NSKeyedUnarchiver unarchiveObjectWithFile:AGENT_REG_FILE];
 	
 	CocoaSecurityResult *sha = [CocoaSecurity sha384:schlussel];

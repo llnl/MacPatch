@@ -24,7 +24,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-// Rev 39
+// Rev 40
 
 #import <Foundation/Foundation.h>
 
@@ -202,6 +202,7 @@ enum {
 //- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(NSData * _Nullable)data dataType:(NSString * _Nullable)dataType withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)touchFile:(NSString * _Nullable )filePath withReply:(nullable void(^)(NSError * _Nullable error))reply;
+- (void)rebootHost:(nullable void(^)(NSError * _Nullable error))reply;
 
 @end
 

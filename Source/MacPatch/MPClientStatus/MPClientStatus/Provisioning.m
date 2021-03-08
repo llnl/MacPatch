@@ -10,6 +10,7 @@
 #import <WebKit/WebKit.h>
 #import "ProvisionHost.h"
 #import <dispatch/dispatch.h>
+#import "EventToSend.h"
 
 @interface WKWebView(SynchronousEvaluateJavaScript)
 - (NSString *)stringByEvaluatingJavaScriptFromString:(NSString *)script;
@@ -82,7 +83,7 @@
     [super windowDidLoad];
     fm = [NSFileManager defaultManager];
     
-    /*
+    
     NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
     self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
                                                      backing:NSBackingStoreBuffered defer:NO];
@@ -90,13 +91,13 @@
     [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
     [self.backwindow setLevel:NSStatusWindowLevel];
     [self.backwindow makeKeyAndOrderFront:NSApp];
-    */
+    
     
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
     
     [_stepperButton setTitle:@"Begin"];
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+        [self->_stepperButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
     });
     
     NSError *err = nil;
@@ -167,6 +168,24 @@
                 });
             } else {
                 qlerror(@"result != 0");
+                NSAlert *alert = [NSAlert alertWithMessageText:@"Error running initial provisioning."
+                    defaultButton:@"Exit"
+                    alternateButton:@"Continue"
+                    otherButton:nil
+                    informativeTextWithFormat:@"There was an error running the initial provisioning installs. Click Exit to exit the app, or click Contimnue and proceed."];
+                [alert setAlertStyle:NSCriticalAlertStyle];
+                [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
+                    NSLog(@"%ld",(long)result);
+                    if (result == 0) {
+                        [self closeWindow:nil];
+                    } else {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [self writeStatusToHTML:@""];
+                            [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+                            [self->_closeWindowButton setEnabled:YES];
+                        });
+                    }
+                }];
             }
         }
     }
@@ -273,22 +292,32 @@
         // Start installs
     } else if ([sender.title isEqualToString:@"Reboot"]) {
         // Write Done file and Code to reboot host
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.backwindow orderOut:self];
+        });
+        
+        
+        dispatch_semaphore_t sem = dispatch_semaphore_create(0);
         [self connectAndExecuteCommandBlock:^(NSError * connectError) {
              if (connectError != nil) {
                  qlerror(@"connectError: %@",connectError.localizedDescription);
+                 dispatch_semaphore_signal(sem);
              } else {
                  [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                      qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                     dispatch_semaphore_signal(sem);
                  }] touchFile:MP_PROVISION_DONE withReply:^(NSError *error) {
-                    dispatch_sync(dispatch_get_main_queue(), ^() {
-                       if (error) {
-                           qlerror(@"Error writing provisioning done file.");
-                       }
-                    });
+                     if (error) {
+                       qlerror(@"Error writing provisioning done file.");
+                     }
+                     dispatch_semaphore_signal(sem);
                  }];
              }
         }];
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
         [self closeWindow:nil];
+        [self logoutAndPatch:nil];
+    
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
         {
@@ -367,7 +396,6 @@
     }];
 }
 
-
 // Get HTML Form Values from Tab
 - (NSDictionary *)getHTMLValues:(NSError **)err
 {
@@ -432,6 +460,40 @@
     }
     
     return result;
+}
+
+- (IBAction)logoutAndPatch:(id)sender
+{
+    //[self.rebootWindow close];
+    
+    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
+    {
+        NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
+        [ud setBool:NO forKey:@"patch"];
+        [ud setBool:NO forKey:@"reboot"];
+        ud = nil;
+    }
+    
+    if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
+    {
+        [@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
+        [[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
+    } else {
+        qlinfo(@"%@ file already exists. No need to create it.",MP_AUTHRUN_FILE);
+    }
+    
+    /* reboot the system using Apple supplied code
+     error = SendAppleEventToSystemProcess(kAERestart);
+     error = SendAppleEventToSystemProcess(kAELogOut);
+     error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+     */
+    
+    OSStatus error = noErr;
+#ifdef DEBUG
+    error = SendAppleEventToSystemProcess(kAELogOut);
+#else
+    error = SendAppleEventToSystemProcess(kAEReallyLogOut);
+#endif
 }
 
 #pragma mark - Tab Delegates

@@ -103,11 +103,15 @@ static NSString * const _taskRunFile = @"/tmp/.mpAVUpdateRunning";
 - (void)main
 {
 	@try {
-		if (scanType == 0) {
-			[self runAVscan];
-		} else if (scanType == 1) {
-			[self runAVscanAndUpdate];
-		}
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Antivirus operations is deferred while provisioning.");
+        } else {
+            if (scanType == 0) {
+                [self runAVscan];
+            } else if (scanType == 1) {
+                [self runAVscanAndUpdate];
+            }
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

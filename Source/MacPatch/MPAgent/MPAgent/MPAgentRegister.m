@@ -97,9 +97,13 @@
             logit(lcl_vError,@"%@",err.localizedDescription);
             return FALSE;
         }
+        
+        return result;
+        
     } @catch (NSException *exception) {
         qlerror(@"%@",exception);
     }
+    
 	return result;
 }
 

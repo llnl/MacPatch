@@ -39,7 +39,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.0.1"
+#define APPVERSION	@"3.6.0.2"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -588,7 +588,7 @@ int main (int argc, char * argv[])
             case 22:
                 // Download Provisioning Config
                 mpac = [[AgentController alloc] init];
-                result = [mpac getProvisioningConfig];
+                result = [mpac provisionSetupAndConfig];
                 exit(result);
                 break;
             case 8888:

@@ -101,7 +101,11 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 - (void)main
 {
 	@try {
-		[self scanAndInstallPofiles];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Profile install operations is deferred while provisioning.");
+        } else {
+            [self scanAndInstallPofiles];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

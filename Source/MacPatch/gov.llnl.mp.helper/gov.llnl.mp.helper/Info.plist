@@ -14,8 +14,8 @@
 		<true/>
 	</dict>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2020 Lawrence Livremore National Laboratory. All rights reserved.</string>
+	<string>Copyright © 2021 Lawrence Livremore National Laboratory. All rights reserved.</string>
 	<key>MPInfo</key>
-	<string>MacPatch 3.5.0 Client Software</string>
+	<string>MacPatch 3.6.0 Client Software</string>
 </dict>
 </plist>

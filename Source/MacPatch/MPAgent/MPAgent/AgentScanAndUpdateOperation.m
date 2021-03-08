@@ -87,7 +87,11 @@
 - (void)main
 {
 	@try {
-		[self runAgentScanAndUpdate];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Agent scan and update operation is deferred while provisioning.");
+        } else {
+            [self runAgentScanAndUpdate];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

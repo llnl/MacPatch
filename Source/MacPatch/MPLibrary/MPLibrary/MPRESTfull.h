@@ -245,4 +245,15 @@
  @return NSString
  */
 - (NSString *)getProvisioningConfig:(NSError **)err;
+
+/**
+ Get provisioning criteria
+ Will return an array of query strings
+ 
+ @param scope NSString object - prod is default
+ @param err Error object
+ 
+ @return NSArray
+ */
+- (NSArray *)getProvisioningCriteriaUsingScope:(NSString *)scope error:(NSError **)err;
 @end
