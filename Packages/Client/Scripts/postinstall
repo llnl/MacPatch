@@ -226,7 +226,6 @@ fi
 # ******************************************************************
 # Check for Provision Done file
 if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
-	touch "/private/var/db/.MPProvisionBegin"
 	/Library/MacPatch/Client/MPAgent --provisionConfig
 	if [ $? != 0 ]; then
 		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
