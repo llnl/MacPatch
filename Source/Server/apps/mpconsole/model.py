@@ -965,15 +965,15 @@ class MpProvisionTask(CommonBase):
 	__tablename__ = 'mp_provision_task'
 
 	rid                 = Column(BigInteger, primary_key=True, autoincrement=True)
-	tuuid               = Column(String(50), nullable=False)
-	name                = Column(String(255), nullable=False)
-	primary_suuid       = Column(String(50))
-	active              = Column(Integer, server_default='0')
-	scope				= Column(Integer, server_default='0')
-	sw_start_datetime   = Column(DateTime, server_default='2021-01-01 00:00:00')
-	sw_end_datetime     = Column(DateTime, server_default='2050-01-01 00:00:00')
-	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
-	cdate               = Column(DateTime, server_default='1970-01-01 00:00:00')
+	tuuid               = Column(String(50), nullable=False, info='Task ID')
+	name                = Column(String(255), nullable=False, info='Name')
+	primary_suuid       = Column(String(50), info='Software ID')
+	active              = Column(Integer, server_default='0', info='Active')
+	scope				= Column(Integer, server_default='0', info='Scope')
+	sw_start_datetime   = Column(DateTime, server_default='2021-01-01 00:00:00', info='Start Date')
+	sw_end_datetime     = Column(DateTime, server_default='2050-01-01 00:00:00', info='End Date')
+	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00', info='Mod Date')
+	cdate               = Column(DateTime, server_default='1970-01-01 00:00:00', info='Create Date')
 
 # mp_provision_script
 class MpProvisionScript(CommonBase):

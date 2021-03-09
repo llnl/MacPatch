@@ -35,8 +35,7 @@
 
 		$( document ).ready(function()
 		{
-            $('#table').bootstrapTable(
-            {
+            $('#table').bootstrapTable( {
                 url: "/provision/criteria/list",
                 striped: true,
                 pagination: true,
@@ -45,6 +44,7 @@
                 pageList: ['10', '25', '50', '100', 'All'],
                 search: true,
                 idField: 'rid',
+				sortName: 'order',
                 sortable: true,
                 detailFormatter: detailFormatter,
                 icons: {

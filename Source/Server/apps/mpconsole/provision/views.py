@@ -29,44 +29,24 @@ from .. aws import *
 @provision.route('/tasks')
 @login_required
 def tasks():
+	cList = MpProvisionTask.query.order_by(MpProvisionTask.mdate.desc()).all()
+	cListCols = MpProvisionTask.__table__.columns
+	cListColsLimited = ['tuuid', 'primary_suuid', 'name', 'active', 'scope', 'sw_start_datetime', 'sw_end_datetime', 'mdate']
 
-	columns = [('tuuid','Task ID',0),('primary_suuid','Software ID',0),('name','Name',1),('active','Active',1),
-			   ('scope','Scope',1),('sw_start_datetime','Valid From',1),('sw_end_datetime','Valid To',1),('mdate','Mod Date',0)]
-	colsForQuery = ['tuuid','primary_suuid','name','active','scope','sw_start_datetime','sw_end_datetime','mdate']
+	return render_template('provision/software_tasks.html', data={}, columns=cListColsLimited, columnsAll=cListCols, isAdmin=True)
 
+''' AJAX Request '''
+@provision.route('/tasks/list', methods=['GET'])
+@login_required
+def tasksList():
+	_results = []
 	qSWTasks = MpProvisionTask.query.order_by(MpProvisionTask.mdate.desc()).all()
-	_data = []
-	for d in qSWTasks:
-		row = {}
-		for c in colsForQuery:
+	for c in qSWTasks:
+		_dict = c.asDict
+		_dict['rid'] = c.rid
+		_results.append(_dict)
 
-			if c in ('sw_start_datetime','sw_end_datetime','mdate'):
-				dt_obj = eval("d."+c)
-				if dt_obj:
-					row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
-			elif c == 'active':
-				_a = eval("d."+c)
-				row[c] = "Yes" if _a == 1 else "No"
-			elif c == 'scope':
-				_a = eval("d."+c)
-				row[c] = "Production" if _a == 1 else "QA"
-			else:
-				row[c] = eval("d."+c)
-
-		_data.append(row)
-
-	_columns = []
-	for c, t, v in columns:
-			row = {}
-			row['field'] = c
-			row['title'] = t
-			row['sortable'] = True
-			if v == 0:
-				row['visible'] = False
-
-			_columns.append(row)
-
-	return render_template('provision/software_tasks.html', data={'rows':_data,'columns': _columns}, isAdmin=True)
+	return json.dumps(_results, default=json_serial), 200
 
 @provision.route('/task/edit/<id>')
 @login_required
@@ -146,6 +126,52 @@ def generateTask(id):
 		return json.dumps({'error':0}), 201
 
 	return json.dumps({'error':1,'errormsg':'Software package not found.'}), 404
+
+''' AJAX Request '''
+@provision.route('/task/remove', methods=['DELETE'])
+@login_required
+def taskDelete():
+	_form = request.form.to_dict()
+	_tasks = []
+	if 'tasks' in _form:
+		_tasks = _form['tasks'].split(",")
+
+	if len(_tasks) >= 1:
+		for t in _tasks:
+			x = MpProvisionTask.query.filter(MpProvisionTask.tuuid == t).first()
+			if x is not None:
+				MpProvisionTask.query.filter(MpProvisionTask.tuuid == t).delete()
+				log_Info("MpProvisionTask {} ({}) has been deleted.".format(x.name,x.tuuid))
+
+		db.session.commit()
+
+	return json.dumps({'error': 0}), 201
+
+''' AJAX Request '''
+@provision.route('/task/active', methods=['POST'])
+@login_required
+def taskActive():
+	_form = request.form.to_dict()
+	pc = MpProvisionTask.query.filter(MpProvisionTask.tuuid == _form['pk']).first()
+	if pc is not None:
+		setattr(pc, 'active', _form['value'])
+		setattr(pc, 'mdate', datetime.now())
+		db.session.commit()
+
+	return json.dumps({'error': 0}), 201
+
+''' AJAX Request '''
+@provision.route('/task/scope', methods=['POST'])
+@login_required
+def taskScope():
+	_form = request.form.to_dict()
+	pc = MpProvisionTask.query.filter(MpProvisionTask.tuuid == _form['pk']).first()
+	if pc is not None:
+		setattr(pc, 'scope', _form['value'])
+		setattr(pc, 'mdate', datetime.now())
+		db.session.commit()
+
+	return json.dumps({'error': 0}), 201
 
 '''
 	-------------------------------------------------
@@ -300,7 +326,6 @@ def uiConfigUpload():
 				return {'errorno': 403, 'errormsg': 'Error, upload file is blank.', 'result': {}}, 403
 			if allowed_file(_fileName):
 				_fileData = _file.read()
-				# print(_fileData.decode("utf-8"))
 
 				qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
 				if qGet is not None:
@@ -346,6 +371,9 @@ def testTask():
 @login_required
 def criteria():
 	cList = MpProvisionCriteria.query.order_by(MpProvisionCriteria.order.asc()).all()
+	for x in cList:
+		y = x.asDictWithRID
+
 	cListCols = MpProvisionCriteria.__table__.columns
 	cListColsLimited = ['rid', 'type', 'type_data', 'order', 'active', 'mdate']
 

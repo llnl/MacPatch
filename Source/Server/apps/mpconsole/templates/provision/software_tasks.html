@@ -67,83 +67,95 @@
 		}
 	};
 
-	var _cols = [{
-					field: 'state',
-					checkbox: true,
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle',
-					width: 60,
-					{% if session.role[0] != 1 %}
-					visible: false,
-					{% endif %}
-				},
-					{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEvents,
-					formatter: operateFormatter,
-					width: 60,
-					{% if session.role[0] != 1 %}
-					visible: false,
-					{% endif %}
-				},];
-
-	_cols.push.apply(_cols, {{data["columns"] | tojson}});
-	var _rows = {{data["rows"] | tojson}};
 
 	$( document ).ready(function()
 	{
 			$('#table').bootstrapTable(
 			{
-				striped: true,
-				pagination: true,
-				sidePagination: 'client',
-				pageList: ['10', '20', '50', '100', 'All'],
-				search: true,
-				showRefresh: false,
-				resizable: true,
-				sortable: true,
-				showColumns: false,
-				icons: {
-					refresh: 'fa fa-refresh',
-					toggle: 'fa fa-th-list',
-					columns: 'fa fa-columns',
-					detailOpen: 'glyphicon glyphicon-info-sign',
-					detailClose: 'glyphicon glyphicon-minus-sign'
-				},
-				idField: 'tuuid',
-				columns: _cols,
-				data: _rows
-			});
+                url: "/provision/tasks/list",
+                striped: true,
+                pagination: true,
+                sidePagination: 'client',
+                showRefresh: true,
+                pageList: ['10', '25', '50', '100', 'All'],
+                search: true,
+                idField: 'tuuid',
+                sortable: true,
+                icons: {
+                    refresh: 'fa fa-refresh',
+                    toggle: 'fa fa-th-list',
+                    columns: 'fa fa-columns',
+                    detailOpen: 'glyphicon glyphicon-info-sign',
+                    detailClose: 'glyphicon glyphicon-minus-sign'
+                },
+                columns: [
+                {% if session.role[0] == 1 %}
+                {
+                        field: 'state',
+                        checkbox: true,
+                        rowspan: 1,
+                        align: 'center',
+                        valign: 'middle'
+                },
+                {% endif %}
+                {
+                    field: 'operate',
+                    title: '',
+                    align: 'center',
+                    events: operateEvents,
+                    formatter: operateFormatter
+                },
+                {% for col in columnsAll %}
+                    {% if col.name in columns %}
+                        {
+                            field: '{{col.name}}',
+                            title: '{{col.info}}',
+                            {% if col.name ==  'tuuid' %}
+                            visible: false,
+                            {% endif %}
+                            {% if col.name ==  'primary_suuid' %}
+                            visible: false,
+                            {% endif %}
+                            {% if col.name ==  'mdate' %}
+                            visible: false,
+                            {% endif %}
+                            sortable: true,
+
+                            {% if col.name == 'active' and session.role[0] == 1 %}
+                            editable: {
+                                type: 'select',
+                                url:  '/provision/task/active',
+                                source: [
+                                    {value: 0, text: 'False'},
+                                    {value: 1, text: 'True'},
+                                ]
+                            },
+                            {% endif %}
+                            {% if col.name == 'scope' and session.role[0] == 1 %}
+                            editable: {
+                                type: 'select',
+                                url:  '/provision/task/scope',
+								source: [
+                                    {value: 0, text: 'QA'},
+                                    {value: 1, text: 'Production'},
+                                ]
+                            },
+                            {% endif %}
+                        },
+                    {% endif %}
+
+                {% endfor %}
+                ]
+            });
+
 	});
 
 	var $table = $('#table'), $delBut = $('#deleteButton'), $addBut = $('#addButton'), $expBut = $('#exportButton'), $impBut = $('#importButton');
 	$(function () {
-		/*
-		$delBut.click(function ()
-		{
-			var task_ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.tuuid;
-			});
-			for (i = 0; i < task_ids.length; i++)
-			{
-				$.get("/software/task/remove/"+task_ids[i]).done(function(data)
-				{
-					$table.bootstrapTable('remove', {
-						field: 'tuuid',
-						values: task_ids[i]
-					});
-				});
-			}
 
-			alert(task_ids.length + " Software task(s) have been deleted.");
-		});
-		*/
 		$delBut.click(function ()
 		{
-			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rows = $table.bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _tID = rows[x]['tuuid'];
@@ -162,10 +174,11 @@
 					alert(jsonValue.errormsg);
 				},
 				success: function () {
-					$('#table').bootstrapTable('remove', {
+					$table.bootstrapTable('remove', {
 						field: 'tuuid',
 						values: rowsArr
 					});
+					$table.bootstrapTable('refresh');
 					alert("Task(s) removed successfully.");
 				}
 			});
@@ -179,7 +192,6 @@
 				$('#modalTitle').html('New Provisioning Software Task');
 				$('#modalCancelButton').html('Cancel');
 				$('#modalBody').html(data);
-				//$('#modalBody').css({'height':'88vh'});
 				$('#modalDialog').addClass("modal-wide");
 				$('#modalDialog').modal('show');
 
@@ -200,6 +212,11 @@
 		});
 	});
 
+	/* Function used to close Modal window from iframe */
+	function closeIFrame()
+	{
+		$('#modalDialog').modal('hide');
+	}
 
 	</script>
 {% endblock %}
