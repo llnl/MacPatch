@@ -453,3 +453,20 @@ def criteriaOrder():
 			return json.dumps("Must be a number."), 409
 
 	return json.dumps({'error': 0}), 201
+
+''' AJAX Request '''
+@provision.route('/criteria/delete', methods=['DELETE'])
+@login_required
+def criteriaDelete():
+	_form = request.form.to_dict()
+	_rids = []
+	if 'rid' in _form:
+		_rids = _form['rid'].split(",")
+
+	if len(_rids) >= 1:
+		for r in _rids:
+			MpProvisionCriteria.query.filter(MpProvisionCriteria.rid == r).delete()
+
+		db.session.commit()
+
+	return json.dumps({'error': 0}), 201

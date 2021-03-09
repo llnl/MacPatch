@@ -218,8 +218,8 @@ class _AgentConfig(MPResource):
 		try:
 
 			res = []
-			client_obj = MpClient.query.filter_by(cuuid=client_id).first()
-			client_group = MpClientGroupMembers.query.filter_by(cuuid=client_obj.cuuid).first()
+			client_obj = MpClient.query.filter(MpClient.cuuid == client_id).first()
+			client_group = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == client_obj.cuuid).first()
 
 			if client_group is not None:
 				swids_Obj = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == client_group.group_id).all()

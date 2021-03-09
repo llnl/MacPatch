@@ -26,21 +26,20 @@
         <style type="text/css" media="screen">
             #editor {
                 height: 340px;
-                width: 700px;
+                width: 640px;
             }
         </style>
         <style>
             #helpRow {
                  display: none;
             }
-        </style>
-
-        <style type="text/css" media="screen">
-            #script {
-                height: 340px;
-                width: 700px;
+            td {
+                vertical-align:top;
+                padding: 10px;
             }
-
+            .well {
+                 width: 80%;
+             }
         </style>
 
 	{% endblock %}
@@ -48,41 +47,40 @@
 
 <body>
 	{% block bodyPanel %}
-    <div class="container">
-
+    <div class="container" align="center">
+        <div class="well">
         <div class="row" align="right">
-            <p><button class="btn btn-primary" type="button" onclick="myFunction()">Syntax Help</button></p>
+            <button class="btn btn-primary btn-sm" onclick="myFunction()"><i class="fa fa-question"></i></button>
         </div>
         <form role="form" id="myForm">
             <input name="rid" type="hidden" value="{{ data.rid or 'NA' }}">
-            <div class="well">
-                <div class="form-group row">
-                    <div class="col-sm-1">
-                        <label>Type</label>
-                        <br>
-                        <select id="type" name="type" required="yes">
+            <table>
+                <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Criteria Query</th>
+                    <th>Order</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <select id="type" name="type" required="yes">
                             <option value="File" {% if data.type == 'File' %}selected{% endif %}>File</option>
                             <option value="Script" {% if data.type == 'Script' %}selected{% endif %}>Script</option>
-                            <option>File</option>
-                            <option>Script</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-8">
-                        <label>Criteria</label>
-                        <br>
-                        <div id="editor">{{ data.type_data or '' }}</div>
-                    </div>
-                    <div class="col-sm-1">
-                        <label>Order</label>
-                        <br>
-                        <input type='text' name="order" value="{{ data.order or '99' }}" size='4'>
-                    </div>
-                </div>
-            </div>
+                            </select>
+                        </td>
+                        <td>
+                            <div id="editor">{{ data.type_data or '' }}</div>
+                        </td>
+                        <td>
+                            <input type='text' name="order" value="{{ data.order or '99' }}" size='4'>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </form>
-
-
-
+        </div>
         <div class="panel panel-default" id="helpRow">
             <div class="card">
             <div class="card-body">
@@ -205,8 +203,9 @@
                 </div>
             </div>
         </div>
-        </div>
+
     </div>
+
 	{% endblock %}
 
 	<!-- jQuery -->

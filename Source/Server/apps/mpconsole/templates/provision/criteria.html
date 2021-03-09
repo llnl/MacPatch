@@ -16,7 +16,6 @@
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
-            <button id="dupButton" type="button" class="btn btn-default" title="Duplicate Patch"><i class="glyphicon glyphicon-duplicate"></i></button>
 			<button id="delButton" type="button" class="btn btn-default" title="Delete Patch"><i class="glyphicon glyphicon-trash"></i></button>
 			{% endif %}
 		</div>
@@ -172,28 +171,29 @@
 			{
 				var ids = $.map($table.bootstrapTable('getSelections'), function (row)
 				{
-					return row.profileID;
+					return row.rid;
 				});
 
 				var formData = new FormData();
-				formData.append("profileID", ids);
+				formData.append("rid", ids);
 				$.ajax({
 					type:'DELETE',
-					url: '/osmanage/profile/delete',
+					url: '/provision/criteria/delete',
 					data: formData,
 					cache: false,
 					processData: false,
 					contentType: false,
 					success: function(){
-						alert("OS Profile Deleted Successfully");
+						alert("Criteria Deleted Successfully");
 						$('#modalDialog').modal('hide');
 						$table.bootstrapTable('remove', {
 							field: 'profileID',
 							values: ids
 						});
+						$table.bootstrapTable('refresh');
 					},
 					error: function(jqXHR, textStatus, errorThrown){
-						alert("OS Profile Failed to Delete");
+						alert("Criteria Failed to Delete");
 						$('#modalDialog').modal('hide');
 					}
 				});
