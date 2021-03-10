@@ -1324,16 +1324,23 @@ typedef enum {
 
 - (void)addPatchesToClientDatabase:(NSArray *)patches
 {
-	qlinfo(@"Adding required patches to client database.");
-    MPClientDB *cdb = [MPClientDB new];
-    [cdb clearRequiredPatches];
-
-    for (NSDictionary *p in patches)
+    @try
     {
-        if (p) {
-            [cdb addRequiredPatch:p];
-            qldebug(@"Added %@",p[@"patch"]);
+        qlinfo(@"Adding required patches to client database.");
+        MPClientDB *cdb = [MPClientDB new];
+        [cdb clearRequiredPatches];
+
+        for (NSDictionary *p in patches)
+        {
+            if (p) {
+                [cdb addRequiredPatch:p];
+                qldebug(@"Added %@",p[@"patch"]);
+            }
         }
+        return;
+    } @catch (NSException *exception) {
+        qlerror(@"%@",exception);
+        return;
     }
     return;
 }
