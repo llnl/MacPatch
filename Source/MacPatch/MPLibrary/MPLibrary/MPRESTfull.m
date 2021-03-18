@@ -29,7 +29,6 @@
     self = [super init];
     if (self)
     {
-        qldebug(@"MPRESTfull init");
         settings = [MPSettings sharedInstance];
         self.clientID = settings.ccuid;
     }
@@ -39,14 +38,12 @@
 
 - (id)initNoSettings
 {
-    qlinfo(@"MPRESTfull initNoSettings");
     self = [super init];
     return self;
 }
 
 - (id)initWithClientID:(NSString *)clientID
 {
-    qlinfo(@"MPRESTfull initWithClientID %@",clientID);
     self = [super init];
     if (self)
     {
@@ -450,8 +447,8 @@
     BOOL result = NO;
     NSError *error = nil;
     NSString *urlPath = [@"/api/v1/sw/installed" stringByAppendingPathComponent:self.clientID];
-    qldebug(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
-    qldebug(@"[postSoftwareInstallResults][data] %@",data);
+    qlinfo(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
+    qlinfo(@"[postSoftwareInstallResults][data] %@",data);
     
     result = [self postDataToWS:urlPath data:data error:&error];
     if (error) {

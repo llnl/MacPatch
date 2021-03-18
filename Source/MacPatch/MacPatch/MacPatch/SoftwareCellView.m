@@ -118,7 +118,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     // Error block
     r.errorBlock = ^(NSError *error)
     {
-		qlerror(@"%@",error.localizedDescription);
+        if (![error.localizedDescription containsString:@"pretending"]) { // CEH Dont want to see the error during testing
+            qlerror(@"%@",error.localizedDescription);
+        }
         [weakSelf loadImage];
     };
     

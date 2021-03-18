@@ -313,7 +313,7 @@
         qlinfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
 		if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -337,7 +337,7 @@
         wsResult = [self syncronusPOSTWithURL:url body:body];
 		qldebug(@"[runSyncPOST][result]: %d",(int)wsResult.statusCode);
         if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -400,6 +400,7 @@
 	__block NSString *dlFile = @"ERR";
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
+    dm.allowSelfSignedCert = self.allowSelfSignedCert;
 	dm.downloadUrl = urlPath;
 	dm.downloadDestination = dlDir;
 	
@@ -494,6 +495,7 @@
 	__block BOOL didFail = NO;
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
+    dm.allowSelfSignedCert = self.allowSelfSignedCert;
 	dm.downloadUrl = url;
 	dm.downloadDestination = dlDir;
 	

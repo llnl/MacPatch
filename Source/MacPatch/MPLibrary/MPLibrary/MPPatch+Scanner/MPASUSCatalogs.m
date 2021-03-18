@@ -57,10 +57,15 @@
 - (BOOL)writeCatalogURL:(NSString *)aCatalogURL
 {
 	BOOL result = TRUE;
-	
+
 	@try
     {
         NSDictionary *osVerInfo = [MPSystemInfo osVersionOctets];
+        if ([[osVerInfo objectForKey:@"major"] intValue] >= 11) {
+            qlinfo(@"Apple Software Catalogs are no longer supported.");
+            return result;
+        }
+        
 		// 10.14 and higher and not Apple CatalogURL
 		if ([[osVerInfo objectForKey:@"minor"] intValue] >= 14)
 		{
@@ -93,6 +98,12 @@
 
 - (BOOL)resetCatalogURL
 {
+    NSDictionary *osVerInfo = [MPSystemInfo osVersionOctets];
+    if ([[osVerInfo objectForKey:@"major"] intValue] >= 11) {
+        // Not supported on macOS 11 and higher
+        return YES;
+    }
+    
 	qlinfo(@"Reset CatalogURL to default.");
 	[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/softwareupdate" arguments:@[@"--clear-catalog"]];
 	return YES;

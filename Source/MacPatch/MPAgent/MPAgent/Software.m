@@ -354,6 +354,20 @@
 			}
 		}
 	}
+    
+    NSDictionary *wsRes = @{@"tuuid":swTaskDict[@"id"],
+                            @"suuid":[swTaskDict valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"resultString":@""};
+    
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
 
 	return result;
 }

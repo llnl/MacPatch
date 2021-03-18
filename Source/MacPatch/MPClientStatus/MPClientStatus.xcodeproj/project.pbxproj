@@ -12,6 +12,7 @@
 		8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F22E84922B9980800A27786 /* WebKit.framework */; };
 		8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F416E0725D4A70F00947128 /* ProvisionHost.m */; };
 		8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F730CC0240B09FA00876026 /* OpenDirectory.framework */; };
+		8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9072CC25FFE113008BE990 /* MPGradientView.m */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
@@ -51,6 +52,8 @@
 		8F416E0625D4A70F00947128 /* ProvisionHost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisionHost.h; sourceTree = "<group>"; };
 		8F416E0725D4A70F00947128 /* ProvisionHost.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisionHost.m; sourceTree = "<group>"; };
 		8F730CC0240B09FA00876026 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
+		8F9072CB25FFE113008BE990 /* MPGradientView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPGradientView.h; sourceTree = "<group>"; };
+		8F9072CC25FFE113008BE990 /* MPGradientView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGradientView.m; sourceTree = "<group>"; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
 		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
@@ -132,6 +135,8 @@
 				8FE1999625B258D1001CA72C /* Provisioning.xib */,
 				8F416E0625D4A70F00947128 /* ProvisionHost.h */,
 				8F416E0725D4A70F00947128 /* ProvisionHost.m */,
+				8F9072CB25FFE113008BE990 /* MPGradientView.h */,
+				8F9072CC25FFE113008BE990 /* MPGradientView.m */,
 			);
 			name = Provisioning;
 			sourceTree = "<group>";
@@ -320,6 +325,7 @@
 				8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */,
 				8FD8905716DFE84600A870A3 /* main.m in Sources */,
 				8FD8907116DFE8B200A870A3 /* MPClientStatusAppDelegate.m in Sources */,
+				8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */,
 				8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */,
 				8FD8907216DFE8B200A870A3 /* MPAppUsage.m in Sources */,
 				8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */,

@@ -87,9 +87,10 @@
         if (_pre.count >= 1) {
             for (NSDictionary *s in _pre)
             {
-                qldebug(@"Pre Script: %@",s[@"name"]);
+                qlinfo(@"Pre Script: %@",s[@"name"]);
                 @try {
                     [self runScript:s[@"script"]];
+                    qlinfo(@"Pre Script: %@",s[@"name"]);
                 } @catch (NSException *exception) {
                     qlerror(@"[PreScript]: %@",exception);
                 }
@@ -220,8 +221,8 @@
 // Helper
 - (int)runScript:(NSString *)script
 {
+    qlinfo(@"Begin running script");
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
@@ -237,23 +238,23 @@
                     qlerror(@"Error running script.");
                     qlerror(@"%@",error.localizedDescription);
                 }
+                qlinfo(@"End running script");
                 dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    qlinfo(@"Script result: %d",(int)res);
     return (int)res;
 }
 
 // Helper
 - (int)installSoftwareProvisonTask:(NSDictionary *)swTask
 {
+    qlinfo(@"Begin running required software install.");
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-    
     NSDictionary *swDict = [self getSoftwareTaskForID:swTask[@"tuuid"]];
-    
-    
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
@@ -269,12 +270,14 @@
                     qlerror(@"Error installing %@.",swTask[@"name"]);
                     qlerror(@"%@",error);
                 }
+                qlinfo(@"End running required software install.");
                 dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    qlinfo(@"Required software result: %d",(int)res);
     return (int)res;
 }
 
@@ -358,6 +361,7 @@
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
+    qldebug(@"[ProvisionHost][postStatus]: %@",status);
     if (type == kMPProcessStatus) {
         dispatch_async(dispatch_get_main_queue(), ^{
             //self->_progressStatus.stringValue = status;
@@ -370,7 +374,8 @@
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
-    qlinfo(@"postStopHasError called %@",arg2);
+    qldebug(@"[ProvisionHost][postStopHasError]: %@",arg2);
+    qldebug(@"postStopHasError called %@",arg2);
     /*
     NSError *err = nil;
     if (arg1) {

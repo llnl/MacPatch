@@ -47,6 +47,8 @@
 @interface Provisioning ()
 {
     NSFileManager *fm;
+    NSTextField *textFieldStatus;
+    NSProgressIndicator *progressWheelMain;
 }
 
 @property (strong) IBOutlet NSWindow *window;
@@ -82,16 +84,18 @@
 {
     [super windowDidLoad];
     fm = [NSFileManager defaultManager];
+    BOOL backgroundOn = YES;
     
-    
-    NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
-    self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
-                                                     backing:NSBackingStoreBuffered defer:NO];
-    //[self.backwindow setOpaque:NO];
-    [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
-    [self.backwindow setLevel:NSStatusWindowLevel];
-    [self.backwindow makeKeyAndOrderFront:NSApp];
-    
+    if (backgroundOn)
+    {
+        NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
+        self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
+                                                         backing:NSBackingStoreBuffered defer:NO];
+        //[self.backwindow setOpaque:NO];
+        [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
+        [self.backwindow setLevel:NSStatusWindowLevel];
+        [self.backwindow makeKeyAndOrderFront:NSApp];
+    }
     
     // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
     
@@ -116,9 +120,10 @@
     [_tabBar selectLastTabViewItem:NULL];
     [_tabBar selectTabViewItemAtIndex:0];
     
-    _swGroup = @"iLoad";
+    _swGroup = @"Default";
     if (_provisionData[@"softwareGroup"]) {
         _swGroup = _provisionData[@"softwareGroup"];
+        qlinfo(@"Setting optional install group to %@",_swGroup);
     }
     
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
@@ -138,6 +143,12 @@
             {
                 beginProvision = YES;
                 qldebug(@"beginProvision = YES");
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    //[self writeStatusToHTML:@""];
+                    [self->_stepperButton setEnabled:YES];
+                    [self->_closeWindowButton setEnabled:YES];
+                });
             }
         } else {
             // File is empty 
@@ -153,16 +164,40 @@
             });
             [NSThread sleepForTimeInterval:1.5];
             
-            NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
-            [self writeStatusToHTML:jsTxt];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                self->textFieldStatus = [[NSTextField alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 300, 158, 600, 18)];
+                [self->textFieldStatus setStringValue:@"Required software needs to be installed. Once completed, you may begin."];
+                [self->textFieldStatus setAlignment:NSTextAlignmentCenter];
+                [self->textFieldStatus setFont:[NSFont systemFontOfSize:14]];
+                [self->textFieldStatus setBezeled:NO];
+                [self->textFieldStatus setDrawsBackground:NO];
+                [self->textFieldStatus setEditable:NO];
+                [self->textFieldStatus setSelectable:NO];
+                [self.window.contentView addSubview:self->textFieldStatus];
+                
+                self->progressWheelMain = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 8, 128, 16, 16)];
+                [self->progressWheelMain setStyle:NSProgressIndicatorStyleSpinning];
+                [self->progressWheelMain startAnimation:nil];
+                [self.window.contentView addSubview:self->progressWheelMain];
+            });
+            
+            //NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
+            //[self writeStatusToHTML:jsTxt];
             
             ProvisionHost *ph = [ProvisionHost new];
             int result = 99;
             result = [ph provisionHost];
             
+            qlinfo(@"provisionHost result = %d",(int)result);
+            
             if (result == 0 ) {
+                qlinfo(@"Result was good, enable stepper button.");
+                qlinfo(@"Result was good, enable close window function.");
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self writeStatusToHTML:@""];
+                    //[self writeStatusToHTML:@""];
+                    [self->textFieldStatus removeFromSuperview];
+                    [self->progressWheelMain removeFromSuperview];
+                    
                     [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
                     [self->_closeWindowButton setEnabled:YES];
                 });
@@ -180,13 +215,27 @@
                         [self closeWindow:nil];
                     } else {
                         dispatch_async(dispatch_get_main_queue(), ^{
-                            [self writeStatusToHTML:@""];
+                            //[self writeStatusToHTML:@""];
+                            [self->textFieldStatus removeFromSuperview];
+                            [self->progressWheelMain removeFromSuperview];
+                            
                             [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
                             [self->_closeWindowButton setEnabled:YES];
                         });
                     }
                 }];
             }
+        }
+        else {
+            qlinfo(@"beginProvision == false");
+            dispatch_async(dispatch_get_main_queue(), ^{
+                //[self writeStatusToHTML:@""];
+                [self->textFieldStatus removeFromSuperview];
+                [self->progressWheelMain removeFromSuperview];
+                
+                [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+                [self->_closeWindowButton setEnabled:YES];
+            });
         }
     }
 }
@@ -237,27 +286,6 @@
              }];
          }
      }];
-    
-    /*
-    [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-        qlerror(@"proxyError: %@",proxyError.localizedDescription);
-    }] postProvisioningData:@"userInfoData" dataForKey:@{@"testKey":@"testVal",@"testKey2":@"testVal2"} withReply:^(NSError *error) {
-       dispatch_sync(dispatch_get_main_queue(), ^()
-          {
-              
-              if (error) {
-                  NSAlert *alert = [[NSAlert alloc] init];
-                  [alert addButtonWithTitle:@"OK"];
-                  [alert setMessageText:@"Error with check-in"];
-                  [alert setInformativeText:@"There was a problem checking in with the server. Please review the client status logs for cause."];
-                  [alert setAlertStyle:NSCriticalAlertStyle];
-                  [alert runModal];
-              } else {
-                  [self->_tabBar selectNextTabViewItem:NULL];
-              }
-          });
-    }];
-     */
 }
 
 // Close the Grey (Transparent) Full Screen Bacround Window
@@ -290,7 +318,8 @@
         [_stepperButton setTitle:@"Continue"];
         [self performSelectorInBackground:@selector(installSoftwareThread) withObject:nil];
         // Start installs
-    } else if ([sender.title isEqualToString:@"Reboot"]) {
+        
+    } else if ([sender.title isEqualToString:@"Reboot"] || [sender.title isEqualToString:@"Finished"]) {
         // Write Done file and Code to reboot host
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.backwindow orderOut:self];
@@ -316,7 +345,7 @@
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
         [self closeWindow:nil];
-        [self logoutAndPatch:nil];
+        //[self logoutAndPatch:nil];
     
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
@@ -327,16 +356,12 @@
             __block NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:vals];
             
             if (err) {
-                NSLog(@"Error: %@",err.localizedDescription);
+                qlerror(@"%@",err.localizedDescription);
                 NSAlert *alert = [NSAlert alertWithMessageText:@"Input Required"
-                 defaultButton:@"OK"
-                 alternateButton:nil
-                 otherButton:nil
-                 informativeTextWithFormat:@"All fields must be answered to continue. Please verify your answers."];
+                                                 defaultButton:@"OK" alternateButton:nil otherButton:nil
+                                     informativeTextWithFormat:@"All fields must be answered to continue. Please verify your answers."];
                 [alert setAlertStyle:NSCriticalAlertStyle];
-                [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
-                    
-                }];
+                [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) { }];
             } else {
                 [self connectAndExecuteCommandBlock:^(NSError * connectError)
                  {
@@ -362,7 +387,6 @@
                                        [alert setAlertStyle:NSCriticalAlertStyle];
                                        [alert runModal];
                                    } else {
-                                       //[self->_tabBar selectNextTabViewItem:NULL];
                                        [self->_tabBar selectTabViewItemAtIndex:(_selectedIndex + 1)];
                                    }
                                });
@@ -373,7 +397,6 @@
         }
         else
         {
-            //[_tabBar selectNextTabViewItem:NULL];
             [self->_tabBar selectTabViewItemAtIndex:(_selectedIndex + 1)];
         }
     }
@@ -500,12 +523,47 @@
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
+    NSLog(@"willSelectTabViewItem %@",tabViewItem.identifier);
     self.selectedTabViewItem = tabViewItem.identifier;
+    
+    NSString *htmlString;
+    if (_provisionData) {
+        htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
+    } else {
+        htmlString = [self htmlForFile:@"blank"];
+    }
+    
+    if ([tabViewItem.identifier isEqualToString:@"0"])
+    {
+        [_welcomeWebView setValue:@(YES) forKey:@"drawsTransparentBackground"];
+        //dispatch_sync(dispatch_get_main_queue(), ^() {
+            //[_welcomeWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        //});
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"1"])
+    {
+        [_collectionWebView setValue:@(YES) forKey:@"drawsTransparentBackground"];
+        [_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"2"])
+    {
+        [_installWebView setValue:@(YES) forKey:@"drawsTransparentBackground"];
+        [_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        
+    }
+    else if ([tabViewItem.identifier isEqualToString:@"3"])
+    {
+        [_finishWebView setValue:@(YES) forKey:@"drawsTransparentBackground"];
+        [_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        
+    }
+    
 }
 
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    //NSLog(@"%@",tabViewItem.identifier);
+    NSLog(@"didSelectTabViewItem %@",tabViewItem.identifier);
     NSString *htmlString;
     
     if (_provisionData) {
@@ -523,13 +581,13 @@
     else if ([tabViewItem.identifier isEqualToString:@"1"])
     {
         _collectionWebView.allowsBackForwardNavigationGestures = NO;
-        [_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        //[_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Continue"];
         [_closeWindowButton setEnabled:NO];
     }
     else if ([tabViewItem.identifier isEqualToString:@"2"])
     {
-        [_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        //[_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         /*[self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
          */
         NSString *text = [self textForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
@@ -558,9 +616,9 @@
     else if ([tabViewItem.identifier isEqualToString:@"3"])
     {
         _finishWebView.allowsBackForwardNavigationGestures = NO;
-        [_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
+        //[_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setEnabled:YES];
-        [_stepperButton setTitle:@"Reboot"];
+        [_stepperButton setTitle:@"Finished"];
         [_skipButton setHidden:YES];
     }
 }
@@ -879,18 +937,8 @@
 {
     if (type == kMPProcessStatus) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            qlinfo(@"status: %@",status);
-            /*
-            if ([status containsString:@"Installing /Lib"]) {
-                NSString *st = [NSString stringWithFormat:@"Installing %@",status.lastPathComponent];
-                self->_progressStatus.stringValue = st;
-            } else {
-                
-            }
-             */
             self->_progressStatus.stringValue = status;
         });
-        //[self postSWStatus:status];
     }
 }
 

@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.0.1"
+#define APPVERSION	@"3.6.0.2"
 #define APPNAME		@"MPUpdater"
 
 void usage(void);
@@ -124,8 +124,15 @@ int main(int argc, char * argv[])
 			}
 			logit(lcl_vInfo,@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
 		}
-		
-		NSFileManager *fm = [NSFileManager defaultManager];
+        
+        NSFileManager *fm = [NSFileManager defaultManager];
+
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
+        {
+            qlinfo(@"MacPatch is in the provisioning process. No agent updates can occur during this.");
+            return 0;
+        }
+
 		NSError *error = nil;
 		NSArray *files = [fm contentsOfDirectoryAtPath:@"/Users/Shared/.mpUpdate" error:&error];
 		

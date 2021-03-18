@@ -688,6 +688,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	BOOL res = YES;
 	NSString *_file = @"/private/var/db/.MPPatchState.plist";
 	NSDictionary *data;
+
 	if (state == kPatchingPausedOn) {
 		data = @{@"pausePatching":[NSNumber numberWithBool:YES]};
 	} else {
@@ -715,6 +716,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 
 #pragma mark • Software
+// CEH - Needs to be updated to support MPSoftware
 - (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
 {
 	qlinfo(@"Start install of %@",swItem[@"name"]);
@@ -1076,6 +1078,19 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 			}
 		}
 	}
+    
+    NSDictionary *wsRes = @{@"tuuid":swItem[@"id"],
+                            @"suuid":[swItem valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"resultString":@""};
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
 	
 	reply(err,result,installResultData);
 }

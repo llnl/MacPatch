@@ -27,18 +27,18 @@
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
-        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="F0z-JX-Cv5">
+        <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="F0z-JX-Cv5">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="196" y="240" width="800" height="600"/>
             <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <value key="minSize" type="size" width="800" height="600"/>
             <value key="maxSize" type="size" width="800" height="600"/>
-            <view key="contentView" id="se5-gp-TjO">
+            <view key="contentView" id="se5-gp-TjO" customClass="MPGradientView">
                 <rect key="frame" x="0.0" y="0.0" width="800" height="600"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
                     <button verticalHuggingPriority="750" id="khR-Mb-dBj">
-                        <rect key="frame" x="0.0" y="50" width="22" height="21"/>
+                        <rect key="frame" x="-17" y="53" width="22" height="21"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="round" title="Win" bezelStyle="circular" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ef0-AA-pL6">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -51,7 +51,7 @@
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" id="4yz-1k-bRj">
-                        <rect key="frame" x="0.0" y="50" width="22" height="21"/>
+                        <rect key="frame" x="-17" y="54" width="22" height="21"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="round" title="Background" bezelStyle="circular" alignment="center" controlSize="mini" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="p81-wz-tPw">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -69,14 +69,14 @@
                         <font key="font" metaFont="system"/>
                         <tabViewItems>
                             <tabViewItem label="Welcome" identifier="0" id="LeI-S5-QJc" userLabel="Welcome">
-                                <view key="view" id="h4k-OE-7YB">
+                                <view key="view" id="h4k-OE-7YB" customClass="MPGradientView">
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2cX-xH-dpa">
+                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2cX-xH-dpa">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration">
+                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
                                                 <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
                                                 <wkPreferences key="preferences"/>
                                             </wkWebViewConfiguration>
@@ -89,10 +89,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="5jw-mC-Q8i">
+                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="5jw-mC-Q8i">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration">
+                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
                                                 <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
                                                 <wkPreferences key="preferences"/>
                                             </wkWebViewConfiguration>
@@ -109,10 +109,10 @@
                                             <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bOf-Ru-8UJ">
+                                                <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="bOf-Ru-8UJ">
                                                     <rect key="frame" x="19" y="16" width="800" height="545"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                                    <wkWebViewConfiguration key="configuration">
+                                                    <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
                                                         <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
                                                         <wkPreferences key="preferences"/>
                                                     </wkWebViewConfiguration>
@@ -172,10 +172,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Lga-HX-LI8">
+                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Lga-HX-LI8">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration">
+                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
                                                 <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
                                                 <wkPreferences key="preferences"/>
                                             </wkWebViewConfiguration>
@@ -223,7 +223,7 @@
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-1306" y="-598"/>
+            <point key="canvasLocation" x="-1179" y="-640"/>
         </window>
     </objects>
 </document>

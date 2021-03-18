@@ -240,10 +240,8 @@
 	NSString *typeQuery;
 	NSString *typeQueryString;
 	NSString *typeResult;
-	
-    // CEH
-    qlinfo(@"scanHostForPatch: %@",aPatch);
-	//qldebug(@"scanHostForPatch: %@",aPatch);
+    
+	qldebug(@"scanHostForPatch: %@",aPatch);
 	
 	int i = 0;
 	for (i=0;i<[queryArray count];i++)
@@ -310,8 +308,7 @@
 				qlerror(@"Error, not enough args for patch query entry.");
 				goto done;	
 			}
-            // CEH
-            qlinfo(@"File Query Array: %@",qryArr);
+            
 			typeQuery		= [qryArr objectAtIndex:1];
 			typeQueryString = [qryArr objectAtIndex:2];
 			typeResult		= [qryArr objectAtIndex:3];

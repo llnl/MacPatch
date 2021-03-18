@@ -311,6 +311,8 @@
 										continue;
 									} else if ([taskDict[@"cmd"] isEqualToString:@"kMPAgentCheck"]) {
 										continue;
+                                    } else if ([taskDict[@"cmd"] isEqualToString:@"kMPVulUpdate"]) {
+                                        continue;
 									} else {
 										logit(lcl_vInfo,@"Scheduling first run of task (%@) to run in 30 seconds.",taskDict[@"cmd"]);
 										[self updateNextRunForTask:taskDict missedTask:YES];
@@ -1064,9 +1066,9 @@
             
             for (NSDictionary *q in provCriteria)
             {
-                qlinfo(@"Process %@",q);
+                qldebug(@"Process %@",q);
                 NSArray *qryArr = [[q objectForKey:@"qstr"] componentsSeparatedByString:@"@" escapeString:@"@@"];
-                qlinfo(@"qryArr %@",qryArr);
+                qldebug(@"qryArr %@",qryArr);
                 
                 if ([@"BundleID" isEqualToString:[qryArr objectAtIndex:0]]) {
                     mpbndl = [[MPBundle alloc] init];
@@ -1089,9 +1091,7 @@
                         qlerror(@"Error, not enough args for File criteria query.");
                         continue;
                     }
-                    // CEH
-                    qlinfo(@"File Query Array: %@",qryArr);
-                    
+
                     if ([mpfile queryFile:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] param:[qryArr objectAtIndex:3]]) {
                         qlinfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
                         count++;
@@ -1117,7 +1117,7 @@
                     }
                 }
             }
-            qlinfo(@"provCriteria.count %d == %d count",provCriteria.count,count);
+            qldebug(@"provCriteria.count %d == %d count",provCriteria.count,count);
             if (provCriteria.count == count)
             {
                 // Criteria is a pass, write .MPProvisionBegin file

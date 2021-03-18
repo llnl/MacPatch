@@ -191,9 +191,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
-    
-    //self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
-    //[self.provisionWindowController showWindow:self];
 }
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification

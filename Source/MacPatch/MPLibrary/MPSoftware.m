@@ -298,12 +298,47 @@
 		{
 			err = nil;
 			[self postStatusToDelegate:@"Patching enabled for %@",swTask[@"name"]];
-			// CEH - Needs to be completed
 			// Install Patches If Enabled
-			sleep(2);
+            
+            NSString *bundle_id = [swTask valueForKeyPath:@"Software.patch_bundle_id"];
+            if (bundle_id.length >= 2) {
+                [self scanAndUpdateUsingBundleID:bundle_id];
+            }
 		}
 	}
+    
+    NSDictionary *wsRes = @{@"tuuid":swTask[@"id"],
+                            @"suuid":[swTask valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"resultString":@""};
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
+    
 	return result;
+}
+
+- (void)scanAndUpdateUsingBundleID:(NSString *)aBundleID
+{
+    NSDictionary *patchDict;
+    MPPatching *mpp = [MPPatching new];
+    NSArray *res = [mpp scanForPatchUsingBundleID:aBundleID];
+    if (res.count == 1) {
+        NSDictionary *customPatch = [res objectAtIndex:0];
+        if ([customPatch[@"bundleID"] isEqualTo:aBundleID])
+        {
+            logit(lcl_vInfo,@"Patch %@ approved for update.",customPatch[@"patch"]);
+            patchDict = [customPatch copy];
+        }
+    }
+    
+    NSDictionary *patchRes = [mpp installPatchUsingTypeFilter:patchDict typeFilter:kCustomPatches];
+    qldebug(@"Patch Result; %@",patchRes);
 }
 
 #pragma mark - Private
