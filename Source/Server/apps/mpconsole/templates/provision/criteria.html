@@ -8,7 +8,18 @@
 {%  endblock %}
 
 {% block pageHeader %}
-	Provisioning - UI Config
+<div class="container-fluid">
+	<div class="pull-left">Provisioning - Detection Criteria</div>
+	<div class="pull-right">
+
+		<button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
+				data-placement="left"
+				data-content="Detection criteria is used to create the .MPProvisionBegin file. All active criteria must return true for the provision file to be created.">
+		  <i class="fa fa-question"></i>
+		</button>
+
+	</div>
+</div>
 {%  endblock %}
 
 {% block bodyPanel %}
@@ -25,6 +36,9 @@
 
 {% block javascript %}
 	{{ super() }}
+
+
+	<script src="{{ url_for('static', filename='static_components/popper/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
@@ -35,6 +49,9 @@
 
 		$( document ).ready(function()
 		{
+			$(function () {
+			  $('[data-toggle="popover"]').popover()
+			})
             $('#table').bootstrapTable( {
                 url: "/provision/criteria/list",
                 striped: true,
