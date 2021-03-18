@@ -23,23 +23,8 @@
 		8F57DD6A25E6CFBF00BAECC8 /* SwiftShell in Frameworks */ = {isa = PBXBuildFile; productRef = 8F57DD6925E6CFBF00BAECC8 /* SwiftShell */; };
 		8F57DD6D25E6D57F00BAECC8 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 8F57DD6C25E6D57F00BAECC8 /* Alamofire */; };
 		8F57DD8D25E80DED00BAECC8 /* Alamofire-Synchronous.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9EB1DF9CCA7009BA318 /* Alamofire-Synchronous.swift */; };
-		8FD5E18623AD574D00A47F7C /* SwiftShell.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD5E18423AD573C00A47F7C /* SwiftShell.framework */; };
-		8FD5E18723AD574D00A47F7C /* SwiftShell.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8FD5E18423AD573C00A47F7C /* SwiftShell.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8FEEC2B31DFF5FB8001133F7 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		8F2BC9E31DF88608009BA318 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				8FD5E18723AD574D00A47F7C /* SwiftShell.framework in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		8F2BC9CD1DF8805E009BA318 /* MPAgentUploader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPAgentUploader.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -71,7 +56,6 @@
 			files = (
 				8F57DD6725E6CE1500BAECC8 /* LogKit in Frameworks */,
 				8F57DD6D25E6D57F00BAECC8 /* Alamofire in Frameworks */,
-				8FD5E18623AD574D00A47F7C /* SwiftShell.framework in Frameworks */,
 				8F57DD6A25E6CFBF00BAECC8 /* SwiftShell in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -171,7 +155,6 @@
 				8F2BC9C91DF8805E009BA318 /* Sources */,
 				8F2BC9CA1DF8805E009BA318 /* Frameworks */,
 				8F2BC9CB1DF8805E009BA318 /* Resources */,
-				8F2BC9E31DF88608009BA318 /* CopyFiles */,
 			);
 			buildRules = (
 			);
@@ -408,6 +391,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
@@ -434,6 +418,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 3.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
