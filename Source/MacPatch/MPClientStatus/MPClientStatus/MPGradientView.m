@@ -13,6 +13,8 @@
 @synthesize startingColor;
 @synthesize endingColor;
 @synthesize angle;
+@synthesize xPoint;
+@synthesize yPoint;
 /*
 - (id)initWithFrame:(NSRect)frame {
     self = [super initWithFrame:frame];
@@ -43,11 +45,27 @@
 */
 - (void)drawRect:(NSRect)rect
 {
+    // Gradient draws from bottom up at 90 degrees
+    if (startingColor == nil) {
+        startingColor = [self colorFromHex:@"abb7c7"];
+    }
+    if (endingColor == nil) {
+        endingColor = [NSColor whiteColor];
+    }
+    if (!angle) {
+        angle = 90;
+    }
+    if (!xPoint) {
+        xPoint = 0;
+    }
+    if (!yPoint) {
+        yPoint = 54;
+    }
+    
     [super drawRect:rect];
-    NSGradient *gradient = [[NSGradient alloc] initWithStartingColor:[self colorFromHex:@"abb7c7"] endingColor:[NSColor whiteColor]];
-    //NSRect bounds = [self bounds];
-    NSRect bounds = NSMakeRect(0,54, 800, 600);
-    [gradient drawInRect:bounds angle:90];
+    NSGradient *gradient = [[NSGradient alloc] initWithStartingColor:startingColor endingColor:endingColor];
+    NSRect bounds = NSMakeRect(xPoint,yPoint, 800, 600);
+    [gradient drawInRect:bounds angle:angle];
 }
 - (NSColor *)colorFromHex:(NSString *)inColorString
 {

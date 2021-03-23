@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property(nonatomic, retain) NSColor *startingColor;
 @property(nonatomic, retain) NSColor *endingColor;
+@property(nonatomic, assign) CGFloat xPoint;
+@property(nonatomic, assign) CGFloat yPoint;
 @property(assign) int angle;
 
 @end
