@@ -50,7 +50,7 @@ class AgentBase(MPResource):
 					if col == 'mdate':
 						continue
 					elif col == 'fileVaultStatus':
-						if 'fileVaultStatus' in args:
+						if 'fileVaultStatus' in args and args['fileVaultStatus'] is not None:
 							setattr(client_obj, 'fileVaultStatus', args['fileVaultStatus'])
 						elif 'fileVault' in _body:
 							setattr(client_obj, 'fileVaultStatus', _body['fileVault'])
@@ -90,8 +90,7 @@ class AgentBase(MPResource):
 					elif col == 'fileVaultStatus':
 						log_Error('[ARGS][91] {}'.format(args))
 
-
-						if 'fileVaultStatus' in args:
+						if 'fileVaultStatus' in args and args['fileVaultStatus'] is not None:
 							setattr(client_object, 'fileVaultStatus', args['fileVaultStatus'])
 						elif 'fileVault' in _body:
 							setattr(client_object, 'fileVaultStatus', _body['fileVault'])

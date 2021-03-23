@@ -352,13 +352,14 @@ class SoftwareInstallResult(MPResource):
 				sw_install = MpSoftwareInstall()
 				setattr(sw_install, 'cuuid', cuuid)
 				setattr(sw_install, 'cdate', datetime.now())
-				#for idx, attr in enumerate(_sw_arr):
-				#	if str(jData[attr]):
-				#		setattr(sw_install, _sw_col[idx], jData[attr])
-				for x in _sw_col:
-					if x in jData:
-						setattr(sw_install, x, jData[x])
-
+				if "SWTaskID" in jData:
+					for idx, attr in enumerate(_sw_arr):
+						if str(jData[attr]):
+							setattr(sw_install, _sw_col[idx], jData[attr])
+				else:
+					for x in _sw_col:
+						if x in jData:
+							setattr(sw_install, x, jData[x])
 
 				try:
 					db.session.add(sw_install)
