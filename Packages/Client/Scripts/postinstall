@@ -145,9 +145,9 @@ fi
 # Set owner & permissions
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 setOwnerAndPerms /Library/LaunchAgents/gov.llnl.mp.status.plist
-setOwnerAndPerms /Library/LaunchAgents/gov.llnl.MPLoginAgent.plist
+#setOwnerAndPerms /Library/LaunchAgents/gov.llnl.MPLoginAgent.plist
 setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
-setOwner /Library/PrivilegedHelperTools/MPLoginAgent.app
+#setOwner /Library/PrivilegedHelperTools/MPLoginAgent.app
 
 if [ ! -d "/Library/Application Support/MPClientStatus" ]; then
 	mkdir "/Library/Application Support/MPClientStatus"

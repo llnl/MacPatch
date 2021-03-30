@@ -70,6 +70,10 @@ if [ -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper" ]; then
 	rm -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper"
 fi
 
+if [ -f "/Library/PrivilegedHelperTools/MPLoginAgent.app" ]; then
+	rm -f "/Library/PrivilegedHelperTools/MPLoginAgent.app"
+fi
+
 if [ -d "/Library/MacPatch/Client/MacPatch.app" ]; then
 	rm -rf "/Library/MacPatch/Client/MacPatch.app"
 fi
