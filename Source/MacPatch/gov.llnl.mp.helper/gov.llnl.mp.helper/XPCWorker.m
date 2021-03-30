@@ -29,11 +29,7 @@
 #import "MPHelperProtocol.h"
 #import "AHCodesignVerifier.h"
 #include <libproc.h>
-//#import "MPAgentController.h"
-
 #import "MPPatching.h"
-
-//#import "DBModels.h"
 #import "DBMigration.h"
 #import "MPClientDB.h"
 
@@ -83,6 +79,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         self->_listener.delegate = self;
         self->_selfPID = [self getPidNumber];
 		self->SW_DATA_DIR = [self swDataDirURL];
+        self->swTaskTimeoutValue = 1200; // 15min timeout to install an item
         [self configDataDir];
         fm = [NSFileManager defaultManager];
 		
@@ -330,7 +327,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	
 	MPPatching *patching = [MPPatching new];
 	patching.delegate = self;
-	//[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
 	
 	if (patchResult[@"patchInstallErrors"]) {
@@ -716,12 +712,29 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 
 #pragma mark • Software
-// CEH - Needs to be updated to support MPSoftware
 - (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+{
+    //__block NSError *err;
+    //__block NSInteger res;
+    //__block NSData *resData;
+    // Default timeout is 30min
+    [self installSoftware:swItem timeOut:1800 withReply:^(NSError *error, NSInteger resultCode, NSData *installData) {
+        //err = error;
+        //res = resultCode;
+        //resData = installData;
+        reply(error, resultCode, installData);
+    }];
+}
+
+
+// CEH - Needs to be updated to support MPSoftware
+//- (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+- (void)installSoftware:(NSDictionary *)swItem timeOut:(NSInteger)timeout withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
 {
 	qlinfo(@"Start install of %@",swItem[@"name"]);
 	qldebug(@"swItem: %@",swItem);
-	
+    self->swTaskTimeoutValue = (int)timeout;
+    
 	NSError *err = nil;
 	NSString *errStr;
 	NSInteger result = 99; // Default result
@@ -1639,7 +1652,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     NSException		*error = nil;
 	NSCharacterSet  *newlineSet;
     
-    
     //[self setTaskIsRunning:YES];
     //[self setTaskTimedOut:NO];
     
@@ -1681,6 +1693,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     [swTask setArguments:aBinArgs];
     logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
     
+    qlinfo(@"[task][setTimeout]: %d",swTaskTimeoutValue);
     // Launch The NSTask
     @try {
         [swTask launch];
@@ -2502,8 +2515,10 @@ done:
 - (void)rebootHost:(void(^)(NSError *error))reply
 {
     NSError *err = nil;
-    qlinfo(@"Provisioning issued a launchctl reboot.");
-    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+    //qlinfo(@"Provisioning issued a launchctl reboot.");
+    //[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+    qlinfo(@"Provisioning issued a cli reboot.");
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/reboot" arguments:@[]];
     reply(err);
 }
 

@@ -24,7 +24,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-// Rev 40
+// Rev 41
 
 #import <Foundation/Foundation.h>
 
@@ -132,6 +132,7 @@ enum {
 // ----------------------------------------
 
 - (void)installSoftware:(NSDictionary *_Nonnull)swItem withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode, NSData * _Nullable installData))reply;
+- (void)installSoftware:(NSDictionary *_Nonnull)swItem timeOut:(NSInteger)timeout withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode, NSData * _Nullable installData))reply;
 
 - (void)runScriptFromString:(NSString *_Nonnull)script withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 - (void)runScriptFromFile:(NSString *_Nonnull)script withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
