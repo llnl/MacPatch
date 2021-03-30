@@ -72,7 +72,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableDebugLogging"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableScanOnLaunch"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
-	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
+	// [defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
+    [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"allowRebootPatchInstalls"];
 	
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 }
@@ -131,6 +132,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    if (@available(macOS 11.0, *)) {
+        //[[self window] setToolbarStyle:NSWindowToolbarStylePreference];
+        [[self window] setToolbarStyle:NSWindowToolbarStyleExpanded];
+    }
+    
 	[[NSAppleEventManager sharedAppleEventManager] setEventHandler:self
 													   andSelector:@selector(handleURLEvent:withReplyEvent:)
 													 forEventClass:kInternetEventClass
@@ -299,53 +305,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
 	[self.swRebootWindow makeKeyAndOrderFront:self];
 	[self.swRebootWindow setLevel:NSStatusWindowLevel];
-}
-
-- (IBAction)logoutAndPatch:(id)sender
-{
-	[self.rebootWindow close];
-	
-	if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
-	{
-		NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
-		[ud setBool:NO forKey:@"patch"];
-		[ud setBool:NO forKey:@"reboot"];
-		ud = nil;
-	}
-	
-	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
-	{
-		[@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-		[[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
-	}
-	
-	/* reboot the system using Apple supplied code
-	 error = SendAppleEventToSystemProcess(kAERestart);
-	 error = SendAppleEventToSystemProcess(kAELogOut);
-	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-	 */
-	
-	OSStatus error = noErr;
-#ifdef DEBUG
-	error = SendAppleEventToSystemProcess(kAELogOut);
-#else
-	error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-#endif
-}
-
-- (IBAction)rebootSystem:(id)sender
-{
-	/* reboot the system using Apple supplied code
-	 error = SendAppleEventToSystemProcess(kAERestart);
-	 error = SendAppleEventToSystemProcess(kAELogOut);
-	 error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-	 error = SendAppleEventToSystemProcess(kAEShutDown);
-	 */
-    
-    [self setAuthRestart];
-    
-	OSStatus error = noErr;
-	error = SendAppleEventToSystemProcess(kAERestart);
 }
 
 - (void)showRestartWindow:(int)action

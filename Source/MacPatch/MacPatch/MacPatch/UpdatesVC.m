@@ -48,6 +48,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (nonatomic, retain) IBOutlet  NSTextField             *patchAllPatchStatusText;
 
 @property (nonatomic, assign) BOOL isPatchingPaused;
+@property (nonatomic, assign) BOOL showRebootWarningDialog;
+@property (nonatomic, assign) int countRebootPatch;
 
 @property (weak) IBOutlet NSScrollView *scrollview;
 @property (nonatomic) NSTask *task;
@@ -81,6 +83,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     // Do view setup here.
 	
 	_content = [NSMutableArray array];
+    _showRebootWarningDialog = 0;
 	[[NSNotificationCenter defaultCenter] addObserver:self
 											 selector:@selector(patchingStateChanged:)
 												 name:@"PatchingStateChangedNotification"
@@ -90,6 +93,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 											 selector:@selector(scanForPatches:)
 												 name:@"PatchScanNotification"
 											   object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(disableButtons:)
+                                                 name:@"disablePatchButtons"
+                                               object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(enableButtons:)
+                                                 name:@"enablePatchButtons"
+                                               object:nil];
 }
 
 - (void)viewDidAppear
@@ -118,43 +131,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	});
 		 
 	[self startScan];
-	/*
-	NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithFile:@"/private/var/tmp/patches.plist"];
-	NSArray *approvedPatches = patchDict[@"required"];
-
-	[self->_content removeAllObjects];
-	[self->_content addObjectsFromArray:[NSMutableArray array]];
 	
-	// If there array has content, we need to remove all objects
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self.tableView reloadData];
-	});
-	
-	// If we have content to add, add it
-	if (approvedPatches && approvedPatches.count > 0)
-	{
-		[self->_content addObjectsFromArray:approvedPatches];
-	} else {
-		[self->_content addObjectsFromArray:[NSArray array]];
-	}
-	
-	dispatch_async(dispatch_get_main_queue(), ^{
-		[self.tableView reloadData];
-		if (self->_content.count > 1)
-		{
-			[self.updateAllButton setHidden:NO];
-			[self.updateAllButton setEnabled:YES];
-			if (self->_isPatchingPaused) {
-				[self.updateAllButton setEnabled:NO];
-				[self.pausedPatchingText setFrame:NSMakeRect(540, 570, 354, 17)]; // Move it over
-			}
-		} else {
-			[self.pausedPatchingText setFrame:NSMakeRect(628, 570, 354, 17)]; // Move it over
-		}
-	});
-	*/
-	//[self stopScan];
-	//return;
 	__block MPPatchContentType patchContentType = kAllPatches;
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -220,13 +197,39 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (IBAction)updateAllPatches:(id)sender
 {
-	__block int allowInstallInt = 0;
+    __block int rebootPatchCount = 0;
+    __block int allowInstallInt = 0;
 	__block BOOL hasRebootPatch = NO;
 	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
-	if (allowInstall) allowInstallInt = 1;
+	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+    BOOL allowInstall = YES;
+	//if (allowInstall) allowInstallInt = 1;
 	
+    for (int i = 0; i < _tableView.numberOfRows; i++) {
+        UpdatesCellView *_cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
+        if ([_cell.rowData[@"restart"] isEqualToString:@"Yes"])
+        {
+            rebootPatchCount++;
+        }
+    }
+    
+    NSString *title = @"Patch requires reboot...";
+    if (rebootPatchCount >= 2) title = @"Patches requires reboot...";
+    
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Patch"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setMessageText:title];
+    [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data."];
+    if([alert runModal] == NSAlertFirstButtonReturn) {
+        [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"AlertOnRebootPatch"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
+    } else {
+        // Hit cancel ...
+        return;
+    }
+        
 	// Get an array of all patch dictionaries
 	NSMutableArray *allPatches = [NSMutableArray new];
 	for (int i = 0; i < _tableView.numberOfRows; i++)
@@ -239,6 +242,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			});
 		} else if ([cell.rowData[@"restart"] isEqualToString:@"Yes"]) {
 			hasRebootPatch = YES;
+            rebootPatchCount++;
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[cell.updateButton setTitle:@"On Reboot"];
 				[cell.updateButton setEnabled:NO];
@@ -248,7 +252,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			qlerror(@"Row Data: %@",cell.rowData);
 		}
 	}
-	
+ 
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self.scanButton setEnabled:NO];
 		[self.updateAllButton setHidden:YES];
@@ -321,7 +325,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     
     [notification.object waitForDataInBackgroundAndNotify];
 }
-
 
 - (BOOL)userNotificationCenter:(NSUserNotificationCenter *)center shouldPresentNotification:(NSUserNotification *)notification
 {
@@ -404,6 +407,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		[self->_mainScanProgressWheel stopAnimation:nil];
 		[self->_mainScanProgressWheel setHidden:YES];
 		[self->_mainScanStatusText setStringValue:@"Patch scan completed. No patches needed."];
+        
+        // Scan is done, clear alert for reboot patch
+        [[NSUserDefaults standardUserDefaults] setInteger:0 forKey:@"AlertOnRebootPatch"];
+        [[NSUserDefaults standardUserDefaults] synchronize];
 		
 		if (self->_content && [self->_content count] >= 0)
 		{
@@ -749,5 +756,26 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	}
 }
 
+- (void)disableButtons:(NSNotification *)notification
+{
+    if ([[notification name] isEqualToString:@"disablePatchButtons"])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.updateAllButton setHidden:YES];
+            [self.mainScanStatusText setStringValue:@""];
+            [self.scanButton setEnabled:NO];
+        });
+    }
+}
+
+- (void)enableButtons:(NSNotification *)notification
+{
+    if ([[notification name] isEqualToString:@"enablePatchButtons"])
+    {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.scanButton setEnabled:YES];
+        });
+    }
+}
 
 @end

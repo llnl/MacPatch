@@ -34,6 +34,7 @@
 //#import <UserNotifications/UserNotifications.h>
 
 #import "Provisioning.h"
+#import "ProvisioningAlt.h"
 
 
 NSString * const kMenuIconNorml		= @"mp3Image";
@@ -249,17 +250,17 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	[self fvUserCheck];
     
     // Provisioning Check, write out MP_PROVISION_BEGIN file if criteria is meet
-    
     // Run Provisioning
     if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
     {
-        qlinfo(@".MPProvisionBegin found. Begin provisioning.");
-        self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
-        [self.provisionWindowController showWindow:self];
-        [self.provisionWindowController.window makeKeyAndOrderFront:nil];
-        [self.provisionWindowController.window setLevel:NSScreenSaverWindowLevel];
-        [NSApp activateIgnoringOtherApps:YES];
-        
+        if (![fm fileExistsAtPath:@"/tmp/.MPSkipIt"]) {
+            qlinfo(@".MPProvisionBegin found. Begin provisioning.");
+            self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
+            [self.provisionWindowController showWindow:self];
+            [self.provisionWindowController.window makeKeyAndOrderFront:nil];
+            [self.provisionWindowController.window setLevel:NSScreenSaverWindowLevel];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
     } else {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
         if ([defaults boolForKey:@"showWhatsNew"]) {
@@ -700,12 +701,15 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		{
 			NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 			[ud setBool:YES forKey:@"patch"];
+            [ud synchronize];
+            /*
 			if ([self patchNeedsReboot] == YES) {
 				[ud setBool:YES forKey:@"reboot"];
 			} else {
 				[ud setBool:NO forKey:@"reboot"];
 			}
 			ud = nil;
+             */
 		}
 
 		dispatch_async(dispatch_get_main_queue(), ^(void) {
@@ -925,30 +929,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		[self showDenyMessage:appRule];
 	}
 	
-	/*
-    for (NSString *r in [self.appRules objectForKey:@"deny"])
-    {
-        if ([[noteInfo objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationBundleIdentifier"] containsString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationName"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationName"] containsString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationPath"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationPath"] containsString:r]) {
-            result = YES;
-            break;
-        }
-    }
-	 */
     return result;
 }
 
@@ -985,37 +965,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [self.rebootWindow center];
     [NSApp arrangeInFront:self];
     [NSApp activateIgnoringOtherApps:YES];
-}
-
-- (IBAction)logoutAndPatch:(id)sender
-{
-	[self.rebootWindow close];
-	
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
-        NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
-        [ud setBool:NO forKey:@"patch"];
-        [ud setBool:NO forKey:@"reboot"];
-        ud = nil;
-    }
-	
-	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
-	{
-		[@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-		[[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
-	}
-    
-    /* reboot the system using Apple supplied code
-     error = SendAppleEventToSystemProcess(kAERestart);
-     error = SendAppleEventToSystemProcess(kAELogOut);
-     error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-     */
-    
-    OSStatus error = noErr;
-#ifdef DEBUG
-    error = SendAppleEventToSystemProcess(kAELogOut);
-#else
-    error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-#endif
 }
 
 #pragma mark -
@@ -1182,7 +1131,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     }
     else if ([notification.name isEqualToString: kRebootRequiredNotification])
     {
-        [self postUserNotificationForReboot];
+        //[self postUserNotificationForReboot];
+        [self displayPatchDataMethod];
     }
     else if ([notification.name isEqualToString: kRefreshStatusIconNotification])
     {
@@ -1225,7 +1175,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		
 		if ([notification.actionButtonTitle isEqualToString:@"Reboot"])
 		{
-			[self logoutNow];
+			//[self logoutNow];
+            [self openMacPatchAppWithAction:@"PatchScan"];
 		}
 		
 		if ([notification.actionButtonTitle isEqualToString:@"Update"])

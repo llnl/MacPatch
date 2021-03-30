@@ -89,6 +89,7 @@
             {
                 qlinfo(@"Pre Script: %@",s[@"name"]);
                 @try {
+                    [_delegate provisionProgress:@"Running Pre-install Script(s)..."];
                     [self runScript:s[@"script"]];
                     qlinfo(@"Pre Script: %@",s[@"name"]);
                 } @catch (NSException *exception) {
@@ -109,6 +110,7 @@
             for (NSDictionary *s in _sw)
             {
                 qlinfo(@"Install Software Task: %@",s[@"name"]);
+                [_delegate provisionProgress:[NSString stringWithFormat:@"Install Software Task: %@",s[@"name"]]];
                 @try {
                     int res = [self installSoftwareProvisonTask:s];
                     if (res != 0) {
@@ -133,6 +135,7 @@
             {
                 qldebug(@"Post Script: %@",s[@"name"]);
                 @try {
+                    [_delegate provisionProgress:[NSString stringWithFormat:@"Running Post-install Script: %@",s[@"name"]]];
                     [self runScript:s[@"script"]];
                 } @catch (NSException *exception) {
                     qlerror(@"[PostScript]: %@",exception);
@@ -264,7 +267,7 @@
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                 qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 dispatch_semaphore_signal(sem);
-            }] installSoftware:swDict withReply:^(NSError *error, NSInteger resultCode, NSData *installData ) {
+            }] installSoftware:swDict timeOut:900 withReply:^(NSError *error, NSInteger resultCode, NSData *installData ) {
                 res = resultCode;
                 if (error) {
                     qlerror(@"Error installing %@.",swTask[@"name"]);

@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.0.2"
+#define APPVERSION	@"3.6.0.3"
 #define APPNAME		@"MPUpdater"
 
 void usage(void);

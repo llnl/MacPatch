@@ -29,7 +29,7 @@
                 resultString = [NSString stringWithFormat:@"%@", result];
             }
         } else {
-            NSLog(@"evaluateJavaScript error : %@", error.localizedDescription);
+            qlerror(@"evaluateJavaScript error : %@", error.localizedDescription);
         }
         finished = YES;
     }];
@@ -48,6 +48,7 @@
 {
     NSFileManager *fm;
     NSTextField *textFieldStatus;
+    NSTextField *textFieldStatusBanner;
     NSProgressIndicator *progressWheelMain;
 }
 
@@ -165,26 +166,37 @@
             [NSThread sleepForTimeInterval:1.5];
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                self->textFieldStatus = [[NSTextField alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 300, 158, 600, 18)];
-                [self->textFieldStatus setStringValue:@"Required software needs to be installed. Once completed, you may begin."];
-                [self->textFieldStatus setAlignment:NSTextAlignmentCenter];
-                [self->textFieldStatus setFont:[NSFont systemFontOfSize:14]];
-                [self->textFieldStatus setBezeled:NO];
-                [self->textFieldStatus setDrawsBackground:NO];
-                [self->textFieldStatus setEditable:NO];
-                [self->textFieldStatus setSelectable:NO];
-                [self.window.contentView addSubview:self->textFieldStatus];
+                self->textFieldStatusBanner = [[NSTextField alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 300, 158, 600, 18)];
+                [self->textFieldStatusBanner setStringValue:@"Required software needs to be installed. Once completed, you may begin."];
+                [self->textFieldStatusBanner setAlignment:NSTextAlignmentCenter];
+                [self->textFieldStatusBanner setFont:[NSFont systemFontOfSize:14]];
+                [self->textFieldStatusBanner setBezeled:NO];
+                [self->textFieldStatusBanner setDrawsBackground:NO];
+                [self->textFieldStatusBanner setEditable:NO];
+                [self->textFieldStatusBanner setSelectable:NO];
+                [self.window.contentView addSubview:self->textFieldStatusBanner];
                 
                 self->progressWheelMain = [[NSProgressIndicator alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 8, 128, 16, 16)];
                 [self->progressWheelMain setStyle:NSProgressIndicatorStyleSpinning];
                 [self->progressWheelMain startAnimation:nil];
                 [self.window.contentView addSubview:self->progressWheelMain];
+                
+                self->textFieldStatus = [[NSTextField alloc] initWithFrame:NSMakeRect(self.window.contentView.frame.size.width/2 - 300, 98, 600, 18)];
+                [self->textFieldStatus setStringValue:@""];
+                [self->textFieldStatus setAlignment:NSTextAlignmentCenter];
+                [self->textFieldStatus setFont:[NSFont systemFontOfSize:12]];
+                [self->textFieldStatus setBezeled:NO];
+                [self->textFieldStatus setDrawsBackground:NO];
+                [self->textFieldStatus setEditable:NO];
+                [self->textFieldStatus setSelectable:NO];
+                [self.window.contentView addSubview:self->textFieldStatus];
             });
             
             //NSString *jsTxt = @"<p>Required software needs to be installed. Once completed, you may begin.</p>";
             //[self writeStatusToHTML:jsTxt];
             
             ProvisionHost *ph = [ProvisionHost new];
+            ph.delegate = self;
             int result = 99;
             result = [ph provisionHost];
             
@@ -196,6 +208,7 @@
                 dispatch_async(dispatch_get_main_queue(), ^{
                     //[self writeStatusToHTML:@""];
                     [self->textFieldStatus removeFromSuperview];
+                    [self->textFieldStatusBanner removeFromSuperview];
                     [self->progressWheelMain removeFromSuperview];
                     
                     [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
@@ -210,13 +223,13 @@
                     informativeTextWithFormat:@"There was an error running the initial provisioning installs. Click Exit to exit the app, or click Contimnue and proceed."];
                 [alert setAlertStyle:NSCriticalAlertStyle];
                 [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
-                    NSLog(@"%ld",(long)result);
                     if (result == 0) {
                         [self closeWindow:nil];
                     } else {
                         dispatch_async(dispatch_get_main_queue(), ^{
                             //[self writeStatusToHTML:@""];
                             [self->textFieldStatus removeFromSuperview];
+                            [self->textFieldStatusBanner removeFromSuperview];
                             [self->progressWheelMain removeFromSuperview];
                             
                             [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
@@ -231,6 +244,7 @@
             dispatch_async(dispatch_get_main_queue(), ^{
                 //[self writeStatusToHTML:@""];
                 [self->textFieldStatus removeFromSuperview];
+                [self->textFieldStatusBanner removeFromSuperview];
                 [self->progressWheelMain removeFromSuperview];
                 
                 [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
@@ -344,8 +358,8 @@
              }
         }];
         dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-        [self closeWindow:nil];
-        //[self logoutAndPatch:nil];
+        //[self closeWindow:nil];
+        [self closeOrRebootHost];
     
     } else {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
@@ -412,7 +426,6 @@
         informativeTextWithFormat:@"Are you sure you want to skip the software installs? If you do, you can always launch the MacPatch application and install them at a later time."];
     [alert setAlertStyle:NSCriticalAlertStyle];
     [alert beginSheetModalForWindow:[self window] completionHandler:^(NSInteger result) {
-        NSLog(@"%ld",(long)result);
         if (result == 1) {
             [self->_tabBar selectNextTabViewItem:NULL];
         }
@@ -435,7 +448,6 @@
         __block NSString *field = f[@"field"];
         NSString *fieldJS = [NSString stringWithFormat:@"document.getElementById('%@').value;",f[@"field"]];
         NSString *res = [self.collectionWebView stringByEvaluatingJavaScriptFromString:fieldJS];
-        NSLog(@"res: %@",res);
         if ([res length] >= [f[@"fieldLen"] intValue]) {
             [result setObject:res forKey:field];
         } else {
@@ -459,11 +471,11 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([status isEqual:@""]) {
             [self->_welcomeWebView evaluateJavaScript:@"clearStatus();" completionHandler:^(id Result, NSError * error) {
-                NSLog(@"Error -> %@", error);
+                qlerror(@"Error[clearStatus()]: %@",error);
             }];
         } else {
             [self->_welcomeWebView evaluateJavaScript:[NSString stringWithFormat:@"addStatus(\"%@\");",status] completionHandler:^(id Result, NSError * error) {
-                NSLog(@"Error -> %@", error);
+                qlerror(@"Error[addStatus()]: %@",error);
             }];
         }
     });
@@ -485,45 +497,37 @@
     return result;
 }
 
-- (IBAction)logoutAndPatch:(id)sender
+- (void)closeOrRebootHost
 {
-    //[self.rebootWindow close];
-    
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9)
-    {
-        NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
-        [ud setBool:NO forKey:@"patch"];
-        [ud setBool:NO forKey:@"reboot"];
-        ud = nil;
-    }
-    
-    if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
-    {
-        [@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-        [[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
+    if (_provisionData[@"mandatoryReboot"]) {
+        if ([_provisionData[@"mandatoryReboot"] intValue] == 1) {
+            [self connectAndExecuteCommandBlock:^(NSError * connectError)
+             {
+                 if (connectError != nil)
+                 {
+                     qlerror(@"connectError: %@",connectError.localizedDescription);
+                 }
+                 else
+                 {
+                     [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                         qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                     }] rebootHost:^(NSError *error) {
+                         if (error) {
+                             qlerror(@"%@",error.localizedDescription);
+                         };
+                     }];
+                 }
+             }];
+        }
     } else {
-        qlinfo(@"%@ file already exists. No need to create it.",MP_AUTHRUN_FILE);
+        [self closeWindow:nil];
     }
-    
-    /* reboot the system using Apple supplied code
-     error = SendAppleEventToSystemProcess(kAERestart);
-     error = SendAppleEventToSystemProcess(kAELogOut);
-     error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-     */
-    
-    OSStatus error = noErr;
-#ifdef DEBUG
-    error = SendAppleEventToSystemProcess(kAELogOut);
-#else
-    error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-#endif
 }
 
 #pragma mark - Tab Delegates
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    NSLog(@"willSelectTabViewItem %@",tabViewItem.identifier);
     self.selectedTabViewItem = tabViewItem.identifier;
     
     NSString *htmlString;
@@ -536,9 +540,6 @@
     if ([tabViewItem.identifier isEqualToString:@"0"])
     {
         [_welcomeWebView setValue:@(YES) forKey:@"drawsTransparentBackground"];
-        //dispatch_sync(dispatch_get_main_queue(), ^() {
-            //[_welcomeWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
-        //});
     }
     else if ([tabViewItem.identifier isEqualToString:@"1"])
     {
@@ -558,12 +559,10 @@
         [_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         
     }
-    
 }
 
 - (void)tabView:(NSTabView *)tabView didSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    NSLog(@"didSelectTabViewItem %@",tabViewItem.identifier);
     NSString *htmlString;
     
     if (_provisionData) {
@@ -619,6 +618,11 @@
         //[_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setEnabled:YES];
         [_stepperButton setTitle:@"Finished"];
+        if (_provisionData[@"mandatoryReboot"]) {
+            if ([_provisionData[@"mandatoryReboot"] intValue] == 1) {
+                [_stepperButton setTitle:@"Reboot"];
+            }
+        }
         [_skipButton setHidden:YES];
     }
 }
@@ -645,7 +649,7 @@
     }
     
     if (!tabData) {
-        NSLog(@"No Data for tab");
+        qlwarning(@"No Data for tab");
         return @"";
     }
 
@@ -684,7 +688,7 @@
     }
     
     if (!tabData) {
-        NSLog(@"No Data for tab");
+        qlwarning(@"No Data for tab");
         return @"";
     }
 
@@ -752,7 +756,6 @@
 
 - (void)getSoftwareForGroup:(NSString *)groupName
 {
-    // - (NSArray *)getSoftwareTasksForGroup:(NSString *)groupName error:(NSError **)err;
     @autoreleasepool
     {
         MPRESTfull *rest = [MPRESTfull new];
@@ -762,7 +765,6 @@
             qlerror(@"%@",err.localizedDescription);
         }
         _swForGroup = [swArr copy];
-        NSLog(@"%@",_swForGroup);
     }
 }
 
@@ -941,6 +943,18 @@
         });
     }
 }
+
+#pragma mark - ProvisionHost protocol
+
+- (void)provisionProgress:(NSString *)progressStr;
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->textFieldStatus) {
+            self->textFieldStatus.stringValue = progressStr;
+        }
+    });
+}
+
 
 #pragma mark - Notifications
 

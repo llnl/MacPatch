@@ -10,6 +10,8 @@
 		8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */; };
 		8F22E84822B98D7600A27786 /* html in Resources */ = {isa = PBXBuildFile; fileRef = 8F22E84722B98D7600A27786 /* html */; };
 		8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F22E84922B9980800A27786 /* WebKit.framework */; };
+		8F313FEF260417EC00E8B402 /* ProvisioningAlt.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F313FED260417EC00E8B402 /* ProvisioningAlt.m */; };
+		8F313FF0260417EC00E8B402 /* ProvisioningAlt.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */; };
 		8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F416E0725D4A70F00947128 /* ProvisionHost.m */; };
 		8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F730CC0240B09FA00876026 /* OpenDirectory.framework */; };
 		8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9072CC25FFE113008BE990 /* MPGradientView.m */; };
@@ -49,6 +51,9 @@
 		8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F22E84722B98D7600A27786 /* html */ = {isa = PBXFileReference; lastKnownFileType = folder; path = html; sourceTree = "<group>"; };
 		8F22E84922B9980800A27786 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
+		8F313FEC260417EC00E8B402 /* ProvisioningAlt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisioningAlt.h; sourceTree = "<group>"; };
+		8F313FED260417EC00E8B402 /* ProvisioningAlt.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisioningAlt.m; sourceTree = "<group>"; };
+		8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProvisioningAlt.xib; sourceTree = "<group>"; };
 		8F416E0625D4A70F00947128 /* ProvisionHost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisionHost.h; sourceTree = "<group>"; };
 		8F416E0725D4A70F00947128 /* ProvisionHost.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisionHost.m; sourceTree = "<group>"; };
 		8F730CC0240B09FA00876026 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
@@ -137,6 +142,9 @@
 				8F416E0725D4A70F00947128 /* ProvisionHost.m */,
 				8F9072CB25FFE113008BE990 /* MPGradientView.h */,
 				8F9072CC25FFE113008BE990 /* MPGradientView.m */,
+				8F313FEC260417EC00E8B402 /* ProvisioningAlt.h */,
+				8F313FED260417EC00E8B402 /* ProvisioningAlt.m */,
+				8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */,
 			);
 			name = Provisioning;
 			sourceTree = "<group>";
@@ -302,6 +310,7 @@
 			files = (
 				8FE6B4831B4C79A1000A0471 /* warn.png in Resources */,
 				8F22E84822B98D7600A27786 /* html in Resources */,
+				8F313FF0260417EC00E8B402 /* ProvisioningAlt.xib in Resources */,
 				8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */,
 				8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */,
 				8FD8907B16DFE8D000A870A3 /* ClientStatusMainMenu.xib in Resources */,
@@ -324,6 +333,7 @@
 				8FCCBA7119AFD1BB001F4C3B /* CHMenuViewController.m in Sources */,
 				8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */,
 				8FD8905716DFE84600A870A3 /* main.m in Sources */,
+				8F313FEF260417EC00E8B402 /* ProvisioningAlt.m in Sources */,
 				8FD8907116DFE8B200A870A3 /* MPClientStatusAppDelegate.m in Sources */,
 				8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */,
 				8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */,

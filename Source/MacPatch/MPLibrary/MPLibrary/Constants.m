@@ -87,8 +87,8 @@ NSString * const MP_AGENT_DEPL_PLIST        = @"/Library/Application Support/Mac
 NSString * const MP_AGENT_SETTINGS          = @"/Library/Application Support/MacPatch/gov.llnl.mp.plist";
 NSString * const MP_AGENT_DB 				= @"/private/var/db/.MacPatch.db";
 
-NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun";
-NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun";
+NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun_CEH"; // No longer used as of MP 3.6x
+NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun_CEH"; // No longer used as of MP 3.6x
 NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain";
 NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist";
 

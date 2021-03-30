@@ -124,6 +124,8 @@
 		8FEC938817CBFEFB00AA9C1C /* MPApplePatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FEC938617CBFEFB00AA9C1C /* MPApplePatch.m */; };
 		8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FEC938917CBFF0F00AA9C1C /* MPCustomPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FEC938C17CBFF0F00AA9C1C /* MPCustomPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FEC938A17CBFF0F00AA9C1C /* MPCustomPatch.m */; };
+		8FEE6272260E8B9700F533F4 /* NSTask+KillBy.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FEE6270260E8B9700F533F4 /* NSTask+KillBy.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8FEE6273260E8B9700F533F4 /* NSTask+KillBy.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FEE6271260E8B9700F533F4 /* NSTask+KillBy.m */; };
 		8FF3D650217010E700059ACD /* Constants.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D64D217010E600059ACD /* Constants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D651217010E700059ACD /* Constants.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D64E217010E600059ACD /* Constants.m */; };
 		8FF3D652217010E700059ACD /* MacPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D64F217010E700059ACD /* MacPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -331,6 +333,8 @@
 		8FEC938A17CBFF0F00AA9C1C /* MPCustomPatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPCustomPatch.m; sourceTree = "<group>"; };
 		8FED886F146462DB00709F8E /* MPASUSCatalogs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPASUSCatalogs.h; sourceTree = "<group>"; };
 		8FED8870146462DB00709F8E /* MPASUSCatalogs.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPASUSCatalogs.m; sourceTree = "<group>"; };
+		8FEE6270260E8B9700F533F4 /* NSTask+KillBy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NSTask+KillBy.h"; sourceTree = "<group>"; };
+		8FEE6271260E8B9700F533F4 /* NSTask+KillBy.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = "NSTask+KillBy.m"; sourceTree = "<group>"; };
 		8FF3D64D217010E600059ACD /* Constants.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Constants.h; sourceTree = "<group>"; };
 		8FF3D64E217010E600059ACD /* Constants.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Constants.m; sourceTree = "<group>"; };
 		8FF3D64F217010E700059ACD /* MacPatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacPatch.h; sourceTree = "<group>"; };
@@ -766,6 +770,8 @@
 				8FF3D72521701AB500059ACD /* NSString+Hash.m */,
 				8FF3D73021701AB600059ACD /* NSString+Helper.h */,
 				8FF3D72921701AB600059ACD /* NSString+Helper.m */,
+				8FEE6270260E8B9700F533F4 /* NSTask+KillBy.h */,
+				8FEE6271260E8B9700F533F4 /* NSTask+KillBy.m */,
 			);
 			name = Helpers;
 			path = MPLibrary/Helpers;
@@ -1010,6 +1016,7 @@
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
 				8FFC7E3625084950009671AD /* NSFileHandle-Helper.h in Headers */,
+				8FEE6272260E8B9700F533F4 /* NSTask+KillBy.h in Headers */,
 				8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */,
 				8FC444171D00921900EF328C /* NSString+Base64.h in Headers */,
 				8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */,
@@ -1112,6 +1119,7 @@
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
+				8FEE6273260E8B9700F533F4 /* NSTask+KillBy.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
 				8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */,
 				8FFC7E3725084950009671AD /* NSFileHandle-Helper.m in Sources */,

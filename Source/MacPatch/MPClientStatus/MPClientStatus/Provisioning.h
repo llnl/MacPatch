@@ -8,10 +8,11 @@
 
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
+#import "ProvisionHost.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Provisioning : NSWindowController <NSTabViewDelegate, WKUIDelegate, WKNavigationDelegate>
+@interface Provisioning : NSWindowController <NSTabViewDelegate, WKUIDelegate, WKNavigationDelegate, ProvisionHostDelegate>
 {
     
 }

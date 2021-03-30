@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="16097.3" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="16097.3"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -12,10 +12,10 @@
             </connections>
         </customObject>
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
-        <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g">
+        <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" toolbarStyle="expanded" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="335" y="390" width="840" height="700"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <value key="minSize" type="size" width="840" height="600"/>
             <value key="maxSize" type="size" width="1000" height="1600"/>
             <view key="contentView" id="EiT-Mj-1SZ">
@@ -160,9 +160,9 @@
         </window>
         <customObject id="-3" userLabel="Application" customClass="NSObject"/>
         <window title="Reboot System" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="HVp-h7-rzM">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
+            <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <view key="contentView" id="LsG-PG-hCS">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -192,15 +192,12 @@
                             <action selector="restartOrShutdown:" target="Voe-Tx-rLC" id="YRU-lR-X7C"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MCp-Zo-lT2">
+                    <button hidden="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MCp-Zo-lT2">
                         <rect key="frame" x="347" y="13" width="96" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Cancel" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="MnT-46-AqK">
                             <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                             <font key="font" metaFont="system"/>
-                            <string key="keyEquivalent" base64-UTF8="YES">
-DQ
-</string>
                         </buttonCell>
                         <connections>
                             <action selector="performClose:" target="HVp-h7-rzM" id="hIQ-f7-UUG"/>
@@ -211,9 +208,9 @@ DQ
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="cnz-96-J4n">
                             <font key="font" metaFont="system"/>
-                            <string key="title">MacPatch has installed a patch that requires a reboot of this system. Please save your work and exit all applications before continuing.
+                            <string key="title">MacPatch has installed a patch that requires a reboot of this system. Please save your work and exit all applications before clicking the Restart button.
 
-Click cancel to reboot at another time. Please be aware that system degradation will occur the longer the system is used before rebooting.</string>
+</string>
                             <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
@@ -223,9 +220,19 @@ Click cancel to reboot at another time. Please be aware that system degradation 
                         <autoresizingMask key="autoresizingMask"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="alertImage" id="tek-ea-M2j"/>
                     </imageView>
+                    <textField hidden="YES" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hLA-yG-mVT">
+                        <rect key="frame" x="117" y="54" width="418" height="58"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="BhQ-sH-fgo">
+                            <font key="font" metaFont="system"/>
+                            <string key="title">Click cancel to reboot at another time. Please be aware that system degradation will occur the longer the system is used before rebooting.</string>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-1727" y="-704"/>
+            <point key="canvasLocation" x="-1865.5" y="-1057"/>
         </window>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
@@ -247,7 +254,7 @@ Click cancel to reboot at another time. Please be aware that system degradation 
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="843" width="495" height="197"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <view key="contentView" id="Bdb-Ky-3Ye">
                 <rect key="frame" x="0.0" y="0.0" width="495" height="197"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -283,7 +290,7 @@ Click cancel to reboot at another time. Please be aware that system degradation 
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="rebootSystem:" target="Voe-Tx-rLC" id="YA2-Rr-EN4"/>
+                            <action selector="restartOrShutdown:" target="Voe-Tx-rLC" id="AoD-hg-GPq"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" tag="98" translatesAutoresizingMaskIntoConstraints="NO" id="cKr-qD-KD6">
@@ -305,7 +312,7 @@ Click cancel to reboot at another time. Please be aware that system degradation 
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="hWJ-We-6J9" userLabel="Reboot Required FileVault">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="383"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <view key="contentView" id="Cdu-ql-HYh">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="383"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -439,7 +446,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="logoutAndPatch:" target="Voe-Tx-rLC" id="T5p-9Y-YQC"/>
+                            <action selector="restartOrShutdown:" target="Voe-Tx-rLC" id="je9-P3-cjh"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="zoi-VV-uQp">
@@ -702,7 +709,7 @@ DQ
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="RL9-pv-Gy5">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="194"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
             <view key="contentView" id="oIZ-6f-v09">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="194"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -734,7 +741,7 @@ DQ
                             <font key="font" metaFont="system"/>
                         </buttonCell>
                         <connections>
-                            <action selector="logoutAndPatch:" target="Voe-Tx-rLC" id="t7o-2j-AUm"/>
+                            <action selector="restartOrShutdown:" target="Voe-Tx-rLC" id="S8d-wZ-fRH"/>
                         </connections>
                     </button>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Xmf-Xg-vVi">

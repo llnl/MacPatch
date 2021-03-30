@@ -147,9 +147,6 @@
 // About Window
 - (IBAction)showAboutWindow:(id)sender;
 
-// Reboot Window
-- (IBAction)logoutAndPatch:(id)sender;
-
 // Client Checkin
 - (IBAction)showCheckinWindow:(id)sender;
 

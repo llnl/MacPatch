@@ -111,7 +111,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (NSArray *)databaseRecords
 {
 	//[db open];
-	NSMutableArray *array = [NSMutableArray new];
+    NSMutableSet *_set = [NSMutableSet new];
+	//NSMutableArray *array = [NSMutableArray new];
 	
 	// Query all records
 	MPClientDB *db = [MPClientDB new];
@@ -128,32 +129,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 								@"name":[hst valueForKey:@"name"],
 								@"error_msg":[hst valueForKey:@"error_msg"] ?:@""
 								};
-			[array addObject:d];
+			//[array addObject:d];
+            [_set addObject:d];
 		}
 	}
 	
-	return [NSArray arrayWithArray:array];
-	/*
-	NSArray *records = [[DBHistory query] allRecords];
-	if (records) {
-		[arrayController removeObjects:[arrayController arrangedObjects]];
-		for (DBHistory *hst in records) {
-			NSDictionary *d = @{@"install_date":[hst valueForKey:@"cdate"],
-								@"type":[hst valueForKey:@"type"],
-								@"uuid":[hst valueForKey:@"uuid"],
-								@"action":[hst valueForKey:@"action"],
-								@"error_code":[hst valueForKey:@"result_code"],
-								@"name":[hst valueForKey:@"name"],
-								@"error_msg":[hst valueForKey:@"error_msg"] ?:@""
-								};
-			[array addObject:d];
-		}
-	}
-	
-	[db close];
-	 */
+    return [NSArray arrayWithArray:[_set allObjects]];
 	//return [NSArray arrayWithArray:array];
-	
 }
 
 - (void)loadTableData

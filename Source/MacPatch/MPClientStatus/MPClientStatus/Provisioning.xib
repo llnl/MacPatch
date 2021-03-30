@@ -128,7 +128,7 @@
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES" flexibleMaxY="YES"/>
                                             <clipView key="contentView" drawsBackground="NO" copiesOnScroll="NO" id="7lf-r5-nG1">
                                                 <rect key="frame" x="1" y="1" width="602" height="262"/>
-                                                <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                                                <autoresizingMask key="autoresizingMask"/>
                                                 <subviews>
                                                     <textView importsGraphics="NO" richText="NO" verticallyResizable="YES" spellingCorrection="YES" smartInsertDelete="YES" id="4n1-zl-c8U">
                                                         <rect key="frame" x="0.0" y="0.0" width="602" height="262"/>
@@ -223,7 +223,7 @@
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-1179" y="-640"/>
+            <point key="canvasLocation" x="-1458" y="-718"/>
         </window>
     </objects>
 </document>

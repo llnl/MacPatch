@@ -10,9 +10,20 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol ProvisionHostDelegate;
+
 @interface ProvisionHost : NSObject
 
+@property (nonatomic, weak) id<ProvisionHostDelegate> delegate;
+
 - (int)provisionHost;
+
+@end
+
+@protocol ProvisionHostDelegate <NSObject>
+@optional
+
+- (void)provisionProgress:(NSString *)progressStr;
 
 @end
 

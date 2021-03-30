@@ -118,6 +118,22 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (IBAction)runInstall:(NSButton *)sender
 {
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"disablePatchButtons" object:self];
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([self.patchRestart.stringValue isEqualToString:@"Restart Required"]) {
+        if ([defaults integerForKey:@"AlertOnRebootPatch"] == 0) {
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert addButtonWithTitle:@"Patch"];
+            [alert setMessageText:@"Patch requires reboot..."];
+            [alert setInformativeText:@"Please save and exit the associated application that is going to be patched, to prevent any loss of data."];
+            if([alert runModal] == NSAlertFirstButtonReturn) {
+                [defaults setInteger:1 forKey:@"AlertOnRebootPatch"];
+                [defaults synchronize];
+            }
+        }
+    }
+    
 	GlobalQueueManager *q = [GlobalQueueManager sharedInstance];
 	
 	if (![sender isKindOfClass:[NSButton class]])
@@ -135,8 +151,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 	});
 	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+    BOOL allowInstall = YES;
 	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];
 	
 	if (needsReboot && !allowInstall)
@@ -173,7 +189,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	});
 	
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
+    BOOL allowInstall = YES;
 	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];
 	
 	if (needsReboot && !allowInstall)
@@ -291,7 +308,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		
 		if (hadError)
 		{
-			//[self.errorImage setHidden:NO];
 			[self.updateButton setTitle:@"Install"];
 			self->_patchCompletionIcon.hidden = NO;
 			self->_patchCompletionIcon.image = [NSImage imageNamed:@"ErrorImage"];
@@ -321,7 +337,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 	});
 	
-	
+	/*
 	if (!hadError)
 	{
 		[self connectAndExecuteCommandBlock:^(NSError * connectError)
@@ -340,8 +356,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			 }
 		}];
 	}
-
+     */
 	[self removeNotificationObserver];
+    
+    // Add Reboot Notification
+    /*
+    if ([self.patchRestart.stringValue isEqualToString:@"Restart Required"]) {
+        qlinfo(@"GlobalQueueManager sharedInstance].globalQueue.operationCount = %lu",(unsigned long)[GlobalQueueManager sharedInstance].globalQueue.operationCount);
+        if ([GlobalQueueManager sharedInstance].globalQueue.operationCount <= 0) {
+            AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+            [appDelegate showRebootWindow];
+        }
+    }
+    */
 }
 
 - (void)stopCellInstallIsRebootPatch
@@ -363,8 +390,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRebootRequiredNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
 	
-	
-	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		 if (connectError != nil)
 		 {
@@ -380,8 +405,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		 }
 	 }];
 
-	AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
-	[appDelegate showRebootWindow];
+    // Reboot window is called from operation
+	//AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+	//[appDelegate showRebootWindow];
 }
 
 @end
