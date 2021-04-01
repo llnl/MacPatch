@@ -104,7 +104,15 @@
 							<a href="#"><i class="fa fa-cubes fa-fw"></i> Patches<span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level">
 								<li>
-									<a href="{{ url_for('patches.apple') }}"><i class="fa fa-apple fa-fw"></i> Apple</a>
+									<a href="#"><i class="fa fa-apple fa-fw"></i> Apple<span class="fa arrow"></span></a>
+									<ul class="nav nav-third-level">
+										<li>
+											<a href="{{ url_for('patches.apple') }}"><i class="fa fa-list-alt fa-fw"></i> Patches</a>
+										</li>
+										<li>
+											<a href="{{ url_for('patches.appleMismatchPatches') }}"><i class="fa fa-list-alt fa-fw"></i> Name Mismatches</a>
+										</li>
+									</ul>
 								</li>
 								<li>
 									<a href="{{ url_for('patches.custom') }}"><i class="fa fa-archive fa-fw"></i> Custom</a>

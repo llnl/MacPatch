@@ -37,13 +37,17 @@ class SUSPatchData(MPResource):
 					# Main Apple Patch
 					apple_obj = ApplePatch.query.filter(ApplePatch.supatchname == row['suname']).first()
 					if apple_obj is None:
-						aObj = ApplePatch()
-						for index, item in enumerate(_aCols, start=0):
-							setattr(aObj, _bCols[index], row[_aCols[index]])
+						apple_obj_alt = ApplePatch.query.filter(ApplePatch.akey == row['akey']).first()
+						if apple_obj_alt is None:
+							aObj = ApplePatch()
+							for index, item in enumerate(_aCols, start=0):
+								setattr(aObj, _bCols[index], row[_aCols[index]])
 
-						db.session.add(aObj)
-						db.session.commit()
-						rows_added += 1
+							db.session.add(aObj)
+							db.session.commit()
+							rows_added += 1
+					else:
+						continue
 
 					# Define Apple Patch Addition for MP
 					apple_obj_alt = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == row['suname']).first()
