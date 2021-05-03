@@ -103,6 +103,7 @@
 		8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = MPDiagCollector.sh; sourceTree = "<group>"; };
 		8FE9DE5C2091002D0079B794 /* CriticalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CriticalWindow.h; sourceTree = "<group>"; };
 		8FE9DE5D2091002D0079B794 /* CriticalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CriticalWindow.m; sourceTree = "<group>"; };
+		8FEE628C261FADEB00F533F4 /* MPClientStatus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPClientStatus.entitlements; sourceTree = "<group>"; };
 		8FF5B5071FC658C4006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -205,6 +206,7 @@
 		8FD8905016DFE84600A870A3 /* MPClientStatus */ = {
 			isa = PBXGroup;
 			children = (
+				8FEE628C261FADEB00F533F4 /* MPClientStatus.entitlements */,
 				8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */,
 				8FD8906D16DFE8B200A870A3 /* MPClientStatusAppDelegate.h */,
 				8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */,
@@ -469,9 +471,12 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_ENTITLEMENTS = MPClientStatus/MPClientStatus.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPClientStatus/MPClientStatus-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
@@ -494,9 +499,12 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CLANG_ENABLE_OBJC_ARC = YES;
+				CODE_SIGN_ENTITLEMENTS = MPClientStatus/MPClientStatus.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPClientStatus/MPClientStatus-Prefix.pch";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;

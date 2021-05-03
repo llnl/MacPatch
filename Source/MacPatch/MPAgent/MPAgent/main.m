@@ -39,7 +39,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.0.3"
+#define APPVERSION	@"3.6.0.4"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"

@@ -55,6 +55,7 @@
 		8F60AD5A2244018F00FDFBCA /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
 		8F60AD5E22440BA400FDFBCA /* MPUpdater-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPUpdater-Prefix.pch"; sourceTree = "<group>"; };
 		8FD5E10323A972C400A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
+		8FEE6284261F9A4C00F533F4 /* MPUpdater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPUpdater.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -100,6 +101,7 @@
 		8F60AD302243F67C00FDFBCA /* MPUpdater */ = {
 			isa = PBXGroup;
 			children = (
+				8FEE6284261F9A4C00F533F4 /* MPUpdater.entitlements */,
 				8F60AD312243F67C00FDFBCA /* main.m */,
 				8F60AD3A2243FF2B00FDFBCA /* MPUpdaterController.h */,
 				8F60AD3B2243FF2B00FDFBCA /* MPUpdaterController.m */,
@@ -322,12 +324,13 @@
 		8F60AD362243F67C00FDFBCA /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MPUpdater/MPUpdater.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 3.6.0.3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -335,7 +338,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MARKETING_VERSION = 3.6.0.3;
+				MARKETING_VERSION = 3.6.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -355,12 +358,13 @@
 		8F60AD372243F67C00FDFBCA /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = MPUpdater/MPUpdater.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 3.6.0.3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPUpdater/Supporting_Files/MPUpdater-Prefix.pch";
 				HEADER_SEARCH_PATHS = (
@@ -368,7 +372,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MARKETING_VERSION = 3.6.0.3;
+				MARKETING_VERSION = 3.6.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

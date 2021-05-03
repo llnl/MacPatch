@@ -47,6 +47,7 @@
 		8FBB66CA21376E64005805C4 /* MOLCertificate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MOLCertificate.h; path = MOLCertificate/Source/MOLCertificate.h; sourceTree = SOURCE_ROOT; };
 		8FBB66CB21376E64005805C4 /* MOLCertificate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MOLCertificate.m; path = MOLCertificate/Source/MOLCertificate.m; sourceTree = SOURCE_ROOT; };
 		8FBB66CD21376F3B005805C4 /* planb-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "planb-Info.plist"; sourceTree = "<group>"; };
+		8FEE6299261FAF3B00F533F4 /* planb.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = planb.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -91,6 +92,7 @@
 		490A51DE18D7581B00DA939E /* planb */ = {
 			isa = PBXGroup;
 			children = (
+				8FEE6299261FAF3B00F533F4 /* planb.entitlements */,
 				490A51EC18D7765500DA939E /* main.m */,
 				0D6D8EAC1EEEF53400B93029 /* PBCommandController.h */,
 				0D6D8EAD1EEEF53400B93029 /* PBCommandController.m */,
@@ -167,6 +169,7 @@
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
 			knownRegions = (
+				English,
 				en,
 			);
 			mainGroup = 490A51D018D7581B00DA939E;
@@ -299,7 +302,10 @@
 		490A51E818D7581B00DA939E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = planb/planb.entitlements;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-ObjC",
@@ -318,7 +324,10 @@
 		490A51E918D7581B00DA939E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = planb/planb.entitlements;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = (
 					"-all_load",
 					"-ObjC",

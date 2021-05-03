@@ -214,20 +214,23 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         }
     }
     
-    NSString *title = @"Patch requires reboot...";
-    if (rebootPatchCount >= 2) title = @"Patches requires reboot...";
     
-    NSAlert *alert = [[NSAlert alloc] init];
-    [alert addButtonWithTitle:@"Patch"];
-    [alert addButtonWithTitle:@"Cancel"];
-    [alert setMessageText:title];
-    [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data."];
-    if([alert runModal] == NSAlertFirstButtonReturn) {
-        [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"AlertOnRebootPatch"];
-        [[NSUserDefaults standardUserDefaults] synchronize];
-    } else {
-        // Hit cancel ...
-        return;
+    if (rebootPatchCount >= 1)
+    {
+        NSString *title = @"Patch requires reboot...";
+        if (rebootPatchCount >= 2) title = @"Patches requires reboot...";
+        NSAlert *alert = [[NSAlert alloc] init];
+        [alert addButtonWithTitle:@"Patch"];
+        [alert addButtonWithTitle:@"Cancel"];
+        [alert setMessageText:title];
+        [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data."];
+        if([alert runModal] == NSAlertFirstButtonReturn) {
+            [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"AlertOnRebootPatch"];
+            [[NSUserDefaults standardUserDefaults] synchronize];
+        } else {
+            // Hit cancel ...
+            return;
+        }
     }
         
 	// Get an array of all patch dictionaries

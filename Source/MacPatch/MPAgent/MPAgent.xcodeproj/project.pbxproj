@@ -189,6 +189,7 @@
 		8FE560E516DE97C700BB7600 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		8FE560E716DE97CF00BB7600 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		8FE560E916DE97DD00BB7600 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		8FEE62A1261FB00B00F533F4 /* MPAgent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPAgent.entitlements; sourceTree = "<group>"; };
 		8FF5B50B1FC658EC006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 		8FF7E9CE210A558B00678B93 /* Software.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Software.h; sourceTree = "<group>"; };
 		8FF7E9CF210A558B00678B93 /* Software.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Software.m; sourceTree = "<group>"; };
@@ -279,6 +280,7 @@
 		8F4B1EEE16DD77BD00E15A9E /* MPAgent */ = {
 			isa = PBXGroup;
 			children = (
+				8FEE62A1261FB00B00F533F4 /* MPAgent.entitlements */,
 				8F4B1EEF16DD77BD00E15A9E /* main.m */,
 				8F4B1F0216DD77FF00E15A9E /* AgentController.h */,
 				8F4B1F0316DD77FF00E15A9E /* AgentController.m */,
@@ -673,8 +675,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
+				CODE_SIGN_ENTITLEMENTS = MPAgent/MPAgent.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.6.0.3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -694,7 +697,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0.3;
+				MARKETING_VERSION = 3.6.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -718,8 +721,9 @@
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ENABLE_OBJC_ARC = YES;
 				CLANG_WARN_INT_CONVERSION = NO;
+				CODE_SIGN_ENTITLEMENTS = MPAgent/MPAgent.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 3.6.0.3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -739,7 +743,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0.3;
+				MARKETING_VERSION = 3.6.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

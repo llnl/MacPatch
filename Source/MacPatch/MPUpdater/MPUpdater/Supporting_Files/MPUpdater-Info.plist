@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<string>gov.llnl.mp.updater</string>
 	<key>CFBundleName</key>
 	<string>MPUpdater</string>
 	<key>CFBundleShortVersionString</key>

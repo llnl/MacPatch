@@ -343,7 +343,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
@@ -375,7 +375,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_TEAM = "";
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
