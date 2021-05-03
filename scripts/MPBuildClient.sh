@@ -351,25 +351,25 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		echo "------------------------------------------------------------"
 		echo
 		echo " - Compiling MacPatch"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		echo " - Compiling gov.llnl.mp.helper"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		echo " - Compiling MPClientStatus"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		#echo " - Compiling MPAgentExec"
 		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPAgent"
         sed -i '' "s/\[BUILD\]/$BUILD_NO_STR/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
         sed -i '' "s/$BUILD_NO_STR/\[BUILD\]/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
 		#echo " - Compiling MPLoginAgent"
 		#$xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPUpdater"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
 		if $INCPlanBSource; then
 			echo " - Compiling Plan B"
-			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		fi
 		echo
 		echo "Compiling completed."
@@ -384,10 +384,9 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
-		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
-		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
+		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
 
 		if $INCPlanBSource; then
 			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
@@ -433,7 +432,6 @@ cp -R ${PKGROOT}/Combined ${BUILDROOT}
 mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications/
 mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
-#mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 #mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 
@@ -460,10 +458,6 @@ if $INCPlanBSource; then
 	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
 	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
     cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
-
-    #agentHash=`md5 -q ${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent`
-	#sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
-    #sed -i '' "s/MPHASH=\"0\"/MPHASH=\"${agentHash}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
 fi
 
 # ------------------------------------------------------------
