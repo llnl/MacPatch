@@ -590,11 +590,6 @@ if $USEMACOS; then
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
 
-    #env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    #CFLAGS="-I${OPENSSLPWD}/include" \
-    #SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    #${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
@@ -603,12 +598,6 @@ if $USEMACOS; then
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-
-     # Install M2Crypto first
-    #env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    #CFLAGS="-I${OPENSSLPWD}/include" \
-    #SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    #${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
     -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
