@@ -56,7 +56,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.5.0.1"
+MINAGENTVER="3.6.0.1"
 DAYSRANGE=15
 IGNORE_SSL=True
 ISBETA=False
