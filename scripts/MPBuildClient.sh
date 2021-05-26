@@ -551,6 +551,7 @@ echo "productbuild --distribution ${BUILDROOT}/Combined/Distribution --resources
 productbuild --distribution ${BUILDROOT}/Combined/Distribution \
 --resources ${BUILDROOT}/Combined/Resources \
 --package-path ${BUILDROOT}/Combined/Packages \
+--product ${BUILDROOT}/Combined/Requirements.plist \
 ${BUILDROOT}/Combined/MacPatchDist.pkg
 
 
