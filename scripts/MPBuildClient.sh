@@ -472,6 +472,7 @@ sleep 5
 # @AGENTVER@
 sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Distribution"
 # @APPVER@
 sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
 sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
