@@ -8,7 +8,7 @@ Create Date: 2020-09-08
 
 # revision identifiers, used by Alembic.
 revision = '100012'
-down_revision = '100011	'
+down_revision = '100011'
 
 from alembic import op
 import sqlalchemy as sa
@@ -25,6 +25,7 @@ def upgrade():
 					sa.Column('primary_suuid', sa.String(length=50), nullable=True),
 					sa.Column('active', sa.Integer(), server_default='0', nullable=True),
 					sa.Column('scope', sa.Integer(), server_default='0', nullable=True),
+					sa.Column('order', sa.Integer(), server_default='99', nullable=True),
 					sa.Column('sw_start_datetime', sa.DateTime(), server_default='1970-01-01 00:00:00', nullable=True),
 					sa.Column('sw_end_datetime', sa.DateTime(), server_default='1970-01-01 00:00:00', nullable=True),
 					sa.Column('mdate', sa.DateTime(), server_default='1970-01-01 00:00:00', nullable=True),

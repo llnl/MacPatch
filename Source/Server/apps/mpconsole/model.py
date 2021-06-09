@@ -1,6 +1,6 @@
 from mpconsole import db
 
-# Rev 22
+# Rev 23
 #
 
 from datetime import *
@@ -970,6 +970,7 @@ class MpProvisionTask(CommonBase):
 	primary_suuid       = Column(String(50), info='Software ID')
 	active              = Column(Integer, server_default='0', info='Active')
 	scope				= Column(Integer, server_default='0', info='Scope')
+	order			    = Column(Integer, server_default='99', info='Order')
 	sw_start_datetime   = Column(DateTime, server_default='2021-01-01 00:00:00', info='Start Date')
 	sw_end_datetime     = Column(DateTime, server_default='2050-01-01 00:00:00', info='End Date')
 	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00', info='Mod Date')

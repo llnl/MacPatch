@@ -170,6 +170,35 @@
 		[self postProgressToDelegate:@"Scanning for %@(%@)", tmpDict[@"patch_name"], tmpDict[@"patch_ver"]];
 		
 		result = [self scanHostForPatch:tmpDict];
+        if (result == YES)
+        {
+            NSMutableDictionary *patch = [[NSMutableDictionary alloc] init];
+            NSDictionary *patchData = [self patchDataForIDUsingArray:tmpDict[@"puuid"] patchArray:patchGroupPatches[@"Custom"]];
+            @try
+            {
+                [patch setObject:@"Third" forKey:@"type"];
+                [patch setObject:tmpDict[@"patch_name"] forKey:@"patch"];
+                [patch setObject:tmpDict[@"patch_ver"] forKey:@"version"];
+                [patch setObject:[NSString stringWithFormat:@"%@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]] forKey:@"description"];
+                [patch setObject:@"0" forKey:@"size"];
+                [patch setObject:@"Y" forKey:@"recommended"];
+                [patch setObject:tmpDict[@"patch_reboot"] forKey:@"restart"];
+                [patch setObject:tmpDict[@"puuid"] forKey:@"patch_id"];
+                [patch setObject:tmpDict[@"bundle_id"] forKey:@"bundleID"];
+                if (patchData) {
+                    [patch setObject:patchData forKey:@"patchData"];
+                } else {
+                    qlinfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
+                }
+                [patchesNeeded addObject:[patch copy]];
+            }
+            @catch (NSException *exception)
+            {
+                qlerror(@"%@\n%@",exception,tmpDict);
+            }
+            patch = nil;
+        }
+        /* Orig
 		if (result == YES)
 		{
 			NSMutableDictionary *patch = [[NSMutableDictionary alloc] init];
@@ -202,8 +231,9 @@
 			}
 			patch = nil;
 		}
+         */
 	}
-	
+    qlinfo(@"*******************");
 	return [patchesNeeded copy];
 }
 

@@ -31,7 +31,7 @@ from .. aws import *
 def tasks():
 	cList = MpProvisionTask.query.order_by(MpProvisionTask.mdate.desc()).all()
 	cListCols = MpProvisionTask.__table__.columns
-	cListColsLimited = ['tuuid', 'primary_suuid', 'name', 'active', 'scope', 'sw_start_datetime', 'sw_end_datetime', 'mdate']
+	cListColsLimited = ['tuuid', 'primary_suuid', 'name', 'active', 'scope', 'order', 'sw_start_datetime', 'sw_end_datetime', 'mdate']
 
 	return render_template('provision/software_tasks.html', data={}, columns=cListColsLimited, columnsAll=cListCols, isAdmin=True)
 
@@ -117,6 +117,7 @@ def generateTask(id):
 		setattr(_swTask, 'primary_suuid', id)
 		setattr(_swTask, 'active', 0)
 		setattr(_swTask, 'scope', 0)
+		setattr(_swTask, 'order', 99)
 		setattr(_swTask, 'sw_start_datetime', datetime.now())
 		setattr(_swTask, 'sw_end_datetime', datetime.now())
 		setattr(_swTask, 'cdate', datetime.now())

@@ -198,7 +198,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)updateAllPatches:(id)sender
 {
     __block int rebootPatchCount = 0;
-    __block int allowInstallInt = 0;
+    __block int allowInstallInt = 1;
 	__block BOOL hasRebootPatch = NO;
 	
 	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -272,6 +272,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				qlerror(@"%@",proxyError);
 			}] installPatches:(NSArray *)allPatches userInstallRebootPatch:allowInstallInt withReply:^(NSError *error, NSInteger resultCode) {
 
+                
                 [self->_task terminate];
                 [[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleDataAvailableNotification object:nil];
                 
