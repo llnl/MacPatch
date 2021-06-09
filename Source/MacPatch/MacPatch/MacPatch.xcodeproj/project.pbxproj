@@ -174,6 +174,7 @@
 		8FE663EF2227230600F12AC8 /* PrefsUpdatesVC.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = PrefsUpdatesVC.h; sourceTree = "<group>"; };
 		8FE663F02227230600F12AC8 /* PrefsUpdatesVC.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = PrefsUpdatesVC.m; sourceTree = "<group>"; };
 		8FE663F12227230600F12AC8 /* PrefsUpdatesVC.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = PrefsUpdatesVC.xib; sourceTree = "<group>"; };
+		8FEE6293261FAEDB00F533F4 /* MacPatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MacPatch.entitlements; sourceTree = "<group>"; };
 		8FF3D73F21701B5600059ACD /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF6102E1D8DF01400E6D3D2 /* MPHelperProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -373,6 +374,7 @@
 		8FB201F31A3F90C60013C622 /* MacPatch */ = {
 			isa = PBXGroup;
 			children = (
+				8FEE6293261FAEDB00F533F4 /* MacPatch.entitlements */,
 				8FF6102E1D8DF01400E6D3D2 /* MPHelperProtocol.h */,
 				8FB201F61A3F90C60013C622 /* AppDelegate.h */,
 				8FB201F71A3F90C60013C622 /* AppDelegate.m */,
@@ -769,7 +771,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -818,7 +820,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -832,18 +834,20 @@
 				CLANG_ANALYZER_NONNULL = NO;
 				CLANG_WARN_COMMA = NO;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = NO;
+				CODE_SIGN_ENTITLEMENTS = MacPatch/MacPatch.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacPatch/MacPatch.pch;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 1.3.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.3.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -864,18 +868,20 @@
 				CLANG_ANALYZER_NONNULL = NO;
 				CLANG_WARN_COMMA = NO;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = NO;
+				CODE_SIGN_ENTITLEMENTS = MacPatch/MacPatch.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacPatch/MacPatch.pch;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
-				MARKETING_VERSION = 1.3.2;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MARKETING_VERSION = 1.3.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

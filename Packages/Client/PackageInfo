@@ -6,11 +6,9 @@
     </scripts>
     <bundle id="gov.llnl.mp.MacPatch" CFBundleIdentifier="gov.llnl.mp.MacPatch" path="./Library/MacPatch/Client/MacPatch.app" CFBundleVersion="1"/>
     <bundle id="gov.llnl.MPClientStatus" CFBundleIdentifier="gov.llnl.MPClientStatus" path="./Library/MacPatch/Client/MPClientStatus.app" CFBundleVersion="1"/>
-    <bundle id="gov.llnl.MPLoginAgent" CFBundleIdentifier="gov.llnl.mp.MacPatch" path="./Library/PrivilegedHelperTools/MPLoginAgent.app" CFBundleVersion="1"/>
     <bundle-version>
         <bundle id="gov.llnl.mp.MacPatch"/>
         <bundle id="gov.llnl.MPClientStatus"/>
-        <bundle id="gov.llnl.MPLoginAgent"/>
     </bundle-version>
 </pkg-info>
 

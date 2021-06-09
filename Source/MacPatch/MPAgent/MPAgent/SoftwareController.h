@@ -19,6 +19,6 @@
 -(BOOL)installSoftwareTask:(NSString *)aTask;
 -(int)installSoftwareTasksForGroup:(NSString *)aGroupName;
 -(int)installSoftwareTasksUsingPLIST:(NSString *)aPlist;
-
+-(int)installMandatorySoftware;
 @end
 

@@ -1,7 +1,7 @@
 //
 //  Constants.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -87,12 +87,18 @@ NSString * const MP_AGENT_DEPL_PLIST        = @"/Library/Application Support/Mac
 NSString * const MP_AGENT_SETTINGS          = @"/Library/Application Support/MacPatch/gov.llnl.mp.plist";
 NSString * const MP_AGENT_DB 				= @"/private/var/db/.MacPatch.db";
 
-NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun";
-NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun";
-NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain"; // New
-NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist"; // New
+NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun_CEH"; // No longer used as of MP 3.6x
+NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun_CEH"; // No longer used as of MP 3.6x
+NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain";
+NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist";
 
+NSString * const MP_PROVISION_DIR          = @"/Library/Application Support/MacPatch/Provision";
+NSString * const MP_PROVISION_FILE         = @"/Library/Application Support/MacPatch/Provision/MPProvision.plist"; // New - Provisioning Status and details
+NSString * const MP_PROVISION_DATA_FILE    = @"/Library/Application Support/MacPatch/Provision/provision.json"; // New - Provisioning Status and details
+//NSString * const MP_PROVISION_DATA_FILE    = @"/Library/MacPatch/Client/Data/provision.json"; // New - Provisioning Status and details
 
+NSString * const MP_PROVISION_BEGIN        = @"/private/var/db/.MPProvisionBegin";
+NSString * const MP_PROVISION_DONE         = @"/private/var/db/.MPProvisionDone";
 
 
 // In a source file

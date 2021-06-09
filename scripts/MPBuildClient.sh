@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.4
+# Version: 2.5
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -23,6 +23,7 @@
 #   2.3     Update variables for version 3.5
 #	2.4		Added option for MDM type installer, dont want MP to install
 #			On existsing MP installs unless the apent is older.
+#	2.5		Removed MPLogout agent from build, no longer used with MP 3.6x
 #
 # -------------------------------------------------------------
 
@@ -30,12 +31,12 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client35/$DATETIME"
+BUILDROOT="/private/var/tmp/MP/Client36/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.5.0.1"
-UPDATEVER="3.5.0.1"
+AGENTVER="3.6.0.1"
+UPDATEVER="3.6.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -90,7 +91,7 @@ while getopts "hs:p:m" opt; do
     esac
 done
 
-runExternalScripts () 
+runExternalScripts ()
 {
     if [ -z "$1" ]; then
         # Scripts path is blank
@@ -98,9 +99,9 @@ runExternalScripts ()
     fi
 
    spath="$1"
-   
+
     FILES="$1/*.sh"
-    for f in $FILES 
+    for f in $FILES
     do
         echo "Processing $f file..."
         bash $f "$SCRIPT_PARENT" "$BUILDROOT"
@@ -152,7 +153,7 @@ if [ -f "$BUILDPLIST" ]; then
 	else
 		if [[ $INC_PLANB_VAR == 1 ]]; then
 			INC_PLANB_VAR="Y"
-		else	
+		else
 			INC_PLANB_VAR="N"
 		fi
 	fi
@@ -166,14 +167,14 @@ INC_PLANB_TXT=`echo $INC_PLANB_TXT | awk '{print toupper($0)}'`
 if [ "$INC_PLANB_TXT" != "$INC_PLANB_VAR" ]; then
 	if [[ "$INC_PLANB_TXT" == "Y" ]]; then
 		defaults write ${BUILDPLIST} incPlanB -bool YES
-	else 
+	else
 		defaults write ${BUILDPLIST} incPlanB -bool NO
 	fi
 fi
 
 if [[ "$INC_PLANB_TXT" == "Y" ]]; then
 	INCPlanBSource=true
-else 
+else
 	INCPlanBSource=false
 fi
 
@@ -350,25 +351,25 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		echo "------------------------------------------------------------"
 		echo
 		echo " - Compiling MacPatch"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		echo " - Compiling gov.llnl.mp.helper"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		echo " - Compiling MPClientStatus"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		#echo " - Compiling MPAgentExec"
 		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPAgent"
         sed -i '' "s/\[BUILD\]/$BUILD_NO_STR/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
         sed -i '' "s/$BUILD_NO_STR/\[BUILD\]/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
-		echo " - Compiling MPLoginAgent"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		#echo " - Compiling MPLoginAgent"
+		#$xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
 		echo " - Compiling MPUpdater"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
 		if $INCPlanBSource; then
 			echo " - Compiling Plan B"
-			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" | grep -A 5 error:
+			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		fi
 		echo
 		echo "Compiling completed."
@@ -380,13 +381,12 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
         fi
 
 		# Compile the agent components
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release 
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
-		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgentExec SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
+		#xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLoginAgent SYMROOT=${BUILDROOT} -configuration Release
 
 		if $INCPlanBSource; then
 			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
@@ -432,9 +432,8 @@ cp -R ${PKGROOT}/Combined ${BUILDROOT}
 mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications/
 mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
-#mv ${BUILDROOT}/Release/MPAgentExec ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
-mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
+#mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
 
@@ -459,10 +458,6 @@ if $INCPlanBSource; then
 	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
 	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
     cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
-
-    #agentHash=`md5 -q ${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent`
-	#sed -i '' "s/MPSERVER=\"localhost\"/MPSERVER=\"${MPPLANB_SRV_ADDR}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
-    #sed -i '' "s/MPHASH=\"0\"/MPHASH=\"${agentHash}\"/g" "${BUILDROOT}/Client/Files/usr/local/bin/mpPlanB"
 fi
 
 # ------------------------------------------------------------
@@ -556,6 +551,7 @@ echo "productbuild --distribution ${BUILDROOT}/Combined/Distribution --resources
 productbuild --distribution ${BUILDROOT}/Combined/Distribution \
 --resources ${BUILDROOT}/Combined/Resources \
 --package-path ${BUILDROOT}/Combined/Packages \
+--product ${BUILDROOT}/Combined/Requirements.plist \
 ${BUILDROOT}/Combined/MacPatchDist.pkg
 
 
@@ -599,5 +595,3 @@ if $SHOW_MASTER_KEY; then
     echo "$ClientMasterKey"
     echo
 fi
-
-

@@ -1,7 +1,7 @@
 //
 //  AntiVirusScanAndUpdateOperation.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -103,11 +103,15 @@ static NSString * const _taskRunFile = @"/tmp/.mpAVUpdateRunning";
 - (void)main
 {
 	@try {
-		if (scanType == 0) {
-			[self runAVscan];
-		} else if (scanType == 1) {
-			[self runAVscanAndUpdate];
-		}
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Antivirus operations is deferred while provisioning.");
+        } else {
+            if (scanType == 0) {
+                [self runAVscan];
+            } else if (scanType == 1) {
+                [self runAVscanAndUpdate];
+            }
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

@@ -2,7 +2,7 @@
 //  main.m
 //  MPLoginAgent
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -68,6 +68,8 @@ static void InstallHandleSIGTERMFromRunLoop(void)
 
 static void fixDefaultsIfNeeded(void)
 {
+    qlinfo(@"fixDefaultsIfNeeded");
+    
     NSArray *domains = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,NSSystemDomainMask,YES);
     //File should be in library
     NSString *libraryPath = [domains firstObject];
@@ -103,6 +105,11 @@ int main(int argc, char * argv[])
     if (![fm fileExistsAtPath:MP_AUTHRUN_FILE]) {
         return 0;
     } else {
+        NSString *logFile = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"/Logs/MPLoginAgent.log"];
+        [MPLog setupLogging:logFile level:lcl_vDebug];
+        lcl_configure_by_name("*", lcl_vDebug);
+        
+        qlinfo(@"%@ file found.",MP_AUTHRUN_FILE.lastPathComponent);
 		// This way it does not run over and over
 		[fm removeFileIfExistsAtPath:MP_AUTHRUN_FILE];
 		
@@ -122,7 +129,7 @@ int main(int argc, char * argv[])
                                                               @"WaitForWindowServerSession": @NO,
                                                               @"ForceOrderFront":            @YES,
                                                               @"CleanExit":                  @YES,
-                                                              @"Debug":                      @NO,
+                                                              @"Debug":                      @YES,
                                                               @"MinView":                    @YES,
                                                               @"AppleTimeout":               @1800,
                                                               @"CustomTimeout":              @600

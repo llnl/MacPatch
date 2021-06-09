@@ -43,6 +43,7 @@ NSString * const 	 kDownloadDirectory 		= @"/private/tmp";
 @synthesize httpStatusCode;
 @synthesize requestTimeout;
 @synthesize resourceTimeout;
+@synthesize allowSelfSignedCert;
 
 - (void)setDelegate:(id )aDelegate
 {
@@ -64,6 +65,7 @@ static id _sharedManager = nil;
 		[_sharedManager setDownloadDestination:kDownloadDirectory];
 		[_sharedManager setResourceTimeout:kSessionResourceTimeout];
 		[_sharedManager setRequestTimeout:kSessionRequestTimeout];
+        [_sharedManager setAllowSelfSignedCert:NO];
 	});
 	return _sharedManager;
 }
@@ -204,6 +206,32 @@ static id _sharedManager = nil;
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
 {
 
+}
+
+- (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler
+{
+    // accept self-signed SSL certificates
+    SecTrustRef serverTrust = challenge.protectionSpace.serverTrust;
+    SecTrustResultType result;
+    SecTrustEvaluate(serverTrust, &result);
+    
+    if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    {
+        NSURLCredential *credential = nil;
+        
+        if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
+            credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+        } else if (result == kSecTrustResultConfirm || result == kSecTrustResultRecoverableTrustFailure) {
+            if (self.allowSelfSignedCert) {
+                credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
+            } else {
+                
+            }
+        }
+        completionHandler(NSURLSessionAuthChallengeUseCredential,credential);
+    } else {
+        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, nil);
+    }
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveData:(NSData *)data

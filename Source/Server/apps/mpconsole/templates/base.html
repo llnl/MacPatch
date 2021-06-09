@@ -47,7 +47,7 @@
 		}
 
 		function aboutConsole() {
-			alert("MacPatch Console 3.5.1")
+			alert("MacPatch Console 3.6.0")
 		}
 	</script>
 </head>
@@ -104,7 +104,15 @@
 							<a href="#"><i class="fa fa-cubes fa-fw"></i> Patches<span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level">
 								<li>
-									<a href="{{ url_for('patches.apple') }}"><i class="fa fa-apple fa-fw"></i> Apple</a>
+									<a href="#"><i class="fa fa-apple fa-fw"></i> Apple<span class="fa arrow"></span></a>
+									<ul class="nav nav-third-level">
+										<li>
+											<a href="{{ url_for('patches.apple') }}"><i class="fa fa-list-alt fa-fw"></i> Patches</a>
+										</li>
+										<li>
+											<a href="{{ url_for('patches.appleMismatchPatches') }}"><i class="fa fa-list-alt fa-fw"></i> Name Mismatches</a>
+										</li>
+									</ul>
 								</li>
 								<li>
 									<a href="{{ url_for('patches.custom') }}"><i class="fa fa-archive fa-fw"></i> Custom</a>
@@ -174,6 +182,21 @@
 								{% endif %}
 							</ul>
 							<!-- /.nav-second-level -->
+						</li>
+						<li id="provisioning">
+							<a href="#"><i class="glyphicon glyphicon-transfer"></i> Provisioning<span class="fa arrow"></span></a>
+							<ul class="nav nav-second-level" id="provisioning_list">
+								<li><a href="{{ url_for('provision.criteria') }}"> <i class="fa fa-code-fork fa-fw"></i> Detection Criteria</a></li>
+								<li><a href="{{ url_for('provision.scripts') }}"><i class="fa fa-file-code-o fa-fw"></i> Scripts</a></li>
+								<li><a href="{{ url_for('provision.tasks') }}"><i class="fa fa-archive fa-fw"></i> Software</a></li>
+								<li><a href="{{ url_for('provision.uiConfig') }}"><i class="fa fa-sliders fa-fw"></i> UI Config</a></li>
+
+								<!--
+								<li>
+									<a href="{{ url_for('provision.testTask') }}"><i class="fa fa-file-o fa-fw"></i> Test</a>
+								</li>
+								-->
+							</ul>
 						</li>
 						<li id="reports">
 							<a href="#"><i class="fa fa-list fa-fw"></i> Reports<span class="fa arrow"></span></a>

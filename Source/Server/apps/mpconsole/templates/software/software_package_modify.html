@@ -200,11 +200,11 @@
 						<div id="center">
 							<select name="req_os_arch" size="1">
 								<option {% if data['PKGCRI_OSArch'] == 'X86' %}Selected{% endif %}>X86</option>
-								<option {% if data['PKGCRI_OSArch'] == 'PPC' %}Selected{% endif %}>PPC</option>
-								<option {% if data['PKGCRI_OSArch'] == 'PPC, X86' %}Selected{% endif %}>PPC, X86</option>
+								<option {% if data['PKGCRI_OSArch'] == 'ARM' %}Selected{% endif %}>ARM</option>
+								<option {% if data['PKGCRI_OSArch'] == 'ARM, X86' %}Selected{% endif %}>ARM, X86</option>
 							</select>
 						</div>
-						<div id="right"> (e.g. "PPC, X86"; Universal) </div>
+						<div id="right"> (e.g. "ARM,X86"; Universal) </div>
 					</div>
 					<div id="row">
 						<div id="left"> Uninstall Script </div>

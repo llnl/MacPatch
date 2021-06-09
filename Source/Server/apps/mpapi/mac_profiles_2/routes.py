@@ -91,6 +91,10 @@ class ProfilesForClient(MPResource):
 		q_result = MpOsProfilesCriteria.query.filter(MpOsProfilesCriteria.gPolicyID == policyID).all()
 		if q_result is not None:
 			c_result = MpClient.query.filter(MpClient.cuuid == clientID).first()
+			if c_result is None:
+				log_Error('No client data ({}) to use for query.'.format(clientID))
+				return (1, criteria)
+
 			c_resultHW = MPISPHardwareOverview.query.filter(MPISPHardwareOverview.cuuid == clientID).first()
 
 			# Replace the comma in model name, so a list can use a comma

@@ -313,7 +313,7 @@
         qlinfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
 		if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -337,7 +337,7 @@
         wsResult = [self syncronusPOSTWithURL:url body:body];
 		qldebug(@"[runSyncPOST][result]: %d",(int)wsResult.statusCode);
         if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //qldebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -352,6 +352,7 @@
 	NSString *url;
 	NSString *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
 	NSString *res;
+    
 	for (Server *s in self.serverArray)
 	{
 		self.allowSelfSignedCert = (s.allowSelfSigned == 1) ? YES : NO;
@@ -399,6 +400,7 @@
 	__block NSString *dlFile = @"ERR";
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
+    dm.allowSelfSignedCert = self.allowSelfSignedCert;
 	dm.downloadUrl = urlPath;
 	dm.downloadDestination = dlDir;
 	
@@ -484,6 +486,7 @@
 	Server *server = [self.serverArray objectAtIndex:self.requestCount];
 	self.allowSelfSignedCert = (server.allowSelfSigned == 1) ? YES : NO;
 	
+    
 	NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
 	qlinfo(@"URL: %@",url);
 	
@@ -492,6 +495,7 @@
 	__block BOOL didFail = NO;
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
+    dm.allowSelfSignedCert = self.allowSelfSignedCert;
 	dm.downloadUrl = url;
 	dm.downloadDestination = dlDir;
 	
@@ -538,6 +542,7 @@
 {
 	NSData *result = nil;
 	NSString *url;
+    
 	for (Server *server in self.serverArray)
 	{
 		self.allowSelfSignedCert = NO;

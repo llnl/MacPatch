@@ -35,7 +35,7 @@
 {% block bodyPanel %}
 <div class="content">
 	<form id="applePatchForm" action="#">
-		<input name="supatchname" type="hidden" value="{{data.supatchname}}">
+		<input name="supatchnameOrig" type="hidden" value="{{data.supatchname}}"> -->
 		<input name="akey" type="hidden" value="{{data.akey}}">
 		<div id="wizard">
 			<h1>Apple Patch Information</h1>
@@ -63,10 +63,10 @@
 						</div>
 						<div class="row top-buffer">
 							<div class="col-md-2">
-								<label>Patch Name</label>
+								<label>Patch Name (SU Name)</label>
 							</div>
 							<div class="col-md-8">
-								{{data.supatchname}}
+								<input type="text" id="supatchname" name="supatchname" SIZE="80" value="{{data.supatchname or ''}}">
 							</div>
 						</div>
 						<div class="row top-buffer">
@@ -211,6 +211,7 @@
 	$(document).ready(function()
 	{
 		// jQuery Wizard
+		var _table =
 		$("#applePatchForm").children("div").steps({
 			headerTag: "h1",
 			bodyTag: "section",
@@ -236,12 +237,13 @@
 					contentType: false,
 					success: function(){
 						alert("Patch Updated Successfully");
+						$('#modalDialog').modal('hide');
 					},
 					error: function(jqXHR, textStatus, errorThrown){
 						alert("Patch Failed to Update");
+						$('#modalDialog').modal('hide');
 					}
 				});
-				$('#modalDialog').modal('hide');
 
 				return true;
 			},

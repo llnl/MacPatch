@@ -1,0 +1,34 @@
+{
+  "object": {
+    "pins": [
+      {
+        "package": "Alamofire",
+        "repositoryURL": "https://github.com/Alamofire/Alamofire.git",
+        "state": {
+          "branch": null,
+          "revision": "eaf6e622dd41b07b251d8f01752eab31bc811493",
+          "version": "5.4.1"
+        }
+      },
+      {
+        "package": "LogKit",
+        "repositoryURL": "https://github.com/cheizer/logkit.git",
+        "state": {
+          "branch": "master",
+          "revision": "2d4ceee04aaa4b2942f5082861ccb77b2e49ae14",
+          "version": null
+        }
+      },
+      {
+        "package": "SwiftShell",
+        "repositoryURL": "https://github.com/kareman/SwiftShell.git",
+        "state": {
+          "branch": null,
+          "revision": "99680b2efc7c7dbcace1da0b3979d266f02e213c",
+          "version": "5.1.0"
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -365,13 +365,13 @@
 							</div>
 							<div class="col-md-7">
 								<select name="req_os_arch" size="1">
-									<option {% if data['PKGCRI_OSArch'] == 'PPC, X86' %}Selected{% endif %}>PPC, X86</option>
+									<option {% if data['PKGCRI_OSArch'] == 'ARM, X86' %}Selected{% endif %}>ARM, X86</option>
 									<option {% if data['PKGCRI_OSArch'] == 'X86' %}Selected{% endif %}>X86</option>
-									<option {% if data['PKGCRI_OSArch'] == 'PPC' %}Selected{% endif %}>PPC</option>
+									<option {% if data['PKGCRI_OSArch'] == 'ARM' %}Selected{% endif %}>ARM</option>
 								</select>
 							</div>
 							<div class="col-md-2">
-								<small>(e.g. "PPC, X86"; Universal)</small>
+								<small>(e.g. "ARM,X86"; Universal)</small>
 							</div>
 						</div>
 					</div>
@@ -624,7 +624,8 @@
 							alert("Software Package Failed to Save");
 							res = false;
 							$('#overlay').hide();
-						}
+						},
+						timeout: 0
 					});
 					return res;
 				},

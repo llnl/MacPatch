@@ -225,4 +225,35 @@
  @return BOOL
  */
 - (BOOL)postAgentInstall:(NSString *)agentVer error:(NSError **)err;
+
+/**
+ Get provisioning dictionary to provision a host
+ 
+ @param clientID client ID, used for determingin if QA scope can be used.
+ @param err Error object
+ 
+ @return NSDictionary
+ */
+- (NSDictionary *)getProvisioningDataForHost:(NSString *)clientID error:(NSError **)err;
+
+/**
+ Get provisioning config json data, needs to be written to file.
+ Will return NSString of JSON data
+ 
+ @param err Error object
+ 
+ @return NSString
+ */
+- (NSString *)getProvisioningConfig:(NSError **)err;
+
+/**
+ Get provisioning criteria
+ Will return an array of query strings
+ 
+ @param scope NSString object - prod is default
+ @param err Error object
+ 
+ @return NSArray
+ */
+- (NSArray *)getProvisioningCriteriaUsingScope:(NSString *)scope error:(NSError **)err;
 @end

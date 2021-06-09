@@ -530,7 +530,7 @@ def b64EncodeAsString(data, defaultValue=None):
 		result = defaultValue
 
 	if data is not None:
-		if data.__class__ is not 'bytes':
+		if data.__class__ != 'bytes':
 			if len(data) > 0:
 				data = data.encode('utf-8')
 				result = b64encode(data).decode('utf-8')

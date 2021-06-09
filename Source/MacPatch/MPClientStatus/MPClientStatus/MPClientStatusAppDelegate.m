@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -33,6 +33,9 @@
 #import "EventToSend.h"
 //#import <UserNotifications/UserNotifications.h>
 
+#import "Provisioning.h"
+#import "ProvisioningAlt.h"
+
 
 NSString * const kMenuIconNorml		= @"mp3Image";
 NSString * const kMenuIconAlert		= @"mp3ImageAlert";
@@ -40,8 +43,13 @@ NSString * const kMenuIconAlert		= @"mp3ImageAlert";
 // Private Methods
 @interface MPClientStatusAppDelegate ()
 {
+    NSFileManager *fm;
 	MPSettings *settings;
+    NSWindowController *windowController;
 }
+
+@property (strong, nonatomic) NSWindowController *provisionWindowController;
+@property (strong, nonatomic) NSWindow *backwindow;
 
 // Helper
 // XPC Connection
@@ -141,6 +149,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 #pragma mark UI Events
 -(void)awakeFromNib
 {
+    fm = [NSFileManager defaultManager];
 	settings = [MPSettings sharedInstance];
 	[settings refresh];
 	
@@ -239,14 +248,32 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	// Run FileVault User Password Check Sync
 	[self fvUserCheck];
-	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	if ([defaults boolForKey:@"showWhatsNew"]) {
-		[self loadWhatsNewWebView:nil];
-		[whatsNewWindow makeKeyAndOrderFront:nil];
-		[whatsNewWindow center];
-		[NSApp activateIgnoringOtherApps:YES];
-	}
+    
+    // Provisioning Check, write out MP_PROVISION_BEGIN file if criteria is meet
+    // Run Provisioning
+    if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
+    {
+        if (![fm fileExistsAtPath:@"/tmp/.MPSkipIt"]) {
+            qlinfo(@".MPProvisionBegin found. Begin provisioning.");
+            self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
+            [self.provisionWindowController showWindow:self];
+            [self.provisionWindowController.window makeKeyAndOrderFront:nil];
+            [self.provisionWindowController.window setLevel:NSScreenSaverWindowLevel];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
+    } else {
+        NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        if ([defaults boolForKey:@"showWhatsNew"]) {
+            [self loadWhatsNewWebView:nil];
+            [whatsNewWindow makeKeyAndOrderFront:nil];
+            [whatsNewWindow center];
+            [NSApp activateIgnoringOtherApps:YES];
+        }
+    }
+}
+
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender{
+    return FALSE;
 }
 
 #pragma mark -
@@ -416,8 +443,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 			 }];
 		 }
 	 }];
-	
-	
+
 }
 
 #pragma mark Show Last CheckIn Menu
@@ -512,7 +538,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		MPFileCheck *fu = [MPFileCheck new];
 		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
 		
-		__block BOOL res = NO;
 		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 		
 		[self connectAndExecuteCommandBlock:^(NSError * connectError)
@@ -572,7 +597,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     @autoreleasepool
     {
-        logit(lcl_vInfo, @"Running client patch status request.");
+        qlinfo(@"Running client patch status request.");
         
         self.patchNeedsReboot = NO;
         self.patchCount = 0;
@@ -676,12 +701,15 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		{
 			NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 			[ud setBool:YES forKey:@"patch"];
+            [ud synchronize];
+            /*
 			if ([self patchNeedsReboot] == YES) {
 				[ud setBool:YES forKey:@"reboot"];
 			} else {
 				[ud setBool:NO forKey:@"reboot"];
 			}
 			ud = nil;
+             */
 		}
 
 		dispatch_async(dispatch_get_main_queue(), ^(void) {
@@ -901,30 +929,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		[self showDenyMessage:appRule];
 	}
 	
-	/*
-    for (NSString *r in [self.appRules objectForKey:@"deny"])
-    {
-        if ([[noteInfo objectForKey:@"NSApplicationBundleIdentifier"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationBundleIdentifier"] containsString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationName"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationName"] containsString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationPath"] isEqualToString:r]) {
-            result = YES;
-            break;
-        } else if ([[noteInfo objectForKey:@"NSApplicationPath"] containsString:r]) {
-            result = YES;
-            break;
-        }
-    }
-	 */
     return result;
 }
 
@@ -961,37 +965,6 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [self.rebootWindow center];
     [NSApp arrangeInFront:self];
     [NSApp activateIgnoringOtherApps:YES];
-}
-
-- (IBAction)logoutAndPatch:(id)sender
-{
-	[self.rebootWindow close];
-	
-    if (floor(NSAppKitVersionNumber) >= NSAppKitVersionNumber10_9) {
-        NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
-        [ud setBool:NO forKey:@"patch"];
-        [ud setBool:NO forKey:@"reboot"];
-        ud = nil;
-    }
-	
-	if (![[NSFileManager defaultManager] fileExistsAtPath:MP_AUTHRUN_FILE])
-	{
-		[@"reboot" writeToFile:MP_AUTHRUN_FILE atomically:YES encoding:NSUTF8StringEncoding error:NULL];
-		[[NSFileManager defaultManager] setAttributes:@{@"NSFilePosixPermissions":[NSNumber numberWithUnsignedLong:0777]} ofItemAtPath:MP_AUTHRUN_FILE error:NULL];
-	}
-    
-    /* reboot the system using Apple supplied code
-     error = SendAppleEventToSystemProcess(kAERestart);
-     error = SendAppleEventToSystemProcess(kAELogOut);
-     error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-     */
-    
-    OSStatus error = noErr;
-#ifdef DEBUG
-    error = SendAppleEventToSystemProcess(kAELogOut);
-#else
-    error = SendAppleEventToSystemProcess(kAEReallyLogOut);
-#endif
 }
 
 #pragma mark -
@@ -1092,7 +1065,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     NSUserNotification *userNote = [[NSUserNotification alloc] init];
     userNote.title = @"Patches Required";
     userNote.informativeText = [NSString stringWithFormat:@"This system requires %@ %@.",aCount,
-								(aCount == 1) ? @"Patch" : @"Patches"];
+								([aCount intValue] == 1) ? @"Patch" : @"Patches"];
     userNote.actionButtonTitle = @"Patch";
     userNote.hasActionButton = YES;
 	[userNote setValue:@YES forKey:@"_showsButtons"];
@@ -1158,7 +1131,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     }
     else if ([notification.name isEqualToString: kRebootRequiredNotification])
     {
-        [self postUserNotificationForReboot];
+        //[self postUserNotificationForReboot];
+        [self displayPatchDataMethod];
     }
     else if ([notification.name isEqualToString: kRefreshStatusIconNotification])
     {
@@ -1201,7 +1175,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		
 		if ([notification.actionButtonTitle isEqualToString:@"Reboot"])
 		{
-			[self logoutNow];
+			//[self logoutNow];
+            [self openMacPatchAppWithAction:@"PatchScan"];
 		}
 		
 		if ([notification.actionButtonTitle isEqualToString:@"Update"])

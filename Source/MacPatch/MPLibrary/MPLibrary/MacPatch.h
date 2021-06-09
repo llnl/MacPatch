@@ -1,7 +1,7 @@
 //
 //  MacPatch.h
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -108,6 +108,7 @@
 #import "NSData+Base64.h"
 #import "NSString+Base64.h"
 #import "NSFileHandle-Helper.h"
+#import "NSTask+KillBy.h"
 
 // -- Models
 // Settings

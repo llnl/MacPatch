@@ -24,6 +24,8 @@
 @property (nonatomic, assign) NSTimeInterval	requestTimeout;
 @property (nonatomic, assign) NSTimeInterval	resourceTimeout;
 
+@property (nonatomic, assign) BOOL              allowSelfSignedCert;
+
 // Read Only
 @property (nonatomic, copy, readonly) NSURL			*downloadedFile;
 @property (nonatomic, copy, readonly) NSError		*downloadError;

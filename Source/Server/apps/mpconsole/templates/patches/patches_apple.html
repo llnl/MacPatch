@@ -154,6 +154,7 @@ Apple Patches
 		}
 	}
 
+	var $_table = $('#table');
 	window.operateEvents = {
 		'click .edit': function (e, value, row, index)
 		{
@@ -164,6 +165,10 @@ Apple Patches
 				$('#modalDialog').addClass("modal-wide");
 				$('#modalBody').css({'height':'80vh'});
 				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$_table.bootstrapTable('refresh');
+				});
 			});
 		},
 		'click .description': function (e, value, row, index)

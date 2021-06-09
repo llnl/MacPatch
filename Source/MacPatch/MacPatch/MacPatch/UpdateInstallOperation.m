@@ -1,7 +1,7 @@
 //
 //  UpdateInstallOperation.m
 /*
-Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+Copyright (c) 2021, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 Written by Charles Heizer <heizer1 at llnl.gov>.
 LLNL-CODE-636469 All rights reserved.
@@ -24,6 +24,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 */
 
 #import "UpdateInstallOperation.h"
+#import "GlobalQueueManager.h"
 #import "LongPatchWindow.h"
 #import "AppDelegate.h"
 
@@ -121,23 +122,59 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[self didChangeValueForKey:@"isFinished"];
 	qltrace(@"-(void)finish ... calling %@",cellStopNote);
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
-	qlinfo(@"finish");
-	qlinfo(@"showRebootWindow: %d",showRebootWindow);
-	AppDelegate *appDelegate;
-	if (showRebootWindow == 1) {
-		qlinfo(@"showRebootWindow == 1");
-		appDelegate = (AppDelegate *)NSApp.delegate;
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[appDelegate showRestartWindow:0];
-		});
-	} else if (showRebootWindow == 2) {
-		qlinfo(@"showRebootWindow == 2");
-		appDelegate = (AppDelegate *)NSApp.delegate;
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[appDelegate showRestartWindow:1];
-		});
-	}
-	qlinfo(@"finish");
+	//qlinfo(@"finish");
+	//(@"showRebootWindow: %d",showRebootWindow);
+    //qlinfo(@"[FINISH][GlobalQueueManager sharedInstance].globalQueue.operationCount = %lu",(unsigned long)[GlobalQueueManager sharedInstance].globalQueue.operationCount);
+    
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    if ([GlobalQueueManager sharedInstance].globalQueue.operationCount == 0) {
+        NSInteger rebootWindowAction = 0;
+        [self setRebootActionDefault:showRebootWindow];
+        
+        if ([defaults objectForKey:@"rebootWindowAction"]) {
+            rebootWindowAction = [defaults integerForKey:@"rebootWindowAction"];
+        }
+        
+        AppDelegate *appDelegate;
+        if (rebootWindowAction == 1) {
+            appDelegate = (AppDelegate *)NSApp.delegate;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [appDelegate showRestartWindow:0];
+            });
+            [defaults setInteger:0 forKey:@"rebootWindowAction"];
+            [defaults synchronize];
+        } else if (rebootWindowAction == 2) {
+            appDelegate = (AppDelegate *)NSApp.delegate;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [appDelegate showRestartWindow:1];
+            });
+            [defaults setInteger:0 forKey:@"rebootWindowAction"];
+            [defaults synchronize];
+        }
+        
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"enablePatchButtons" object:self];
+    } else {
+        [self setRebootActionDefault:showRebootWindow];
+    }
+	//qlinfo(@"finish");
+}
+
+- (void)setRebootActionDefault:(NSInteger)action
+{
+    NSInteger defaultsAction = 0;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults synchronize];
+    
+    if ([defaults objectForKey:@"rebootWindowAction"]) {
+        defaultsAction = [defaults integerForKey:@"rebootWindowAction"];
+    }
+    
+    if (defaultsAction == action) {
+        return;
+    } else if (defaultsAction < action) {
+        [defaults setInteger:action forKey:@"rebootWindowAction"];
+        [defaults synchronize];
+    }
 }
 
 - (void)start
@@ -209,13 +246,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 						if ([_needsReboot.lowercaseString isEqualToString:@"yes"])
 						{
 							if (resultCode == 1000) {
-								qlinfo(@"resultCode == 1000");
+								//qlinfo(@"resultCode == 1000");
 								self->showRebootWindow = 2;
-								qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+								//qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
 							} else {
-								qlinfo(@"resultCode == 0");
+								//qlinfo(@"resultCode == 0");
 								self->showRebootWindow = 1;
-								qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+								//qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
 							}
 						}
 					}

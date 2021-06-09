@@ -1,7 +1,7 @@
 //
 //  Profiles.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -101,7 +101,11 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 - (void)main
 {
 	@try {
-		[self scanAndInstallPofiles];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Profile install operations is deferred while provisioning.");
+        } else {
+            [self scanAndInstallPofiles];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

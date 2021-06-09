@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+        <style type="text/css" media="screen">
+            #script {
+                height: 340px;
+                width: 700px;
+            }
+        </style>
+
+	{% endblock %}
+</head>
+
+<body>
+	{% block bodyPanel %}
+		<form role="form" id="myForm">
+			<div class="form-group">
+				<div class="well well-sm">
+					<div class="row">
+					<div class="col-md-12">
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Name</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="name" value="{{data['Script']['name'] or ''}}">
+							</div>
+						</div>
+						{% if type == 'edit' %}
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Script ID</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="sid" value="{{data['Script']['sid'] or ''}}" readonly>
+							</div>
+						</div>
+						{% elif type == 'new' %}
+							<input class="form-control" type="hidden" name="sid" value="{{data['NEWID']}}" readonly>
+						{% endif %}
+
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Start Date</label>
+							</div>
+							<div class="col-md-5">
+								<div class='input-group date' id='sw_start_datetime'>
+									<input class="form-control" type="text" name="sw_start_datetime" value="{{data['Script']['sw_start_datetime'] or '2021-01-01 12:00:00' }}">
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</div>
+							<div class="col-md-4">
+								Valid From Date
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>End Date</label>
+							</div>
+							<div class="col-md-5">
+								<div class='input-group date' id='sw_end_datetime'>
+									<input class="form-control" type="text" name="sw_end_datetime" value="{{data['Script']['sw_end_datetime'] or '2050-01-01 12:00:00' }}">
+									<span class="input-group-addon">
+										<span class="glyphicon glyphicon-calendar"></span>
+									</span>
+								</div>
+							</div>
+							<div class="col-md-4">
+								Valid To Date
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Scope</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="scope">
+                                    <option value="0" {% if 0 == data['Script']['scope'] %}selected{% endif %}>QA</option>
+									<option value="1" {% if 1 == data['Script']['scope'] %}selected{% endif %}>Production</option>
+								</select>
+							</div>
+						</div>
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Active</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="active">
+									<option value="1" {% if 1 == data['Script']['active'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['Script']['active'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Script Type</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="type">
+									<option value="1" {% if 1 == data['Script']['type'] %}selected{% endif %}>Post Software Task Installs</option>
+									<option value="0" {% if 0 == data['Script']['type'] %}selected{% endif %}>Pre Software Task Installs</option>
+								</select>
+							</div>
+						</div>
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Install Order</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="order" value="{{data['Script']['order'] or '99'}}">
+							</div>
+                            <div class="col-md-4">
+								Install Order 1 to 99, 1 is first
+							</div>
+						</div>
+
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Script</label>
+							</div>
+							<div class="col-md-5">
+								<div id="script">{{data['Script']['script'] or ''}}</div>
+							</div>
+						</div>
+
+					</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+
+    <!-- ACE Editor -->
+	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+
+	{% block javascript %}
+
+
+		<script type="text/javascript">
+			$(document).ready(function()
+			{
+				$('#sw_start_datetime').datetimepicker({
+					defaultDate: '{{data['Script']['sw_start_datetime'] or '1970-01-01 12:00:00'}}',
+					format: 'yyyy-mm-dd HH:ii:ss'
+				});
+				$('#sw_end_datetime').datetimepicker( {
+					defaultDate: '{{data['Script']['sw_end_datetime'] or '2050-01-01 12:00:00'}}',
+					format: 'yyyy-mm-dd HH:ii:ss'
+				});
+
+				$("#modalSaveButton").click(function()
+				{
+					var formData = new FormData($('#myForm')[0]);
+					var preValue = ace.edit("script").getValue();
+					formData.append('script', preValue );
+
+					var _url = "/provision/script/save/{{data['Script']['sid'] or data['NEWID']}}";
+					$.ajax({
+						url: _url,
+						type: 'POST',
+                        cache: false,
+						processData: false,
+						contentType: false,
+						data: formData,
+						error: function (request, status, error)
+						{
+							jsonValue = jQuery.parseJSON( request.responseText );
+							alert(jsonValue.error);
+						},
+						success: function () {
+							alert("Provisioning script saved successfully.");
+							$('#modalDialog').modal('hide');
+						}
+					});
+
+					$('#myForm') = '';
+				});
+
+				var script = ace.edit("script");
+                script.setTheme("ace/theme/eclipse");
+                script.setFontSize('12px');
+                script.getSession().setMode("ace/mode/sh");
+			});
+		</script>
+	{% endblock %}
+</body>
+
+</html>

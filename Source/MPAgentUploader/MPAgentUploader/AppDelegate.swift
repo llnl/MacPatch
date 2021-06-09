@@ -35,7 +35,7 @@ var log = LXLogger()
 //import SwiftyBeaver
 //let log = SwiftyBeaver.self
 
-var MPAlamofire = Alamofire.SessionManager()
+var MPAlamofire = Alamofire.Session()
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -64,6 +64,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ aNotification: Notification) {
         // Insert code here to tear down your application
+    }
+    
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        NSApplication.shared.terminate(self)
+        return true
     }
     
     lazy var preferencesWindowController: PreferencesWindowController  = {

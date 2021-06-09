@@ -1,7 +1,7 @@
 //
 //  MPSWDiskTaskOperation.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -118,7 +118,11 @@
 {
     logit(lcl_vInfo,@"Run Mandatory Software Installs");
     @try {
-		[self checkAndInstallMandatoryApplications];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Install mandatory applications operation is deferred while provisioning.");
+        } else {
+            [self checkAndInstallMandatoryApplications];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

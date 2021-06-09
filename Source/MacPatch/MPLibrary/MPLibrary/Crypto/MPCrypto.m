@@ -1,7 +1,7 @@
 //
 //  MPCrypto.m
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -440,11 +440,16 @@ done:
         return nil;
     }
     
+    /*
     SecTransformSetAttribute(encrypt,
                              kSecPaddingKey,
                              NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and
                              // kSecPaddingPKCS1Key fails horribly)
                              &error);
+    */
+    
+    // Switched to kSecPaddingOAEPKey
+    SecTransformSetAttribute(encrypt, kSecPaddingKey, kSecPaddingOAEPKey, &error);
     
     CFDataRef sourceData = CFDataCreate(kCFAllocatorDefault, plainText, plainTextLen);
     SecTransformSetAttribute(encrypt, kSecTransformInputAttributeName, sourceData, &error);
@@ -487,12 +492,15 @@ done:
         qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
-    
+    /*
     SecTransformSetAttribute(decrypt,
                              kSecPaddingKey,
-                             NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and
-                             // kSecPaddingPKCS1Key fails horribly)
+                             NULL, // kSecPaddingPKCS1Key (rdar://13661366 : NULL means kSecPaddingPKCS1Key and kSecPaddingPKCS1Key fails horribly)
                              &error);
+    */
+    
+    // Switched to kSecPaddingOAEPKey
+    SecTransformSetAttribute(encrypt, kSecPaddingKey, kSecPaddingOAEPKey, &error);
     
     SecTransformSetAttribute(decrypt, kSecTransformInputAttributeName, (CFDataRef)encData, &error);
     

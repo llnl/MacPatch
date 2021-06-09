@@ -1,7 +1,7 @@
 //
 //  AgentScanAndUpdateOperation.m
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -87,7 +87,11 @@
 - (void)main
 {
 	@try {
-		[self runAgentScanAndUpdate];
+        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+            qlinfo(@"Agent scan and update operation is deferred while provisioning.");
+        } else {
+            [self runAgentScanAndUpdate];
+        }
 	}
 	@catch (NSException * e) {
 		logit(lcl_vError,@"[NSException]: %@",e);

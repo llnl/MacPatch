@@ -345,7 +345,7 @@
 	//
 	if (result == 0)
 	{
-		[self recordInstalledRequiredSoftware:swTaskDict[@"id"]];
+		[self recordInstalledRequiredSoftware:swTaskDict];
 		if ([[swTaskDict valueForKeyPath:@"Software.auto_patch"] intValue] == 1)
 		{
 			NSString *bundle_id = [swTaskDict valueForKeyPath:@"Software.patch_bundle_id"];
@@ -354,6 +354,20 @@
 			}
 		}
 	}
+    
+    NSDictionary *wsRes = @{@"tuuid":swTaskDict[@"id"],
+                            @"suuid":[swTaskDict valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"resultString":@""};
+    
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
 
 	return result;
 }
@@ -361,7 +375,7 @@
 - (BOOL)recordRequiredSoftware:(NSArray *)ids
 {
 	[settings refresh];
-	NSString *cGroupID = settings.agent.groupId;
+	
 	// CEH Not implemented
 	/*
 	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
@@ -384,55 +398,20 @@
 	return YES;
 }
 
-- (BOOL)recordInstalledRequiredSoftware:(NSString *)tuuid
+- (BOOL)recordInstalledRequiredSoftware:(NSDictionary *)swTask
 {
-	// [settings refresh];
-	// NSString *cGroupID = settings.agent.groupId;
-	// CEH Not implemented
-	/*
-	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
-	NSMutableArray *array = reqPlist[@"requiredSoftware"];
-	
-	for (NSMutableDictionary *cg in array)
-	{
-		// Find our dictionary for our client group
-		if ([cg[@"clientGroup"] isEqualToString:cGroupID])
-		{
-			NSMutableArray *iArr = [cg[@"installed"] mutableCopy];
-			[iArr addObject:@{@"tuuid":tuuid,@"idate":[NSDate date]}];
-			cg[@"installed"] = iArr;
-		}
-	}
-	
-	[reqPlist writeToFile:SOFTWARE_REQUIRED_PLIST atomically:NO];
-	 */
-	return YES;
+    BOOL result = NO;
+    MPClientDB *db = [MPClientDB new];
+    result = [db recordSoftwareInstall:swTask];
+    return result;
 }
 
 - (BOOL)isSoftwareTaskInstalled:(NSString *)tuuid
 {
-	[settings refresh];
-	NSString *cGroupID = settings.agent.groupId;
-	// CEH
-	/*
-	NSMutableDictionary *reqPlist = [NSMutableDictionary dictionaryWithContentsOfFile:SOFTWARE_REQUIRED_PLIST];
-	NSArray *array = reqPlist[@"requiredSoftware"];
-
-	for (NSDictionary *cg in array)
-	{
-		// Find our dictionary for our client group
-		if ([cg[@"clientGroup"] isEqualToString:cGroupID])
-		{
-			NSArray *installed = cg[@"installed"];
-			NSPredicate *predicate = [NSPredicate predicateWithFormat:@"tuuid CONTAINS[cd] %@",tuuid];
-			NSArray *filteredArray = [installed filteredArrayUsingPredicate:predicate];
-			if (filteredArray.count == 1) {
-				return YES; // Found
-			}
-		}
-	}
-	*/
-	return NO;
+    BOOL result = NO;
+    MPClientDB *db = [MPClientDB new];
+    result = [db isSoftwareTaskInstalled:tuuid];
+    return result;
 }
 
 #pragma mark - Private Methods

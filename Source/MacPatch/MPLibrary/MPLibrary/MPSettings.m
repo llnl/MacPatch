@@ -28,6 +28,7 @@ static MPSettings *_instance;
 @property (nonatomic, readwrite) NSFileManager *fm;
 
 @property (nonatomic, strong, readwrite) NSString *ccuid;
+@property (nonatomic, strong, readwrite) NSString *clientID;
 @property (nonatomic, strong, readwrite) NSString *serialno;
 @property (nonatomic, strong, readwrite) NSString *osver;
 @property (nonatomic, strong, readwrite) NSString *ostype;
@@ -46,6 +47,7 @@ static MPSettings *_instance;
 @synthesize fm;
 
 @synthesize ccuid;
+@synthesize clientID;
 @synthesize serialno;
 @synthesize osver;
 @synthesize ostype;
@@ -73,7 +75,8 @@ static MPSettings *_instance;
             [dict setObject:[NSNumber numberWithInt:511] forKey:NSFilePosixPermissions];
             NSError *error = nil;
             [_instance.fm setAttributes:dict ofItemAtPath:MP_AGENT_SETTINGS error:&error];
-            [_instance setCcuid:[_instance clientID]];
+            [_instance setCcuid:[_instance clientIDStr]];
+            [_instance setClientID:_instance.ccuid];
             [_instance setSerialno:[_instance clientSerialNumber]];
             [_instance collectOSInfo];
             [_instance settings];
@@ -275,7 +278,7 @@ static MPSettings *_instance;
 
 #pragma mark - Private
 
-- (NSString *)clientID
+- (NSString *)clientIDStr
 {
     NSString *result = NULL;
     io_struct_inband_t iokit_entry;

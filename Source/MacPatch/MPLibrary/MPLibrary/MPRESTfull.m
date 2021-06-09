@@ -16,22 +16,21 @@
     MPSettings *settings;
 }
 
-@property (nonatomic, strong) NSString *ccuid;
+@property (nonatomic, strong) NSString *clientID;
 
 @end
 
 @implementation MPRESTfull
 
-@synthesize ccuid;
+@synthesize clientID;
 
 - (id)init
 {
     self = [super init];
     if (self)
     {
-        qldebug(@"MPRESTfull init");
         settings = [MPSettings sharedInstance];
-        self.ccuid = settings.ccuid;
+        self.clientID = settings.ccuid;
     }
     
     return self;
@@ -39,18 +38,16 @@
 
 - (id)initNoSettings
 {
-    qlinfo(@"MPRESTfull initNoSettings");
     self = [super init];
     return self;
 }
 
 - (id)initWithClientID:(NSString *)clientID
 {
-    qlinfo(@"MPRESTfull initWithClientID %@",clientID);
     self = [super init];
     if (self)
     {
-        self.ccuid = clientID;
+        self.clientID = clientID;
     }
     
     return self;
@@ -133,7 +130,7 @@
     MPWSResult *ws_result;
     
     MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
-    NSString *urlPath = [@"/api/v3/client/checkin" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [@"/api/v3/client/checkin" stringByAppendingPathComponent:self.clientID];
     ws_result = [req runSyncPOST:urlPath body:data];
     
     if (ws_result.statusCode >= 200 && ws_result.statusCode <= 299) {
@@ -160,7 +157,7 @@
 {
     NSDictionary *data;
     NSError *error = nil;
-    NSString *urlPath = [@"/api/v2/client/checkin/info" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [@"/api/v2/client/checkin/info" stringByAppendingPathComponent:self.clientID];
     data = [self getDataFromWS:urlPath error:&error];
     if (err != NULL) *err = error;
     
@@ -180,7 +177,7 @@
     BOOL result = NO;
     NSError *error = nil;
     NSDictionary *data = @{@"rows":scanData};
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/%d/%@",(int)type, self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/%d/%@",(int)type, self.clientID];
     qldebug(@"[postClientScanDataWithType][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:data error:&error];
@@ -207,10 +204,10 @@
     NSString *urlPath;
     
     if (!aSeverity) {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/all/%@",self.ccuid];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/all/%@",self.clientID];
     } else {
         // Set OS Level *, any OS
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/%@/%@",aSeverity, self.ccuid];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/%@/%@",aSeverity, self.clientID];
     }
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -250,7 +247,7 @@
     NSDictionary *ws_result;
     NSDictionary *result = nil;
     
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/group/%@",self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/group/%@",self.clientID];
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -287,7 +284,7 @@
 	NSDictionary *ws_result;
 	NSDictionary *result = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/all/%@",self.ccuid];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/client/patch/all/%@",self.clientID];
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
@@ -324,7 +321,7 @@
 {
     BOOL result = NO;
     NSError *error = nil;
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch,type,self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch,type,self.clientID];
     qldebug(@"[postPatchInstallResults][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
@@ -346,7 +343,7 @@
  */
 - (BOOL)postOSMigrationStatus:(NSString *)action label:(NSString *)label migrationID:(NSString *)migrationID error:(NSError **)err
 {
-    NSDictionary *data = @{@"clientID":self.ccuid,
+    NSDictionary *data = @{@"clientID":self.clientID,
                            @"action":action,
                            @"os": [[MPSystemInfo osVersionInfo] objectForKey:@"ProductUserVisibleVersion"],
                            @"label":label, @"migrationID":migrationID};
@@ -354,7 +351,7 @@
     
     BOOL result = NO;
     NSError *error = nil;
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/migration/%@",self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/migration/%@",self.clientID];
     qldebug(@"[postOSMigrationStatus][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:data error:&error];
@@ -380,9 +377,9 @@
     
     NSString *urlPath;
     if (!key) {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@",self.ccuid];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@",self.clientID];
     } else {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@/%@",self.ccuid,key];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@/%@",self.clientID,key];
     }
     
     qldebug(@"[postAgentRegistration][urlPath] %@",urlPath);
@@ -408,9 +405,9 @@
     BOOL        result = NO;
     NSString    *urlPath;
     if (!key) {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/status/%@",self.ccuid];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/status/%@",self.clientID];
     } else {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/status/%@/%@",self.ccuid,key];
+        urlPath = [NSString stringWithFormat:@"/api/v2/client/register/status/%@/%@",self.clientID,key];
     }
     
     MPHTTPRequest *req;
@@ -449,9 +446,9 @@
 {
     BOOL result = NO;
     NSError *error = nil;
-    NSString *urlPath = [@"/api/v1/sw/installed" stringByAppendingPathComponent:self.ccuid];
-    qldebug(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
-    qldebug(@"[postSoftwareInstallResults][data] %@",data);
+    NSString *urlPath = [@"/api/v1/sw/installed" stringByAppendingPathComponent:self.clientID];
+    qlinfo(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
+    qlinfo(@"[postSoftwareInstallResults][data] %@",data);
     
     result = [self postDataToWS:urlPath data:data error:&error];
     if (error) {
@@ -485,7 +482,7 @@
     NSArray *result = nil;
     
     //NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.clientID, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
     qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -530,7 +527,7 @@
 	NSDictionary *ws_result;
 	NSDictionary *result = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/task/%@/%@",self.ccuid, taskID];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/task/%@/%@",self.clientID, taskID];
 	qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -571,7 +568,7 @@
     NSDictionary *ws_result;
     
     NSString *result;
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/agent/plugin/hash/%@/%@/%@/%@", plugin, bundleID, version, self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/agent/plugin/hash/%@/%@/%@/%@", plugin, bundleID, version, self.clientID];
     qldebug(@"[urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -606,7 +603,7 @@
 - (BOOL)getAgentHasInventoryDataInDB:(NSError **)err
 {
     BOOL      result    = NO;
-    NSString  *urlPath  = [NSString stringWithFormat:@"/api/v2/client/inventory/state/%@",self.ccuid];
+    NSString  *urlPath  = [NSString stringWithFormat:@"/api/v2/client/inventory/state/%@",self.clientID];
     
     MPHTTPRequest *req;
     MPWSResult *wsresult;
@@ -647,7 +644,7 @@
 {
     BOOL result = NO;
     NSError *error = nil;
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/inventory/state/%@",self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/inventory/state/%@",self.clientID];
     qldebug(@"[postAgentHasInventoryData][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
@@ -669,7 +666,7 @@
     NSDictionary *ws_result;
     NSArray *result = nil;
     
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/groups/%@",self.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/groups/%@",self.clientID];
     qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -710,7 +707,7 @@
 	NSDictionary *ws_result;
 	NSDictionary *result = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/patch/bundleID/%@/%@",bundleID,self.ccuid];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/patch/bundleID/%@/%@",bundleID,self.clientID];
 	qldebug(@"[getPatchForBundleID][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -749,7 +746,7 @@
 	NSDictionary *ws_result;
 	NSDictionary *result = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/sw/restrictions/%@",self.ccuid];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/sw/restrictions/%@",self.clientID];
 	qldebug(@"[getSoftwareRestrictions][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -792,7 +789,7 @@
 	NSDictionary *ws_result;
 	NSDictionary *result = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.ccuid];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.clientID];
 	qldebug(@"[getS3URLForType][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
@@ -830,7 +827,7 @@
 {
     BOOL result = NO;
     NSError *error = nil;
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/agent/install/%@/%@",self.ccuid,agentVer];
+	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/agent/install/%@/%@",self.clientID,agentVer];
     qldebug(@"[postAgentInstall][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
@@ -844,4 +841,113 @@
     return result;
 }
 
+/**
+ Get provisioning dictionary to provision a host
+ 
+ @param clientID client ID, used for determingin if QA scope can be used.
+ @param err Error object
+ 
+ @return NSDictionary
+ */
+- (NSDictionary *)getProvisioningDataForHost:(NSString *)clientID error:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSDictionary *result = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/data/%@",self.clientID];
+    qldebug(@"[getProvisioningDataForHost][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+    
+    
+    if ([ws_result objectForKey:@"data"])
+    {
+        if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
+        {
+            qldebug(@"Web Servce result: %@",ws_result);
+            result = [ws_result objectForKey:@"data"];
+        }
+        else
+        {
+            qlerror(@"Result was not of type dictionary.");
+            qlerror(@"Result: %@", ws_result);
+        }
+    }
+    
+    return result;
+}
+
+/**
+ Get provisioning config json data, needs to be written to file.
+ Will return NSString of JSON data
+ 
+ @param err Error object
+ 
+ @return NSString
+ */
+- (NSString *)getProvisioningConfig:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSString *result = nil;
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/config/%@",self.clientID];
+    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+    
+    
+    if ([ws_result objectForKey:@"data"])
+    {
+        qldebug(@"Web Servce result: %@",ws_result);
+        NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[ws_result objectForKey:@"data"] options:0];
+        result = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
+    }
+    
+    return result;
+}
+
+/**
+ Get provisioning criteria
+ Will return an array of query strings
+ 
+ @param scope NSString object - prod is default
+ @param err Error object
+ 
+ @return NSArray
+ */
+- (NSArray *)getProvisioningCriteriaUsingScope:(NSString *)scope error:(NSError **)err
+{
+    NSError *ws_err = nil;
+    NSDictionary *ws_result;
+    NSArray *result = [NSArray array];
+    
+    NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/criteria/%@/%@",self.clientID,scope];
+    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    
+    ws_result = [self getDataFromWS:urlPath error:&ws_err];
+    if (ws_err) {
+        *err = ws_err;
+        return nil;
+    }
+
+    if ([ws_result objectForKey:@"data"])
+    {
+        NSDictionary *_data = [ws_result objectForKey:@"data"];
+        if([_data objectForKey:@"query"]) {
+            result = (NSArray *)_data[@"query"];
+        }
+    }
+    
+    return result;
+}
 @end

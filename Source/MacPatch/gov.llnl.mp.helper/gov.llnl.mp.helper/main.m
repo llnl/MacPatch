@@ -18,7 +18,7 @@ int main(int argc, const char * argv[])
     {
         if (argc >= 2) {
             if (strcmp(argv[1], "-v") == 0) {
-                printf("1.0.0\n");
+                printf("3.6.0\n");
                 return (0);
             }
         }
@@ -35,7 +35,7 @@ static void setUpLogging ()
 {
     // Setup logging
     BOOL enableDebug = NO;
-    [MPLog setupLogging:@"/Library/Logs/gov.llnl.mp.helper.log" level:lcl_vDebug];
+    [MPLog setupLogging:@"/Library/Logs/gov.llnl.mp.helper.log" level:lcl_vInfo];
     
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *appPrefsPath = @"/Library/Preferences/gov.llnl.mp.helper.plist";
@@ -56,6 +56,7 @@ static void setUpLogging ()
     } else {
         // enable logging for all components up to level Info
         lcl_configure_by_name("*", lcl_vInfo);
+        [MPLog MirrorMessagesToStdErr:YES];
         logit(lcl_vInfo,@"***** gov.llnl.mp.helper started *****");
     }
 }

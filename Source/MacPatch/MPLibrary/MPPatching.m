@@ -2,7 +2,7 @@
 //  MPPatching.m
 //  MPLibrary
 /*
- Copyright (c) 2017, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -614,6 +614,9 @@ typedef enum {
         [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
         qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
         result = [NSArray arrayWithArray:approvedUpdatesArray];
+    } else {
+        MPClientDB *cdb = [MPClientDB new];
+        [cdb clearRequiredPatches];
     }
 	
 	[self patchScanCompleted];
@@ -1321,14 +1324,23 @@ typedef enum {
 
 - (void)addPatchesToClientDatabase:(NSArray *)patches
 {
-	qlinfo(@"Adding required patches to client database.");
-    MPClientDB *cdb = [MPClientDB new];
-    [cdb clearRequiredPatches];
-
-    for (NSDictionary *p in patches)
+    @try
     {
-        [cdb addRequiredPatch:p];
-        qldebug(@"Added %@",p[@"patch"]);
+        qlinfo(@"Adding required patches to client database.");
+        MPClientDB *cdb = [MPClientDB new];
+        [cdb clearRequiredPatches];
+
+        for (NSDictionary *p in patches)
+        {
+            if (p) {
+                [cdb addRequiredPatch:p];
+                qldebug(@"Added %@",p[@"patch"]);
+            }
+        }
+        return;
+    } @catch (NSException *exception) {
+        qlerror(@"%@",exception);
+        return;
     }
     return;
 }

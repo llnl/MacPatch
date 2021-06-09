@@ -64,6 +64,37 @@ def applePatchesList():
 
 	return json.dumps({'data': _results}, default=json_serial), 200
 
+@patches.route('/apple/mismatch')
+@login_required
+def appleMismatchPatches():
+	cols = [('patch','Patch',1), ('name','Description',1), ('count','Found',1)]
+	return render_template('patches/patches_apple_mismatch.html', data={}, columns=cols, pageTitle="Mismatched Apple Patches")
+
+@patches.route('/apple/mismatch/list',methods=['GET'])
+@login_required
+@cross_origin()
+def appleMismatchPatchesList():
+
+	results = []
+
+	q = MpClientPatches.query.filter(MpClientPatches.type == 'Apple').all()  # Set of Apple Patches Needed by clients
+	_patchesRaw = [row.patch for row in q]  # As a list
+	_patches = set(_patchesRaw)  # Make the list a set, so no dups
+
+	for x in _patches:
+		y = ApplePatch.query.filter(ApplePatch.supatchname == x).first()
+		if y is None:
+			count = 0
+			name = "NA"
+			for r in q:
+				if r.patch == x:
+					count = count + 1
+					name = r.description
+
+			results.append({'patch': x, 'name': name, 'count': count})
+	print(results)
+	return json.dumps({'data': results}, default=json_serial), 200
+
 
 @patches.route('/apple/state',methods=['POST'])
 @login_required
@@ -142,11 +173,17 @@ def applePatchWizardUpdate():
 
 	if localAdmin() or adminRole():
 		critDict = dict(request.form)
-		suname = request.form['supatchname']
+		suname = request.form['supatchnameOrig']
 		akey = request.form['akey']
 
+		# Set / Update Values in ApplePatch table
+		_applePatch = ApplePatch.query.filter(ApplePatch.akey == akey).first()
+		setattr(_applePatch, 'supatchname', request.form['supatchname'])
+		db.session.commit()
+
 		# Set / Update Values in MP Apple Patch Additions table
-		patchAdds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == request.form['supatchname']).first()
+		patchAdds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == suname).first()
+		setattr(patchAdds, 'supatchname', request.form['supatchname'])
 		setattr(patchAdds, 'patch_reboot', request.form['patch_reboot'])
 		setattr(patchAdds, 'patch_install_weight', request.form['patchInstallWeight'])
 		setattr(patchAdds, 'severity', request.form['patch_severity'])
@@ -154,7 +191,7 @@ def applePatchWizardUpdate():
 		db.session.commit()
 
 		# Remove Criteria before adding new / updating
-		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == request.form['supatchname']).delete()
+		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == suname).delete()
 		db.session.commit()
 
 		for key in critDict:
@@ -164,7 +201,7 @@ def applePatchWizardUpdate():
 
 				patchCrit = ApplePatchCriteria()
 				setattr(patchCrit, 'puuid', akey)
-				setattr(patchCrit, 'supatchname', suname)
+				setattr(patchCrit, 'supatchname', request.form['supatchname'])
 				setattr(patchCrit, 'type', critDict["reqCri_type_" + nid][0])
 				setattr(patchCrit, 'type_action', critDict["reqCri_type_action_" + nid][0])
 				setattr(patchCrit, 'type_data', critDict["reqCri_type_data_" + nid][0])
@@ -175,7 +212,7 @@ def applePatchWizardUpdate():
 				db.session.add(patchCrit)
 				db.session.commit()
 
-		log("{} updated apple patch {}({}).".format(session.get('user'), suname, akey))
+		log("{} updated apple patch {}({}).".format(session.get('user'), request.form['supatchname'], akey))
 
 	else:
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))

@@ -354,5 +354,3 @@ patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/<string:all>/<str
 
 patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
 
-patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
-

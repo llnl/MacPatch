@@ -5,19 +5,19 @@
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
- 
+
  This file is part of MacPatch, a program for installing and patching
  software.
- 
+
  MacPatch is free software; you can redistribute it and/or modify it under
  the terms of the GNU General Public License (as published by the Free
  Software Foundation) version 2, dated June 1991.
- 
+
  MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
  WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
  FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
  License for more details.
- 
+
  You should have received a copy of the GNU General Public License along
  with MacPatch; if not, write to the Free Software Foundation, Inc.,
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
@@ -56,7 +56,7 @@ handler.setFormatter(formatter)
 logger.addHandler(handler)
 
 # Global Settings
-MINAGENTVER="3.3.6.4"
+MINAGENTVER="3.6.0.1"
 DAYSRANGE=15
 IGNORE_SSL=True
 ISBETA=False
@@ -85,7 +85,7 @@ def hasCheckedIn(clientID):
 	else:
 		response = urllib2.urlopen('https://'+MPSERVER+':3600/api/v1/client/checkin/info/'+clientID)
 
-	data = json.load(response)   
+	data = json.load(response)
 	if 'result' in data:
 		mdate = data['result']['mdate2']
 		if mdate:
@@ -130,7 +130,7 @@ def validAgentHash():
     with open('/Library/MacPatch/Client/MPAgent', "rb") as f:
         for chunk in iter(lambda: f.read(4096), b""):
             hash_md5.update(chunk)
-    
+
     if hash_md5.hexdigest().lower() == MPHASH.lower():
         return True
     else:
@@ -165,4 +165,4 @@ def main():
 		logger.info("No update needed.")
 
 if __name__ == '__main__':
-	main()	
+	main()

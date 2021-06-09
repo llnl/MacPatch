@@ -5,7 +5,8 @@ import base64
 import hashlib
 from datetime import datetime
 
-from M2Crypto import RSA
+import M2Crypto
+#from M2Crypto import RSA
 from flask_restful import reqparse
 
 from . import *
@@ -152,17 +153,32 @@ class RegistrationStatus(MPResource):
 
 ''' Private Methods '''
 def verifyClientHash(encodedKey, hash):
-	_lHash = hashlib.sha1(str(encodedKey).encode('utf-8')).hexdigest()
-	if _lHash.lower() == hash.lower():
-		return True
+	if encodedKey is not None:
+		if isinstance(encodedKey, (bytes, bytearray)) == False:
+			# Object is not encoded, needs to be
+			encodedKey = encodedKey.encode('utf-8')
+
+		_lHash = hashlib.sha1(encodedKey).hexdigest()
+		if _lHash.lower() == hash.lower():
+			return True
+		else:
+			return False
 	else:
 		return False
 
 def decodeClientKey(encodedKey):
-	priKeyFile = return_data_for_server_key('priKey')
-	priv = RSA.load_key(priKeyFile)
-	decrypted = priv.private_decrypt(base64.b64decode(encodedKey), RSA.pkcs1_padding)
-	return decrypted
+	try:
+		priKeyFile = return_data_for_server_key('priKey')
+		priv = M2Crypto.RSA.load_key(priKeyFile)
+		decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_oaep_padding)
+
+		return decrypted
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message=str(e.args[0]).encode("utf-8")
+		log_Error('[Registration][decodeClientKey][Line: %d] Message: %s' % (exc_tb.tb_lineno, message))
+		return None
+
 
 # Add Routes Resources
 register_api.add_resource(Test,                 '/client/RegTest')

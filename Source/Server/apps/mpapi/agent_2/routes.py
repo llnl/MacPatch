@@ -179,7 +179,7 @@ class _AgentConfig(MPResource):
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
-			log_Error('[AgentConfig][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
+			log_Error('[AgentConfig][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
 			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
 
 	def agentSettingsRev(self,group_id):
@@ -218,8 +218,8 @@ class _AgentConfig(MPResource):
 		try:
 
 			res = []
-			client_obj = MpClient.query.filter_by(cuuid=client_id).first()
-			client_group = MpClientGroupMembers.query.filter_by(cuuid=client_obj.cuuid).first()
+			client_obj = MpClient.query.filter(MpClient.cuuid == client_id).first()
+			client_group = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == client_obj.cuuid).first()
 
 			if client_group is not None:
 				swids_Obj = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == client_group.group_id).all()

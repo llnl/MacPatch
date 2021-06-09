@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+
+        <style type="text/css" media="screen">
+            #editor {
+                height: 340px;
+                width: 640px;
+            }
+        </style>
+        <style>
+            #helpRow {
+                 display: none;
+            }
+            td {
+                vertical-align:top;
+                padding: 10px;
+            }
+            .well {
+                 width: 80%;
+             }
+        </style>
+
+	{% endblock %}
+</head>
+
+<body>
+	{% block bodyPanel %}
+    <div class="container" align="center">
+        <div class="well">
+        <div class="row" align="right">
+            <button class="btn btn-primary btn-sm" onclick="myFunction()"><i class="fa fa-question"></i></button>
+        </div>
+        <form role="form" id="myForm">
+            <input name="rid" type="hidden" value="{{ data.rid or 'NA' }}">
+            <table>
+                <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Criteria Query</th>
+                    <th>Order</th>
+                </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <select id="type" name="type" required="yes">
+                            <option value="File" {% if data.type == 'File' %}selected{% endif %}>File</option>
+                            <option value="Script" {% if data.type == 'Script' %}selected{% endif %}>Script</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div id="editor">{{ data.type_data or '' }}</div>
+                        </td>
+                        <td>
+                            <input type='text' name="order" value="{{ data.order or '99' }}" size='4'>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </form>
+        </div>
+        <div class="panel panel-default" id="helpRow">
+            <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-sm-2" align="center">
+                        <h5>Base Criteria Type</h5>
+                    </div>
+                    <div class="col-lg-8">
+                        <h5>Criteria Description</h5>
+                    </div>
+                </div>
+                <!--
+                <div class="row">
+                    <div class="col-sm-2">
+                        <label>BundleID</label>
+                    </div>
+                    <div class="col-lg-8">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Query</th>
+                                    <th>Value</th>
+                                    <th>Query Result</th>
+                                    <th>Example Syntax</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Exists</td>
+                                    <td>BundleID Value</td>
+                                    <td>True/False</td>
+                                    <td>Exists@com.adobe.Reader@True</td>
+                                </tr>
+                                <tr>
+                                    <td>Version</td>
+                                    <td>BundleID Value</td>
+                                    <td>Version;(EQ,LT,LTE,GT,GTE,NEQ)</td>
+                                    <td>Version@com.adobe.Reader@9.3.0;LT</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                -->
+                <div class="row">
+                    <div class="col-sm-2">
+                        <p align="center" style="padding-top: 20px;">
+                            <label>File</label>
+                        </p>
+                    </div>
+                    <div class="col-lg-8">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Query</th>
+                                    <th>Value</th>
+                                    <th>Query Result</th>
+                                    <th>Example Syntax</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                <td>Exists</td>
+                                <td>File Path</td>
+                                <td>True/False</td>
+                                <td>Exists@/Applications/Firefox.app@True</td>
+                            </tr>
+                                <!--
+                                <tr>
+                                    <td>Date</td>
+                                    <td>File Path</td>
+                                    <td>True/False</td>
+                                    <td>Date@/Applications/Firefox.app@2010-03-22 12:00:00;LT</td>
+                                </tr>
+                                -->
+                                <tr>
+                                    <td>Hash</td>
+                                    <td>File Path</td>
+                                    <td>MD5 Hash;True/False</td>
+                                    <td>Hash@/Applications/Firefox.app@123432dsh2362h3h;TRUE</td>
+                                </tr>
+                                <tr>
+                                    <td>Version</td>
+                                    <td>File Path</td>
+                                    <td>Version;(EQ,LT,LTE,GT,GTE,NEQ)</td>
+                                    <td>Version@/Applications/Firefox.app@3.5.7;LT</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2">
+                        <p align="center" style="padding-top: 20px;">
+                        <label>Script</label>
+                        </p>
+                    </div>
+                    <div class="col-lg-8">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Query</th>
+                                    <th>Value</th>
+                                    <th>Query Result</th>
+                                    <th>Example Syntax</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Script</td>
+                                    <td>Script Text</td>
+                                    <td>True</td>
+                                    <td>#!/bin/sh ...</td>
+                                    <td>If a @ is used it must be escaped with @</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+    <!-- ACE Editor -->
+	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	{% block javascript %}
+
+    <script type="text/javascript">
+        function myFunction() {
+            var x = document.getElementById("helpRow");
+            console.log(x.style.display);
+            if (x.style.display === "none") {
+                x.style.display = "block";
+            } else if (x.style.display === "") {
+                x.style.display = "block";
+            } else {
+                x.style.display = "none";
+            }
+        }
+
+        $(document).ready(function()
+        {
+            $("#modalSaveButton").click(function()
+            {
+                var formData = new FormData($('#myForm')[0]);
+                var preValue = ace.edit("editor").getValue();
+                formData.append('type_data', preValue );
+
+                var _url = "/provision/criteria/save";
+                $.ajax({
+                    url: _url,
+                    type: 'POST',
+                    cache: false,
+                    processData: false,
+                    contentType: false,
+                    data: formData,
+                    error: function (request, status, error)
+                    {
+                        jsonValue = jQuery.parseJSON( request.responseText );
+                        alert(jsonValue.error);
+                    },
+                    success: function () {
+                        alert("Provisioning script saved successfully.");
+                        $('#modalDialog').modal('hide');
+                    }
+                });
+
+                $('#myForm') = '';
+            });
+
+            var editor = ace.edit("editor");
+            editor.setTheme("ace/theme/eclipse");
+            editor.setFontSize('12px');
+            editor.getSession().setMode("ace/mode/sh");
+        });
+    </script>
+	{% endblock %}
+</body>
+
+</html>
+

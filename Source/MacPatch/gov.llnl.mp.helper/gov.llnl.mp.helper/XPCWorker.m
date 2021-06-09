@@ -3,7 +3,7 @@
 //  gov.llnl.mp.worker
 //
 /*
- Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -29,11 +29,7 @@
 #import "MPHelperProtocol.h"
 #import "AHCodesignVerifier.h"
 #include <libproc.h>
-//#import "MPAgentController.h"
-
 #import "MPPatching.h"
-
-//#import "DBModels.h"
 #import "DBMigration.h"
 #import "MPClientDB.h"
 
@@ -83,6 +79,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         self->_listener.delegate = self;
         self->_selfPID = [self getPidNumber];
 		self->SW_DATA_DIR = [self swDataDirURL];
+        self->swTaskTimeoutValue = 1200; // 15min timeout to install an item
         [self configDataDir];
         fm = [NSFileManager defaultManager];
 		
@@ -330,7 +327,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	
 	MPPatching *patching = [MPPatching new];
 	patching.delegate = self;
-	//[self postPatchStatus:@"Begin %@ install", patch[@"patch"]];
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
 	
 	if (patchResult[@"patchInstallErrors"]) {
@@ -688,6 +684,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	BOOL res = YES;
 	NSString *_file = @"/private/var/db/.MPPatchState.plist";
 	NSDictionary *data;
+
 	if (state == kPatchingPausedOn) {
 		data = @{@"pausePatching":[NSNumber numberWithBool:YES]};
 	} else {
@@ -717,9 +714,27 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 #pragma mark • Software
 - (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
 {
+    //__block NSError *err;
+    //__block NSInteger res;
+    //__block NSData *resData;
+    // Default timeout is 30min
+    [self installSoftware:swItem timeOut:1800 withReply:^(NSError *error, NSInteger resultCode, NSData *installData) {
+        //err = error;
+        //res = resultCode;
+        //resData = installData;
+        reply(error, resultCode, installData);
+    }];
+}
+
+
+// CEH - Needs to be updated to support MPSoftware
+//- (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+- (void)installSoftware:(NSDictionary *)swItem timeOut:(NSInteger)timeout withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+{
 	qlinfo(@"Start install of %@",swItem[@"name"]);
 	qldebug(@"swItem: %@",swItem);
-	
+    self->swTaskTimeoutValue = (int)timeout;
+    
 	NSError *err = nil;
 	NSString *errStr;
 	NSInteger result = 99; // Default result
@@ -868,7 +883,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		// ------------------------------------------------
 		// Install PKG
 		// ------------------------------------------------
-		[self postStatus:@"Installing %@",[dlSoftwareFile stringByDeletingLastPathComponent]];
+		[self postStatus:@"Installing %@",dlSoftwareFile.lastPathComponent];
 		result = [self installPkgFromZIP:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swItem[@"pkgEnv"]];
 		
 		// ------------------------------------------------
@@ -1076,12 +1091,26 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 			}
 		}
 	}
+    
+    NSDictionary *wsRes = @{@"tuuid":swItem[@"id"],
+                            @"suuid":[swItem valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"resultString":@""};
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
 	
 	reply(err,result,installResultData);
 }
 
 - (BOOL)downloadSoftware:(NSDictionary *)swTask toDestination:(NSString *)toPath
 {
+    qlinfo(@"downloadSoftware for task %@",swTask[@"name"]);
 	NSString *_url;
 	NSInteger useS3 = [[swTask valueForKeyPath:@"Software.sw_useS3"] integerValue];
 	if (useS3 == 1) {
@@ -1623,7 +1652,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     NSException		*error = nil;
 	NSCharacterSet  *newlineSet;
     
-    
     //[self setTaskIsRunning:YES];
     //[self setTaskTimedOut:NO];
     
@@ -1665,6 +1693,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     [swTask setArguments:aBinArgs];
     logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
     
+    qlinfo(@"[task][setTimeout]: %d",swTaskTimeoutValue);
     // Launch The NSTask
     @try {
         [swTask launch];
@@ -2084,7 +2113,7 @@ done:
     OSStatus delRes = [kc deleteKeyChain];
     if (delRes != noErr) {
         qlerror(@"Error deleteing keychain.");
-        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:@[]];
+        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:NULL];
         result = NO;
     }
     
@@ -2396,6 +2425,102 @@ done:
 	[self postStatus:progressStr];
 }
 
+#pragma mark - Provisioning
+
+- (void)createDirectory:(NSString *)path withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    NSFileManager *dfm = [NSFileManager defaultManager];
+    [dfm createDirectoryRecursivelyAtPath:path];
+    if (![dfm isDirectoryAtPath:path]) {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:[NSString stringWithFormat:@"%@ is not a directory.",path]};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+    }
+    reply(err);
+}
+
+- (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    id _data = nil;
+    
+    if ([[dataType lowercaseString] isEqualToString:@"string"]) {
+        _data = (NSString*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"dict"]) {
+        _data = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"array"]) {
+        _data = (NSArray*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    } else if ([[dataType lowercaseString] isEqualToString:@"bool"]) {
+        // Bools are wrapped in NSDict key = key
+        NSDictionary *x = (NSDictionary*) [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        _data = x[key];
+    } else {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file. Type not supported."};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+        reply(err);
+    }
+
+    MPFileCheck *fu = [MPFileCheck new];
+    
+    NSMutableDictionary *_pFile;
+    if ([fu fExists:MP_PROVISION_FILE]) {
+        _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
+    } else {
+        _pFile = [NSMutableDictionary new];
+    }
+    
+    if ([key isEqualToString:@"status"])
+    {
+        NSMutableArray *_status = [NSMutableArray new];
+        if (_pFile[@"status"]) {
+            _status = [_pFile[@"status"] mutableCopy];
+        }
+        [_status addObject:_data];
+        _pFile[key] = _status;
+    } else {
+        _pFile[key] = _data;
+    }
+    
+    /* This Fails for some reason.
+    // The Error is "The file couldn’t be saved because the specified URL type isn’t supported."
+     
+    NSURL *urlFilePath = [NSURL URLWithString:MP_PROVISION_FILE];
+    qlinfo(@"urlFilePath: %@",urlFilePath);
+    qlinfo(@"_pFile: %@",_pFile);
+    [_pFile writeToURL:urlFilePath error:&err];
+    if (err) {
+        qlerror(@"%@",err.localizedDescription);
+    }
+    */
+    
+    if (![_pFile writeToFile:MP_PROVISION_FILE atomically:NO]) {
+        NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file."};
+        err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
+    }
+
+    reply(err);
+}
+
+- (void)touchFile:(NSString *)filePath withReply:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if (![fm fileExistsAtPath:filePath]) {
+        [@"NA" writeToFile:filePath atomically:NO encoding:NSUTF8StringEncoding error:&err];
+    }
+    
+    reply(err);
+}
+
+- (void)rebootHost:(void(^)(NSError *error))reply
+{
+    NSError *err = nil;
+    //qlinfo(@"Provisioning issued a launchctl reboot.");
+    //[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
+    qlinfo(@"Provisioning issued a cli reboot.");
+    [NSTask launchedTaskWithLaunchPath:@"/sbin/reboot" arguments:@[]];
+    reply(err);
+}
 
 #pragma mark - Test Code
 
