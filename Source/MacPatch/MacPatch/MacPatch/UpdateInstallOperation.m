@@ -219,7 +219,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			
 		} else {
 
-			int allowRebPtch = [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? 1 : 0;
+			//int allowRebPtch = [[NSUserDefaults standardUserDefaults] boolForKey:@"allowRebootPatchInstalls"] ? 1 : 0;
+            int allowRebPtch = 1;
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
 				qlerror(@"%@",proxyError);
