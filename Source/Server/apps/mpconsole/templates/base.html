@@ -119,11 +119,7 @@
 								</li>
 								<li>
 									<a href="{{ url_for('patches.patchGroups') }}"><i class="fa fa-list fa-fw"></i> Patch Groups
-									{% if patchGroupCount %}
-										<small class="label pull-right btn-primary" id="labelPatchGroupCount">{{patchGroupCount}}</small>
-									{% else %}
-										<small class="label pull-right btn-primary" id="labelPatchGroupCount">0</small>
-									{% endif %}
+										<small class="label pull-right btn-primary" id="labelPatchGroupCount">{{ patchGroupCount or '0' }}</small>
 									</a>
 								</li>
 								<li>

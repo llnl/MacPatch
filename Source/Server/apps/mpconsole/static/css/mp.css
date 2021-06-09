@@ -17,7 +17,7 @@
 }
 
 .modal.modal-mid .modal-dialog {
-  width: 780px;
+	width: 780px !important;
 }
 
 .modal.modal-mid-wide .modal-dialog {
