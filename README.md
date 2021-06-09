@@ -1,4 +1,4 @@
-# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.5.x
+# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.6.x
 
 ## Overview
 MacPatch simplifies the act of patching and installing software on Mac OS X based systems. The client relies on using the built-in software update application for patching the Mac OS X system updates and it's own scan and patch engine for custom patches. 
@@ -19,7 +19,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 ## System Requirements
 
 ### Client 
-* Mac OS X 10.12.x and higher.
+* Mac OS X 10.12.x and higher. X86 and ARM (M1 Macs)
 
 ##### Server Requirements:
 * Mac OS X or Mac OS X Server 10.12 or higher 
