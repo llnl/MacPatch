@@ -52,11 +52,18 @@ NS_ASSUME_NONNULL_BEGIN
 
 
 /**
- Return an array of all software tasks installed
+ Return an array of all software task ids installed
 
  @return NSArray
  */
 - (NSArray *)retrieveInstalledSoftwareTasks;
+
+/**
+ Return an array of dictionaries of all software tasks installed
+
+ @return NSArray
+ */
+- (NSArray *)retrieveInstalledSoftwareTasksDict;
 
 /**
  Method answers if a software task is installed.

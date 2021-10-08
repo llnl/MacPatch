@@ -39,7 +39,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.0.7"
+#define APPVERSION	@"3.6.1.11"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -161,12 +161,15 @@ int main (int argc, char * argv[])
                 // FV Check
                 {"fvCheck"              ,no_argument        ,0, 'Z'},
                 
+                // Test DB
+                {"installedApps"        ,no_argument        ,0, 'E'},
+                
 
 				{0, 0, 0, 0}
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSMg:d:P:Lzpr::R::X:k:l:m:Kvbh:Z", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSMg:d:P:Lzpr::R::X:k:l:m:Kvbh:ZE", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -327,6 +330,9 @@ int main (int argc, char * argv[])
                 case 'Z':
                     a_Type = 8888;
                     break;
+                case 'E':
+                    a_Type = 7777;
+                    break;
 				case 'h':
 				case '?':
 				default:
@@ -396,10 +402,18 @@ int main (int argc, char * argv[])
 		AgentData *mpad;
 		MPAgent *mpAgent;
         MPProvision *mpProv;
-        
+        NSArray *hist;
+        MPClientDB *cdb;
 		int result = 1;
 		switch (a_Type)
 		{
+            case 7777:
+                // Test
+                cdb = [[MPClientDB alloc] init];
+                hist = [cdb retrieveInstalledSoftwareTasksDict];
+                qlinfo(@"%@",hist);
+                return 0;
+                break;
 			case 1:
 				// Client Checkin
 				mpac = [[AgentController alloc] init];
