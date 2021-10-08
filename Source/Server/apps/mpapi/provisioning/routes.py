@@ -174,11 +174,7 @@ class SWProvTasks(MPResource):
 			if agentSettings.patch_state is not None:
 				scope = agentSettings.patch_state
 
-			print( '----')
-			print( agentSettings.patch_state )
-			print('----')
-
-			qGet = MpProvisionTask.query.filter(MpProvisionTask.active == 1, MpProvisionTask.scope == scope).all()
+			qGet = MpProvisionTask.query.filter(MpProvisionTask.active == 1, MpProvisionTask.scope == scope).order_by(MpProvisionTask.order.asc()).all()
 
 			tasks = []
 			if qGet is not None:
@@ -224,7 +220,7 @@ class ProvisionData(MPResource):
 				if agentSettings.patch_state == 'QA':
 					scope = 0
 
-			qGetSW = MpProvisionTask.query.filter(MpProvisionTask.active == 1, MpProvisionTask.scope == scope).all()
+			qGetSW = MpProvisionTask.query.filter(MpProvisionTask.active == 1, MpProvisionTask.scope == scope).order_by(MpProvisionTask.order.asc()).all()
 			qGetSCPre = MpProvisionScript.query.filter(MpProvisionScript.active == 1, MpProvisionScript.scope == scope, MpProvisionScript.type == 0).order_by(MpProvisionScript.order.asc()).all()
 			qGetSCPst = MpProvisionScript.query.filter(MpProvisionScript.active == 1, MpProvisionScript.scope == scope, MpProvisionScript.type == 1).order_by(MpProvisionScript.order.asc()).all()
 

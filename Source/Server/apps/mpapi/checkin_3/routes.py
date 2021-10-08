@@ -140,6 +140,7 @@ class AgentBase(MPResource):
 		if qGroupSettings is not None:
 			versions["agent"] = qGroupSettings.rev_settings
 			versions["tasks"] = qGroupSettings.rev_tasks
+			versions["swrestrictions"] = qGroupSettings.restrictions_version
 
 		qMPServers = MpServerList.query.filter(MpServerList.listid == 1).first()
 		if qMPServers is not None:
