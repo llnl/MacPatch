@@ -25,7 +25,7 @@
 
 '''
     Script: MPSUSPatchSync
-    Version: 1.6.1
+    Version: 1.6.2
 
     Description: This Script read all of the patch information
     from the apple software update sucatlog files and post the
@@ -134,7 +134,6 @@ def readServerMetadata(metaURL):
     r = requests.get(metaURL)
     if r.status_code == requests.codes.ok:
 
-        #plist = plistlib.readPlistFromString(r.text.encode('utf-8'))
         plist = plistlib.loads(r.text.encode('utf-8'))
 
         if "CFBundleShortVersionString" in plist:
@@ -160,7 +159,6 @@ def readServerMetadata(metaURL):
                     if 'description' in localization:
                         descASCII = localization['description'].encode('ascii', 'ignore').decode('ascii')
                         description = base64.b64encode(descASCII)
-                        #description = base64.b64encode(str(localization['description']).encode('utf-8'))
 
         except Exception as e:
             logger.error("Error: %s" % e)
@@ -202,22 +200,30 @@ def readDistributionFile(distURL):
 
         # Get Title
         if distData['title'] == '' or distData['title'] == 'SU_TITLE':
-            _su_title = re.findall(r'(?<="SU_TITLE" =).?"(.*)(?=\"|\';)', _strings)
-            if len(_su_title) >= 1:
-                distData['title'] = _su_title[0]
+            if _strings is not None:
+                _su_title = re.findall(r'(?<="SU_TITLE" =).?"(.*)(?=\"|\';)', _strings)
+                if len(_su_title) >= 1:
+                    distData['title'] = _su_title[0]
+
+        if 'major-os-update=\"true\"' in r.text:
+            # This addresses new Apple format where restart info is not stored in dist file
+            # All major updates require restart
+            distData['restart'] = 'RequireRestart'
 
         # Get Version
         if distData['version'] == '' or distData['version'] == None or distData['version'] == 'SU_VERS':
-            _su_vers = re.findall(r'(?<="SU_VERS" =).?"(.*)(?=\"|\';)', _strings)
-            if len(_su_vers) >= 1:
-                distData['version'] = _su_vers[0]
+            if _strings is not None:
+                _su_vers = re.findall(r'(?<="SU_VERS" =).?"(.*)(?=\"|\';)', _strings)
+                if len(_su_vers) >= 1:
+                    distData['version'] = _su_vers[0]
 
         # Get Description
         if distData['description'] == None or distData['description'] == '':
-            _desc = re.findall(r'(?<="SU_DESCRIPTION" =).?\'(.*)(?<=</html>)', _strings, re.DOTALL | re.MULTILINE)
-            if len(_desc) >= 1:
-                descASCII = _desc[0].encode('ascii', 'ignore').decode('ascii')
-                distData['description'] = base64.b64encode(descASCII.encode('utf-8'))
+            if _strings is not None:
+                _desc = re.findall(r'(?<="SU_DESCRIPTION" =).?\'(.*)(?<=</html>)', _strings, re.DOTALL | re.MULTILINE)
+                if len(_desc) >= 1:
+                    descASCII = _desc[0].encode('ascii', 'ignore').decode('ascii')
+                    distData['description'] = base64.b64encode(descASCII.encode('utf-8'))
 
         # Some of apples patches now have a space where the version number
         # would go, patch wont install without the space
@@ -267,7 +273,6 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
     else:
         r = requests.get(sucatalog)
         if r.status_code == requests.codes.ok:
-            #prefs = plistlib.readPlistFromString(r.text.encode('utf-8'))
             prefs = plistlib.loads(r.text.encode('utf-8'))
 
     if not prefs:
@@ -319,11 +324,6 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
             df = readDistributionFile(patch['Distribution'])
             patch.update(df.copy())
 
-        # Deprecated
-        #if len(patch['ServerMetadataURL']) >= 1:
-        #   md = readServerMetadata(patch['ServerMetadataURL'])
-        #   patch.update(md.copy())
-
         # Make sure we dont have an empty patch name
         if len(patch['name']) <= 2:
             patch['name'] = patch['akey']
@@ -355,6 +355,8 @@ def readSUSCatalogFile(sucatalog, filterList=[], asFile=False):
         if containsFilterItem == False:
             logger.info("Adding patch: " + str(patch['suname']))
             print(("Adding patch: " + str(patch['suname'])))
+            if 'Sur-' in patch['suname']:
+                print("{}".format(patch))
             patches.append(patch)
         else:
             logger.info("Excluding patch: " + str(patch['suname']))
