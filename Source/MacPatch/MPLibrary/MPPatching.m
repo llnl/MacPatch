@@ -643,7 +643,14 @@ typedef enum {
 {
 	qldebug(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
     qldebug(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
-	
+    
+    // If MacOS 11 or later than filter out Apple Update
+    // We will open the apple sys prefs SU pane
+    if (@available(macOS 11.0, *)) {
+        NSPredicate *thirdPred = [NSPredicate predicateWithFormat:@"(type == %@)", @"Third"];
+        approvedPatches = [approvedPatches filteredArrayUsingPredicate:thirdPred];
+    }
+
 	BOOL hasUserLoggedIn = [MPSystemInfo isUserLoggedIn];
 	BOOL canInstallRebootPatches = NO;
 	
@@ -657,7 +664,7 @@ typedef enum {
 	
 	int i;
 	BOOL installResult = NO;
-	
+    
 	int patchesToInstall = (int)approvedPatches.count;
 	int patchesInstalled = 0;
 	int patchInstallErrors = 0;
@@ -670,7 +677,7 @@ typedef enum {
 	// Reboot Patch Install Vars
 	if (!hasUserLoggedIn) canInstallRebootPatches = YES; //If no user logged in
 	if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
-	
+    
 	MPClientDB *cdb = [MPClientDB new];
 	qlinfo(@"Begin installing patches.");
 	for (i = 0; i < approvedPatches.count; i++)
@@ -1014,14 +1021,18 @@ typedef enum {
 			qlinfo(@"Starting install for %@",_patch[@"patch"]);
 			qldebug(@"Apple Dict:%@",_patch);
 			[self iLoadStatus:@"Begin: %s",_patch[@"patch"]];
-			
+
 			mpAsus = [MPAsus new];
             mpAsus.delegate = self;
             
 			if ([_patch[@"hasCriteria"] boolValue] == NO || !_patch[@"hasCriteria"])
 			{
 				qlinfo(@"hasCriteria=No");
-				installResult = [mpAsus installAppleSoftwareUpdate:_patch[@"patch"]];
+                if (_patch[@"forceAppleReboot"]) {
+                    
+                } else {
+                    installResult = [mpAsus installAppleSoftwareUpdate:_patch[@"patch"]];
+                }
 				qlinfo(@"installResult(1): %@",installResult ? @"Yes":@"No");
 			}
 			else

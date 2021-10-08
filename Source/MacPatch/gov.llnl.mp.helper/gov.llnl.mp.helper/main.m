@@ -18,7 +18,7 @@ int main(int argc, const char * argv[])
     {
         if (argc >= 2) {
             if (strcmp(argv[1], "-v") == 0) {
-                printf("3.6.0\n");
+                printf("3.6.1\n");
                 return (0);
             }
         }

@@ -8,9 +8,6 @@
       location = "group:MPClientStatus/MPClientStatus.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:MPLoginAgent/MPLoginAgent.xcodeproj">
-   </FileRef>
-   <FileRef
       location = "group:gov.llnl.mp.helper/gov.llnl.mp.helper.xcodeproj">
    </FileRef>
    <FileRef

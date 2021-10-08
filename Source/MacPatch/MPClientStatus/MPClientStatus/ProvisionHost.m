@@ -203,8 +203,6 @@
         }
     }
     
-    
-    
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
             qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);;

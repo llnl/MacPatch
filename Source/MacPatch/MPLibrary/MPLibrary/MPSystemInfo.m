@@ -30,6 +30,7 @@
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
+#import "MPNSTask.h"
 
 typedef struct kinfo_proc kinfo_proc;
 
@@ -315,8 +316,7 @@ done:
 	BOOL result = YES;
 	
 	SCDynamicStoreRef store = SCDynamicStoreCreate(NULL, (CFStringRef)@"LocalUserLoggedIn", NULL, NULL);
-	CFStringRef consoleUserName;
-	consoleUserName = SCDynamicStoreCopyConsoleUser(store, NULL, NULL);
+	CFStringRef consoleUserName = SCDynamicStoreCopyConsoleUser(store, NULL, NULL);
 	NSString *_consoleUserName = (__bridge NSString *)consoleUserName;
 	if (consoleUserName != NULL)
 	{

@@ -463,7 +463,6 @@
         *err = error;
     }
     return [result copy];
-    //[self->_tabBar selectNextTabViewItem:NULL];
 }
 
 - (void)writeStatusToHTML:(NSString *)status
@@ -856,12 +855,14 @@
                     qlerror(@"Error installing software task %@",swTask[@"Software"][@"name"]);
                     if (error) {
                         qlerror(@"Error: %@",error.localizedDescription);
-                    } else {
+                    }
+                    /*
+                    else {
                         error = [NSError errorWithDomain:@"InstallError"
                                                                  code:1
                                                              userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Failed to install software task.", nil)}];
                     }
-                    
+                    */
                 }
                 
                 dispatch_semaphore_signal(sem);

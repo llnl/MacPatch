@@ -11,10 +11,11 @@
 
 @class MPAsus;
 @class MPPatching;
+@class MPNSTask;
 
-@interface XPCWorker : NSObject <MPAsusDelegate, MPPatchingDelegate>
+@interface XPCWorker : NSObject <MPAsusDelegate, MPPatchingDelegate, MPNSTaskDelegate>
 {
-    NSTask              *swTask;
+    NSTask              *nsTask;
     NSPipe              *pipe_task;
     NSFileHandle        *fh_task;
     NSTimer             *swTaskTimer;

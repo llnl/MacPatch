@@ -87,7 +87,6 @@ NSInteger const TaskErrorTimedOut = 900001;
 		[self setUseMigrationConfig:NO];
 		[self setVerifyFingerprint:NO];
 		
-		mpAsus = [[MPAsus alloc] init];
 		mpDataMgr = [[MPDataMgr alloc] init];
 	}
 	return self;
@@ -398,6 +397,19 @@ done:
 
 - (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err
 {
+    NSError *aErr = nil;
+    NSString *resultString;
+    MPNSTask *task = [MPNSTask new];
+    task.taskTimeoutValue = 0;
+    resultString = [task runTaskWithBinPath:aBinPath args:aArgs environment:aEnv error:&aErr];
+    if (err != NULL) *err = aErr;
+    
+    return resultString;
+}
+
+/*
+- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err
+{
 	[self setTaskTimedOut:NO];
 	NSString *resultString;
 	NSTask *task = [[NSTask alloc] init];
@@ -502,7 +514,7 @@ done:
 	
 	return resultString;
 }
-
+*/
 - (NSString *)installPkgWithResult:(NSString *)pkgPath target:(NSString *)aTarget error:(NSError **)err
 {
 	NSString *result;
@@ -514,6 +526,7 @@ done:
 	return result;
 }
 
+/*
 - (void)taskTimeoutThread
 {
 	@autoreleasepool
@@ -537,7 +550,7 @@ done:
 	[self.taskTimeoutTimer invalidate];
 	[self setTaskTimedOut:YES];
 }
-
+*/
 #pragma mark Migration methods
 
 - (BOOL)scanForMigrationConfig

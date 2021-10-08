@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,7 +15,7 @@
         <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" toolbarStyle="expanded" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="335" y="390" width="840" height="700"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
             <value key="minSize" type="size" width="840" height="600"/>
             <value key="maxSize" type="size" width="1000" height="1600"/>
             <view key="contentView" id="EiT-Mj-1SZ">
@@ -130,7 +130,7 @@
                             </searchFieldCell>
                         </searchField>
                     </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="6190F5E0-63F4-4702-9947-898BCB034095" label="" paletteLabel="" tag="-1" id="H9S-Dv-cdX">
+                    <toolbarItem implicitItemIdentifier="6190F5E0-63F4-4702-9947-898BCB034095" label="" paletteLabel="" tag="-1" title="Box" id="H9S-Dv-cdX">
                         <nil key="toolTip"/>
                         <size key="minSize" width="120" height="22"/>
                         <size key="maxSize" width="120" height="22"/>
@@ -162,7 +162,7 @@
         <window title="Reboot System" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="HVp-h7-rzM">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
             <view key="contentView" id="LsG-PG-hCS">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -232,7 +232,7 @@
                     </textField>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-1865.5" y="-1057"/>
+            <point key="canvasLocation" x="-1884" y="-905"/>
         </window>
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
@@ -254,7 +254,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="843" width="495" height="197"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
             <view key="contentView" id="Bdb-Ky-3Ye">
                 <rect key="frame" x="0.0" y="0.0" width="495" height="197"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -306,13 +306,13 @@
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="-1662.5" y="-595.5"/>
+            <point key="canvasLocation" x="-1904" y="-1215"/>
         </window>
         <customObject id="YLy-65-1bz" customClass="NSFontManager"/>
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="hWJ-We-6J9" userLabel="Reboot Required FileVault">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="383"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
             <view key="contentView" id="Cdu-ql-HYh">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="383"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -709,7 +709,7 @@ DQ
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="RL9-pv-Gy5">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="194"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
             <view key="contentView" id="oIZ-6f-v09">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="194"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -780,7 +780,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
         <image name="HistoryTemplate" width="64" height="64"/>
         <image name="MacPatchTemplate" width="64" height="64"/>
         <image name="UpdatesTemplate" width="64" height="64"/>
-        <image name="alertImage" width="64" height="53"/>
+        <image name="alertImage" width="64" height="53.5"/>
         <image name="appImage" width="128" height="128"/>
         <image name="appstoreTemplate" width="64" height="64"/>
     </resources>

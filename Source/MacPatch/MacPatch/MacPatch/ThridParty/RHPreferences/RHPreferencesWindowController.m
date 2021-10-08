@@ -104,6 +104,10 @@ static const CGFloat RHPreferencesWindowControllerResizeAnimationDurationPer100P
         
     }
     
+    if (@available(macOS 11.0, *)) {
+        [[self window] setToolbarStyle:NSWindowToolbarStyleExpanded];
+    }
+    
     return self;
 }
 

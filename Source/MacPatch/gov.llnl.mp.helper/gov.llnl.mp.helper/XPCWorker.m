@@ -388,9 +388,34 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	double patchProgress = 0.0;
 	NSInteger result = 0;
 	MPPatching *patching = [MPPatching new];
-	
+    
+    NSMutableArray *_patches = [NSMutableArray arrayWithArray:patches];
+    for (NSDictionary *d in _patches) {
+        if ([d[@"type"] isEqualToString:@"Apple"]) {
+            if ([d[@"restart"] isEqualToString:@"Yes"]) {
+                NSMutableDictionary *m = [d mutableCopy];
+                [m setObject:@(999) forKey:@"order"];
+                [_patches replaceObjectAtIndex:[_patches indexOfObject:d] withObject:m];
+            }
+        }
+    }
+    
+    //Sort the patches and force Apple reboot to last...
+    NSSortDescriptor *descriptor = [[NSSortDescriptor alloc] initWithKey:@"order" ascending:YES];
+    NSMutableArray *_sortedPatches = [NSMutableArray arrayWithArray:[_patches sortedArrayUsingDescriptors:@[descriptor]]];
+    
+    // Take last item of the Array add force reboot key
+    // Make sure its a Apple Patch and a reboot patch
+    NSMutableDictionary *lastPatch = [[_sortedPatches lastObject] mutableCopy];
+    if ([lastPatch[@"type"] isEqualToString:@"Apple"]) {
+        if ([lastPatch[@"restart"] isEqualToString:@"Yes"]) {
+            [lastPatch setObject:@"1" forKey:@"forceAppleReboot"];
+        }
+        [_sortedPatches replaceObjectAtIndex:[_sortedPatches indexOfObject:[_sortedPatches lastObject]] withObject:lastPatch];
+    }
+    
 	[self postPatchStatus:@"Installing all patches ..."];
-	for (NSDictionary *patch in patches)
+	for (NSDictionary *patch in _sortedPatches)
 	{
 		qlinfo(@"Install Patch: %@",patch[@"patch"]);
 		qldebug(@"Patch: %@",patch);
@@ -1095,7 +1120,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     NSDictionary *wsRes = @{@"tuuid":swItem[@"id"],
                             @"suuid":[swItem valueForKeyPath:@"Software.sid"],
                             @"action":@"i",
-                            @"result":[NSString stringWithFormat:@"%d",result],
+                            @"result":[NSString stringWithFormat:@"%d",(int)result],
                             @"resultString":@""};
     MPRESTfull *mpr = [MPRESTfull new];
     err = nil;
@@ -1325,7 +1350,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	{
 		MPClientDB *db = [MPClientDB new];
 		InstalledSoftware *_swTask = [db getSoftwareTaskUsingID:swTaskID];
-		
+        qldebug(@"_swTask[%@]: %@",swTaskID,[_swTask.uninstall decodeBase64AsString]);
 		if (!_swTask) {
 			qlerror(@"Software task id (%@) could not be found. Uninstall will not occure.",swTaskID);
 			reply(1);
@@ -1598,6 +1623,15 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     reply(err,res);
 }
 
+- (void)removeFile:(NSString *)aFile withReply:(void(^)(NSInteger result))reply
+{
+    int res = 0;
+    NSFileManager *fm = [NSFileManager defaultManager];
+    BOOL result = [fm removeFileIfExistsAtPath:aFile];
+    if (!result) res = 1;
+    reply(res);
+}
+
 
 #pragma mark • Client Checkin
 
@@ -1643,25 +1677,11 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 
 // Helpers
-
 - (int)runTask:(NSString *)aBinPath binArgs:(NSArray *)aBinArgs environment:(NSString *)env
 {
-    NSString		*tmpStr;
-    NSMutableData	*data;
-    NSData			*dataChunk = nil;
-    NSException		*error = nil;
-	NSCharacterSet  *newlineSet;
-    
-    //[self setTaskIsRunning:YES];
-    //[self setTaskTimedOut:NO];
-    
+    MPNSTask *task = [MPNSTask new];
+    task.taskTimeoutValue = swTaskTimeoutValue;
     int taskResult = -1;
-    
-    swTask = [[NSTask alloc] init];
-    NSPipe *aPipe = [NSPipe pipe];
-    
-    [swTask setStandardOutput:aPipe];
-    [swTask setStandardError:aPipe];
     
     // Parse the Environment variables for the install
     NSDictionary *defaultEnvironment = [[NSProcessInfo processInfo] environment];
@@ -1686,17 +1706,77 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
         }
     }
     
-    [swTask setEnvironment:environment];
     logit(lcl_vDebug,@"[task][environment]: %@",environment);
-    [swTask setLaunchPath:aBinPath];
     logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
-    [swTask setArguments:aBinArgs];
+    logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
+    qlinfo(@"[task][setTimeout]: %d",swTaskTimeoutValue);
+    
+    NSString *result;
+    NSError *error = nil;
+    result = [task runTaskWithBinPath:aBinPath args:aBinArgs environment:environment error:&error];
+    if (error) {
+        qlerror(@"%@",error.localizedDescription);
+    } else {
+        taskResult = task.taskTerminationStatus;
+    }
+
+    return taskResult;
+}
+
+/*
+- (int)runTaskOld:(NSString *)aBinPath binArgs:(NSArray *)aBinArgs environment:(NSString *)env
+{
+    NSString		*tmpStr;
+    NSMutableData	*data;
+    NSData			*dataChunk = nil;
+    NSException		*error = nil;
+	NSCharacterSet  *newlineSet;
+    
+    //[self setTaskIsRunning:YES];
+    //[self setTaskTimedOut:NO];
+    
+    int taskResult = -1;
+    
+    nsTask = [[NSTask alloc] init];
+    NSPipe *aPipe = [NSPipe pipe];
+    
+    [nsTask setStandardOutput:aPipe];
+    [nsTask setStandardError:aPipe];
+    
+    // Parse the Environment variables for the install
+    NSDictionary *defaultEnvironment = [[NSProcessInfo processInfo] environment];
+    NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithDictionary:defaultEnvironment];
+    [environment setObject:@"YES" forKey:@"NSUnbufferedIO"];
+    [environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    
+    if ([env isEqualToString:@"NA"] == NO && [[env trim] length] > 0)
+    {
+        NSArray *l_envArray;
+        NSArray *l_envItems;
+        l_envArray = [env componentsSeparatedByString:@","];
+        for (id item in l_envArray) {
+            l_envItems = nil;
+            l_envItems = [item componentsSeparatedByString:@"="];
+            if ([l_envItems count] == 2) {
+                logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+                [environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
+            } else {
+                logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+            }
+        }
+    }
+    
+    [nsTask setEnvironment:environment];
+    logit(lcl_vDebug,@"[task][environment]: %@",environment);
+    [nsTask setLaunchPath:aBinPath];
+    logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
+    [nsTask setArguments:aBinArgs];
     logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
     
     qlinfo(@"[task][setTimeout]: %d",swTaskTimeoutValue);
     // Launch The NSTask
     @try {
-        [swTask launch];
+        [nsTask launch];
         // If timeout is set start it ...
         if (swTaskTimeoutValue != 0) {
             [NSThread detachNewThreadSelector:@selector(taskTimeoutThread) toTarget:self withObject:nil];
@@ -1745,18 +1825,18 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     if (swTaskTimedOut == YES) {
         qlerror(@"Task was terminated due to timeout.");
         [NSThread sleepForTimeInterval:5.0];
-        [swTask terminate];
+        [nsTask terminate];
         taskResult = 1;
         goto done;
     }
     
     if([data length] && error == nil)
     {
-        if ([swTask isRunning])
+        if ([nsTask isRunning])
         {
             for (int i = 0; i < 30; i++)
             {
-                if ([swTask isRunning]) {
+                if ([nsTask isRunning]) {
                     [NSThread sleepForTimeInterval:1.0];
                 } else {
                     break;
@@ -1764,10 +1844,10 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
             }
             // Task should be complete
             qlinfo(@"Terminate Software Task.");
-            [swTask terminate];
+            [nsTask terminate];
         }
         
-        int status = [swTask terminationStatus];
+        int status = [nsTask terminationStatus];
         qlinfo(@"swTask terminationStatus: %d",status);
         if (status == 0) {
             taskResult = 0;
@@ -1775,7 +1855,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
             taskResult = 1;
         }
     } else {
-        logit(lcl_vError,@"Install returned error. Code:[%d]",[swTask terminationStatus]);
+        logit(lcl_vError,@"Install returned error. Code:[%d]",[nsTask terminationStatus]);
         taskResult = 1;
     }
     
@@ -1814,8 +1894,9 @@ done:
     qlinfo(@"Task timedout, killing task.");
     [swTaskTimer invalidate];
     swTaskTimedOut = YES;
-    [swTask terminate];
+    [nsTask terminate];
 }
+ */
 
 - (void)changeOwnershipOfApp:(NSString *)aApp owner:(NSString *)aOwner group:(NSString *)aGroup error:(NSError **)err
 {
@@ -2053,6 +2134,60 @@ done:
     
     NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
     "/usr/bin/fdesetup authrestart -delayminutes -1 -verbose -inputplist <<EOF \n"
+    "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n"
+    "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \n"
+    "<plist version=\"1.0\"> \n"
+    "<dict> \n"
+    "    <key>Username</key> \n"
+    "    <string>%@</string> \n"
+    "    <key>Password</key> \n"
+    "    <string>%@</string> \n"
+    "</dict></plist>\n"
+    "EOF",authData[@"userName"],authData[@"userPass"]];
+    
+    [script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+    
+    MPScript *mps = [MPScript new];
+    BOOL res = [mps runScript:script];
+    if (!res) {
+        qlerror(@"bypassFileVaultForRestart script failed to run.");
+    } else {
+        result = 0;
+    }
+    // Keep for debugging
+    BOOL keepScript = NO;
+    if (!keepScript)
+    {
+        if ([fm fileExistsAtPath:@"/private/var/tmp/authScript"]) {
+            err = nil;
+            [fm removeItemAtPath:@"/private/var/tmp/authScript" error:&err];
+            if (err) {
+                qlerror(@"Error removing authScript");
+            }
+        }
+    }
+
+    // Quick Sleep before the reboot
+    [NSThread sleepForTimeInterval:1.0];
+    reply(err,result);
+}
+
+- (void)runAuthRestartWithReply:(void(^)(NSError *error, NSInteger result))reply
+{
+    NSInteger result = 1;
+    NSDictionary *authData = nil;
+    NSError *err = nil;
+    MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+    MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+    if (!err) {
+        authData = [pi toDictionary];
+    } else {
+        qlerror(@"Error getting saved FileVault auth data.");
+        reply(err,result);
+    }
+    
+    NSString *script = [NSString stringWithFormat:@"#!/bin/bash \n"
+    "/usr/bin/fdesetup authrestart -delayminutes 0 -verbose -inputplist <<EOF \n"
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?> \n"
     "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\"> \n"
     "<plist version=\"1.0\"> \n"
@@ -2515,8 +2650,6 @@ done:
 - (void)rebootHost:(void(^)(NSError *error))reply
 {
     NSError *err = nil;
-    //qlinfo(@"Provisioning issued a launchctl reboot.");
-    //[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
     qlinfo(@"Provisioning issued a cli reboot.");
     [NSTask launchedTaskWithLaunchPath:@"/sbin/reboot" arguments:@[]];
     reply(err);

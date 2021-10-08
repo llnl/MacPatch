@@ -394,16 +394,13 @@
 	task = [[NSTask alloc] init];
 	[task setLaunchPath:@"/System/Library/CoreServices/RemoteManagement/ARDAgent.app/Contents/Support/sysinfocachegen"];
 	
-	NSArray *arguments;
-	arguments = [NSArray arrayWithObjects:@"-p",spFileName,nil];
+	NSArray *arguments = @[@"-p",spFileName];
 	[task setArguments: arguments];
 	
-	NSPipe *pipe;
-	pipe = [NSPipe pipe];
+	NSPipe *pipe = [NSPipe pipe];
 	[task setStandardOutput: pipe];
 	
-	NSFileHandle *file;
-	file = [pipe fileHandleForReading];
+	NSFileHandle *file = [pipe fileHandleForReading];
 	
 	[task launch];
 	

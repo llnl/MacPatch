@@ -52,7 +52,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (nonatomic, assign) int countRebootPatch;
 
 @property (weak) IBOutlet NSScrollView *scrollview;
-@property (nonatomic) NSTask *task;
 
 // XPC Connection
 @property (atomic, strong, readwrite) NSXPCConnection *workerConnection;
@@ -169,7 +168,37 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				// If we have content to add, add it
 				if (approvedPatches && approvedPatches.count > 0)
 				{
-					[self->_content addObjectsFromArray:approvedPatches];
+                    NSPredicate *thirdPred = [NSPredicate predicateWithFormat:@"(type == %@)", @"Third"];
+                    NSPredicate *applePred = [NSPredicate predicateWithFormat:@"(type == %@)", @"Apple"];
+                    
+                    NSArray *apple_patches = [approvedPatches filteredArrayUsingPredicate:applePred];
+                    NSMutableArray *patches = [[approvedPatches filteredArrayUsingPredicate:thirdPred] mutableCopy];
+                    
+                    if (apple_patches.count >= 1) {
+                        int size = 0;
+                        NSMutableString *descriptionStr = [NSMutableString new];
+                        for (NSDictionary *ad in apple_patches) {
+                            NSString *strSize = [ad[@"size"] stringByReplacingOccurrencesOfString:@"K" withString:@""];
+                            size = size + [strSize intValue];
+                            qlinfo(@"CEH append == %@",ad[@"patch"]);
+                            if (apple_patches.lastObject == ad) {
+                                [descriptionStr appendFormat:@"%@",ad[@"patch"]];
+                            } else {
+                                [descriptionStr appendFormat:@"%@,",ad[@"patch"]];
+                            }
+                        }
+                        //[descriptionStr appendString:@"\nClicking the Install button will open Software Update. Use the built-in software to install the Apple updates. If a OS Upgrade is present please click the \"More info...\" link under Other updates are available, to show the patches."];
+                        [descriptionStr appendString:@"\nClicking the Install button will open Software Update to install the Apple updates. If a OS Upgrade is present please click the \"More info...\" link under Other updates are available, to show the patches."];
+                        NSMutableDictionary *mad = [apple_patches[0] mutableCopy];
+                        [mad setObject:@"Apple Patches" forKey:@"patch"];
+                        [mad setObject:descriptionStr forKey:@"description"];
+                        [mad setObject:@"1.0" forKey:@"version"];
+                        [mad setObject:[NSString stringWithFormat:@"%dK",size] forKey:@"size"];
+                        [patches addObject:mad];
+                    }
+                    
+                    
+					[self->_content addObjectsFromArray:[patches copy]];
 				} else {
 					[self->_content addObjectsFromArray:[NSArray array]];
 				}
@@ -199,31 +228,39 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     __block int rebootPatchCount = 0;
     __block int allowInstallInt = 1;
-	__block BOOL hasRebootPatch = NO;
-	
-	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
-    BOOL allowInstall = YES;
-	//if (allowInstall) allowInstallInt = 1;
-	
+    __block BOOL hasAppleRebootPatch = NO;
+    __block BOOL hasApplePatch = NO;
+    
     for (int i = 0; i < _tableView.numberOfRows; i++) {
         UpdatesCellView *_cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-        if ([_cell.rowData[@"restart"] isEqualToString:@"Yes"])
-        {
+        qlinfo(@"_cell.rowData: %@",_cell.rowData);
+        if ([_cell.rowData[@"restart"] isEqualToString:@"Yes"]) {
             rebootPatchCount++;
+            if ([_cell.rowData[@"type"] isEqualToString:@"Apple"]) {
+                hasAppleRebootPatch = YES;
+            }
+        }
+        if ([_cell.rowData[@"type"] isEqualToString:@"Apple"]) {
+            hasApplePatch = YES;
         }
     }
     
-    
+    qlinfo(@"rebootPatchCount: %d",rebootPatchCount);
     if (rebootPatchCount >= 1)
     {
-        NSString *title = @"Patch requires reboot...";
-        if (rebootPatchCount >= 2) title = @"Patches requires reboot...";
         NSAlert *alert = [[NSAlert alloc] init];
+        NSString *title = @"Patch requires reboot...";
+        if (rebootPatchCount >= 2) title = @"Patches require reboot...";
         [alert addButtonWithTitle:@"Patch"];
         [alert addButtonWithTitle:@"Cancel"];
         [alert setMessageText:title];
-        [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data."];
+        
+        if (hasAppleRebootPatch) {
+            [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data. System will reboot immediately after installs have occurred."];
+        } else {
+            [alert setInformativeText:@"Please save and exit any applications that are going to be patched, to prevent any loss of data."];
+        }
+
         if([alert runModal] == NSAlertFirstButtonReturn) {
             [[NSUserDefaults standardUserDefaults] setInteger:1 forKey:@"AlertOnRebootPatch"];
             [[NSUserDefaults standardUserDefaults] synchronize];
@@ -238,22 +275,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	for (int i = 0; i < _tableView.numberOfRows; i++)
 	{
 		UpdatesCellView *cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-		if ([cell.rowData[@"restart"] isEqualToString:@"No"] || allowInstall) {
-			[allPatches addObject:cell.rowData];
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[cell.updateButton setHidden:YES];
-			});
-		} else if ([cell.rowData[@"restart"] isEqualToString:@"Yes"]) {
-			hasRebootPatch = YES;
-            rebootPatchCount++;
-			dispatch_async(dispatch_get_main_queue(), ^{
-				[cell.updateButton setTitle:@"On Reboot"];
-				[cell.updateButton setEnabled:NO];
-			});
-		} else {
-			qlerror(@"Error, restart attribute value was not set properly.");
-			qlerror(@"Row Data: %@",cell.rowData);
-		}
+        [allPatches addObject:cell.rowData];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [cell.updateButton setHidden:YES];
+        });
 	}
  
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -272,8 +297,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				qlerror(@"%@",proxyError);
 			}] installPatches:(NSArray *)allPatches userInstallRebootPatch:allowInstallInt withReply:^(NSError *error, NSInteger resultCode) {
 
-                
-                [self->_task terminate];
+
                 [[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleDataAvailableNotification object:nil];
                 
 				if (error) {
@@ -291,21 +315,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 					
 					qlerror(@"Error[%ld] installing patches.", resultCode);
 				}
-				
-				dispatch_async(dispatch_get_main_queue(), ^{
-					if (hasRebootPatch) {
-						[self showRebootPatchActions];
-					}
-				});
-				
-				dispatch_async(dispatch_get_main_queue(), ^{
-					[self->_scanButton setEnabled:YES];
-					[self resizeTableViewToDefaultSize];
-					if (allowInstallInt) {
-						AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
-						[appDelegate showRestartWindow:0];
-					}
-				});
+                
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self->_scanButton setEnabled:YES];
+                    [self resizeTableViewToDefaultSize];
+                    
+                    if (rebootPatchCount >= 1) {
+                        if (!hasAppleRebootPatch) { // Dont show on apple patch that needs reboot.
+                            AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+                            [appDelegate showRestartWindow:0];
+                        }
+                    }
+                });
+                
 			}];
 		}
 	}];

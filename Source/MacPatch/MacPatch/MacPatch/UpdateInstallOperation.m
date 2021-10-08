@@ -206,7 +206,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)runPatchInstall
 {
-	[self postPatchStatus:@"Start Patch Install" ];
+    qlinfo(@"Start Patch Install");
+    qlinfo(@"Patch: %@",self->patch);
+    
+	[self postPatchStatus:@"Start Patch Install"];
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
@@ -234,7 +237,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 					qlerror(@"%@",error.localizedDescription);
 				}
 				NSString *_needsReboot = self->patch[@"restart"];
-				
+                qlinfo(@"_needsReboot = %@", _needsReboot);
 				if (resultCode == 0 || resultCode == 1000) // 1000 is a signal for patch that needs a halt
 				{
 					qlinfo(@"Install was sucessful");

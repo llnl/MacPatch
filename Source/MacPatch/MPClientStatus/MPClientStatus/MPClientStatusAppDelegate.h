@@ -101,6 +101,7 @@
 @property (unsafe_unretained) IBOutlet NSMenuItem *selfVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *MPVersionInfoMenuItem;
 @property (unsafe_unretained) IBOutlet NSMenuItem *checkAgentAndUpdateMenuItem;
+@property (unsafe_unretained) IBOutlet NSMenuItem *fvAuthRestartMenuItem;
 @property (nonatomic, assign) BOOL asusAlertOpen;
 
 // Client Info

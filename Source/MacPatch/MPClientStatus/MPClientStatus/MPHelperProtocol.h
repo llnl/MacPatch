@@ -24,7 +24,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
-// Rev 41
+// Rev 43
 
 #import <Foundation/Foundation.h>
 
@@ -149,7 +149,7 @@ enum {
 // Misc     -------------------------------
 // ----------------------------------------
 - (void)unzip:(NSString *_Nonnull)aFile withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
-
+- (void)removeFile:(NSString *_Nonnull)aFile withReply:(nullable void(^)(NSInteger result))reply;
 
 // ----------------------------------------
 // Client Checkin     ---------------------
@@ -192,13 +192,16 @@ enum {
 - (void)setAuthrestartDataForUser:(NSString * _Nullable )userName userPass:(NSString * _Nullable)userPass useRecoveryKey:(BOOL)useKey  withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
 - (void)enableAuthRestartWithReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+- (void)runAuthRestartWithReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
 
 - (void)getAuthRestartDataWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nullable result))reply;
 - (void)clearAuthrestartData:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
 - (void)fvAuthrestartAccountIsValid:(nullable void(^)(NSError * _Nullable error, BOOL result))reply;
 - (void)getFileVaultUsers:(nullable void(^)(NSArray * _Nullable users))reply;
 
-// Provisioning
+// ----------------------------------------
+// Provisioning                  ----------
+// ----------------------------------------
 - (void)createDirectory:(NSString * _Nullable )path withReply:(nullable void(^)(NSError * _Nullable error))reply;
 //- (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(id _Nullable )data withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(NSData * _Nullable)data dataType:(NSString * _Nullable)dataType withReply:(nullable void(^)(NSError * _Nullable error))reply;

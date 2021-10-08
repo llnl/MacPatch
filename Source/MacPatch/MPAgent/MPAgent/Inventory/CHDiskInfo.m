@@ -62,7 +62,7 @@
     
     NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath:@"/usr/sbin/diskutil"];
-    [task setArguments:[NSArray arrayWithObjects:@"list",@"-plist",nil]];
+    [task setArguments:@[@"list",@"-plist"]];
     [task setStandardOutput:file];
     [task launch];
     [task waitUntilExit];
