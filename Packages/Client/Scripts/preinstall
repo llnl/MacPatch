@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Installer
-# ver 2.2
+# ver 2.3
 # Created By Charles Heizer
 # LLNL
 #
@@ -27,6 +27,11 @@ if [ $? == 1 ]; then
 		rm -f "/private/tmp/clientStatusPID"
 	fi
 	echo $clientStatusPID > /private/tmp/clientStatusPID
+fi
+
+macPatchPID=$(ps -ae | grep MacPatch.app | grep -v grep | awk '{ print $1 }')
+if [ ! -z "$macPatchPID" ]; then
+	/bin/kill -9 $macPatchPID
 fi
 
 # ***************************************************************************************

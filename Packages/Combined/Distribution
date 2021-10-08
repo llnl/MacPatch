@@ -12,7 +12,6 @@
             my.result.type = 'Fatal';
             return false;
         } else {
-        
             if (system.files.fileExistsAtPath('/Library/MacPatch/Client/.mpVersion.plist')) {
                 mpData = system.files.plistAtPath('/Library/MacPatch/Client/.mpVersion.plist');
                 if ( !(system.compareVersions('@AGENTVER@', mpData['version']) > 0) ) {
@@ -20,7 +19,7 @@
                     my.result.message = 'This software is already installed. No install will occur.';
                     my.result.type = 'Fatal';
                     return false;
-                }   
+                }
             }
         }
         return true;

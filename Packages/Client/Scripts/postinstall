@@ -367,4 +367,8 @@ if [ -f "/private/tmp/clientStatusPID" ]; then
 	fi
 fi
 
+# Show Whats New
+/usr/bin/touch /private/tmp/.mpResetWhatsNew
+chmod 777 /private/tmp/.mpResetWhatsNew
+
 exit 0;
