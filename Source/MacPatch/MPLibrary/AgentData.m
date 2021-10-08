@@ -143,8 +143,12 @@
 	} else if ([data isKindOfClass:[NSString class]]) {
 		result = [CocoaSecurity aesEncrypt:data key:aesKey iv:aesIv];
 	}
-	[d setObject:result.base64 forKey:aKey];
-	[NSKeyedArchiver archiveRootObject:d toFile:AGENT_REG_FILE];
+    if (result) {
+        [d setObject:result.base64 forKey:aKey];
+        [NSKeyedArchiver archiveRootObject:d toFile:AGENT_REG_FILE];
+    } else {
+        qlerror(@"Unable to write data for key.");
+    }
 }
 
 - (void)echoAgentData
