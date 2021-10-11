@@ -1,24 +1,14 @@
 MacPatch - Changes
 
-MacPatch v3.5.0.1
+MacPatch v3.6.1.11
 
 * Client
-- Add support to retry a failed Apple Patch, only once per session
-- Add FileValut authrestart support the MacPatch.app. Can use Users account and password, or user account and recovery key.
-- Add collection of MDM enrollment
-- Add collection of DEP enrollment
-- Add tracking for when an agent is installed
-- Add Notifications will now open to the location of the task (e.g. Patches needed will open to updates and begin a scan)
+- Add support to MPClientStatus for FileVault authenticated restarts
+- Remove support for installing Apple Patches, now opens System Prefs
+- Fix Timer for Software Restrictions
 
 * Server
-- Cleaned up UI on privleges 
-- Approved patch list is now dynamic, no longer need to save patch group on changes
-- Software group is now dynamic, no longer need to save software group on changes
-- Fix issue with large file uploads
-- Fixed issue where proxy server data was not added to agent config
-- Add support to the API for min agent version
+- Fix Software Restrictions Revisions not getting incremented
+- Fix Software Restrictions Remove from Client Group
 
 * Other
-- Updated MPAgentUploader for the latest version of Swift
-- MPAgentUploader has been notorized
-
