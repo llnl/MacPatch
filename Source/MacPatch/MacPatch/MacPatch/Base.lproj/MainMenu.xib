@@ -246,6 +246,8 @@
                 <outlet property="rebootWindow" destination="RL9-pv-Gy5" id="dhK-4W-afn"/>
                 <outlet property="restartWindow" destination="HVp-h7-rzM" id="KeD-zD-Ivv"/>
                 <outlet property="swRebootWindow" destination="pB4-kz-NS7" id="5rO-Fn-bH3"/>
+                <outlet property="updateWarningText" destination="uwc-ie-5i8" id="cvv-7Y-iv5"/>
+                <outlet property="updateWarningWindow" destination="czy-cF-asX" id="QWD-F7-Icu"/>
                 <outlet property="viewHolder" destination="BoI-Qm-Tfv" id="Mkn-v4-mx4"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
@@ -773,6 +775,62 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                 </subviews>
             </view>
             <point key="canvasLocation" x="-1623" y="-295"/>
+        </window>
+        <window title="Apply System Updates" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="czy-cF-asX" userLabel="Update Warning">
+            <windowStyleMask key="styleMask" titled="YES"/>
+            <rect key="contentRect" x="283" y="305" width="553" height="218"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <view key="contentView" id="YA1-yW-mdE">
+                <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cax-Ho-LmF">
+                        <rect key="frame" x="117" y="176" width="418" height="22"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Update and Reboot System" allowsEditingTextAttributes="YES" id="zW5-5m-jpM">
+                            <font key="font" metaFont="systemBold" size="17"/>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dR0-jP-87Q">
+                        <rect key="frame" x="20" y="126" width="72" height="72"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="appImage" id="iCX-z9-7qW"/>
+                    </imageView>
+                    <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="EsF-hl-58H">
+                        <rect key="frame" x="443" y="13" width="96" height="32"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <buttonCell key="cell" type="push" title="OK" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="E55-fS-15W">
+                            <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                            <font key="font" metaFont="system"/>
+                            <string key="keyEquivalent" base64-UTF8="YES">
+DQ
+</string>
+                        </buttonCell>
+                        <connections>
+                            <action selector="openAppleUpdates:" target="Voe-Tx-rLC" id="eg2-ky-pEn"/>
+                        </connections>
+                    </button>
+                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uwc-ie-5i8">
+                        <rect key="frame" x="117" y="60" width="418" height="112"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="KlC-XW-dDz">
+                            <font key="font" metaFont="system"/>
+                            <string key="title">MacPatch has detected that this system needs System updates applied. Please reboot this host after those updates are installed. If the system updates reboot this host, no further action is required.
+</string>
+                            <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
+                            <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
+                        </textFieldCell>
+                    </textField>
+                    <imageView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IM3-E5-7Ou">
+                        <rect key="frame" x="54" y="110" width="48" height="48"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="alertImage" id="6p7-mv-vVd"/>
+                    </imageView>
+                </subviews>
+            </view>
+            <point key="canvasLocation" x="-1884" y="-905"/>
         </window>
     </objects>
     <resources>

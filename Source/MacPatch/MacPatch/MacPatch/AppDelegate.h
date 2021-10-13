@@ -41,6 +41,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (unsafe_unretained) IBOutlet NSWindow *rebootWindow;
 @property (unsafe_unretained) IBOutlet NSWindow *restartWindow;
 @property (unsafe_unretained) IBOutlet NSWindow *swRebootWindow;
+@property (unsafe_unretained) IBOutlet NSWindow *updateWarningWindow;
+@property (weak) IBOutlet NSTextField *updateWarningText;
 
 - (IBAction)changeView:(id)sender;
 - (IBAction)showPreferences:(id)sender;
@@ -52,6 +54,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)showRebootWindow;
 - (void)showRestartWindow:(int)action;
 - (void)showSWRebootWindow;
+- (void)showUpdateWarningWindow:(int)action;
 
 @end
 

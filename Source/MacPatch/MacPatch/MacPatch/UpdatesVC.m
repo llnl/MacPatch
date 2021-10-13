@@ -319,13 +319,22 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self->_scanButton setEnabled:YES];
                     [self resizeTableViewToDefaultSize];
+                    AppDelegate *appDelegate;
                     
                     if (rebootPatchCount >= 1) {
-                        if (!hasAppleRebootPatch) { // Dont show on apple patch that needs reboot.
-                            AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
+                        if (hasApplePatch) {
+                            appDelegate = (AppDelegate *)NSApp.delegate;
+                            [appDelegate showUpdateWarningWindow:0];
+                        } else {
+                            appDelegate = (AppDelegate *)NSApp.delegate;
                             [appDelegate showRestartWindow:0];
                         }
+                    } else {
+                        if (hasApplePatch) {
+                            [NSWorkspace.sharedWorkspace openURL: [NSURL fileURLWithPath:ASUS_PREF_PANE]];
+                        }
                     }
+
                 });
                 
 			}];
