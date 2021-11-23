@@ -22,6 +22,7 @@
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
 		8FCCBA7119AFD1BB001F4C3B /* CHMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */; };
 		8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */; };
+		8FD1A3E12744973100166BE4 /* libpython.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD1A3DF274496D900166BE4 /* libpython.tbd */; };
 		8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904A16DFE84600A870A3 /* Cocoa.framework */; };
 		8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8905316DFE84600A870A3 /* InfoPlist.strings */; };
 		8FD8905716DFE84600A870A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8905616DFE84600A870A3 /* main.m */; };
@@ -43,7 +44,6 @@
 		8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8FE8069622D0095C00D9DE94 /* Notes.txt */; };
 		8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */; };
 		8FE9DE5E2091002D0079B794 /* CriticalWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE9DE5D2091002D0079B794 /* CriticalWindow.m */; };
-		8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B5071FC658C4006F5FB2 /* Python.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -69,6 +69,8 @@
 		8FCCBA6E19AFD1BB001F4C3B /* CHMenuViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHMenuViewController.h; sourceTree = "<group>"; };
 		8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMenuViewController.m; sourceTree = "<group>"; };
 		8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHMenuViewController.xib; sourceTree = "<group>"; };
+		8FD1A3DB274496A300166BE4 /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
+		8FD1A3DF274496D900166BE4 /* libpython.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpython.tbd; path = usr/lib/libpython.tbd; sourceTree = SDKROOT; };
 		8FD5E10023A9729D00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FD8904716DFE84600A870A3 /* MPClientStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPClientStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FD8904A16DFE84600A870A3 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -115,7 +117,6 @@
 				8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */,
 				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
-				8FF5B5101FC65AF6006F5FB2 /* Python.framework in Frameworks */,
 				8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */,
 				8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */,
 				8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */,
@@ -126,6 +127,7 @@
 				8FD8908616DFE92C00A870A3 /* SystemConfiguration.framework in Frameworks */,
 				8FD8908716DFE92C00A870A3 /* CoreServices.framework in Frameworks */,
 				8FD8908816DFE92C00A870A3 /* IOKit.framework in Frameworks */,
+				8FD1A3E12744973100166BE4 /* libpython.tbd in Frameworks */,
 				8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -170,6 +172,8 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FD1A3DF274496D900166BE4 /* libpython.tbd */,
+				8FD1A3DB274496A300166BE4 /* Python3.framework */,
 				8F730CC0240B09FA00876026 /* OpenDirectory.framework */,
 				8FD5E10023A9729D00A47F7C /* libiconv.tbd */,
 				8F22E84922B9980800A27786 /* WebKit.framework */,
@@ -482,6 +486,7 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 3.6.1;
@@ -510,9 +515,11 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MARKETING_VERSION = 3.6.1;
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
