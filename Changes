@@ -1,6 +1,6 @@
 MacPatch - Changes
 
-MacPatch v3.6.1.11
+MacPatch v3.6.1.12
 
 * Client
 - Add support to MPClientStatus for FileVault authenticated restarts
@@ -12,3 +12,5 @@ MacPatch v3.6.1.11
 - Fix Software Restrictions Remove from Client Group
 
 * Other
+- Updated NGINX Source
+- Updated Server Build for macOS
