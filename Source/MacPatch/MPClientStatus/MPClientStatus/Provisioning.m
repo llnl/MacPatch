@@ -445,9 +445,11 @@
     int i = 0;
     for (NSDictionary *f in tabData[@"fields"])
     {
+        qlinfo(@"Field: %@",f);
         __block NSString *field = f[@"field"];
         NSString *fieldJS = [NSString stringWithFormat:@"document.getElementById('%@').value;",f[@"field"]];
         NSString *res = [self.collectionWebView stringByEvaluatingJavaScriptFromString:fieldJS];
+        qlinfo(@"%@: %@",field,res);
         if ([res length] >= [f[@"fieldLen"] intValue]) {
             [result setObject:res forKey:field];
         } else {
@@ -462,8 +464,8 @@
         NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.provision" code:1001 userInfo:@{@"Error reason": @"Invalid Input"}];
         *err = error;
     }
+    qlinfo(@"Form Values: %@",result);
     return [result copy];
-    //[self->_tabBar selectNextTabViewItem:NULL];
 }
 
 - (void)writeStatusToHTML:(NSString *)status
@@ -856,12 +858,14 @@
                     qlerror(@"Error installing software task %@",swTask[@"Software"][@"name"]);
                     if (error) {
                         qlerror(@"Error: %@",error.localizedDescription);
-                    } else {
+                    }
+                    /*
+                    else {
                         error = [NSError errorWithDomain:@"InstallError"
                                                                  code:1
                                                              userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Failed to install software task.", nil)}];
                     }
-                    
+                    */
                 }
                 
                 dispatch_semaphore_signal(sem);

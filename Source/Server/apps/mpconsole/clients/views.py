@@ -842,6 +842,7 @@ def clientGroupSWResAdd(id):
 			setattr(swRes, 'enabled', '1')
 			db.session.add(swRes)
 			db.session.commit()
+			revGroupSWRes(_groupID)
 
 		return redirect(url_for('.clientGroup',name=id,tab=5))
 
@@ -871,6 +872,21 @@ def revGroupSWRes(group_id):
 		setattr(grp_conf, "restrictions_version", rev_swres)
 		db.session.commit()
 
+@clients.route('/group/<id>/sw/res/remove',methods=['DELETE'])
+@login_required
+def clientGroupSWResDel(id):
+
+	_group_id = id
+	_sw_ids = request.form.get('rids').split(",")
+	if _sw_ids is not None and len(_sw_ids) > 0:
+		for i in _sw_ids:
+			print("Delete rid {}".format(i))
+			MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == _group_id,
+											   MpClientGroupSoftwareRestrictions.appID == i).delete()
+			db.session.commit()
+			revGroupSWRes(_group_id)
+
+	return json.dumps({}), 200
 '''
 ********************************
 	Global

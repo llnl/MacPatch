@@ -40,7 +40,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSOperationQueue 	*aQueue;
 }
 
-- (void)refreshInstalledItems;
 - (BOOL)parseSoftwareItems:(id)jsonData;
 
 // XPC Connection
@@ -106,6 +105,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 	[self populateSoftwareGroupsPopupButton:nil];
 	[self getInstalledSoftwareTasks];
+    self.tableView.usesAlternatingRowBackgroundColors = YES;
+    if (@available(macOS 11.0, *)) {
+        self.tableView.style = NSTableViewStyleFullWidth;
+    }
 }
 
 - (IBAction)loadBannerView:(id)sender
@@ -367,11 +370,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	} completionBlock:^{
 		[hud removeFromSuperview];
 	}];
-}
-
-- (void)refreshInstalledItems
-{
-    //[self setInstalledItems:[db getAllSoftwareRecords]];
 }
 
 - (void)getInstalledSoftwareTasks
@@ -730,6 +728,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         }
         
         cellView.isAppInstalled = NO;
+        cellView.isLocalAppInstalled = NO;
         
         for (NSString *_tid in installedItems) {
             if ([_tid isEqualToString:sw[@"id"]])
@@ -744,7 +743,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
             {
                 if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
-                    cellView.isAppInstalled = YES;
+                    //[cellView.installedStateImage setImage:[NSImage imageNamed:@"GoodImageHD"]];
+                    cellView.isLocalAppInstalled = YES;
+                    //cellView.isAppInstalled = YES;
                 }
             }
         }

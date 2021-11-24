@@ -175,7 +175,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 
 /**
- Return an array of all software tasks installed
+ Return an array of all software task ids installed
 
  @return NSArray
  */
@@ -197,6 +197,32 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	}
 	
 	return [swTasks copy];
+}
+
+/**
+ Return an array of dictionaries of all software tasks installed
+
+ @return NSArray
+ */
+
+- (NSArray *)retrieveInstalledSoftwareTasksDict
+{
+    NSMutableArray *swTasks = [NSMutableArray new];
+    @try
+    {
+        NSMutableArray *installedSoftwareArray = [self.installedSoftware mutableCopy];
+        
+        for (InstalledSoftware *sw in installedSoftwareArray) {
+            [swTasks addObject:@{@"name":sw.name, @"tuuid":sw.tuuid, @"suuid":sw.suuid, @"hasUninstall":@(sw.has_uninstall)}];
+        }
+
+        return [swTasks copy];
+    }
+    @catch (NSException *exception) {
+        qlerror(@"%@",exception);
+    }
+    
+    return [swTasks copy];
 }
 
 /**

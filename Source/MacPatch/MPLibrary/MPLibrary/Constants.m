@@ -54,6 +54,7 @@ NSString * const WS_FAILED_REQ_PLIST        = @"/Library/MacPatch/Client/lib/Web
 NSString * const ASUS_BIN_PATH				= @"/usr/sbin/softwareupdate";
 NSString * const ASUS_APP_PATH				= @"/System/Library/CoreServices/Software Update.app";
 NSString * const ASUS_PLIST_PATH			= @"/Library/Preferences/com.apple.SoftwareUpdate.plist";
+NSString * const ASUS_PREF_PANE             = @"/System/Library/PreferencePanes/SoftwareUpdate.prefPane";
 
 NSString * const CLIENT_PATCH_STATUS_FILE	= @"~/Library/Application Support/.mpUpdateCStatus";
 NSString * const SELF_PATCH_PATH			= @"/Library/MacPatch/Client/Self Patch.app";

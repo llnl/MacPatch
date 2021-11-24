@@ -236,7 +236,10 @@
 
 	NSMutableDictionary *environment = [NSMutableDictionary new];
 	[environment setObject:@"YES" forKey:@"NSUnbufferedIO"];
-	[environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    
+    if ([self isMacPatchAppRunning]) {
+        [environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    }
 	
 	NSError *taskErr = nil;
 	MPNSTask *_task = [MPNSTask new];
@@ -417,6 +420,18 @@
 	}
 	
 	return @"N";
+}
+
+- (BOOL)isMacPatchAppRunning
+{
+    BOOL result = NO;
+    NSArray *apps = [[NSWorkspace sharedWorkspace] runningApplications];
+    NSPredicate *mpFilter = [NSPredicate predicateWithFormat:@"bundleIdentifier like[c] 'gov.llnl.mp.MacPatch'"];
+    NSArray *activeApplications = [apps filteredArrayUsingPredicate:mpFilter];
+    if (activeApplications.count == 1) {
+        result = YES;
+    }
+    return result;
 }
 
 @end

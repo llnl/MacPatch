@@ -69,6 +69,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	}];
 }
 
+- (void)viewDidAppear
+{
+    [self setAuthClearButtonState];
+}
+
 #pragma mark - RHPreferencesViewControllerProtocol
 
 -(NSString*)identifier
@@ -216,6 +221,23 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[self presentViewControllerAsModalWindow:authVC];
 }
 
+- (void)setAuthClearButtonState
+{
+    NSDictionary *authPlist = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+    if ([authPlist[@"enabled"] boolValue]) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self->_authRestartSetupButton.enabled = NO;
+            self->_authRestartClearButton.enabled = YES;
+        });
+    } else {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self->_authRestartSetupButton.enabled = YES;
+            self->_authRestartClearButton.enabled = NO;
+        });
+    }
+    
+}
+
 // Will show a message if creds are setup and being used
 - (void)checkAuthrestartState
 {
@@ -227,6 +249,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self->authState setStringValue:authString];
 	});
+    
+    [self setAuthClearButtonState];
 }
 
 // Clear the creds for auth restart

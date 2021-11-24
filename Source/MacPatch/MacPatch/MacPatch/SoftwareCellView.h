@@ -38,6 +38,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (nonatomic, strong) NSDictionary  *rowData;
 @property (nonatomic, strong) NSArray		*serverArray;
 @property (nonatomic, assign) BOOL 			isAppInstalled;
+@property (nonatomic, assign) BOOL          isLocalAppInstalled;
 
 @property (nonatomic, strong) IBOutlet NSProgressIndicator *progressBar;
 @property (nonatomic, strong) IBOutlet SYFlatButton *actionButton;

@@ -55,6 +55,7 @@ extern NSString * const WS_FAILED_REQ_PLIST;
 extern NSString * const ASUS_BIN_PATH;
 extern NSString * const ASUS_APP_PATH;
 extern NSString * const ASUS_PLIST_PATH;
+extern NSString * const ASUS_PREF_PANE;
 
 extern NSString * const CLIENT_PATCH_STATUS_FILE;
 extern NSString * const SELF_PATCH_PATH;

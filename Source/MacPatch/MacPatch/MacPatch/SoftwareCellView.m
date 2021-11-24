@@ -72,6 +72,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			self->_installedStateImage.image = [NSImage imageNamed:@"GoodImage"];
 		});
 	}
+    
+    if (_isLocalAppInstalled) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            self->_installedStateImage.image = [NSImage imageNamed:@"GoodImageHD"];
+            self->_installedStateImage.toolTip = @"Application is installed, but not managed by MacPatch.";
+        });
+    }
 	
 	[self connectToHelperTool];
 	[self loadImage];

@@ -317,6 +317,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[self.restartWindow setLevel:NSStatusWindowLevel];
 }
 
+- (void)showUpdateWarningWindow:(int)action;
+{
+    [self.updateWarningWindow makeKeyAndOrderFront:self];
+    [self.updateWarningWindow setLevel:NSStatusWindowLevel];
+}
+
 - (IBAction)restartOrShutdown:(id)sender
 {
 	OSStatus error = noErr;
@@ -366,6 +372,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             }
         }];
     }
+}
+
+- (IBAction)openAppleUpdates:(id)sender
+{
+    [NSWorkspace.sharedWorkspace openURL: [NSURL fileURLWithPath:ASUS_PREF_PANE]];
 }
 
 #pragma mark - DockTile

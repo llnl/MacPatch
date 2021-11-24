@@ -434,7 +434,7 @@ static MPSettings *_instance;
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
 {
 	NSMutableArray *_srvs = [NSMutableArray new];
-	if (@available(macOS 10.15, *)) {
+	if (@available(macOS 11.0, *)) {
 		// macOS 10.13 or later code path
 		qltrace(@"suServersFromDictionary is no longer supported by Apple.");
 	} else {

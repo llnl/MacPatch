@@ -120,6 +120,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     [[NSNotificationCenter defaultCenter] postNotificationName:@"disablePatchButtons" object:self];
     
+    // If MacOS 11 or later than skip Apple Update
+    // We will open the apple sys prefs SU pane
+    //if (@available(macOS 11.0, *)) {
+    if ([_rowData[@"type"] isEqualToString:@"Apple"]) {
+        [NSWorkspace.sharedWorkspace openURL: [NSURL fileURLWithPath:ASUS_PREF_PANE]];
+        return;
+    }
+    //}
+
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if ([self.patchRestart.stringValue isEqualToString:@"Restart Required"]) {
         if ([defaults integerForKey:@"AlertOnRebootPatch"] == 0) {
@@ -151,7 +160,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 	});
 	
-	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
     BOOL allowInstall = YES;
 	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];
 	

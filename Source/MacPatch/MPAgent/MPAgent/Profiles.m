@@ -101,10 +101,14 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 - (void)main
 {
 	@try {
-        if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
-            qlinfo(@"Profile install operations is deferred while provisioning.");
+        if (@available(macOS 11.0, *)) {
+            qlinfo(@"Profile installs are not supported on MacOS 11 and higher.");
         } else {
-            [self scanAndInstallPofiles];
+            if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE]) {
+                qlinfo(@"Profile install operations is deferred while provisioning.");
+            } else {
+                [self scanAndInstallPofiles];
+            }
         }
 	}
 	@catch (NSException * e) {
@@ -375,12 +379,10 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 - (BOOL)installProfile:(NSString *)aProfilePath
 {
     // Write Profile Data To Plist
-    NSArray *cmdArgs = [NSArray arrayWithObjects:@"-I",@"-F",aProfilePath, nil];
-    NSTask *task = nil;
-    task = [NSTask launchedTaskWithLaunchPath:@"/usr/bin/profiles" arguments:cmdArgs];
+    NSTask *task = [NSTask launchedTaskWithLaunchPath:@"/usr/bin/profiles" arguments:@[@"-I",@"-F",aProfilePath]];
     [task waitUntilExit];
 
-    int result = [task terminationStatus];
+    int result = task.terminationStatus;
     if (result == 0) {
         return YES;
     } else {
@@ -391,12 +393,10 @@ static NSString *kMPProfilesData = @"Data/gov.llnl.mp.custom.profiles.plist";
 - (BOOL)removeProfile:(NSString *)aProfileIdentifier
 {
     // Write Profile Data To Plist
-    NSArray *cmdArgs = [NSArray arrayWithObjects:@"-R",@"-p",aProfileIdentifier, nil];
-    NSTask *task = nil;
-    task = [NSTask launchedTaskWithLaunchPath:@"/usr/bin/profiles" arguments:cmdArgs];
+    NSTask *task = [NSTask launchedTaskWithLaunchPath:@"/usr/bin/profiles" arguments:@[@"-R",@"-p",aProfileIdentifier]];
     [task waitUntilExit];
 
-    int result = [task terminationStatus];
+    int result = task.terminationStatus;
     if (result == 0) {
         [self removeProfileInstallFromDisk:aProfileIdentifier];
         return YES;

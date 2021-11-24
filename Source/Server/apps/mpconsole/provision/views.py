@@ -357,6 +357,29 @@ def allowed_file(filename):
 @login_required
 def testTask():
 
+	results = []
+	q = MpClientPatches.query.filter(MpClientPatches.type == 'Apple').all() # Set of Apple Patches Needed by clients
+	_patchesRaw = [row.patch for row in q]  # As a list
+	_patches = set(_patchesRaw)  # Make the list a set, so no dups
+
+	for x in _patches:
+		y = ApplePatch.query.filter(ApplePatch.supatchname == x).first()
+		if y is None:
+			count = 0
+			name = "NA"
+			for r in q:
+				if r.patch == x:
+					count = count + 1
+					name = r.description
+
+			results.append({'patch': x, 'name': name, 'count': count})
+
+	print("{}".format(results))
+
+	print(len(_patches))
+	t = ApplePatch.query.filter(ApplePatch.supatchname == 'macOS Big Sur 11.2.3-20D91').first()
+	print(t)
+
 	_data = {}
 	mps = MpSoftware.query.filter(MpSoftware.sState == 2).all()
 

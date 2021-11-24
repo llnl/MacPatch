@@ -37,4 +37,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (nonatomic, retain) IBOutlet NSButton *allowInstallRebootPatchesCheckBox;
 @property (nonatomic, retain) IBOutlet NSButton *pausePatchingCheckBox;
 
+@property (nonatomic, retain) IBOutlet NSButton *authRestartSetupButton;
+@property (nonatomic, retain) IBOutlet NSButton *authRestartClearButton;
+
 @end

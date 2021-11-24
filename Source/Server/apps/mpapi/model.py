@@ -970,6 +970,7 @@ class MpProvisionTask(CommonBase):
 	primary_suuid       = Column(String(50))
 	active              = Column(Integer, server_default='0')
 	scope				= Column(Integer, server_default='0')
+	order 				= Column(Integer, server_default='99')
 	sw_start_datetime   = Column(DateTime, server_default='2021-01-01 00:00:00')
 	sw_end_datetime     = Column(DateTime, server_default='2050-01-01 00:00:00')
 	mdate               = Column(DateTime, server_default='1970-01-01 00:00:00')

@@ -97,6 +97,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 @synthesize selfVersionInfoMenuItem;
 @synthesize MPVersionInfoMenuItem;
 @synthesize checkAgentAndUpdateMenuItem;
+@synthesize fvAuthRestartMenuItem;
 
 // Client Info
 @synthesize clientInfoWindow;
@@ -196,6 +197,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
+    [self resetWhatsNew];
+    
     // Show/hide Quit Menu Item
     NSTimer *t = [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(updateMenu:) userInfo:statusMenu repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:t forMode:NSEventTrackingRunLoopMode];
@@ -238,8 +241,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     // Run Notification Timer
     [self runMPUserNotificationCenter];
     
+    // Software Restrictions
     appRules = @{@"allow":@[],@"deny":@[]};
-	[self processSoftwareRules];
+	[self updateSoftwareRestrictionRules]; // Timer to eval new or remove rules
 	
 	if ([prefs stringForKey:@"denyHelpStringMessage"])
 	{
@@ -263,6 +267,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         }
     } else {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+        [defaults synchronize];
         if ([defaults boolForKey:@"showWhatsNew"]) {
             [self loadWhatsNewWebView:nil];
             [whatsNewWindow makeKeyAndOrderFront:nil];
@@ -317,6 +322,57 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     }
     
     [menu update];
+}
+
+- (void)resetWhatsNew
+{
+    __block BOOL didConnect = NO;
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    
+    [self connectAndExecuteCommandBlock:^(NSError * connectError)
+     {
+         if (connectError != nil) {
+             qlerror(@"connectError: %@",connectError.localizedDescription);
+             dispatch_semaphore_signal(sem);
+         } else {
+             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+             }] getVersionWithReply:^(NSString *verData) {
+                 if ([verData isEqualToString:@"1"]) {
+                     didConnect = YES;
+                 }
+                 [NSThread sleepForTimeInterval:5.0];
+                 dispatch_semaphore_signal(sem);
+             }];
+         }
+     }];
+    
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    
+    __block NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    static NSString *whatsNewFile = @"/private/tmp/.mpResetWhatsNew";
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:whatsNewFile])
+    {
+        sem = dispatch_semaphore_create(0);
+        [self connectAndExecuteCommandBlock:^(NSError * connectError)
+         {
+             if (connectError != nil) {
+                 qlerror(@"connectError: %@",connectError.localizedDescription);
+                 dispatch_semaphore_signal(sem);
+             } else {
+                 [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                     qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                 }] removeFile:whatsNewFile withReply:^(NSInteger result) {
+                     [defaults setObject:[NSNumber numberWithBool:YES] forKey:@"showWhatsNew"];
+                     [defaults synchronize];
+                     dispatch_semaphore_signal(sem);
+                 }];
+             }
+         }];
+        
+        dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    }
 }
 
 #pragma mark - Helper
@@ -537,6 +593,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	{
 		MPFileCheck *fu = [MPFileCheck new];
 		if (![fu fExists:MP_AUTHSTATUS_FILE]) return;
+        
+        NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
+        if ([prefs[@"enabled"] boolValue]) {
+            
+        }
+        
 		
 		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 		
@@ -567,6 +629,45 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		
 		dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 	}
+}
+
+- (IBAction)runFVAuthRestart:(id)sender
+{
+    NSAlert *alert = [[NSAlert alloc] init];
+    [alert addButtonWithTitle:@"Restart"];
+    [alert addButtonWithTitle:@"Cancel"];
+    [alert setMessageText:@"Authenticated Restart"];
+    [alert setInformativeText:@"Your about to do a authenticated restart of this host. Are you sure?"];
+    if([alert runModal] == NSAlertFirstButtonReturn) {
+        [self performSelectorOnMainThread:@selector(runAuthRestart) withObject:nil waitUntilDone:NO modes:@[NSRunLoopCommonModes]];
+    } else {
+        // Hit cancel ...
+        return;
+    }
+}
+
+- (void)runAuthRestart
+{
+    [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+        if (connectError != nil) {
+            qlerror(@"connectError: %@",connectError.localizedDescription);
+        } else {
+            [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                qlerror(@"proxyError: %@",proxyError.localizedDescription);
+            }] runAuthRestartWithReply:^(NSError *error, NSInteger result) {
+                if (error) {
+                    qlerror(@"Error, unable to enable FileVault auth restart");
+                    NSAlert *alert = [[NSAlert alloc] init];
+                    [alert addButtonWithTitle:@"OK"];
+                    [alert setMessageText:@"Error Running Auth Restart"];
+                    [alert setInformativeText:@"There was a problem setting and running an FileVault auth restart."];
+                    [alert setAlertStyle:NSCriticalAlertStyle];
+                    [alert runModal];
+                }
+                qlinfo(@"MPClientstatus called auth restart.");
+            }];
+        }
+    }];
 }
 
 

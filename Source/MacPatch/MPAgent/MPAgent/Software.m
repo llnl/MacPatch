@@ -15,7 +15,7 @@
 	NSFileManager *fm;
 	
 	// Task Vars
-	NSTask              *task;
+	// NSTask              *task;
 	NSPipe              *pipe_task;
 	NSFileHandle        *fh_task;
 	MPSettings			*settings;
@@ -462,6 +462,54 @@
 }
 
 #pragma mark Task methods
+
+- (int)runTask:(NSString *)aBinPath binArgs:(NSArray *)aBinArgs environment:(NSString *)env
+{
+    MPNSTask *task = [MPNSTask new];
+    task.taskTimeoutValue = taskTimeoutValue;
+    int taskResult = -1;
+    
+    // Parse the Environment variables for the install
+    NSDictionary *defaultEnvironment = [[NSProcessInfo processInfo] environment];
+    NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithDictionary:defaultEnvironment];
+    [environment setObject:@"YES" forKey:@"NSUnbufferedIO"];
+    [environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    
+    if ([env isEqualToString:@"NA"] == NO && [[env trim] length] > 0)
+    {
+        NSArray *l_envArray;
+        NSArray *l_envItems;
+        l_envArray = [env componentsSeparatedByString:@","];
+        for (id item in l_envArray) {
+            l_envItems = nil;
+            l_envItems = [item componentsSeparatedByString:@"="];
+            if ([l_envItems count] == 2) {
+                logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+                [environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
+            } else {
+                logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+            }
+        }
+    }
+    
+    logit(lcl_vDebug,@"[task][environment]: %@",environment);
+    logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
+    logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
+    qlinfo(@"[task][setTimeout]: %d",taskTimeoutValue);
+    
+    NSString *result;
+    NSError *error = nil;
+    result = [task runTaskWithBinPath:aBinPath args:aBinArgs environment:environment error:&error];
+    if (error) {
+        qlerror(@"%@",error.localizedDescription);
+    } else {
+        taskResult = task.taskTerminationStatus;
+    }
+
+    return taskResult;
+}
+
+/*
 - (int)runTask:(NSString *)aBinPath binArgs:(NSArray *)aBinArgs environment:(NSString *)env
 {
 	NSString		*tmpStr;
@@ -646,7 +694,7 @@ done:
 	[self setTaskTimedOut:YES];
 	[task terminate];
 }
-
+*/
 #pragma mark Install methods
 - (int)installPkgFromDMG:(NSString *)pkgID environment:(NSString *)aEnv
 {
@@ -875,7 +923,7 @@ done:
 		return 1;
 	}
 	
-	NSArray *args = [NSArray arrayWithObjects:@"attach", @"-mountpoint", mountPoint, swLoc, @"-nobrowse", nil];
+	NSArray *args = @[@"attach", @"-mountpoint", mountPoint, swLoc, @"-nobrowse"];
 	NSTask  *aTask = [[NSTask alloc] init];
 	NSPipe  *pipe = [NSPipe pipe];
 	
@@ -899,7 +947,7 @@ done:
 	NSString *mountPointBase = [SOFTWARE_DATA_DIR stringByAppendingPathComponent:@"dmg"];
 	mountPoint = [mountPointBase stringByAppendingPathComponent:pkgID];
 	
-	NSArray       *args  = [NSArray arrayWithObjects:@"detach", mountPoint, @"-force", nil];
+	NSArray       *args  = @[@"detach", mountPoint, @"-force"];
 	NSTask        *aTask = [[NSTask alloc] init];
 	NSPipe        *pipe  = [NSPipe pipe];
 	
@@ -982,7 +1030,6 @@ done:
 	
 	MPPatching *patching = [MPPatching new];
 	NSMutableArray *customPatchesFound = [[patching scanForPatchUsingBundleID:aBundleID] mutableCopy];
-	//NSMutableArray *customPatchesFound = (NSMutableArray *)[mpAsus scanForCustomUpdateUsingBundleID:aBundleID];
 	
 	logit(lcl_vDebug,@"Custom Patches Needed: %@",customPatchesFound);
 	logit(lcl_vDebug,@"Approved Patches: %@",patchForBundleID);
@@ -1084,7 +1131,6 @@ done:
 		//
 		
 		// Vars
-		MPAsus 	 	*mpAsus = [[MPAsus alloc] init];
 		MPScript 	*mpScript = nil;
 		MPInstaller *mpInstaller;
 		MPCrypto *crypto;

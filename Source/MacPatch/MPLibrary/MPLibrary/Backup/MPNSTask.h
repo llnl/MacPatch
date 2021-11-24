@@ -37,14 +37,13 @@
 @interface MPNSTask : NSObject <MPNSTaskDelegate>
 
 @property (weak, nonatomic) id delegate;
-@property (nonatomic, assign) int taskTimeoutValue; // 900 seconds is default
-@property (nonatomic, assign, readonly) int taskTerminationStatus;
 
-// Backwards compatibility: runTask -> runTaskWithBinPath
-- (NSString *)runTask:(NSString *)binPath binArgs:(NSArray *)args error:(NSError **)err;
-- (NSString *)runTask:(NSString *)binPath binArgs:(NSArray *)args environment:(NSDictionary *)env error:(NSError **)err;
+/**
+ Task timeout, default timeout is 300 seconds
+ */
+@property (nonatomic, assign) int taskTimeoutValue;
 
-- (NSString *)runTaskWithBinPath:(NSString *)binPath args:(NSArray *)args error:(NSError **)err;
-- (NSString *)runTaskWithBinPath:(NSString *)binPath args:(NSArray *)args environment:(NSDictionary *)env error:(NSError **)err;
+- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs error:(NSError **)err;
+- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err;
 
 @end

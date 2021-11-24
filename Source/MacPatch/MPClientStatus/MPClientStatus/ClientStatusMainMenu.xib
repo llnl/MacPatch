@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="17701"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="18122"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -81,10 +81,17 @@
                     </menu>
                 </menuItem>
                 <menuItem isSeparatorItem="YES" id="544"/>
-                <menuItem title="Refresh Status..." id="0cj-AU-2EU">
+                <menuItem title="FileVault Auth Restart" id="0cj-AU-2EU">
                     <modifierMask key="keyEquivalentModifierMask"/>
                     <connections>
-                        <action selector="refreshClientStatus:" target="494" id="afd-Vz-OLg"/>
+                        <action selector="runFVAuthRestart:" target="494" id="Vz0-HL-Hj5"/>
+                    </connections>
+                </menuItem>
+                <menuItem isSeparatorItem="YES" id="Dqm-mg-H7q"/>
+                <menuItem title="Refresh Status..." id="tEA-yM-CkE">
+                    <modifierMask key="keyEquivalentModifierMask"/>
+                    <connections>
+                        <action selector="refreshClientStatus:" target="494" id="hvf-jm-DiP"/>
                     </connections>
                 </menuItem>
                 <menuItem title="About MPClientStatus" id="545">
@@ -739,7 +746,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="360" height="166"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <value key="maxSize" type="size" width="360" height="166"/>
             <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="360" height="166"/>
@@ -776,7 +783,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="1042" y="676" width="480" height="131"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <value key="minSize" type="size" width="480" height="131"/>
             <view key="contentView" id="557">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="131"/>
@@ -809,7 +816,7 @@
                         <rect key="frame" x="20" y="22" width="440" height="0.0"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <clipView key="contentView" id="sa6-VY-FkX">
-                            <rect key="frame" x="1" y="0.0" width="438" height="0.0"/>
+                            <rect key="frame" x="1" y="1" width="438" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                             <subviews>
                                 <tableView verticalHuggingPriority="750" allowsExpansionToolTips="YES" columnAutoresizingStyle="lastColumnOnly" alternatingRowBackgroundColors="YES" columnSelection="YES" multipleSelection="NO" autosaveColumns="NO" headerView="568" id="567">
@@ -838,7 +845,7 @@
                                                 </binding>
                                             </connections>
                                         </tableColumn>
-                                        <tableColumn editable="NO" width="290" minWidth="40" maxWidth="1000" id="570">
+                                        <tableColumn editable="NO" width="281" minWidth="40" maxWidth="1000" id="570">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Value">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -869,7 +876,7 @@
                             <rect key="frame" x="1" y="154" width="387" height="15"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" horizontal="NO" id="565">
+                        <scroller key="verticalScroller" wantsLayer="YES" verticalHuggingPriority="750" doubleValue="0.047619047619047616" horizontal="NO" id="565">
                             <rect key="frame" x="423" y="0.0" width="16" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
@@ -910,6 +917,7 @@
                 <outlet property="criticalWinRebootButton" destination="t9i-WE-wxm" id="bqJ-XE-4Sg"/>
                 <outlet property="criticalWinTitleText" destination="E1e-8g-oUC" id="92Q-Zv-4AH"/>
                 <outlet property="criticalWindow" destination="XBL-98-vzc" id="JaL-OH-OAJ"/>
+                <outlet property="fvAuthRestartMenuItem" destination="0cj-AU-2EU" id="h7K-Nu-w9E"/>
                 <outlet property="rebootBodyText" destination="iMy-tp-ciN" id="hwX-WZ-oIh"/>
                 <outlet property="rebootTitleText" destination="mwm-Oi-5Fq" id="Tf2-Am-UEt"/>
                 <outlet property="rebootWindow" destination="Rir-3v-4PY" id="tNt-9b-JG4"/>
@@ -927,7 +935,7 @@
         <window title="MacPatch - Reboot" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Rir-3v-4PY">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="574" height="178"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <value key="minSize" type="size" width="574" height="178"/>
             <value key="maxSize" type="size" width="574" height="178"/>
             <view key="contentView" id="Gb8-ho-ckQ">
@@ -1000,7 +1008,7 @@ DQ
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="XBL-98-vzc" customClass="CriticalWindow">
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="1950" y="1183" width="573" height="142"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <view key="contentView" wantsLayer="YES" id="2QN-iU-IZm">
                 <rect key="frame" x="0.0" y="0.0" width="573" height="142"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -1096,7 +1104,7 @@ KQAyADcASQBMAFEAUwBdAGMAbABzAHgAgACVAJcAmQCbAJ0ApwCuALMAvgDBAMMAxQDHAMwA1wDgAOgA
         <window title="MacPatch - What's New" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="bMN-3l-C5D">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="335" y="390" width="620" height="442"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <value key="minSize" type="size" width="620" height="442"/>
             <value key="maxSize" type="size" width="620" height="442"/>
             <value key="minFullScreenContentSize" type="size" width="620" height="442"/>
@@ -1133,7 +1141,7 @@ KQAyADcASQBMAFEAUwBdAGMAbABzAHgAgACVAJcAmQCbAJ0ApwCuALMAvgDBAMMAxQDHAMwA1wDgAOgA
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="348" width="544" height="193"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1415"/>
             <view key="contentView" id="FbC-Ds-eJs">
                 <rect key="frame" x="0.0" y="0.0" width="544" height="193"/>
                 <autoresizingMask key="autoresizingMask"/>

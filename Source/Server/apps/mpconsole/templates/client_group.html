@@ -230,7 +230,7 @@ Client Group - {{group_name}}
                     </div>
                 </div>
                 <div class="tab-pane fade" id="swRes">
-                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-show-export="true">
+                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-unique-id="appID" data-show-export="true">
                         <div id="toolbarSoftwareRes">
                             <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
                             <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -266,6 +266,7 @@ Client Group - {{group_name}}
 	<script>
 	var $tasksTable = $('#tableTasks'), $ttRbutton = $('#ttRefreshbutton');
 	var $tableSoftware = $('#tableSoftware');
+	var $tableSoftwareRes = $('#tableSoftwareRes');
 	var $tableProvision = $('#tableProvision');
 
 	$( document ).ready(function()
@@ -990,14 +991,14 @@ Client Group - {{group_name}}
 
 		$delSWResButton.click(function ()
 		{
-			var rows = $tableSoftware.bootstrapTable('getAllSelections');
+			var rows = $tableSoftwareRes.bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
-				var _rid = rows[x]['rid'];
+				var _rid = rows[x]['appID'];
 				rowsArr.push(_rid);
 			}
 
-			var _url = "/clients/group/{{gResults['Group']['id']}}/sw/remove";
+			var _url = "/clients/group/{{gResults['Group']['id']}}/sw/res/remove";
 			$.ajax({
 				url: _url,
 				type: 'DELETE',
@@ -1010,9 +1011,11 @@ Client Group - {{group_name}}
 				},
 				success: function () {
 					for (x in rowsArr) {
-						$tableSoftware.bootstrapTable('removeByUniqueId', rowsArr[x]);
+						
+						$tableSoftwareRes.bootstrapTable('removeByUniqueId', rowsArr[x]);
+						
 					}
-					alert("Software removed successfully.");
+					alert("Software Restriction removed successfully.");
 				}
 			});
 		});

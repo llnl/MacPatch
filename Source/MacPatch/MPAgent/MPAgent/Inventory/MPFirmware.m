@@ -86,7 +86,7 @@
     
     [task setStandardOutput:pipe];
     [task setLaunchPath:@"/usr/sbin/firmwarepasswd"];
-    [task setArguments:[NSArray arrayWithObject:@"-check"]];
+    [task setArguments:@[@"-check"]];
     [task launch];
     
     NSData *data = [[pipe fileHandleForReading] readDataToEndOfFile];
@@ -118,7 +118,7 @@
     
     [task setStandardOutput:pipe];
     [task setLaunchPath:@"/usr/sbin/firmwarepasswd"];
-    [task setArguments:[NSArray arrayWithObject:@"-mode"]];
+    [task setArguments:@[@"-mode"]];
     [task launch];
     
     NSData *data = [[pipe fileHandleForReading] readDataToEndOfFile];

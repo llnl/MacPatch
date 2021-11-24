@@ -25,17 +25,21 @@
 
 #import "MPNSTask.h"
 #import "MacPatch.h"
-#import "MPTimer.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPNSTask
 
 @interface MPNSTask ()
 {
-	NSTask *task;
+    NSTask *task;
+    NSTimer *taskTimer;
+    NSFileManager *fm;
 }
 
-@property (strong)              		 NSTimer     *taskTimeoutTimer;
+@property (nonatomic, assign, readwrite) int         taskTerminationStatus;
+@property (nonatomic, strong)            NSMutableArray *taskObserverArray;
+
+@property (strong)                       NSTimer     *taskTimeoutTimer;
 @property (nonatomic, assign, readwrite) BOOL        taskTimedOut;
 @property (nonatomic, assign, readwrite) BOOL        taskIsRunning;
 
@@ -46,6 +50,7 @@
 
 @implementation MPNSTask
 
+@synthesize taskTerminationStatus;
 @synthesize taskTimeoutTimer;
 @synthesize taskTimeoutValue;
 @synthesize taskTimedOut;
@@ -56,168 +61,177 @@
     self = [super init];
 	if (self)
 	{
-		[self setTaskTimeoutValue:600];
-		[self setTaskIsRunning:NO];
-		[self setTaskTimedOut:NO];
+        fm = [NSFileManager defaultManager];
+        [self setTaskTimeoutValue:900];
+        [self setTaskIsRunning:NO];
+        [self setTaskTimedOut:NO];
+        [self setTaskTerminationStatus:-99];
     }
 	
     return self;
 }
 
-- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs error:(NSError **)err
+- (NSString *)runTask:(NSString *)binPath binArgs:(NSArray *)args error:(NSError **)err
 {
-	NSError *error = nil;
-	NSString *result;
-	result = [self runTask:aBinPath binArgs:aArgs environment:nil error:&error];
-	if (error)
-	{
-		if (err != NULL) *err = error;
-	}
-	
-    return [result trim];
+    return [self runTaskWithBinPath:binPath args:args environment:nil error:err];
 }
 
-- (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err
+- (NSString *)runTask:(NSString *)binPath binArgs:(NSArray *)args environment:(NSDictionary *)env error:(NSError **)err
 {
-	[self setTaskIsRunning:YES];
-	[self setTaskTimedOut:NO];
-	
-	int taskResult = -1;
-	
-	if (task) {
-		task = nil;
-	}
-	task = [[NSTask alloc] init];
-	NSPipe *aPipe = [NSPipe pipe];
-	
-	[task setStandardOutput:aPipe];
-	[task setStandardError:aPipe];
-	if (aEnv != NULL) {
-		qldebug(@"[task][environment]: %@",aEnv);
-		[task setEnvironment:aEnv];
-	}
-	
-	[task setLaunchPath:aBinPath];
-	qldebug(@"[task][setLaunchPath]: %@",aBinPath);
-	[task setArguments:aArgs];
-	qldebug(@"[task][setArguments]: %@",aArgs);
-	
-		
-	// Get a NSFileHandle from the pipe. This NSFileHandle will provide the stdout buffer
-	NSFileHandle *fileHandle = [aPipe fileHandleForReading];
-	
-	[[NSNotificationCenter defaultCenter] addObserver:self
-											 selector:@selector(mpTaskDataAvailable:)
-												 name:NSFileHandleDataAvailableNotification
-											   object:fileHandle];
-		
-	// Setup the file handle to work asynchronously and trigger the notification when there is data
-	// in the stdout
-	[fileHandle waitForDataInBackgroundAndNotify];
-	
-	// And finally launch the task, asynchronously
-	// If timeout is set start it ...
-	if (taskTimeoutValue != 0) {
-		//[NSThread detachNewThreadSelector:@selector(taskTimeoutThread) toTarget:self withObject:nil];
-	}
-	
-	[task launch];
-	[task waitUntilExit];
-	taskResult = [task terminationStatus];
-	if (taskResult == 0) {
-		qlinfo(@"Task succeeded: %d",taskResult);
-	} else {
-		qlerror(@"Task failed: %d",taskResult);
-		NSDictionary *errorDetail = @{NSLocalizedDescriptionKey:@"Task failed."};
-		NSError *error = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:errorDetail];
-		if (err != NULL) *err = error;
-	}
-	
-	[self setTaskIsRunning:NO];
-	NSString *tmpStr = [[NSString alloc] initWithData:_taskData encoding:NSUTF8StringEncoding];
-	return tmpStr;
+    return [self runTaskWithBinPath:binPath args:args environment:env error:err];
 }
 
-// The notification will be captured and run this method,
-// passing the NSFileHandle as the object property of the notification
-- (void)mpTaskDataAvailable:(NSNotification *)notification
+- (NSString *)runTaskWithBinPath:(NSString *)binPath args:(NSArray *)args error:(NSError **)error
 {
-	NSMutableData *_data = [NSMutableData dataWithData:_taskData];
-	NSData *newData = [notification.object availableData];
-	if (newData && newData.length)
-	{
-		NSString *tmpStr = [[NSString alloc] initWithData:newData encoding:NSUTF8StringEncoding];
-		if ([[tmpStr trim] length] != 0)
-		{
-			[self postStatusToDelegate:tmpStr];
-			if (![_taskDataLastLine isEqualToString:tmpStr]){
-				qldebug(@"[mpTaskDataAvailable]: %@",[tmpStr trim]);
-				_taskDataLastLine = tmpStr.copy;
-			}
-			
-		}
-		[_data appendData:newData];
-		_taskData = (NSData *)[_data copy];
-	}
-	
-	[notification.object waitForDataInBackgroundAndNotify];
+    return [self runTaskWithBinPath:binPath args:args environment:nil error:error];
+}
+
+- (NSString *)runTaskWithBinPath:(NSString *)binPath args:(NSArray *)args environment:(NSDictionary *)env error:(NSError **)error
+{
+    NSError *err = nil;
+    NSMutableArray *tmpResults = [NSMutableArray new];
+    int taskResult = -99;
+    [self setTaskTerminationStatus:taskResult];
+    
+    if (![fm fileExistsAtPath:binPath]) {
+        if (error != NULL) {
+            err = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:@{NSLocalizedDescriptionKey:@"Task failed, bin path was not found."}];
+            *error = err;
+        } else {
+            qlerror(@"Task failed, bin path was not found.");
+        }
+        return @"ERR";
+    }
+    
+    BOOL useTimeOutTimer = NO;
+    if (taskTimeoutValue != 0) useTimeOutTimer = YES;
+    
+    taskIsRunning = YES;
+    taskTimedOut = NO;
+    
+    task = [[NSTask alloc] init];
+    task.launchPath = binPath;
+    if (args) task.arguments = args;
+    if (env) task.environment = env;
+
+    NSPipe *stdoutPipe = [NSPipe pipe];
+    task.standardInput = [NSPipe pipe];
+    task.standardOutput = stdoutPipe;
+    task.standardError = stdoutPipe;
+    
+
+    NSFileHandle *stdoutHandle = [stdoutPipe fileHandleForReading];
+    [stdoutHandle waitForDataInBackgroundAndNotify];
+    id observer = [[NSNotificationCenter defaultCenter] addObserverForName:NSFileHandleDataAvailableNotification
+                                                                    object:stdoutHandle
+                                                                     queue:nil
+                                                                usingBlock:^(NSNotification *note)
+    {
+        // This block is called when output from the task is available.
+        NSData *dataRead = [stdoutHandle availableData];
+        NSString *stringRead = [[NSString alloc] initWithData:dataRead encoding:NSUTF8StringEncoding];
+        NSArray *parsedString;
+        if ([[stringRead trim] length] != 0)
+        {
+            if (useTimeOutTimer) [self resetTimer];
+            if (![self.taskDataLastLine isEqualToString:[stringRead trim]])
+            {
+                parsedString = [self parseTaskStdout:stringRead];
+                for (NSString *line in parsedString) {
+                    NSString *lineT = [line trim];
+                    if ([lineT length] != 0) {
+                        if ([lineT containsString:@"PackageKit: Missing bundle path"] == NO) {
+                            [self postStatusToDelegate:lineT];
+                            [tmpResults addObject:lineT];
+                            qlinfo(@"task stdout: %@", lineT);
+                        }
+                    }
+                    lineT = nil;
+                }
+                
+                [self setTaskDataLastLine:[stringRead trim]];
+            }
+        }
+        [stdoutHandle waitForDataInBackgroundAndNotify];
+    }];
+    // If there is a task timeout timer
+    if (useTimeOutTimer) {
+        if (!taskTimer) {
+            [self resetTimer];
+        }
+    }
+    
+    [task launch];          // Start the task
+    [task waitUntilExit];   // Wait for the task to complete
+    
+    taskResult = task.terminationStatus;
+    [self setTaskTerminationStatus:taskResult];
+    
+    if (taskResult == 0) {
+        qlinfo(@"Task succeeded: %d",taskResult);
+    } else {
+        // Post Failure data to web service
+        [self postFailurToWebService:binPath args:args statusCode:taskResult stdOut:[tmpResults componentsJoinedByString:@"\n"]];
+        
+        qlerror(@"Task failed: %d",taskResult);
+        err = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:@{NSLocalizedDescriptionKey:@"Task failed."}];
+        if (error != NULL) *error = err;
+    }
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:observer];
+    if (!taskTimer) {
+        [taskTimer invalidate];
+        taskTimer = nil;
+    }
+
+    return [tmpResults componentsJoinedByString:@"\n"];
 }
 
 #pragma mark - Private
 
-- (void)taskTimeoutThread
+- (NSArray *)parseTaskStdout:(NSString *)stdoutStr
 {
-	@autoreleasepool
-	{
-		for (int i = 0; i < taskTimeoutValue; i++)
-		{
-			[NSThread sleepForTimeInterval:1.0];
-			if (!taskIsRunning) break;
-		}
-		if (taskIsRunning)taskTimedOut = YES;
-		
-		if (taskTimedOut)
-		{
-			qlinfo(@"Task timedout, killing task.");
-			[task terminate];
-		}
-	}
-	
+    NSArray *res = [NSArray new];
+    NSCharacterSet *separator = [NSCharacterSet newlineCharacterSet];
+    res = [stdoutStr componentsSeparatedByCharactersInSet:separator];
+    return res;
 }
 
-- (void)taskTimeoutThreadOld
+- (void)resetTimer
 {
-	@autoreleasepool
-	{
-		 qlinfo(@"[MPNSTask] Timeout is set to %d",taskTimeoutValue);
-		 NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
-														   target:self
-														selector:@selector(taskTimeout:)
-														 userInfo:nil
-														 repeats:NO];
-		 [self setTaskTimeoutTimer:timer];
-		 while (taskTimedOut == NO && [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
-	}
-	
+    if (taskTimer) {
+        [taskTimer invalidate];
+    }
+
+    taskTimer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
+                                                   target:self selector:@selector(taskTimerExceeded)
+                                                 userInfo:nil repeats:NO];
 }
 
-- (void)taskTimeout:(NSNotification *)aNotification
+- (void)taskTimerExceeded
 {
-	qlinfo(@"Task timedout, killing task.");
-	//[taskTimeoutTimer invalidate];
-	[self setTaskTimedOut:YES];
-	[task terminate];
+    qlinfo(@"taskTimerExceeded");
+    taskTimedOut = YES;
+    [task terminate];
+}
+
+- (void)postFailurToWebService:(NSString *)binPath args:(NSArray *)args statusCode:(int)status stdOut:(NSString *)stdOut
+{
+    MPSettings *s = [MPSettings sharedInstance];
+    NSDictionary *d = @{@"cuuid":s.ccuid, @"binPath":binPath, @"binArgs":args, @"statusCode":@(status), @"stdOut":stdOut};
+    qlinfo(@"postFailurToWebService ---");
+    qlinfo(@"%@",d);
 }
 
 #pragma mark - Delegate Helper
 
 - (void)postStatusToDelegate:(NSString *)str, ...
 {
-	va_list va;
-	va_start(va, str);
-	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
-	va_end(va);
-	
-	[self.delegate taskStatus:self status:string];
+    va_list va;
+    va_start(va, str);
+    NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
+    va_end(va);
+    
+    [self.delegate taskStatus:self status:string];
 }
 @end

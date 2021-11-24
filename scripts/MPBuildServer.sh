@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.6.0
+# Version: 3.6.1
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -40,6 +40,7 @@
 # 3.5.0     All python now ref as python3
 #           Changed Linux dist detection to /etc/os-release
 # 3.6.0     M2Crypto has been updated to install without special flags
+# 3.6.1     Updated Nodejs install for yarn
 #
 # ----------------------------------------------------------------------------
 
@@ -374,6 +375,15 @@ if $USELINUX; then
         pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3" "python3-devel" "python3-setuptools" "python3-pip" "swig" "yarn")
         for i in "${pkgs[@]}"
         do
+            if [ $i == "yarn" ]; then
+                curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash -
+                echo
+                echo "Install nodejs 14.x"
+                yum clean all
+                yum install -y -q -e 1 nodejs
+                echo
+            fi
+
             p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
             if [ -z $p ]; then
                 echo " - Install $i"
@@ -441,7 +451,7 @@ echo "* Build and configure NGINX"
 echo "-----------------------------------------------------------------------"
 echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
 echo
-NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | head -n 1`
+NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 
 mkdir -p ${BUILDROOT}/nginx
 tar xfz ${SRC_DIR}/${NGINX_SW} --strip 1 -C ${BUILDROOT}/nginx
