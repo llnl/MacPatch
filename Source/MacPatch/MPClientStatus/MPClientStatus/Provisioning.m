@@ -59,11 +59,14 @@
 @property (weak) IBOutlet NSTextView *softwareTextView;
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
 @property (weak) IBOutlet NSProgressIndicator *progressWheel;
+@property (weak) IBOutlet NSProgressIndicator *finishProgressWheel;
 @property (weak) IBOutlet NSTextField *progressStatus;
+@property (weak) IBOutlet NSTextField *finishProgressStatus;
 @property (weak) NSString *selectedTabViewItem;
 @property (weak) NSString *swGroup;
 @property (strong) NSArray *swForGroup;
-@property (strong) NSDictionary *provisionData;
+@property (strong) NSDictionary *provisionUIData;
+@property (strong) NSDictionary *provisionFileData;
 
 @property (strong, nonatomic) NSWindow *backwindow;
 @property (weak) IBOutlet NSButton *closeWindowButton;
@@ -98,32 +101,36 @@
         [self.backwindow makeKeyAndOrderFront:NSApp];
     }
     
-    // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+    _provisionFileData = [self readProvisioningFile];
     
-    [_stepperButton setTitle:@"Begin"];
+    // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
     dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_stepperButton setTitle:@"Begin"];
         [self->_stepperButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
     });
     
     NSError *err = nil;
-    NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_DATA_FILE];
+    NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_UI_FILE];
     NSDictionary *jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     if (err) {
-        qlerror(@"MP_PROVISION_DATA_FILE contents are null. Unable to provision this system.");
+        qlerror(@"MP_PROVISION_UI_FILE contents are null. Unable to provision this system.");
         qlerror(@"%@",err.localizedDescription);
-        _provisionData = nil;
+        _provisionUIData = nil;
         [self.window close];
     } else {
-        _provisionData = [jdata copy];
+        _provisionUIData = [jdata copy];
     }
     
     _tabBar.delegate = self;
-    [_tabBar selectLastTabViewItem:NULL];
-    [_tabBar selectTabViewItemAtIndex:0];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_tabBar selectTabViewItemWithIdentifier:@"1"];
+        [self->_tabBar selectTabViewItemWithIdentifier:@"0"];
+        [self->_tabBar needsDisplay];
+    });
     
     _swGroup = @"Default";
-    if (_provisionData[@"softwareGroup"]) {
-        _swGroup = _provisionData[@"softwareGroup"];
+    if (_provisionUIData[@"softwareGroup"]) {
+        _swGroup = _provisionUIData[@"softwareGroup"];
         qlinfo(@"Setting optional install group to %@",_swGroup);
     }
     
@@ -132,18 +139,17 @@
 }
 
 - (void)runProvisionHostThread
-{
+{    
     @autoreleasepool
     {
         BOOL beginProvision = NO;
-        NSDictionary *provisionFileData = [self readProvisioningFile];
-        qldebug(@"provisionFileData: %@", provisionFileData);
-        if (provisionFileData[@"stage"])
+        qlinfo(@"CEHD: provisionFileData: %@", _provisionFileData);
+        if (_provisionFileData[@"stage"])
         {
-            if ([[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
+            if ([[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
             {
                 beginProvision = YES;
-                qldebug(@"beginProvision = YES");
+                qldebug(@"CEHD: beginProvision = YES");
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     //[self writeStatusToHTML:@""];
@@ -154,12 +160,14 @@
         } else {
             // File is empty 
             beginProvision = YES;
-            qldebug(@"beginProvision = YES, File is empty");
+            qldebug(@"CEHD: beginProvision = YES, File is empty");
         }
         
         // Host need initial required provisioning software installed.
         if (beginProvision)
         {
+            qlinfo(@"CEHD: beginProvision");
+            
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
             });
@@ -232,7 +240,7 @@
                             [self->textFieldStatusBanner removeFromSuperview];
                             [self->progressWheelMain removeFromSuperview];
                             
-                            [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+                            [self->_stepperButton setEnabled:YES]; // Disable Begin button ... initial required sw should be small
                             [self->_closeWindowButton setEnabled:YES];
                         });
                     }
@@ -247,7 +255,7 @@
                 [self->textFieldStatusBanner removeFromSuperview];
                 [self->progressWheelMain removeFromSuperview];
                 
-                [self->_stepperButton setEnabled:YES]; // Diable Begin button ... initial required sw should be small
+                [self->_stepperButton setEnabled:YES]; // Disable Begin button ... initial required sw should be small
                 [self->_closeWindowButton setEnabled:YES];
             });
         }
@@ -256,12 +264,15 @@
 
 - (NSDictionary *)readProvisioningFile
 {
+    qlinfo(@"readProvisioningFile: %@",MP_PROVISION_FILE);
     NSMutableDictionary *_pFile;
     if ( [fm fileExistsAtPath:MP_PROVISION_FILE] ) {
+        qlinfo(@"MP_PROVISION_FILE: %@",MP_PROVISION_FILE);
         _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
     } else {
         _pFile = [NSMutableDictionary new];
     }
+    qlinfo(@"_pFile: %@",_pFile);
     return [_pFile copy];
 }
 
@@ -326,14 +337,16 @@
 - (IBAction)changeTab:(NSButton *)sender
 {
     __block NSInteger _selectedIndex = [self.selectedTabViewItem integerValue];
-    
+    qlinfo(@"CEHD: changeTab");
+    qlinfo(@"CEHD: sender.title = %@",sender.title);
     if ([sender.title isEqualToString:@"Install"]) {
         [_stepperButton setEnabled:NO];
         [_stepperButton setTitle:@"Continue"];
         [self performSelectorInBackground:@selector(installSoftwareThread) withObject:nil];
         // Start installs
         
-    } else if ([sender.title isEqualToString:@"Reboot"] || [sender.title isEqualToString:@"Finished"]) {
+    } else if ([sender.title isEqualToString:@"Reboot"] || [sender.title isEqualToString:@"Finished"])
+    {
         // Write Done file and Code to reboot host
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.backwindow orderOut:self];
@@ -361,7 +374,8 @@
         //[self closeWindow:nil];
         [self closeOrRebootHost];
     
-    } else {
+    } else
+    {
         if ([self.selectedTabViewItem isEqualToString:@"1"])
         {
             // Get All Values
@@ -487,7 +501,7 @@
 - (NSDictionary *)getDataForTab:(NSString *)tabIndex
 {
     NSDictionary *result = nil;
-    NSArray *a = _provisionData[@"tabs"];
+    NSArray *a = _provisionUIData[@"tabs"];
     for (NSDictionary *d in a)
     {
         if ([[d objectForKey:@"id"] integerValue] == [tabIndex integerValue]) {
@@ -501,8 +515,8 @@
 
 - (void)closeOrRebootHost
 {
-    if (_provisionData[@"mandatoryReboot"]) {
-        if ([_provisionData[@"mandatoryReboot"] intValue] == 1) {
+    if (_provisionUIData[@"mandatoryReboot"]) {
+        if ([_provisionUIData[@"mandatoryReboot"] intValue] == 1) {
             [self connectAndExecuteCommandBlock:^(NSError * connectError)
              {
                  if (connectError != nil)
@@ -530,11 +544,13 @@
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
+    qlinfo(@"CEHD: willSelectTabViewItem");
     self.selectedTabViewItem = tabViewItem.identifier;
+    qlinfo(@"CEHD: willSelectTabViewItem self.selectedTabViewItem = %@",tabViewItem.identifier);
     
     NSString *htmlString;
-    if (_provisionData) {
-        htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
+    if (_provisionUIData) {
+        htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionUIData[@"tabs"]];
     } else {
         htmlString = [self htmlForFile:@"blank"];
     }
@@ -567,8 +583,10 @@
 {
     NSString *htmlString;
     
-    if (_provisionData) {
-        htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
+    qlinfo(@"CEHD:[tabViewItem.identifier] %@",tabViewItem.identifier);
+    
+    if (_provisionUIData) {
+        htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionUIData[@"tabs"]];
     } else {
         htmlString = [self htmlForFile:@"blank"];
     }
@@ -582,16 +600,12 @@
     else if ([tabViewItem.identifier isEqualToString:@"1"])
     {
         _collectionWebView.allowsBackForwardNavigationGestures = NO;
-        //[_collectionWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setTitle:@"Continue"];
         [_closeWindowButton setEnabled:NO];
     }
     else if ([tabViewItem.identifier isEqualToString:@"2"])
     {
-        //[_installWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
-        /*[self writeSoftwareView:@"The following software be will installed once you click the \"Install\" button. This can not be canceled once started. Please note, this may take some time depending on your network connection.\n"];
-         */
-        NSString *text = [self textForTab:[tabViewItem.identifier intValue] data:_provisionData[@"tabs"]];
+        NSString *text = [self textForTab:[tabViewItem.identifier intValue] data:_provisionUIData[@"tabs"]];
         
         // Calc size and count
         NSInteger swCount = 0;
@@ -616,8 +630,70 @@
     }
     else if ([tabViewItem.identifier isEqualToString:@"3"])
     {
+        //dispatch_async(dispatch_get_main_queue(), ^(void) {
+        [self->_skipButton setHidden:YES];
+        [self->_stepperButton setHidden:YES];
+        //});
+        
+        // Check to see if the process needs to run any final scripts.
+        _provisionFileData = [self readProvisioningFile];
+        NSDictionary *pData = _provisionFileData[@"data"];
+        qlinfo(@"provisionFileData[3]: %@",pData);
+        
+        // Unarchive the data object and locate the scriptsFinish key, then see if the array
+        // has anything in it.
+        if (pData[@"scriptsFinish"]) {
+            
+            // Show quick message and wheel
+            dispatch_async(dispatch_get_main_queue(), ^(void) {
+                [self->_finishProgressStatus setHidden:NO];
+                self->_finishProgressStatus.stringValue = @"Finalizing system configuration before the reboot.";
+                [self->_finishProgressWheel setHidden:NO];
+                [self->_finishProgressWheel startAnimation:nil];
+            });
+            
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^(void) {
+               
+                NSArray *scripts = [NSArray array];
+                if([pData[@"scriptsFinish"] isKindOfClass: [NSData class]]) {
+                    scripts = [NSKeyedUnarchiver unarchiveObjectWithData:pData[@"scriptsFinish"]];
+                }
+                
+                if(scripts.count >= 1) {
+                    // Sort Array by order ascending
+                    NSSortDescriptor *orderDescriptor = [[NSSortDescriptor alloc] initWithKey:@"order" ascending:YES];
+                    scripts = [scripts sortedArrayUsingDescriptors:[NSArray arrayWithObject:orderDescriptor]];
+                    for (NSDictionary *script in scripts)
+                    {
+                        if ([script[@"active"] intValue] == 1) {
+                            if ([self runScript:script[@"script"]] != 0) {
+                                qlerror(@"Error running script, sid is %@", script[@"sid"]);
+                                qlerror(@"Script Data: %@",script[@"script"]);
+                            }
+                        }
+                    }
+                }
+                qlinfo(@"CEHD[3]: after scripts");
+                dispatch_async(dispatch_get_main_queue(), ^(void) {
+                    [self->_finishProgressStatus setHidden:YES];
+                    [self->_finishProgressWheel stopAnimation:nil];
+                    [self->_finishProgressWheel setHidden:YES];
+                    [self finishDisplayingCompletionTab];
+                });
+            });
+        }
+        else
+        {
+            qlinfo(@"CEHD[3]: else");
+            dispatch_async(dispatch_get_main_queue(), ^(void) {
+                [self->_finishProgressStatus setHidden:YES];
+                [self->_finishProgressWheel setHidden:YES];
+                [self finishDisplayingCompletionTab];
+            });
+        }
+        
+        /*
         _finishWebView.allowsBackForwardNavigationGestures = NO;
-        //[_finishWebView loadHTMLString:htmlString baseURL:[[NSBundle mainBundle] resourceURL]];
         [_stepperButton setEnabled:YES];
         [_stepperButton setTitle:@"Finished"];
         if (_provisionData[@"mandatoryReboot"]) {
@@ -626,7 +702,53 @@
             }
         }
         [_skipButton setHidden:YES];
+         */
     }
+}
+
+- (void)finishDisplayingCompletionTab
+{
+    qlinfo(@"run finishDisplayingCompletionTab");
+    _finishWebView.allowsBackForwardNavigationGestures = NO;
+    [_stepperButton setHidden:NO];
+    [_stepperButton setEnabled:YES];
+    [_stepperButton setTitle:@"Finished"];
+    if (_provisionUIData[@"mandatoryReboot"]) {
+        if ([_provisionUIData[@"mandatoryReboot"] intValue] == 1) {
+            [_stepperButton setTitle:@"Reboot"];
+        }
+    }
+    [_skipButton setHidden:YES];
+}
+
+- (int)runScript:(NSString *)script
+{
+    qlinfo(@"Begin running script");
+    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    __block NSInteger res = 99;
+    [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+        if (connectError != nil) {
+            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            dispatch_semaphore_signal(sem);
+        } else {
+            [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                dispatch_semaphore_signal(sem);
+            }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
+                res = result;
+                if (error) {
+                    qlerror(@"Error running script.");
+                    qlerror(@"%@",error.localizedDescription);
+                }
+                qlinfo(@"End running script");
+                dispatch_semaphore_signal(sem);
+            }];
+        }
+    }];
+    
+    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    qlinfo(@"Script result: %d",(int)res);
+    return (int)res;
 }
 
 #pragma mark - HTML

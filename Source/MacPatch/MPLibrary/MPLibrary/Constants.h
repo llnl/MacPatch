@@ -95,7 +95,7 @@ extern NSString * const MP_AUTHSTATUS_FILE;
 
 extern NSString * const MP_PROVISION_DIR;
 extern NSString * const MP_PROVISION_FILE;
-extern NSString * const MP_PROVISION_DATA_FILE;
+extern NSString * const MP_PROVISION_UI_FILE;
 extern NSString * const MP_PROVISION_BEGIN;
 extern NSString * const MP_PROVISION_DONE;
 

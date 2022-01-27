@@ -2576,6 +2576,8 @@ done:
 
 - (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
 {
+    qlinfo(@"CEHD [postProvisioningData]: key:%@ dataType:%@",key,dataType);
+    
     NSError *err = nil;
     id _data = nil;
     
@@ -2595,10 +2597,10 @@ done:
         reply(err);
     }
 
-    MPFileCheck *fu = [MPFileCheck new];
+    MPFileCheck *fc = [MPFileCheck new];
     
     NSMutableDictionary *_pFile;
-    if ([fu fExists:MP_PROVISION_FILE]) {
+    if ([fc fExists:MP_PROVISION_FILE]) {
         _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
     } else {
         _pFile = [NSMutableDictionary new];
@@ -2611,27 +2613,20 @@ done:
             _status = [_pFile[@"status"] mutableCopy];
         }
         [_status addObject:_data];
-        _pFile[key] = _status;
+        [_pFile setObject:_status forKey:key];
+        // _pFile[key] = _status;
     } else {
-        _pFile[key] = _data;
+        [_pFile setObject:_data forKey:key];
+        // _pFile[key] = _data;
     }
-    
-    /* This Fails for some reason.
-    // The Error is "The file couldn’t be saved because the specified URL type isn’t supported."
-     
-    NSURL *urlFilePath = [NSURL URLWithString:MP_PROVISION_FILE];
-    qlinfo(@"urlFilePath: %@",urlFilePath);
-    qlinfo(@"_pFile: %@",_pFile);
-    [_pFile writeToURL:urlFilePath error:&err];
-    if (err) {
-        qlerror(@"%@",err.localizedDescription);
-    }
-    */
     
     if (![_pFile writeToFile:MP_PROVISION_FILE atomically:NO]) {
         NSDictionary *errDetail = @{NSLocalizedDescriptionKey:@"Error writing provisioning data to file."};
         err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
     }
+    
+    qlinfo(@"CEHD: Verify postProvisioningData");
+    qlinfo(@"CEHD: Data: %@",[NSDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE]);
 
     reply(err);
 }

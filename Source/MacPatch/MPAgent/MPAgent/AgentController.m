@@ -1160,18 +1160,18 @@
             return 1;
         } else {
             // if config exists, remove so we can write a new one
-            if ([fm fileExistsAtPath:MP_PROVISION_DATA_FILE])
+            if ([fm fileExistsAtPath:MP_PROVISION_UI_FILE])
             {
-                [fm removeItemAtPath:MP_PROVISION_DATA_FILE error:&err]; // File exists, remove it
+                [fm removeItemAtPath:MP_PROVISION_UI_FILE error:&err]; // File exists, remove it
                 if (err) {
-                    qlerror(@"Error, unable to remove existsing %@ file.",[MP_PROVISION_DATA_FILE lastPathComponent]);
+                    qlerror(@"Error, unable to remove existsing %@ file.",[MP_PROVISION_UI_FILE lastPathComponent]);
                     qlerror(@"%@",err.localizedDescription);
                     return 1;
                 }
             }
             
             // Write new config file
-            [configJSON writeToFile:MP_PROVISION_DATA_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
+            [configJSON writeToFile:MP_PROVISION_UI_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
             if (err) {
                 qlerror(@"Error writing provisioning configuration to disk.");
                 qlerror(@"%@",err.localizedDescription);
@@ -1181,7 +1181,7 @@
         }
     } else {
         [fm createDirectoryRecursivelyAtPath:MP_PROVISION_DIR];
-        [configJSON writeToFile:MP_PROVISION_DATA_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
+        [configJSON writeToFile:MP_PROVISION_UI_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
         if (err) {
             qlerror(@"Error writing provisioning configuration to disk.");
             qlerror(@"%@",err.localizedDescription);
