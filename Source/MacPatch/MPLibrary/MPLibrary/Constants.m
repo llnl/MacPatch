@@ -95,8 +95,7 @@ NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/
 
 NSString * const MP_PROVISION_DIR          = @"/Library/Application Support/MacPatch/Provision";
 NSString * const MP_PROVISION_FILE         = @"/Library/Application Support/MacPatch/Provision/MPProvision.plist"; // New - Provisioning Status and details
-NSString * const MP_PROVISION_DATA_FILE    = @"/Library/Application Support/MacPatch/Provision/provision.json"; // New - Provisioning Status and details
-//NSString * const MP_PROVISION_DATA_FILE    = @"/Library/MacPatch/Client/Data/provision.json"; // New - Provisioning Status and details
+NSString * const MP_PROVISION_UI_FILE    = @"/Library/Application Support/MacPatch/Provision/provision.json"; // New - Provisioning Status and details
 
 NSString * const MP_PROVISION_BEGIN        = @"/private/var/db/.MPProvisionBegin";
 NSString * const MP_PROVISION_DONE         = @"/private/var/db/.MPProvisionDone";

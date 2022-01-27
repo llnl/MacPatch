@@ -77,7 +77,36 @@
         return res;
     } else {
         // Write Provision Data to File
-        [self writeToKeyInProvisionFile:@"data" data:provisionData];
+        /*
+        NSError *err = nil;
+        NSData *_data = [NSKeyedArchiver archivedDataWithRootObject:provisionData requiringSecureCoding:NO error:&err];
+        if (err) {
+            NSLog(@"%@",err.localizedDescription);
+        }
+         */
+        //[self writeToKeyInProvisionFile:@"data" data:_data];
+        NSMutableDictionary *_provisionData = [NSMutableDictionary dictionaryWithDictionary:provisionData];
+        if (_provisionData[@"scriptsPre"]) {
+            if ([_provisionData[@"scriptsPre"] count] >= 1) {
+                NSData *scriptsPreData = [NSKeyedArchiver archivedDataWithRootObject:_provisionData[@"scriptsPre"]];
+                [_provisionData setObject:scriptsPreData forKey:@"scriptsPre"];
+            }
+        }
+        if (_provisionData[@"scriptsPost"]) {
+            if ([_provisionData[@"scriptsPost"] count] >= 1) {
+                NSData *scriptsPostData = [NSKeyedArchiver archivedDataWithRootObject:_provisionData[@"scriptsPost"]];
+                [_provisionData setObject:scriptsPostData forKey:@"scriptsPost"];
+            }
+        }
+        if (_provisionData[@"scriptsFinish"]) {
+            if ([_provisionData[@"scriptsFinish"] count] >= 1) {
+                NSData *scriptsFinData = [NSKeyedArchiver archivedDataWithRootObject:_provisionData[@"scriptsFinish"]];
+                [_provisionData setObject:scriptsFinData forKey:@"scriptsFinish"];
+            }
+        }
+
+        [self writeToKeyInProvisionFile:@"data" data:_provisionData];
+        
     }
     
     // Run Pre Scripts
@@ -110,7 +139,7 @@
             for (NSDictionary *s in _sw)
             {
                 qlinfo(@"Install Software Task: %@",s[@"name"]);
-                [_delegate provisionProgress:[NSString stringWithFormat:@"Install Software Task: %@",s[@"name"]]];
+                [_delegate provisionProgress:[NSString stringWithFormat:@"Install %@",s[@"name"]]];
                 @try {
                     int res = [self installSoftwareProvisonTask:s];
                     if (res != 0) {
@@ -164,7 +193,7 @@
         qlerror(@"%@",err);
         return result;
     } else {
-        qldebug(@"%@",data);
+        qlinfo(@"%@",data);
         result = [data copy];
     }
     
@@ -179,7 +208,7 @@
 
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data type:(NSString *)type
 {
-    //qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
+    qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
     NSString *_type;
     NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:data];
     
@@ -198,7 +227,7 @@
             _type = @"bool";
             myData = [NSKeyedArchiver archivedDataWithRootObject:data];
         } else {
-            qlerror(@"Type (%@) not known, data will not be written.",[data class]);
+            qlerror(@"Type (%@) not known for key (%@), data will not be written.",[data class],key);
             return;
         }
     }

@@ -12,6 +12,8 @@
 		8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F22E84922B9980800A27786 /* WebKit.framework */; };
 		8F313FEF260417EC00E8B402 /* ProvisioningAlt.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F313FED260417EC00E8B402 /* ProvisioningAlt.m */; };
 		8F313FF0260417EC00E8B402 /* ProvisioningAlt.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */; };
+		8F3AB0DB2757E41C005676B3 /* Survey.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F3AB0D92757E41C005676B3 /* Survey.m */; };
+		8F3AB0DC2757E41C005676B3 /* Survey.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F3AB0DA2757E41C005676B3 /* Survey.xib */; };
 		8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F416E0725D4A70F00947128 /* ProvisionHost.m */; };
 		8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F730CC0240B09FA00876026 /* OpenDirectory.framework */; };
 		8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9072CC25FFE113008BE990 /* MPGradientView.m */; };
@@ -54,6 +56,9 @@
 		8F313FEC260417EC00E8B402 /* ProvisioningAlt.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisioningAlt.h; sourceTree = "<group>"; };
 		8F313FED260417EC00E8B402 /* ProvisioningAlt.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisioningAlt.m; sourceTree = "<group>"; };
 		8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ProvisioningAlt.xib; sourceTree = "<group>"; };
+		8F3AB0D82757E41C005676B3 /* Survey.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Survey.h; sourceTree = "<group>"; };
+		8F3AB0D92757E41C005676B3 /* Survey.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Survey.m; sourceTree = "<group>"; };
+		8F3AB0DA2757E41C005676B3 /* Survey.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Survey.xib; sourceTree = "<group>"; };
 		8F416E0625D4A70F00947128 /* ProvisionHost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisionHost.h; sourceTree = "<group>"; };
 		8F416E0725D4A70F00947128 /* ProvisionHost.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisionHost.m; sourceTree = "<group>"; };
 		8F730CC0240B09FA00876026 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
@@ -143,13 +148,21 @@
 				8FE1999625B258D1001CA72C /* Provisioning.xib */,
 				8F416E0625D4A70F00947128 /* ProvisionHost.h */,
 				8F416E0725D4A70F00947128 /* ProvisionHost.m */,
-				8F9072CB25FFE113008BE990 /* MPGradientView.h */,
-				8F9072CC25FFE113008BE990 /* MPGradientView.m */,
 				8F313FEC260417EC00E8B402 /* ProvisioningAlt.h */,
 				8F313FED260417EC00E8B402 /* ProvisioningAlt.m */,
 				8F313FEE260417EC00E8B402 /* ProvisioningAlt.xib */,
 			);
 			name = Provisioning;
+			sourceTree = "<group>";
+		};
+		8F3AB0D72757E3E0005676B3 /* Survey */ = {
+			isa = PBXGroup;
+			children = (
+				8F3AB0D82757E41C005676B3 /* Survey.h */,
+				8F3AB0D92757E41C005676B3 /* Survey.m */,
+				8F3AB0DA2757E41C005676B3 /* Survey.xib */,
+			);
+			name = Survey;
 			sourceTree = "<group>";
 		};
 		8FD8903E16DFE84600A870A3 = {
@@ -223,10 +236,13 @@
 				8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */,
 				8FC36B391B45BF1F0099D214 /* EventToSend.h */,
 				8FC36B3A1B45BF1F0099D214 /* EventToSend.c */,
-				8FE9DE5C2091002D0079B794 /* CriticalWindow.h */,
 				8FE9DE5D2091002D0079B794 /* CriticalWindow.m */,
+				8FE9DE5C2091002D0079B794 /* CriticalWindow.h */,
 				8FD8907716DFE8D000A870A3 /* ClientStatusMainMenu.xib */,
+				8F9072CB25FFE113008BE990 /* MPGradientView.h */,
+				8F9072CC25FFE113008BE990 /* MPGradientView.m */,
 				8F2858CB25B9ECDA00203E69 /* Provisioning */,
+				8F3AB0D72757E3E0005676B3 /* Survey */,
 				8FD8907316DFE8BE00A870A3 /* Resources */,
 				8FD8905116DFE84600A870A3 /* Supporting Files */,
 			);
@@ -323,6 +339,7 @@
 				8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */,
 				8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */,
 				8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */,
+				8F3AB0DC2757E41C005676B3 /* Survey.xib in Resources */,
 				8FE1999825B258D1001CA72C /* Provisioning.xib in Resources */,
 				8FE1999B25B25D3B001CA72C /* provision in Resources */,
 			);
@@ -344,6 +361,7 @@
 				8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */,
 				8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */,
 				8FD8907216DFE8B200A870A3 /* MPAppUsage.m in Sources */,
+				8F3AB0DB2757E41C005676B3 /* Survey.m in Sources */,
 				8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */,
 				8FE9DE5E2091002D0079B794 /* CriticalWindow.m in Sources */,
 			);
@@ -478,7 +496,7 @@
 				CODE_SIGN_ENTITLEMENTS = MPClientStatus/MPClientStatus.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -489,7 +507,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.1;
+				MARKETING_VERSION = 3.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -507,7 +525,7 @@
 				CODE_SIGN_ENTITLEMENTS = MPClientStatus/MPClientStatus.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -518,7 +536,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.1;
+				MARKETING_VERSION = 3.6.2;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";

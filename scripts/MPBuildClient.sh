@@ -496,7 +496,6 @@ sed -i '' "s/@UBUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist
 # Find and remove .mpRM files, these are here as place holders so that GIT will keep the
 # directory structure
 find ${BUILDROOT} -name ".mpRM" -print | xargs -I{} rm -rf {}
-
 # Remove the compiled Release directory now that all of the files have been copied
 # rm -r ${BUILDROOT}/Release
 

@@ -328,7 +328,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -338,7 +338,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MARKETING_VERSION = 3.6.1;
+				MARKETING_VERSION = 3.6.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -362,7 +362,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = YES;
 				CODE_SIGN_STYLE = Manual;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -372,7 +372,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MARKETING_VERSION = 3.6.1;
+				MARKETING_VERSION = 3.6.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
