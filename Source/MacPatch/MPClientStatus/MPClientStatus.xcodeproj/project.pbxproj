@@ -19,6 +19,7 @@
 		8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9072CC25FFE113008BE990 /* MPGradientView.m */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
+		8FB1AB7427A45558003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7327A45553003DC95C /* libcurl.tbd */; };
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
 		8FC36B3D1B45C0850099D214 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC36B3C1B45C0850099D214 /* Carbon.framework */; };
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
@@ -66,6 +67,7 @@
 		8F9072CC25FFE113008BE990 /* MPGradientView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGradientView.m; sourceTree = "<group>"; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
 		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
+		8FB1AB7327A45553003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
 		8FC36B3A1B45BF1F0099D214 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EventToSend.c; sourceTree = "<group>"; };
 		8FC36B3C1B45C0850099D214 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -119,6 +121,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FB1AB7427A45558003DC95C /* libcurl.tbd in Frameworks */,
 				8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */,
 				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
@@ -185,6 +188,7 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB7327A45553003DC95C /* libcurl.tbd */,
 				8FD1A3DF274496D900166BE4 /* libpython.tbd */,
 				8FD1A3DB274496A300166BE4 /* Python3.framework */,
 				8F730CC0240B09FA00876026 /* OpenDirectory.framework */,

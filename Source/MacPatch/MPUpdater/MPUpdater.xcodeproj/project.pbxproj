@@ -21,6 +21,7 @@
 		8F60AD572244017600FDFBCA /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD562244017600FDFBCA /* SystemConfiguration.framework */; };
 		8F60AD592244018300FDFBCA /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD582244018300FDFBCA /* libz.tbd */; };
 		8F60AD5B2244018F00FDFBCA /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD5A2244018F00FDFBCA /* libicucore.tbd */; };
+		8FB1AB7A27A45581003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7927A4557D003DC95C /* libcurl.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -54,6 +55,7 @@
 		8F60AD582244018300FDFBCA /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		8F60AD5A2244018F00FDFBCA /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
 		8F60AD5E22440BA400FDFBCA /* MPUpdater-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPUpdater-Prefix.pch"; sourceTree = "<group>"; };
+		8FB1AB7927A4557D003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FD5E10323A972C400A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FEE6284261F9A4C00F533F4 /* MPUpdater.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPUpdater.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,6 +73,7 @@
 				8F60AD552244016E00FDFBCA /* Security.framework in Frameworks */,
 				8F60AD532244016400FDFBCA /* IOKit.framework in Frameworks */,
 				8F60AD512244015B00FDFBCA /* CoreServices.framework in Frameworks */,
+				8FB1AB7A27A45581003DC95C /* libcurl.tbd in Frameworks */,
 				8F60AD4F2244014C00FDFBCA /* CoreFoundation.framework in Frameworks */,
 				8F60AD4D2244014200FDFBCA /* Cocoa.framework in Frameworks */,
 				8F60AD4B2244013B00FDFBCA /* Foundation.framework in Frameworks */,
@@ -122,6 +125,7 @@
 		8F60AD43224400FE00FDFBCA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB7927A4557D003DC95C /* libcurl.tbd */,
 				8FD5E10323A972C400A47F7C /* libiconv.tbd */,
 				8F60AD5A2244018F00FDFBCA /* libicucore.tbd */,
 				8F60AD582244018300FDFBCA /* libz.tbd */,

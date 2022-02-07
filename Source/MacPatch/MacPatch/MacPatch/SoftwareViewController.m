@@ -503,7 +503,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	else
 	{
 		/* If there is no content, display only installed items */
-		qlinfo(@"no content");
 		if ([fm fileExistsAtPath:[[SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"content.plist"]])
 		{
 			_a = [NSKeyedUnarchiver unarchiveObjectWithFile:[[SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"content.plist"]];

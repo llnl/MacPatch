@@ -1,5 +1,5 @@
 //
-//  MPSettings.h
+//  MPServerPing.h
 //  MPLibrary
 /*
  Copyright (c) 2021, Lawrence Livermore National Security, LLC.
@@ -26,27 +26,12 @@
 
 #import <Foundation/Foundation.h>
 
-@class Agent;
+NS_ASSUME_NONNULL_BEGIN
 
-@interface MPSettings : NSObject
+@interface MPServerPing : NSObject
 
-@property (nonatomic, strong, readonly) NSString *ccuid;
-@property (nonatomic, strong, readonly) NSString *serialno;
-@property (nonatomic, strong, readonly) NSString *osver;
-@property (nonatomic, strong, readonly) NSString *ostype;
-@property (nonatomic, strong, readonly) NSString *agentVer;
-@property (nonatomic, strong, readonly) NSString *clientVer;
-
-@property (nonatomic, strong, readonly) Agent *agent;
-@property (nonatomic, strong, readonly) NSArray *servers;
-@property (nonatomic, strong, readonly) NSArray *suservers;
-@property (nonatomic, strong, readonly) NSArray *tasks;
-
-
-+ (MPSettings *)sharedInstance;
-
-- (BOOL)refresh;
-- (BOOL)settings;
-- (BOOL)compareAndUpdateSettings:(NSDictionary *)remoteSettingsRevs;
+- (BOOL)serverHostIsReachable:(NSString *)hostName port:(NSInteger)port;
 
 @end
+
+NS_ASSUME_NONNULL_END

@@ -93,6 +93,9 @@
 		8FA28F0921939EF8005D5E92 /* FMXDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EF621939EF8005D5E92 /* FMXDatabaseManager.m */; };
 		8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA8B0CE23636B3500B030C9 /* RequiredPatch.m */; };
 		8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA8B0CF23636B3600B030C9 /* RequiredPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FB1AB6D27A453DA003DC95C /* MPServerPing.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FB1AB6B27A453DA003DC95C /* MPServerPing.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8FB1AB6E27A453DA003DC95C /* MPServerPing.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB1AB6C27A453DA003DC95C /* MPServerPing.m */; };
+		8FB1AB7027A4550F003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB6F27A4550F003DC95C /* libcurl.tbd */; };
 		8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8FBC25622407417600996F5B /* DHCachedPasswordUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */; };
 		8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC0A8CC2181112F006C7FCB /* libz.tbd */; };
@@ -282,6 +285,9 @@
 		8FAEF650145F187C006284B2 /* MPDataMgr.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDataMgr.m; sourceTree = "<group>"; };
 		8FAEF65E145F1922006284B2 /* RegexKitLite.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RegexKitLite.h; sourceTree = "<group>"; };
 		8FAEF65F145F1922006284B2 /* RegexKitLite.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RegexKitLite.m; sourceTree = "<group>"; };
+		8FB1AB6B27A453DA003DC95C /* MPServerPing.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MPServerPing.h; path = MPLibrary/MPServerPing.h; sourceTree = "<group>"; };
+		8FB1AB6C27A453DA003DC95C /* MPServerPing.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = MPServerPing.m; path = MPLibrary/MPServerPing.m; sourceTree = "<group>"; };
+		8FB1AB6F27A4550F003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = DHCachedPasswordUtil.h; sourceTree = "<group>"; };
 		8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = DHCachedPasswordUtil.m; sourceTree = "<group>"; };
 		8FC0A8CC2181112F006C7FCB /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
@@ -403,6 +409,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FB1AB7027A4550F003DC95C /* libcurl.tbd in Frameworks */,
 				8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */,
 				8FE5609816DE6D6300BB7600 /* Security.framework in Frameworks */,
 				8FE5609916DE6D6600BB7600 /* Foundation.framework in Frameworks */,
@@ -770,6 +777,8 @@
 				8FF3D6872170125900059ACD /* MPDefaults.m */,
 				8FF3D6852170125900059ACD /* MPSettings.h */,
 				8FF3D6882170125900059ACD /* MPSettings.m */,
+				8FB1AB6B27A453DA003DC95C /* MPServerPing.h */,
+				8FB1AB6C27A453DA003DC95C /* MPServerPing.m */,
 				8F0011801F894753009F75EC /* Model */,
 			);
 			name = "MP Settings";
@@ -821,6 +830,7 @@
 		8FEA3EE51649726400103E80 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB6F27A4550F003DC95C /* libcurl.tbd */,
 				8FA13A1121B874A900124016 /* libz.1.dylib */,
 				8FC0A8CC2181112F006C7FCB /* libz.tbd */,
 				8FF5B4FF1FC6585D006F5FB2 /* Python.framework */,
@@ -997,6 +1007,7 @@
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
 				8FFC7E3625084950009671AD /* NSFileHandle-Helper.h in Headers */,
 				8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */,
+				8FB1AB6D27A453DA003DC95C /* MPServerPing.h in Headers */,
 				8FC444171D00921900EF328C /* NSString+Base64.h in Headers */,
 				8FEC938B17CBFF0F00AA9C1C /* MPCustomPatch.h in Headers */,
 			);
@@ -1101,6 +1112,7 @@
 				8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */,
 				8FFC7E3725084950009671AD /* NSFileHandle-Helper.m in Sources */,
 				8FBC25622407417600996F5B /* DHCachedPasswordUtil.m in Sources */,
+				8FB1AB6E27A453DA003DC95C /* MPServerPing.m in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
 				8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */,

@@ -19,6 +19,7 @@
 		8F7666541E4CFCD600DF27BE /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7666501E4CFCD600DF27BE /* SystemConfiguration.framework */; };
 		8F7666571E4CFCFA00DF27BE /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7666551E4CFCFA00DF27BE /* CoreServices.framework */; };
 		8F7666581E4CFCFA00DF27BE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7666561E4CFCFA00DF27BE /* IOKit.framework */; };
+		8FB1AB7627A45568003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7527A45563003DC95C /* libcurl.tbd */; };
 		8FE6640F222E002400F12AC8 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D7412171027100059ACD /* libMPLibrary.a */; };
 		8FF3D7442171047E00059ACD /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D7432171047E00059ACD /* Python.framework */; };
 		8FF3D746217104A500059ACD /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D745217104A400059ACD /* libsqlite3.tbd */; };
@@ -58,6 +59,7 @@
 		8F7666501E4CFCD600DF27BE /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		8F7666551E4CFCFA00DF27BE /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		8F7666561E4CFCFA00DF27BE /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8FB1AB7527A45563003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FD5E10223A972B800A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FF3D7412171027100059ACD /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FF3D7432171047E00059ACD /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
@@ -79,6 +81,7 @@
 				8F7666121E4BA70C00DF27BE /* Security.framework in Frameworks */,
 				8F7666511E4CFCD600DF27BE /* AppKit.framework in Frameworks */,
 				8F7666521E4CFCD600DF27BE /* Cocoa.framework in Frameworks */,
+				8FB1AB7627A45568003DC95C /* libcurl.tbd in Frameworks */,
 				8F7666531E4CFCD600DF27BE /* CoreFoundation.framework in Frameworks */,
 				8F7666541E4CFCD600DF27BE /* SystemConfiguration.framework in Frameworks */,
 				8F7666571E4CFCFA00DF27BE /* CoreServices.framework in Frameworks */,
@@ -133,6 +136,7 @@
 		8F7666101E4BA70C00DF27BE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB7527A45563003DC95C /* libcurl.tbd */,
 				8FD5E10223A972B800A47F7C /* libiconv.tbd */,
 				8FF3D745217104A400059ACD /* libsqlite3.tbd */,
 				8FF3D7432171047E00059ACD /* Python.framework */,

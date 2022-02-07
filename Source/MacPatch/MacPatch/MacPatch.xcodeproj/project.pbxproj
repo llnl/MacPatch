@@ -51,6 +51,7 @@
 		8F83530D217E87950034FEFB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F83530C217E87950034FEFB /* Python.framework */; };
 		8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA13A5F21B99DFD00124016 /* WebKit.framework */; };
 		8FA28E14219102E8005D5E92 /* SoftwareInstallOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28E13219102E8005D5E92 /* SoftwareInstallOperation.m */; };
+		8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7127A4553C003DC95C /* libcurl.tbd */; };
 		8FB201F81A3F90C60013C622 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB201F71A3F90C60013C622 /* AppDelegate.m */; };
 		8FB201FA1A3F90C60013C622 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FB201F91A3F90C60013C622 /* main.m */; };
 		8FB201FF1A3F90C60013C622 /* MainMenu.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FB201FD1A3F90C60013C622 /* MainMenu.xib */; };
@@ -149,6 +150,7 @@
 		8FA13A5F21B99DFD00124016 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		8FA28E12219102E8005D5E92 /* SoftwareInstallOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoftwareInstallOperation.h; sourceTree = "<group>"; };
 		8FA28E13219102E8005D5E92 /* SoftwareInstallOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SoftwareInstallOperation.m; sourceTree = "<group>"; };
+		8FB1AB7127A4553C003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FB201F11A3F90C60013C622 /* MacPatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MacPatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FB201F51A3F90C60013C622 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8FB201F61A3F90C60013C622 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -196,6 +198,7 @@
 				8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */,
 				8F83530D217E87950034FEFB /* Python.framework in Frameworks */,
 				8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */,
+				8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */,
 				8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */,
 				8F771AF71E4D461B0011C256 /* Foundation.framework in Frameworks */,
 				8F771AF81E4D461B0011C256 /* IOKit.framework in Frameworks */,
@@ -266,6 +269,7 @@
 		8F2486A31A40DF61003E24C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB7127A4553C003DC95C /* libcurl.tbd */,
 				8FD5E0FF23A9729100A47F7C /* libiconv.tbd */,
 				8F4AD1A7225E975600698096 /* Carbon.framework */,
 				8FA13A5F21B99DFD00124016 /* WebKit.framework */,

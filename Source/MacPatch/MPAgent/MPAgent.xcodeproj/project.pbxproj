@@ -53,6 +53,7 @@
 		8FA6A8811B9621BF006A329B /* NSMetadataQuery+Synchronous.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8741B9621BF006A329B /* NSMetadataQuery+Synchronous.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		8FA6A8821B9621BF006A329B /* PowerProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8761B9621BF006A329B /* PowerProfile.m */; };
 		8FA6A8861B96230C006A329B /* MPInventoryPlugin.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */; };
+		8FB1AB7827A45575003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7727A45570003DC95C /* libcurl.tbd */; };
 		8FE03DD11B600C5A005D39EE /* MPAgentUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */; };
 		8FE03DD61B60195A005D39EE /* AntiVirus.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD51B60195A005D39EE /* AntiVirus.m */; };
 		8FE03DD91B601AC6005D39EE /* AVSoftware.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE03DD81B601AC6005D39EE /* AVSoftware.m */; };
@@ -170,6 +171,7 @@
 		8FA6A8831B9621DB006A329B /* InventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = InventoryPlugin.h; sourceTree = "<group>"; };
 		8FA6A8841B96230C006A329B /* MPInventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPInventoryPlugin.h; sourceTree = "<group>"; };
 		8FA6A8851B96230C006A329B /* MPInventoryPlugin.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPInventoryPlugin.m; sourceTree = "<group>"; };
+		8FB1AB7727A45570003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FD5E0FD23A9723F00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FE03DCF1B600C5A005D39EE /* MPAgentUpdater.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAgentUpdater.h; sourceTree = "<group>"; };
 		8FE03DD01B600C5A005D39EE /* MPAgentUpdater.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPAgentUpdater.m; sourceTree = "<group>"; };
@@ -206,6 +208,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FB1AB7827A45575003DC95C /* libcurl.tbd in Frameworks */,
 				8F1B0805223707D3004D2ACF /* libMPLibrary.a in Frameworks */,
 				8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */,
 				8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */,
@@ -251,6 +254,7 @@
 		8F4B1EEB16DD77BD00E15A9E /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FB1AB7727A45570003DC95C /* libcurl.tbd */,
 				8FD5E0FD23A9723F00A47F7C /* libiconv.tbd */,
 				8F1B0804223707D3004D2ACF /* libMPLibrary.a */,
 				8F53E2091FDA18BB004D4C32 /* PCSC.framework */,
