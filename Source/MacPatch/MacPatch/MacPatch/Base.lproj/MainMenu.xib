@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="19455" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="19455"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -14,19 +14,19 @@
         <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
         <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" toolbarStyle="expanded" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <rect key="contentRect" x="335" y="390" width="840" height="700"/>
+            <rect key="contentRect" x="335" y="390" width="840" height="680"/>
             <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
-            <value key="minSize" type="size" width="840" height="600"/>
+            <value key="minSize" type="size" width="840" height="680"/>
             <value key="maxSize" type="size" width="1000" height="1600"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="840" height="700"/>
+                <rect key="frame" x="0.0" y="0.0" width="840" height="680"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <box autoresizesSubviews="NO" fixedFrame="YES" borderType="none" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="BoI-Qm-Tfv">
-                        <rect key="frame" x="-3" y="-4" width="846" height="706"/>
+                        <rect key="frame" x="-3" y="-4" width="846" height="686"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <view key="contentView" id="waw-Oq-zgO">
-                            <rect key="frame" x="0.0" y="0.0" width="846" height="706"/>
+                            <rect key="frame" x="0.0" y="0.0" width="846" height="686"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         </view>
                     </box>

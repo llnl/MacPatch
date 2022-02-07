@@ -90,12 +90,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     NSString *imgURL = _rowData[@"Software"][@"sw_img_path"];
 	if ([imgURL isEqualToString:@"None"]) return; //If no image then dont try
-	
+    
     if (self.requestCount == -1) {
         self.requestCount++;
     } else {
         if (self.requestCount >= (self.serverArray.count - 1)) {
-			qlerror(@"[SoftwareCellView]: Error, could not complete request, failed all servers.");
+			qlerror(@"[SoftwareCellView][loadImage]: Error, could not complete request, failed all servers.");
             return;
         } else {
             self.requestCount++;
@@ -105,7 +105,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     Server *server = [self.serverArray objectAtIndex:self.requestCount];
 	NSString *urlPath = [NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode];
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-	qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+	//qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+    //qlinfo(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
     r.allowSelfSignedCert = server.allowSelfSigned;
     __weak STHTTPRequest *wr = r;
@@ -458,7 +459,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				}
 			}
         }
-		
+        
+        [self->_progressBarNew stopAnimation];
+        [self->_progressBarNew setHidden:YES];
+        
         [self.actionButton setEnabled:YES];
         [self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
     });

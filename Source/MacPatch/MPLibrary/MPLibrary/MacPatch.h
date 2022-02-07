@@ -41,6 +41,7 @@
 #import "MPClientInfo.h"
 #import "MPDownloadManager.h"
 #import "DHCachedPasswordUtil.h"
+#import "MPServerPing.h"
 
 // NEW
 #import "MPFileUtils.h"

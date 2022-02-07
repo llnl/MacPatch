@@ -1,10 +1,28 @@
 //
 //  MPSettings.m
 //  MPLibrary
-//
-//  Created by Charles Heizer on 6/12/17.
-//
-//
+/*
+ Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "MPSettings.h"
 #import <IOKit/IOKitLib.h>
@@ -355,7 +373,7 @@ static MPSettings *_instance;
 
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
 {
-	
+    MPServerPing *ping = [MPServerPing new];
 	NSMutableArray *_srvs = [NSMutableArray new];
 	NSMutableArray *_srvsRaw = [NSMutableArray new];
 	NSArray *_raw_srvs = settings[@"data"];
@@ -366,27 +384,43 @@ static MPSettings *_instance;
 	for (NSDictionary *_srv in _raw_srvs)
 	{
 		if ([_srv[@"serverType"] integerValue] == 0) {
-			_master = [_srv copy];
+            _master = [_srv copy];
 			continue;
 		}
 		
 		if ([_srv[@"serverType"] integerValue] == 2) {
-			_proxy = [_srv copy];
+            if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+                _proxy = [_srv copy];
+            }
 			continue;
 		}
-		
-		[_srvsRaw addObject:[_srv copy]];
+        
+        if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+            [_srvsRaw addObject:[_srv copy]];
+        }
 	}
 	
 	// Randomize the array of servers
 	//_srvsRaw = [[self randomizeArray:_srvsRaw] mutableCopy];
-	if (_master) [_srvsRaw addObject:_master]; // Add the master
-	if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
-	
-	for (NSDictionary *s in _srvsRaw)
-	{
-		[_srvs addObject:[[Server alloc] initWithDictionary:s]];
-	}
+
+    if (_srvsRaw.count >= 1) {
+        if (_master) {
+            if ([ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]]) {
+                // Since we have reachable servers in the array, only add master if reachable
+                [_srvsRaw addObject:_master]; // Add the master
+            }
+        }
+        if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
+        for (NSDictionary *s in _srvsRaw)
+        {
+            [_srvs addObject:[[Server alloc] initWithDictionary:s]];
+        }
+    } else {
+        // No servers which are reachable, add the master server so there
+        // is at least 1 server in the array and it can timeout.
+        [_srvs addObject:[[Server alloc] initWithDictionary:_master]];
+        qlerror(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
+    }
 	
 	// Now we just read the plist, it's server list is randomized on version rev
 	return (NSArray *)_srvs;
@@ -429,7 +463,6 @@ static MPSettings *_instance;
 	_newSettings[@"data"] = _srvs;
 	return _newSettings;
 }
-
 
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
 {
@@ -514,5 +547,10 @@ static MPSettings *_instance;
 	
 	agentVer = [NSString stringWithFormat:@"%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"]];
 	clientVer = [NSString stringWithFormat:@"%@.%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"],verData[@"build"]];
+}
+
+- (void)serversCache
+{
+    
 }
 @end
