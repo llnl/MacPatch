@@ -5,7 +5,7 @@
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleShortVersionString</key>
-	<string>3.6.2</string>
+	<string>3.6.4</string>
 	<key>CFBundleVersion</key>
 	<string>4</string>
 	<key>NSAppTransportSecurity</key>
@@ -16,6 +16,6 @@
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright © 2022 Lawrence Livremore National Laboratory. All rights reserved.</string>
 	<key>MPInfo</key>
-	<string>MacPatch 3.6.2 Client Software</string>
+	<string>MacPatch 3.6.4 Client Software</string>
 </dict>
 </plist>

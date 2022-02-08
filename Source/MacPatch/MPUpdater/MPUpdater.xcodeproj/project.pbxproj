@@ -10,7 +10,6 @@
 		8F60AD322243F67C00FDFBCA /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD312243F67C00FDFBCA /* main.m */; };
 		8F60AD3C2243FF2B00FDFBCA /* MPUpdaterController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F60AD3B2243FF2B00FDFBCA /* MPUpdaterController.m */; };
 		8F60AD45224400FF00FDFBCA /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD44224400FF00FDFBCA /* libMPLibrary.a */; };
-		8F60AD472244012100FDFBCA /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD462244012100FDFBCA /* Python.framework */; };
 		8F60AD492244012B00FDFBCA /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD482244012B00FDFBCA /* libsqlite3.tbd */; };
 		8F60AD4B2244013B00FDFBCA /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD4A2244013B00FDFBCA /* Foundation.framework */; };
 		8F60AD4D2244014200FDFBCA /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F60AD4C2244014200FDFBCA /* Cocoa.framework */; };
@@ -77,7 +76,6 @@
 				8F60AD4F2244014C00FDFBCA /* CoreFoundation.framework in Frameworks */,
 				8F60AD4D2244014200FDFBCA /* Cocoa.framework in Frameworks */,
 				8F60AD4B2244013B00FDFBCA /* Foundation.framework in Frameworks */,
-				8F60AD472244012100FDFBCA /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

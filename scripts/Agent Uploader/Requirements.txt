@@ -1,0 +1,7 @@
+# Python 3 = MacPatch API Modules
+M2Crypto==0.38.0
+pycrypto>=2.6.1
+requests>=2.27.0
+mysql-connector-python
+simplejson==3.17.6
+psutil==5.9.0

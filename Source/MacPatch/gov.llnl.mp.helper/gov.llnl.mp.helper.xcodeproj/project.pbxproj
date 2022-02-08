@@ -21,7 +21,6 @@
 		8F7666581E4CFCFA00DF27BE /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F7666561E4CFCFA00DF27BE /* IOKit.framework */; };
 		8FB1AB7627A45568003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7527A45563003DC95C /* libcurl.tbd */; };
 		8FE6640F222E002400F12AC8 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D7412171027100059ACD /* libMPLibrary.a */; };
-		8FF3D7442171047E00059ACD /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D7432171047E00059ACD /* Python.framework */; };
 		8FF3D746217104A500059ACD /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF3D745217104A400059ACD /* libsqlite3.tbd */; };
 		8FF3D74A2171056F00059ACD /* AHCodesignVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D7482171056F00059ACD /* AHCodesignVerifier.m */; };
 /* End PBXBuildFile section */
@@ -75,7 +74,6 @@
 			files = (
 				8FE6640F222E002400F12AC8 /* libMPLibrary.a in Frameworks */,
 				8FF3D746217104A500059ACD /* libsqlite3.tbd in Frameworks */,
-				8FF3D7442171047E00059ACD /* Python.framework in Frameworks */,
 				8F7666161E4BA72300DF27BE /* libz.tbd in Frameworks */,
 				8F7666141E4BA71D00DF27BE /* libicucore.tbd in Frameworks */,
 				8F7666121E4BA70C00DF27BE /* Security.framework in Frameworks */,
