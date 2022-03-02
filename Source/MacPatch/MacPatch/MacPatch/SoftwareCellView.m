@@ -90,12 +90,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     NSString *imgURL = _rowData[@"Software"][@"sw_img_path"];
 	if ([imgURL isEqualToString:@"None"]) return; //If no image then dont try
+    qldebug(@"[CELL IMAGE][1]: %@", imgURL);
+    qldebug(@"[loadImage][serverArray]: %@",self.serverArray);
+    qldebug(@"[loadImage][requestCount]: %ld",self.requestCount);
     
     if (self.requestCount == -1) {
         self.requestCount++;
     } else {
         if (self.requestCount >= (self.serverArray.count - 1)) {
 			qlerror(@"[SoftwareCellView][loadImage]: Error, could not complete request, failed all servers.");
+            self.requestCount = -1;
             return;
         } else {
             self.requestCount++;
@@ -105,7 +109,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     Server *server = [self.serverArray objectAtIndex:self.requestCount];
 	NSString *urlPath = [NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode];
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-	//qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+    qldebug(@"[CELL IMAGE][2]: %@", url);
+    //qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
     //qlinfo(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
     r.allowSelfSignedCert = server.allowSelfSigned;
@@ -119,6 +124,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         if (sr.responseStatus >= 200 && sr.responseStatus <= 299) {
 			NSImage *image = [[NSImage alloc] initWithData:data];
 			[self.swIcon setImage:image];
+            self.requestCount = -1;
         } else {
             [weakSelf loadImage];
         }

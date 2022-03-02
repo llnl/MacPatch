@@ -1,16 +1,11 @@
 MacPatch - Changes
 
-MacPatch v3.6.1.12
+MacPatch v3.6.4.2
 
 * Client
-- Add support to MPClientStatus for FileVault authenticated restarts
-- Remove support for installing Apple Patches, now opens System Prefs
-- Fix Timer for Software Restrictions
-
-* Server
-- Fix Software Restrictions Revisions not getting incremented
-- Fix Software Restrictions Remove from Client Group
+- Added Better Server Roll-over for faster response
+- Fix issue with loading images
+- Dropped support for python due to macOS 12.3
 
 * Other
-- Updated NGINX Source
-- Updated Server Build for macOS
+- Update Build script

@@ -25,7 +25,6 @@
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
 		8FCCBA7119AFD1BB001F4C3B /* CHMenuViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */; };
 		8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */; };
-		8FD1A3E12744973100166BE4 /* libpython.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD1A3DF274496D900166BE4 /* libpython.tbd */; };
 		8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904A16DFE84600A870A3 /* Cocoa.framework */; };
 		8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 8FD8905316DFE84600A870A3 /* InfoPlist.strings */; };
 		8FD8905716DFE84600A870A3 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FD8905616DFE84600A870A3 /* main.m */; };
@@ -135,7 +134,6 @@
 				8FD8908616DFE92C00A870A3 /* SystemConfiguration.framework in Frameworks */,
 				8FD8908716DFE92C00A870A3 /* CoreServices.framework in Frameworks */,
 				8FD8908816DFE92C00A870A3 /* IOKit.framework in Frameworks */,
-				8FD1A3E12744973100166BE4 /* libpython.tbd in Frameworks */,
 				8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -511,7 +509,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				MARKETING_VERSION = 3.6.4;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -540,7 +538,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				MARKETING_VERSION = 3.6.4;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";

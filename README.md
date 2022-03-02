@@ -19,7 +19,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 ## System Requirements
 
 ### Client 
-* Mac OS X 10.12.x and higher. X86 and ARM (M1 Macs)
+* Mac OS X 10.13.x and higher. X86 and ARM (M1 Macs)
 
 ##### Server Requirements:
 * Mac OS X or Mac OS X Server 10.12 or higher 

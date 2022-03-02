@@ -140,8 +140,6 @@
 		8FF3D66D2170113900059ACD /* MPDiskUtil.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D65F2170113900059ACD /* MPDiskUtil.m */; };
 		8FF3D66E2170113900059ACD /* MPDate.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6602170113900059ACD /* MPDate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6702170119200059ACD /* InventoryPlugin.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D66F2170119200059ACD /* InventoryPlugin.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FF3D673217011C500059ACD /* MPPython.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D671217011C500059ACD /* MPPython.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FF3D674217011C500059ACD /* MPPython.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D672217011C500059ACD /* MPPython.m */; };
 		8FF3D679217011E700059ACD /* MPHTTPRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D675217011E700059ACD /* MPHTTPRequest.m */; };
 		8FF3D67A217011E700059ACD /* MPRESTfull.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D676217011E700059ACD /* MPRESTfull.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D67B217011E700059ACD /* MPHTTPRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D677217011E700059ACD /* MPHTTPRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -193,7 +191,6 @@
 		8FF3D73C21701AB600059ACD /* NSDate+Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D72E21701AB600059ACD /* NSDate+Helper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D73D21701AB600059ACD /* NSFileManager+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72F21701AB600059ACD /* NSFileManager+Helper.m */; };
 		8FF3D73E21701AB600059ACD /* NSString+Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D73021701AB600059ACD /* NSString+Helper.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FF5B5001FC65861006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B4FF1FC6585D006F5FB2 /* Python.framework */; };
 		8FFC7E3625084950009671AD /* NSFileHandle-Helper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FFC7E342508494F009671AD /* NSFileHandle-Helper.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8FFC7E3725084950009671AD /* NSFileHandle-Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC7E352508494F009671AD /* NSFileHandle-Helper.m */; };
 /* End PBXBuildFile section */
@@ -419,7 +416,6 @@
 				8FE5609D16DE6D6F00BB7600 /* CoreFoundation.framework in Frameworks */,
 				8F382F0F1FB970BE00129063 /* CFNetwork.framework in Frameworks */,
 				8FE5609E16DE6D7200BB7600 /* Cocoa.framework in Frameworks */,
-				8FF5B5001FC65861006F5FB2 /* Python.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -955,7 +951,6 @@
 				8FF3D6612170113900059ACD /* MPDiskUtil.h in Headers */,
 				8FF3D6702170119200059ACD /* InventoryPlugin.h in Headers */,
 				8F4B1E2C16DD1D8C00E15A9E /* MPDataMgr.h in Headers */,
-				8FF3D673217011C500059ACD /* MPPython.h in Headers */,
 				8FA28F0521939EF8005D5E92 /* FMXModel.h in Headers */,
 				8FA28F0621939EF8005D5E92 /* FMXQuery.h in Headers */,
 				8FA28F0421939EF8005D5E92 /* FMXHelpers.h in Headers */,
@@ -1149,7 +1144,6 @@
 				8FF3D6B5217012D600059ACD /* MPRemoteFingerprint.m in Sources */,
 				8FF3D6802170120600059ACD /* MPWSResult.m in Sources */,
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
-				8FF3D674217011C500059ACD /* MPPython.m in Sources */,
 				8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */,
 				8FF3D6B8217012D600059ACD /* MPKeychain.m in Sources */,
 				8FF3D68C2170125900059ACD /* MPSettings.m in Sources */,

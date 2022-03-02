@@ -48,7 +48,6 @@
 		8F771AFA1E4D461B0011C256 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AF11E4D461B0011C256 /* libz.tbd */; };
 		8F771AFB1E4D461B0011C256 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AF21E4D461B0011C256 /* Security.framework */; };
 		8F771AFC1E4D461B0011C256 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F771AF31E4D461B0011C256 /* SystemConfiguration.framework */; };
-		8F83530D217E87950034FEFB /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F83530C217E87950034FEFB /* Python.framework */; };
 		8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA13A5F21B99DFD00124016 /* WebKit.framework */; };
 		8FA28E14219102E8005D5E92 /* SoftwareInstallOperation.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28E13219102E8005D5E92 /* SoftwareInstallOperation.m */; };
 		8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7127A4553C003DC95C /* libcurl.tbd */; };
@@ -196,7 +195,6 @@
 				8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */,
 				8F771AF61E4D461B0011C256 /* CoreServices.framework in Frameworks */,
 				8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */,
-				8F83530D217E87950034FEFB /* Python.framework in Frameworks */,
 				8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */,
 				8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */,
 				8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */,

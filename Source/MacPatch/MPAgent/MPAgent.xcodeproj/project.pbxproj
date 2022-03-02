@@ -67,7 +67,6 @@
 		8FE560E816DE97CF00BB7600 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E716DE97CF00BB7600 /* SystemConfiguration.framework */; };
 		8FE560EA16DE97DD00BB7600 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FE560E916DE97DD00BB7600 /* Security.framework */; };
 		8FE8A7F22112564500E8796E /* Software.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF7E9CF210A558B00678B93 /* Software.m */; };
-		8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF5B50B1FC658EC006F5FB2 /* Python.framework */; };
 		8FF93F9319959206005A4EEB /* MPAgentRegister.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF93F9219959206005A4EEB /* MPAgentRegister.m */; };
 		8FFC7E3324FEC753009671AD /* SPSmartCard.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFC7E3224FEC753009671AD /* SPSmartCard.m */; };
 		8FFEF391224D391A00D9BF8E /* SysInfoCacheGen.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FFEF390224D391A00D9BF8E /* SysInfoCacheGen.m */; };
@@ -211,7 +210,6 @@
 				8FB1AB7827A45575003DC95C /* libcurl.tbd in Frameworks */,
 				8F1B0805223707D3004D2ACF /* libMPLibrary.a in Frameworks */,
 				8F53E20A1FDA18BB004D4C32 /* PCSC.framework in Frameworks */,
-				8FF5B50F1FC659AE006F5FB2 /* Python.framework in Frameworks */,
 				8F5310011B42EEE400B8D893 /* libsqlite3.dylib in Frameworks */,
 				8F530FEE1B42ED2B00B8D893 /* libxml2.dylib in Frameworks */,
 				8FE560DE16DE979E00BB7600 /* libicucore.dylib in Frameworks */,
@@ -681,7 +679,7 @@
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_ENTITLEMENTS = MPAgent/MPAgent.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 3.6.4.2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -701,7 +699,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				MARKETING_VERSION = 3.6.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -727,7 +725,7 @@
 				CLANG_WARN_INT_CONVERSION = NO;
 				CODE_SIGN_ENTITLEMENTS = MPAgent/MPAgent.entitlements;
 				CODE_SIGN_IDENTITY = "-";
-				CURRENT_PROJECT_VERSION = 4;
+				CURRENT_PROJECT_VERSION = 3.6.4.2;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -747,7 +745,7 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MPAgent/MPAgent-Info.plist";
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				MARKETING_VERSION = 3.6.4;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

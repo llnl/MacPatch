@@ -11,7 +11,7 @@
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>MPInfo</key>
-	<string>MacPatch 3.6.2 Client Software</string>
+	<string>MacPatch 3.6.4 Client Software</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>

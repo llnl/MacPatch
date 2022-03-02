@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.5
+# Version: 2.6
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -24,6 +24,8 @@
 #	2.4		Added option for MDM type installer, dont want MP to install
 #			On existsing MP installs unless the apent is older.
 #	2.5		Removed MPLogout agent from build, no longer used with MP 3.6x
+#	2.6		Added option for setting build root
+#			Added logic for Distribution_Beta file to allow installs over the top
 #
 # -------------------------------------------------------------
 
@@ -35,8 +37,8 @@ BUILDROOT="/private/var/tmp/MP/Client36/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENTVER="3.6.0.1"
-UPDATEVER="3.6.0.1"
+AGENTVER="3.6.4.1"
+UPDATEVER="3.6.4.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -56,9 +58,9 @@ MDMPACKAGE=false
 
 # Script Input Args ----------------------------------------------------------
 
-usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-m Is MDM PKG]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-b Build Root Dir] [-l settings plist][-m Is MDM PKG]" 1>&2; exit 1; }
 
-while getopts "hs:p:m" opt; do
+while getopts "hs:p:b:l:m" opt; do
     case $opt in
         s)
             EXTERNALSCRIPTS=true
@@ -67,6 +69,12 @@ while getopts "hs:p:m" opt; do
         p)
             PEXTERNALSCRIPTS=true
             PEXTERNALSCRIPTSDIR=${OPTARG}
+            ;;
+		b)
+            BUILDROOT=${OPTARG}
+            ;;
+		l)
+            BUILDPLIST=${OPTARG}
             ;;
 		m)
 			MDMPACKAGE=true
@@ -110,18 +118,8 @@ runExternalScripts ()
     return
 }
 
-
-
-
 if [ -f "$BUILDPLIST" ]; then
 	CODESIGNIDENTITYALT=`defaults read ${BUILDPLIST} name 2> /dev/null`
-fi
-
-if [ -d "$BUILDROOT" ]; then
-	rm -rf ${BUILDROOT}
-else
-	mkdir -p ${BUILDROOT}
-	mkdir -p ${BUILDROOT}/logs
 fi
 
 #clear
@@ -216,6 +214,14 @@ echo " - Set overall MacPatch Client version ( e.g. 3.2.0 ) "
 read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
 AGENT_VER=${AGENT_VER:-$AGENT_VERS}
 defaults write ${BUILDPLIST} client_version "${AGENT_VER}"
+BUILDROOT="$BUILDROOT/$AGENT_VER/$DATETIME"
+
+if [ -d "$BUILDROOT" ]; then
+	rm -rf ${BUILDROOT}
+else
+	mkdir -p ${BUILDROOT}
+	mkdir -p ${BUILDROOT}/logs
+fi
 
 # ------------------------------------------------------------
 # Set Client Build Number
@@ -266,10 +272,13 @@ PKGSTATE=`echo $PKGSTATE | awk '{print toupper($0)}'`
 defaults write ${BUILDPLIST} package_state "${PKGSTATE}"
 if [ "$PKGSTATE" == "B" ]; then
 	PKG_STATE="- (Beta)"
+	osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 4"
 elif [ "$PKGSTATE" == "A" ]; then
 	PKG_STATE="- (Alpha)"
+	osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 5"
 else
 	echo "Setting Package desired state to \"Release\""
+	osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 6"
 fi
 
 # ------------------------------------------------------------
@@ -433,9 +442,13 @@ mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications/
 mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
-#mv ${BUILDROOT}/Release/MPLoginAgent.app ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
-
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
+
+
+if [ "$PKGSTATE" == "A" ] || [ "$PKGSTATE" == "B" ]; then
+	rm ${BUILDROOT}/Combined/Distribution
+	mv ${BUILDROOT}/Combined/Distribution_Beta ${BUILDROOT}/Combined/Distribution
+fi
 
 if $MDMPACKAGE; then
 	if [ -f "$PKGROOT/MDM/Distribution" ]; then
