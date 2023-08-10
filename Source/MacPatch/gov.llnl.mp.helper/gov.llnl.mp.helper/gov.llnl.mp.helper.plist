@@ -12,7 +12,7 @@
 	</array>
 	<key>MachServices</key>
 	<dict>
-		<key>gov.llnl.mp.workerd</key>
+		<key>gov.llnl.mp.helper</key>
 		<true/>
 	</dict>
 	<key>RunAtLoad</key>

@@ -5,10 +5,13 @@
       location = "group:MacPatch/MacPatch.xcodeproj">
    </FileRef>
    <FileRef
+      location = "group:gov.llnl.mp.helper/gov.llnl.mp.helper.xcodeproj">
+   </FileRef>
+   <FileRef
       location = "group:MPClientStatus/MPClientStatus.xcodeproj">
    </FileRef>
    <FileRef
-      location = "group:gov.llnl.mp.helper/gov.llnl.mp.helper.xcodeproj">
+      location = "group:MPClientStatus/../gov.llnl.mp.status.ui/gov.llnl.mp.status.ui.xcodeproj">
    </FileRef>
    <FileRef
       location = "group:MPAgent/MPAgent.xcodeproj">

@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -165,7 +165,6 @@
 		8FF3D6AD217012D600059ACD /* MPKeyItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6A1217012D500059ACD /* MPKeyItem.m */; };
 		8FF3D6AE217012D600059ACD /* MPSimpleKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6A2217012D600059ACD /* MPSimpleKeychain.m */; };
 		8FF3D6AF217012D600059ACD /* MPClientKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6A3217012D600059ACD /* MPClientKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FF3D6B0217012D600059ACD /* MPKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6A4217012D600059ACD /* MPKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6B1217012D600059ACD /* MPCodeSign.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6A5217012D600059ACD /* MPCodeSign.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6B2217012D600059ACD /* MPRemoteFingerprint.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6A6217012D600059ACD /* MPRemoteFingerprint.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6B3217012D600059ACD /* MPKeyItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6A7217012D600059ACD /* MPKeyItem.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -173,7 +172,6 @@
 		8FF3D6B5217012D600059ACD /* MPRemoteFingerprint.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6A9217012D600059ACD /* MPRemoteFingerprint.m */; };
 		8FF3D6B6217012D600059ACD /* MPSimpleKeychain.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6AA217012D600059ACD /* MPSimpleKeychain.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6B7217012D600059ACD /* MPCodeSign.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6AB217012D600059ACD /* MPCodeSign.m */; };
-		8FF3D6B8217012D600059ACD /* MPKeychain.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6AC217012D600059ACD /* MPKeychain.m */; };
 		8FF3D6C02170131700059ACD /* MPSWTasks.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6BA2170131700059ACD /* MPSWTasks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6C42170131700059ACD /* MPSWTasks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6BE2170131700059ACD /* MPSWTasks.m */; };
 		8FF3D7222170196800059ACD /* MPLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D7212170196800059ACD /* MPLog.m */; };
@@ -923,7 +921,6 @@
 				8F4B1E2A16DD1D8C00E15A9E /* MPInstaller.h in Headers */,
 				8FF3D67F2170120600059ACD /* MPWSResult.h in Headers */,
 				8FF3D6B6217012D600059ACD /* MPSimpleKeychain.h in Headers */,
-				8FF3D6B0217012D600059ACD /* MPKeychain.h in Headers */,
 				8FF3D6B3217012D600059ACD /* MPKeyItem.h in Headers */,
 				8FF3D6AF217012D600059ACD /* MPClientKey.h in Headers */,
 				8FF3D6B2217012D600059ACD /* MPRemoteFingerprint.h in Headers */,
@@ -1035,10 +1032,10 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1410;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
-			compatibilityVersion = "Xcode 8.0";
+			compatibilityVersion = "Xcode 11.4";
 			developmentRegion = en;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -1145,7 +1142,6 @@
 				8FF3D6802170120600059ACD /* MPWSResult.m in Sources */,
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
 				8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */,
-				8FF3D6B8217012D600059ACD /* MPKeychain.m in Sources */,
 				8FF3D68C2170125900059ACD /* MPSettings.m in Sources */,
 				8FF3D68B2170125900059ACD /* MPDefaults.m in Sources */,
 				8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */,
@@ -1188,6 +1184,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1202,7 +1199,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = /Library/Frameworks;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -1231,6 +1228,7 @@
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -1243,7 +1241,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INSTALL_PATH = /Library/Frameworks;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
 			};
@@ -1268,6 +1266,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1.0.0;
+				DEAD_CODE_STRIPPING = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1288,7 +1287,7 @@
 					"$(inherited)",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -1318,6 +1317,7 @@
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				CURRENT_PROJECT_VERSION = 1.0.0;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1333,7 +1333,7 @@
 					"$(inherited)",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

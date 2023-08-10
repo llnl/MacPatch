@@ -751,6 +751,7 @@
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
+        qlerror(@"[getSoftwareRestrictions][ws_err] %@",ws_err.description);
 		*err = ws_err;
 		return nil;
 	}

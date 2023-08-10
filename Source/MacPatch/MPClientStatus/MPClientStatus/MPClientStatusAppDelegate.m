@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.m
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,11 +27,10 @@
 #import "MacPatch.h"
 #import <SystemConfiguration/SystemConfiguration.h>
 #import "MPAppUsage.h"
-#import "MPWorkerProtocol.h"
+#import "MPStatusProtocol.h"
 #import "AppLaunchObject.h"
 #import "CHMenuViewController.h"
 #import "EventToSend.h"
-//#import <UserNotifications/UserNotifications.h>
 
 #import "Provisioning.h"
 #import "ProvisioningAlt.h"
@@ -134,6 +133,26 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 + (void)initialize
 {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+
+    
+    [defaults registerDefaults:[NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST]];
+    NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MPClientStatus.log"];
+    [MPLog setupLogging:_logFile level:lcl_vInfo];
+    
+    if ([defaults boolForKey:@"DeBug"] == YES)
+    {
+        // enable logging for all components up to level Debug
+        lcl_configure_by_name("*", lcl_vDebug);
+        logit(lcl_vInfo,@"***** MPStatus started -- Debug Enabled *****");
+    } else {
+        // enable logging for all components up to level Info
+        lcl_configure_by_name("*", lcl_vInfo);
+        logit(lcl_vInfo,@"***** MPStatus started *****");
+    }
+    
+    qlinfo(@"start initialize");
+    
+    
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.mpResetWhatsNew"])
 	{
 		[defaults removeObjectForKey:@"showWhatsNew"];
@@ -145,11 +164,13 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	[defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showWhatsNew"];
 	[defaults registerDefaults:defaultValues];
 	[defaults synchronize];
+    qlinfo(@"end initialize");
 }
 
 #pragma mark UI Events
 -(void)awakeFromNib
 {
+    qlinfo(@"start awakeFromNib");
     fm = [NSFileManager defaultManager];
 	settings = [MPSettings sharedInstance];
 	[settings refresh];
@@ -193,12 +214,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
+    qlinfo(@"end awakeFromNib");
 }
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+- (void)applicationDidFinishLaunching_Test:(NSNotification *)aNotification
 {
-    [self resetWhatsNew];
-    
     // Show/hide Quit Menu Item
     NSTimer *t = [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(updateMenu:) userInfo:statusMenu repeats:YES];
     [[NSRunLoop currentRunLoop] addTimer:t forMode:NSEventTrackingRunLoopMode];
@@ -221,6 +241,50 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         logit(lcl_vInfo,@"***** MPStatus started *****");
     }
     
+    // Watch for SoftwareUpdate Launches
+    NSNotificationCenter *dc = [[NSWorkspace sharedWorkspace] notificationCenter];
+    
+    // Setup App monitoring
+    mpAppUsage = [[MPAppUsage alloc] init];
+    [mpAppUsage cleanDB]; // Removes Entries Where App Version is NULL
+    
+    [dc addObserver:self selector:@selector(appLaunchNotificationReceived:) name:NSWorkspaceWillLaunchApplicationNotification object:[NSWorkspace sharedWorkspace]];
+    [dc addObserver:self selector:@selector(appLaunchForFilterNotification:) name:NSWorkspaceWillLaunchApplicationNotification object:[NSWorkspace sharedWorkspace]];
+    
+    // Test Connection to Helper
+    [self runTestOnHelper];
+    
+    // Start Last CheckIn Thread, update every 5 min
+    [self showLastCheckIn];
+}
+
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+    qlinfo(@"start applicationDidFinishLaunching");
+    [self resetWhatsNew];
+    
+    // Show/hide Quit Menu Item
+    NSTimer *t = [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(updateMenu:) userInfo:statusMenu repeats:YES];
+    [[NSRunLoop currentRunLoop] addTimer:t forMode:NSEventTrackingRunLoopMode];
+    
+    //Setup Defaults
+    NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
+    [prefs registerDefaults:[NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST]];
+    /*
+    NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MPClientStatus.log"];
+    [MPLog setupLogging:_logFile level:lcl_vInfo];
+    
+    if ([prefs boolForKey:@"DeBug"] == YES)
+    {
+        // enable logging for all components up to level Debug
+        lcl_configure_by_name("*", lcl_vDebug);
+        logit(lcl_vInfo,@"***** MPStatus started -- Debug Enabled *****");
+    } else {
+        // enable logging for all components up to level Info
+        lcl_configure_by_name("*", lcl_vInfo);
+        logit(lcl_vInfo,@"***** MPStatus started *****");
+    }
+    */
     // Watch for SoftwareUpdate Launches
     NSNotificationCenter *dc = [[NSWorkspace sharedWorkspace] notificationCenter];
     
@@ -275,9 +339,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             [NSApp activateIgnoringOtherApps:YES];
         }
     }
+    qlinfo(@"end applicationDidFinishLaunching");
 }
 
-- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender{
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
+{
     return FALSE;
 }
 
@@ -381,11 +447,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 // Ensures that we're connected to our helper tool.
 {
 	if (self.workerConnection == nil) {
-		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
-		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
+		self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kMPStatusUIMachName options:NSXPCConnectionPrivileged];
+		self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPStatusProtocol)];
 		
 		// Register Progress Messeges From Helper
-		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
+		self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPStatusProtocol)];
 		self.workerConnection.exportedObject = self;
 		
 #pragma clang diagnostic push
@@ -1348,7 +1414,7 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	_timerSWRules = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
-		logit(lcl_vInfo, @"Start, Software Rules Update Thread");
+		logit(lcl_vDebug, @"Start, Software Rules Update Thread");
 		logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
 		[self performSelectorOnMainThread:@selector(processSoftwareRules)
 							   withObject:nil
@@ -1385,6 +1451,24 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 - (IBAction)closeSWResWindow:(id)sender
 {
 	[swResWindow close];
+}
+
+#pragma mark - Test
+
+- (void)runTestOnHelper
+{
+    logit(lcl_vInfo,@"Test connection to helper.");
+    [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+        if (connectError != nil) {
+            logit(lcl_vError,@"connectError: %@",connectError.localizedDescription);
+        } else {
+            [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                logit(lcl_vError,@"proxyError: %@",proxyError.localizedDescription);
+            }] getVersionWithReply:^(NSString * verData) {
+                logit(lcl_vInfo,@"Test connection to helper was succesful.");
+            }];
+        }
+    }];
 }
 
 @end

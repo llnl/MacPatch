@@ -2,7 +2,7 @@
 //  AppDelegate.m
 //  MacPatch
 /*
-Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+Copyright (c) 2023, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 Written by Charles Heizer <heizer1 at llnl.gov>.
 LLNL-CODE-636469 All rights reserved.
@@ -179,37 +179,37 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			
         case 0:
             // Software
-            [_SoftwareToolbarButton setState:NSOnState];
-			[_UpdatesToolbarButton setState:NSOffState];
-            [_HistoryToolbarButton setState:NSOffState];
-            [_AgentToolbarButton setState:NSOffState];
+            [_SoftwareToolbarButton setState:NSControlStateValueOn];
+            [_UpdatesToolbarButton setState:NSControlStateValueOff];
+            [_HistoryToolbarButton setState:NSControlStateValueOff];
+            [_AgentToolbarButton setState:NSControlStateValueOff];
             break;
         case 1:
             // Updates
-            [_SoftwareToolbarButton setState:NSOffState];
-            [_UpdatesToolbarButton setState:NSOnState];
-            [_HistoryToolbarButton setState:NSOffState];
-            [_AgentToolbarButton setState:NSOffState];
+            [_SoftwareToolbarButton setState:NSControlStateValueOff];
+            [_UpdatesToolbarButton setState:NSControlStateValueOn];
+            [_HistoryToolbarButton setState:NSControlStateValueOff];
+            [_AgentToolbarButton setState:NSControlStateValueOff];
             break;
         case 2:
             // History
-            [_SoftwareToolbarButton setState:NSOffState];
-            [_UpdatesToolbarButton setState:NSOffState];
-            [_HistoryToolbarButton setState:NSOnState];
-            [_AgentToolbarButton setState:NSOffState];
+            [_SoftwareToolbarButton setState:NSControlStateValueOff];
+            [_UpdatesToolbarButton setState:NSControlStateValueOff];
+            [_HistoryToolbarButton setState:NSControlStateValueOn];
+            [_AgentToolbarButton setState:NSControlStateValueOff];
             break;
         case 3:
             // Agent
-            [_SoftwareToolbarButton setState:NSOffState];
-            [_UpdatesToolbarButton setState:NSOffState];
-            [_HistoryToolbarButton setState:NSOffState];
-            [_AgentToolbarButton setState:NSOnState];
+            [_SoftwareToolbarButton setState:NSControlStateValueOff];
+            [_UpdatesToolbarButton setState:NSControlStateValueOff];
+            [_HistoryToolbarButton setState:NSControlStateValueOff];
+            [_AgentToolbarButton setState:NSControlStateValueOn];
             break;
         default:
-            [_SoftwareToolbarButton setState:NSOffState];
-            [_UpdatesToolbarButton setState:NSOffState];
-            [_HistoryToolbarButton setState:NSOnState];
-            [_AgentToolbarButton setState:NSOffState];
+            [_SoftwareToolbarButton setState:NSControlStateValueOff];
+            [_UpdatesToolbarButton setState:NSControlStateValueOff];
+            [_HistoryToolbarButton setState:NSControlStateValueOn];
+            [_AgentToolbarButton setState:NSControlStateValueOff];
             break;
     }
     

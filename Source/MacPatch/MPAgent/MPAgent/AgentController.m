@@ -1,7 +1,7 @@
 //
 //  AgentController.m
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -255,8 +255,10 @@
         BOOL keepRunning = YES;
         while (keepRunning)
         {
+            int loopCount = 0;
             @autoreleasepool
             {
+                
                 //@try
                 //{                    
                     NSDictionary *taskDict;
@@ -472,13 +474,21 @@
                             }
                         }
                     }
-					if (firstRun) firstRun = NO;
+                if (firstRun) {
+                    [self printTasks:self.tasksArray];
+                    firstRun = NO;
+                }
                // }
                // @catch (NSException *exception) {
                //     qlerror(@"%@",exception);
                // }
+                if (loopCount >= 30) {
+                    [self printTasks:self.tasksArray];
+                    loopCount = 0;
+                }
             }
             sleep(1);
+            loopCount++;
         }
     }
 }
@@ -555,6 +565,14 @@
         logit(lcl_vInfo,@"%@ next run at %@ (DISABLED TASK)",_task[@"name"],nextRun);
     }
     return [(NSDictionary *)_task copy];
+}
+
+// Ner MP 3.7
+// Print MPTask List and scheduled next run
+- (void)printTasks:(NSArray *)tasks
+{
+    NSString *currentTasksFile = @"/Library/Application Support/MacPatch/CurrentTasks.plist";
+    [tasks writeToFile:currentTasksFile atomically:YES];
 }
 
 #pragma mark - Single Methods

@@ -8,6 +8,7 @@
 
 #import "ProvisionHost.h"
 #import "MacPatch.h"
+#import "MPStatusProtocol.h"
 
 @interface ProvisionHost()
 {
@@ -350,10 +351,10 @@
 {
     if (self.workerConnection == nil) {
         self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
-        self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
+        self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPStatusProtocol)];
         
         // Register Progress Messeges From Helper
-        self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProgress)];
+        self.workerConnection.exportedInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPStatusProtocol)];
         self.workerConnection.exportedObject = self;
         
 #pragma clang diagnostic push

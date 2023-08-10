@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 48;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -23,12 +23,12 @@
 		8F2486831A40A369003E24C9 /* HistoryViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486811A40A369003E24C9 /* HistoryViewController.m */; };
 		8F2486841A40A369003E24C9 /* HistoryViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486821A40A369003E24C9 /* HistoryViewController.xib */; };
 		8F24869F1A40DB53003E24C9 /* HistoryItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F24869E1A40DB53003E24C9 /* HistoryItem.m */; };
-		8F2486A21A40DF48003E24C9 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F2486A11A40DF48003E24C9 /* libsqlite3.dylib */; };
 		8F2486AA1A410C35003E24C9 /* SWInstallItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486A91A410C35003E24C9 /* SWInstallItem.m */; };
 		8F2486C71A41EE7B003E24C9 /* RHPreferencesWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486C41A41EE7B003E24C9 /* RHPreferencesWindow.xib */; };
 		8F2486C81A41EE7B003E24C9 /* RHPreferencesWindowController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486C61A41EE7B003E24C9 /* RHPreferencesWindowController.m */; };
 		8F2486CD1A41FFD0003E24C9 /* PrefsGeneralViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2486CB1A41FFD0003E24C9 /* PrefsGeneralViewController.m */; };
 		8F2486CE1A41FFD0003E24C9 /* PrefsGeneralViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */; };
+		8F4A09A3291C7A5C00CEA5C6 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4A09A2291C7A5B00CEA5C6 /* libsqlite3.tbd */; };
 		8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4AD1A7225E975600698096 /* Carbon.framework */; };
 		8F4AD1AB225E990300698096 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8F4AD1A9225E990300698096 /* EventToSend.c */; };
 		8F4E3CB22405F77A008CA5E6 /* FileVaultIcon.icns in Resources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB12405F77A008CA5E6 /* FileVaultIcon.icns */; };
@@ -110,7 +110,6 @@
 		8F24869D1A40DB53003E24C9 /* HistoryItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HistoryItem.h; sourceTree = "<group>"; };
 		8F24869E1A40DB53003E24C9 /* HistoryItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HistoryItem.m; sourceTree = "<group>"; };
 		8F2486A01A40DECF003E24C9 /* MacPatch.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MacPatch.pch; sourceTree = "<group>"; };
-		8F2486A11A40DF48003E24C9 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		8F2486A81A410C35003E24C9 /* SWInstallItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWInstallItem.h; sourceTree = "<group>"; };
 		8F2486A91A410C35003E24C9 /* SWInstallItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWInstallItem.m; sourceTree = "<group>"; };
 		8F2486C31A41EE7B003E24C9 /* RHPreferences.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RHPreferences.h; sourceTree = "<group>"; };
@@ -120,6 +119,7 @@
 		8F2486CA1A41FFD0003E24C9 /* PrefsGeneralViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PrefsGeneralViewController.h; sourceTree = "<group>"; };
 		8F2486CB1A41FFD0003E24C9 /* PrefsGeneralViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PrefsGeneralViewController.m; sourceTree = "<group>"; };
 		8F2486CC1A41FFD0003E24C9 /* PrefsGeneralViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = PrefsGeneralViewController.xib; sourceTree = "<group>"; };
+		8F4A09A2291C7A5B00CEA5C6 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		8F4AD1A7225E975600698096 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
 		8F4AD1A9225E990300698096 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EventToSend.c; path = MacPatch/EventToSend.c; sourceTree = SOURCE_ROOT; };
 		8F4AD1AA225E990300698096 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = EventToSend.h; path = MacPatch/EventToSend.h; sourceTree = SOURCE_ROOT; };
@@ -135,7 +135,6 @@
 		8F6FE7222385DFD100403A41 /* LongPatchWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LongPatchWindow.m; sourceTree = "<group>"; };
 		8F6FE7232385DFD200403A41 /* LongPatchWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LongPatchWindow.h; sourceTree = "<group>"; };
 		8F6FE7242385DFD200403A41 /* LongPatchWindow.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = LongPatchWindow.xib; sourceTree = "<group>"; };
-		8F771AE91E4D454D0011C256 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../../../../../../../Library/Developer/Xcode/DerivedData/MacPatch-gxkmkynletpxzdaprzqsylnshysq/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
 		8F771AEB1E4D461B0011C256 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8F771AEC1E4D461B0011C256 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		8F771AED1E4D461B0011C256 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
@@ -145,7 +144,6 @@
 		8F771AF11E4D461B0011C256 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		8F771AF21E4D461B0011C256 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		8F771AF31E4D461B0011C256 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
-		8F83530C217E87950034FEFB /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 		8FA13A5F21B99DFD00124016 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		8FA28E12219102E8005D5E92 /* SoftwareInstallOperation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SoftwareInstallOperation.h; sourceTree = "<group>"; };
 		8FA28E13219102E8005D5E92 /* SoftwareInstallOperation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SoftwareInstallOperation.m; sourceTree = "<group>"; };
@@ -192,20 +190,20 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F4A09A3291C7A5C00CEA5C6 /* libsqlite3.tbd in Frameworks */,
+				8F771AFA1E4D461B0011C256 /* libz.tbd in Frameworks */,
+				8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */,
+				8F771AF91E4D461B0011C256 /* libicucore.tbd in Frameworks */,
+				8FF3D74021701B5600059ACD /* libMPLibrary.a in Frameworks */,
 				8F4AD1A8225E975700698096 /* Carbon.framework in Frameworks */,
 				8F771AF61E4D461B0011C256 /* CoreServices.framework in Frameworks */,
 				8FA13A6021B99DFD00124016 /* WebKit.framework in Frameworks */,
 				8F771AF41E4D461B0011C256 /* Cocoa.framework in Frameworks */,
-				8FB1AB7227A45546003DC95C /* libcurl.tbd in Frameworks */,
 				8F771AF51E4D461B0011C256 /* CoreFoundation.framework in Frameworks */,
 				8F771AF71E4D461B0011C256 /* Foundation.framework in Frameworks */,
 				8F771AF81E4D461B0011C256 /* IOKit.framework in Frameworks */,
-				8F771AF91E4D461B0011C256 /* libicucore.tbd in Frameworks */,
-				8F771AFA1E4D461B0011C256 /* libz.tbd in Frameworks */,
 				8F771AFB1E4D461B0011C256 /* Security.framework in Frameworks */,
 				8F771AFC1E4D461B0011C256 /* SystemConfiguration.framework in Frameworks */,
-				8FF3D74021701B5600059ACD /* libMPLibrary.a in Frameworks */,
-				8F2486A21A40DF48003E24C9 /* libsqlite3.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -267,23 +265,21 @@
 		8F2486A31A40DF61003E24C9 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F4A09A2291C7A5B00CEA5C6 /* libsqlite3.tbd */,
+				8F771AF11E4D461B0011C256 /* libz.tbd */,
 				8FB1AB7127A4553C003DC95C /* libcurl.tbd */,
 				8FD5E0FF23A9729100A47F7C /* libiconv.tbd */,
+				8F771AF01E4D461B0011C256 /* libicucore.tbd */,
+				8FF3D73F21701B5600059ACD /* libMPLibrary.a */,
 				8F4AD1A7225E975600698096 /* Carbon.framework */,
 				8FA13A5F21B99DFD00124016 /* WebKit.framework */,
-				8F83530C217E87950034FEFB /* Python.framework */,
 				8F771AEB1E4D461B0011C256 /* Cocoa.framework */,
 				8F771AEC1E4D461B0011C256 /* CoreFoundation.framework */,
 				8F771AED1E4D461B0011C256 /* CoreServices.framework */,
 				8F771AEE1E4D461B0011C256 /* Foundation.framework */,
 				8F771AEF1E4D461B0011C256 /* IOKit.framework */,
-				8F771AF01E4D461B0011C256 /* libicucore.tbd */,
-				8F771AF11E4D461B0011C256 /* libz.tbd */,
 				8F771AF21E4D461B0011C256 /* Security.framework */,
 				8F771AF31E4D461B0011C256 /* SystemConfiguration.framework */,
-				8F771AE91E4D454D0011C256 /* libMacPatch.a */,
-				8F2486A11A40DF48003E24C9 /* libsqlite3.dylib */,
-				8FF3D73F21701B5600059ACD /* libMPLibrary.a */,
 			);
 			name = Frameworks;
 			path = MacPatch;
@@ -499,7 +495,7 @@
 		8FB201E91A3F90C60013C622 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1410;
 				ORGANIZATIONNAME = "Heizer, Charles";
 				TargetAttributes = {
 					8F0D48A3220B847D00500A78 = {
@@ -513,7 +509,7 @@
 				};
 			};
 			buildConfigurationList = 8FB201EC1A3F90C60013C622 /* Build configuration list for PBXProject "MacPatch" */;
-			compatibilityVersion = "Xcode 8.0";
+			compatibilityVersion = "Xcode 11.4";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -662,6 +658,7 @@
 				CODE_SIGN_IDENTITY = "";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -671,7 +668,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MacPatchTile/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = (
@@ -701,6 +698,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -709,7 +707,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MacPatchTile/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 10.14;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -756,6 +754,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -773,7 +772,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -811,6 +810,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -822,7 +822,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -840,16 +840,21 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacPatch/MacPatch.pch;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 3.7.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -874,16 +879,21 @@
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacPatch/MacPatch.pch;
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.2;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 3.7.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

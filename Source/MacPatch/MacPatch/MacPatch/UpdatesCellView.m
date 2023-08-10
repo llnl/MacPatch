@@ -1,7 +1,7 @@
 //
 //  UpdatesCellView.m
 /*
-Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+Copyright (c) 2023, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 Written by Charles Heizer <heizer1 at llnl.gov>.
 LLNL-CODE-636469 All rights reserved.
@@ -196,7 +196,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 	});
 	
-	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+	//NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	//BOOL allowInstall = [defaults boolForKey:@"allowRebootPatchInstalls"];
     BOOL allowInstall = YES;
 	BOOL needsReboot = [_rowData[@"restart"] stringToBoolValue];

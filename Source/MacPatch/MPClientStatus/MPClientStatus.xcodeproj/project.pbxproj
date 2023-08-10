@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 53;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,10 @@
 		8F3AB0DB2757E41C005676B3 /* Survey.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F3AB0D92757E41C005676B3 /* Survey.m */; };
 		8F3AB0DC2757E41C005676B3 /* Survey.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8F3AB0DA2757E41C005676B3 /* Survey.xib */; };
 		8F416E0825D4A70F00947128 /* ProvisionHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F416E0725D4A70F00947128 /* ProvisionHost.m */; };
+		8F4A099C291C790300CEA5C6 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4A099B291C790300CEA5C6 /* libz.tbd */; };
+		8F4A099E291C791900CEA5C6 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4A099D291C791900CEA5C6 /* libsqlite3.tbd */; };
+		8F4A099F291C79FD00CEA5C6 /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD5E10023A9729D00A47F7C /* libiconv.tbd */; };
+		8F4A09A1291C7A3200CEA5C6 /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F4A09A0291C7A3200CEA5C6 /* libicucore.tbd */; };
 		8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8F730CC0240B09FA00876026 /* OpenDirectory.framework */; };
 		8F9072CD25FFE113008BE990 /* MPGradientView.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F9072CC25FFE113008BE990 /* MPGradientView.m */; };
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
@@ -36,9 +40,6 @@
 		8FD8908716DFE92C00A870A3 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8907E16DFE92C00A870A3 /* CoreServices.framework */; };
 		8FD8908816DFE92C00A870A3 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8907F16DFE92C00A870A3 /* IOKit.framework */; };
 		8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908016DFE92C00A870A3 /* CoreFoundation.framework */; };
-		8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908116DFE92C00A870A3 /* libicucore.dylib */; };
-		8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908316DFE92C00A870A3 /* libz.dylib */; };
-		8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */; };
 		8FE1999725B258D1001CA72C /* Provisioning.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE1999525B258D1001CA72C /* Provisioning.m */; };
 		8FE1999825B258D1001CA72C /* Provisioning.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FE1999625B258D1001CA72C /* Provisioning.xib */; };
 		8FE1999B25B25D3B001CA72C /* provision in Resources */ = {isa = PBXBuildFile; fileRef = 8FE1999A25B25D3B001CA72C /* provision */; };
@@ -61,11 +62,14 @@
 		8F3AB0DA2757E41C005676B3 /* Survey.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Survey.xib; sourceTree = "<group>"; };
 		8F416E0625D4A70F00947128 /* ProvisionHost.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ProvisionHost.h; sourceTree = "<group>"; };
 		8F416E0725D4A70F00947128 /* ProvisionHost.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ProvisionHost.m; sourceTree = "<group>"; };
+		8F4A099B291C790300CEA5C6 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		8F4A099D291C791900CEA5C6 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		8F4A09A0291C7A3200CEA5C6 /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
+		8F4A09AA291C7D6B00CEA5C6 /* MPStatusProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPStatusProtocol.h; sourceTree = "<group>"; };
 		8F730CC0240B09FA00876026 /* OpenDirectory.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenDirectory.framework; path = System/Library/Frameworks/OpenDirectory.framework; sourceTree = SDKROOT; };
 		8F9072CB25FFE113008BE990 /* MPGradientView.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPGradientView.h; sourceTree = "<group>"; };
 		8F9072CC25FFE113008BE990 /* MPGradientView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGradientView.m; sourceTree = "<group>"; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
-		8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPHelperProtocol.h; sourceTree = "<group>"; };
 		8FB1AB7327A45553003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
 		8FC36B3A1B45BF1F0099D214 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EventToSend.c; sourceTree = "<group>"; };
@@ -76,7 +80,6 @@
 		8FCCBA6F19AFD1BB001F4C3B /* CHMenuViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CHMenuViewController.m; sourceTree = "<group>"; };
 		8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = CHMenuViewController.xib; sourceTree = "<group>"; };
 		8FD1A3DB274496A300166BE4 /* Python3.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python3.framework; path = Library/Frameworks/Python3.framework; sourceTree = DEVELOPER_DIR; };
-		8FD1A3DF274496D900166BE4 /* libpython.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libpython.tbd; path = usr/lib/libpython.tbd; sourceTree = SDKROOT; };
 		8FD5E10023A9729D00A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FD8904716DFE84600A870A3 /* MPClientStatus.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPClientStatus.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FD8904A16DFE84600A870A3 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -96,11 +99,6 @@
 		8FD8907E16DFE92C00A870A3 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
 		8FD8907F16DFE92C00A870A3 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		8FD8908016DFE92C00A870A3 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
-		8FD8908116DFE92C00A870A3 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
-		8FD8908216DFE92C00A870A3 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
-		8FD8908316DFE92C00A870A3 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		8FD8908416DFE92C00A870A3 /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../Developer/Xcode/DerivedData/MacPatch-gcqqukpepnyosjeqfffypdzoyyfx/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
-		8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		8FD8909A16DFEC0700A870A3 /* MPClientStatus-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "MPClientStatus-Info.plist"; sourceTree = "<group>"; };
 		8FE1999425B258D1001CA72C /* Provisioning.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Provisioning.h; sourceTree = "<group>"; };
 		8FE1999525B258D1001CA72C /* Provisioning.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Provisioning.m; sourceTree = "<group>"; };
@@ -112,7 +110,6 @@
 		8FE9DE5C2091002D0079B794 /* CriticalWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CriticalWindow.h; sourceTree = "<group>"; };
 		8FE9DE5D2091002D0079B794 /* CriticalWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CriticalWindow.m; sourceTree = "<group>"; };
 		8FEE628C261FADEB00F533F4 /* MPClientStatus.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MPClientStatus.entitlements; sourceTree = "<group>"; };
-		8FF5B5071FC658C4006F5FB2 /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -120,21 +117,22 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F4A09A1291C7A3200CEA5C6 /* libicucore.tbd in Frameworks */,
+				8F4A099F291C79FD00CEA5C6 /* libiconv.tbd in Frameworks */,
+				8F4A099E291C791900CEA5C6 /* libsqlite3.tbd in Frameworks */,
+				8F4A099C291C790300CEA5C6 /* libz.tbd in Frameworks */,
 				8FB1AB7427A45558003DC95C /* libcurl.tbd in Frameworks */,
-				8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */,
-				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8F0D48B0220B8D8F00500A78 /* libMPLibrary.a in Frameworks */,
-				8FD8908F16DFE99500A870A3 /* libsqlite3.dylib in Frameworks */,
-				8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */,
-				8FD8908A16DFE92C00A870A3 /* libicucore.dylib in Frameworks */,
-				8FD8908C16DFE92C00A870A3 /* libz.dylib in Frameworks */,
-				8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */,
+				8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */,
 				8FC36B3D1B45C0850099D214 /* Carbon.framework in Frameworks */,
+				8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */,
+				8FD8908716DFE92C00A870A3 /* CoreServices.framework in Frameworks */,
+				8FD8904B16DFE84600A870A3 /* Cocoa.framework in Frameworks */,
+				8F730CC1240B09FA00876026 /* OpenDirectory.framework in Frameworks */,
 				8FD8908516DFE92C00A870A3 /* Security.framework in Frameworks */,
 				8FD8908616DFE92C00A870A3 /* SystemConfiguration.framework in Frameworks */,
-				8FD8908716DFE92C00A870A3 /* CoreServices.framework in Frameworks */,
 				8FD8908816DFE92C00A870A3 /* IOKit.framework in Frameworks */,
-				8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */,
+				8F22E84A22B9980800A27786 /* WebKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -186,26 +184,22 @@
 		8FD8904916DFE84600A870A3 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F4A09A0291C7A3200CEA5C6 /* libicucore.tbd */,
+				8F4A099D291C791900CEA5C6 /* libsqlite3.tbd */,
+				8F4A099B291C790300CEA5C6 /* libz.tbd */,
 				8FB1AB7327A45553003DC95C /* libcurl.tbd */,
-				8FD1A3DF274496D900166BE4 /* libpython.tbd */,
 				8FD1A3DB274496A300166BE4 /* Python3.framework */,
 				8F730CC0240B09FA00876026 /* OpenDirectory.framework */,
 				8FD5E10023A9729D00A47F7C /* libiconv.tbd */,
 				8F22E84922B9980800A27786 /* WebKit.framework */,
 				8F0174CF225D60270035A703 /* UserNotifications.framework */,
 				8F0D48AF220B8D8F00500A78 /* libMPLibrary.a */,
-				8FF5B5071FC658C4006F5FB2 /* Python.framework */,
 				8FC36B3C1B45C0850099D214 /* Carbon.framework */,
 				8FD8907C16DFE92C00A870A3 /* Security.framework */,
 				8FD8907D16DFE92C00A870A3 /* SystemConfiguration.framework */,
 				8FD8907E16DFE92C00A870A3 /* CoreServices.framework */,
 				8FD8907F16DFE92C00A870A3 /* IOKit.framework */,
 				8FD8908016DFE92C00A870A3 /* CoreFoundation.framework */,
-				8FD8908116DFE92C00A870A3 /* libicucore.dylib */,
-				8FD8908216DFE92C00A870A3 /* libcrypto.dylib */,
-				8FD8908316DFE92C00A870A3 /* libz.dylib */,
-				8FD8908E16DFE99500A870A3 /* libsqlite3.dylib */,
-				8FD8908416DFE92C00A870A3 /* libMacPatch.a */,
 				8FD8904A16DFE84600A870A3 /* Cocoa.framework */,
 				8FD8904C16DFE84600A870A3 /* Other Frameworks */,
 			);
@@ -225,8 +219,8 @@
 		8FD8905016DFE84600A870A3 /* MPClientStatus */ = {
 			isa = PBXGroup;
 			children = (
+				8F4A09AA291C7D6B00CEA5C6 /* MPStatusProtocol.h */,
 				8FEE628C261FADEB00F533F4 /* MPClientStatus.entitlements */,
-				8F90F5EA220CF8C5008E820C /* MPHelperProtocol.h */,
 				8FD8906D16DFE8B200A870A3 /* MPClientStatusAppDelegate.h */,
 				8FD8906E16DFE8B200A870A3 /* MPClientStatusAppDelegate.m */,
 				8FD8906F16DFE8B200A870A3 /* MPAppUsage.h */,
@@ -238,8 +232,8 @@
 				8FCCBA7019AFD1BB001F4C3B /* CHMenuViewController.xib */,
 				8FC36B391B45BF1F0099D214 /* EventToSend.h */,
 				8FC36B3A1B45BF1F0099D214 /* EventToSend.c */,
-				8FE9DE5D2091002D0079B794 /* CriticalWindow.m */,
 				8FE9DE5C2091002D0079B794 /* CriticalWindow.h */,
+				8FE9DE5D2091002D0079B794 /* CriticalWindow.m */,
 				8FD8907716DFE8D000A870A3 /* ClientStatusMainMenu.xib */,
 				8F9072CB25FFE113008BE990 /* MPGradientView.h */,
 				8F9072CC25FFE113008BE990 /* MPGradientView.m */,
@@ -301,7 +295,7 @@
 		8FD8903F16DFE84600A870A3 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1410;
 				ORGANIZATIONNAME = LLNL;
 				TargetAttributes = {
 					8FD8904616DFE84600A870A3 = {
@@ -310,7 +304,7 @@
 				};
 			};
 			buildConfigurationList = 8FD8904216DFE84600A870A3 /* Build configuration list for PBXProject "MPClientStatus" */;
-			compatibilityVersion = "Xcode 3.2";
+			compatibilityVersion = "Xcode 11.4";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -410,6 +404,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -429,7 +424,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -467,6 +462,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -479,7 +475,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -499,6 +495,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -506,10 +503,13 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.4;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 3.7.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -528,6 +528,7 @@
 				CODE_SIGN_IDENTITY = "-";
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -535,10 +536,13 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "MPClientStatus/MPClientStatus-Info.plist";
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.4;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MARKETING_VERSION = 3.7.0;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "gov.llnl.${PRODUCT_NAME:rfc1034identifier}";
 				PRODUCT_NAME = "$(TARGET_NAME)";

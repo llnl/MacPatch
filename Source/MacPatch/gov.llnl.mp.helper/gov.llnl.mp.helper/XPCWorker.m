@@ -3,7 +3,7 @@
 //  gov.llnl.mp.worker
 //
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -46,8 +46,8 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
 @property (nonatomic, strong, readwrite) NSURL          *SW_DATA_DIR;
 
-@property (atomic, strong, readwrite)   NSXPCListener   *listener;
 @property (atomic, assign, readwrite)   int             selfPID;
+@property (atomic, strong, readwrite)   NSXPCListener   *listener;
 @property (atomic, weak, readwrite)     NSXPCConnection *xpcConnection;
 
 // PID
@@ -2576,8 +2576,7 @@ done:
 
 - (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
 {
-    qlinfo(@"CEHD [postProvisioningData]: key:%@ dataType:%@",key,dataType);
-    
+    // qlinfo(@"CEHD [postProvisioningData]: key:%@ dataType:%@",key,dataType);
     NSError *err = nil;
     id _data = nil;
     
@@ -2625,9 +2624,8 @@ done:
         err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
     }
     
-    qlinfo(@"CEHD: Verify postProvisioningData");
-    qlinfo(@"CEHD: Data: %@",[NSDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE]);
-
+    //qlinfo(@"CEHD: Verify postProvisioningData");
+    //qlinfo(@"CEHD: Data: %@",[NSDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE]);
     reply(err);
 }
 

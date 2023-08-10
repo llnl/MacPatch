@@ -2,7 +2,7 @@
 //  main.m
 //  MPAgent
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -34,12 +34,13 @@
 #import "AgentData.h"
 #import "MPAgent.h"
 #import "MPProvision.h"
+#import "MPTaskData.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.6.4.2"
+#define APPVERSION	@"3.7.0.2"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -71,7 +72,8 @@ int main (int argc, char * argv[])
 		
 		// Patching
 		MPPatchContentType updateType = kAllPatches;
-		NSString 	   *updateBundle = nil;
+		NSString *updateBundle = nil;
+        NSString *patchType = nil;
 		
 		// Software
 		NSString *swArg			= NULL;
@@ -81,6 +83,9 @@ int main (int argc, char * argv[])
         NSString *osMigAction   = NULL;
         NSString *osMigLabel    = @"";
         NSString *osMigID       = @"auto";
+        
+        // Tasks
+        MPTaskData *taskData = [MPTaskData new];
 		
 		// Setup argument processing
 		int c;
@@ -161,6 +166,9 @@ int main (int argc, char * argv[])
                 // FV Check
                 {"fvCheck"              ,no_argument        ,0, 'Z'},
                 
+                // Tasks
+                {"readTasks"            ,no_argument        ,0, 'O'},
+                
                 // Test DB
                 {"installedApps"        ,no_argument        ,0, 'E'},
                 
@@ -169,7 +177,7 @@ int main (int argc, char * argv[])
 			};
 			// getopt_long stores the option index here.
 			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIYsuxfB:Ft:ACaUGSMg:d:P:Lzpr::R::X:k:l:m:Kvbh:ZE", long_options, &option_index);
+			c = getopt_long (argc, argv, "eDTVciIYsuxf:B:Ft:ACaUGSMg:d:P:Lzpr::R::X:k:l:m:Kvbh:ZEO", long_options, &option_index);
 			
 			// Detect the end of the options.
 			if (c == -1)
@@ -214,11 +222,12 @@ int main (int argc, char * argv[])
 					break;
 				case 'f':
 					a_Type = 50;
-					if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"apple"]) {
+                    patchType = [NSString stringWithUTF8String:optarg];
+					if ([[patchType lowercaseString] isEqualTo:@"apple"]) {
 						updateType = kApplePatches;
-					} else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"custom"] || [[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"third"]) {
+					} else if ([[patchType lowercaseString] isEqualTo:@"custom"] || [[patchType lowercaseString] isEqualTo:@"third"]) {
 						updateType = kCustomPatches;
-					} else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"critical"]) {
+					} else if ([[patchType lowercaseString] isEqualTo:@"critical"]) {
 						updateType = kCriticalPatches;
 					}
 					break;
@@ -333,6 +342,9 @@ int main (int argc, char * argv[])
                 case 'E':
                     a_Type = 7777;
                     break;
+                case 'O':
+                    [taskData printAgentTasks];
+                    return 0;
 				case 'h':
 				case '?':
 				default:

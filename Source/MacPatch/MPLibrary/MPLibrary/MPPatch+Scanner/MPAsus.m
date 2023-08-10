@@ -1,7 +1,7 @@
 //
 //  MPAsus.m
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -110,8 +110,7 @@
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	
-	//qltrace(@"%@",string);
-    qlinfo(@"postStringToDelegate: %@",string);
+    qldebug(@"postStringToDelegate: %@",string);
 	[self.delegate asusProgress:string];
 }
 
@@ -126,6 +125,12 @@
 	[self postStringToDelegate:@"Configuring Apple software update scan."];
 	
 	NSArray *appleUpdates = nil;
+    
+    // Before we scan we will kickstart softwareupdated
+    // This is an issue with 10.15 and higher
+    qlinfo(@"Run softwareupdated kickstart.");
+    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"kickstart", @"-k", @"system/com.apple.softwareupdated"]];
+    
 	
 	NSTask *task = [[NSTask alloc] init];
 	[task setLaunchPath: ASUS_BIN_PATH];

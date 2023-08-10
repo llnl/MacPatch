@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?>
 <installer-gui-script minSpecVersion="1.000000">
     <title>MacPatch Client</title>
-    <options customize="allow" allow-external-scripts="yes"/>
     <options customize="allow" hostArchitectures="x86_64,arm64"/>
     <domains enable_anywhere="true" enable_localSystem="true"/>
     <installation-check script="pm_install_check();"/>
