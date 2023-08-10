@@ -144,10 +144,10 @@ fi
 # ******************************************************************
 # Set owner & permissions
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
 setOwnerAndPerms /Library/LaunchAgents/gov.llnl.mp.status.plist
-#setOwnerAndPerms /Library/LaunchAgents/gov.llnl.MPLoginAgent.plist
 setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
-#setOwner /Library/PrivilegedHelperTools/MPLoginAgent.app
+setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.status.ui
 
 if [ ! -d "/Library/Application Support/MPClientStatus" ]; then
 	mkdir "/Library/Application Support/MPClientStatus"
@@ -303,6 +303,9 @@ fi
 #
 
 /bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist
+/bin/sleep 2
+
+/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
 /bin/sleep 2
 
 # ******************************************************************

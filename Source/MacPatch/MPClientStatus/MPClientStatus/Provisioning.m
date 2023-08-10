@@ -7,10 +7,10 @@
 //
 
 #import "Provisioning.h"
-#import <WebKit/WebKit.h>
 #import "ProvisionHost.h"
-#import <dispatch/dispatch.h>
 #import "EventToSend.h"
+#import <WebKit/WebKit.h>
+#import <dispatch/dispatch.h>
 
 @interface WKWebView(SynchronousEvaluateJavaScript)
 - (NSString *)stringByEvaluatingJavaScriptFromString:(NSString *)script;
@@ -143,13 +143,14 @@
     @autoreleasepool
     {
         BOOL beginProvision = NO;
-        qlinfo(@"CEHD: provisionFileData: %@", _provisionFileData);
+        //qlinfo(@"CEHD: provisionFileData: %@", _provisionFileData);
         if (_provisionFileData[@"stage"])
         {
+            qlinfo(@"Provision Stage: %@",_provisionFileData[@"stage"]);
             if ([[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
             {
                 beginProvision = YES;
-                qldebug(@"CEHD: beginProvision = YES");
+                //qldebug(@"CEHD: beginProvision = YES");
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     //[self writeStatusToHTML:@""];
@@ -160,13 +161,13 @@
         } else {
             // File is empty 
             beginProvision = YES;
-            qldebug(@"CEHD: beginProvision = YES, File is empty");
+            //qldebug(@"CEHD: beginProvision = YES, File is empty");
         }
         
         // Host need initial required provisioning software installed.
         if (beginProvision)
         {
-            qlinfo(@"CEHD: beginProvision");
+            qlinfo(@"Begin Provisioning");
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
@@ -264,15 +265,15 @@
 
 - (NSDictionary *)readProvisioningFile
 {
-    qlinfo(@"readProvisioningFile: %@",MP_PROVISION_FILE);
+    qldebug(@"readProvisioningFile: %@",MP_PROVISION_FILE);
     NSMutableDictionary *_pFile;
     if ( [fm fileExistsAtPath:MP_PROVISION_FILE] ) {
-        qlinfo(@"MP_PROVISION_FILE: %@",MP_PROVISION_FILE);
+        qldebug(@"MP_PROVISION_FILE: %@",MP_PROVISION_FILE);
         _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
     } else {
         _pFile = [NSMutableDictionary new];
     }
-    qlinfo(@"_pFile: %@",_pFile);
+    qldebug(@"_pFile: %@",_pFile);
     return [_pFile copy];
 }
 
@@ -337,8 +338,8 @@
 - (IBAction)changeTab:(NSButton *)sender
 {
     __block NSInteger _selectedIndex = [self.selectedTabViewItem integerValue];
-    qlinfo(@"CEHD: changeTab");
-    qlinfo(@"CEHD: sender.title = %@",sender.title);
+    //qlinfo(@"CEHD: changeTab");
+    //qlinfo(@"CEHD: sender.title = %@",sender.title);
     if ([sender.title isEqualToString:@"Install"]) {
         [_stepperButton setEnabled:NO];
         [_stepperButton setTitle:@"Continue"];
@@ -544,9 +545,9 @@
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    qlinfo(@"CEHD: willSelectTabViewItem");
+    //qlinfo(@"CEHD: willSelectTabViewItem");
     self.selectedTabViewItem = tabViewItem.identifier;
-    qlinfo(@"CEHD: willSelectTabViewItem self.selectedTabViewItem = %@",tabViewItem.identifier);
+    //qlinfo(@"CEHD: willSelectTabViewItem self.selectedTabViewItem = %@",tabViewItem.identifier);
     
     NSString *htmlString;
     if (_provisionUIData) {
@@ -583,7 +584,7 @@
 {
     NSString *htmlString;
     
-    qlinfo(@"CEHD:[tabViewItem.identifier] %@",tabViewItem.identifier);
+    //qlinfo(@"CEHD:[tabViewItem.identifier] %@",tabViewItem.identifier);
     
     if (_provisionUIData) {
         htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionUIData[@"tabs"]];
@@ -673,7 +674,7 @@
                         }
                     }
                 }
-                qlinfo(@"CEHD[3]: after scripts");
+                //qlinfo(@"CEHD[3]: after scripts");
                 dispatch_async(dispatch_get_main_queue(), ^(void) {
                     [self->_finishProgressStatus setHidden:YES];
                     [self->_finishProgressWheel stopAnimation:nil];
@@ -684,7 +685,7 @@
         }
         else
         {
-            qlinfo(@"CEHD[3]: else");
+            //qlinfo(@"CEHD[3]: else");
             dispatch_async(dispatch_get_main_queue(), ^(void) {
                 [self->_finishProgressStatus setHidden:YES];
                 [self->_finishProgressWheel setHidden:YES];

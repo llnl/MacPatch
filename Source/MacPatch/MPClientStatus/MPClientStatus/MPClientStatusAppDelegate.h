@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.h
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,12 +24,11 @@
  */
 
 #import <Cocoa/Cocoa.h>
-#import "MPWorkerProtocol.h"
 #import <WebKit/WebKit.h>
 
 @class MPAsus, MPAppUsage;
 
-@interface MPClientStatusAppDelegate : NSObject <MPWorkerClient,NSUserNotificationCenterDelegate,WKNavigationDelegate>
+@interface MPClientStatusAppDelegate : NSObject <NSUserNotificationCenterDelegate,WKNavigationDelegate>
 {
 	NSWindow *__unsafe_unretained window;
     

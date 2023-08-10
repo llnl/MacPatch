@@ -1,7 +1,7 @@
 //
 //  MPSimpleKeychain.m
 /*
- Copyright (c) 2021, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2023, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -470,6 +470,7 @@
     SecTrustedApplicationRef MPLoginAgent = NULL;
     SecTrustedApplicationRef MPUpdateAgent = NULL;
 	SecTrustedApplicationRef MPHelper = NULL;
+    SecTrustedApplicationRef MPStatusUI = NULL;
     
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
 	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
@@ -478,6 +479,7 @@
     result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
 	result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.helper", &MPHelper);
+    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.status.ui", &MPStatusUI);
     
     NSArray *trustedApplications = @[(__bridge_transfer id)me,
 									 (__bridge_transfer id)MPAgent,

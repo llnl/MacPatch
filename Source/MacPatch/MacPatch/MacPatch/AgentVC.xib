@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14460.31" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <deployment version="101200" identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14460.31"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="14460.31"/>
+        <deployment version="101500" identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="21507"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -19,7 +19,7 @@
             <rect key="frame" x="0.0" y="0.0" width="1000" height="818"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <button verticalHuggingPriority="750" id="oFa-hQ-MF1">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="oFa-hQ-MF1">
                     <rect key="frame" x="20" y="741" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Agent" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="soU-68-STT">
@@ -30,7 +30,7 @@
                         <action selector="showAgent:" target="-2" id="DQm-RN-nDs"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="IPB-HF-YCD">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IPB-HF-YCD">
                     <rect key="frame" x="20" y="571" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Client ID" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="Ukb-mi-Mjv">
@@ -41,7 +41,7 @@
                         <action selector="showClientID:" target="-2" id="iyn-VL-J2G"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="hM9-Gc-gum">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hM9-Gc-gum">
                     <rect key="frame" x="20" y="709" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Tasks" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="uEl-oB-gL4">
@@ -52,7 +52,7 @@
                         <action selector="showTasks:" target="-2" id="Hkq-qJ-53z"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="Twg-PQ-jg9">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Twg-PQ-jg9">
                     <rect key="frame" x="20" y="677" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Servers" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="ThM-fq-bZO">
@@ -63,7 +63,7 @@
                         <action selector="showServers:" target="-2" id="BI8-TJ-JdE"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="4M1-Ml-PDF">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="4M1-Ml-PDF">
                     <rect key="frame" x="20" y="645" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="SoftwareUpdate Servers" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="0kP-VR-FnH">
@@ -74,7 +74,7 @@
                         <action selector="showSUServers:" target="-2" id="Vwa-gv-iTR"/>
                     </connections>
                 </button>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="qoA-Yh-7Kw">
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="qoA-Yh-7Kw">
                     <rect key="frame" x="18" y="781" width="156" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Agent Settings" id="BrM-V6-FhD">
@@ -83,7 +83,7 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" id="KZg-ex-80h">
+                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KZg-ex-80h">
                     <rect key="frame" x="18" y="610" width="156" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="Host Info" id="VwP-uf-Jmr">
@@ -92,7 +92,7 @@
                         <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <wkWebView wantsLayer="YES" id="Sj3-rj-F6w">
+                <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Sj3-rj-F6w">
                     <rect key="frame" x="190" y="0.0" width="810" height="818"/>
                     <autoresizingMask key="autoresizingMask" heightSizable="YES"/>
                     <wkWebViewConfiguration key="configuration">
@@ -100,7 +100,7 @@
                         <wkPreferences key="preferences"/>
                     </wkWebViewConfiguration>
                 </wkWebView>
-                <button verticalHuggingPriority="750" id="Tuv-P9-Jcs">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Tuv-P9-Jcs">
                     <rect key="frame" x="38" y="20" width="105" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Refresh Settings" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="0Fg-21-J5n">
@@ -111,7 +111,7 @@
                         <action selector="showSUServers:" target="-2" id="oC8-1H-sAk"/>
                     </connections>
                 </button>
-                <button id="mov-Se-40u">
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mov-Se-40u">
                     <rect key="frame" x="20" y="23" width="14" height="16"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                     <buttonCell key="cell" type="bevel" bezelStyle="circular" image="NSRefreshTemplate" imagePosition="overlaps" alignment="left" controlSize="small" imageScaling="proportionallyDown" id="gJe-x8-VRo">
@@ -119,7 +119,7 @@
                         <font key="font" metaFont="smallSystem"/>
                     </buttonCell>
                 </button>
-                <button verticalHuggingPriority="750" id="jOs-NG-cOi">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="jOs-NG-cOi">
                     <rect key="frame" x="20" y="539" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Serial Number" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="CJ5-cc-1E0">
@@ -130,7 +130,7 @@
                         <action selector="showSerialNo:" target="-2" id="XbF-WX-bfo"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="Cgb-Xf-pFz">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Cgb-Xf-pFz">
                     <rect key="frame" x="20" y="507" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="FileVault Status" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="sRE-Mc-iKX">
@@ -141,7 +141,7 @@
                         <action selector="showFileVaultStatus:" target="-2" id="nJV-cA-KzU"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="1RF-M1-VjM">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="1RF-M1-VjM">
                     <rect key="frame" x="20" y="475" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="Network Info" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="1Mg-eu-6Xo">
@@ -152,7 +152,7 @@
                         <action selector="showNetworkInfo:" target="-2" id="DTh-cG-RJg"/>
                     </connections>
                 </button>
-                <button verticalHuggingPriority="750" id="ke7-fO-at8">
+                <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ke7-fO-at8">
                     <rect key="frame" x="20" y="443" width="152" height="24"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="bevel" title="OS Profiles" bezelStyle="rounded" alignment="left" imageScaling="proportionallyDown" inset="2" id="tmX-FV-ynU">
@@ -168,6 +168,6 @@
         </customView>
     </objects>
     <resources>
-        <image name="NSRefreshTemplate" width="11" height="15"/>
+        <image name="NSRefreshTemplate" width="14" height="16"/>
     </resources>
 </document>

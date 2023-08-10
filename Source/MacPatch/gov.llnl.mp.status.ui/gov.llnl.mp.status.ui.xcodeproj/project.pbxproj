@@ -1,0 +1,423 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 53;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		8F35407329721E30007DFD89 /* AHCodesignVerifier.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F35407129721E30007DFD89 /* AHCodesignVerifier.m */; };
+		8F4A09AB291C7EAC00CEA5C6 /* gov.llnl.mp.status.ui.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = 8FF4C08A2919F55B00170943 /* gov.llnl.mp.status.ui.plist */; };
+		8FF4C0792919F4C300170943 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF4C0782919F4C300170943 /* main.m */; };
+		8FF4C08F2919F60400170943 /* libMPLibrary.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C08E2919F60400170943 /* libMPLibrary.a */; };
+		8FF4C0912919F60D00170943 /* libsqlite3.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0902919F60D00170943 /* libsqlite3.tbd */; };
+		8FF4C0932919F61400170943 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0922919F61400170943 /* libz.tbd */; };
+		8FF4C0952919F62100170943 /* libicucore.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0942919F62100170943 /* libicucore.tbd */; };
+		8FF4C0972919F62900170943 /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0962919F62900170943 /* libcurl.tbd */; };
+		8FF4C0992919F63600170943 /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0982919F63600170943 /* Security.framework */; };
+		8FF4C09B2919F63D00170943 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C09A2919F63D00170943 /* AppKit.framework */; };
+		8FF4C09D2919F64400170943 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C09C2919F64400170943 /* Cocoa.framework */; };
+		8FF4C09F2919F64B00170943 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C09E2919F64B00170943 /* CoreFoundation.framework */; };
+		8FF4C0A12919F65300170943 /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0A02919F65200170943 /* SystemConfiguration.framework */; };
+		8FF4C0A32919F65A00170943 /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0A22919F65A00170943 /* CoreServices.framework */; };
+		8FF4C0A52919F66200170943 /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FF4C0A42919F66200170943 /* IOKit.framework */; };
+		8FF4C0A92919F79200170943 /* XPCStatus.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF4C0A82919F79200170943 /* XPCStatus.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8FF4C0732919F4C300170943 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = LaunchDaemons;
+			dstSubfolderSpec = 16;
+			files = (
+				8F4A09AB291C7EAC00CEA5C6 /* gov.llnl.mp.status.ui.plist in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		8F35407129721E30007DFD89 /* AHCodesignVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AHCodesignVerifier.m; sourceTree = "<group>"; };
+		8F35407229721E30007DFD89 /* AHCodesignVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AHCodesignVerifier.h; sourceTree = "<group>"; };
+		8FF4C0752919F4C300170943 /* gov.llnl.mp.status.ui */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gov.llnl.mp.status.ui; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FF4C0782919F4C300170943 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		8FF4C0892919F55B00170943 /* MPStatusUI-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPStatusUI-Prefix.pch"; sourceTree = "<group>"; };
+		8FF4C08A2919F55B00170943 /* gov.llnl.mp.status.ui.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = gov.llnl.mp.status.ui.plist; sourceTree = "<group>"; };
+		8FF4C08B2919F55B00170943 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8FF4C08C2919F57100170943 /* gov.llnl.mp.status.ui.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = gov.llnl.mp.status.ui.entitlements; sourceTree = "<group>"; };
+		8FF4C08E2919F60400170943 /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FF4C0902919F60D00170943 /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
+		8FF4C0922919F61400170943 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
+		8FF4C0942919F62100170943 /* libicucore.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libicucore.tbd; path = usr/lib/libicucore.tbd; sourceTree = SDKROOT; };
+		8FF4C0962919F62900170943 /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
+		8FF4C0982919F63600170943 /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
+		8FF4C09A2919F63D00170943 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		8FF4C09C2919F64400170943 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		8FF4C09E2919F64B00170943 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		8FF4C0A02919F65200170943 /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		8FF4C0A22919F65A00170943 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		8FF4C0A42919F66200170943 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		8FF4C0A62919F79200170943 /* MPStatusProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPStatusProtocol.h; sourceTree = "<group>"; };
+		8FF4C0A72919F79200170943 /* XPCStatus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = XPCStatus.h; sourceTree = "<group>"; };
+		8FF4C0A82919F79200170943 /* XPCStatus.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XPCStatus.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		8FF4C0722919F4C300170943 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FF4C0A52919F66200170943 /* IOKit.framework in Frameworks */,
+				8FF4C0A32919F65A00170943 /* CoreServices.framework in Frameworks */,
+				8FF4C0A12919F65300170943 /* SystemConfiguration.framework in Frameworks */,
+				8FF4C09F2919F64B00170943 /* CoreFoundation.framework in Frameworks */,
+				8FF4C09D2919F64400170943 /* Cocoa.framework in Frameworks */,
+				8FF4C09B2919F63D00170943 /* AppKit.framework in Frameworks */,
+				8FF4C0992919F63600170943 /* Security.framework in Frameworks */,
+				8FF4C0972919F62900170943 /* libcurl.tbd in Frameworks */,
+				8FF4C0952919F62100170943 /* libicucore.tbd in Frameworks */,
+				8FF4C0932919F61400170943 /* libz.tbd in Frameworks */,
+				8FF4C0912919F60D00170943 /* libsqlite3.tbd in Frameworks */,
+				8FF4C08F2919F60400170943 /* libMPLibrary.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		8F35407029721E30007DFD89 /* AHCodesignVerifier */ = {
+			isa = PBXGroup;
+			children = (
+				8F35407129721E30007DFD89 /* AHCodesignVerifier.m */,
+				8F35407229721E30007DFD89 /* AHCodesignVerifier.h */,
+			);
+			path = AHCodesignVerifier;
+			sourceTree = "<group>";
+		};
+		8FF4C06C2919F4C300170943 = {
+			isa = PBXGroup;
+			children = (
+				8FF4C0772919F4C300170943 /* gov.llnl.mp.status.ui */,
+				8FF4C0762919F4C300170943 /* Products */,
+				8FF4C08D2919F60400170943 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		8FF4C0762919F4C300170943 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				8FF4C0752919F4C300170943 /* gov.llnl.mp.status.ui */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		8FF4C0772919F4C300170943 /* gov.llnl.mp.status.ui */ = {
+			isa = PBXGroup;
+			children = (
+				8FF4C08C2919F57100170943 /* gov.llnl.mp.status.ui.entitlements */,
+				8FF4C0A62919F79200170943 /* MPStatusProtocol.h */,
+				8FF4C0782919F4C300170943 /* main.m */,
+				8FF4C0A72919F79200170943 /* XPCStatus.h */,
+				8FF4C0A82919F79200170943 /* XPCStatus.m */,
+				8F35407029721E30007DFD89 /* AHCodesignVerifier */,
+				8FF4C07F2919F4DC00170943 /* Supporting Files */,
+			);
+			path = gov.llnl.mp.status.ui;
+			sourceTree = "<group>";
+		};
+		8FF4C07F2919F4DC00170943 /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				8FF4C08B2919F55B00170943 /* Info.plist */,
+				8FF4C08A2919F55B00170943 /* gov.llnl.mp.status.ui.plist */,
+				8FF4C0892919F55B00170943 /* MPStatusUI-Prefix.pch */,
+			);
+			path = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		8FF4C08D2919F60400170943 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				8FF4C0A42919F66200170943 /* IOKit.framework */,
+				8FF4C0A22919F65A00170943 /* CoreServices.framework */,
+				8FF4C0A02919F65200170943 /* SystemConfiguration.framework */,
+				8FF4C09E2919F64B00170943 /* CoreFoundation.framework */,
+				8FF4C09C2919F64400170943 /* Cocoa.framework */,
+				8FF4C09A2919F63D00170943 /* AppKit.framework */,
+				8FF4C0982919F63600170943 /* Security.framework */,
+				8FF4C0962919F62900170943 /* libcurl.tbd */,
+				8FF4C0942919F62100170943 /* libicucore.tbd */,
+				8FF4C0922919F61400170943 /* libz.tbd */,
+				8FF4C0902919F60D00170943 /* libsqlite3.tbd */,
+				8FF4C08E2919F60400170943 /* libMPLibrary.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		8FF4C0742919F4C300170943 /* gov.llnl.mp.status.ui */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 8FF4C07C2919F4C300170943 /* Build configuration list for PBXNativeTarget "gov.llnl.mp.status.ui" */;
+			buildPhases = (
+				8FF4C0712919F4C300170943 /* Sources */,
+				8FF4C0722919F4C300170943 /* Frameworks */,
+				8FF4C0732919F4C300170943 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = gov.llnl.mp.status.ui;
+			productName = gov.llnl.mp.status.ui;
+			productReference = 8FF4C0752919F4C300170943 /* gov.llnl.mp.status.ui */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		8FF4C06D2919F4C300170943 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastUpgradeCheck = 1420;
+				ORGANIZATIONNAME = "Lawrence Livermore Nat'l Lab";
+				TargetAttributes = {
+					8FF4C0742919F4C300170943 = {
+						CreatedOnToolsVersion = 14.1;
+					};
+				};
+			};
+			buildConfigurationList = 8FF4C0702919F4C300170943 /* Build configuration list for PBXProject "gov.llnl.mp.status.ui" */;
+			compatibilityVersion = "Xcode 11.4";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = 8FF4C06C2919F4C300170943;
+			productRefGroup = 8FF4C0762919F4C300170943 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				8FF4C0742919F4C300170943 /* gov.llnl.mp.status.ui */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		8FF4C0712919F4C300170943 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				8FF4C0792919F4C300170943 /* main.m in Sources */,
+				8FF4C0A92919F79200170943 /* XPCStatus.m in Sources */,
+				8F35407329721E30007DFD89 /* AHCodesignVerifier.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		8FF4C07A2919F4C300170943 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		8FF4C07B2919F4C300170943 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		8FF4C07D2919F4C300170943 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = gov.llnl.mp.status.ui/gov.llnl.mp.status.ui.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "gov.llnl.mp.status.ui/Supporting Files/MPStatusUI-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
+				INFOPLIST_FILE = "gov.llnl.mp.status.ui/Supporting Files/Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"gov.llnl.mp.status.ui/Supporting\\ Files/Info.plist",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.status.ui;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		8FF4C07E2919F4C300170943 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_WARN_DOCUMENTATION_COMMENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = gov.llnl.mp.status.ui/gov.llnl.mp.status.ui.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_HARDENED_RUNTIME = YES;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "gov.llnl.mp.status.ui/Supporting Files/MPStatusUI-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
+				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
+				INFOPLIST_FILE = "gov.llnl.mp.status.ui/Supporting Files/Info.plist";
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				OTHER_LDFLAGS = (
+					"-ObjC",
+					"-all_load",
+					"-framework",
+					Foundation,
+					"-sectcreate",
+					__TEXT,
+					__info_plist,
+					"gov.llnl.mp.status.ui/Supporting\\ Files/Info.plist",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.status.ui;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		8FF4C0702919F4C300170943 /* Build configuration list for PBXProject "gov.llnl.mp.status.ui" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8FF4C07A2919F4C300170943 /* Debug */,
+				8FF4C07B2919F4C300170943 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		8FF4C07C2919F4C300170943 /* Build configuration list for PBXNativeTarget "gov.llnl.mp.status.ui" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				8FF4C07D2919F4C300170943 /* Debug */,
+				8FF4C07E2919F4C300170943 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 8FF4C06D2919F4C300170943 /* Project object */;
+}

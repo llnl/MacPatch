@@ -999,7 +999,7 @@ static const CGFloat kDetailsLabelFontSize = 12.0f;
 	context = UIGraphicsGetCurrentContext();
 #else   // !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE)
     [NSGraphicsContext saveGraphicsState];
-    CGContextRef context =  [[NSGraphicsContext currentContext] graphicsPort];
+    CGContextRef context =  [[NSGraphicsContext currentContext] CGContext];
 #endif  // (TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE)
     
 	if (self.dimBackground) {

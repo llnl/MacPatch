@@ -51,7 +51,6 @@
 		8F7666191E4BA92800DF27BE /* XPCWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = XPCWorker.m; sourceTree = "<group>"; };
 		8F76661E1E4BAAED00DF27BE /* MPHelper-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "MPHelper-Prefix.pch"; sourceTree = "<group>"; };
 		8F7666491E4CF98100DF27BE /* gov.llnl.mp.helper.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = gov.llnl.mp.helper.plist; sourceTree = "<group>"; };
-		8F76664B1E4CFC7400DF27BE /* libMacPatch.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libMacPatch.a; path = "../../../../../../../../../Library/Developer/Xcode/DerivedData/MacPatch-gxkmkynletpxzdaprzqsylnshysq/Build/Products/Debug/libMacPatch.a"; sourceTree = "<group>"; };
 		8F76664D1E4CFCD600DF27BE /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		8F76664E1E4CFCD600DF27BE /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		8F76664F1E4CFCD600DF27BE /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
@@ -61,7 +60,6 @@
 		8FB1AB7527A45563003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
 		8FD5E10223A972B800A47F7C /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = usr/lib/libiconv.tbd; sourceTree = SDKROOT; };
 		8FF3D7412171027100059ACD /* libMPLibrary.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; path = libMPLibrary.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		8FF3D7432171047E00059ACD /* Python.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Python.framework; path = System/Library/Frameworks/Python.framework; sourceTree = SDKROOT; };
 		8FF3D745217104A400059ACD /* libsqlite3.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libsqlite3.tbd; path = usr/lib/libsqlite3.tbd; sourceTree = SDKROOT; };
 		8FF3D7482171056F00059ACD /* AHCodesignVerifier.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AHCodesignVerifier.m; sourceTree = "<group>"; };
 		8FF3D7492171056F00059ACD /* AHCodesignVerifier.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AHCodesignVerifier.h; sourceTree = "<group>"; };
@@ -72,14 +70,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8FE6640F222E002400F12AC8 /* libMPLibrary.a in Frameworks */,
-				8FF3D746217104A500059ACD /* libsqlite3.tbd in Frameworks */,
 				8F7666161E4BA72300DF27BE /* libz.tbd in Frameworks */,
+				8FB1AB7627A45568003DC95C /* libcurl.tbd in Frameworks */,
 				8F7666141E4BA71D00DF27BE /* libicucore.tbd in Frameworks */,
+				8FF3D746217104A500059ACD /* libsqlite3.tbd in Frameworks */,
+				8FE6640F222E002400F12AC8 /* libMPLibrary.a in Frameworks */,
 				8F7666121E4BA70C00DF27BE /* Security.framework in Frameworks */,
 				8F7666511E4CFCD600DF27BE /* AppKit.framework in Frameworks */,
 				8F7666521E4CFCD600DF27BE /* Cocoa.framework in Frameworks */,
-				8FB1AB7627A45568003DC95C /* libcurl.tbd in Frameworks */,
 				8F7666531E4CFCD600DF27BE /* CoreFoundation.framework in Frameworks */,
 				8F7666541E4CFCD600DF27BE /* SystemConfiguration.framework in Frameworks */,
 				8F7666571E4CFCFA00DF27BE /* CoreServices.framework in Frameworks */,
@@ -134,10 +132,11 @@
 		8F7666101E4BA70C00DF27BE /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8F7666151E4BA72300DF27BE /* libz.tbd */,
 				8FB1AB7527A45563003DC95C /* libcurl.tbd */,
 				8FD5E10223A972B800A47F7C /* libiconv.tbd */,
+				8F7666131E4BA71D00DF27BE /* libicucore.tbd */,
 				8FF3D745217104A400059ACD /* libsqlite3.tbd */,
-				8FF3D7432171047E00059ACD /* Python.framework */,
 				8FF3D7412171027100059ACD /* libMPLibrary.a */,
 				8F7666551E4CFCFA00DF27BE /* CoreServices.framework */,
 				8F7666561E4CFCFA00DF27BE /* IOKit.framework */,
@@ -145,9 +144,6 @@
 				8F76664E1E4CFCD600DF27BE /* Cocoa.framework */,
 				8F76664F1E4CFCD600DF27BE /* CoreFoundation.framework */,
 				8F7666501E4CFCD600DF27BE /* SystemConfiguration.framework */,
-				8F76664B1E4CFC7400DF27BE /* libMacPatch.a */,
-				8F7666151E4BA72300DF27BE /* libz.tbd */,
-				8F7666131E4BA71D00DF27BE /* libicucore.tbd */,
 				8F7666111E4BA70C00DF27BE /* Security.framework */,
 			);
 			name = Frameworks;
@@ -188,7 +184,7 @@
 		8F7665F11E4BA6A100DF27BE /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1200;
+				LastUpgradeCheck = 1410;
 				ORGANIZATIONNAME = "Lawrence Livermore Nat'l Lab";
 				TargetAttributes = {
 					8F7665F81E4BA6A100DF27BE = {
@@ -262,6 +258,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
@@ -279,7 +276,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -319,6 +316,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -330,7 +328,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
 			};
@@ -344,13 +342,15 @@
 				CODE_SIGN_ENTITLEMENTS = gov.llnl.mp.helper/gov.llnl.mp.helper.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -376,13 +376,15 @@
 				CODE_SIGN_ENTITLEMENTS = gov.llnl.mp.helper/gov.llnl.mp.helper.entitlements;
 				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Manual;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_HARDENED_RUNTIME = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "gov.llnl.mp.helper/MPHelper-Prefix.pch";
+				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

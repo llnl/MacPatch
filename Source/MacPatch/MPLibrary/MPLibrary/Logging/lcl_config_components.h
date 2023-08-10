@@ -17,7 +17,7 @@ _lcl_component(MPASUSCatalogs,      "MPASUSCatalogs",       "MPASUSCatalogs")
 _lcl_component(MPInstaller,         "MPInstaller",          "MPInstaller")
 _lcl_component(MPSystemInfo,        "MPSystemInfo",         "MPSystemInfo")
 _lcl_component(MPDate,              "MPDate",               "MPDate")
-_lcl_component(MPDefaults,          "MPDefaults",       	"MPDefaults")
+_lcl_component(MPDefaults,          "MPDefaults",           "MPDefaults")
 
 _lcl_component(MPNetwork,           "MPNetwork",            "MPNetwork")
 
@@ -35,6 +35,8 @@ _lcl_component(MPNSTask,            "MPNSTask",             "MPNSTask")
 
 // MacPatch Helper
 _lcl_component(MPHelper,          "MPHelper",           "MPHelper")
+// MacPatch Client Status Helper
+_lcl_component(MPStatusUI,        "MPStatusUI",         "MPStatusUI")
 
 
 
