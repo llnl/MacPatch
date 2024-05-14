@@ -23,7 +23,7 @@
 {%  endblock %}
 
 {% block bodyPanel %}
-    <table id="table" data-toolbar="#toolbar" class="table table-condensed" data-show-export="true">
+    <table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
@@ -52,9 +52,9 @@
 			$(function () {
 			  $('[data-toggle="popover"]').popover()
 			})
-            $('#table').bootstrapTable( {
+            $('#table').bootstrapTable( 
+            {
                 url: "/provision/criteria/list",
-                striped: true,
                 pagination: true,
                 sidePagination: 'client',
                 showRefresh: true,

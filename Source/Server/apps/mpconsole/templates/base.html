@@ -47,7 +47,7 @@
 		}
 
 		function aboutConsole() {
-			alert("MacPatch Console 3.6.0")
+			alert("MacPatch Console 3.8.0")
 		}
 	</script>
 </head>
@@ -154,9 +154,11 @@
 						<li id="management">
 							<a href="#"><i class="fa fa-crosshairs fa-fw"></i> OS Management<span class="fa arrow"></span></a>
 							<ul class="nav nav-second-level">
+								<!-- Depricated, USE MDM now
 								<li>
 									<a href="{{ url_for('osmanage.profiles') }}"><i class="fa fa-list fa-fw"></i> Profiles</a>
 								</li>
+								-->
                                 <li>
 									<a href="{{ url_for('osmanage.appFilters') }}"><i class="fa fa-list fa-fw"></i>Software Restrictions</a>
 								</li>

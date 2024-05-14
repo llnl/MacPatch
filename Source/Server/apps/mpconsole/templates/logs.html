@@ -17,14 +17,14 @@
 
 {% block body %}
 	<div>
-		<table id="logsTable" class="table table-condensed" data-toolbar="#logsToolbar" data-show-export="true">
+		<table id="logsTable" class="table table-condensed table-striped" data-toolbar="#logsToolbar" data-show-export="true">
 			<div id="logsToolbar">
 				<button id="saveGroupDataButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-floppy-save"></i></button>
 			</div>
 		</table>
 	</div>
 	<div id="overlay">
-		<img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
+		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
 		<h1 style="text-align: center; color: white; ">Saving...</h1>
 	</div>
 {% endblock %}
@@ -49,7 +49,6 @@
 			pageList: [20, 30, 40, 50, 100, 200],
 			pagination: true,
 			sidePagination: "client",
-            striped: true,
             sortable: true,
             search: true,
             columns: [

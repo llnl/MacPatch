@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbar">
+	<table id="table" class="table table-condensed table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
@@ -28,35 +28,40 @@
 	{{ super() }}
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	
 	<script type="text/javascript">
-
 		function operateEditFormatter(value, row, index)
 		{
 			var htmlData = [];
-			htmlData.push('<table>');
-			htmlData.push('<tr><td>');
+			htmlData.push('<div class="buttonGroup">');
 			if ( '{{session.role[0]}}' == 1 ) {
+				htmlData.push('<div class="buttonItem">');
 				htmlData.push('<a class="tasks" href="javascript:void(0)" title="Add/Remove Software Tasks">');
 				htmlData.push('<i class="glyphicon glyphicon-th-list" aria-hidden="true"></i></a>');
+				htmlData.push('</div>');
 			} else {
+				htmlData.push('<div class="buttonItem">');
 				htmlData.push('<a class="tasks" href="javascript:void(0)" title="View Software Tasks">');
 				htmlData.push('<i class="fa fa-search" aria-hidden="true"></i></a>');
-			}
-			htmlData.push('</td>');
-			if ( '{{session.role[0]}}' == 1 ) {
-				htmlData.push('<td><a class="edit" href="javascript:void(0)" title="Edit Software Group Info">');
-				htmlData.push('<i class="glyphicon glyphicon-pencil" aria-hidden="true"></i>');
-				htmlData.push('</a></td>');
+				htmlData.push('</div>');
 			}
 			if ( '{{session.role[0]}}' == 1 ) {
-				htmlData.push('<td><a class="remove" href="javascript:void(0)" title="Remove Software Group">');
-				htmlData.push('<i class="fa fa-trash-o"></i></a></td>');
+				htmlData.push('<i class="buttonSeperator"></i>');
+				htmlData.push('<div class="buttonItem">');
+				htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Software Group Info">');
+				htmlData.push('<i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>');
+				htmlData.push('</div>');
 			}
-			htmlData.push('</tr></table>');
+			if ( '{{session.role[0]}}' == 1 ) {
+				htmlData.push('<i class="buttonSeperator"></i>');
+				htmlData.push('<div class="buttonItem">');
+				htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Software Group">');
+				htmlData.push('<i class="fa fa-trash-o"></i></a>');
+				htmlData.push('</div>');
+			}
+			htmlData.push('</div>');
 			return htmlData.join('');
 		}
 
@@ -75,7 +80,7 @@
 
 				var _url = "/software/group/" + row['gid'] + "/tasks";
 				var innerHTML = '<div id="modalLoading">' +
-				 ' <img id="overlayImg" src="{{ url_for("static", filename="img/35.gif")}}" style="display:block;margin:auto;padding-top:10%;" />' +
+				 ' <img id="overlayImg" src="{{ url_for("static", filename="img/36.png")}}" style="display:block;margin:auto;padding-top:10%;" />' +
 				 ' <h1 style="text-align: center; color: white; ">Loading...</h1>' +
 				 '</div>' +
 				 ' <iframe src="' + _url + '" id="modaliFrame"' +
@@ -157,7 +162,6 @@
 		{
 			$('#table').bootstrapTable(
 			{
-				striped: true,
 				pagination: true,
 				sidePagination: 'client',
 				pageSize: 20,

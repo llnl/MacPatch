@@ -5,7 +5,6 @@ from boto3.session import Session
 from botocore.config import Config
 from botocore.errorfactory import ClientError
 
-
 from . import db
 from . model import *
 from . modes import *
@@ -13,6 +12,10 @@ from . mplogger import *
 from . mputil import *
 
 class MPaws:
+
+	def __init__(self, app):
+		self.config = app['config']
+
 
 	def __init__(self):
 		self.s3Client = self.getS3Client()

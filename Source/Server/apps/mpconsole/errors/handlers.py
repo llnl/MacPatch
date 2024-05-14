@@ -1,5 +1,5 @@
 from flask import render_template
-from .. import db
+from mpconsole.app import db
 from . import errors
 
 

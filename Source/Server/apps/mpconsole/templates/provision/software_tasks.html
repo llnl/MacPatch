@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="New Software Task"><i class="glyphicon glyphicon-plus"></i></button>
@@ -70,83 +70,82 @@
 
 	$( document ).ready(function()
 	{
-			$('#table').bootstrapTable(
+		$('#table').bootstrapTable(
+		{
+			url: "/provision/tasks/list",
+			pagination: true,
+			sidePagination: 'client',
+			showRefresh: true,
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			idField: 'tuuid',
+			sortable: true,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			columns: [
+			{% if session.role[0] == 1 %}
 			{
-                url: "/provision/tasks/list",
-                striped: true,
-                pagination: true,
-                sidePagination: 'client',
-                showRefresh: true,
-                pageList: ['10', '25', '50', '100', 'All'],
-                search: true,
-                idField: 'tuuid',
-                sortable: true,
-                icons: {
-                    refresh: 'fa fa-refresh',
-                    toggle: 'fa fa-th-list',
-                    columns: 'fa fa-columns',
-                    detailOpen: 'glyphicon glyphicon-info-sign',
-                    detailClose: 'glyphicon glyphicon-minus-sign'
-                },
-                columns: [
-                {% if session.role[0] == 1 %}
-                {
-                        field: 'state',
-                        checkbox: true,
-                        rowspan: 1,
-                        align: 'center',
-                        valign: 'middle'
-                },
-                {% endif %}
-                {
-                    field: 'operate',
-                    title: '',
-                    align: 'center',
-                    events: operateEvents,
-                    formatter: operateFormatter
-                },
-                {% for col in columnsAll %}
-                    {% if col.name in columns %}
-                        {
-                            field: '{{col.name}}',
-                            title: '{{col.info}}',
-                            {% if col.name ==  'tuuid' %}
-                            visible: false,
-                            {% endif %}
-                            {% if col.name ==  'primary_suuid' %}
-                            visible: false,
-                            {% endif %}
-                            {% if col.name ==  'mdate' %}
-                            visible: false,
-                            {% endif %}
-                            sortable: true,
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+			},
+			{% endif %}
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter
+			},
+			{% for col in columnsAll %}
+				{% if col.name in columns %}
+					{
+						field: '{{col.name}}',
+						title: '{{col.info}}',
+						{% if col.name ==  'tuuid' %}
+						visible: false,
+						{% endif %}
+						{% if col.name ==  'primary_suuid' %}
+						visible: false,
+						{% endif %}
+						{% if col.name ==  'mdate' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
 
-                            {% if col.name == 'active' and session.role[0] == 1 %}
-                            editable: {
-                                type: 'select',
-                                url:  '/provision/task/active',
-                                source: [
-                                    {value: 0, text: 'False'},
-                                    {value: 1, text: 'True'},
-                                ]
-                            },
-                            {% endif %}
-                            {% if col.name == 'scope' and session.role[0] == 1 %}
-                            editable: {
-                                type: 'select',
-                                url:  '/provision/task/scope',
-								source: [
-                                    {value: 0, text: 'QA'},
-                                    {value: 1, text: 'Production'},
-                                ]
-                            },
-                            {% endif %}
-                        },
-                    {% endif %}
+						{% if col.name == 'active' and session.role[0] == 1 %}
+						editable: {
+							type: 'select',
+							url:  '/provision/task/active',
+							source: [
+								{value: 0, text: 'False'},
+								{value: 1, text: 'True'},
+							]
+						},
+						{% endif %}
+						{% if col.name == 'scope' and session.role[0] == 1 %}
+						editable: {
+							type: 'select',
+							url:  '/provision/task/scope',
+							source: [
+								{value: 0, text: 'QA'},
+								{value: 1, text: 'Production'},
+							]
+						},
+						{% endif %}
+					},
+				{% endif %}
 
-                {% endfor %}
-                ]
-            });
+			{% endfor %}
+			]
+		});
 
 	});
 

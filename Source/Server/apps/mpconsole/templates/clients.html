@@ -10,7 +10,7 @@ Clients - All
 {%  endblock %}
 
 {% block bodyPanel %}
-	<table id="table" class="table table-condensed"></table>
+	<table id="table" class="table table-condensed table-striped"></table>
 {% endblock %}
 
 
@@ -25,7 +25,6 @@ Clients - All
 			$('#table').bootstrapTable(
 			{
 				url: "/clients/list",
-				striped: true,
 				pagination: true,
 				sidePagination: 'client',
 				showRefresh: true,

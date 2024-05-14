@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar" data-show-export="true" data-sort-name="mdate" data-sort-order="desc">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar" data-show-export="true" data-sort-name="mdate" data-sort-order="desc">
 		<div id="toolbar"></div>
 	</table>
 
@@ -36,8 +36,8 @@
 
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable({
-			striped: true,
+		$('#table').bootstrapTable(
+		{
 			ajax: function loadMyRows(params)
 			{
 				if (params.data.search == '') {

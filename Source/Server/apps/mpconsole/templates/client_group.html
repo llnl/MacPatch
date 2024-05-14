@@ -5,8 +5,6 @@
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<style type="text/css">
-
-
 	</style>
 {%  endblock %}
 
@@ -30,7 +28,7 @@ Client Group - {{group_name}}
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="clients">
-			<table id="table" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbar">
+			<table id="table" class="table table-condensed table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
 				<div id="toolbar">
 					{% if gResults['Owner'] == True or gResults['Admin'] == True %}
 					<button id="delClientButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -41,7 +39,7 @@ Client Group - {{group_name}}
 			<div class="row">
 				<div class="col-md-3">
 					<label>Client Check-in Status</label>
-					<table id="tableLegend" class="table table-bordered table-condensed table-nonfluid">
+					<table id="tableLegend" class="table table-bordered table-condensed table-nonfluid table-striped">
 						<thead>
 							<tr>
 								<td class="normal" width="110"><b>Normal</b></td>
@@ -193,11 +191,11 @@ Client Group - {{group_name}}
 			</form>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 3 %}in active{% endif %}" id="tasks">
-			<table id="tableTasks">
+			<table id="tableTasks" class="table table-condensed table-striped">
 			</table>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 4 %}in active{% endif %}" id="profiles">
-			<table id="tableProfiles" data-toolbar="#toolbarProfiles" data-show-export="true">
+			<table id="tableProfiles" data-toolbar="#toolbarProfiles" data-show-export="true" class="table table-striped">
 				<div id="toolbarProfiles">
 					<button id="addProfileButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 				</div>
@@ -213,7 +211,7 @@ Client Group - {{group_name}}
 	        <div class="tab-content">
 
                 <div class="tab-pane fade in active" id="swReq">
-                    <table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true">
+                    <table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true" class="table table-condensed table-striped">
                         <div id="toolbarSoftware">
                             <button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
                             <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -230,7 +228,7 @@ Client Group - {{group_name}}
                     </div>
                 </div>
                 <div class="tab-pane fade" id="swRes">
-                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-unique-id="appID" data-show-export="true">
+                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-unique-id="appID" data-show-export="true" class="table table-condensed table-striped">
                         <div id="toolbarSoftwareRes">
                             <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
                             <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -240,11 +238,11 @@ Client Group - {{group_name}}
 		    </div>
         </div>
         <div class="tab-pane fade {% if selectedTab == 6 %}in active{% endif %}" id="provisioning">
-			<table id="tableProvision" data-toolbar="#toolbarProvision" data-show-export="true">
+			<table id="tableProvision" data-toolbar="#toolbarProvision" data-show-export="true" class="table table-condensed table-striped">
 			</table>
 		</div>
         <div class="tab-pane fade {% if selectedTab == 7 %}in active{% endif %}" id="users">
-			<table id="tableUsers" data-toolbar="#toolbarUsers" data-show-export="true">
+			<table id="tableUsers" data-toolbar="#toolbarUsers" data-show-export="true" class="table table-condensed table-striped">
 				<div id="toolbarUsers">
 					<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 				</div>
@@ -274,7 +272,6 @@ Client Group - {{group_name}}
 		$('#table').bootstrapTable(
 		{
             url: "/clients/group/{{group_id}}/clients",
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '25', '50', '100', 'All'],
@@ -334,7 +331,6 @@ Client Group - {{group_name}}
 
 		$tasksTable.bootstrapTable(
 		{
-			striped: true,
 			url: "/clients/group/{{group_id}}/tasks",
 			search: true,
 			pageSize: 20,
@@ -501,7 +497,6 @@ Client Group - {{group_name}}
 		$('#tableProfiles').bootstrapTable(
 		{
 			url: "/osmanage/profiles/group/{{group_id}}",
-			striped: true,
 			search: true,
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
@@ -686,14 +681,16 @@ Client Group - {{group_name}}
 	function operateFormatterProfiles(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table><tr><td>')
+		htmlData.push('<div class="buttonGroup">');	
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="editProfile" href="javascript:void(0)" title="Edit Profile">');
 		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i>');
 		htmlData.push('</a>');
-		htmlData.push('</td><td>');
+		htmlData.push('</div>');
+		htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
 		htmlData.push('<a class="removeProfile" href="javascript:void(0)" title="Remove Profile">');
 		htmlData.push('<i class="fa fa-trash-o"></i></a>');
-		htmlData.push('</td></tr></table>');
+		htmlData.push('</div></div>');
 		return htmlData.join('');
 	}
 

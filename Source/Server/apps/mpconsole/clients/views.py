@@ -9,12 +9,11 @@ import os.path
 import sys
 from operator import itemgetter
 
-from .  import clients
-from .. import login_manager
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
+from . import clients
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
 
 
 '''
@@ -183,7 +182,9 @@ def clientInstalledPatches(client_id):
 def clientInventoryReport(client_id, inv_id):
 
 	sql = text("select * From {} where cuuid = '{}'".format(inv_id, client_id))
-	_q_result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(sql)
+		_q_result = raw_result.mappings().all()
 
 	_results = []
 	_columns = []
@@ -240,7 +241,10 @@ def clientGroups():
 				From mp_client_group_members
 				Group By group_id""")
 
-	result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(sql)
+		result = raw_result.mappings().all()
+
 	_results = []
 	for v in result:
 		_row = {}
@@ -466,7 +470,9 @@ def clientGroupClients(group_id):
 				  mpa_HasSLAM as SLAM
 				  from mp_clients c Left Join mpi_DirectoryServices d
 				  ON c.cuuid = d.cuuid""")
-	_q_result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(sql)
+		_q_result = raw_result.mappings().all()
 
 	_results = []
 	for v in _q_result:
@@ -570,7 +576,8 @@ def groupSettings(id):
 			log_Debug("Current Group Settings[{}]: {} = {}".format(id, row.key, row.value))
 
 		sql = "DELETE FROM mp_client_settings WHERE group_id='" + id + "'"
-		db.engine.execute(sql)
+		with db.engine.connect() as conn:
+			conn.execute(text(sql))
 
 	for f in _form:
 		log_Debug("Updated Group Settings[{}]: {} = {}".format(id, f, str(_form[f])))
@@ -686,7 +693,9 @@ def groupTasks(group_id):
 			del _row['_sa_instance_state']
 			_results.append(_row)
 
-	return json.dumps({'data': _results, 'total': len(_results)}), 200
+	# OLD
+	#return json.dumps({'data': _results, 'total': len(_results)}), 200
+	return json.dumps(_results), 200
 
 # Private Method to Add Missing tasks, used by groupTasks
 #

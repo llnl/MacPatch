@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar" data-show-export="true">
 		<div id="toolbar"></div>
 	</table>
 
@@ -34,8 +34,8 @@
 
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable({
-			striped: true,
+		$('#table').bootstrapTable(
+		{
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '50', '100', 'All'],

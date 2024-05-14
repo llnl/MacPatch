@@ -14,7 +14,7 @@ MDM - InTune Groups
     {% for col in columns %}
 
     {% endfor %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
 		<div id="toolbar">
             {% if session.role[0] == 1 %}
 			    <button id="addButton" type="button" class="btn btn-default" title="Add MDM Group"><i class="glyphicon glyphicon-plus"></i></button>
@@ -36,7 +36,6 @@ MDM - InTune Groups
 		$('#table').bootstrapTable(
 		{
             url: "/mdm/groups/list",
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '50', '100', 'All'],

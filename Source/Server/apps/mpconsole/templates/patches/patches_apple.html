@@ -13,7 +13,7 @@ Apple Patches
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="qaButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-cog"></i> Create -> QA</button>
@@ -28,96 +28,94 @@ Apple Patches
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script>
 
 	$( document ).ready(function()
 	{
-			$('#table').bootstrapTable(
+		$('#table').bootstrapTable(
+		{
+			url: "/patches/apple/list",
+			pagination: true,
+			sidePagination: 'client',
+			showRefresh: true,
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			idField: 'akey',
+			sortable: true,
+			detailView: true,
+			detailFormatter: detailFormatter,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			idField: 'supatchname',
+			columns: [
 			{
-				url: "/patches/apple/list",
-				striped: true,
-				pagination: true,
-				sidePagination: 'client',
-				showRefresh: true,
-				pageList: ['10', '25', '50', '100', 'All'],
-				search: true,
-				idField: 'akey',
-				sortable: true,
-				detailView: true,
-				detailFormatter: detailFormatter,
-				icons: {
-					refresh: 'fa fa-refresh',
-					toggle: 'fa fa-th-list',
-					columns: 'fa fa-columns',
-					detailOpen: 'glyphicon glyphicon-info-sign',
-					detailClose: 'glyphicon glyphicon-minus-sign'
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter
+			},
+			{% for col in columns %}
+			{
+				field: '{{col.name}}',
+				title: '{{col.info}}',
+				{% if col.name ==  'rid' or col.name == 'akey' or col.name == 'description64' or col.name == 'description'
+				or col.name == 'severity_int' or col.name == 'osver_support'
+				%}
+				visible: false,
+				{% endif %}
+				{% if col.name ==  'patch_state' and session.role[0] == 1 %}
+				editable: {
+					type: 'select',
+					url: '/patches/apple/state',
+					source: [
+						{value: 'Create', text: 'Create'},
+						{value: 'QA', text: 'QA'},
+						{value: 'Production', text: 'Production'},
+						{value: 'Disabled', text: 'Disabled'}
+					]
 				},
-				idField: 'supatchname',
-				columns: [
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEvents,
-					formatter: operateFormatter
+				{% endif %}
+				{% if col.name == 'severity' and session.role[0] == 1 %}
+				editable: {
+					type: 'select',
+					url: '/patches/apple/severity',
+					source: [
+						{value: 'High', text: 'High'},
+						{value: 'Medium', text: 'Medium'},
+						{value: 'Low', text: 'Low'},
+						{value: 'Critical', text: 'Critical'},
+						{value: 'Unknown', text: 'Unknown'},
+					]
 				},
+				{% endif %}
+				sortable: true
+			},
+			{% endfor %}
+			],
+			data: [
+			{% for patch in data %}
+			{
 				{% for col in columns %}
-				{
-					field: '{{col.name}}',
-					title: '{{col.info}}',
-					{% if col.name ==  'rid' or col.name == 'akey' or col.name == 'description64' or col.name == 'description'
-					or col.name == 'severity_int' or col.name == 'osver_support'
-					%}
-					visible: false,
-					{% endif %}
-					{% if col.name ==  'patch_state' and session.role[0] == 1 %}
-					editable: {
-						type: 'select',
-						url: '/patches/apple/state',
-						source: [
-							{value: 'Create', text: 'Create'},
-							{value: 'QA', text: 'QA'},
-							{value: 'Production', text: 'Production'},
-							{value: 'Disabled', text: 'Disabled'}
-						]
-					},
-					{% endif %}
-					{% if col.name == 'severity' and session.role[0] == 1 %}
-					editable: {
-						type: 'select',
-						url: '/patches/apple/severity',
-						source: [
-							{value: 'High', text: 'High'},
-							{value: 'Medium', text: 'Medium'},
-							{value: 'Low', text: 'Low'},
-							{value: 'Critical', text: 'Critical'},
-							{value: 'Unknown', text: 'Unknown'},
-						]
-					},
-					{% endif %}
-					sortable: true
-				},
+				{% if col.name ==  'severity'%}
+					{{col.name}}: '{{patch.severity}}',
+				{% elif col.name ==  'patch_state'%}
+					{{col.name}}: '{{patch.patch_state}}',
+				{% else %}
+					{{col.name}}: '{{patch[0][col.name]}}',
+				{% endif %}
 				{% endfor %}
-				],
-				data: [
-				{% for patch in data %}
-				{
-					{% for col in columns %}
-					{% if col.name ==  'severity'%}
-						{{col.name}}: '{{patch.severity}}',
-					{% elif col.name ==  'patch_state'%}
-						{{col.name}}: '{{patch.patch_state}}',
-					{% else %}
-						{{col.name}}: '{{patch[0][col.name]}}',
-					{% endif %}
-					{% endfor %}
-				},
-				{% endfor %}
-				]
-			});
+			},
+			{% endfor %}
+			]
+		});
 	});
 
 	function detailFormatter(index, row) {
@@ -142,9 +140,12 @@ Apple Patches
 	{
 		if ( '{{session.role[0]}}' == 1 ) {
 			return [
+				'<div class="buttonGroup">',
+				'<div class="buttonItem">',	
 				'<a class="edit" href="javascript:void(0)" title="Edit">',
 				'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
-				'</a>&nbsp;'
+				'</a>&nbsp;',
+				'</div></div>'
 			].join('');
 		} else {
 			return [

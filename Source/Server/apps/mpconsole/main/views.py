@@ -2,9 +2,9 @@ from flask import render_template, redirect, url_for
 from flask_login import login_required, current_user, login_user
 from sqlalchemy.exc import SQLAlchemyError, OperationalError
 
-from .  import main
-from .. import login_manager
-from .. model import *
+from . import main
+from mpconsole.app import login_manager
+from mpconsole.model import *
 
 @login_manager.user_loader
 def load_user(userid):

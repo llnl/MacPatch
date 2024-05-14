@@ -18,13 +18,13 @@ import json
 from datetime import datetime
 from dateutil.parser import parse
 
-from .  import patches
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
-from .. mputil import *
-from .. aws import *
+from . import patches
+from mpconsole.app import db
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
+from mpconsole.mputil import *
+from mpconsole.aws import *
 
 '''
 ----------------------------------------------------------------
@@ -62,7 +62,7 @@ def applePatchesList():
 		_results.append(_row)
 
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @patches.route('/apple/mismatch')
 @login_required
@@ -92,9 +92,9 @@ def appleMismatchPatchesList():
 					name = r.description
 
 			results.append({'patch': x, 'name': name, 'count': count})
-	print(results)
-	return json.dumps({'data': results}, default=json_serial), 200
-
+	
+	# This is an odd one, html parses the dict with the data and total keys
+	return json.dumps({'data':results, 'total':len(results)}, default=json_serial), 200
 
 @patches.route('/apple/state',methods=['POST'])
 @login_required
@@ -218,7 +218,7 @@ def applePatchWizardUpdate():
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))
 		return json.dumps({'error': 'Does not have permission to update apple patch.'}, default=json_serial), 401
 
-	return json.dumps({'data': {}}, default=json_serial), 200
+	return json.dumps({}, default=json_serial), 200
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toQA',methods=['GET'])
@@ -232,11 +232,11 @@ def migrateApplePatchesToQA():
 				row.patch_state = 'QA'
 
 		db.session.commit()
-		return json.dumps({'data': {}}, default=json_serial), 200
+		return json.dumps({}, default=json_serial), 200
 
 	else:
 		log_Error("{} does not have permission to migrate apple patch(s) to QA state.".format(session.get('user')))
-		return json.dumps({'data': {}}, default=json_serial), 403
+		return json.dumps({}, default=json_serial), 403
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toProd',methods=['GET'])
@@ -250,11 +250,11 @@ def migrateApplePatchesToProd():
 				row.patch_state = 'Production'
 
 		db.session.commit()
-		return json.dumps({'data': {}}, default=json_serial), 200
+		return json.dumps({}, default=json_serial), 200
 
 	else:
 		log_Error("{} does not have permission to migrate apple patch(s) to Production state.".format(session.get('user')))
-		return json.dumps({'data': {}}, default=json_serial), 403
+		return json.dumps({}, default=json_serial), 403
 
 '''
 ----------------------------------------------------------------
@@ -296,7 +296,7 @@ def customList():
 
 		_results.append(_row)
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @patches.route('/customPatchWizardAdd')
 @login_required
@@ -365,7 +365,7 @@ def customPatchWizardUpdate():
 		# Check Permissions
 		if not localAdmin() and not adminRole():
 			log_Error("{} does not have permission to change custom patch {}.".format(session.get('user'), puuid))
-			return {'data': {}}, 403
+			return {}, 403
 
 		# Save File, returns path to file
 		_file = None
@@ -465,7 +465,7 @@ def customPatchWizardUpdate():
 		log_Error('Message: %s' % (e))
 		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
 
-	return {'data': {}}, 200
+	return {}, 200
 
 ''' Private '''
 def savePatchFile(puuid, file):
@@ -546,7 +546,7 @@ def customDuplicate(patch_id):
 
 	if not localAdmin() and not adminRole():
 		log_Error("{} does not have permission to duplicate custom patch.".format(session.get('user')))
-		return json.dumps({'data': {}}, default=json_serial), 403
+		return json.dumps({}, default=json_serial), 403
 
 
 	qGet1 = MpPatch.query.filter(MpPatch.puuid == patch_id).first()
@@ -602,7 +602,7 @@ def customDuplicate(patch_id):
 		message=str(e.args[0]).encode("utf-8")
 		log_Error('Message: %s' % (message))
 
-	return json.dumps({'data': {}}, default=json_serial), 200
+	return json.dumps({}, default=json_serial), 200
 
 @patches.route('/custom/delete',methods=['DELETE'])
 @login_required
@@ -610,7 +610,7 @@ def customDelete():
 	ids = request.form['patches']
 	if not localAdmin() and not adminRole():
 		log_Error("{} does not have permission to delete custom patch(s).".format(session.get('user')))
-		return json.dumps({'data': {}}, default=json_serial), 403
+		return json.dumps({}, default=json_serial), 403
 	update_groups = []
 	for puuid in ids.split(","):
 		gids = removePatchFromPatchGroupsAlt(puuid)
@@ -646,7 +646,7 @@ def customDelete():
 	for gid in _update_groups:
 			patchGroupPatchesSave(gid)  
 
-	return json.dumps({'data': {}}, default=json_serial), 200
+	return json.dumps({}, default=json_serial), 200
 
 def removePatchFromPatchGroupsAlt(patch_id):
 	groups = []
@@ -676,7 +676,7 @@ def customPatchPicker():
 		row['patch_ver'] = p.patch_ver
 		_results.append(row)
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 ''' AJAX Request '''
 @patches.route('/custom/state',methods=['POST'])
@@ -892,7 +892,7 @@ def patchGroupMembers(id):
 
 		_results.append(row)
 
-	return json.dumps({'data': _results, 'total': rowCounter}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 ''' AJAX Request '''
 '''
@@ -983,7 +983,10 @@ def patchGroupContentEdit(id):
 				) p ON p.patch_id = b.id
 				WHERE b.patch_state IN (""" + _pType + """)""")
 
-	result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(sql)
+		result = raw_result.mappings().all()
+
 	_results = []
 	for v in result:
 		_row = {}
@@ -1039,8 +1042,10 @@ def patchGroupContent(group_id):
 				WHERE b.patch_state IN (""" + _pType + """)
 				ORDER BY b.{} {};""".format(args['sort'], args['order'])
 			   )
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(sql)
+		result = raw_result.mappings().all()
 
-	result = db.engine.execute(sql)
 	_results = []
 	for v in result:
 		_row = {}
@@ -1065,7 +1070,7 @@ def patchGroupContent(group_id):
 
 		_results.append(_row)
 
-	return json.dumps({'data': _results, 'total': total}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @patches.route('/group/add/<group_id>/<patch_id>')
 @login_required
@@ -1197,7 +1202,9 @@ def patchGroupPatchesSave(group_id):
 # Private
 def patchDataForPatchID(patch_id):
 	sql = text("SELECT * from combined_patches_view Where id = :patchID")
-	result = db.engine.execute(sql, patchID=patch_id)
+	with db.engine.connect() as conn:
+		result = conn.execute(sql, patchID=patch_id)
+
 	_results = []
 	for v in result:
 		_results.append(dict(v))
@@ -1278,12 +1285,15 @@ def requiredListPaged(limit,offset,search,sort,order):
 
 	# Query for Data
 	qResult = requiredQuery(search, int(offset), int(limit), sort, order, getNewTotal)
-
+	
 	# Result is a tuple, records = 0, rowCount = 1
 	_result = qResult[0]
-
+	import pprint
+	pprint.pprint(_result[0])
+	
 	# Parse results, and create list for json result
 	_results = []
+	
 	for v in _result:
 		_row = {}
 		for column, value in list(v.items()):
@@ -1296,7 +1306,7 @@ def requiredListPaged(limit,offset,search,sort,order):
 		total = qResult[1]
 		session['my_search_total'] = total
 		session['my_search'] = search
-
+	
 	return json.dumps({'data': _results, 'total': total}, default=json_serial), 200
 
 def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order='desc', getCount=True):
@@ -1308,7 +1318,7 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 	if sort == 'undefined':
 		sort = 'date'
 	if order == 'undefined':
-		sort = 'desc'
+		order = 'desc'
 
 	# Define Sort and Order By
 	order_by_str = sort + ' ' + order
@@ -1361,12 +1371,17 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 	recCounter2 = 0
 	# Execute the SQL statement(s)
 	if sql0 is not None:
-		res1 = db.engine.execute(sql0)
-		recCounter1 = res1.rowcount
+		with db.engine.connect() as conn:
+			raw_result1 = conn.execute(sql0)
+			res1 = raw_result1.mappings().all()
+		recCounter1 = len(res1)
 
 	if sql1 is not None:
-		result = db.engine.execute(text(sql1))
-		recCounter2 = result.rowcount
+		with db.engine.connect() as conn:
+			print(sql1)
+			raw_result = conn.execute(text(sql1))
+			result = raw_result.mappings().all()
+		recCounter2 = len(result)
 
 	# Return tuple, query results and a record count
 	return (result, recCounter1, recCounter2)
@@ -1446,7 +1461,7 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 	if sort == 'undefined':
 		sort = 'mdate'
 	if order == 'undefined':
-		sort = 'desc'
+		order = 'desc'
 
 	order_by_str = sort + ' ' + order
 	if sort in clientCols:

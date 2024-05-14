@@ -150,67 +150,30 @@ class MPTaskJobs():
 		self.app.config.get('INTUNE_USER'),
 		self.app.config.get('INTUNE_USER_PASS'),
 		self.app.config.get('INTUNE_CLIENT_ID'))
-
+		#print(f"token_response: {token_response}")
 		self.token = token_response['accessToken']
 
-	def getHTTPHeader(self):
-		return {'Authorization': 'Bearer ' + self.token,
+	def getHTTPHeader(self): 
+		x= {'Authorization': 'Bearer ' + self.token,
 						'User-Agent': 'adal-python-sample',
 						'Accept': 'application/json',
 						'Content-Type': 'application/json',
 						'client-request-id': str(uuid.uuid4())}
+		#print(x)
+		return x
 
 #
 # Will get all managed/enrolled devices in InTune MDM
 # MS Graph API uri: /beta/deviceManagement/managedDevices
 # CEH: This method is slow, needs to be changed to sql string in future
 #
-	def GetEnrolledDevicesOrig(self):
-		self.getAccessToken()
-		devices = []
-
-		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/managedDevices'
-		self.app.logger.info("[GetEnrolledDevices]: Start Get Records")
-		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
-		if graph_data.ok != True:
-			self.app.logger.error("[GetEnrolledDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
-			return
-
-		json_data = json.loads(graph_data.content)
-		devices = json_data['value']
-		self.app.logger.info("[GetEnrolledDevices]: Devices found {}".format(len(devices)))
-
-		# Get all of the paged records
-		if "@odata.nextLink" in graph_data:
-			_qryStr = graph_data["@odata.nextLink"].split("?")[1]
-			while True:
-				res = self.getNextLink(endpoint, _qryStr)
-				devices.extend(res[0])
-				if res[1] is not None:
-					_qryStr = res[1].split("?")[1]
-				else:
-					break
-
-		self.app.logger.info("[GetEnrolledDevices]: Delete all records in db")
-		num_rows_deleted = MDMIntuneDevices.query.delete()
-		self.app.logger.info("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
-		self.app.logger.info("[GetEnrolledDevices]: Start Adding Rows")
-		for device in devices:
-			udid = None
-			new_device = MDMIntuneDevices()
-			for key in device:
-				setattr(new_device, key, device[key])
-
-			udid = self.getUDIDForDeviceID(device['id'])
-			if udid is not None:
-				setattr(new_device, 'udid', udid)
-			db.session.add(new_device)
-		db.session.commit()
-
-		self.app.logger.info("[GetEnrolledDevices]: Stop Adding Rows")
-		self.AddLastSync(MDMIntuneDevices.__tablename__, 'MDMIntuneDevices', self.user)
 
 	def GetEnrolledDevices(self):
+		table_columns = MDMIntuneDevices.__table__.columns.keys()
+		table_columns.remove('rid')
+		print(table_columns)
+		return
+	
 		self.getAccessToken()
 		devices = []
 
@@ -236,14 +199,14 @@ class MPTaskJobs():
 				else:
 					break
 
-		self.app.logger.info("[GetEnrolledDevices]: Delete all records in db")
-		num_rows_deleted = MDMIntuneDevices.query.delete()
-		self.app.logger.info("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
+		#self.app.logger.info("[GetEnrolledDevices]: Delete all records in db")
+		#num_rows_deleted = MDMIntuneDevices.query.delete()
+		#self.app.logger.info("[GetEnrolledDevices]: Deleted rows: " + str(num_rows_deleted))
 		self.app.logger.info("[GetEnrolledDevices]: Start Adding Rows")
 
 		isFirst = True
 		idList = []
-		table_columns = MDMIntuneDevices.__table__.columns
+		#table_columns = MDMIntuneDevices.__table__.columns.keys()
 		'''
 		sqlInsertStr = ""
 		
@@ -261,34 +224,45 @@ class MPTaskJobs():
 			if i % 1000 == 0:
 				sqlInsertStr = sqlInsertStr + ";"
 				print(sqlInsertStr)
-				db.engine.execute(text(sqlInsertStr))
+				with db.engine.connect() as conn:
+					conn.execute(text(sqlInsertStr))
 				isFirst = True
 		print("Run it")
 		sqlInsertStr = sqlInsertStr + ";"
 		print(sqlInsertStr)
-		db.engine.execute(sqlInsertStr)
+		with db.engine.connect() as conn:
+			conn.execute(sqlInsertStr)
 		# Build the uuid quey str now
 		print("commit")
 		db.session.commit()
 		print("commited")
  		'''
-		#for i, device in enumerate(devices):
+		
+		# MDMIntuneDevices
+		print(table_columns)
+		for i, device in enumerate(devices):
+			_dev = {tc: device[tc] for tc in table_columns}
+			print(_dev)
+			break
 
-		for device in devices:
-			if isFirst:
-				sqlInsertStr = self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device)
-				isFirst = False
 
-			udid = None
-			new_device = MDMIntuneDevices()
-			for key in device:
-				setattr(new_device, key, device[key])
+		return
 
-			udid = self.getUDIDForDeviceID(device['id'])
-			if udid is not None:
-				setattr(new_device, 'udid', udid)
-			db.session.add(new_device)
-		db.session.commit()
+		#for device in devices:
+		#	if isFirst:
+		#		sqlInsertStr = self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device)
+		#		isFirst = False
+
+		#	udid = None
+		#	new_device = MDMIntuneDevices()
+		#	for key in device:
+		#		setattr(new_device, key, device[key])
+
+		#	udid = self.getUDIDForDeviceID(device['id'])
+		#	if udid is not None:
+		#		setattr(new_device, 'udid', udid)
+		#	db.session.add(new_device)
+		#db.session.commit()
 
 
 		self.app.logger.info("[GetEnrolledDevices]: Stop Adding Rows")
@@ -306,7 +280,7 @@ class MPTaskJobs():
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + '/beta/deviceManagement/importedDeviceIdentities'
 		self.app.logger.info("[SA][GetCorpDevices]: Start Get Records")
-		#self.app.logger.info("[GetCorpDevices]: Start Get Records")
+
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
 			self.app.logger.error("[GetCorpDevices]: Error getting InTune data error code {}".format(graph_data.status_code))
@@ -331,22 +305,14 @@ class MPTaskJobs():
 		sqlInsertStr = ""
 		isFirst = True
 
+		_records = []
 		for i, device in enumerate(devices):
-			if isFirst:
-				sqlInsertStr = self.genSQLInsert('mdm_intune_corporate_devices',device)
-				isFirst = False
-			else:
-				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsert('mdm_intune_corporate_devices',device,onlyData=True)
-			if i % 1000 == 0:
-				sqlInsertStr = sqlInsertStr + ";"
-				db.engine.execute(text(sqlInsertStr))
-				isFirst = True
-
-		sqlInsertStr = sqlInsertStr + ";"
-		db.engine.execute(text(sqlInsertStr))
+			_records.append(MDMIntuneCorporateDevices(**device))
+  
+		db.session.add_all(_records)
 		db.session.commit()
-		self.app.logger.info("[GetCorpDevices]: Stop Adding Rows")
 
+		self.app.logger.info("[GetCorpDevices]: Stop Adding Rows")
 		self.AddLastSync(MDMIntuneCorporateDevices.__tablename__,'MDMIntuneCorporateDevices',self.user)
 
 #
@@ -357,7 +323,8 @@ class MPTaskJobs():
 		self.getAccessToken()
 
 		devices = []
-		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/beta/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
+		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/v1.0/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
+		print(endpoint)
 		self.app.logger.info("[GetDeviceConfigProfiles]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
@@ -384,23 +351,18 @@ class MPTaskJobs():
 		sqlInsertStr = ""
 		isFirst = True
 
+		import pprint
+		_records = []
 		for i, profile in enumerate(profiles):
-			if isFirst:
-				sqlInsertStr = self.genSQLInsert('mdm_intune_devices_config_profiles',profile)
-				isFirst = False
-			else:
-				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsert('mdm_intune_devices_config_profiles',profile,onlyData=True)
-			if i % 1000 == 0:
-				sqlInsertStr = sqlInsertStr + ";"
-				db.engine.execute(text(sqlInsertStr))
-				isFirst = True
-
-		sqlInsertStr = sqlInsertStr + ";"
-		db.engine.execute(text(sqlInsertStr))
+			del profile['@odata.type']
+			_records.append(MDMIntuneConfigProfiles(**profile))
+		
+		db.session.add_all(_records)
 		db.session.commit()
-		self.app.logger.info("[GetDeviceConfigProfiles]: Stop Adding Rows")
 
+		self.app.logger.info("[GetDeviceConfigProfiles]: Stop Adding Rows")
 		self.AddLastSync(MDMIntuneConfigProfiles.__tablename__,'MDMIntuneConfigProfiles',self.user)
+		return
 
 #
 # MS Graph API has a limit of a Max 1000 returned results

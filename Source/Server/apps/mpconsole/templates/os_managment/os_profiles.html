@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed">
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
@@ -37,7 +37,6 @@
 		$('#table').bootstrapTable(
 		  {
 			  url: "/osmanage/profiles/list",
-			  striped: true,
 			  pagination: true,
 			  sidePagination: 'client',
 			  showRefresh: true,
@@ -65,10 +64,8 @@
 				  align: 'center',
 				  events: operateEvents,
 				  formatter: operateFormatter,
-				  width: 60
+				  width: 80
 			  },
-
-
 			  {% for col in columns %}
 			  {
 				  field: '{{col[0]}}',
@@ -149,19 +146,22 @@
 	function operateFormatter(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table><tr><td>')
+		htmlData.push('<div class="buttonGroup">');
 		{% if session.role[0] == 1 %}
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Profile">');
 		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
 		{% else %}
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Profile Data">');
-		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
+		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i></a>');
 		{% endif %}
-		htmlData.push('</a>');
-		htmlData.push('</td><td>');
+		htmlData.push('</div>');
+		htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
 		htmlData.push('<a class="download" href="javascript:void(0)" title="Download Profile">');
 		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
-		htmlData.push('</td></tr></table>');
+		htmlData.push('</div>');
+		htmlData.push('</div>');
 		return htmlData.join('');
 	}
 

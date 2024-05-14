@@ -13,7 +13,7 @@ Report - {{title}}
 
 {% block bodyPanel %}
 	{% if denied != True %}
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar" data-show-export="true">
 		<div id="toolbar">
 			{% if isowner == True %}
 				<button id="editButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-pencil"></i></button>
@@ -46,7 +46,6 @@ Report - {{title}}
 	{
 		$('#table').bootstrapTable(
 		{
-			striped: true,
 			ajax: function loadMyRows(params)
 			{
 				if (params.data.search == '') {

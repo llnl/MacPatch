@@ -1,16 +1,18 @@
 from flask import render_template
 from flask_login import login_required, current_user
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 from datetime import datetime, timedelta
 from operator import itemgetter
 
 import json
+import pprint
 
-from .  import dashboard
-from .. import login_manager
-from .. import db
-from .. model import *
-from .. import errors
+from . import dashboard
+from mpconsole.app import db, login_manager
+from mpconsole import errors
+from mpconsole.model import *
+
 
 @dashboard.route('/dashboard')
 @login_required
@@ -21,7 +23,10 @@ def index():
 	# Get OS Ver Data
 	osVerData = []
 	sql1 = text('SELECT osver, Count(osver) As Count From mp_clients Group By osver Order By Count Desc')
-	result = db.engine.execute(sql1)
+
+	with db.engine.connect() as conn:
+		result = conn.execute(sql1)
+
 	for row in result:
 		osVerData.append((str(row[0]), str(row[1])))
 
@@ -32,7 +37,9 @@ def index():
 					Order By Count Desc""")
 
 	# Get OS Ver Minor Count
-	resultB = db.engine.execute(sql1b)
+	with db.engine.connect() as conn:
+		resultB = conn.execute(sql1b)
+
 	for row in resultB:
 		osVerMinorData.append((str(row[0]), str(row[1])))
 
@@ -41,7 +48,8 @@ def index():
 	sql2 = text("""SELECT needsReboot, Count(*) As Count
 				FROM mp_clients Group By needsReboot""")
 
-	rb_result = db.engine.execute(sql2)
+	with db.engine.connect() as conn:
+		rb_result = conn.execute(sql2)
 	for row in rb_result:
 		rbData.append((str(row[0]).title(), str(row[1])))
 
@@ -56,7 +64,9 @@ def index():
 		""")
 
 	mdl_data = []
-	mdl_result = db.engine.execute(sql3)
+	with db.engine.connect() as conn:
+		mdl_result = conn.execute(sql3)
+
 	for row in mdl_result:
 		mdl_data.append((str(row[0]).title(), str(row[1])))
 
@@ -72,7 +82,9 @@ def index():
 	mdlt_book_count = 0
 	mdlt_desk_count = 0
 	mdlt_serv_count = 0
-	mdlt_result = db.engine.execute(sql3b)
+	with db.engine.connect() as conn:
+		mdlt_result = conn.execute(sql3b)
+
 	for row in mdlt_result:
 		if "book" in str(row[0]).title().lower():
 			mdlt_book_count = mdlt_book_count + row[1]
@@ -101,8 +113,10 @@ def index():
 				""")
 	pch_data_raw = []
 	pch_data = []
-	pch_resultA = db.engine.execute(sql4a)
-	pch_resultB = db.engine.execute(sql4b)
+	with db.engine.connect() as conn:
+		pch_resultA = conn.execute(sql4a)
+		pch_resultB = conn.execute(sql4b)
+
 	for row in pch_resultA:
 		pch_data_raw.append(row)
 	for row in pch_resultB:
@@ -123,7 +137,9 @@ def index():
 	AND patch_state = 'Production'
 	Order By postdate Desc""")
 
-	result_patch_release = db.engine.execute(sql6)
+	with db.engine.connect() as conn:
+		result_patch_release = conn.execute(sql6)
+
 	for row in result_patch_release:
 		_dict = {}
 		_dict['patch'] = str(row[0])
@@ -139,7 +155,9 @@ def index():
 	Order By Total Desc Limit 10""")
 
 	install_data = []
-	install_result = db.engine.execute(sql7)
+	with db.engine.connect() as conn:
+		install_result = conn.execute(sql7)
+
 	for row in install_result:
 		install_data.append((str(row[0]).title(), str(row[1])))
 
@@ -150,7 +168,9 @@ def index():
 	warn = 0
 	alert = 0
 	sql5 = text(""" SELECT mdate From mp_clients""")
-	status_result = db.engine.execute(sql5)
+	with db.engine.connect() as conn:
+		status_result = conn.execute(sql5)
+
 	for row in status_result:
 		diff = today - row[0]
 		if diff.days <= 7:
@@ -167,7 +187,9 @@ def index():
 	GROUP BY client_version
 	Order By total Desc
 	""")
-	agentver_result = db.engine.execute(sql6)
+	with db.engine.connect() as conn:
+		agentver_result = conn.execute(sql6)
+
 	for row in agentver_result:
 		agents_data.append((str(row[0]).title(), str(row[1])))
 
@@ -195,18 +217,16 @@ def drilldown(chart,value):
 		cols = result[1]
 		data = result[0]
 
-
 	return render_template('dashboard/dashview.html', dataTitle=title, data=data, columns=cols, chart=chart, value=value)
 
 # Modal Data, for refresh etc
 @dashboard.route('/data/<chart>/<value>')
 def drilldowndata(chart,value):
-
 	result = drillDownDataFilter(chart, value)
 	if result is not None:
-		return json.dumps({'data': result[0], 'columns': result[1]}, default=json_serial), 200
+		return json.dumps(result[0], default=json_serial), 200
 	else:
-		return json.dumps({'data': [], 'columns': []}, default=json_serial), 404
+		return json.dumps([], default=json_serial), 404
 
 # Private/local
 def drillDownDataFilter(chart, filterValue):
@@ -382,8 +402,11 @@ def modelTypeCollection(model):
 	for g in q_client_Groups:
 		_client_Groups[g.group_id] = g.group_name
 
-	mdl_result = db.engine.execute(sqlStr)
-	for row in mdl_result:
+	with db.engine.connect() as conn:
+		mdl_result = conn.execute(sqlStr)
+		results_as_dict = mdl_result.mappings().all()
+
+	for row in results_as_dict:
 		_dict = {}
 		for col in colNames:
 			_name = col['name']
@@ -398,9 +421,7 @@ def modelTypeCollection(model):
 					_dict[_name] = row[_name]
 			else:
 				_dict[_name] = ""
-
 		_results.append(_dict)
-
 	return _results, colNames
 
 # Filter - Model Types (Laptop, Desktop ...)
@@ -450,8 +471,11 @@ def modelTypesCollection(model):
 	for g in q_client_Groups:
 		_client_Groups[g.group_id] = g.group_name
 
-	mdl_result = db.engine.execute(sqlStr)
-	for row in mdl_result:
+	with db.engine.connect() as conn:
+		mdl_result = conn.execute(sqlStr)
+		results_as_dict = mdl_result.mappings().all()
+
+	for row in results_as_dict:
 		_dict = {}
 		for col in colNames:
 			_name = col['name']
@@ -497,8 +521,11 @@ def requiredPatchCollection(patch):
 	for g in q_client_Groups:
 		_client_Groups[g.group_id] = g.group_name
 
-	mdl_result = db.engine.execute(sqlStr)
-	for row in mdl_result:
+	with db.engine.connect() as conn:
+		mdl_result = conn.execute(sqlStr)
+		results_as_dict = mdl_result.mappings().all()
+
+	for row in results_as_dict:
 		_dict = {}
 		for col in colNames:
 			_name = col['name']
@@ -544,8 +571,12 @@ def installedPatchCollection(patch):
 	for g in q_client_Groups:
 		_client_Groups[g.group_id] = g.group_name
 
-	mdl_result = db.engine.execute(sqlStr)
-	for row in mdl_result:
+	with db.engine.connect() as conn:
+		mdl_result = conn.execute(sqlStr)
+		results_as_dict = mdl_result.mappings().all()
+		
+
+	for row in results_as_dict:
 		_dict = {}
 		for col in colNames:
 			_name = col['name']

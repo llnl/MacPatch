@@ -1,8 +1,6 @@
 from flask import render_template, request
-from flask_login import login_required, current_user
+from flask_login import login_required
 from sqlalchemy import text
-from datetime import datetime, timedelta
-from operator import itemgetter
 from flask_cors import cross_origin
 
 import json
@@ -10,12 +8,10 @@ import os
 import humanize
 
 from . import maint
-from .. import login_manager
-from .. import db
-from ..model import *
-
-from .. modes import *
-from .. mputil import *
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mputil import *
 
 
 @maint.route('/maint')
@@ -166,7 +162,9 @@ def extensions():
 		_clients.append(x.cuuid)
 
 	sql = text("SELECT Distinct cuuid from mpi_SPExtensions")
-	_sql_result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		_sql_result = conn.execute(sql)
+
 	for r in _sql_result:
 		_row = dict(r)
 		_ext_clients.append(_row['cuuid'])
@@ -186,7 +184,9 @@ def extensions_p():
 		_clients.append(x.cuuid)
 
 	sql = text("SELECT Distinct cuuid from av_info")
-	_sql_result = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		_sql_result = conn.execute(sql)
+
 	for r in _sql_result:
 		_row = dict(r)
 		_ext_clients.append(_row['cuuid'])
@@ -196,9 +196,8 @@ def extensions_p():
 	for c in result:
 		x = x + 1
 		sql = text("Delete from av_info Where cuuid = '" + c +"'")
-		print(sql)
-
-		_sql_result = db.engine.execute(sql)
+		with db.engine.connect() as conn:
+			_sql_result = conn.execute(sql)
 
 
 	return render_template('maint/maint.html', data=result, count=len(result))

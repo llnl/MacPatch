@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="New Software Task"><i class="glyphicon glyphicon-plus"></i></button>
@@ -99,52 +99,31 @@
 
 	$( document ).ready(function()
 	{
-			$('#table').bootstrapTable(
-			{
-				striped: true,
-				pagination: true,
-				sidePagination: 'client',
-				pageList: ['10', '20', '50', '100', 'All'],
-				search: true,
-				showRefresh: false,
-				resizable: true,
-				sortable: true,
-				showColumns: false,
-				icons: {
-					refresh: 'fa fa-refresh',
-					toggle: 'fa fa-th-list',
-					columns: 'fa fa-columns',
-					detailOpen: 'glyphicon glyphicon-info-sign',
-					detailClose: 'glyphicon glyphicon-minus-sign'
-				},
-				idField: 'tuuid',
-				columns: _cols,
-				data: _rows
-			});
+		$('#table').bootstrapTable(
+		{
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '20', '50', '100', 'All'],
+			search: true,
+			showRefresh: false,
+			resizable: true,
+			sortable: true,
+			showColumns: false,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			idField: 'tuuid',
+			columns: _cols,
+			data: _rows
+		});
 	});
 
 	var $table = $('#table'), $delBut = $('#deleteButton'), $addBut = $('#addButton'), $expBut = $('#exportButton'), $impBut = $('#importButton');
 	$(function () {
-		/*
-		$delBut.click(function ()
-		{
-			var task_ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.tuuid;
-			});
-			for (i = 0; i < task_ids.length; i++)
-			{
-				$.get("/software/task/remove/"+task_ids[i]).done(function(data)
-				{
-					$table.bootstrapTable('remove', {
-						field: 'tuuid',
-						values: task_ids[i]
-					});
-				});
-			}
-
-			alert(task_ids.length + " Software task(s) have been deleted.");
-		});
-		*/
 		$delBut.click(function ()
 		{
 			var rows = $('#table').bootstrapTable('getAllSelections');
@@ -174,7 +153,6 @@
 				}
 			});
 		});
-
 		$addBut.click(function ()
 		{
 			$.get("/software/task/new").done(function(data)

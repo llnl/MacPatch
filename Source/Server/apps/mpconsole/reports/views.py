@@ -9,10 +9,9 @@ from sqlalchemy import text
 from datetime import datetime
 
 from .  import reports
-from .. import db
-from .. import login_manager
-from .. model import *
-from .. mplogger import *
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.mplogger import *
 
 # This is a UI Request
 @reports.route('/new')
@@ -27,7 +26,9 @@ def new():
 		FROM INFORMATION_SCHEMA.COLUMNS
 		WHERE TABLE_NAME LIKE 'mpi_%'
 		AND TABLE_SCHEMA='MacPatchDB3';''')
-	result = db.engine.execute(sql_tables)
+	with db.engine.connect() as conn:
+		result = conn.execute(sql_tables)
+
 	for row in result:
 		inv_tables.append([str(row[0]),0])
 
@@ -57,7 +58,9 @@ def editReport(id):
 		FROM INFORMATION_SCHEMA.COLUMNS
 		WHERE TABLE_NAME LIKE 'mpi_%'
 		AND TABLE_SCHEMA='MacPatchDB3';''')
-	result = db.engine.execute(sql_tables)
+	with db.engine.connect() as conn:
+		result = conn.execute(sql_tables)
+
 	for row in result:
 		_tbl = str(row[0])
 		raw_tables.append(_tbl)
@@ -78,9 +81,10 @@ def editReport(id):
 @reports.route('/list')
 def listOfReports():
 	_results = []
-	sql = 'Select rid, name FROM mp_inv_reports WHERE owner = \'{}\' OR scope = \'0\';'.format(session['user'])
+	sql = f"Select rid, name FROM mp_inv_reports WHERE owner = '{session['user']}' OR scope = 0;"
+	with db.engine.connect() as conn:
+		res = conn.execute(text(sql))
 
-	res = db.engine.execute(sql)
 	for row in res:
 		_row = {}
 		_row['id'] = row.rid
@@ -169,7 +173,7 @@ def showReportPaged(id,limit,offset,search,sort,order):
 				row[x] = eval(y)
 
 		_results.append(row)
-
+	
 	return json.dumps({'data': _results, 'total': qResult[1]}, default=json_serial), 200
 
 # Private
@@ -204,23 +208,35 @@ def requiredQueryOrig(queryInfo, filterStr='undefined', page=0, page_size=0, sor
 			sql_where = '{} {}'.format(sql_where," ".join(sql_and))
 
 	sql_rows = 'SELECT 1 FROM {} {};'.format(queryInfo['table'], sql_where)
-	query_rows = db.engine.execute(text(sql_rows.strip()))
-	rowCounter = query_rows.rowcount
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(text(sql_rows.strip()))
+		query_rows = raw_result.mappings().all()
+
+	rowCounter = len(query_rows)
 
 	_start = page*page_size
 	_end = page_size
 
 	sql = 'SELECT {} FROM {} {} ORDER BY {} {} LIMIT {},{};'.format(",".join(queryInfo['columns']), queryInfo['table'], sql_where, sort, order, _start, _end)
-	query = db.engine.execute(text(sql.strip()))
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(text(sql.strip()))
+		query = raw_result.mappings().all()
+
 	return (query, rowCounter)
 
 def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='mdate', order='desc', getCount=True):
 
 	useMpClients = False
 	rowCounter = 0
+
+	if sort == "undefined":
+		sort = 'mdate'
+
+	if order == "undefined":
+		order = 'desc'
+
 	if 'mp_clients.' in ','.join(queryInfo['columns']):
 		useMpClients = True
-
 
 	sql_where = ""
 	sql_and = []
@@ -258,8 +274,12 @@ def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='m
 	else:
 		sql_rows = 'SELECT 1 FROM {} {};'.format(queryInfo['table'], sql_where)
 
-	query_rows = db.engine.execute(text(sql_rows.strip()))
-	rowCounter = query_rows.rowcount
+	print(f"sql_rows: {sql_rows}")
+
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(text(sql_rows.strip()))
+		query_rows = raw_result.mappings().all()
+	rowCounter = len(query_rows)
 
 	_start = page*page_size
 	_end = page_size
@@ -274,14 +294,20 @@ def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='m
 				)
 	else:
 		sql = 'SELECT {} FROM {} {} ORDER BY {} {} LIMIT {},{};'.format(",".join(queryInfo['columns']), queryInfo['table'], sql_where, sort, order, _start, _end)
-	query = db.engine.execute(text(sql.strip()))
+	
+	print(f"sql: {sql}")
+	with db.engine.connect() as conn:
+		raw_result = conn.execute(text(sql.strip()))
+		query = raw_result.mappings().all()
+
 	return (query, rowCounter)
 
 # Private
 def columnsForTable(table):
 	columns = []
 	sql = 'Select COLUMN_NAME FROM information_schema.columns WHERE TABLE_NAME = \'{}\' AND table_schema = \'MacPatchDB3\' order by ordinal_position;'.format(table)
-	query = db.engine.execute(sql)
+	with db.engine.connect() as conn:
+		query = conn.execute(text(sql))
 
 	if query is not None:
 		for i in query:
@@ -360,8 +386,9 @@ def tableFields(table_name):
 				WHERE TABLE_NAME = 'mp_clients'
 				AND table_schema = 'MacPatchDB3'
 				order by ordinal_position;"""
+	with db.engine.connect() as conn:
+		query_result = conn.execute(text(sql_columns))
 
-	query_result = db.engine.execute(sql_columns)
 	for row in query_result:
 		if row[0] != 'rid':
 			_total = _total + 1
@@ -371,7 +398,8 @@ def tableFields(table_name):
 			_results.append(_row)
 
 	if mp_clients_cols is not None:
-		query_result = db.engine.execute(mp_clients_cols)
+		with db.engine.connect() as conn:
+			query_result = conn.execute(text(mp_clients_cols))
 		for row in query_result:
 			if row[0] != 'rid' or row[0] != 'cuuid' or row[0] != 'mdate':
 				_total = _total + 1
@@ -410,7 +438,8 @@ def previewTableData(table_name):
 
 	sql_query = " ".join(qStr)
 	sql_query = sql_query.replace('%', '%%') # pymysql addition
-	query_result = db.engine.execute(sql_query)
+	with db.engine.connect() as conn:
+		query_result = conn.execute(text(sql_query))
 
 	_columns = []
 	_jColumns = []
@@ -428,7 +457,8 @@ def previewTableData(table_name):
 			order by ordinal_position;"""
 
 		# Get Columns for table
-		cols_query = db.engine.execute(sql_columns)
+		with db.engine.connect() as conn:
+			cols_query = conn.execute(text(sql_columns))
 		for col in cols_query:
 			if col[0] != 'rid':
 				_columns.append(col.COLUMN_NAME)

@@ -10,12 +10,11 @@ import hashlib
 from io import BytesIO
 
 from . import osmanage
-from .. import login_manager
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
-from .. clients.views import revGroupSWRes
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
+from mpconsole.clients.views import revGroupSWRes
 
 '''
 	This method queries the DB for all uploaded profiles
@@ -55,7 +54,7 @@ def profilesListJSON():
 
 		_results.append(row)
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 '''
 	This method renders the os_profile_manager.html File
@@ -437,7 +436,7 @@ def groupProfiles(group_id):
 
 			_results.append(row)
 
-	return json.dumps({'data': _results, 'total': 0}), 200
+	return json.dumps(_results), 200
 
 ''' AJAX Method '''
 @osmanage.route('/group/profile', methods=['POST'])
@@ -556,13 +555,14 @@ def appFilterList():
 	_results = []
 	if srList is not None:
 		for sr in srList:
+			print(sr)
 			row = {}
 			for c in swaf_columns:
 				y = "sr."+c[0]
 				row[c[0]] = eval(y)
 			_results.append(row)
-
-	return json.dumps({'data': _results, 'total': 0}), 200
+	print(_results)	
+	return json.dumps(_results), 200
 
 @osmanage.route('/app_filter/add')
 @login_required
@@ -587,7 +587,8 @@ def appFilterSave():
 	if adminRole() or localAdmin():
 		formDict = _form.to_dict()
 		if not formDict:
-			return json.dumps({'error': 404, 'data': [], 'total': 0}), 404
+			#return json.dumps({'error': 404, 'data': [], 'total': 0}), 404
+			return json.dumps([]), 404
 
 		appID = str(uuid.uuid4())
 		isNew = False
@@ -664,7 +665,7 @@ def appFilterClientGroupList(client_group):
 				row = {'appID':cg.appID,'displayName':swRes.displayName,'processName':swRes.processName,'enabled':cg.enabled}
 				_results.append(row)
 
-	return json.dumps({'data': _results, 'total': 0}), 200
+	return json.dumps(_results), 200
 
 def swRestrictionForID(swResList, appID):
 	for s in swResList:

@@ -3,6 +3,7 @@
 {% block styles %}
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
@@ -11,7 +12,7 @@ Client Groups
 {%  endblock %}
 
 {% block bodyPanel %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-responsive table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 		</div>
@@ -22,8 +23,8 @@ Client Groups
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script>
 
 	var gRights = [];
@@ -35,15 +36,12 @@ Client Groups
 	{
 		$('#table').bootstrapTable(
 		{
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '25', '50', '100', 'All'],
 			search: true,
 			showRefresh: false,
-			resizable: false,
 			sortable: true,
-			showColumns: false,
 			idField: 'group_id',
 			sortName: 'count',
 			sortOrder: 'desc',
@@ -51,8 +49,6 @@ Client Groups
 				refresh: 'fa fa-refresh',
 				toggle: 'fa fa-th-list',
 				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
 			},
 			columns: [
 			{
@@ -60,7 +56,8 @@ Client Groups
 				title: '',
 				align: 'center',
 				events: operateEvents,
-				formatter: operateFormatter
+				formatter: operateFormatter,
+				width: 120
 			},
 			{% for col in columns %}
 			{
@@ -101,8 +98,7 @@ Client Groups
 	function operateFormatter(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table>');
-		htmlData.push('<tr><td>');
+		htmlData.push('<div class="buttonGroup">');	
 		var hasRowRight = false;
 
 		hasRowRight = false;
@@ -113,24 +109,36 @@ Client Groups
 				hasRowRight = true;
 			}
 		}
-		if (hasRowRight || row.group_name == 'Default')
-		{
+		if (hasRowRight || row.group_name == 'Default') {
+			htmlData.push('<div class="buttonItem">');
 			htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch Group">');
 			htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>');
-			htmlData.push('</td><td>');
+			htmlData.push('</div>');
+			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
 			htmlData.push('<a class="modify" href="javascript:void(0)" title="Modify Patch Group">');
 			htmlData.push('<i class="fa fa-edit fa-lg"></i></a>');
-			htmlData.push('</td><td>');
-		}
-		if (row['group_owner'] == '{{session.user}}' && row['count'] <= 0 && row.group_name != 'Default') {
-			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
-			htmlData.push('<i class="fa fa-trash-o fa-lg"></i></a>');
-			htmlData.push('</td>');
+			htmlData.push('</div>');
 		} else {
-			htmlData.push('&nbsp;&nbsp;&nbsp;&nbsp;');
+			htmlData.push('<div class="buttonItem">');
+			htmlData.push('<i class="fa fa-pencil fa-lg disabled" aria-hidden="true"></i>');
+			htmlData.push('</div>');
+			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
+			htmlData.push('<i class="fa fa-edit fa-lg disabled"></i>');
+			htmlData.push('</div>');
 		}
 
-		htmlData.push('</td></tr></table>');
+		if (((row['group_owner'] == '{{session.user}}') || ({{session.role[0]}} == 1)) && row['count'] >= 0 && row.group_name != 'Default') {
+			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
+			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
+			htmlData.push('<i class="fa fa-trash-o fa-lg"></i></a>');
+			htmlData.push('</div>');
+		} else {
+			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
+			htmlData.push('<i class="fa fa-trash-o fa-lg disabled"></i></a>');
+			htmlData.push('</div>');
+		}
+
+		htmlData.push('</div>');
 		return htmlData.join('');
 	}
 

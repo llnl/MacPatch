@@ -2,11 +2,10 @@ from flask import render_template, jsonify, request, session
 from flask_security import login_required
 import json
 
-from .  import test
-from .. import db
-from .. import login_manager
-from .. model import *
-from .. mplogger import *
+from . import test
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.mplogger import *
 
 # This is a UI Request
 @test.route('/')

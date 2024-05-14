@@ -172,3 +172,44 @@ body.modal-open .modal .modal-dialog {
 .icon-invisible {
 	visibility: hidden;
 }
+
+/* Bootstrap Table Div for Buttons */
+.buttonGroup {
+	max-width: fit-content;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.buttonItem {
+	display: inline-block;
+}
+
+.buttonItemVC {
+	display: grid;
+	align-items: center;
+	display: inline-block;
+}
+
+.buttonSeperator {
+	border-left: 1px solid black;
+	height: 16px;
+	width: 0px;
+	margin-left: 10px;
+	padding-right: 10px;
+}
+
+/* Override */
+.table-condensedX > thead > tr > th,
+.table-condensedX > tbody > tr > th,
+.table-condensedX > tfoot > tr > th,
+.table-condensedX > thead > tr > td,
+.table-condensedX > tbody > tr > td,
+.table-condensedX > tfoot > tr > td {
+  padding: 5px;
+}
+
+.fa.disabled, .fa[disabled], .disabled > .fa, [disabled] > .fa {
+  opacity: 0.4;
+  /*optional*/ cursor: not-allowed;
+  /*optional*/ pointer-events: none;
+}

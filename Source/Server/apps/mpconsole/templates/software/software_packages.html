@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed" data-toolbar="#toolbar">
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="delButton" type="button" class="btn btn-default" title="Delete Package"><i class="glyphicon glyphicon-trash"></i></button>
@@ -39,19 +39,23 @@
 	function operateFormatter(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table><tr><td>')
+		htmlData.push('<div class="buttonGroup">')
 		{% if session.role[0] == 1 %}
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Package">');
 		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
 		{% else %}
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Package Data">');
-		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
+		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i></a>');
 		{% endif %}
-		htmlData.push('</a>');
-		htmlData.push('</td><td>');
+		htmlData.push('</div>');
+		htmlData.push('<i class="buttonSeperator"></i>');
+		htmlData.push('<div class="buttonItem">');
 		htmlData.push('<a class="download" href="/mp-content' + row['sw_url'] + '" title="Download Package" target=_blank>');
 		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
-		htmlData.push('</td></tr></table>');
+		htmlData.push('</div>');
+		htmlData.push('</div>');
 		return htmlData.join('');
 	}
 
@@ -105,7 +109,6 @@
 	{
 		$('#table').bootstrapTable(
 		{
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '50', '100', 'All'],

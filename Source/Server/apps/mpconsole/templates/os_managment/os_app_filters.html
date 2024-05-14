@@ -13,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -35,7 +35,6 @@
 		$('#table').bootstrapTable (
 		{
             url: "/osmanage/app_filter/list",
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '25', '50', '100', 'All'],
@@ -59,6 +58,7 @@
 				align: 'center',
 				events: operateEvents,
 				formatter: operateFormatter,
+				width: 30
 			},
 			{% for col in columns %}
 			{% if col[0] != 'rid' %}
@@ -136,9 +136,10 @@
 	function operateFormatter(value, row, index)
 	{
 		return [
+			'<div class="buttonGroup"><div class="buttonItemVC">',
 			'<a class="edit" href="javascript:void(0)" title="Edit">',
-			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
-			'</a>&nbsp;'
+			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>',
+			'</div></div>'
 		].join('');
 	}
 

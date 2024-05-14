@@ -6,7 +6,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table_admins" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table_admins" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
 		<div id="toolbar">
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -29,7 +29,6 @@
 	{
 		$('#table_admins').bootstrapTable(
 		{
-			striped: true,
             url: "/patches/patchGroup/members/{{group_id}}",
 			search: true,
 			pageSize: 10,

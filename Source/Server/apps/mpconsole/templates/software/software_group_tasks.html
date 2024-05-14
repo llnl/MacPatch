@@ -18,14 +18,14 @@
 
 {% block body %}
 	<div>
-		<table id="tasksTable" class="table table-condensed" data-toolbar="#tasksToolbar" data-show-export="true" data-show-columns="true">
+		<table id="tasksTable" class="table table-condensed table-striped" data-toolbar="#tasksToolbar" data-show-export="true" data-show-columns="true">
 			<div id="tasksToolbar">
 			</div>
 		</table>
 		<div id="group_id" hidden>{{group_id}}</div>
 	</div>
 	<div id="overlay">
-		<img id="overlayImg" src="{{ url_for('static', filename='img/35.gif')}}" style="display:block;margin:auto;padding-top:10%;" />
+		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
 		<h1 style="text-align: center; color: white; ">Saving...</h1>
 	</div>
 {% endblock %}
@@ -36,11 +36,7 @@
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
 	<!-- Bootstrap Core JavaScript -->
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
-
 	<script>
 	var _cols = [{
 					field: 'selected',
@@ -62,8 +58,8 @@
 
 	$( document ).ready(function()
 	{
-		$('#tasksTable').bootstrapTable({
-			striped: true,
+		$('#tasksTable').bootstrapTable(
+		{
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '40', '100', 'All'],

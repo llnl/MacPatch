@@ -14,7 +14,7 @@ MDM - Corporate Devices
     {% for col in columns %}
 
     {% endfor %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
 		<div id="toolbar">
             {% if session.role[0] == 1 %}
                 <button id="queryButton" type="button" class="btn btn-default" title="Search InTune For A Device"><i class="glyphicon glyphicon-search"></i></button>
@@ -39,7 +39,6 @@ MDM - Corporate Devices
 		$('#table').bootstrapTable(
 		{
             url: "/mdm/corporateDevices/list",
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '50', '100', 'All'],

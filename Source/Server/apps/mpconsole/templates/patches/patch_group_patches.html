@@ -17,7 +17,7 @@
 
 {% block body %}
 	<div>
-		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true">
+		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true" class="table table-condensed table-striped">
 			<div id="patchesToolbar">
                 {% if isOwner == true or session.role[0] == 1 %}
 				<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-All</i></button>
@@ -45,7 +45,6 @@
 	{
 		$('#patchesTable').bootstrapTable(
 		{
-			striped: true,
 			url: "/patches/group/list/{{groupID}}",
 			search: true,
 			pageSize: 20,

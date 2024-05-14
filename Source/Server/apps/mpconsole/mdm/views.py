@@ -13,13 +13,12 @@ from collections import OrderedDict
 
 
 from .  import mdm
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
-from .. mputil import *
-from .. mptasks import MPTaskJobs
-from .. mptasks import MPIntune
+from mpconsole.app import db
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
+from mpconsole.mputil import *
+from mpconsole.mptasks import MPIntune, MPTaskJobs
 
 
 @mdm.route('/enrolledDevices')
@@ -71,7 +70,7 @@ def enrolledDevicesList():
 					_row[col] = _val
 		_results.append(OrderedDict(sorted(_row.items())) )
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @mdm.route('/corporateDevices')
 @login_required
@@ -120,7 +119,7 @@ def corporateDevicesList():
 
 		_results.append(OrderedDict(sorted(_row.items())) )
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @mdm.route('/corporateDevice/add',methods=['GET','POST'])
 @login_required
@@ -217,7 +216,7 @@ def configProfilesList():
 
 		_results.append(OrderedDict(sorted(_row.items())) )
 
-	return json.dumps({'data': _results}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @mdm.route('/configProfiles/payload/<string:id>',methods=['GET'])
 @login_required

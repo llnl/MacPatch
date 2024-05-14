@@ -5,12 +5,11 @@ from datetime import datetime
 import json
 import uuid
 
-from .  import registration
-from .. import login_manager
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
+from . import registration
+from mpconsole.app import db, login_manager
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
 
 '''
 ----------------------------------------------------------------
@@ -69,7 +68,7 @@ def keys():
 	_results = []
 	_columns = []
 	qCols = MpRegKeys.__table__.columns
-	qGet = MpRegKeys.query.filter_by(active=1).all()
+	qGet = MpRegKeys.query.all()
 
 	for col in qCols:
 		_columns.append({'name':col.name, 'label': col.info})
@@ -77,7 +76,8 @@ def keys():
 	for x in qGet:
 		_results.append(x.asDictWithRID)
 
-	return json.dumps({'data': _results, 'total': 0}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
+	#return json.dumps({'data': _results, 'total': 0}, default=json_serial), 200
 
 # JSON
 @registration.route('/clients')
@@ -100,7 +100,8 @@ def clients():
 		d['group_name'] = searchForGroup(x[1], _groups)
 		_results.append(d)
 
-	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
+	#return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
 def searchForGroup(group, list):
 	res = next((item for item in list if item["group_id"] == group))
@@ -151,7 +152,7 @@ def parked():
 	for x in qGet:
 		_results.append(x.asDictWithRID)
 
-	return json.dumps({'data': _results, 'total': 0}, default=json_serial), 200
+	return json.dumps(_results, default=json_serial), 200
 
 @registration.route('/key/add',methods=['GET','POST'])
 @login_required

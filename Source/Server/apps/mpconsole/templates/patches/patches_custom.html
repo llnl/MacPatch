@@ -14,7 +14,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
@@ -42,7 +42,6 @@
 		$('#table').bootstrapTable(
 		{
 			url: "/patches/custom/list",
-			striped: true,
 			pagination: true,
 			sidePagination: 'client',
 			showRefresh: true,
@@ -228,7 +227,8 @@
 	function operateFormatter(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table><tr><td>')
+		htmlData.push('<div class="buttonGroup">');
+		htmlData.push('<div class="buttonItem">');
 		{% if session.role[0] == 1 %}
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch">');
 		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
@@ -236,16 +236,18 @@
 		htmlData.push('<a class="edit" href="javascript:void(0)" title="Patch Data">');
 		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i>');
 		{% endif %}
-
 		htmlData.push('</a>');
-		htmlData.push('</td><td>');
+		htmlData.push('</div>');
+		htmlData.push('<i class="buttonSeperator"></i>');	
+		htmlData.push('<div class="buttonItem">');
 		if (row['pkg_url'].includes('WSAccessKey')) {
 		    htmlData.push('<a class="download" href="' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
         } else {
 		    htmlData.push('<a class="download" href="/mp-content' + row['pkg_url'] + '" title="Download Patch" target=_blank>');
         }
 		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
-		htmlData.push('</td></tr></table>');
+		htmlData.push('</div>');
+		htmlData.push('</div>');
 		return htmlData.join('');
 	}
 

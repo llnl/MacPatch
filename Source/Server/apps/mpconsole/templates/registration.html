@@ -80,7 +80,7 @@ Agent Registration
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="keys">
 			<h4>Registration Keys</h4>
-			<table id="tableKeys" class="table" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableKeys" class="table table-condensedX table-striped" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarKeys">
 					<button id="addKeyButton" type="button" class="btn btn-default" title="Add Registration Key"><i class="glyphicon glyphicon-plus"></i></button>
 				</div>
@@ -88,14 +88,14 @@ Agent Registration
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 3 %}in active{% endif %}" id="regClients">
 			<h4>Registred Clients</h4>
-			<table id="tableClients" class="table" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableClients" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarClients">
 				</div>
 			</table>
 		</div>
 		{% else %}
 		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="regClients">
-			<table id="tableClients" class="table" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableClients" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarClients">
 				</div>
 			</table>
@@ -104,7 +104,7 @@ Agent Registration
 		{% if session.role[0] == 1 %}
 		<div class="tab-pane fade {% if selectedTab == 4 %}in active{% endif %}" id="parkedClients">
 			<h4>Parked Clients</h4>
-			<table id="tableParkedClients" class="table" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableParkedClients" class="table table-striped" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
 			</table>
 		</div>
 		{% endif %}
@@ -121,11 +121,7 @@ Agent Registration
 
 {% block javascript %}
 	{{ super() }}
-
-
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
@@ -134,7 +130,6 @@ Agent Registration
 	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
 
 	<script>
-
 	var $ttRbutton = $('#ttRefreshbutton');
 
 	$( document ).ready(function()
@@ -143,7 +138,6 @@ Agent Registration
 		{% if session.role[0] == 1 %}
 		$('#tableKeys').bootstrapTable(
 		{
-			striped: true,
 			url: "/registration/keys",
 			search: true,
 			pageSize: 20,
@@ -175,7 +169,6 @@ Agent Registration
 		{% endif %}
 		$('#tableClients').bootstrapTable(
 		{
-			striped: true,
 			url: "/registration/clients",
 			search: true,
 			pageSize: 20,
@@ -220,7 +213,6 @@ Agent Registration
 		{% if session.role[0] == 1 %}
 		$('#tableParkedClients').bootstrapTable(
 		{
-			striped: true,
 			url: "/registration/parked",
 			search: true,
 			pageSize: 20,
@@ -256,16 +248,19 @@ Agent Registration
 	function keyFormatter(value, row, index)
 	{
 		var htmlData = [];
-		htmlData.push('<table><tr><td>')
+		htmlData.push('<div class="buttonGroup">')
+		htmlData.push('<div class="buttonItem">')
 		htmlData.push('<a class="editKey" href="javascript:void(0)" title="Edit Key">');
-		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i>');
-		htmlData.push('</a>');
-		htmlData.push('</td>');
+		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i></a>');
+		htmlData.push('</div>');
 		{% if session.role[0] == 1 %}
-		htmlData.push('<td><a class="removeKey" href="javascript:void(0)" title="Remove Key">');
-		htmlData.push('<i class="fa fa-trash-o"></i></a></td>');
+		htmlData.push('<i class="buttonSeperator"></i>');
+		htmlData.push('<div class="buttonItem">')
+		htmlData.push('<a class="removeKey" href="javascript:void(0)" title="Remove Key">');
+		htmlData.push('<i class="fa fa-trash-o"></i></a>');
+		htmlData.push('</div>');
 		{% endif %}
-		htmlData.push('</tr></table>');
+		htmlData.push('</div>');
 		return htmlData.join('');
 	}
 

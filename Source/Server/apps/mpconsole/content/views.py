@@ -1,9 +1,8 @@
-from flask import request, current_app, send_from_directory, session, render_template
-from flask_security import login_required
+from flask import current_app, send_from_directory
 
-from .  import content
-from .  import *
-from .. mputil import *
+from . import content
+from . import *
+from mpconsole.mputil import *
 
 @content.route('/<path:file>')
 def content(file):

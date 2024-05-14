@@ -1,7 +1,7 @@
 from flask import render_template
 
 from . import agent
-from .. model import *
+from mpconsole.model import *
 
 @agent.route('/download')
 def clientDownload():

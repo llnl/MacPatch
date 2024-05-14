@@ -53,24 +53,24 @@
 				<div id="toolbar">
 					<button id="delAgentButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
 				</div>
-				<table id="tableAgents" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbar">
+				<table id="tableAgents" class="table table-condensed table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
 
 				</table>
 
 			{% else %}
-				<table id="tableAgents" class="table table-condensed" data-row-style="rowStyle"></table>
+				<table id="tableAgents" class="table table-condensed table-striped" data-row-style="rowStyle"></table>
 			{% endif %}
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="filters">
 			{% if gResults['Admin'] == True %}
-				<table id="tableFilters" class="table table-condensed" data-row-style="rowStyle" data-toolbar="#toolbarFilters">
+				<table id="tableFilters" class="table table-condensed table-striped" data-row-style="rowStyle" data-toolbar="#toolbarFilters">
 				<div id="toolbarFilters">
 					<button id="addFilterButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 					<button id="delFilterButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
 				</div>
 				</table>
 			{% else %}
-				<table id="tableFilters" class="table table-condensed" data-row-style="rowStyle"></table>
+				<table id="tableFilters" class="table table-condensed table-striped" data-row-style="rowStyle"></table>
 			{% endif %}
 		</div>
 	</div>

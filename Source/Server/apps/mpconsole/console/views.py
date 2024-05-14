@@ -12,10 +12,10 @@ from datetime import datetime
 from hashlib import sha1, sha256
 
 from .  import console
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
+from mpconsole.app import db
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
 
 ''' Global '''
 

@@ -2,6 +2,7 @@ from flask import render_template, request, session
 from flask_security import login_required
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm.session import make_transient
+from sqlalchemy.sql import text
 from sqlalchemy import or_
 import os
 import json
@@ -12,12 +13,12 @@ import sys
 from datetime import datetime
 
 from .  import software
-from .. import db
-from .. model import *
-from .. modes import *
-from .. mplogger import *
-from .. mputil import *
-from .. aws import *
+from mpconsole.app import db
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
+from mpconsole.mputil import *
+from mpconsole.aws import *
 
 '''
 	-------------------------------------------------
@@ -215,28 +216,36 @@ def filtersForGroup(id,limit,offset,search,sort,order):
 
 		_results.append(row)
 
-	return json.dumps({'data': _results, 'total': total}), 200
+	return json.dumps({'data':_results,'total':len(_results)}), 200
 
 def filtersQuery(id, filterStr='undefined', page=0, page_size=0, sort='rid', order='desc', getCount=True):
 
 	if sort == 'undefined':
-		sort = 'mp_software_groups_filters.rid'
+		#sort = 'mp_software_groups_filters.rid'
+		sort = 'rid'
 
 	if sort in ['rid', 'attribute', 'datasource', 'attribute_oper', 'attribute_filter', 'attribute_condition']:
-		sort = 'mp_software_groups_filters.'+sort
+		#sort = 'mp_software_groups_filters.'+sort
+		sort = sort
+	else:
+		sort = ""
+
+	if order == 'undefined':
+		order = 'desc'
 
 	order_by_str = sort + ' ' + order
-
 	filterStr = str(filterStr)
+
 	if filterStr == 'undefined' or len(filterStr) <= 0:
-		query = MpSoftwareGroupFilters.query.filter(MpSoftwareGroupFilters.gid == id).order_by(str(order_by_str))
+		query = MpSoftwareGroupFilters.query.filter(MpSoftwareGroupFilters.gid == id).order_by(text(order_by_str))
+		
 	else:
 		query = MpSoftwareGroupFilters.query.filter(MpSoftwareGroupFilters.gid == id,
 											or_(MpSoftwareGroupFilters.attribute.contains(filterStr),
 											MpSoftwareGroupFilters.datasource.contains(filterStr),
 											MpSoftwareGroupFilters.attribute_oper.contains(filterStr),
 											MpSoftwareGroupFilters.attribute_filter.contains(filterStr),
-											MpSoftwareGroupFilters.attribute_condition.contains(filterStr))).order_by(str(order_by_str))
+											MpSoftwareGroupFilters.attribute_condition.contains(filterStr))).order_by(text(order_by_str))
 
 	# count of rows
 	if getCount:
