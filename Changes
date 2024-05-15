@@ -1,11 +1,14 @@
 MacPatch - Changes
 
-MacPatch v3.6.4.2
+MacPatch v3.8.0
+
+* Server
+- Updated Python Min-Requirement to 3.11
+- Updated Python Modules
+- Refactored API and Console app for module changes
 
 * Client
-- Added Better Server Roll-over for faster response
-- Fix issue with loading images
-- Dropped support for python due to macOS 12.3
+
 
 * Other
 - Update Build script
