@@ -1,7 +1,7 @@
 //
 //  MPAgent.m
 /*
- Copyright (c) 2023, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -81,8 +81,33 @@ static MPAgent *_instance;
 
 #pragma mark -
 #pragma mark OS/Client Info
+- (NSString *)getIOPlatformAttributeForKey:(CFStringRef)key
+{
+	io_service_t service;
+
+	if (@available(macOS 12.0, *)) {
+		service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+	} else {
+		// Fallback on earlier versions
+		service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+	}
+	if (!service)
+	{
+		qlerror(@"Couldn't get IO service to query for key (%@).", key);
+		return nil;
+	}
+
+	NSString *result = (__bridge_transfer NSString *)IORegistryEntryCreateCFProperty(service, key, kCFAllocatorDefault, 0);
+	IOObjectRelease(service);
+
+	return result;
+}
+
+
 - (NSString *)collectCUUIDFromHost
 {
+	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformUUIDKey)];
+	/* OLD
 	NSString *result = NULL;
 	io_struct_inband_t iokit_entry;
 	uint32_t bufferSize = 4096; // this signals the longest entry we will take
@@ -94,6 +119,7 @@ static MPAgent *_instance;
 	IOObjectRelease(ioRegistryRoot);
     
 	return result;
+	 */
 }
 
 - (NSDictionary *)systemVersionDictionary
@@ -117,6 +143,8 @@ static MPAgent *_instance;
 
 - (NSString *)getHostSerialNumber
 {
+	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformSerialNumberKey)];
+	/* OLD
 	NSString *result = nil;
     
 	io_registry_entry_t rootEntry = IORegistryEntryFromPath( kIOMasterPortDefault, "IOService:/" );
@@ -136,6 +164,7 @@ static MPAgent *_instance;
 	}
 	
 	return result;
+	 */
 }
 
 - (NSDictionary *)getOSInfo

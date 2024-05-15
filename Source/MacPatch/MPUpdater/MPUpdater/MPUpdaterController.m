@@ -2,7 +2,7 @@
 //  MPUpdaterController.m
 //  MPUpdater
 /*
- Copyright (c) 2023, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -526,9 +526,11 @@ done:
 	return result;
 }
 
-/*
+
 - (void)taskTimeoutThread
 {
+	qlinfo(@"Task timeout thread called. (NON-OP)");
+	/*
 	@autoreleasepool
 	{
 		qldebug(@"Timeout is set to %f",taskTimeoutValue);
@@ -541,16 +543,16 @@ done:
 		while (taskTimedOut == NO && [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
 		
 	}
-	
+	*/
 }
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	qlinfo(@"Task timedout, killing task.");
-	[self.taskTimeoutTimer invalidate];
-	[self setTaskTimedOut:YES];
+	qlinfo(@"Task timedout, killing task. (NON-OP)");
+	//[self.taskTimeoutTimer invalidate];
+	//[self setTaskTimedOut:YES];
 }
-*/
+
 #pragma mark Migration methods
 
 - (BOOL)scanForMigrationConfig

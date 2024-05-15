@@ -1,7 +1,7 @@
 //
 //  MPAsus.m
 /*
- Copyright (c) 2023, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -134,8 +134,8 @@
 	
 	NSTask *task = [[NSTask alloc] init];
 	[task setLaunchPath: ASUS_BIN_PATH];
-	[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
-	
+	[task setArguments: @[@"-l"]];
+
 	//if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
 	//	[task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
 	//} else {

@@ -1,7 +1,7 @@
 //
 //  AgentController.m
 /*
- Copyright (c) 2023, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -32,7 +32,6 @@
 // Operations
 #import "ClientCheckInOperation.h"
 #import "AgentScanAndUpdateOperation.h"
-#import "AntiVirusScanAndUpdateOperation.h"
 #import "InventoryOperation.h"
 #import	"PatchScanAndUpdateOperation.h"
 #import "MPSWDistTaskOperation.h"
@@ -49,7 +48,6 @@
 
     ClientCheckInOperation          *clientOp;
     AgentScanAndUpdateOperation     *agentOp;
-    AntiVirusScanAndUpdateOperation *avOp;
     InventoryOperation              *invOp;
     PatchScanAndUpdateOperation     *patchOp;
     MPSWDistTaskOperation           *swDistOp;
@@ -122,10 +120,12 @@
             [self runPatchScanAndUpdate];
             break;
         case 5:
-            [self runAVInfoScan];
+            //[self runAVInfoScan];
+			printf("Run AV Info Scan, no longer supported.");
             break;
         case 6:
-            [self runAVInfoScanAndDefsUpdate];
+            //[self runAVInfoScanAndDefsUpdate];
+			printf("Run AV Defs Scan and Update, no longer supported.");
             break;
         case 7:
             [self scanAndUpdateAgentUpdater];
@@ -366,22 +366,6 @@
 										[queue addOperation:agentOp];
 										agentOp = nil;
 										 */
-									}
-									if ([taskDict[@"cmd"] isEqualToString:@"kMPAVInfo"])
-									{
-										avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-										avOp.taskName = @"kMPAVInfo";
-										[avOp setScanType:0];
-										[queue addOperation:avOp];
-										avOp = nil;
-									}
-									else if ([taskDict[@"cmd"] isEqualToString:@"kMPAVCheck"])
-									{
-										avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-										avOp.taskName = @"kMPAVCheck";
-										[avOp setScanType:1];
-										[queue addOperation:avOp];
-										avOp = nil;
 									}
 									else if ([taskDict[@"cmd"] isEqualToString:@"kMPInvScan"])
 									{
@@ -679,42 +663,6 @@
     }
     
     exit(0);
-}
-
-- (void)runAVInfoScan
-{
-    avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-    [avOp setScanType:0];
-    [queue addOperation:avOp];
-    avOp = nil;
-    
-    if ([NSThread isMainThread]) {
-        while ([[queue operations] count] > 0) {
-            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-        }
-    } else {
-        [queue waitUntilAllOperationsAreFinished];
-    }
-    
-	exit(0);
-}
-
-- (void)runAVInfoScanAndDefsUpdate
-{
-    avOp = [[AntiVirusScanAndUpdateOperation alloc] init];
-    [avOp setScanType:1];
-    [queue addOperation:avOp];
-    avOp = nil;
-    
-    if ([NSThread isMainThread]) {
-        while ([[queue operations] count] > 0) {
-            [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:1]];
-        }
-    } else {
-        [queue waitUntilAllOperationsAreFinished];
-    }
-    
-	exit(0);
 }
 
 -(void)scanAndUpdateAgentUpdater
@@ -1135,7 +1083,7 @@
                     }
                 }
             }
-            qldebug(@"provCriteria.count %d == %d count",provCriteria.count,count);
+			qldebug(@"provCriteria.count %lu == %d count",(unsigned long)provCriteria.count,count);
             if (provCriteria.count == count)
             {
                 // Criteria is a pass, write .MPProvisionBegin file
