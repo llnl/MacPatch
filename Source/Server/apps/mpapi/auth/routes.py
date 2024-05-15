@@ -3,13 +3,14 @@ from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from ast import literal_eval
 
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+from itsdangerous import BadSignature, SignatureExpired
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
 
 parser = reqparse.RequestParser()
 

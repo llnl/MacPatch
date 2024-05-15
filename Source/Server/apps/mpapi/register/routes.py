@@ -6,18 +6,14 @@ import hashlib
 from datetime import datetime
 
 import M2Crypto
-#from M2Crypto import RSA
 from flask_restful import reqparse
 
 from . import *
 
-from .. model import *
-from .. mplogger import *
-from .. mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
+from mpapi.mputil import *
 from .. shared.agentRegistration import *
-
-
-# from flask_restful_swagger import swagger
 
 # Client Reg Test
 class Test(MPResource):
@@ -37,7 +33,6 @@ class Test(MPResource):
 class Registration(MPResource):
 
 	def __init__(self):
-		# self.reqparse = reqparse.RequestParser()
 		super(Registration, self).__init__()
 	'''
 	@swagger.operation(

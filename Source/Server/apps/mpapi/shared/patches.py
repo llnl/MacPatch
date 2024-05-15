@@ -1,5 +1,5 @@
-from .. model import *
-from .. mplogger import *
+from mpapi.model import *
+from mpapi.mplogger import *
 from .. extensions import cache
 from . client import *
 

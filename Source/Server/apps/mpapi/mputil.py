@@ -14,7 +14,8 @@ import json
 import os.path
 import hmac
 from ldap3 import Server, Connection, ALL, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES
-from itsdangerous import TimedJSONWebSignatureSerializer as Serializer, BadSignature, SignatureExpired
+from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
+from itsdangerous import BadSignature, SignatureExpired
 from werkzeug.security import check_password_hash
 
 from cryptography.exceptions import *
@@ -25,9 +26,9 @@ from cryptography.hazmat.primitives.asymmetric import padding
 
 from base64 import b64encode, b64decode
 
-from . import db
-from . model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
-from . mplogger import *
+from mpapi.app import db
+from mpapi.model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
+from mpapi.mplogger import *
 
 # ----------------------------------------------------------------------------
 '''

@@ -1,8 +1,8 @@
-from flask import request, current_app, send_from_directory
+from flask import current_app, send_from_directory
 from flask_restful import reqparse
 
 from . import *
-from .. mputil import *
+from mpapi.mputil import *
 
 parser = reqparse.RequestParser()
 

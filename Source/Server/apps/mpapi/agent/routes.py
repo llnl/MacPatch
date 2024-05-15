@@ -10,11 +10,11 @@ import hashlib
 from ast import literal_eval
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
-from .. servers.routes import serverListForID, ServerInfo, suServerListForID
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
+from mpapi.servers.routes import serverListForID, ServerInfo, suServerListForID
 
 parser = reqparse.RequestParser()
 

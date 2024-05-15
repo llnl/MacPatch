@@ -4,10 +4,10 @@ from sqlalchemy.exc import IntegrityError
 import base64
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
 
 parser = reqparse.RequestParser()
 

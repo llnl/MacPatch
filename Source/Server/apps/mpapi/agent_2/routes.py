@@ -10,13 +10,13 @@ import plistlib
 import json
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
-from .. servers_2.routes import serverListForID, suServerListForID
-from .. agent.routes import AgentUpdates
-from .. extensions import cache
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
+from mpapi.servers_2.routes import serverListForID, suServerListForID
+from mpapi.agent.routes import AgentUpdates
+from mpapi.extensions import cache
 
 parser = reqparse.RequestParser()
 

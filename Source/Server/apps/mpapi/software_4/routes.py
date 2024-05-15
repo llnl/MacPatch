@@ -8,10 +8,10 @@ import base64
 #from flask_sqlalchemy_cache import FromCache
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
 from .. wsresult import *
 from .. extensions import cache
 from .. shared.software import *

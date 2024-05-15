@@ -1,4 +1,4 @@
-from .. model import *
+from mpapi.model import *
 
 class Client():
 

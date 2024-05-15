@@ -5,10 +5,10 @@ from datetime import datetime
 from collections import OrderedDict
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
 from .. shared.patches import *
 
 

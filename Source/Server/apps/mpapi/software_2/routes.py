@@ -6,10 +6,10 @@ from distutils.version import LooseVersion
 import base64
 
 from . import *
-from .. import db
-from .. mputil import *
-from .. model import *
-from .. mplogger import *
+from mpapi.app import db
+from mpapi.mputil import *
+from mpapi.model import *
+from mpapi.mplogger import *
 from .. wsresult import *
 from .. shared.software import *
 from .. software_4.routes import SoftwareTasksForGroup as SoftwareTasksForGroupNew
