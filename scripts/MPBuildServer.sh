@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.6.1
+# Version: 3.7.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -12,8 +12,8 @@
 # Simply modify the GITROOT and BUILDROOT variables
 #
 # History:
-# 1.4:    Remove Jetty Support
-#     Added Tomcat 7.0.57
+# 1.4:      Remove Jetty Support
+#           Added Tomcat 7.0.57
 # 1.5:      Added Tomcat 7.0.63
 # 1.6:      Variableized the tomcat config
 #           removed all Jetty refs
@@ -41,6 +41,7 @@
 #           Changed Linux dist detection to /etc/os-release
 # 3.6.0     M2Crypto has been updated to install without special flags
 # 3.6.1     Updated Nodejs install for yarn
+# 3.7.0     Update for MacOS and tweaks to install options
 #
 # ----------------------------------------------------------------------------
 
@@ -128,13 +129,10 @@ fi
 
 # Script Input Args ----------------------------------------------------------
 
-usage() { echo "Usage: $0 [-c ALT_SSL_CERT]" 1>&2; exit 1; }
+usage() { echo "Usage: $0" 1>&2; exit 1; }
 
-while getopts "hc:" opt; do
+while getopts "h" opt; do
     case $opt in
-        c)
-            CA_CERT=${OPTARG}
-            ;;
         h)
             echo
             usage
@@ -194,11 +192,11 @@ if $USEMACOS; then
         echo "To install brew go to https://brew.sh and follow the install"
         echo "directions."
         echo
-        echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" to be installed"
+        echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" and \"Python 3.11\" to be installed"
         echo "using brew. It's recommended that you install these two"
         echo "applications before continuing."
         echo
-        echo "Exapmple: brew install yarn openssl swig gpm"
+        echo "Exapmple: brew install yarn openssl swig gpm python3.12"
         echo
         read -p "Would you like to continue (Y/N)? [Y]: " BREWOK
         BREWOK=${BREWOK:-Y}
@@ -452,6 +450,8 @@ echo "-----------------------------------------------------------------------"
 echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
 echo
 NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
+PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
+OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 
 mkdir -p ${BUILDROOT}/nginx
 tar xfz ${SRC_DIR}/${NGINX_SW} --strip 1 -C ${BUILDROOT}/nginx
@@ -466,18 +466,21 @@ if $USELINUX; then
     --user=www-data \
     --group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 else
+    mkdir -p ${BUILDROOT}/pcre
+    tar xfz ${SRC_DIR}/${PCRE_SW} --strip 1 -C ${BUILDROOT}/pcre
+
+    mkdir -p ${BUILDROOT}/openssl
+    tar xfz ${SRC_DIR}/${OSSL_SW} --strip 1 -C ${BUILDROOT}/openssl
+
     # Now using brew installed openssl and pcre
-    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
     export KERNEL_BITS=64
     ./configure --prefix=${MPSERVERBASE}/nginx \
-    --with-cc-opt="-I${OPENSSLPWD}/include" \
-    --with-ld-opt="-L${OPENSSLPWD}/lib" \
     --with-http_v2_module \
     --without-http_autoindex_module \
     --without-http_ssi_module \
     --with-http_ssl_module \
-    --with-pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
-
+    --with-openssl=${BUILDROOT}/openssl \
+    --with-pcre=${BUILDROOT}/pcre > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 fi
 
 make  >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
@@ -577,31 +580,27 @@ chown $OWNERGRP "${MPSERVERBASE}/apps/log"
 chmod 2777 "${MPSERVERBASE}/apps/log"
 
 cd "${MPSERVERBASE}"
-python3 -m venv env/server --copies --clear
-python3 -m venv env/api --copies --clear
-python3 -m venv env/console --copies --clear
-
-CA_STR=""
-if [ "$CA_CERT" != "NA" ]; then
-    CA_STR="--cert \"$CA_CERT\""
+if $USEMACOS; then
+    /usr/local/bin/python3 -m venv env/server --copies --clear
+    /usr/local/bin/python3 -m venv env/api --copies --clear
+    /usr/local/bin/python3 -m venv env/console --copies --clear
+else
+    python3 -m venv env/server --copies --clear
+    python3 -m venv env/api --copies --clear
+    python3 -m venv env/console --copies --clear
 fi
 
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
-    OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
+    OPENSSLPWD=`brew --prefix openssl@1.1 | awk -F@ '{print $1}'`
 
     # Server venv
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
     ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt
     deactivate
 
     # API venv
@@ -610,7 +609,7 @@ if $USEMACOS; then
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
-    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
+    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt --no-cache-dir
     deactivate
 
     # Console venv
@@ -618,41 +617,27 @@ if $USEMACOS; then
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    # Install M2Crypto first
-    env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    CFLAGS="-I${OPENSSLPWD}/include" \
-    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
+    env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt --no-cache-dir
     deactivate
 
 else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
     ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt
     deactivate
 
     echo "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-    #${MPSERVERBASE}/env/api/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt
     deactivate
 
     echo "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
-    #${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt
     deactivate
 fi
 
