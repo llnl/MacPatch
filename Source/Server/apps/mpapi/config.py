@@ -27,20 +27,22 @@ def as_none(value):
 
 class Config(object):
 
-	DEBUG               			= False
-	TESTING             			= False
+	DEBUG               	= False
+	TESTING             	= False
+
+	SITECONFIG_FILE			= os.environ.get('SITECONFIG_FILE') or '/opt/MacPatch/Server/etc/siteconfig.json'
 
 	# Web Server Options
 	# Use 127.0.0.1 and port 3601, NGINX will be the outward facing
 	# avenue for clients to communicate.
-	SRV_HOST            			= '127.0.0.1'
-	SRV_PORT            			= 3601
-	JSON_SORT_KEYS					= False
+	SRV_HOST            	= '127.0.0.1'
+	SRV_PORT            	= 3601
+	JSON_SORT_KEYS			= False
 
 	# URL Options
-	API_PREFIX          			= 'api'
-	API_VERSION         			= 'v1'
-	URL_PREFIX          			= '/' + API_PREFIX + '/' + API_VERSION
+	API_PREFIX          	= 'api'
+	API_VERSION         	= 'v1'
+	URL_PREFIX          	= '/' + API_PREFIX + '/' + API_VERSION
 
 	# Database Options
 	DB_USER                         = os.environ.get('DB_USER') or 'mpdbadm'
@@ -119,5 +121,6 @@ class Config(object):
 	MAIL_PASSWORD 				= os.environ.get('MAIL_PASSWORD') or '*****'
 	MAIL_USE_TLS				= as_bool(os.environ.get('MAIL_USE_TLS') or 'no')
 	MAIL_USE_SSL	 			= as_bool(os.environ.get('MAIL_USE_SSL') or 'yes')
+	MAIL_FROM_ADDRESS			= os.environ.get('MAIL_FROM_ADDRESS') or 'macpatch-noreply@example.com'
 
 

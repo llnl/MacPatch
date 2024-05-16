@@ -13,11 +13,11 @@ from datetime import datetime
 import textwrap
 
 from .  import provision
-from .. import db
-from .. model import *
+from mpapi.app import db
+from mpapi.model import *
 from .. modes import *
-from .. mplogger import *
-from .. mputil import *
+from mpapi.mplogger import *
+from mpapi.mputil import *
 from .. aws import *
 
 '''

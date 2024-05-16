@@ -185,34 +185,39 @@ def clientInventoryReport(client_id, inv_id):
 	with db.engine.connect() as conn:
 		raw_result = conn.execute(sql)
 		_q_result = raw_result.mappings().all()
-
+		
 	_results = []
 	_columns = []
+	_columns_raw = None
+	
+	if len(_q_result) >= 1:
+		_columns_raw = _q_result[0].keys()
 
-	for v in _q_result:
-		_row = {}
-		for column, value in list(v.items()):
-			if column != "cdate" or column != "rid" or column != "cuuid":
+		for v in _q_result:
+			_row = {}
+			for column, value in list(v.items()):
+				if column != "cdate" or column != "rid" or column != "cuuid":
+					if column == "mdate":
+						_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
+					else:
+						_row[column] = value
+
+			_results.append(_row)
+
+		for column in _columns_raw:
+			if column != "cdate" and column != "rid" and column != "cuuid":
+				_col = {}
+				_col['field'] = column
 				if column == "mdate":
-					_row[column] = value.strftime("%Y-%m-%d %H:%M:%S")
+					_col['title'] = 'Inv Date'
 				else:
-					_row[column] = value
+					_col['title'] = column.replace('mpa_', '', 1).replace("_", " ")
 
-		_results.append(_row)
-
-	for column in list(_q_result.keys()):
-		if column != "cdate" and column != "rid" and column != "cuuid":
-			_col = {}
-			_col['field'] = column
-			if column == "mdate":
-				_col['title'] = 'Inv Date'
-			else:
-				_col['title'] = column.replace('mpa_', '', 1).replace("_", " ")
-
-			_col['sortable'] = 'true'
-			_columns.append(_col)
+				_col['sortable'] = 'true'
+				_columns.append(_col)
 
 	return json.dumps({'data':_results, 'columns':_columns}), 200
+
 
 def daysFromDate(now, date):
 	x = now - date
@@ -835,6 +840,7 @@ def clientGroupSWDel(id):
 def clientGroupSWResAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
+		print(sw)
 		return render_template('client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
 
 	elif request.method == 'POST':

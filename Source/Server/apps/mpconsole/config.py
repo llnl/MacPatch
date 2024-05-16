@@ -5,8 +5,10 @@ from datetime import timedelta
 basedir = os.path.abspath(os.path.dirname(__file__))
 appsdir = os.path.dirname(basedir)
 
-dotFile=os.path.join(appsdir, '.mpconsole')
-load_dotenv(dotFile, override=True)
+dotFileGlobal=os.path.join(appsdir, '.mpglobal')
+dotFileConsole=os.path.join(appsdir, '.mpconsole')
+load_dotenv(dotFileGlobal, override=True)
+load_dotenv(dotFileConsole, override=True)
 
 MP_ROOT_DIR	= os.environ.get('MP_ROOT_DIR') or '/opt/MacPatch'
 MP_SRV_DIR	= MP_ROOT_DIR+'/Server'

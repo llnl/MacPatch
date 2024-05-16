@@ -7,7 +7,7 @@ from . import db
 
 from mpconsole.mputil import return_data_for_root_key, read_config_file
 from . model import MpClientGroups, MpClient, MpClientGroupMembers, MpClientTasks
-from . model import MpClientSettings
+from . model import MpClientSettings, AdmUsers
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -19,6 +19,7 @@ from sqlalchemy import *
 '''
 # Add Default Admin Account ----------------------------------------------------
 def addDefaultAdminAccount():
+	# Read from siteconfig file
 	usr_dict = return_data_for_root_key('users')
 	if 'admin' in usr_dict:
 		adm_account = usr_dict['admin']

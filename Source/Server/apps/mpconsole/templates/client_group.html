@@ -20,9 +20,7 @@ Client Group - {{group_name}}
 		{% if readOnly == False %}
 		<li {% if selectedTab == 2 %}class="active"{% endif %}><a href="#settings" data-toggle="tab">Agent Settings</a></li>
 		<li {% if selectedTab == 3 %}class="active"{% endif %}><a href="#tasks" data-toggle="tab">Agent Tasks</a></li>
-		<li {% if selectedTab == 4 %}class="active"{% endif %}><a href="#profiles" data-toggle="tab">OS Profiles</a></li>
         <li {% if selectedTab == 5 %}class="active"{% endif %}><a href="#reqSoftware" data-toggle="tab">Software</a></li>
-        <li {% if selectedTab == 6 %}class="active"{% endif %}><a href="#provisioning" data-toggle="tab">Provisioning</a></li>
 		<li {% if selectedTab == 7 %}class="active"{% endif %}><a href="#users" data-toggle="tab">Users</a></li>
 		{% endif %}
 	</ul>
@@ -194,13 +192,6 @@ Client Group - {{group_name}}
 			<table id="tableTasks" class="table table-condensed table-striped">
 			</table>
 		</div>
-		<div class="tab-pane fade {% if selectedTab == 4 %}in active{% endif %}" id="profiles">
-			<table id="tableProfiles" data-toolbar="#toolbarProfiles" data-show-export="true" class="table table-striped">
-				<div id="toolbarProfiles">
-					<button id="addProfileButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-				</div>
-			</table>
-		</div>
 		<div class="tab-pane fade {% if selectedTab == 5 %}in active{% endif %}" id="reqSoftware">
             <br>
             <ul class="nav nav-tabs">
@@ -237,10 +228,6 @@ Client Group - {{group_name}}
                 </div>
 		    </div>
         </div>
-        <div class="tab-pane fade {% if selectedTab == 6 %}in active{% endif %}" id="provisioning">
-			<table id="tableProvision" data-toolbar="#toolbarProvision" data-show-export="true" class="table table-condensed table-striped">
-			</table>
-		</div>
         <div class="tab-pane fade {% if selectedTab == 7 %}in active{% endif %}" id="users">
 			<table id="tableUsers" data-toolbar="#toolbarUsers" data-show-export="true" class="table table-condensed table-striped">
 				<div id="toolbarUsers">
@@ -259,13 +246,12 @@ Client Group - {{group_name}}
 	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/moment/min/moment.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
 
 	<script>
 	var $tasksTable = $('#tableTasks'), $ttRbutton = $('#ttRefreshbutton');
 	var $tableSoftware = $('#tableSoftware');
 	var $tableSoftwareRes = $('#tableSoftwareRes');
-	var $tableProvision = $('#tableProvision');
 
 	$( document ).ready(function()
 	{
@@ -282,7 +268,6 @@ Client Group - {{group_name}}
 			showColumns: true,
 			idField: 'cuuid',
 			uniqueId: 'cuuid',
-
 			columns: [
 			{
 					field: 'state',
@@ -416,39 +401,6 @@ Client Group - {{group_name}}
 			]
 		});
 
-		$tableProvision.bootstrapTable(
-		{
-			striped: true,
-            //url: "/clients/group/{{group_id}}/provision",
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
-			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
-			idField: 'suuid',
-			uniqueId: 'suuid',
-			columns: [
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEventsProvision,
-				formatter: operateFormatterProvision
-			},
-			{% for provcol in provCols %}
-			{
-				field: '{{provcol[0]}}',
-				title: '{{provcol[1]}}',
-				sortable: true
-			},
-			{% endfor %}
-			],
-            data: []
-		});
-
 		$('#tableUsers').bootstrapTable(
 		{
 			striped: true,
@@ -494,43 +446,7 @@ Client Group - {{group_name}}
 			]
 		});
 
-		$('#tableProfiles').bootstrapTable(
-		{
-			url: "/osmanage/profiles/group/{{group_id}}",
-			search: true,
-			pageSize: 20,
-			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
-			sidePagination: "client",
-			showRefresh: true,
-			columns: [
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEventsProfiles,
-					formatter: operateFormatterProfiles,
-					{% if gResults['Owner'] == True %}
-					visible: true,
-					{% else %}
-					visible: false,
-					{% endif %}
-				},
-				{% for col in profileCols %}
-					{
-						{% if col[2] == '0' %}
-						visible: false,
-						{% endif %}
-						sortable: true,
-						field: '{{col[0]}}',
-						title: '{{col[1]}}'
-					},
-				{% endfor %}
-			]
-		});
-
-		$('#tableSoftwareRes').bootstrapTable(
-		{
+		$('#tableSoftwareRes').bootstrapTable({
 			url: "/osmanage/app_filter/list/{{group_id}}",
 			striped: true,
 			search: true,
@@ -573,8 +489,7 @@ Client Group - {{group_name}}
 
 	});
 
-	function formatYesNo(value,row,index)
-    {
+	function formatYesNo(value,row,index) {
         if (Number.isInteger(value))
         {
             return value=='0' ? 'No' : 'Yes';
@@ -589,8 +504,7 @@ Client Group - {{group_name}}
 		This will set the background color on rows
 		based on client check-in status
 	*/
-	function rowStyle(row, index)
-	{
+	function rowStyle(row, index) {
 		if (row.clientState == 0) {
 			return {classes: "normal"};
 		} else if (row.clientState == 1) {
@@ -601,8 +515,7 @@ Client Group - {{group_name}}
 		return {classes: "normal"};
 	}
 
-	function operateFormatter(value, row, index)
-	{
+	function operateFormatter(value, row, index) {
 		return [
 			{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
 			'<div class="operateWidth-md"><a class="dashboard" href="javascript:void(0)" title="Client Dashboard">',
@@ -612,8 +525,7 @@ Client Group - {{group_name}}
 		].join('');
 	}
 
-	function rebootFormatter(value, row, index)
-	{
+	function rebootFormatter(value, row, index) {
 		if (value == 'true') {
 			return [
 				'<div class="operateWidth-md">',
@@ -631,8 +543,7 @@ Client Group - {{group_name}}
 	}
 
 	/* Events for client table */
-	window.operateEvents =
-	{
+	window.operateEvents = {
 		'click .mvClientButton': function (e, value, row, index)
 		{
 			$.get( "/clients/show/move/client/" + row['cuuid']).done(function(data)
@@ -663,8 +574,7 @@ Client Group - {{group_name}}
 		},
 	};
 
-	function operateFormatterUsers(value, row, index)
-	{
+	function operateFormatterUsers(value, row, index) {
 		{% if gResults['Owner'] == True %}
 		return [
 			'<div><a class="remove" href="javascript:void(0)" title="Remove User from Group">',
@@ -678,31 +588,13 @@ Client Group - {{group_name}}
 		{% endif %}
 	}
 
-	function operateFormatterProfiles(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<div class="buttonGroup">');	
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="editProfile" href="javascript:void(0)" title="Edit Profile">');
-		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i>');
-		htmlData.push('</a>');
-		htmlData.push('</div>');
-		htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-		htmlData.push('<a class="removeProfile" href="javascript:void(0)" title="Remove Profile">');
-		htmlData.push('<i class="fa fa-trash-o"></i></a>');
-		htmlData.push('</div></div>');
-		return htmlData.join('');
-	}
-
 	/* Events for software table */
-	function operateFormatterSW(value, row, index)
-	{
+	function operateFormatterSW(value, row, index) {
 		var htmlData = [];
 		return htmlData.join('');
 	}
 
-	window.operateEventsSW =
-	{
+	window.operateEventsSW = {
 		'click .removeSW': function (e, value, row, index)
 		{
 
@@ -713,27 +605,7 @@ Client Group - {{group_name}}
 		}
 	};
 
-	/* Events for provisioning table */
-	function operateFormatterProvision(value, row, index)
-	{
-		var htmlData = [];
-		return htmlData.join('');
-	}
-
-	window.operateEventsProvision =
-	{
-		'click .removeProv': function (e, value, row, index)
-		{
-
-		},
-		'click .addProv': function (e, value, row, index)
-		{
-
-		}
-	};
-
-	window.operateEventsUsers =
-	{
+	window.operateEventsUsers = {
 		'click .remove': function (e, value, row, index)
 		{
 			var _url = "/clients/group/{{gResults['Group']['id']}}/" + row['user_id'] + "/remove";
@@ -752,63 +624,15 @@ Client Group - {{group_name}}
 		}
 	};
 
-	var $profilesTable = $('#tableProfiles');
-
-	window.operateEventsProfiles =
-	{
-		'click .editProfile': function (e, value, row, index)
-		{
-			$.get( "/osmanage/profile/group/{{gResults['Group']['id']}}/edit/" + row['gPolicyID']).done(function(data)
-			{
-				$('#myContent').remove();
-				$('#modalTitle').html('Edit Profile');
-				$('#modalSaveButton').remove();
-				$('#modalCancelButton').remove();
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'60vh'});
-				$('#modalDialog').addClass("modal-wide");
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$profilesTable.bootstrapTable('refresh');
-				});
-			});
-
-
-		},
-		'click .removeProfile': function (e, value, row, index)
-		{
-			var result = confirm("Want to delete?");
-			if (result) {
-				var _url = "/osmanage/profile/" + row['gPolicyID'];
-				$.ajax({
-					url: _url,
-					cache: false,
-					type: 'DELETE',
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
-					},
-					success: function () {
-						$profilesTable.bootstrapTable('refresh');
-					}
-				});
-			}
-		}
-	};
-
 	var $table = $('#tableUsers'), $addButton = $('#addButton'),
-	$_settingsSaveButton = $('#settingsSaveButton'), $_delClientButton = $('#delClientButton'),
-	$addProfileButton = $('#addProfileButton');
+	$_settingsSaveButton = $('#settingsSaveButton'), $_delClientButton = $('#delClientButton');
 
 	var $addSWButton = $('#addSWButton'), $delSWButton = $('#delSWButton');
 	var $addSWResButton = $('#addSWResButton'), $delSWResButton = $('#delSWResButton');
 
 	var $_mvClientButton = $('#mvClientButton');
 	$(function () {
-		$addButton.click(function ()
-		{
+		$addButton.click(function () {
 			$.get( "/clients/group/{{gResults['Group']['id']}}/user/add").done(function(data)
 			{
 				$('#myContent').remove();
@@ -821,27 +645,7 @@ Client Group - {{group_name}}
 			});
 		});
 
-		$addProfileButton.click(function ()
-		{
-			$.get( "/osmanage/profile/group/{{gResults['Group']['id']}}/add").done(function(data)
-			{
-				$('#myContent').remove();
-				$('#modalTitle').html('Add Profile to Group');
-				$('#modalSaveButton').remove();
-				$('#modalCancelButton').html('Close');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'88vh'});
-				$('#modalDialog').addClass("modal-wide");
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$profilesTable.bootstrapTable('refresh');
-				});
-			});
-		});
-
-		$_settingsSaveButton.click(function ()
-		{
+		$_settingsSaveButton.click(function () {
 			var data = {};
 			$('#settingsForm').serializeArray().map(function(x){data[x.name] = x.value;});
 
@@ -851,8 +655,7 @@ Client Group - {{group_name}}
 				type: 'POST',
 				cache: false,
 				data: data,
-				error: function (request, status, error)
-				{
+				error: function (request, status, error) {
 					jsonValue = jQuery.parseJSON( request.responseText );
 					alert(jsonValue.errormsg);
 				},
@@ -860,11 +663,9 @@ Client Group - {{group_name}}
 					alert("Settings saved successfully.");
 				}
 			});
-
 		});
 
-		$_mvClientButton.click(function ()
-		{
+		$_mvClientButton.click(function () {
 			var rows = $('#table').bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
@@ -888,9 +689,7 @@ Client Group - {{group_name}}
 			});
 		});
 
-		$_delClientButton.click(function ()
-		{
-			//var rows = JSON.stringify($('#table').bootstrapTable('getAllSelections'));
+		$_delClientButton.click(function () {
 			var rows = $('#table').bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
@@ -904,8 +703,7 @@ Client Group - {{group_name}}
 				type: 'POST',
 				cache: false,
 				data: {'clients':rowsArr.toString()},
-				error: function (request, status, error)
-				{
+				error: function (request, status, error) {
 					jsonValue = jQuery.parseJSON( request.responseText );
 					alert(jsonValue.errormsg);
 				},
@@ -916,21 +714,9 @@ Client Group - {{group_name}}
 					alert("Client(s) removed successfully.");
 				}
 			});
-
-			/*
-			$.get( "/clients/group/{{gResults['Group']['id']}}/user/add").done(function(data) {
-				$('#modalTitle').html('Add Admin User To Group');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'200px'});
-				$('#modalSaveButton').remove();
-				$('#modalCancelButton').remove();
-				$('#modalDialog').modal('show');
-			});
-			*/
 		});
 
-		$addSWButton.click(function ()
-		{
+		$addSWButton.click(function () {
 			$.get( "/clients/group/{{gResults['Group']['id']}}/sw/add").done(function(data)
 			{
 				$('#myContent').remove();
@@ -943,8 +729,7 @@ Client Group - {{group_name}}
 			});
 		});
 
-		$delSWButton.click(function ()
-		{
+		$delSWButton.click(function () {
 			var rows = $tableSoftware.bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
@@ -958,8 +743,7 @@ Client Group - {{group_name}}
 				type: 'DELETE',
 				cache: false,
 				data: {'rids':rowsArr.toString()},
-				error: function (request, status, error)
-				{
+				error: function (request, status, error) {
 					jsonValue = jQuery.parseJSON( request.responseText );
 					alert(jsonValue.errormsg);
 				},
@@ -972,8 +756,7 @@ Client Group - {{group_name}}
 			});
 		});
 
-		$addSWResButton.click(function ()
-		{
+		$addSWResButton.click(function () {
 			$.get( "/clients/group/{{gResults['Group']['id']}}/sw/res/add").done(function(data)
 			{
 				$('#myContent').remove();
@@ -986,8 +769,7 @@ Client Group - {{group_name}}
 			});
 		});
 
-		$delSWResButton.click(function ()
-		{
+		$delSWResButton.click(function () {
 			var rows = $tableSoftwareRes.bootstrapTable('getAllSelections');
 			var rowsArr = [];
 			for (x in rows) {
@@ -1001,16 +783,13 @@ Client Group - {{group_name}}
 				type: 'DELETE',
 				cache: false,
 				data: {'rids':rowsArr.toString()},
-				error: function (request, status, error)
-				{
+				error: function (request, status, error) {
 					jsonValue = jQuery.parseJSON( request.responseText );
 					alert(jsonValue.errormsg);
 				},
 				success: function () {
 					for (x in rowsArr) {
-						
 						$tableSoftwareRes.bootstrapTable('removeByUniqueId', rowsArr[x]);
-						
 					}
 					alert("Software Restriction removed successfully.");
 				}

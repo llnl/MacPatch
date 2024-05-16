@@ -14,9 +14,9 @@ if __name__ == '__main__':
 	
 	if args.isRun:
 		if args.isLocal:
-			app.run(host='127.0.0.1', port=8001)
+			app.run(host='127.0.0.1', port=3602)
 		else:
-			app.run(host='0.0.0.0', port=8001)
+			app.run(host='0.0.0.0', port=3602)
 
 	if args.isVersion:
 		print("MPConsole v3.8.0")

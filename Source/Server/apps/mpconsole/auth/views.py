@@ -22,6 +22,7 @@ def login():
 		log_Error("Form data is incomplete.")
 		return render_template("login.html", form=form)
 
+	# Read from siteconfig file
 	_localAdm = return_data_for_root_key('users')
 
 	tryLocalAdmin = False

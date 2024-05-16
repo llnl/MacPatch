@@ -739,8 +739,10 @@
 					vars[_name] = ace.edit("editor_" + sid);
 					vars[_name].setTheme("ace/theme/eclipse");
 					vars[_name].getSession().setMode("ace/mode/sh");
+					vars[_name].$blockScrolling = Infinity;
 					vars[_name].session.setValue( $(_meta).data("value") );
 					vars[_name].setFontSize('10px');
+					
 				} catch (err) {
 					console.log("console catch:" + err);
 				}

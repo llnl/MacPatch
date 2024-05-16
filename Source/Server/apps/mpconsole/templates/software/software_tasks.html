@@ -32,10 +32,8 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
 	<script>
 
 	function operateFormatter(value, row, index)

@@ -29,6 +29,7 @@ from base64 import b64encode, b64decode
 from mpapi.app import db
 from mpapi.model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
 from mpapi.mplogger import *
+from mpapi.mpldap import MPldap
 
 # ----------------------------------------------------------------------------
 '''
@@ -148,12 +149,17 @@ def authUser(username_or_token, password):
 			return res
 
 		# Last Check LDAP Accounts
-		_ldap_conf = return_data_for_root_key('ldap')
-		if _ldap_conf:
-			if _ldap_conf['enabled']:
-				res = ldapAuth(_ldap_conf, username_or_token, password)
-				if res:
-					return res
+		if current_app.config['LDAP_SRVC_ENABLED']:
+			# Init LDAP class
+			mpLDAP = MPldap(current_app)
+			# Seach the directory for user logging in
+			foundUserDN = mpLDAP.findOUN(username_or_token)
+
+			if foundUserDN is not None:
+				# User was found in the directory 
+				# Lets try the auth for the user logging in
+				if mpLDAP.authOUN(foundUserDN, username_or_token, password):
+					return True
 	else:
 		# Token Was Good
 		return True
@@ -207,20 +213,8 @@ def dbUserAuth(user, password):
 '''
 def ldapAuth(ldap_conf, user, password):
 	try:
-		userID = ''
-		usr_prefix = ''
-		usr_suffix = ''
-		if 'loginUsrPrefix' in ldap_conf:
-			if ldap_conf['loginUsrPrefix'] != 'LOGIN-PREFIX':
-				usr_prefix = ldap_conf['loginUsrPrefix']
-
-		if 'loginUsrSufix' in ldap_conf:
-			if ldap_conf['loginUsrSufix'] != 'LOGIN-SUFFIX':
-				usr_suffix = ldap_conf['loginUsrSufix']
-
-		userID = usr_prefix + user + usr_suffix
-
 		server = None
+		_config = current_app.config
 		if 'server' in ldap_conf and 'port' in ldap_conf and 'useSSL' in ldap_conf:
 			_use_ssl = True
 			if ldap_conf['useSSL'] is False:
