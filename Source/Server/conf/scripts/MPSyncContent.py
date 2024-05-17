@@ -1,7 +1,7 @@
 #!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
- Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,29 +25,28 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.5.2
+	Version: 1.6.0
 '''
 
 import datetime
 import logging
 import os
 import argparse
-import plistlib
 import sys
 import subprocess
-import hashlib
 import platform
 import subprocess
 import json
 
 
 # Define logging for global use
-logger       = logging.getLogger('MPSyncContent')
+logger		= logging.getLogger('MPSyncContent')
 
-MP_HOME      = "/opt/MacPatch"
-MP_SRV_BASE  = MP_HOME+"/Server"
+MP_HOME		= "/opt/MacPatch"
+MP_SRV_BASE	= MP_HOME+"/Server"
+MP_SRV_APPS	= MP_SRV_BASE+'/apps'
 
-logFile      = MP_SRV_BASE+"/logs/MPSyncContent.log"
+logFile		= MP_SRV_BASE+"/logs/MPSyncContent.log"
 
 # Rsync Path
 SYNC_DIR_NAME="mpContentWeb3"
@@ -61,7 +60,7 @@ MP_SRV_CONF=MP_SRV_BASE+"/conf"
 MP_SYNC_CONF=MP_SRV_BASE+"/etc/syncContent.json"
 
 # Global OS vars
-__version__ = "1.5.0"
+__version__ = "1.6.0"
 os_type = platform.system()
 system_name = platform.uname()[1]
 
@@ -89,6 +88,7 @@ def readJSONFile(filename):
 		print('COULD NOT LOAD:', filename)
 
 	return returndata
+
 
 def main():
 	'''Main command processing'''
