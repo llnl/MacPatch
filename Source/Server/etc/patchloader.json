@@ -4,38 +4,8 @@
 		"ASUSServer": "swscan.apple.com",
 		"Catalogs": [
 			{
-				"osver": "10.9",
-				"catalogurl":"/content/catalogs/others/index-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": false
-			},
-			{
-				"osver": "10.10",
-				"catalogurl":"/content/catalogs/others/index-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": false
-			},
-			{
-				"osver": "10.11",
-				"catalogurl":"/content/catalogs/others/index-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": false
-			},
-			{
-				"osver": "10.12",
-				"catalogurl":"/content/catalogs/others/index-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": false
-			},
-			{
-				"osver": "10.13",
-				"catalogurl":"/content/catalogs/others/index-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": true
-			},
-			{
-				"osver": "10.14",
-				"catalogurl":"/content/catalogs/others/index-10.14-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
-				"enabled": true
-			},
-			{
-				"osver": "10.15",
-				"catalogurl":"/content/catalogs/others/index-10.15-10.14-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog",
+				"osver": "14",
+				"catalogurl":"/content/catalogs/others/index-14-13-12-10.16-10.15-10.14-10.13-10.12-10.11-10.10-10.9-mountainlion-lion-snowleopard-leopard.merged-1.sucatalog.gz",
 				"enabled": true
 			}
 		],
