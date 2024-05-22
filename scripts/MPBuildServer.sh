@@ -42,6 +42,7 @@
 # 3.6.0     M2Crypto has been updated to install without special flags
 # 3.6.1     Updated Nodejs install for yarn
 # 3.7.0     Update for MacOS and tweaks to install options
+#           Check for Python 3 version requirement.
 #
 # ----------------------------------------------------------------------------
 
@@ -127,6 +128,46 @@ elif [[ "$unamestr" == 'Darwin' ]]; then
 
 fi
 
+# ------------------
+# Global Functions
+# ------------------
+function mkdirP {
+  #
+  # Function for creating directory and echo it
+  #
+  if [ ! -n "$1" ]; then
+    echo "Enter a directory name"
+  elif [ -d $1 ]; then
+    echo "$1 already exists"
+  else
+    echo " - Creating directory $1"
+    mkdir -p $1
+  fi
+}
+
+function rmF {
+  #
+  # Function for remove files and dirs and echos
+  #
+  if [ ! -n "$1" ]; then
+    echo "Enter a path"
+  elif [ -d $1 ]; then
+    echo " - Removing $1"
+    rm -rf $1
+  elif [ -f $1 ]; then
+    echo " - Removing $1"
+    rm -rf $1
+  fi
+}
+
+function command_exists () {
+    type "$1" &> /dev/null ;
+}
+
+function version {
+    printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
+}
+
 # Script Input Args ----------------------------------------------------------
 
 usage() { echo "Usage: $0" 1>&2; exit 1; }
@@ -208,6 +249,21 @@ if $USEMACOS; then
     fi
 fi
 
+pyver=`python3 --version | awk -F= '{print $2}'` 
+if [ $(version $pyver) -lt $(version 3.11) ]; then
+    clear
+    echo
+    echo "* WARNING"
+    echo "* Python Requirement"
+    echo "-----------------------------------------------------------------------"
+    echo
+    echo "Server Build Requires Python 3.12.x or higher. Currently $pyver is"
+    echo "installed. This script will not continue until Python requirement is"
+    echo "completed."
+    exit 1
+fi
+
+
 # ----------------------------------------------------------------------------
 # Make Sure Linux has Right User
 # ----------------------------------------------------------------------------
@@ -248,46 +304,6 @@ if [ -d "$TMP_DIR" ]; then
 else
   mkdir -p ${TMP_DIR}
 fi
-
-# ------------------
-# Global Functions
-# ------------------
-function mkdirP {
-  #
-  # Function for creating directory and echo it
-  #
-  if [ ! -n "$1" ]; then
-    echo "Enter a directory name"
-  elif [ -d $1 ]; then
-    echo "$1 already exists"
-  else
-    echo " - Creating directory $1"
-    mkdir -p $1
-  fi
-}
-
-function rmF {
-  #
-  # Function for remove files and dirs and echos
-  #
-  if [ ! -n "$1" ]; then
-    echo "Enter a path"
-  elif [ -d $1 ]; then
-    echo " - Removing $1"
-    rm -rf $1
-  elif [ -f $1 ]; then
-    echo " - Removing $1"
-    rm -rf $1
-  fi
-}
-
-function command_exists () {
-    type "$1" &> /dev/null ;
-}
-
-function version {
-    printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
-}
 
 # ------------------
 # Create Skeleton Dir Structure
