@@ -434,7 +434,7 @@ if $USELINUX; then
                 curl -sL https://rpm.nodesource.com/setup_20.x | sudo -E bash -
                 echo
                 echo "Install nodejs 20.x"
-                yum clean all
+                #yum clean all
                 yum install -y -q -e 1 nodejs
                 echo
             fi
@@ -714,7 +714,7 @@ rm -rf ${BUILDROOT}
 # ------------------
 # Set Permissions
 # ------------------
-clear
+#clear
 echo "Setting Permissions..."
 chmod -R 0775 "${MPBASE}/Content"
 chown -R $OWNERGRP "${MPBASE}/Content"
