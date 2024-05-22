@@ -285,7 +285,7 @@ for f in $pyLst; do
     fi
 done
 
-if !$pyFound then
+if !$pyFound; then
     clear
     echo
     echo "* WARNING"
