@@ -462,9 +462,10 @@ if $USELINUX; then
         do
             if [ $i == "yarn" ]; then
                 if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then
-                    curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+                    #curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+                    curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
                     echo
-                    echo "Install nodejs 10.x"
+                    echo "Install nodejs 20.x"
                     sudo apt-get install -y nodejs
                     echo
                 fi
@@ -644,9 +645,9 @@ if $USEMACOS; then
     /usr/local/bin/python3 -m venv env/api --copies --clear
     /usr/local/bin/python3 -m venv env/console --copies --clear
 else
-    python3 -m venv env/server --copies --clear
-    python3 -m venv env/api --copies --clear
-    python3 -m venv env/console --copies --clear
+    eval($pyApp -m venv env/server --copies --clear)
+    eval($pyApp -m venv env/api --copies --clear)
+    eval($pyApp -m venv env/console --copies --clear)
 fi
 
 cd "${MPSERVERBASE}/apps"
