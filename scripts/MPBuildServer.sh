@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.7.0
+# Version: 3.7.1
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -43,6 +43,7 @@
 # 3.6.1     Updated Nodejs install for yarn
 # 3.7.0     Update for MacOS and tweaks to install options
 #           Check for Python 3 version requirement.
+# 3.7.1     Added IPv6 to nginx build
 #
 # ----------------------------------------------------------------------------
 
