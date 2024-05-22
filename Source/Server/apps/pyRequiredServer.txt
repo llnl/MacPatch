@@ -1,0 +1,10 @@
+pycryptodome==3.20.0
+simplejson==3.19.2
+requests==2.31.0
+#mysql-connector-python==8.0.28
+#mysql-connector-python==8.3.0
+pymysql==1.1.0
+psutil==5.9.8
+python-crontab==3.0.0
+M2Crypto==0.41.0
+packaging
