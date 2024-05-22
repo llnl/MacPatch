@@ -168,6 +168,13 @@ function version {
     printf "%03d%03d%03d%03d" $(echo "$1" | tr '.' ' ')
 }
 
+function versionMinor {
+    major=`echo $1 | cut -d. -f1`
+    minor=`echo $1 | cut -d. -f2`
+    _newVer="$major.$minor"
+    printf "%03d%03d%03d%03d" $(echo "_newVer" | tr '.' ' ')
+}
+
 # Script Input Args ----------------------------------------------------------
 
 usage() { echo "Usage: $0" 1>&2; exit 1; }
@@ -249,20 +256,52 @@ if $USEMACOS; then
     fi
 fi
 
-pyver=`python3 --version | awk -F= '{print $2}'` 
-if [ $(version $pyver) -lt $(version 3.11) ]; then
+# ----------------------------------------------------------------------------
+# Check Python Version
+# ----------------------------------------------------------------------------
+
+pyFound=false
+pyMin="NA"
+pyMax="NA"
+pyApp="NA"
+pyLst=$(ls /usr/bin/python* & ls /usr/local/bin/python*)
+for f in $pyLst; do
+    pyver=$(echo "`$f --version | awk '{print \$2}'`")
+    if ! [[ $pyver =~ ^[0-9]+(\.[0-9]+){2,3}$ ]]; then
+        # Skip Non Version Number Strings
+        continue
+    fi
+    if [ $(versionMinor $pyver) -eq $(versionMinor 3.11) ]; then
+        pyMin="$f"
+        pyFound=true
+        continue
+    fi
+    if [ $(versionMinor $pyver) -eq $(versionMinor 3.12) ]; then
+        pyMax="$f"
+        pyFound=true
+        pyApp=${f}
+        continue
+    fi
+done
+
+if ! $pyFound then
     clear
     echo
     echo "* WARNING"
     echo "* Python Requirement"
     echo "-----------------------------------------------------------------------"
     echo
-    echo "Server Build Requires Python 3.12.x or higher. Currently $pyver is"
-    echo "installed. This script will not continue until Python requirement is"
-    echo "completed."
-    exit 1
+    echo "Server Build Requires Python 3.11.x or higher. This script will not"
+    echo "continue until Python requirement is completed."
+    echo
+    exit 1    
+else
+    if [ ! $pyMax == "NA" ]; then
+        pyApp=${pyMax}
+    else
+        pyApp=${pyMin}
+    fi
 fi
-
 
 # ----------------------------------------------------------------------------
 # Make Sure Linux has Right User
@@ -386,7 +425,7 @@ if $USELINUX; then
         # Add the Yarn repo
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
-        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3" "python3-devel" "python3-setuptools" "python3-pip" "swig" "yarn")
+        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "swig" "yarn")
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
@@ -416,7 +455,7 @@ if $USELINUX; then
         curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         #statements
-        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
+        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "swig" "yarn")
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
@@ -479,6 +518,7 @@ if $USELINUX; then
     --with-http_v2_module \
     --with-http_ssl_module \
     --with-pcre \
+    --with-ipv6 \
     --user=www-data \
     --group=www-data > ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 else
@@ -492,6 +532,7 @@ else
     export KERNEL_BITS=64
     ./configure --prefix=${MPSERVERBASE}/nginx \
     --with-http_v2_module \
+    --with-ipv6 \
     --without-http_autoindex_module \
     --without-http_ssi_module \
     --with-http_ssl_module \
