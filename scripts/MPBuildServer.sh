@@ -173,7 +173,7 @@ function versionMinor {
     major=`echo $1 | cut -d. -f1`
     minor=`echo $1 | cut -d. -f2`
     _newVer="$major.$minor"
-    printf "%03d%03d%03d%03d" $(echo "_newVer" | tr '.' ' ')
+    printf "%03d%03d%03d%03d" $(echo "$_newVer" | tr '.' ' ')
 }
 
 # Script Input Args ----------------------------------------------------------
@@ -285,7 +285,7 @@ for f in $pyLst; do
     fi
 done
 
-if ! $pyFound then
+if !$pyFound then
     clear
     echo
     echo "* WARNING"
