@@ -430,9 +430,10 @@ if $USELINUX; then
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
-                curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash -
+                #curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash -
+                curl -sL https://rpm.nodesource.com/setup_20.x | sudo -E bash -
                 echo
-                echo "Install nodejs 14.x"
+                echo "Install nodejs 20.x"
                 yum clean all
                 yum install -y -q -e 1 nodejs
                 echo
