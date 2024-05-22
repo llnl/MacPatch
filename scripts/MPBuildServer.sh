@@ -645,9 +645,9 @@ if $USEMACOS; then
     /usr/local/bin/python3 -m venv env/api --copies --clear
     /usr/local/bin/python3 -m venv env/console --copies --clear
 else
-    eval($pyApp -m venv env/server --copies --clear)
-    eval($pyApp -m venv env/api --copies --clear)
-    eval($pyApp -m venv env/console --copies --clear)
+    eval "$pyApp -m venv env/server --copies --clear"
+    eval "$pyApp -m venv env/api --copies --clear"
+    eval "$pyApp -m venv env/console --copies --clear"
 fi
 
 cd "${MPSERVERBASE}/apps"
