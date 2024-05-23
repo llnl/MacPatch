@@ -660,47 +660,47 @@ if $USEMACOS; then
     # Server venv
     logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
 
     env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
     deactivate
 
     # API venv
     logit "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
-    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt >> ${BUILD_LOG_FILE}
     deactivate
 
     # Console venv
     logit "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
 
     env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt --no-cache-dir >> ${BUILD_LOG_FILE}
     deactivate
 
 else
     logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
     deactivate
 
     logit "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate 
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt >> ${BUILD_LOG_FILE}
     deactivate
 
     logit "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt >> ${BUILD_LOG_FILE}
     deactivate
 fi
 
