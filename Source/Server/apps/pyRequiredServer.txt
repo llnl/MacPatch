@@ -7,3 +7,4 @@ psutil==5.9.8
 python-crontab==3.0.0
 M2Crypto==0.41.0
 packaging==24.0
+python-dotenv==1.0.1
