@@ -619,7 +619,7 @@ COMMAND=(openssl req -new -sha256 -x509 -nodes -days 999 -subj "${OPTS[@]}" -new
 if (( $? )) ; then
     logit "ERROR:"
     logit " Something went wrong with creating the default self-signed SSL certs."
-    logit " Please re-run it unless you have an actual signed certificate ready to go.
+    logit " Please re-run it unless you have an actual signed certificate ready to go."
     logit " % cd ${certsDir}"
     logit " % openssl req -new -sha256 -x509 -nodes -days 999 -subj '${OPTS[@]}' -newkey rsa:2048 -keyout server.key -out server.crt"
     logit ""
