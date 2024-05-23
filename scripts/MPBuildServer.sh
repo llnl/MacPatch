@@ -688,7 +688,7 @@ else
     logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
     ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
     deactivate
 
     logit "Creating api virtual env..."
