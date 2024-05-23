@@ -336,7 +336,7 @@ fi
 # Main
 # ----------------------------------------------------------------------------
 clear
-logit
+logit ""
 logit "* Begin MacPatch Server build."
 logit "-----------------------------------------------------------------------"
 
@@ -430,7 +430,7 @@ fi
 # Install required packages
 # ------------------
 if $USELINUX; then
-    logit
+    logit ""
     logit "* Install required linux packages"
     logit "-----------------------------------------------------------------------"
     if $USERHEL; then
@@ -502,11 +502,11 @@ fi
 # ------------------
 # Build NGINX
 # ------------------
-logit
+logit ""
 logit "* Build and configure NGINX"
 logit "-----------------------------------------------------------------------"
 logit "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
-logit
+logit ""
 NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
@@ -572,7 +572,7 @@ ln -s ${MPSERVERBASE}/conf/Content/Doc ${MPBASE}/Content/Doc
 chown -R $OWNERGRP ${MPSERVERBASE}
 
 # Admin Site - App
-logit
+logit ""
 logit "* Configuring Console app"
 logit "-----------------------------------------------------------------------"
 
@@ -584,9 +584,9 @@ if $USEMACOS; then
     chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
 fi
 
-logit
+logit ""
 logit "* Installing Javascript modules"
-logit
+logit "-----------------------------------------------------------------------"
 cd ${MPSERVERBASE}/apps/mpconsole
 yarn install --cwd ${MPSERVERBASE}/apps/mpconsole --modules-folder static/yarn_components --no-bin-links
 
@@ -594,7 +594,7 @@ yarn install --cwd ${MPSERVERBASE}/apps/mpconsole --modules-folder static/yarn_c
 # Generate self signed certificates
 # ------------------------------------------------------------
 clear
-logit
+logit ""
 logit "* Creating self signed SSL certificate"
 logit "-----------------------------------------------------------------------"
 
@@ -621,20 +621,20 @@ if (( $? )) ; then
     logit " Something went wrong with creating the default self-signed SSL certs."
     logit " Please re-run it unless you have an actual signed certificate ready to go.
     logit " % cd ${certsDir}"
-    logit " % openssl req -new -sha256 -x509 -nodes -days 999 -subj \"${OPTS[@]}\" -newkey rsa:2048 -keyout server.key -out server.crt"
-    logit
+    logit " % openssl req -new -sha256 -x509 -nodes -days 999 -subj '${OPTS[@]}' -newkey rsa:2048 -keyout server.key -out server.crt"
+    logit ""
 else
     logit "Done!"
-    logit
+    logit ""
     logit "NOTE: It's strongly recommended that an actual signed certificate be installed"
     logit "if running in a production environment."
-    logit
+    logit ""
 fi
 
 # ------------------------------------------------------------
 # Create Virtualenv
 # ------------------------------------------------------------
-logit
+logit ""
 logit "* Create Virtual ENV's for Server, Console, API"
 logit "-----------------------------------------------------------------------"
 
@@ -708,7 +708,7 @@ fi
 # ------------------
 # Clean up structure place holders
 # ------------------
-logit
+logit ""
 logit "* Clean up Server dirtectory"
 logit "-----------------------------------------------------------------------"
 find ${MPBASE} -name ".mpRM" -print | xargs -I{} rm -rf {}
@@ -726,13 +726,13 @@ chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
 chown -R $OWNERGRP "${MPSERVERBASE}/env"
 
-logit
-logit
+logit ""
+logit ""
 logit "-----------------------------------------------------------------------"
-logit " \* Server build has been completed. Please read the 'Server - Install & Setup'"
+logit " * Server build has been completed. Please read the 'Server - Install & Setup'"
 logit "   document for the next steps in setting up the MacPatch server."
 logit ""
 logit " A copy of the scripts actions are saved in $BUILD_LOG_FILE"
-logit
+logit ""
 
 exit 0;
