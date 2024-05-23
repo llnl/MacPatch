@@ -95,6 +95,7 @@ MPBASE="/opt/MacPatch"
 MPSRVCONTENT="${MPBASE}/Content/Web"
 MPSERVERBASE="/opt/MacPatch/Server"
 BUILDROOT="${MPBASE}/.build/server"
+BUILD_LOG_FILE="/tmp/MPServerBuild.log"
 TMP_DIR="${MPBASE}/.build/tmp"
 SRC_DIR="${MPSERVERBASE}/conf/src/server"
 OWNERGRP="79:70"
@@ -132,16 +133,21 @@ fi
 # ------------------
 # Global Functions
 # ------------------
+function logit {
+    echo "$1"
+    echo "$1">>${BUILD_LOG_FILE}
+}
+
 function mkdirP {
   #
   # Function for creating directory and echo it
   #
   if [ ! -n "$1" ]; then
-    echo "Enter a directory name"
+    logit "Enter a directory name"
   elif [ -d $1 ]; then
-    echo "$1 already exists"
+    logit "$1 already exists"
   else
-    echo " - Creating directory $1"
+    logit " - Creating directory $1"
     mkdir -p $1
   fi
 }
@@ -227,6 +233,7 @@ if $USEMACOS; then
         if [ "$XCODEOK" == "Y" ] || [ "$XCODEOK" == "y" ] ; then
             echo
         else
+            logit "Xcode requirements, selected no. Exiting script"
             exit 1
         fi
     fi
@@ -252,6 +259,7 @@ if $USEMACOS; then
         if [ "$BREWOK" == "Y" ] || [ "$BREWOK" == "y" ] ; then
             echo
         else
+            logit "Brew requirements, selected no. Exiting script"
             exit 1
         fi
     fi
@@ -295,6 +303,7 @@ if !$pyFound; then
     echo "Server Build Requires Python 3.11.x or higher. This script will not"
     echo "continue until Python requirement is completed."
     echo
+    logit "Python requirements not meet. Exiting script"
     exit 1    
 else
     if [ ! $pyMax == "NA" ]; then
@@ -310,15 +319,15 @@ fi
 
 # Check and set os type
 if $USELINUX; then
-  echo
-  echo "* Checking for required user (www-data)."
-  echo "-----------------------------------------------------------------------"
+  logit ""
+  logit "* Checking for required user (www-data)."
+  logit "-----------------------------------------------------------------------"
 
   getent passwd www-data > /dev/null 2>&1
   if [ $? -eq 0 ]; then
-    echo "www-data user exists"
+    logit "www-data user exists"
   else
-      echo "Create user www-data"
+    logit "Create user www-data"
     useradd -r -M -s /dev/null -U www-data
   fi
 fi
@@ -327,30 +336,32 @@ fi
 # Main
 # ----------------------------------------------------------------------------
 clear
-echo
-echo "* Begin MacPatch Server build."
-echo "-----------------------------------------------------------------------"
+logit
+logit "* Begin MacPatch Server build."
+logit "-----------------------------------------------------------------------"
 
 # Create Build Root
 if [ -d "$BUILDROOT" ]; then
-  rm -rf ${BUILDROOT}
-else
-  mkdir -p ${BUILDROOT}
+    logit "Deleting ${BUILDROOT}"
+    rm -rf ${BUILDROOT}
 fi
+logit "Creating ${BUILDROOT}"
+mkdir -p ${BUILDROOT}
 
 # Create TMP Dir for builds
 if [ -d "$TMP_DIR" ]; then
-  rm -rf ${TMP_DIR}
-else
-  mkdir -p ${TMP_DIR}
+    logit "Deleting ${TMP_DIR}"
+    rm -rf ${TMP_DIR}
 fi
+logit "Creating ${TMP_DIR}"
+mkdir -p ${TMP_DIR}
 
 # ------------------
 # Create Skeleton Dir Structure
 # ------------------
-echo
-echo "* Create MacPatch server directory structure."
-echo "-----------------------------------------------------------------------"
+logit
+logit "* Create MacPatch server directory structure."
+logit "-----------------------------------------------------------------------"
 mkdirP ${MPBASE}
 mkdirP ${MPBASE}/Content
 mkdirP ${MPBASE}/Content/Web
@@ -419,29 +430,19 @@ fi
 # Install required packages
 # ------------------
 if $USELINUX; then
-    echo
-    echo "* Install required linux packages"
-    echo "-----------------------------------------------------------------------"
+    logit
+    logit "* Install required linux packages"
+    logit "-----------------------------------------------------------------------"
     if $USERHEL; then
         # Add the Yarn repo
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
-        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "swig" "yarn")
+        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "swig" "nodejs" "yarn")
         for i in "${pkgs[@]}"
         do
-            if [ $i == "yarn" ]; then
-                #curl -sL https://rpm.nodesource.com/setup_14.x | sudo -E bash -
-                curl -sL https://rpm.nodesource.com/setup_20.x | sudo -E bash -
-                echo
-                echo "Install nodejs 20.x"
-                #yum clean all
-                yum install -y -q -e 1 nodejs
-                echo
-            fi
-
             p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
             if [ -z $p ]; then
-                echo " - Install $i"
+                logit " - Install $i"
                 yum install -y -q -e 1 ${i}
             fi
         done
@@ -462,20 +463,19 @@ if $USELINUX; then
         do
             if [ $i == "yarn" ]; then
                 if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then
-                    #curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
                     curl -sL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-                    echo
-                    echo "Install nodejs 20.x"
+                    logit
+                    logit "Install nodejs 20.x"
                     sudo apt-get install -y nodejs
-                    echo
+                    logit
                 fi
             fi
 
             p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
             if [ -z $p ]; then
-                echo
-                echo "Install $i"
-                echo
+                logit
+                logit "Install $i"
+                logit
                 apt-get install ${i} -y
             fi
         done
@@ -485,9 +485,9 @@ if $USELINUX; then
     nodeVer=`node -v | sed s/v//g`
     if [ $(version $nodeVer) -le $(version $minNodeVer) ]; then
         clear
-        echo "***** ERROR *****"
-        echo "Node version failed. Expected version \">=8\". Got $nodeVer"
-        echo "Please install a newer version of node and re-run this script."
+        logit "***** ERROR *****"
+        logit "Node version failed. Expected version \">=8\". Got $nodeVer"
+        logit "Please install a newer version of node and re-run this script."
         exit 1
     fi
 
@@ -502,11 +502,11 @@ fi
 # ------------------
 # Build NGINX
 # ------------------
-echo
-echo "* Build and configure NGINX"
-echo "-----------------------------------------------------------------------"
-echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
-echo
+logit
+logit "* Build and configure NGINX"
+logit "-----------------------------------------------------------------------"
+logit "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
+logit
 NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 PCRE_SW=`find "${SRC_DIR}" -name "pcre-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
 OSSL_SW=`find "${SRC_DIR}" -name "openssl-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
@@ -548,20 +548,19 @@ make install >> ${MPSERVERBASE}/logs/nginx-build.log 2>&1
 
 mv ${MPSERVERBASE}/nginx/conf/nginx.conf ${MPSERVERBASE}/nginx/conf/nginx.conf.orig
 if $USEMACOS; then
-    echo " - Copy nginx.conf.mac to ${MPSERVERBASE}/nginx/conf/nginx.conf"
+    logit " - Copy nginx.conf.mac to ${MPSERVERBASE}/nginx/conf/nginx.conf"
     cp ${MPSERVERBASE}/conf/nginx/nginx.conf.mac ${MPSERVERBASE}/nginx/conf/nginx.conf
 else
-    echo " - Copy nginx.conf to ${MPSERVERBASE}/nginx/conf/nginx.conf"
+    logit " - Copy nginx.conf to ${MPSERVERBASE}/nginx/conf/nginx.conf"
     cp ${MPSERVERBASE}/conf/nginx/nginx.conf ${MPSERVERBASE}/nginx/conf/nginx.conf
 fi
-echo " - Copy nginx sites to ${MPSERVERBASE}/nginx/conf/sites"
+logit " - Copy nginx sites to ${MPSERVERBASE}/nginx/conf/sites"
 cp -r ${MPSERVERBASE}/conf/nginx/sites ${MPSERVERBASE}/nginx/conf/sites
 
 perl -pi -e "s#\[SRVBASE\]#$MPSERVERBASE#g" $MPSERVERBASE/nginx/conf/nginx.conf
 FILES=$MPSERVERBASE/nginx/conf/sites/*.conf
 for f in $FILES
 do
-    #echo "$f"
     perl -pi -e "s#\[SRVBASE\]#$MPSERVERBASE#g" $f
     perl -pi -e "s#\[SRVCONTENT\]#$MPSRVCONTENT#g" $f
 done
@@ -573,9 +572,9 @@ ln -s ${MPSERVERBASE}/conf/Content/Doc ${MPBASE}/Content/Doc
 chown -R $OWNERGRP ${MPSERVERBASE}
 
 # Admin Site - App
-echo
-echo "* Configuring Console app"
-echo "-----------------------------------------------------------------------"
+logit
+logit "* Configuring Console app"
+logit "-----------------------------------------------------------------------"
 
 # Set Permissions
 if $USEMACOS; then
@@ -585,19 +584,19 @@ if $USEMACOS; then
     chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
 fi
 
-echo
-echo "* Installing Javascript modules"
-echo
+logit
+logit "* Installing Javascript modules"
+logit
 cd ${MPSERVERBASE}/apps/mpconsole
 yarn install --cwd ${MPSERVERBASE}/apps/mpconsole --modules-folder static/yarn_components --no-bin-links
 
 # ------------------------------------------------------------
 # Generate self signed certificates
 # ------------------------------------------------------------
-#clear
-echo
-echo "* Creating self signed SSL certificate"
-echo "-----------------------------------------------------------------------"
+clear
+logit
+logit "* Creating self signed SSL certificate"
+logit "-----------------------------------------------------------------------"
 
 certsDir="${MPSERVERBASE}/etc/ssl"
 if [ ! -d "${certsDir}" ]; then
@@ -618,22 +617,26 @@ COMMAND=(openssl req -new -sha256 -x509 -nodes -days 999 -subj "${OPTS[@]}" -new
 
 "${COMMAND[@]}"
 if (( $? )) ; then
-    echo -e "ERROR: Something went wrong!"
-    exit 1
+    logit "ERROR:"
+    logit " Something went wrong with creating the default self-signed SSL certs."
+    logit " Please re-run it unless you have an actual signed certificate ready to go.
+    logit " % cd ${certsDir}"
+    logit " % openssl req -new -sha256 -x509 -nodes -days 999 -subj \"${OPTS[@]}\" -newkey rsa:2048 -keyout server.key -out server.crt"
+    logit
 else
-    echo "Done!"
-    echo
-    echo "NOTE: It's strongly recommended that an actual signed certificate be installed"
-    echo "if running in a production environment."
-    echo
+    logit "Done!"
+    logit
+    logit "NOTE: It's strongly recommended that an actual signed certificate be installed"
+    logit "if running in a production environment."
+    logit
 fi
 
 # ------------------------------------------------------------
 # Create Virtualenv
 # ------------------------------------------------------------
-echo
-echo "* Create Virtualenv for Web services app"
-echo "-----------------------------------------------------------------------"
+logit
+logit "* Create Virtual ENV's for Server, Console, API"
+logit "-----------------------------------------------------------------------"
 
 mkdir -p "${MPSERVERBASE}/apps/log"
 chown $OWNERGRP "${MPSERVERBASE}/apps/log"
@@ -655,49 +658,49 @@ if $USEMACOS; then
     OPENSSLPWD=`brew --prefix openssl@1.1 | awk -F@ '{print $1}'`
 
     # Server venv
-    echo "Creating server scripts virtual env..."
+    logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
 
     env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 
     # API venv
-    echo "Creating api virtual env..."
+    logit "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
-    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt --no-cache-dir
+    -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 
     # Console venv
-    echo "Creating console virtual env..."
+    logit "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
 
     env CFLAGS="-I/usr/local/include -I${OPENSSLPWD}/include -L/usr/local/lib -L${OPENSSLPWD}/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt --no-cache-dir
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 
 else
-    echo "Creating server scripts virtual env..."
+    logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt
+    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 
-    echo "Creating api virtual env..."
-    source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt
+    logit "Creating api virtual env..."
+    source ${MPSERVERBASE}/env/api/bin/activate 
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 
-    echo "Creating console virtual env..."
+    logit "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir 2>&1 >&3 | tee ${BUILD_LOG_FILE}
+    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt 2>&1 >&3 | tee ${BUILD_LOG_FILE}
     deactivate
 fi
 
@@ -705,17 +708,17 @@ fi
 # ------------------
 # Clean up structure place holders
 # ------------------
-echo
-echo "* Clean up Server dirtectory"
-echo "-----------------------------------------------------------------------"
+logit
+logit "* Clean up Server dirtectory"
+logit "-----------------------------------------------------------------------"
 find ${MPBASE} -name ".mpRM" -print | xargs -I{} rm -rf {}
 rm -rf ${BUILDROOT}
 
 # ------------------
 # Set Permissions
 # ------------------
-#clear
-echo "Setting Permissions..."
+clear
+logit "Setting Permissions..."
 chmod -R 0775 "${MPBASE}/Content"
 chown -R $OWNERGRP "${MPBASE}/Content"
 chmod -R 0775 "${MPSERVERBASE}/logs"
@@ -723,11 +726,13 @@ chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
 chown -R $OWNERGRP "${MPSERVERBASE}/env"
 
-echo
-echo
-echo "-----------------------------------------------------------------------"
-echo " * Server build has been completed. Please read the \"Server - Install & Setup\""
-echo "   document for the next steps in setting up the MacPatch server."
-echo
+logit
+logit
+logit "-----------------------------------------------------------------------"
+logit " * Server build has been completed. Please read the \"Server - Install & Setup\""
+logit "   document for the next steps in setting up the MacPatch server."
+logit 
+logit " A copy of the scripts actions are saved in ${BUILD_LOG_FILE}"
+logit
 
 exit 0;
