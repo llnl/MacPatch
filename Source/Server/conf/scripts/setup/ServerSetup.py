@@ -746,14 +746,10 @@ class MPConfigDefaults:
 		return config
 
 	def genServerKeys(self):
-		Rand.rand_seed(os.urandom(1024))
-		new_key = RSA.gen_key(4096, 65537)
-		private_key = new_key.save_key('Alice-private.pem', None)
-		public_key = new_key.save_pub_key('Alice-public.pem')
-		#new_key = RSA.generate(4096, e=65537)
-		#public_key = new_key.publickey().exportKey("PEM")
-		#private_key = new_key.exportKey("PEM")
-		#return private_key, public_key
+		new_key = RSA.generate(4096, e=65537)
+		public_key = new_key.publickey().exportKey("PEM")
+		private_key = new_key.exportKey("PEM")
+		return private_key, public_key
 
 	def writeConfig(self, config):
 		print("Writing configuration data to file ...")
