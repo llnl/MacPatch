@@ -82,12 +82,13 @@ gGID 			= 70
 cronList		= []
 
 
-
-
 if sys.platform.startswith('linux'):
+	# Normalize Distro Name
 	_distName = distro.name()
 	if 'redhat' in _distName.lower() or 'red hat' in _distName.lower():
 		distro_name = 'redhat'
+	elif 'cent' in _distName.lower():
+		distro_name = 'centos'
 	else:
 		distro_name = _distName.lower()
 
