@@ -683,7 +683,6 @@ class MPLdap:
 			ldap_hostname = input("Active Directory/LDAP server hostname: ")
 			_new_config['LDAP_SRVC_SERVER'] = ldap_hostname
 
-			print(f"Is {ldap_hostname} a DNS round robin?")
 			ldap_roundrobin = input(f"Is {ldap_hostname} a DNS round robin (Default is No)? [Y/N]: ").upper() or "N"
 			if ldap_roundrobin == "Y":
 				_new_config['LDAP_SRVC_MULTISERVER'] = 'yes'
@@ -841,7 +840,7 @@ def main():
 		
 	services_group.add_argument('-a', '--action', required='--service' in sys.argv, choices=("start", "stop")) #only required if --service is given
 
-	services_group.add_argument("--cron", dest="cronArg", choices=("start", "stop"), help="start/stop all MacPatch cron jobs", required=False)
+	services_group.add_argument("--cron", dest="cronArg", choices=("MPPatchLoader", "MPSyncContent", "All"), help="MPPatchLoader/MPSyncContent/All MacPatch cron jobs", required=False)
 	services_group.add_argument('--enable-services', help='Select from list of MacPatch server services to enable.', action='store_true')
 	services_group.add_argument('--disable-services', help='Select from list of MacPatch server services to disable.', action='store_true')
 
@@ -904,9 +903,9 @@ def main():
 			osxServices(args.service,args.action)
 
 	# CRON Tab Additions
-	if args.cron != None:
+	if args.cronArg != None:
 		if os_type == 'Linux':
-			linuxLoadCronServices(args.cron)
+			linuxLoadCronServices(args.cronArg)
 
 
 def usage():
