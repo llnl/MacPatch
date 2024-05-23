@@ -729,10 +729,10 @@ chown -R $OWNERGRP "${MPSERVERBASE}/env"
 logit
 logit
 logit "-----------------------------------------------------------------------"
-logit " * Server build has been completed. Please read the \"Server - Install & Setup\""
+logit " \* Server build has been completed. Please read the 'Server - Install & Setup'"
 logit "   document for the next steps in setting up the MacPatch server."
-logit 
-logit " A copy of the scripts actions are saved in ${BUILD_LOG_FILE}"
+logit ""
+logit " A copy of the scripts actions are saved in $BUILD_LOG_FILE"
 logit
 
 exit 0;
