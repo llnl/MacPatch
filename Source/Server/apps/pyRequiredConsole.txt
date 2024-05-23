@@ -25,3 +25,4 @@ gevent==24.2.1
 boto3==1.34.89
 adal==1.2.7
 email-validator==2.1.1
+distro==1.9.0

@@ -27,7 +27,7 @@
   MacPatch Patch Loader Setup Script
   MacPatch Version 3.8.x
 
-  Script Version 2.4.2
+  Script Version 2.4.3
 '''
 
 import os
@@ -45,6 +45,7 @@ from sys import exit
 from Crypto.PublicKey import RSA
 from dotenv.main import dotenv_values
 from dotenv import set_key
+import distro
 
 # ----------------------------------------------------------------------------
 # Script Requires ROOT
@@ -55,37 +56,41 @@ if os.geteuid() != 0:
 # ----------------------------------------------------------------------------
 # Variables
 # ----------------------------------------------------------------------------
-MP_BASE	 	     = "/opt/MacPatch"
-MP_SRV_BASE	     = MP_BASE+"/Server"
-MP_SRV_APPS	     = MP_SRV_BASE+"/apps"
-MP_SRV_ETC	     = MP_SRV_BASE+"/etc"
-MP_FLASK_FILE    = MP_SRV_BASE+"/apps/config.cfg"
-MP_CONF_FILE     = MP_SRV_BASE+"/etc/siteconfig.json"
-MP_SRVC_FILE     = MP_SRV_BASE+"/etc/.mpservices.json"
+MP_BASE			= "/opt/MacPatch"
+MP_SRV_BASE		= MP_BASE+"/Server"
+MP_SRV_APPS		= MP_SRV_BASE+"/apps"
+MP_SRV_ETC		= MP_SRV_BASE+"/etc"
+MP_FLASK_FILE	= MP_SRV_BASE+"/apps/config.cfg"
+MP_CONF_FILE	= MP_SRV_BASE+"/etc/siteconfig.json"
+MP_SRVC_FILE	= MP_SRV_BASE+"/etc/.mpservices.json"
 
-MP_FLASK_GLOBAL	 = '.mpglobal'
-MP_FLASK_CONSOLE = '.mpconsole'
-MP_FLASK_API	 = '.mpapi'
+MP_FLASK_GLOBAL		= '.mpglobal'
+MP_FLASK_CONSOLE	= '.mpconsole'
+MP_FLASK_API		= '.mpapi'
 
-if sys.platform.startswith('linux'):
-	dist_type 	 = platform.dist()[0]
-else:
-	dist_type 	 = "Mac"
-
-
-MP_SRV_CONF 	= MP_SRV_BASE+"/conf"
-MP_SRV_CONT 	= MP_BASE+"/Content/Web"
+MP_SRV_CONF		= MP_SRV_BASE+"/conf"
+MP_SRV_CONT		= MP_BASE+"/Content/Web"
 MP_INV_DIR		= MP_SRV_BASE+"/InvData"
 MP_SRV_KEYS		= MP_SRV_ETC +"/keys"
 
 os_type 		= platform.system()
 system_name 	= platform.uname()[1]
+distro_name		= None
+distro_version	= distro.version()
 gUID 			= 79
 gGID 			= 70
 cronList		= []
 
 
+
+
 if sys.platform.startswith('linux'):
+	_distName = distro.name()
+	if 'redhat' in _distName.lower() or 'red hat' in _distName.lower():
+		distro_name = 'redhat'
+	else:
+		distro_name = _distName.lower()
+
 	# OS is Linux, I need the dist type...
 	try:
 		pw = pwd.getpwnam('www-data')
@@ -261,12 +266,12 @@ def repairPermissions():
 
 def linuxServices(service, action):
 	useSYSTEMD=False
-	if platform.dist()[0] == "Ubuntu" and Version(platform.dist()[1]) >= Version("15.0"):
+	if distro_name == "ubuntu" and Version(distro_version) >= Version("15.0"):
 		useSYSTEMD=True
-	elif (platform.dist()[0] == "redhat" or platform.dist()[0] == "centos") and Version(platform.dist()[1]) >= Version("7.0"):
+	elif (distro_name == "redhat" or distro_name == "centos") and Version(distro_version) >= Version("8.0"):
 		useSYSTEMD=True
 	else:
-		print(f"ERROR: Unable to {action} service(s). OS("+platform.dist()[0]+") is unsupported.")
+		print(f"ERROR: Unable to {action} service(s). OS({distro_name}) is unsupported.")
 		return
 
 	# Define the list of services
@@ -541,12 +546,12 @@ def linkStartupScripts(service,action='enable',altType=None):
 	print("Copy Startup Script for "+service)
 	useSYSTEMD=False
 
-	if platform.dist()[0] == "Ubuntu" and Version(platform.dist()[1]) >= Version("15.0"):
+	if distro_name == "ubuntu" and Version(distro_version) >= Version("15.0"):
 		useSYSTEMD=True
-	elif (platform.dist()[0] == "redhat" or platform.dist()[0] == "centos") and Version(platform.dist()[1]) >= Version("7.0"):
+	elif (distro_name == "redhat" or distro_name == "centos") and Version(distro_version) >= Version("8.0"):
 		useSYSTEMD=True
 	else:
-		print("Unable to start service ("+service+") at start up. OS("+platform.dist()[0]+") is unsupported.")
+		print(f"Unable to start service ({service}) at start up. OS({distro_name}) is unsupported.")
 		return
 
 	if useSYSTEMD == True:
