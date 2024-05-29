@@ -529,6 +529,7 @@ def setupServices():
 		if os_type == 'Darwin':
 			srvsList.append('gov.llnl.mp.sus.sync.plist')
 
+
 	# Sync From Master
 	if masterType == False:
 		_RSYNC = 'Y'
@@ -877,6 +878,8 @@ def main():
 			_enabled_services = {"Linux": {"services": list(srvList)} }
 
 		writeJSON(_enabled_services,MP_SRVC_FILE)
+
+		return
 
 	if args.configArg is not None:
 		if args.configArg == 'admin':
