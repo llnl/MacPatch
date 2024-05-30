@@ -1,4 +1,4 @@
-"""0002 - MP 3.1.0 Schema additions
+"""0003 - MP 3.1.0 Schema additions
 
 Revision ID: 100003
 Revises: 100002a

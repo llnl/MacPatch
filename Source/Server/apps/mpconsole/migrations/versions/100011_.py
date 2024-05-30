@@ -7,7 +7,7 @@ Create Date: 2020-09-08
 """
 
 # revision identifiers, used by Alembic.
-revision = '100011	'
+revision = '100011'
 down_revision = '100010'
 
 from alembic import op
