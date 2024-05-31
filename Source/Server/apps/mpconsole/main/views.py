@@ -1,6 +1,6 @@
-from flask import render_template, redirect, url_for
-from flask_login import login_required, current_user, login_user
-from sqlalchemy.exc import SQLAlchemyError, OperationalError
+from flask import redirect, url_for
+from flask_login import login_required
+from sqlalchemy.exc import SQLAlchemyError
 
 from . import main
 from mpconsole.app import login_manager

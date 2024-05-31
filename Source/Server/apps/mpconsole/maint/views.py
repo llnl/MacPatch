@@ -1,7 +1,6 @@
 from flask import render_template, request
 from flask_login import login_required
 from sqlalchemy import text
-from flask_cors import cross_origin
 
 import json
 import os

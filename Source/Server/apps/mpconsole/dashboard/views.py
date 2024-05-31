@@ -1,18 +1,13 @@
+import json
 from flask import render_template
-from flask_login import login_required, current_user
+from flask_login import login_required
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
-from datetime import datetime, timedelta
-from operator import itemgetter
-
-import json
-import pprint
+from datetime import datetime
 
 from . import dashboard
 from mpconsole.app import db, login_manager
-from mpconsole import errors
 from mpconsole.model import *
-
 
 @dashboard.route('/dashboard')
 @login_required

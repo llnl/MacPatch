@@ -1,4 +1,4 @@
-from flask import render_template, flash, redirect, url_for, request, session, current_app
+from flask import render_template, flash, redirect, url_for, session, current_app
 from flask_login import login_user, logout_user
 from werkzeug.exceptions import HTTPException
 

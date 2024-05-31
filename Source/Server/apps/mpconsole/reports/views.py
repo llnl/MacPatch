@@ -1,8 +1,6 @@
-from flask import render_template, jsonify, request, session
+from flask import render_template, request, session
 from flask_security import login_required
 import json
-import base64
-import uuid
 import sys
 
 from sqlalchemy import text

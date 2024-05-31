@@ -1,4 +1,4 @@
-from flask import render_template, session, request, current_app, redirect, url_for
+from flask import render_template, session, request, current_app
 from flask_security import login_required
 from flask_cors import cross_origin
 from sqlalchemy import text, or_, desc
@@ -8,9 +8,7 @@ import sys
 import json
 import humanize
 import base64
-from operator import itemgetter
 from collections import OrderedDict
-
 
 from .  import mdm
 from mpconsole.app import db

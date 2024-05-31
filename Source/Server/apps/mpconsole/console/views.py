@@ -1,8 +1,7 @@
-from flask import render_template, jsonify, request, session, g
+from flask import render_template, request, session
 from flask_security import login_required
 from sqlalchemy import desc
 from werkzeug.security import generate_password_hash
-from flask_cors import cross_origin
 import json
 import re
 import uuid

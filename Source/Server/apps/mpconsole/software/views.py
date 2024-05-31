@@ -7,7 +7,6 @@ from sqlalchemy import or_
 import os
 import json
 import uuid
-import base64
 import hashlib
 import sys
 from datetime import datetime
