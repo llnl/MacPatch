@@ -294,7 +294,7 @@ def linuxServices(service, action):
 
 	# Perform action for each service given
 	for s in _services:
-		serviceName=service+".service"
+		serviceName=s+".service"
 		etcServiceConf="/etc/systemd/system/"+serviceName
 
 		if os.path.exists(etcServiceConf):
@@ -302,7 +302,7 @@ def linuxServices(service, action):
 			cmd = f"/bin/systemctl {action} {serviceName}"
 			os.system(cmd)
 		else:
-			print("ERROR: Unable to find {etcServiceConf}. Can not {action} service.")
+			print(f"ERROR: Unable to find {etcServiceConf}. Can not {action} service.")
 
 def linuxLoadCronServices(service):
 	from crontab import CronTab
