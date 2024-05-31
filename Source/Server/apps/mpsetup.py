@@ -1,23 +1,30 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
 import uuid
 import hashlib
 import os.path
 from datetime import datetime
 from werkzeug.security import generate_password_hash
-from mpapi import db
-from mpapi.mputil import return_data_for_root_key, read_config_file
-from mpapi.model import MpClientsRegistrationSettings, MpSiteKeys
-from mpapi.model import AgentConfig, AgentConfigData
-from mpapi.model import MpPatchGroup, PatchGroupMembers
-from mpapi.model import MpAsusCatalogList
-from mpapi.model import MpServer, MpServerList
-from mpapi.model import MpSoftwareGroup, MpSoftwareGroupPrivs
-from mpapi.model import MpClientGroups, MpClient, MpClientGroupMembers, MpClientTasks
-from mpapi.model import MpClientSettings
+
+from mpconsole.app import create_app, db
+from mpconsole.mputil import return_data_for_root_key, read_config_file
+from mpconsole.model import MpClientsRegistrationSettings, MpSiteKeys
+from mpconsole.model import AgentConfig, AgentConfigData
+from mpconsole.model import MpPatchGroup, PatchGroupMembers
+from mpconsole.model import MpAsusCatalogList
+from mpconsole.model import MpServer, MpServerList
+from mpconsole.model import MpSoftwareGroup, MpSoftwareGroupPrivs
+from mpconsole.model import MpClientGroups, MpClient, MpClientGroupMembers, MpClientTasks
+from mpconsole.model import MpClientSettings
 
 basedir = os.path.abspath(os.path.dirname(__file__))
+myApp = create_app()
 
-from sqlalchemy import *
-
+""" 
+	Global Methods
+"""
 def addDefaultData():
 	addRegConfig()
 	addSiteKeys()
@@ -38,19 +45,21 @@ def hasRegConfig():
 		return True
 	else:
 		return False
-
+	
 def addRegConfig():
 	# Check for config
+	print("- Adding Client Registration Settings")
 	if hasRegConfig():
+		print("\t! Client Registration Settings already exist")
 		return False
 
 	# Add Agent Config
 	db.session.add(MpClientsRegistrationSettings(autoreg="0", autoreg_key="999999999", client_parking="0"))
 	db.session.commit()
-
+	print("\t* Client Registration Settings Added")
+	
 # Add Site Keys  -------------------------------------------------------------
 def hasSiteKeys():
-
 	_siteData = getSiteKeyData()
 	res = MpSiteKeys.query.filter(MpSiteKeys.pubKeyHash==_siteData['pubKeyHash'],
 								MpSiteKeys.priKeyHash==_siteData['priKeyHash'],
@@ -62,7 +71,9 @@ def hasSiteKeys():
 
 def addSiteKeys():
 	# Check for config
+	print("- Adding Site Keys")
 	if hasSiteKeys():
+		print("\t! Site Keys already exist")
 		return False
 
 	_siteData = getSiteKeyData()
@@ -72,6 +83,7 @@ def addSiteKeys():
 							priKey=_siteData['priKey'], priKeyHash=_siteData['priKeyHash'],
 							active="1", mdate=datetime.now()))
 	db.session.commit()
+	print("\t* Site Keys Added")
 
 def resetSiteKeys():
 	# Check for config
@@ -136,7 +148,9 @@ def hasClientConfig():
 
 def addClientConfig():
 	# Check for config
+	print("- Adding Default Client Config Data")
 	if hasClientConfig():
+		print("\t! Default Client Config Data already exist")
 		return False
 
 	agentConf = {"AllowClient": "1", "AllowServer": "0", "Description": "Defautl Agent Config",
@@ -150,11 +164,13 @@ def addClientConfig():
 	# Add Agent Config
 	db.session.add(AgentConfig(aid=_uuid, name="Default", isDefault="1", revision="0"))
 	db.session.commit()
+	print("\t* Default Agent Config Added")
 
 	# Add Agent Config Data
 	for key in agentConf.keys():
 		db.session.add(AgentConfigData(aid=_uuid, akey=key, akeyValue=agentConf[key], enforced="0"))
 		db.session.commit()
+	print("\t* Default Agent Config Data Added")
 
 	# Get & Set Revision Hash
 	revHash = getRevisonForConfig(_uuid)
@@ -162,6 +178,7 @@ def addClientConfig():
 		_hash = AgentConfig.query.filter(AgentConfig.aid == _uuid).first()
 		_hash.revision = revHash
 		db.session.commit()
+	print("\t* Default Revision for Config Added")
 
 def getRevisonForConfig(configID):
 
@@ -188,7 +205,9 @@ def hasDefaultPatchGroup():
 
 def addDefaultPatchGroup():
 	# Check for config
+	print("- Adding Default Patch Group")
 	if hasDefaultPatchGroup():
+		print("\t! Default Patch Group already exist")
 		return False
 
 	adm_dict = return_data_for_root_key('users')
@@ -200,10 +219,12 @@ def addDefaultPatchGroup():
 	# Add Agent Config
 	db.session.add(MpPatchGroup(name="Default", id=_uuid, type="0"))
 	db.session.commit()
+	print("\t* Default Patch Group Added")
 
 	# Add Agent Config
 	db.session.add(PatchGroupMembers(user_id=adm_user, patch_group_id=_uuid, is_owner="1"))
 	db.session.commit()
+	print("\t* Setting Default Patch Owner")
 
 # SW Dist Group --------------------------------------------------------------
 def hasDefaultSWGroup():
@@ -215,7 +236,9 @@ def hasDefaultSWGroup():
 
 def addDefaultSWGroup():
 	# Check for config
+	print("- Adding Default Software Group")
 	if hasDefaultSWGroup():
+		print("\t! Default Software Group already exist")
 		return False
 
 	adm_dict = return_data_for_root_key('users')
@@ -228,8 +251,10 @@ def addDefaultSWGroup():
 	dts = datetime.now()
 	db.session.add(MpSoftwareGroupPrivs(gid=_uuid, uid=adm_user, isowner='1'))
 	db.session.commit()
+	print("\t* Default Software Group Owner Added")
 	db.session.add(MpSoftwareGroup(gid=_uuid, gName="Default", gDescription="Default", gType="0", gHash='0', state='1', cdate=dts, mdate=dts))
 	db.session.commit()
+	print("\t* Default Software Group Added")
 
 # SUS Server Group -----------------------------------------------------------
 def hasDefaultSUSGroup():
@@ -241,12 +266,15 @@ def hasDefaultSUSGroup():
 
 def addDefaultSUSGroup():
 	# Check for config
+	print("- Adding Default Software Update Group")
 	if hasDefaultSUSGroup():
+		print("\t! Default Software Update Group already exist")
 		return False
 
 	# Add Default SUS Server Group
 	db.session.add(MpAsusCatalogList(name="Default", listid='1', version="0"))
 	db.session.commit()
+	print("\t* Default Software Update Group Owner Added")
 
 # Server Config --------------------------------------------------------------
 def hasDefaultServerConfig():
@@ -258,12 +286,15 @@ def hasDefaultServerConfig():
 
 def addDefaultServerConfig():
 	# Check for config
+	print("- Adding Default Server Config")
 	if hasDefaultServerConfig():
+		print("\t! Default Server Config already exist")
 		return False
 
 	# Add Agent Config
 	db.session.add(MpServer(listid='1', server="localhost", port="3600", useSSL='1', useSSLAuth='0', allowSelfSignedCert='1', isMaster='1', isProxy='0', active='0'))
 	db.session.commit()
+	print("\t* Default Server Config Added")
 
 def hasDefaultServerList():
 	res = MpServerList.query.filter(MpServerList.listid == 1).first()
@@ -274,12 +305,15 @@ def hasDefaultServerList():
 
 def addDefaultServerList():
 	# Check for config
+	print("- Adding Default Server List")
 	if hasDefaultServerList():
+		print("\t! Default Server List already exist")
 		return False
 
 	# Add Agent Config
 	db.session.add(MpServerList(listid='1', name="Default", version="0"))
 	db.session.commit()
+	print("\t* Default Server List Added")
 
 # Client Groups ---------------------------------------------------------------
 def hasDefaultClientGroup():
@@ -291,16 +325,20 @@ def hasDefaultClientGroup():
 
 def addDefaultClientGroup():
 	# Check for config
+	print("- Adding Default Client Group")
 	if hasDefaultClientGroup():
+		print("\t! Default Client Group already exist")
 		return False
 
 	# Add Agent Config
 	_uuid = str(uuid.uuid4())
 	db.session.add(MpClientGroups(group_id=_uuid, group_name="Default", group_owner="mpadmin"))
 	db.session.commit()
+	print("\t* Default Client Group Added")
 
 def addDefaultTasksToClientGroup():
 	# Check if Default group exists
+	print("- Adding Default Tasks to Client Group")
 	gid = None
 	res = MpClientGroups.query.filter(MpClientGroups.group_name == 'Default').first()
 	if res is not None:
@@ -323,6 +361,7 @@ def addDefaultTasksToClientGroup():
 			db.session.add(_task)
 
 		db.session.commit()
+		print("\t* Default Tasks for Client Group Added")
 		return True
 	elif hasTasks == 2:
 		log_Error("There was a problem getting the data on the default tasks.")
@@ -365,7 +404,9 @@ def hasDefaultSettingsClientGroup():
 
 def addDefaultSettingsClientGroup():
 	# Check for config
+	print("- Adding Default Settings to Client Group")
 	if hasDefaultSettingsClientGroup():
+		print("\t! Default Settings for Client Group already exist")
 		return False
 
 	# Add Agent Config
@@ -392,6 +433,7 @@ def addDefaultSettingsClientGroup():
 		db.session.add(mpcs)
 
 	db.session.commit()
+	print("\t* Default Settings for Client Group Added")
 	return True
 
 '''
@@ -433,3 +475,46 @@ def addUnassignedClientsToGroup():
 			db.session.add(MpClientGroupMembers(group_id=default_gid, cuuid=x.cuuid))
 
 	db.session.commit()
+
+
+'''
+	Main Command For File
+'''
+def main():
+
+	parser = argparse.ArgumentParser(description='Process application args.')
+	g = parser.add_mutually_exclusive_group()
+	g.add_argument('--populate-db', dest='loaddata', help="Populate the default values for new installs.", required=False, action='store_true')
+	g.add_argument('--add-site-keys', dest='addkeys', help="Add Site Keys", required=False, action='store_true')
+	g.add_argument('--reset-site-keys', dest='resetkeys', help="Reset Site Keys", required=False, action='store_true')
+	g.add_argument('--assignToDefault', dest='assignClients', help="Assigns any client not in a group to default group.", required=False, action='store_true')
+	g.add_argument('--add-admin', dest='admuser', help="Adds Admin Account to DB", required=False, action='store_true')
+	args = parser.parse_args()
+
+	if args.loaddata:
+		with myApp.app_context():
+			addDefaultData()
+			exit(0)
+	
+	if args.addkeys:
+		with myApp.app_context():
+			addSiteKeys()
+			exit(0)
+	
+	if args.resetkeys:
+		with myApp.app_context():
+			resetSiteKeys()
+			exit(0)
+
+	if args.assignClients:
+		with myApp.app_context():
+			addUnassignedClientsToGroup()
+			exit(0)
+	
+	if args.admuser:
+		with myApp.app_context():
+			addDefaultAdminAccount()
+			exit(0)
+	
+if __name__ == '__main__':
+	main()
