@@ -587,8 +587,8 @@ fi
 logit ""
 logit "* Installing Javascript modules"
 logit "-----------------------------------------------------------------------"
-cd ${MPSERVERBASE}/apps/mpconsole
-yarn install --cwd ${MPSERVERBASE}/apps/mpconsole --modules-folder static/yarn_components --no-bin-links
+cd ${MPSERVERBASE}/apps/console/mpconsole
+yarn install --cwd ${MPSERVERBASE}/apps/console/mpconsole --modules-folder static/yarn_components --no-bin-links
 
 # ------------------------------------------------------------
 # Generate self signed certificates
