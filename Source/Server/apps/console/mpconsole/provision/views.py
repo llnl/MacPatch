@@ -7,12 +7,12 @@ import sys
 from datetime import datetime
 
 from .  import provision
-from mpapi.app import db
-from mpapi.model import *
-from .. modes import *
-from mpapi.mplogger import *
-from mpapi.mputil import *
-from .. aws import *
+from mpconsole.app import db
+from mpconsole.model import *
+from mpconsole.modes import *
+from mpconsole.mplogger import *
+from mpconsole.mputil import *
+from mpconsole.aws import *
 
 '''
 	-------------------------------------------------
