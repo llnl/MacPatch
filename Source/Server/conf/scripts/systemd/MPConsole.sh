@@ -41,8 +41,8 @@ case "$1" in
 	${ENV_HOME}/bin/gunicorn \
 	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
 	--config ${MP_HOME}/apps/console/gunicorn_config.py \
-	--access-logfile ${HOME}/logs/g_console_access.log \
-	--error-logfile ${HOME}/logs/g_console_error.log \
+	--access-logfile ${MP_HOME}/logs/g_console_access.log \
+	--error-logfile ${MP_HOME}/logs/g_console_error.log \
 	--chdir ${MP_HOME}/apps/console "app:create_app()" \
 	--pid $PIDFile &
 	;;
