@@ -8,7 +8,7 @@ source ${ENV_HOME}/bin/activate
 
 ${ENV_HOME}/bin/gunicorn \
 --pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
---config ${APP_HOME}/gunicorn_console.py \
+--config ${APP_HOME}/gunicorn_config.py \
 --chdir ${APP_HOME} "app:create_app()" \
 --access-logfile ${HOME}/logs/g_console_access.log \
 --error-logfile ${HOME}/logs/g_console_error.log
