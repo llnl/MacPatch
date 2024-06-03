@@ -1,4 +1,6 @@
 import multiprocessing
+import gevent.monkey
+gevent.monkey.patch_all()
 
 # Sample Gunicorn configuration file.
 
@@ -149,8 +151,8 @@ tmp_upload_dir = None
 #  https://ios-sign-dev.llnl.gov/static/apps/500e5603-4ba2-456d-aabc-40ad45170471/signed/Eco.ipa.zip
 #  https://ios-sign-dev.llnl.gov/static/apps/d6f187d9-59a2-46a5-a63f-a8dad386aa91/signed/NEOMobileCheckLists.ipa.zip
 
-accesslog = '-'
-errorlog = '-'
+#ccesslog = '-'
+#errorlog = '-'
 #accesslog = 'logs/gMPAPI_access.log'
 #errorlog = 'logs/gMPAPI_error.log'
 loglevel = 'info'

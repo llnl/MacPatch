@@ -13,9 +13,7 @@
         </dict>
         <key>ProgramArguments</key>
         <array>
-                <string>/opt/MacPatch/Server/env/console/bin/python</string>
-                <string>/opt/MacPatch/Server/apps/mpconsole.py</string>
-                <string>gunicorn</string>
+                <string>/opt/MacPatch/Server/apps/console/runapp.sh</string>
         </array>
         <key>KeepAlive</key>
         <true/>

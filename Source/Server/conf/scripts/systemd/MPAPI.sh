@@ -37,12 +37,14 @@ PIDFile="/tmp/mpapi.pid"
 case "$1" in
  start)
 	echo $"Starting MacPatch API's"
-	
     source "${ENV_HOME}/bin/activate"
-	"${ENV_HOME}/bin/gunicorn" \
-	--pythonpath "${ENV_HOME}/lib/python3.11/site-packages" \
-	--config "${MP_HOME}/apps/gunicorn/gunicorn_api.py" \
-	--chdir "${MP_HOME}/apps/mpapi" "app:create_app()" --pid $PIDFile &
+	${ENV_HOME}/bin/gunicorn \
+	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
+	--config ${MP_HOME}/apps/api/gunicorn_config.py \
+	--access-logfile ${HOME}/logs/g_api_access.log \
+	--error-logfile ${HOME}/logs/g_api_error.log \
+	--chdir ${MP_HOME}/apps/api "app:create_app()" \
+	--pid $PIDFile &
 	;;
  stop)
 	echo $"Stopping MacPatch API's"

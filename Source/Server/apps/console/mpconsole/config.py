@@ -3,7 +3,8 @@ from dotenv import load_dotenv
 from datetime import timedelta
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-appsdir = os.path.dirname(basedir)
+consoledir = os.path.dirname(basedir)
+appsdir = os.path.dirname(consoledir)
 
 dotFileGlobal=os.path.join(appsdir, '.mpglobal')
 dotFileConsole=os.path.join(appsdir, '.mpconsole')

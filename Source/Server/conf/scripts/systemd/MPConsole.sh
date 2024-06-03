@@ -37,12 +37,14 @@ PIDFile="/tmp/mpconsole.pid"
 case "$1" in
  start)
 	echo $"Starting MacPatch Admin Console"
-	
     source "${ENV_HOME}/bin/activate"
-	"${ENV_HOME}/bin/gunicorn" \
-	--pythonpath "${ENV_HOME}/lib/python3.11/site-packages" \
-	--config "${MP_HOME}/apps/gunicorn/gunicorn_console.py" \
-	--chdir "${MP_HOME}/apps/mpconsole" "app:create_app()" --pid $PIDFile &
+	${ENV_HOME}/bin/gunicorn \
+	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
+	--config ${MP_HOME}/apps/console/gunicorn_config.py \
+	--access-logfile ${HOME}/logs/g_console_access.log \
+	--error-logfile ${HOME}/logs/g_console_error.log \
+	--chdir ${MP_HOME}/apps/console "app:create_app()" \
+	--pid $PIDFile &
 	;;
  stop)
 	echo $"Stopping MacPatch Admin Console"
