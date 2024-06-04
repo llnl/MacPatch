@@ -142,7 +142,7 @@
 			confirm_str = "Are you sure you want to remove these patch(es)?";
 			if (confirm(confirm_str) == true)
 			{
-				var rows = $('#table').bootstrapTable('getAllSelections');
+				var rows = $('#table').bootstrapTable('getSelections');
 				var rowsArr = [];
 				for (x in rows) {
 					var _patchID = rows[x]['puuid'];
@@ -173,7 +173,7 @@
 
 		$dupButton.click(function ()
 		{
-		    var rows = $('#table').bootstrapTable('getAllSelections');
+		    var rows = $('#table').bootstrapTable('getSelections');
 		    if (rows.length > 1) {
 		        alert("Duplicating multiple patches is not permitted. Please select only one patch at a time.");
                 return;

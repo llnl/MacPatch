@@ -137,7 +137,7 @@
 
 		$delBut.click(function ()
 		{
-			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rows = $('#table').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _sID = rows[x]['sid'];

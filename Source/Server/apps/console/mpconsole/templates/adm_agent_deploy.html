@@ -317,7 +317,7 @@
 	$(function () {
 		$_delAgentButton.click(function ()
 		{
-			var rows = $('#tableAgents').bootstrapTable('getAllSelections');
+			var rows = $('#tableAgents').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _puuid = rows[x]['puuid'];
@@ -350,7 +350,7 @@
 
 		$_delFilterButton.click(function ()
 		{
-			var rows = $('#tableFilters').bootstrapTable('getAllSelections');
+			var rows = $('#tableFilters').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _rid = rows[x]['rid'];
