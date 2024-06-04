@@ -2,7 +2,7 @@
 //  MPSettings.m
 //  MPLibrary
 /*
- Copyright (c) 2023, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -296,42 +296,38 @@ static MPSettings *_instance;
 
 #pragma mark - Private
 
+- (NSString *)getIOPlatformAttributeForKey:(CFStringRef)key
+{
+	io_service_t service;
+
+	if (@available(macOS 12.0, *)) {
+		service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+	} else {
+		// Fallback on earlier versions
+		service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
+	}
+	if (!service)
+	{
+		qlerror(@"Couldn't get IO service to query for key (%@).", key);
+		return nil;
+	}
+
+	NSString *result = (__bridge_transfer NSString *)IORegistryEntryCreateCFProperty(service, key, kCFAllocatorDefault, 0);
+	IOObjectRelease(service);
+
+	return result;
+}
+
 - (NSString *)clientIDStr
 {
-    NSString *result = NULL;
-    io_struct_inband_t iokit_entry;
-    uint32_t bufferSize = 4096; // this signals the longest entry we will take
-    io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
-    IORegistryEntryGetProperty(ioRegistryRoot, kIOPlatformUUIDKey, iokit_entry, &bufferSize);
-    result = [NSString stringWithCString:iokit_entry encoding:NSASCIIStringEncoding];
-    
-    IOObjectRelease((unsigned int) iokit_entry);
-    IOObjectRelease(ioRegistryRoot);
-    
-    return result;
+	// Old Code for UUID Still Commented in MPAgent.m
+	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformUUIDKey)];
 }
 
 - (NSString *)clientSerialNumber
 {
-    NSString *result = nil;
-    
-    io_registry_entry_t rootEntry = IORegistryEntryFromPath( kIOMasterPortDefault, "IOService:/" );
-    CFTypeRef serialAsCFString = NULL;
-    
-    serialAsCFString = IORegistryEntryCreateCFProperty( rootEntry,
-                                                       CFSTR(kIOPlatformSerialNumberKey),
-                                                       kCFAllocatorDefault,
-                                                       0);
-    
-    IOObjectRelease( rootEntry );
-    if (serialAsCFString == NULL) {
-        result = @"NA";
-    } else {
-        result = [NSString stringWithFormat:@"%@",(__bridge NSString *)serialAsCFString];
-        CFRelease(serialAsCFString);
-    }
-    
-    return result;
+	// Old Code for SN Still Commented in MPAgent.m
+	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformSerialNumberKey)];
 }
 
 - (void)collectOSInfo

@@ -1,0 +1,800 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<style type="text/css">
+	</style>
+{%  endblock %}
+
+{% block pageHeader %}
+Client Group - {{group_name}}
+{%  endblock %}
+
+{% block bodyPanel %}
+	<!-- Tab panes -->
+	<!-- Nav tabs -->
+	<ul class="nav nav-tabs">
+		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#clients" data-toggle="tab">Clients</a></li>
+		{% if readOnly == False %}
+		<li {% if selectedTab == 2 %}class="active"{% endif %}><a href="#settings" data-toggle="tab">Agent Settings</a></li>
+		<li {% if selectedTab == 3 %}class="active"{% endif %}><a href="#tasks" data-toggle="tab">Agent Tasks</a></li>
+        <li {% if selectedTab == 5 %}class="active"{% endif %}><a href="#reqSoftware" data-toggle="tab">Software</a></li>
+		<li {% if selectedTab == 7 %}class="active"{% endif %}><a href="#users" data-toggle="tab">Users</a></li>
+		{% endif %}
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="clients">
+			<table id="table" class="table table-condensed table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
+				<div id="toolbar">
+					{% if gResults['Owner'] == True or gResults['Admin'] == True %}
+					<button id="delClientButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+					{% endif %}
+					<button id="mvClientButton" type="button" class="btn btn-default" title="Assign To Group"><i class="glyphicon glyphicon-share"></i></button>
+				</div>
+			</table>
+			<div class="row">
+				<div class="col-md-3">
+					<label>Client Check-in Status</label>
+					<table id="tableLegend" class="table table-bordered table-condensed table-nonfluid table-striped">
+						<thead>
+							<tr>
+								<td class="normal" width="110"><b>Normal</b></td>
+								<td class="warning" width="110"><b>Warning</b></td>
+								<td class="danger" width="110"><b>Alert</b></td>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td class="normal">0 - 7 Days</td>
+								<td class="warning">7 - 14 Days</td>
+								<td class="danger">15 or more Days</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="settings">
+			<h3>Agent Settings</h3>
+			<form role="form" id="settingsForm">
+			<div class="form-group">
+				<div class="well">
+					<div class="row">
+					<div class="col-md-12">
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Patch Group</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="patch_group">
+									{% for pg in gResults['Patches']['groups'] %}
+									<option value="{{pg[0]}}" {% if pg[0] == settings.patch_group %}selected{% endif %}>{{pg[1]}}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Software Catalog (Default)</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="software_group">
+									{% for swc in gResults['Software']['catalogs'] %}
+									<option value="{{swc[0]}}" {% if swc[0] == settings.software_group %}selected{% endif %}>{{swc[1]}}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Inherited Software Catalog</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="inherited_software_group">
+									<option value="None">None</option>
+									{% for swc in gResults['Software']['catalogs'] %}
+									<option value="{{swc[0]}}" {% if swc[0] == settings.inherited_software_group %}selected{% endif %}>{{swc[1]}}</option>
+									{% endfor %}
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Allow Patching on Mac OS X Client</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="allow_client">
+									<option value="1" {% if "1" == settings.allow_client %}selected{% endif %}>Yes</option>
+									<option value="0" {% if "0" == settings.allow_client %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Allow Patching on Mac OS X Server</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="allow_server">
+									<option value="1" {% if "1" == settings.allow_server %}selected{% endif %}>Yes</option>
+									<option value="0" {% if "0" == settings.allow_server %}selected{% endif %}>No</option>
+								</select>
+							</div>
+							<div class="col-md-4">
+								(Mac OS Type = Server or Server.app is installed)
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Reboot</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="allow_reboot">
+									<option value="1" {% if "1" == settings.allow_reboot %}selected{% endif %}>Yes</option>
+									<option value="0" {% if "0" == settings.allow_reboot %}selected{% endif %}>No</option>
+								</select>
+							</div>
+							<div class="col-md-4">
+								(Allow reboot with no users logged in.)
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Verify Signatures</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="verify_signatures">
+									<option value="1" {% if "1" == settings.verify_signatures %}selected{% endif %}>Yes</option>
+									<option value="0" {% if "0" == settings.verify_signatures %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Patch State Patching</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="patch_state">
+									<option value="Production" {% if "Production" == settings.patch_state %}selected{% endif %}>Production</option>
+									<option value="QA" {% if "QA" == settings.patch_state %}selected{% endif %}>QA</option>
+									<option value="All" {% if "All" == settings.patch_state %}selected{% endif %}>Production &amp; QA</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+								<label>Pre-Stage Patches</label>
+							</div>
+							<div class="col-md-3">
+								<select class="form-control" name="pre_stage_patches">
+									<option value="1" {% if "1" == settings.pre_stage_patches %}selected{% endif %}>Yes</option>
+									<option value="0" {% if "0" == settings.pre_stage_patches %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+
+						<div class="row row-grid top10">
+							<div class="col-md-4">
+							</div>
+							<div class="col-md-3 text-right">
+								<button type="button" class="btn btn-primary" id="settingsSaveButton">Save Settings</button>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+
+			</div>
+			</form>
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 3 %}in active{% endif %}" id="tasks">
+			<table id="tableTasks" class="table table-condensed table-striped">
+			</table>
+		</div>
+		<div class="tab-pane fade {% if selectedTab == 5 %}in active{% endif %}" id="reqSoftware">
+            <br>
+            <ul class="nav nav-tabs">
+                <li class="active"><a href="#swReq" data-toggle="tab">Required Software</a></li>
+                <li><a href="#swRes" data-toggle="tab">Software Restrictions</a></li>
+	        </ul>
+
+	        <div class="tab-content">
+
+                <div class="tab-pane fade in active" id="swReq">
+                    <table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true" class="table table-condensed table-striped">
+                        <div id="toolbarSoftware">
+                            <button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                            <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                        </div>
+                    </table>
+                    <br>
+                    <div class="panel panel-info">
+                        <div class="panel-heading">
+                            Required Software
+                        </div>
+                        <div class="panel-body">
+                            <p>The following software packages will be installed on client check-in. Software which requires a reboot will notify the user a reboot is nessasary via the standard macOS notification mechanisim.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane fade" id="swRes">
+                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-unique-id="appID" data-show-export="true" class="table table-condensed table-striped">
+                        <div id="toolbarSoftwareRes">
+                            <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                            <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                        </div>
+                    </table>
+                </div>
+		    </div>
+        </div>
+        <div class="tab-pane fade {% if selectedTab == 7 %}in active{% endif %}" id="users">
+			<table id="tableUsers" data-toolbar="#toolbarUsers" data-show-export="true" class="table table-condensed table-striped">
+				<div id="toolbarUsers">
+					<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+				</div>
+			</table>
+		</div>
+	</div>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+
+	<script>
+	var $tasksTable = $('#tableTasks'), $ttRbutton = $('#ttRefreshbutton');
+	var $tableSoftware = $('#tableSoftware');
+	var $tableSoftwareRes = $('#tableSoftwareRes');
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+            url: "/clients/group/{{group_id}}/clients",
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: false,
+			sortable: true,
+			showColumns: true,
+			idField: 'cuuid',
+			uniqueId: 'cuuid',
+			columns: [
+			{
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+			},
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter,
+				{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
+				visible: true,
+				{% else %}
+				visible: false,
+				{% endif %}
+			},
+			{% for col in columns %}
+			{% if col.name != 'rid' %}
+			{
+				field: '{{col.name}}',
+				title: '{{col.info}}',
+				{% if col.name == 'rid' or col.name == 'cuuid' or col.name == 'cdate' or col.name == 'ostype'
+                or col.name == 'SLAM' or col.name == 'macaddr' or col.name == 'ADDN' or col.name == 'agent_version'
+                or col.name == 'agent_build' %}
+				visible: false,
+				{% elif col.name == 'needsreboot' %}
+				align: 'center',
+				formatter: rebootFormatter,
+				{% endif %}
+				sortable: true
+
+			},
+            {% endif %}
+			{% endfor %}
+			{
+				field: 'clientState',
+				title: 'clientState',
+				visible: false
+			},
+			]
+		});
+
+		$tasksTable.bootstrapTable(
+		{
+			url: "/clients/group/{{group_id}}/tasks",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			pagination: true,
+			sidePagination: "client",
+			showRefresh: true,
+			idField: 'cmd',
+			columns: [
+				{% for tcol in tasksCols %}
+					{
+						field: '{{tcol.name}}',
+						title: '{{tcol.info}}',
+						{% if tcol.name == 'id' or tcol.name == 'idrev' or tcol.name == 'parent' or tcol.name == 'cmdalt'
+						 or tcol.name == 'mode' or tcol.name == 'idsig' or tcol.name == 'group_id' or tcol.name == 'rid'
+						 or tcol.name == 'scope' or tcol.name == 'startdate' or tcol.name == 'enddate'%}
+						visible: false,
+						{% endif %}
+						{% if tcol.name == 'active' %}
+						editable: {
+							type: 'select',
+							url: '/clients/group/{{gResults['Group']['id']}}/task/active',
+							source: [
+								{value: '0', text: 'False'},
+								{value: '1', text: 'True'},
+							]
+						},
+						{% endif %}
+						{% if tcol.name ==  'interval' %}
+						editable: {
+							type: 'text',
+							url: '/clients/group/{{gResults['Group']['id']}}/task/interval'
+						},
+						{% endif %}
+						{% if tcol.name ==  'startdate' or tcol.name ==  'enddate' %}
+						editable: {
+							type: 'date',
+							format: 'yyyy-mm-dd',
+							viewformat: 'yyyy-mm-dd',
+							url: '/clients/group/{{gResults['Group']['id']}}/task/{{tcol.name}}'
+						},
+						{% endif %}
+						sortable: true
+					},
+				{% endfor %}
+			]
+		});
+
+		$tableSoftware.bootstrapTable(
+		{
+			striped: true,
+            url: "/clients/group/{{group_id}}/software",
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: true,
+			sortable: true,
+			showColumns: true,
+			idField: 'rid',
+			uniqueId: 'rid',
+			columns: [
+            {
+                field: 'state',
+                checkbox: true,
+                rowspan: 1,
+                align: 'center',
+                valign: 'middle'
+			},
+			{% for swcol in swCols %}
+			{
+				field: '{{swcol[0]}}',
+				title: '{{swcol[1]}}',
+                {% if swcol[2] == '0' %}
+                visible: false,
+                {% endif %}
+				sortable: true
+			},
+			{% endfor %}
+			]
+		});
+
+		$('#tableUsers').bootstrapTable(
+		{
+			striped: true,
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: true,
+			sortable: true,
+			showColumns: true,
+			idField: 'user_id',
+			uniqueId: 'user_id',
+
+			columns: [
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEventsUsers,
+				formatter: operateFormatterUsers,
+				{% if gResults['Owner'] == True %}
+				visible: true,
+				{% else %}
+				visible: false,
+				{% endif %}
+			},
+			{% for ucol in gResults['Users']['columns'] %}
+			{
+				field: '{{ucol[0]}}',
+				title: '{{ucol[1]}}',
+				sortable: true
+			},
+			{% endfor %}
+			],
+			data: [
+			{% for usr in gResults['Users']['users'] %}
+			{
+				'user_id': "{{usr.user_id}}",
+				'owner': "{{usr.owner}}"
+			},
+			{% endfor %}
+			]
+		});
+
+		$('#tableSoftwareRes').bootstrapTable({
+			url: "/osmanage/app_filter/list/{{group_id}}",
+			striped: true,
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			sidePagination: "client",
+			showRefresh: true,
+            idField: 'appID',
+			columns: [
+            {
+                field: 'state',
+                checkbox: true,
+                rowspan: 1,
+                align: 'center',
+                valign: 'middle'
+			},
+            {% for col in swResCols %}
+                {
+                    {% if col[2] == '0' %}
+                    visible: false,
+                    {% endif %}
+                    sortable: true,
+                    field: '{{col[0]}}',
+                    title: '{{col[1]}}',
+                    {% if col[0] == 'enabled' %}
+                    editable: {
+                        type: 'select',
+                        url: '/clients/group/{{gResults['Group']['id']}}/sw/res/enable',
+                        source: [
+                            {value: '1', text: 'Yes'},
+                            {value: '0', text: 'No'},
+                        ]
+                    },
+                    {% endif %}
+                },
+            {% endfor %}
+			]
+		});
+
+	});
+
+	function formatYesNo(value,row,index) {
+        if (Number.isInteger(value))
+        {
+            return value=='0' ? 'No' : 'Yes';
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+	/*  Format Rows in Clients Table
+		This will set the background color on rows
+		based on client check-in status
+	*/
+	function rowStyle(row, index) {
+		if (row.clientState == 0) {
+			return {classes: "normal"};
+		} else if (row.clientState == 1) {
+			return {classes: "warning"};
+		} else if (row.clientState == 2) {
+			return {classes: "danger"};
+		}
+		return {classes: "normal"};
+	}
+
+	function operateFormatter(value, row, index) {
+		return [
+			{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
+			'<div class="operateWidth-md"><a class="dashboard" href="javascript:void(0)" title="Client Dashboard">',
+			'<i class="fa fa-search fa-lg" aria-hidden="true"></i>',
+			'</a></div>'
+			{% endif %}
+		].join('');
+	}
+
+	function rebootFormatter(value, row, index) {
+		if (value == 'true') {
+			return [
+				'<div class="operateWidth-md">',
+				'<img src="{{ url_for("static", filename="img/Reboot_32.png") }}" title="Reboot Required" height="22" width="22">',
+				'</div>'
+			].join('');
+		} else {
+			return [
+				'<div class="operateWidth-md">',
+				'<img src="{{ url_for("static", filename="img/empty.png") }}" height="22" width="22">',
+				'</div>'
+			].join('');
+		}
+
+	}
+
+	/* Events for client table */
+	window.operateEvents = {
+		'click .mvClientButton': function (e, value, row, index)
+		{
+			$.get( "/clients/show/move/client/" + row['cuuid']).done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Move Client To Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalDialog').modal('show');
+			});
+		},
+		'click .dashboard': function (e, value, row, index)
+		{
+			$('#myContent').remove();
+			//alert(row['cuuid']);
+			var _url = "/clients/dashboard/" + row['cuuid'];
+			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="true"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+			$('#modalTitle').html('Client Dashboard - ' + row['hostname']);
+			$('#modalSaveButton').remove();
+			$('#modalCancelButton').html('Close');
+			$('#modalBody').html(innerHTML);
+			$('#modalBody').css({'height':'88vh'});
+			$('#modalDialog').addClass("modal-wide");
+			$('#modalDialog').modal('show');
+		},
+	};
+
+	function operateFormatterUsers(value, row, index) {
+		{% if gResults['Owner'] == True %}
+		return [
+			'<div><a class="remove" href="javascript:void(0)" title="Remove User from Group">',
+			'<i class="fa fa-trash-o fa-lg" aria-hidden="true"></i>',
+			'</a>&nbsp;&nbsp;&nbsp;</div>'
+		].join('');
+		{% else %}
+		return [
+			''
+		].join('');
+		{% endif %}
+	}
+
+	/* Events for software table */
+	function operateFormatterSW(value, row, index) {
+		var htmlData = [];
+		return htmlData.join('');
+	}
+
+	window.operateEventsSW = {
+		'click .removeSW': function (e, value, row, index)
+		{
+
+		},
+		'click .addSW': function (e, value, row, index)
+		{
+
+		}
+	};
+
+	window.operateEventsUsers = {
+		'click .remove': function (e, value, row, index)
+		{
+			var _url = "/clients/group/{{gResults['Group']['id']}}/" + row['user_id'] + "/remove";
+			$.ajax({
+				url: _url,
+				cache: false,
+				error: function (request, status, error)
+				{
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					$('#tableUsers').bootstrapTable('removeByUniqueId', row['user_id']);
+				}
+			});
+		}
+	};
+
+	var $table = $('#tableUsers'), $addButton = $('#addButton'),
+	$_settingsSaveButton = $('#settingsSaveButton'), $_delClientButton = $('#delClientButton');
+
+	var $addSWButton = $('#addSWButton'), $delSWButton = $('#delSWButton');
+	var $addSWResButton = $('#addSWResButton'), $delSWResButton = $('#delSWResButton');
+
+	var $_mvClientButton = $('#mvClientButton');
+	$(function () {
+		$addButton.click(function () {
+			$.get( "/clients/group/{{gResults['Group']['id']}}/user/add").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add Admin User To Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalSaveButton').remove();
+				$('#modalCancelButton').remove();
+				$('#modalDialog').modal('show');
+			});
+		});
+
+		$_settingsSaveButton.click(function () {
+			var data = {};
+			$('#settingsForm').serializeArray().map(function(x){data[x.name] = x.value;});
+
+			var _url = "/clients/group/{{gResults['Group']['id']}}/settings";
+			$.ajax({
+				url: _url,
+				type: 'POST',
+				cache: false,
+				data: data,
+				error: function (request, status, error) {
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					alert("Settings saved successfully.");
+				}
+			});
+		});
+
+		$_mvClientButton.click(function () {
+			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _cuuid = rows[x]['cuuid'];
+				rowsArr.push(_cuuid);
+			}
+
+			if (rowsArr.length <= 0) {
+				return;
+			}
+
+			$.get( "/clients/show/move/client/0").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Move Client(s) To Group');
+				$('#modalBody').html(data);
+				$('#modalBody #cuuids').val(rowsArr.toString());
+				$('#modalBody #orig_group_id').val('{{group_id}}');
+				$('#modalBody').css({'height':'200px'});
+				$('#modalDialog').modal('show');
+			});
+		});
+
+		$_delClientButton.click(function () {
+			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _cuuid = rows[x]['cuuid'];
+				rowsArr.push(_cuuid);
+			}
+
+			var _url = "/clients/group/{{gResults['Group']['id']}}/remove/clients";
+			$.ajax({
+				url: _url,
+				type: 'POST',
+				cache: false,
+				data: {'clients':rowsArr.toString()},
+				error: function (request, status, error) {
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					for (x in rowsArr) {
+						$('#table').bootstrapTable('removeByUniqueId', rowsArr[x]);
+					}
+					alert("Client(s) removed successfully.");
+				}
+			});
+		});
+
+		$addSWButton.click(function () {
+			$.get( "/clients/group/{{gResults['Group']['id']}}/sw/add").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add Required Software to Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalSaveButton').remove();
+				$('#modalCancelButton').remove();
+				$('#modalDialog').modal('show');
+			});
+		});
+
+		$delSWButton.click(function () {
+			var rows = $tableSoftware.bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _rid = rows[x]['rid'];
+				rowsArr.push(_rid);
+			}
+
+			var _url = "/clients/group/{{gResults['Group']['id']}}/sw/remove";
+			$.ajax({
+				url: _url,
+				type: 'DELETE',
+				cache: false,
+				data: {'rids':rowsArr.toString()},
+				error: function (request, status, error) {
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					for (x in rowsArr) {
+						$tableSoftware.bootstrapTable('removeByUniqueId', rowsArr[x]);
+					}
+					alert("Software removed successfully.");
+				}
+			});
+		});
+
+		$addSWResButton.click(function () {
+			$.get( "/clients/group/{{gResults['Group']['id']}}/sw/res/add").done(function(data)
+			{
+				$('#myContent').remove();
+				$('#modalTitle').html('Add Software Restriction to Group');
+				$('#modalBody').html(data);
+				$('#modalBody').css({'height':'200px'});
+				$('#modalSaveButton').remove();
+				$('#modalCancelButton').remove();
+				$('#modalDialog').modal('show');
+			});
+		});
+
+		$delSWResButton.click(function () {
+			var rows = $tableSoftwareRes.bootstrapTable('getAllSelections');
+			var rowsArr = [];
+			for (x in rows) {
+				var _rid = rows[x]['appID'];
+				rowsArr.push(_rid);
+			}
+
+			var _url = "/clients/group/{{gResults['Group']['id']}}/sw/res/remove";
+			$.ajax({
+				url: _url,
+				type: 'DELETE',
+				cache: false,
+				data: {'rids':rowsArr.toString()},
+				error: function (request, status, error) {
+					jsonValue = jQuery.parseJSON( request.responseText );
+					alert(jsonValue.errormsg);
+				},
+				success: function () {
+					for (x in rowsArr) {
+						$tableSoftwareRes.bootstrapTable('removeByUniqueId', rowsArr[x]);
+					}
+					alert("Software Restriction removed successfully.");
+				}
+			});
+		});
+	});
+	</script>
+{% endblock %}

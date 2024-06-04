@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+{%  endblock %}
+
+{% block pageHeader %}
+	Software Restrictions
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
+		<div id="toolbar">
+			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+		</div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+    $( document ).ready(function()
+	{
+		$('#table').bootstrapTable (
+		{
+            url: "/osmanage/app_filter/list",
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '25', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: false,
+			sortable: true,
+			showColumns: true,
+			idField: 'appID',
+			columns: [
+			{
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+			},
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter,
+				width: 30
+			},
+			{% for col in columns %}
+			{% if col[0] != 'rid' %}
+			{
+				field: '{{col[0]}}',
+				title: '{{col[1]}}',
+				align: 'center',
+				sortable: true,
+                {% if col[2] == '1' %}
+                visible: true,
+                {% else %}
+                visible: false,
+                {% endif %}
+                formatter: formatYesNo,
+
+			},
+            {% endif %}
+			{% endfor %}
+			]
+		});
+	});
+
+	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+	$(function ()
+	{
+		$delButton.click(function ()
+		{
+			var ids = $.map($table.bootstrapTable('getSelections'), function (row)
+			{
+				return row.appID;
+			});
+
+			var formData = new FormData();
+			formData.append("appID", ids);
+			$.ajax({
+				type:'DELETE',
+				url: '/osmanage/app_filter/delete',
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				success: function(){
+					alert("Software restriction deleted successfully");
+					$('#modalDialog').modal('hide');
+					$table.bootstrapTable('refresh');
+				},
+				error: function(jqXHR, textStatus, errorThrown){
+					alert("Failed to delete software restriction.");
+					$('#modalDialog').modal('hide');
+				}
+			});
+			return true;
+		});
+
+		$addButton.click(function ()
+		{
+		    resetModalWindow();
+		    $.get( "/osmanage/app_filter/add").done(function(data)
+			{
+				$('#modalTitle').html('Software Restriction');
+				$('#modalCancelButton').html('Cancel');
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+					console.log("hidden.bs.modal");
+					$(".mySWResForm").html("");
+				});
+			});
+		});
+	});
+
+	function operateFormatter(value, row, index)
+	{
+		return [
+			'<div class="buttonGroup"><div class="buttonItemVC">',
+			'<a class="edit" href="javascript:void(0)" title="Edit">',
+			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>',
+			'</div></div>'
+		].join('');
+	}
+
+	function formatYesNo(value,row,index)
+    {
+        if (Number.isInteger(value))
+        {
+            return value==0 ? 'No' : 'Yes';
+        }
+        else
+        {
+            return value;
+        }
+    }
+
+	window.operateEvents = {
+		'click .edit': function (e, value, row, index)
+		{
+			$.get( "/osmanage/app_filter/edit/" + row['appID']).done(function(data)
+            {
+                $('#modalTitle').html('Edit Software Restriction');
+				$('#modalCancelButton').html('Cancel');
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+					$(".mySWResForm").html("");
+				});
+
+			});
+		},
+		'click .description': function (e, value, row, index) {
+			alert('You click description action, row: ' + JSON.stringify(row));
+		}
+	};
+	</script>
+{% endblock %}

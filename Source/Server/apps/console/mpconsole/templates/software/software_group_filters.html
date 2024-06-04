@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<!-- Custom Fonts -->
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+	{{title}}
+{%  endblock %}
+
+{% block bodyPanel %}
+	<div class="modal fade" id="modalDialogAlt" tabindex="-1" role="dialog">
+		<div class="modal-dialog">
+			<div class="modal-content" id="modalContentAlt">
+				<div class="modal-header" id="modalHeaderAlt">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+					<h4 class="modal-title" id="modalTitleAlt"></h4>
+				</div>
+				<div class="modal-body" id="modalBodyAlt">
+					<!-- output data here-->
+				</div>
+				<div class="modal-footer" id="modalFooterAlt">
+					<button type="button" class="btn btn-default" data-dismiss="modal" id="modalCancelButtonAlt">Cancel</button>
+					<button type="button" class="btn btn-primary" id="modalSaveButtonAlt">Save</button>
+				</div>
+			</div><!-- /.modal-content -->
+		</div><!-- /.modal-dialog -->
+	</div><!-- /.modal -->
+
+	<table id="table" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
+		<div id="toolbar">
+			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+		</div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<!-- Bootstrap Table -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<script>
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+			ajax: function loadMyRows(params)
+			{
+				if (params.data.search == '') {
+					params.data.search = undefined;
+				}
+				if (params.data.sort == '') {
+					params.data.sort = 'rid';
+				}
+				if (params.data.order == '') {
+					params.data.order = desc;
+				}
+
+				var _url = "/software/group/filter/list/{{group_id}}/"+ params.data.limit +"/"+ params.data.offset +"/"+ params.data.search +"/"+ params.data.sort +"/"+ params.data.order;
+				console.log(_url);
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							me: 'required',
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			sidePagination: "server",
+			showRefresh: true,
+			idField: 'rid',
+			columns: [
+						{
+							field: 'operate',
+							title: '',
+							align: 'center',
+							events: operateEvents,
+							formatter: operateFormatter,
+							width: 100
+						},
+				{% for col in columns %}
+					{
+						{% if col[2] == 0 %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+					},
+				{% endfor %}
+			]
+		});
+	});
+
+	var $table = $('#table'), $addButton = $('#addButton');
+
+	function operateFormatter(value, row, index)
+	{
+		var htmlData = [];
+		htmlData.push('<div class="buttonGroup">')
+		if ( {{session.role[0]}} == 1 ) {
+			htmlData.push('<div class="buttonItem">');
+			htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Filter">');
+			htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i></a>');
+			htmlData.push('</div>');
+		} else {
+			htmlData.push('<div class="buttonItem">');
+			htmlData.push('&nbsp;&nbsp;&nbsp;');
+			htmlData.push('</div>');
+		}
+		if ( {{session.role[0]}} == 1 ) {
+			htmlData.push('<i class="buttonSeperator"></i>');
+			htmlData.push('<div class="buttonItem">');
+			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Filter">');
+			htmlData.push('<i class="fa fa-trash-o"></i></a>');
+			htmlData.push('</div>');
+		} else {
+			htmlData.push('<div class="buttonItem">');
+			htmlData.push('&nbsp;&nbsp;&nbsp;');
+			htmlData.push('</div>');
+		}
+		htmlData.push('</div>');
+		return htmlData.join('');
+	}
+
+	window.operateEvents = {
+		'click .edit': function (e, value, row, index)
+		{
+			$.get( "/software/group/filter/edit/{{group_id}}/" + row['rid']).done(function(data)
+			{
+				$('#modalTitleAlt').html('Edit Software Group Filter');
+				$('#modalBodyAlt').html(data);
+				$('#modalBodyAlt').css({'height':'60vh'});
+				$('#modalDialogAlt').addClass("modal-mid-wide");
+				$('#modalDialogAlt').modal('show');
+
+				$("#modalDialogAlt").on("hidden.bs.modal", function () {
+					$table.bootstrapTable('refresh');
+				});
+			});
+		},
+		'click .remove': function (e, value, row, index)
+		{
+			if (confirm('Are you sure to delete this filter ?'))
+			{
+				var _url = "/software/group/filter/edit/{{group_id}}/" + row['rid'];
+				$.ajax({
+					url: _url,
+					type: 'DELETE',
+					success: function(result) {
+						// Do something with the result
+						$('#table').bootstrapTable('remove', {
+							field: 'rid',
+							values: [row.id]
+						});
+						$table.bootstrapTable('refresh');
+					}
+				});
+			}
+		},
+	};
+
+	$(function ()
+	{
+		$addButton.click(function ()
+		{
+			$.get( "/software/group/filter/add/{{group_id}}" ).done(function(data)
+			{
+				$('#modalTitleAlt').html("Add Software Group Filter");
+				$('#modalBodyAlt').html(data);
+				$('#modalBodyAlt').css({'height':'60vh'});
+				$('#modalDialogAlt').addClass("modal-mid-wide");
+				$('#modalDialogAlt').modal('show');
+
+			});
+		});
+	});
+	</script>
+
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$("#modalSaveButton").click(function()
+			{
+				// Save tasks data
+				var iframe = document.getElementById('modaliFrame');
+				if (iframe)
+				{
+					var innerDoc = iframe.contentDocument || iframe.contentWindow.document;
+					var gid = innerDoc.getElementById('group_id').innerHTML;
+					if (gid) {
+						var _url = "/software/group/filter/"+gid+"/save";
+						$.ajax({
+							url: _url,
+							type: 'POST',
+							cache: false,
+							error: function (request, status, error)
+							{
+								jsonValue = jQuery.parseJSON( request.responseText );
+								alert(jsonValue.errormsg);
+							},
+							success: function () {
+								alert("Software tasks data saved successfully.");
+								$('#modalDialog').modal('hide');
+							}
+						});
+					}
+				}
+			});
+		});
+
+		function refreshFiltersTable() {
+			$('#table').bootstrapTable('refresh');
+		}
+	</script>
+{% endblock %}

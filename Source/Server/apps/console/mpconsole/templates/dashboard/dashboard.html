@@ -1,0 +1,643 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+{{clientCount}} Clients
+{%  endblock %}
+
+{% block bodyPanel %}
+
+			<div class="row">
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Client Model Types
+						</div>
+						<!-- /.panel-heading -->
+						<div class="panel-body">
+
+                            <ul class="nav nav-tabs" role="tablist" id="modelTab">
+                               <li><a href="#mTypes" data-toggle="tab">Types</a></li>
+                               <li><a href="#mBreakDown" data-toggle="tab">Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
+								<div class="tab-pane active" id="mBreakDown">
+									<br>
+									<canvas id="model-bar-chart" />
+								</div>
+                                <div class="tab-pane" id="mTypes">
+									<br>
+                                    <canvas id="model-pie-chart" />
+								</div>
+                            </div>
+
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+                    <div class="panel panel-default">
+						<div class="panel-heading">
+							Patches
+						</div>
+                        <div class="panel-body">
+                            <ul class="nav nav-tabs" id="patchTab">
+                               <li><a href="#pRequired" data-toggle="tab">Required</a></li>
+                               <li><a href="#pReleased" data-toggle="tab">Released</a></li>
+                               <li><a href="#pInstalled" data-toggle="tab">Installed</a></li>
+                            </ul>
+                            <div class="tab-content">
+								<div class="tab-pane active" id="pRequired">
+									<br>
+									<canvas id="patch-bar-chart" />
+								</div>
+								<div class="tab-pane" id="pReleased">
+									<br>
+									<table id="table" class="table table-condensed table-striped" data-toggle="table">
+										<thead>
+											<tr>
+												<th>Patch</th>
+												<th>Version</th>
+												<th>Release Date</th>
+											</tr>
+										</thead>
+										<tbody>
+											{% for item in patchReleased %}
+											<tr>
+												<td>{{item['patch']}}</td><td>{{item['version']}}</td><td>{{item['date']}}</td>
+											</tr>
+											{% endfor %}
+										</tbody>
+									</table>
+								</div>
+								<div class="tab-pane" id="pInstalled">
+									<br>
+									<canvas id="patch-installed-bar-chart" />
+								</div>
+                            </div>
+                        </div>
+                    </div>
+				</div>
+            </div>
+            <div class="row">
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							macOS Versions
+						</div>
+						<!-- /.panel-heading -->
+                        <div class="panel-body">
+
+                            <ul class="nav nav-tabs" role="tablist" id="osTab">
+                               <li><a href="#osMinor" data-toggle="tab">OS Version - Minor</a></li>
+                               <li><a href="#osAll" data-toggle="tab">OS Version - Top 10</a></li>
+                            </ul>
+                            <div class="tab-content">
+								<div class="tab-pane active" id="osMinor">
+									<br>
+									<canvas id="osminor-bar-chart" />
+								</div>
+                                <div class="tab-pane" id="osAll">
+									<br>
+                                    <canvas id="osver-bar-chart" />
+								</div>
+                            </div>
+
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Clients Needing Reboot
+						</div>
+						<!-- /.panel-heading -->
+						<div class="panel-body">
+							<canvas id="reboot-pie-chart" />
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+            </div>
+            <div class="row">
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Client Checkin Status
+						</div>
+						<!-- /.panel-heading -->
+						<div class="panel-body">
+							<canvas id="clientstatus-bar-chart" />
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-6 -->
+				<div class="col-lg-6">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							Agent Versions
+						</div>
+						<!-- /.panel-heading -->
+						<div class="panel-body">
+							<canvas id="agents-pie-chart" />
+						</div>
+						<!-- /.panel-body -->
+					</div>
+					<!-- /.panel -->
+				</div>
+				<!-- /.col-lg-6 -->
+			</div>
+			<!-- /.row -->
+
+
+{% endblock %}
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+	<script src="{{ url_for('static', filename='yarn_components/raphael/raphael.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/morris.js/morris.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/Chart.bundle.min.js') }}"></script>
+
+	<script>
+	$( document ).ready(function()
+	{
+        $('#modelTab li:last-child a').tab('show');
+        $('#patchTab li:first-child a').tab('show');
+        $('#osTab li:first-child a').tab('show');
+	});
+
+	var ctxRebootStatus = document.getElementById("reboot-pie-chart");
+	var myChartRebootStatus = new Chart(ctxRebootStatus, {
+		type: 'pie',
+		data: {
+			labels: [
+				{% for item in rebootData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: '# of Votes',
+				data: [
+					{% for item in rebootData %}
+						{{item[1]}},
+					{% endfor %}
+				],
+				backgroundColor: [
+					'#FF0000',
+					'#0EAC2B'
+				],
+
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true
+		}
+	});
+
+	var ctxModelType = document.getElementById("model-bar-chart");
+	var modelTypeChart = new Chart(ctxModelType, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in modelData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: "Mac Models",
+				data: [
+					{% for item in modelData %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in modelData %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Custom Chart Title'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	var ctxModelTypes = document.getElementById("model-pie-chart");
+	var modelTypesChart= new Chart(ctxModelTypes, {
+		type: 'pie',
+		data: {
+			labels: [
+				{% for item in modelTypeData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: '# of Votes',
+				data: [
+					{% for item in modelTypeData %}
+						{{item[1]}},
+					{% endfor %}
+				],
+                backgroundColor: [
+					{% for item in modelTypeData %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true
+		}
+	});
+
+	var ctxRequiredPatches = document.getElementById("patch-bar-chart");
+	var requiredPatchesChart = new Chart(ctxRequiredPatches, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in patchData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: "Required Patch",
+				data: [
+					{% for item in patchData %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in patchData %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			legend: {
+				display: false,
+			},
+			title: {
+				display: true,
+				text: 'Top 10 Required Patches'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	var ctxOSVer = document.getElementById("osver-bar-chart");
+	var myChartOsVer = new Chart(ctxOSVer, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in osData %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: "OS Versions",
+				data: [
+					{% for item in osData %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in osData %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Custom Chart Title'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	var ctxOSVerMinor = document.getElementById("osminor-bar-chart");
+	var myChartOsVerMinor = new Chart(ctxOSVerMinor, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in osMinor %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: "macOS Versions",
+				data: [
+					{% for item in osMinor %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in osMinor %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Custom Chart Title'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	var ctxPatchInstall = document.getElementById("patch-installed-bar-chart");
+	var patchInstallChart = new Chart(ctxPatchInstall, {
+		type: 'bar',
+		data: {
+			labels: [
+				{% for item in patchInstalled %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+
+				data: [
+					{% for item in patchInstalled %}
+						"{{item[1]}}",
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in patchInstalled %}
+					chartColor(),
+					{% endfor %}
+				],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			legend: {
+				display: false,
+			},
+			title: {
+				display: true,
+				text: 'Top 10 Installed Patches'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	ctxOSVer.onclick = function (evt)
+	{
+		var activePoints = myChartOsVer.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('osver','OS Version',label,value);
+	};
+
+	ctxOSVerMinor.onclick = function (evt)
+	{
+		var activePoints = myChartOsVerMinor.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('osverminor','OS Version',label,value);
+	};
+
+	ctxRebootStatus.onclick = function (evt)
+	{
+		var activePoints = myChartRebootStatus.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('reboot','Reboot Status',label,value);
+	};
+
+	ctxModelType.onclick = function (evt)
+	{
+		var activePoints = modelTypeChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('modelType','Model Type',label,value);
+	};
+
+	ctxModelTypes.onclick = function (evt)
+	{
+		var activePoints = modelTypesChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('modelTypes','Model Type',label,value);
+	};
+
+	ctxRequiredPatches.onclick = function (evt)
+	{
+		var activePoints = requiredPatchesChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+		showDrillDownWindow('requiredPatches','Required Patch',label,value);
+	};
+
+	ctxPatchInstall.onclick = function (evt)
+	{
+		var activePoints = patchInstallChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+		showDrillDownWindow('installedPatch','Installed Patch',label,value);
+	};
+
+	function graphClickEventOSVer(event)
+	{
+		var activePoints = myNewChart.getElementsAtEvent(event);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+
+		var url = "http://example.com/?label=" + label + "&value=" + value;
+		alert(url);
+	};
+
+	var ctxClientStatus = document.getElementById("clientstatus-bar-chart");
+	var clientStatusChart = new Chart(ctxClientStatus, {
+		type: 'bar',
+		data: {
+			labels: [ 'Normal', 'Warning', 'Alert' ],
+			datasets: [{
+				label: "Checkin Status",
+				data: [ {{clientStatus[0]}}, {{clientStatus[1]}}, {{clientStatus[2]}}],
+				backgroundColor: ['green', 'yellow', 'red'],
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true,
+			title: {
+				display: false,
+				text: 'Custom Chart Title'
+			},
+			scales: {
+				yAxes: [{
+					ticks: {
+						beginAtZero: true
+					}
+				}]
+			}
+		}
+	});
+
+	ctxClientStatus.onclick = function (evt)
+	{
+		var activePoints = clientStatusChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+        showDrillDownWindow('agentStatus','Agent Status',label,value);
+	};
+
+	var ctxAgentVersion = document.getElementById("agents-pie-chart");
+	var agentVersionChart = new Chart(ctxAgentVersion, {
+		type: 'pie',
+		data: {
+			labels: [
+				{% for item in agentVers %}
+					"{{item[0]}}",
+				{% endfor %}
+			],
+			datasets: [{
+				label: 'Agent Versions',
+				data: [
+					{% for item in agentVers %}
+						{{item[1]}},
+					{% endfor %}
+				],
+				backgroundColor: [
+					{% for item in agentVers %}
+						chartColor(),
+					{% endfor %}
+				],
+
+				borderWidth: 1
+			}]
+		},
+		options: {
+			responsive: true
+		}
+	});
+
+	ctxAgentVersion.onclick = function (evt)
+	{
+		var activePoints = agentVersionChart.getElementsAtEvent(evt);
+		var chartData = activePoints[0]['_chart'].config.data;
+		var idx = activePoints[0]['_index'];
+
+		var label = chartData.labels[idx];
+		var value = chartData.datasets[0].data[idx];
+		showDrillDownWindow('agentVersion','Agent Version',label,value);
+	};
+
+	function showDrillDownWindow(query, title, label, value)
+	{
+		var _url = "/dashboard/drilldown/"+query+"/"+label;
+		var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+			 ' frameborder="0" allowtransparency="false"' +
+			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+        $('#modalTitle').html(title +" - " + label);
+        $('#modalSaveButton').remove();
+        $('#modalCancelButton').remove();
+        $('#modalBody').html(innerHTML);
+        $('#modalBody').css({'height':'80vh'});
+        $('#modalDialog').addClass("modal-wide");
+        $('#modalDialog').modal('show');
+	};
+
+	</script>
+
+{% endblock %}

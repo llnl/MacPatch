@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block pageHeader %}
+MDM - Corporate Devices
+{% endblock %}
+
+{% block bodyPanel %}
+    {% for col in columns %}
+
+    {% endfor %}
+	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
+		<div id="toolbar">
+            {% if session.role[0] == 1 %}
+                <button id="queryButton" type="button" class="btn btn-default" title="Search InTune For A Device"><i class="glyphicon glyphicon-search"></i></button>
+			    <button id="addButton" type="button" class="btn btn-default" title="Add New Corporate Device"><i class="glyphicon glyphicon-plus"></i></button>
+                <button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
+            {% endif %}
+                &nbsp;<div id="lastSync">Last Sync: {{ lastSync }}</div>
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+            url: "/mdm/corporateDevices/list",
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '20', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: true,
+			sortable: true,
+			showColumns: true,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			idField: 'rid',
+			columns: [
+			{% for col in columns %}
+			{
+                    field: '{{ col['column'] }}',
+                    title: '{{ col['displayName'] }}',
+                    {% if col['visible'] == 0 %}
+                    visible: false,
+                    {% endif %}
+                    sortable: true
+			},
+			{% endfor %}
+			],
+			data: [
+
+			]
+		});
+
+	    $('#addButton').click(function ()
+        {
+            $('#myContent').remove();
+            var _url = "/mdm/corporateDevice/add";
+            var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+             ' frameborder="0" allowtransparency="true"' +
+             ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+            $('#modalTitle').html("New Corporate Device");
+            $('#modalBody').html(innerHTML);
+            $('#modalBody').css({'height':'40vh'});
+            $('#modalDialog').addClass("modal-mid");
+            $('#modalSaveButton').remove();
+            $('#modalCancelButton').remove();
+            $('#modalDialog').modal('show');
+        });
+
+	    $('#syncButton').click(function ()
+        {
+            var load = "<i class=\"fa fa-gear fa-spin\"></i> Getting Data"
+            document.getElementById("lastSync").innerHTML = load;
+            $.get("/mdm/runSync/corporateDevices", function(data) {
+                    //$(data).find('#reviews .card').appendTo('#reviews');
+                    var obj = JSON.parse(data);
+                    document.getElementById("lastSync").innerHTML = "Last Sync: " + obj.lastSync;
+                }).fail(function() {
+                    document.getElementById("lastSync").innerHTML = "Error getting sync data. ";
+                });
+        });
+
+        $('#queryButton').click(function ()
+        {
+            $('#myContent').remove();
+            var _url = "/mdm/corporateDevice/live/query";
+            var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
+             ' frameborder="0" allowtransparency="true"' +
+             ' style="width: 98%; height: 98%; position: absolute"></iframe>';
+
+            $('#modalTitle').html("Live Corporate Device Search");
+            $('#modalBody').html(innerHTML);
+            $('#modalBody').css({'height':'60vh'});
+            $('#modalDialog').addClass("modal-mid");
+            $('#modalSaveButton').remove();
+            $('#modalCancelButton').remove();
+            $('#modalDialog').modal('show');
+        });
+	});
+
+	</script>
+{% endblock %}

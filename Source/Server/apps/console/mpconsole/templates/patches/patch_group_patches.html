@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+{% block styles %}
+	<!-- Bootstrap Core CSS -->
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<style>
+		#patchesTable > tbody > tr > td {
+			height:28px;
+			padding:4px;
+			border-top: 2px;
+		}
+	</style>
+{%  endblock %}
+
+{% block body %}
+	<div>
+		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true" class="table table-condensed table-striped">
+			<div id="patchesToolbar">
+                {% if isOwner == true or session.role[0] == 1 %}
+				<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-All</i></button>
+				<button id="selectAppleButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Apple</i></button>
+				<button id="selectThirdButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Custom</i></button>
+                {% endif %}
+			</div>
+		</table>
+	</div>
+{% endblock %}
+
+
+{% block javascript %}
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+
+	<script>
+	$( document ).ready(function()
+	{
+		$('#patchesTable').bootstrapTable(
+		{
+			url: "/patches/group/list/{{groupID}}",
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			pagination: true,
+			sidePagination: "client",
+			showRefresh: true,
+			idField: 'id',
+			checkboxHeader: false,
+			maintainSelected: true,
+			sortName: 'postdate',
+			sortOrder: 'desc',
+			columns: [
+				{% for col in columns %}
+				{
+					{% if col[1] == 'state' %}
+						field: 'state',
+						title: '',
+						checkbox: true,
+						rowspan: 1,
+						align: 'center',
+						valign: 'middle',
+						sortable: true,
+						{% if isOwner == 'false' %}
+						disabled: true,
+						{% endif %}
+					{% else %}
+						field: '{{col[0]}}',
+						title: '{{col[1]}}',
+						{% if col[0] ==  'id' or col[0] == 'suname' or col[0] == 'patch_state' %}
+						visible: false,
+						{% endif %}
+						sortable: true
+					{% endif %}
+				},
+				{% endfor %}
+			],
+			onCheck: function(row, $element) {
+				//console.log(row);
+			},
+			onLoadSuccess: function(data) {
+				removeSelected();
+			},
+			onPageChange: function(number, size) {
+				removeSelected();
+				$('#patchesTable').bootstrapTable('refresh');
+			},
+			onColumnSwitch: function(field, checked) {
+				removeSelected();
+				$('#patchesTable').bootstrapTable('refresh');
+			},
+			onSort: function(name, order) {
+				removeSelected();
+				$('#patchesTable').bootstrapTable('refresh');
+			},
+		});
+	});
+
+
+	/* Removed the selected row color from the table */
+	function removeSelected() {
+		$('#patchesTable tr').each(function (i, row, element) {
+			$(this).removeClass('selected');
+		});
+	}
+
+	/* Save button and save content to json */
+	$(function () {
+		$('#saveGroupDataButton').click(function ()
+		{
+			{% if isOwner == 'true' or session.role[0] == 1 %}
+				// Overlay shows save progress wheel
+				$('#overlay').show();
+
+				$.ajax({
+					type:'GET',
+					url: '/patches/group/save/{{groupID}}',
+					cache: false,
+					processData: false,
+					contentType: false,
+					success: function()
+					{
+						$('#overlay').hide();
+						alert("Patch group data saved successfully.");
+					},
+					error: function(jqXHR, textStatus, errorThrown){
+						$('#overlay').hide();
+						alert("Patch group data was not saved.");
+					}
+				});
+			{% endif %}
+		});
+	});
+
+	$("#selectAllButton").click(function ()
+	{
+		var ids = [];
+		var data = $('#patchesTable').bootstrapTable('getData');
+		$.each( data, function( i, row, element ) {
+			ids.push(row.id);
+			$.each( $('input[name="btSelectItem"]:checkbox'),function() {
+				if ($(this).attr('value') == row.id) {
+					$(this).prop("checked", true);
+				}
+			});
+		});
+
+		var _url = "/patches/group/add/bulk/{{groupID}}";
+		$.ajax({
+			url: _url,
+			type: 'POST',
+			cache: false,
+			data: JSON.stringify(ids),
+			dataType: "json",
+			contentType: "application/json",
+			error: function (request, status, error)
+			{
+				jsonValue = jQuery.parseJSON( request.responseText );
+			}
+		 });
+
+		 $('#patchesTable').bootstrapTable('refresh');
+	});
+
+	$("#selectAppleButton").click(function ()
+	{
+		var ids = [];
+		var data = $('#patchesTable').bootstrapTable('getData');
+		$.each( data, function( i, row, element ) {
+			if (row.type == "Apple") {
+				ids.push(row.id);
+				$.each( $('input[name="btSelectItem"]:checkbox'),function() {
+					if ($(this).attr('value') == row.id) {
+						$(this).prop("checked", true);
+					}
+				});
+			}
+		});
+
+		var _url = "/patches/group/add/bulk/{{groupID}}";
+		$.ajax({
+			url: _url,
+			type: 'POST',
+			cache: false,
+			data: JSON.stringify(ids),
+			dataType: "json",
+			contentType: "application/json",
+			error: function (request, status, error)
+			{
+				jsonValue = jQuery.parseJSON( request.responseText );
+			}
+		 });
+
+	});
+
+	$("#selectThirdButton").click(function ()
+	{
+		var ids = [];
+		var data = $('#patchesTable').bootstrapTable('getData');
+		$.each( data, function( i, row, element ) {
+			if (row.type == "Third") {
+				ids.push(row.id);
+				$.each( $('input[name="btSelectItem"]:checkbox'),function() {
+					if ($(this).attr('value') == row.id) {
+						$(this).prop("checked", true);
+					}
+				});
+			}
+		});
+
+		var _url = "/patches/group/add/bulk/{{groupID}}";
+		$.ajax({
+			url: _url,
+			type: 'POST',
+			cache: false,
+			data: JSON.stringify(ids),
+			dataType: "json",
+			contentType: "application/json",
+			error: function (request, status, error)
+			{
+				jsonValue = jQuery.parseJSON( request.responseText );
+			}
+		 });
+
+	});
+
+	$('#patchesTable').on('check.bs.table', function (e, row, $element)
+	{
+		//This event fires every time a checkbox is checked
+		{% if isOwner == 'true' or session.role[0] == 1 %}
+			removeSelected();
+			$.get( "/patches/group/add/{{groupID}}/" + row['id']).done(function(data, status)
+			{
+				var result = JSON.parse(data);
+				if (result.error != 0) {
+					alert('An error was generated adding this patch to this group.');
+				}
+			});
+		{% endif %}
+	});
+
+	$('#patchesTable').on('uncheck.bs.table', function (e, row)
+	{
+		//This event fires every time a checkbox is unchecked
+		{% if isOwner == 'true' or session.role[0] == 1 %}
+			$.get( "/patches/group/remove/{{groupID}}/" + row['id']).done(function(data, status)
+			{
+				var result = JSON.parse(data);
+				if (result.error != 0) {
+					alert('An error was generated adding this patch to this group.');
+				}
+			});
+		{% endif %}
+	});
+
+	</script>
+{% endblock %}

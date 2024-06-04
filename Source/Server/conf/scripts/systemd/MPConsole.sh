@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 #
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2024, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 # Written by Charles Heizer <heizer1 at llnl.gov>.
 # LLNL-CODE-636469 All rights reserved.
@@ -31,18 +31,25 @@
 RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
 ENV_HOME="${MP_HOME}/env/console"
+PATH="${ENV_HOME}/bin",$PATH
+PIDFile="/tmp/mpconsole.pid"
 
 case "$1" in
  start)
 	echo $"Starting MacPatch Admin Console"
-	cd $ENV_HOME
-    source ${ENV_HOME}/bin/activate
-    $MP_HOME/apps/mpconsole.py gunicorn --daemon &
+    source "${ENV_HOME}/bin/activate"
+	${ENV_HOME}/bin/gunicorn \
+	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
+	--config ${MP_HOME}/apps/console/gunicorn_config.py \
+	--access-logfile ${MP_HOME}/logs/g_console_access.log \
+	--error-logfile ${MP_HOME}/logs/g_console_error.log \
+	--chdir ${MP_HOME}/apps/console "app:create_app()" \
+	--pid $PIDFile &
 	;;
  stop)
 	echo $"Stopping MacPatch Admin Console"
-	mpPID=`ps -ef | grep "mpconsole.py gunicorn" | grep -v grep | head -1 | awk '{ print $2 }'`
-	kill -9 $mpPID
+	CurPID=$(<"$PIDFile")
+	kill -9 $CurPID
  	;;
  *)
  	echo $"Usage: $0 {start|stop}"

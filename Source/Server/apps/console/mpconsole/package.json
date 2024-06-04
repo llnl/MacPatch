@@ -1,0 +1,36 @@
+{
+	"name": "MacPatch",
+	"version": "3.8.0",
+	"description": "MacPatch",
+	"author": "Charles Heizer",
+	"license": "GPL-2.0-only",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/LLNL/MacPatch.git"
+  	},
+	"dependencies": {
+		"ace-editor-builds": "^1.2.4",
+		"bootstrap": "3.4.1",
+		"bootstrap-chosen": "^1.4.2",
+		"bootstrap-editable": "^1.0.1",
+		"bootstrap-table": "^1.22.6",
+		"brace": "^0.11.1",
+		"chart.js": "^2.9.4",
+		"chosen-js": "^1.8.7",
+		"colresizable": "^1.6.0",
+		"font-awesome": "^4.7.0",
+		"interactjs": "^1.10.27",
+		"jQuery-QueryBuilder": "^3.0.0",
+		"jquery": "^3.7.1",
+		"jquery-steps-tc": "^1.1.0",
+		"metismenu": "^3.0.7",
+		"modernizr": "^3.13.0",
+		"moment": "^2.30.1",
+		"morris.js": "^0.5.0",
+		"raphael": "^2.3.0",
+		"sb-admin-2": "^3.3.8",
+		"selectize": "^0.12.6",
+		"sql-parser-mistic": "^1.2.3",
+		"tableexport.jquery.plugin": "^1.30.0"
+	}
+}

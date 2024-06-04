@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+
+	{% endblock %}
+</head>
+<body>
+	{% block bodyPanel %}
+		<form role="form" id="myForm">
+			<input class="form-control" type="hidden" name="rid" value="{{data['rid'] or ''}}" readonly>
+			<div class="form-group">
+				<div class="well well-sm">
+					<label><h3>Group Filter</h3></label>
+
+					<div class="row">
+					<div class="col-md-12">
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Type</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="attribute">
+									<option value="ldap" {% if 'ldap' == data['attribute'] %}selected{% endif %}>LDAP Query</option>
+									<option value="cuuid" {% if 'cuuid' == data['attribute'] %}selected{% endif %}>Client ID</option>
+									<option value="ipaddr" {% if 'ipaddr' == data['attribute'] %}selected{% endif %}>IP Address</option>
+									<option value="Domain" {% if 'Domain' == data['attribute'] %}selected{% endif %}>Client Group</option>
+									<option value="agent_version" {% if 'agent_version' == data['attribute'] %}selected{% endif %}>Agent Version</option>
+									<option value="client_version" {% if 'client_version' == data['attribute'] %}selected{% endif %}>LDAP Query</option>
+									<option value="osver" {% if 'osver' == data['attribute'] %}selected{% endif %}>OS Version</option>
+									<option value="Model_Identifier" {% if 'Model_Identifier' == data['attribute'] %}selected{% endif %}>Model Identifier</option>
+									<option value="Model_Name" {% if 'Model_Name' == data['attribute'] %}selected{% endif %}>Model Name</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>DataSource</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="datasource">
+									<option value="Database" {% if 'Database' == data['datasource'] %}selected{% endif %}>Database</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Operator</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="attribute_oper">
+									<option value="In" {% if 'In' == data['attribute_oper'] %}selected{% endif %}>In</option>
+									<option value="EQ" {% if 'EQ' == data['attribute_oper'] %}selected{% endif %}>Equal</option>
+									<option value="NEQ" {% if 'NEQ' == data['attribute_oper'] %}selected{% endif %}>Not Equal</option>
+									<option value="Contains" {% if 'Contains' == data['attribute_oper'] %}selected{% endif %}>Contains</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Filter Value</label>
+							</div>
+							<div class="col-md-5">
+								<input class="form-control" type="text" name="attribute_filter" value="{{data['attribute_filter'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Condition</label>
+							</div>
+							<div class="col-md-5">
+								<select class="form-control" name="attribute_condition">
+									<option value="AND" {% if 'AND' == data['attribute_condition'] %}selected{% endif %}>AND</option>
+									<option value="OR" {% if 'OR' == data['attribute_condition'] %}selected{% endif %}>OR</option>
+									<option value="None" {% if 'None' == data['attribute_condition'] %}selected{% endif %}>None</option>
+								</select>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	{% block javascript %}
+		<script type="text/javascript">
+			$('#modalSaveButtonAlt').click(function()
+			{
+				// The unbind is needed to prevent multiple form
+				// sumbits when adding multiple filters in a row
+				$('#modalSaveButtonAlt').unbind('click');
+				var data = {};
+				$('#myForm').serializeArray().map(function(x){data[x.name] = x.value;});
+
+				var _url = "/software/group/filter/save/{{group_id}}";
+				$.ajax({
+					url: _url,
+					type: 'POST',
+					cache: false,
+					data: data,
+					error: function (request, status, error)
+					{
+						jsonValue = jQuery.parseJSON( request.responseText );
+						alert(jsonValue.error);
+					},
+					success: function () {
+						alert("Group filter saved successfully.");
+						//parent.refreshFiltersTable();
+						$('#modalDialogAlt').modal('hide');
+						//$('#table').bootstrapTable('refresh');
+					}
+				});
+			});
+		</script>
+	{% endblock %}
+</body>
+
+</html>

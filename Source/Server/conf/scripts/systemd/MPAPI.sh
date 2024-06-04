@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 #
-# Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+# Copyright (c) 2024, Lawrence Livermore National Security, LLC.
 # Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 # Written by Charles Heizer <heizer1 at llnl.gov>.
 # LLNL-CODE-636469 All rights reserved.
@@ -25,24 +25,31 @@
 #
 # -------------------------------------------------------------
 #
-# WSServices Startup and shutdown script
+# mpapi Startup and shutdown script
 #
 
 RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
 ENV_HOME="${MP_HOME}/env/api"
+PATH="${ENV_HOME}/bin",$PATH
+PIDFile="/tmp/mpapi.pid"
 
 case "$1" in
  start)
-	echo $"Starting MacPatch REST Services"
-	cd $ENV_HOME
-	source $ENV_HOME/bin/activate
-	$MP_HOME/apps/mpapi.py gunicorn --daemon &
+	echo $"Starting MacPatch API's"
+    source "${ENV_HOME}/bin/activate"
+	${ENV_HOME}/bin/gunicorn \
+	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
+	--config ${MP_HOME}/apps/api/gunicorn_config.py \
+	--access-logfile ${MP_HOME}/logs/g_api_access.log \
+	--error-logfile ${MP_HOME}/logs/g_api_error.log \
+	--chdir ${MP_HOME}/apps/api "app:create_app()" \
+	--pid $PIDFile &
 	;;
  stop)
-	echo $"Stopping MacPatch REST Services"
-	mpPID=`ps -ef | grep "mpapi.py gunicorn" | grep -v grep | head -1 | awk '{ print $2 }'`
-	kill -9 $mpPID
+	echo $"Stopping MacPatch API's"
+	CurPID=$(<"$PIDFile")
+	kill -9 $CurPID
  	;;
  *)
  	echo $"Usage: $0 {start|stop}"

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="description" content="">
+	<meta name="author" content="">
+
+	<title>
+		{% block title %}
+		{% endblock %}
+	</title>
+
+	{% block styles %}
+		<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+
+	{% endblock %}
+</head>
+
+<body>
+	{% block bodyPanel %}
+		<form role="form" id="mySWResForm">
+			<div class="form-group">
+				<div class="well well-sm">
+					<label><h3>Create Software Restriction</h3></label>
+
+					<div class="row">
+					<div class="col-md-12">
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Name</label>
+							</div>
+							<div class="col-md-4">
+								<input class="form-control" type="text" name="displayName" value="{{data['displayName'] or ''}}">
+							</div>
+                            <div class="col-md-4">
+                                Display name for software message
+                            </div>
+						</div>
+
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Process Name</label>
+							</div>
+							<div class="col-md-4">
+								<input class="form-control" type="text" name="processName" value="{{data['processName'] or ''}}">
+							</div>
+                            <div class="col-md-4">
+                                Process name to apply restriction. Use "*" as wildcard.
+                            </div>
+						</div>
+
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Kill Process</label>
+							</div>
+							<div class="col-md-4">
+								<select class="form-control" name="killProc">
+									<option value="1" {% if 1 == data['killProc'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['killProc'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+                            <div class="col-md-4">
+                                Terminate matching process.
+                            </div>
+						</div>
+
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Kill Process Message</label>
+							</div>
+							<div class="col-md-4">
+								<textarea class="form-control" rows="5" name="message">{{data['message'] or ''}}</textarea>
+							</div>
+                            <div class="col-md-4">
+                                Message to users.
+                            </div>
+						</div>
+
+                        <div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Global</label>
+							</div>
+							<div class="col-md-4">
+								<select class="form-control" name="isglobal">
+                                    <option value="0" {% if 0 == data['isglobal'] %}selected{% endif %}>No</option>
+									<option value="1" {% if 1 == data['isglobal'] %}selected{% endif %}>Yes</option>
+								</select>
+							</div>
+                            <div class="col-md-4">
+                                Global restrictions are applied to all systems.
+                            </div>
+						</div>
+
+
+						<div class="row row-grid top10">
+							<div class="col-md-3">
+								<label>Enabled</label>
+							</div>
+							<div class="col-md-4">
+								<select class="form-control" name="enabled">
+									<option value="0" {% if 0 == data['enabled'] %}selected{% endif %}>No</option>
+                                    <option value="1" {% if 1 == data['enabled'] %}selected{% endif %}>Yes</option>
+								</select>
+                                {% if type == 'edit' %}
+                                    <input class="form-control" type="hidden" name="appID" value="{{data['appID'] or ''}}" readonly>
+                                    <input class="form-control" type="hidden" name="rid" value="{{data['rid'] or ''}}" readonly>
+                                {% elif type == 'new' %}
+                                    <input class="form-control" type="hidden" name="appID" value="{{appID}}" readonly>
+                                    <input class="form-control" type="hidden" name="rid" value="NEWRID" readonly>
+                                {% endif %}
+                                <input class="form-control" type="hidden" name="bundleID" value="{{data['bundleID'] or ''}}" readonly>
+                                <input class="form-control" type="hidden" name="sendEmail" value="0" readonly>
+							</div>
+						</div>
+					</div>
+					</div>
+				</div>
+			</div>
+		</form>
+	{% endblock %}
+
+	<!-- jQuery -->
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+
+	<!-- Bootstrap Core JavaScript -->
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+
+	{% block javascript %}
+
+		<script type="text/javascript">
+			$(document).ready(function()
+			{
+				$("#modalSaveButton").click(function()
+				{
+					var data = {};
+					$('#mySWResForm').serializeArray().map(function(x){data[x.name] = x.value;});
+                    if ("appID" in data)
+                    {
+                        var _url = "/osmanage/app_filter/save";
+                        $.ajax({
+                            url: _url,
+                            type: 'POST',
+                            cache: false,
+                            data: data,
+                            error: function (request, status, error) {
+                                jsonValue = jQuery.parseJSON(request.responseText);
+                                alert(jsonValue.error);
+                            },
+                            success: function () {
+                                alert("Software restriction saved successfully.");
+                                $("#mySWResForm").html("");
+                                $('#modalDialog').modal('hide');
+                            }
+                        });
+                        $("#mySWResForm").html("");
+                    }
+				});
+			});
+		</script>
+	{% endblock %}
+</body>
+
+</html>

@@ -1,7 +1,7 @@
 #!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
- Copyright (c) 2013, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2024, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,7 +25,7 @@
 
 '''
     Script: MPSUSPatchSync
-    Version: 1.6.2
+    Version: 1.6.3
 
     Description: This Script read all of the patch information
     from the apple software update sucatlog files and post the
@@ -74,12 +74,9 @@ import requests
 import xml.etree.ElementTree as ET
 import base64
 import sys
-import subprocess
 import hashlib
 import plistlib
 import fnmatch
-from pprint import pprint
-from sys import platform
 import simplejson
 
 MP_SRV_BASE  = "/opt/MacPatch/Server"
@@ -101,7 +98,6 @@ wsPostKey       = '123456' # Ref from siteconfig.json settings->server->apiKey
 # Do not Change
 susConfig = {}
 wsPostAPIURI    = '/api/v1/sus/patches/apple'
-wsPostKeyHash   = 'NA'  #hashlib.md5(wsPostKey).hexdigest()
 wsPostVersion   = "1.0.0"
 
 # --------------------------------------------
@@ -123,53 +119,6 @@ def returnVersionFromCDATAString(aStr):
 def returnDateTimeAsString(aDate):
     # Converts a datetime object to string, needed for JSON
     return aDate.strftime('%Y-%m-%d %H:%M:%S')
-
-# Deprecated
-def readServerMetadata(metaURL):
-
-    title = 'NA'
-    version = '1.0.0'
-    description = 'NA'
-
-    r = requests.get(metaURL)
-    if r.status_code == requests.codes.ok:
-
-        plist = plistlib.loads(r.text.encode('utf-8'))
-
-        if "CFBundleShortVersionString" in plist:
-            version = str(plist["CFBundleShortVersionString"])
-
-        localization = {}
-        try:
-            _loc = plist.get('localization',None)
-            if _loc == None:
-                _loc = plist.get('localizations',None)
-
-            if _loc != None:
-                if "English" in _loc:
-                    localization = _loc["English"]
-                elif "en" in _loc:
-                    localization = _loc["en"]
-                else:
-                    localization = None
-
-                if localization != None:
-                    if 'title' in localization:
-                        title = localization['title']
-                    if 'description' in localization:
-                        descASCII = localization['description'].encode('ascii', 'ignore').decode('ascii')
-                        description = base64.b64encode(descASCII)
-
-        except Exception as e:
-            logger.error("Error: %s" % e)
-            logger.error("Offending URL: %s" % metaURL)
-
-    metaData = {}
-    metaData['title'] = title
-    metaData['version'] = version
-    metaData['description'] = description
-
-    return metaData
 
 def readDistributionFile(distURL):
 

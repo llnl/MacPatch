@@ -53,8 +53,6 @@
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */; };
 		8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F222848A5C006E6BC5 /* GCDTask.m */; };
 		8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */; };
 		8FA139F221B7857D00124016 /* ConfigProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139EE21B7857D00124016 /* ConfigProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -221,8 +219,6 @@
 		8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
 		8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
 		8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
-		8F8019F122848A5B006E6BC5 /* GCDTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDTask.h; sourceTree = "<group>"; };
-		8F8019F222848A5C006E6BC5 /* GCDTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDTask.m; sourceTree = "<group>"; };
 		8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+MPHelper.h"; sourceTree = "<group>"; };
 		8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+MPHelper.m"; sourceTree = "<group>"; };
 		8F87427116308AD2007BA7DB /* MPWebServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWebServices.h; sourceTree = "<group>"; };
@@ -582,15 +578,6 @@
 			name = "MacPatch+SWDist";
 			sourceTree = "<group>";
 		};
-		8F8019F022848A3A006E6BC5 /* GCDTask */ = {
-			isa = PBXGroup;
-			children = (
-				8F8019F122848A5B006E6BC5 /* GCDTask.h */,
-				8F8019F222848A5C006E6BC5 /* GCDTask.m */,
-			);
-			path = GCDTask;
-			sourceTree = "<group>";
-		};
 		8F83530E217E8B230034FEFB /* NSDate-Category */ = {
 			isa = PBXGroup;
 			children = (
@@ -846,7 +833,6 @@
 		8FED881F1463165B00709F8E /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
-				8F8019F022848A3A006E6BC5 /* GCDTask */,
 				8FE7E9B422372E7C000FAA6A /* UAObfuscatedString */,
 				8FE7E9AB22372E28000FAA6A /* CocoaSecurity */,
 				8F83530E217E8B230034FEFB /* NSDate-Category */,
@@ -910,7 +896,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */,
 				8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */,
 				8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */,
 				8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */,
@@ -1032,7 +1017,8 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 1410;
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1540;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
 			compatibilityVersion = "Xcode 11.4";
@@ -1152,7 +1138,6 @@
 				8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */,
 				8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */,
 				8FF3D6832170123900059ACD /* STHTTPRequest.m in Sources */,
-				8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */,
 				8FF3D6A02170129B00059ACD /* MPCrypto.m in Sources */,
 				8FA28EDC21939EE2005D5E92 /* FMDatabasePool.m in Sources */,
 			);

@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+<div class="container-fluid">
+	<div class="pull-left">Provisioning - Detection Criteria</div>
+	<div class="pull-right">
+
+		<button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
+				data-placement="left"
+				data-content="Detection criteria is used to create the .MPProvisionBegin file. All active criteria must return true for the provision file to be created.">
+		  <i class="fa fa-question"></i>
+		</button>
+
+	</div>
+</div>
+{%  endblock %}
+
+{% block bodyPanel %}
+    <table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
+		<div id="toolbar">
+			{% if session.role[0] == 1 %}
+			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="delButton" type="button" class="btn btn-default" title="Delete Patch"><i class="glyphicon glyphicon-trash"></i></button>
+			{% endif %}
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+
+
+	<script src="{{ url_for('static', filename='static_components/popper/popper.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
+
+	<script>
+
+		$( document ).ready(function()
+		{
+			$(function () {
+			  $('[data-toggle="popover"]').popover()
+			})
+            $('#table').bootstrapTable( 
+            {
+                url: "/provision/criteria/list",
+                pagination: true,
+                sidePagination: 'client',
+                showRefresh: true,
+                pageList: ['10', '25', '50', '100', 'All'],
+                search: true,
+                idField: 'rid',
+				sortName: 'order',
+                sortable: true,
+                detailFormatter: detailFormatter,
+                icons: {
+                    refresh: 'fa fa-refresh',
+                    toggle: 'fa fa-th-list',
+                    columns: 'fa fa-columns',
+                    detailOpen: 'glyphicon glyphicon-info-sign',
+                    detailClose: 'glyphicon glyphicon-minus-sign'
+                },
+                columns: [
+                {% if session.role[0] == 1 %}
+                {
+                        field: 'state',
+                        checkbox: true,
+                        rowspan: 1,
+                        align: 'center',
+                        valign: 'middle'
+                },
+                {% endif %}
+                {
+                    field: 'operate',
+                    title: '',
+                    align: 'center',
+                    events: operateEvents,
+                    formatter: operateFormatter
+                },
+                {% for col in columnsAll %}
+
+                    {% if col.name in columns %}
+                        {
+                            field: '{{col.name}}',
+                            title: '{{col.info}}',
+                            {% if col.name ==  'rid' %}
+                            visible: false,
+                            {% endif %}
+                            sortable: true,
+
+                            {% if col.name == 'active' and session.role[0] == 1 %}
+                            editable: {
+                                type: 'select',
+                                url:  '/provision/criteria/active',
+                                source: [
+                                    {value: 0, text: 'False'},
+                                    {value: 1, text: 'True'},
+                                ]
+                            },
+                            {% endif %}
+                            {% if col.name == 'order' and session.role[0] == 1 %}
+                            editable: {
+                                type: 'text',
+                                url:  '/provision/criteria/order'
+                            },
+                            {% endif %}
+                        },
+                    {% endif %}
+
+                {% endfor %}
+                ]
+            });
+
+		});
+
+		function detailFormatter(index, row)
+        {
+            var html = [];
+            var re = /\\n/g;
+            var re2 = /\\t/g;
+            var re3 = /<style([\S\s]*?)>([\S\s]*?)<\/style>/ig;
+            var decodedData = window.atob(row['description64']);
+            var description = decodedData.replace("Data('"," ");
+            description = description.replace("')"," ");
+            description = description.replace(re," ");
+            description = description.replace(re2," ");
+            description = description.replace(re3," ");
+            if (description.trim() == "") {
+                description = '<p>No Description</p>'
+            }
+            html.push(description);
+            return html.join('');
+        }
+
+        window.operateEvents = {
+            'click .edit': function (e, value, row, index)
+            {
+                $('#myContent').remove();
+                var _url = "/provision/criteria/edit/" + row['rid'];
+                $.get( _url ).done(function(data) {
+					$('#modalTitle').html("Edit Provision Detection Script");
+					$('#modalBody').html(data);
+					$('#modalBody').css({'height':'72vh'});
+					$('#modalDialog').addClass("modal-mid-60");
+					$('#modalDialog').modal('show');
+
+					$("#modalDialog").on("hidden.bs.modal", function () {
+						$table.bootstrapTable('refresh');
+					});
+				});
+            },
+            'click .description': function (e, value, row, index) {
+                alert('You click description action, row: ' + JSON.stringify(row));
+            }
+        };
+
+		function operateFormatter(value, row, index)
+        {
+            var htmlData = [];
+            htmlData.push('<table><tr><td>')
+            {% if session.role[0] == 1 %}
+            htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch">');
+            htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
+            {% endif %}
+
+            htmlData.push('</a>');
+
+
+            htmlData.push('</td></tr></table>');
+            return htmlData.join('');
+        }
+
+        var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+		$(function ()
+		{
+			$delButton.click(function ()
+			{
+				var ids = $.map($table.bootstrapTable('getSelections'), function (row)
+				{
+					return row.rid;
+				});
+
+				var formData = new FormData();
+				formData.append("rid", ids);
+				$.ajax({
+					type:'DELETE',
+					url: '/provision/criteria/delete',
+					data: formData,
+					cache: false,
+					processData: false,
+					contentType: false,
+					success: function(){
+						alert("Criteria Deleted Successfully");
+						$('#modalDialog').modal('hide');
+						$table.bootstrapTable('remove', {
+							field: 'profileID',
+							values: ids
+						});
+						$table.bootstrapTable('refresh');
+					},
+					error: function(jqXHR, textStatus, errorThrown){
+						alert("Criteria Failed to Delete");
+						$('#modalDialog').modal('hide');
+					}
+				});
+				return true;
+			});
+
+			$addButton.click(function ()
+			{
+				$.get( "/provision/criteria/add").done(function(data) {
+					$('#modalTitle').html("Add Provisioning Detection Criteria");
+					$('#modalBody').html(data);
+					$('#modalDialog').addClass("modal-wide");
+					$('#modalBody').css({'height':'72vh'});
+					$('#modalDialog').modal('show');
+
+					$("#modalDialog").on("hidden.bs.modal", function () {
+						$table.bootstrapTable('refresh');
+					});
+				});
+			});
+		});
+	</script>
+{% endblock %}
