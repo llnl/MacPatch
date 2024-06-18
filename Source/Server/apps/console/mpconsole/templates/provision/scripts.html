@@ -38,10 +38,8 @@
 	{{ super() }}
 	<script src="{{ url_for('static', filename='static_components/popper/popper.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/colresizable/colResizable-1.6.min.js') }}"></script>
 	<script>
 
 	function operateFormatter(value, row, index)
@@ -60,49 +58,21 @@
 		'click .edit': function (e, value, row, index)
 		{
 			var _url = "/provision/script/edit/" + row['sid'];
-			$.get(_url).done(function(data)
-			{
+			$.get(_url).done(function(data) {
 				resetModalWindow();
 				$('#modalTitle').html('New Provisioning Script');
 				$('#modalCancelButton').html('Cancel');
 				$('#modalBody').html(data);
-				//$('#modalBody').css({'height':'88vh'});
 				$('#modalDialog').addClass("modal-wide");
 				$('#modalDialog').modal('show');
-
 				$("#modalDialog").on("hidden.bs.modal", function () {
 					//$profilesTable.bootstrapTable('refresh');
 				});
 			});
 		}
 	};
-
-	var _cols = [{
-					field: 'state',
-					checkbox: true,
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle',
-					width: 60,
-					{% if session.role[0] != 1 %}
-					visible: false,
-					{% endif %}
-				},
-					{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEvents,
-					formatter: operateFormatter,
-					width: 60,
-					{% if session.role[0] != 1 %}
-					visible: false,
-					{% endif %}
-				},];
-
-	_cols.push.apply(_cols, {{data["columns"] | tojson}});
-	var _rows = {{data["rows"] | tojson}};
-
+	/* EDIT */
+	
 	$( document ).ready(function()
 	{
 		$(function () {
@@ -110,15 +80,16 @@
 		})
 		$('#table').bootstrapTable(
 		{
+			url: "/provision/scripts/list",
 			pagination: true,
 			sidePagination: 'client',
 			pageList: ['10', '20', '50', '100', 'All'],
 			search: true,
-			showRefresh: false,
-			resizable: true,
+			showRefresh: true,
 			sortable: true,
 			sortName: 'order',
-			showColumns: false,
+			showColumns: true,
+			idField: 'sid',
 			icons: {
 				refresh: 'fa fa-refresh',
 				toggle: 'fa fa-th-list',
@@ -126,18 +97,47 @@
 				detailOpen: 'glyphicon glyphicon-info-sign',
 				detailClose: 'glyphicon glyphicon-minus-sign'
 			},
-			idField: 'tuuid',
-			columns: _cols,
-			data: _rows
+			columns: [
+			{
+				field: 'state',
+				checkbox: true,
+				rowspan: 1,
+				align: 'center',
+				valign: 'middle',
+				width: 60,
+				{% if session.role[0] != 1 %}
+				visible: false,
+				{% endif %}
+			},
+			{
+				field: 'operate',
+				title: '',
+				align: 'center',
+				events: operateEvents,
+				formatter: operateFormatter,
+				width: 60,
+				{% if session.role[0] != 1 %}
+				visible: false,
+				{% endif %}
+			},
+			{% for col in columns %}
+			{
+				field: '{{col.field}}',
+				title: '{{col.title}}',
+				{% if col.visible == false %}
+				visible: false,
+				{% endif %}
+				sortable: true
+			},
+			{% endfor %}
+			]
 		});
 	});
 
 	var $table = $('#table'), $delBut = $('#deleteButton'), $addBut = $('#addButton'), $expBut = $('#exportButton'), $impBut = $('#importButton');
 	$(function () {
-
-		$delBut.click(function ()
-		{
-			var rows = $('#table').bootstrapTable('getAllSelections');
+		$delBut.click(function () {
+			var rows = $('#table').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _sID = rows[x]['sid'];
@@ -165,8 +165,7 @@
 			});
 		});
 
-		$addBut.click(function ()
-		{
+		$addBut.click(function () {
 			$.get("/provision/script/new").done(function(data)
 			{
 				resetModalWindow();
@@ -182,9 +181,6 @@
 				});
 			});
 		});
-
 	});
-
-
 	</script>
 {% endblock %}

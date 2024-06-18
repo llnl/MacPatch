@@ -666,7 +666,7 @@ Client Group - {{group_name}}
 		});
 
 		$_mvClientButton.click(function () {
-			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rows = $('#table').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _cuuid = rows[x]['cuuid'];
@@ -690,7 +690,7 @@ Client Group - {{group_name}}
 		});
 
 		$_delClientButton.click(function () {
-			var rows = $('#table').bootstrapTable('getAllSelections');
+			var rows = $('#table').bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _cuuid = rows[x]['cuuid'];
@@ -730,7 +730,7 @@ Client Group - {{group_name}}
 		});
 
 		$delSWButton.click(function () {
-			var rows = $tableSoftware.bootstrapTable('getAllSelections');
+			var rows = $tableSoftware.bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _rid = rows[x]['rid'];
@@ -770,7 +770,7 @@ Client Group - {{group_name}}
 		});
 
 		$delSWResButton.click(function () {
-			var rows = $tableSoftwareRes.bootstrapTable('getAllSelections');
+			var rows = $tableSoftwareRes.bootstrapTable('getSelections');
 			var rowsArr = [];
 			for (x in rows) {
 				var _rid = rows[x]['appID'];

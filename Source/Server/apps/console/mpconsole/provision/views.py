@@ -6,7 +6,7 @@ import base64
 import sys
 from datetime import datetime
 
-from .  import provision
+from . import provision
 from mpconsole.app import db
 from mpconsole.model import *
 from mpconsole.modes import *
@@ -177,12 +177,20 @@ def taskScope():
 @provision.route('/scripts')
 @login_required
 def scripts():
+	_columns = [{'field':'sid','title':'Script ID','visible':0},{'field':'name','title':'Name','visible':1},
+		   {'field':'script','title':'Script','visible':1},{'field':'active','title':'Active','visible':1},
+		   {'field':'scope','title':'Scope','visible':1},{'field':'type','title':'Type','visible':1},
+		   {'field':'order','title':'Order','visible':1},{'field':'sw_start_datetime','title':'Valid From','visible':0},
+		   {'field':'sw_end_datetime','title':'Valid To','visible':0},{'field':'mdate','title':'Mod Date','visible':0}]
 
-	columns = [('sid','Script ID',0),('name','Name',1),('script','Script',1),('active','Active',1),
-			   ('scope','Scope',1),('type','Type',1),('order','Order',1), ('sw_start_datetime','Valid From',0),
-			   ('sw_end_datetime','Valid To',0),('mdate','Mod Date',0)]
+	return render_template('provision/scripts.html', data={}, columns=_columns, isAdmin=True)
+
+''' AJAX Request '''
+@provision.route('/scripts/list')
+@login_required
+def scriptsList():
+
 	colsForQuery = ['sid','name','script','active','scope','type','order','sw_start_datetime','sw_end_datetime','mdate']
-
 	qScripts = MpProvisionScript.query.order_by(MpProvisionScript.mdate.desc()).all()
 	_data = []
 	for d in qScripts:
@@ -201,7 +209,12 @@ def scripts():
 				row[c] = "Production" if _a == 1 else "QA"
 			elif c == 'type':
 				_a = eval("d."+c)
-				row[c] = "Post Software Task Install" if _a == 1 else "Pre Software Task Install"
+				if _a == 0:
+					row[c] = "Post Software Task Install"
+				elif _a == 1:
+					row[c] = "Pre Software Task Install"
+				elif _a == 2:
+					row[c] = "Finish"
 			elif c == 'script':
 				_a = eval("d." + c)
 				row[c] = (_a[:10] + '...') if len(_a) > 10 else _a
@@ -210,18 +223,8 @@ def scripts():
 
 		_data.append(row)
 
-	_columns = []
-	for c, t, v in columns:
-			row = {}
-			row['field'] = c
-			row['title'] = t
-			row['sortable'] = True
-			if v == 0:
-				row['visible'] = False
-
-			_columns.append(row)
-
-	return render_template('provision/scripts.html', data={'rows':_data,'columns': _columns}, isAdmin=True)
+	return json.dumps(_data, default=json_serial), 200
+	
 
 @provision.route('/script/edit/<id>')
 @login_required

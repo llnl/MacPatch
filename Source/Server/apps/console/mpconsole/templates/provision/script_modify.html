@@ -118,12 +118,13 @@
 						</div>
                         <div class="row row-grid top10">
 							<div class="col-md-3">
-								<label>Script Type</label>
+								<label>Script Type -- {{data['Script']['type']}}</label>
 							</div>
 							<div class="col-md-5">
 								<select class="form-control" name="type">
 									<option value="1" {% if 1 == data['Script']['type'] %}selected{% endif %}>Post Software Task Installs</option>
 									<option value="0" {% if 0 == data['Script']['type'] %}selected{% endif %}>Pre Software Task Installs</option>
+									<option value="2" {% if 2 == data['Script']['type'] %}selected{% endif %}>Finish Script</option>
 								</select>
 							</div>
 						</div>
