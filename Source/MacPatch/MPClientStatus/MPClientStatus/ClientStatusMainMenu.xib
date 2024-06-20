@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="21507" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="32700.99.1234" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="21507"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="21507"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="22690"/>
+        <plugIn identifier="com.apple.WebKit2IBPlugin" version="22690"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -746,13 +746,13 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="335" y="390" width="360" height="166"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="maxSize" type="size" width="360" height="166"/>
             <view key="contentView" id="372">
                 <rect key="frame" x="0.0" y="0.0" width="360" height="166"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589">
+                    <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="589">
                         <rect key="frame" x="17" y="45" width="326" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="594">
@@ -761,7 +761,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="590">
+                    <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="590">
                         <rect key="frame" x="17" y="20" width="326" height="17"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" alignment="center" title="Label" id="593">
@@ -783,13 +783,13 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="1042" y="676" width="480" height="131"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="480" height="131"/>
             <view key="contentView" id="557">
                 <rect key="frame" x="0.0" y="0.0" width="480" height="131"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="561">
+                    <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="561">
                         <rect key="frame" x="105" y="92" width="290" height="22"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="MacPatch Client Information" id="562">
@@ -803,7 +803,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="axesIndependently" image="appImage" id="564"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="560">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="560">
                         <rect key="frame" x="105" y="34" width="358" height="50"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" selectable="YES" sendsActionOnEndEditing="YES" title="Multiline Label" id="563">
@@ -845,7 +845,7 @@
                                                 </binding>
                                             </connections>
                                         </tableColumn>
-                                        <tableColumn editable="NO" width="266" minWidth="40" maxWidth="1000" id="570">
+                                        <tableColumn editable="NO" width="237" minWidth="40" maxWidth="1000" id="570">
                                             <tableHeaderCell key="headerCell" lineBreakMode="truncatingTail" borderStyle="border" alignment="left" title="Value">
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" white="0.33333298560000002" alpha="1" colorSpace="calibratedWhite"/>
@@ -935,14 +935,14 @@
         <window title="MacPatch - Reboot" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="Rir-3v-4PY">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="574" height="178"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="574" height="178"/>
             <value key="maxSize" type="size" width="574" height="178"/>
             <view key="contentView" id="Gb8-ho-ckQ">
                 <rect key="frame" x="0.0" y="0.0" width="574" height="178"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iMy-tp-ciN">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="iMy-tp-ciN">
                         <rect key="frame" x="117" y="56" width="439" height="68"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="iB1-7Y-D6B">
@@ -954,7 +954,7 @@ To finish the installation and restart your computer, click Restart.            
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mwm-Oi-5Fq">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="mwm-Oi-5Fq">
                         <rect key="frame" x="117" y="132" width="439" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Install and Restart" allowsEditingTextAttributes="YES" id="fs5-Fp-grJ">
@@ -1008,7 +1008,7 @@ DQ
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="XBL-98-vzc" customClass="CriticalWindow">
             <windowPositionMask key="initialPositionMask" rightStrut="YES" topStrut="YES"/>
             <rect key="contentRect" x="1950" y="1183" width="573" height="158"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <view key="contentView" wantsLayer="YES" id="2QN-iU-IZm">
                 <rect key="frame" x="0.0" y="0.0" width="573" height="158"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -1018,7 +1018,7 @@ DQ
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="RVq-mc-dLv"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pHy-dd-CQ6">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pHy-dd-CQ6">
                         <rect key="frame" x="106" y="33" width="334" height="84"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" id="cNh-We-GGs">
@@ -1028,7 +1028,7 @@ DQ
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="E1e-8g-oUC">
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="E1e-8g-oUC">
                         <rect key="frame" x="106" y="121" width="339" height="19"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="MacPatch - Critical Patch Install" id="fDw-Ub-7mO">
@@ -1041,8 +1041,8 @@ DQ
                         <rect key="frame" x="108" y="72" width="330" height="20"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     </progressIndicator>
-                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oeB-bz-QPU">
-                        <rect key="frame" x="106" y="86" width="329" height="24"/>
+                    <textField hidden="YES" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" textCompletion="NO" translatesAutoresizingMaskIntoConstraints="NO" id="oeB-bz-QPU">
+                        <rect key="frame" x="106" y="86" width="328" height="24"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" lineBreakMode="truncatingTail" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="Label" id="3RU-vq-apI">
                             <font key="font" metaFont="menu" size="14"/>
@@ -1104,7 +1104,7 @@ KQAyADcASQBMAFEAUwBdAGMAbABzAHgAgACVAJcAmQCbAJ0ApwCuALMAvgDBAMMAxQDHAMwA1wDgAOgA
         <window title="MacPatch - What's New" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="bMN-3l-C5D">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="335" y="390" width="620" height="442"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <value key="minSize" type="size" width="620" height="442"/>
             <value key="maxSize" type="size" width="620" height="442"/>
             <value key="minFullScreenContentSize" type="size" width="620" height="442"/>
@@ -1141,7 +1141,7 @@ KQAyADcASQBMAFEAUwBdAGMAbABzAHgAgACVAJcAmQCbAJ0ApwCuALMAvgDBAMMAxQDHAMwA1wDgAOgA
             <windowStyleMask key="styleMask" titled="YES"/>
             <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="348" width="544" height="193"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="4096" height="1127"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2560" height="1415"/>
             <view key="contentView" id="FbC-Ds-eJs">
                 <rect key="frame" x="0.0" y="0.0" width="544" height="193"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -1160,7 +1160,7 @@ DQ
                             <action selector="closeSWResWindow:" target="494" id="bRJ-Ts-Oa0"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KNt-nV-ZoS">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KNt-nV-ZoS">
                         <rect key="frame" x="112" y="49" width="414" height="93"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" title="Application has been restricted." allowsEditingTextAttributes="YES" id="YLy-Aa-IFP">
@@ -1179,7 +1179,7 @@ DQ
                         <autoresizingMask key="autoresizingMask"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="message" id="D8R-yH-Smd"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sWx-iQ-gcT">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sWx-iQ-gcT">
                         <rect key="frame" x="112" y="150" width="414" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Software Restriction" allowsEditingTextAttributes="YES" id="8Ds-bh-PZ8">
@@ -1196,7 +1196,7 @@ DQ
     <resources>
         <image name="MacPatchIcon" width="128" height="128"/>
         <image name="appImage" width="128" height="128"/>
-        <image name="message" width="24" height="24"/>
+        <image name="message" width="32" height="32"/>
         <image name="warn" width="32" height="27"/>
     </resources>
 </document>

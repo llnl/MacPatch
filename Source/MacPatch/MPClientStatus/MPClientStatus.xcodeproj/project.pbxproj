@@ -24,6 +24,7 @@
 		8F90F5E3220CA0E8008E820C /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8904D16DFE84600A870A3 /* AppKit.framework */; };
 		8F90F5E9220CABE0008E820C /* ClietStatusMedia.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */; };
 		8FB1AB7427A45558003DC95C /* libcurl.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FB1AB7327A45553003DC95C /* libcurl.tbd */; };
+		8FB31A902C24CD080052BB31 /* provision in Resources */ = {isa = PBXBuildFile; fileRef = 8FB31A8F2C24CD080052BB31 /* provision */; };
 		8FC36B3B1B45BF1F0099D214 /* EventToSend.c in Sources */ = {isa = PBXBuildFile; fileRef = 8FC36B3A1B45BF1F0099D214 /* EventToSend.c */; };
 		8FC36B3D1B45C0850099D214 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FC36B3C1B45C0850099D214 /* Carbon.framework */; };
 		8FC41315192571FA00BB394F /* AppLaunchObject.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FC41314192571FA00BB394F /* AppLaunchObject.m */; };
@@ -42,7 +43,6 @@
 		8FD8908916DFE92C00A870A3 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FD8908016DFE92C00A870A3 /* CoreFoundation.framework */; };
 		8FE1999725B258D1001CA72C /* Provisioning.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FE1999525B258D1001CA72C /* Provisioning.m */; };
 		8FE1999825B258D1001CA72C /* Provisioning.xib in Resources */ = {isa = PBXBuildFile; fileRef = 8FE1999625B258D1001CA72C /* Provisioning.xib */; };
-		8FE1999B25B25D3B001CA72C /* provision in Resources */ = {isa = PBXBuildFile; fileRef = 8FE1999A25B25D3B001CA72C /* provision */; };
 		8FE6B4831B4C79A1000A0471 /* warn.png in Resources */ = {isa = PBXBuildFile; fileRef = 8FE6B4821B4C79A1000A0471 /* warn.png */; };
 		8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */ = {isa = PBXBuildFile; fileRef = 8FE8069622D0095C00D9DE94 /* Notes.txt */; };
 		8FE859582006A2EE00BFD9C5 /* MPDiagCollector.sh in Resources */ = {isa = PBXBuildFile; fileRef = 8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */; };
@@ -71,6 +71,7 @@
 		8F9072CC25FFE113008BE990 /* MPGradientView.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPGradientView.m; sourceTree = "<group>"; };
 		8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = ClietStatusMedia.xcassets; sourceTree = "<group>"; };
 		8FB1AB7327A45553003DC95C /* libcurl.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libcurl.tbd; path = usr/lib/libcurl.tbd; sourceTree = SDKROOT; };
+		8FB31A8F2C24CD080052BB31 /* provision */ = {isa = PBXFileReference; lastKnownFileType = folder; path = provision; sourceTree = "<group>"; };
 		8FC36B391B45BF1F0099D214 /* EventToSend.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = EventToSend.h; sourceTree = "<group>"; };
 		8FC36B3A1B45BF1F0099D214 /* EventToSend.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = EventToSend.c; sourceTree = "<group>"; };
 		8FC36B3C1B45C0850099D214 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = System/Library/Frameworks/Carbon.framework; sourceTree = SDKROOT; };
@@ -103,7 +104,6 @@
 		8FE1999425B258D1001CA72C /* Provisioning.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Provisioning.h; sourceTree = "<group>"; };
 		8FE1999525B258D1001CA72C /* Provisioning.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Provisioning.m; sourceTree = "<group>"; };
 		8FE1999625B258D1001CA72C /* Provisioning.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = Provisioning.xib; sourceTree = "<group>"; };
-		8FE1999A25B25D3B001CA72C /* provision */ = {isa = PBXFileReference; lastKnownFileType = folder; name = provision; path = ../../../../../../../../Workspace/DynView/DynView/provision; sourceTree = "<group>"; };
 		8FE6B4821B4C79A1000A0471 /* warn.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = warn.png; sourceTree = "<group>"; };
 		8FE8069622D0095C00D9DE94 /* Notes.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Notes.txt; sourceTree = "<group>"; };
 		8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = MPDiagCollector.sh; sourceTree = "<group>"; };
@@ -248,6 +248,7 @@
 		8FD8905116DFE84600A870A3 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				8FB31A8F2C24CD080052BB31 /* provision */,
 				8F22E84722B98D7600A27786 /* html */,
 				8FD8909A16DFEC0700A870A3 /* MPClientStatus-Info.plist */,
 				8FD8905316DFE84600A870A3 /* InfoPlist.strings */,
@@ -260,7 +261,6 @@
 		8FD8907316DFE8BE00A870A3 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				8FE1999A25B25D3B001CA72C /* provision */,
 				8FE6B4821B4C79A1000A0471 /* warn.png */,
 				8FE859572006A2EE00BFD9C5 /* MPDiagCollector.sh */,
 				8F90F5E8220CABE0008E820C /* ClietStatusMedia.xcassets */,
@@ -328,6 +328,7 @@
 			files = (
 				8FE6B4831B4C79A1000A0471 /* warn.png in Resources */,
 				8F22E84822B98D7600A27786 /* html in Resources */,
+				8FB31A902C24CD080052BB31 /* provision in Resources */,
 				8F313FF0260417EC00E8B402 /* ProvisioningAlt.xib in Resources */,
 				8FCCBA7219AFD1BB001F4C3B /* CHMenuViewController.xib in Resources */,
 				8FD8905516DFE84600A870A3 /* InfoPlist.strings in Resources */,
@@ -337,7 +338,6 @@
 				8FE8069722D0095C00D9DE94 /* Notes.txt in Resources */,
 				8F3AB0DC2757E41C005676B3 /* Survey.xib in Resources */,
 				8FE1999825B258D1001CA72C /* Provisioning.xib in Resources */,
-				8FE1999B25B25D3B001CA72C /* provision in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
