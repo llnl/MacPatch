@@ -44,6 +44,7 @@
 # 3.7.0     Update for MacOS and tweaks to install options
 #           Check for Python 3 version requirement.
 # 3.7.1     Added IPv6 to nginx build
+# 3.7.2     Updated to backward support RHEL7
 #
 # ----------------------------------------------------------------------------
 
@@ -75,18 +76,62 @@ fi
 
 # Script Variables -----------------------------------------------------------
 
-platform='unknown'
-unamestr=`uname`
-if [[ "$unamestr" == 'Linux' ]]; then
-   platform='linux'
-elif [[ "$unamestr" == 'Darwin' ]]; then
-   platform='mac'
-fi
-
 USELINUX=false
 USERHEL=false
 USEUBUNTU=false
 USEMACOS=false
+OWNERGRP="79:70"
+
+get_distribution() {
+    lsb_dist=""
+    # Every system that we officially support has /etc/os-release
+    if [ -r /etc/os-release ]; then
+        lsb_dist="$(. /etc/os-release && echo "$ID")"
+    fi
+    # Returning an empty string here should be alright since the
+    # case statements don't act unless you provide an actual value
+    echo "$lsb_dist"
+}
+
+majr_version='0'
+platform='unknown'
+unamestr=`uname`
+if [[ "$unamestr" == 'Linux' ]]; then
+    
+    platform='linux'
+    USELINUX=true
+    OWNERGRP="www-data:www-data"
+
+    lsb_dist=$( get_distribution )
+    lsb_dist="$(echo "$lsb_dist" | tr '[:upper:]' '[:lower:]')"
+
+    case "$lsb_dist" in
+        ubuntu)
+            USEUBUNTU=true
+            if command_exists lsb_release; then
+                dist_version="$(lsb_release --codename | cut -f2)"
+            fi
+            if [ -z "$dist_version" ] && [ -r /etc/lsb-release ]; then
+                dist_version="$(. /etc/lsb-release && echo "$DISTRIB_CODENAME")"
+            fi
+        ;;
+        centos|rhel|sles)
+            USERHEL=true
+            if [ -z "$dist_version" ] && [ -r /etc/os-release ]; then
+                dist_version="$(. /etc/os-release && echo "$VERSION_ID")"
+            fi
+        ;;
+        *)
+            echo "Not running a supported version of Linux."
+            exit 1
+        ;;
+    esac
+    majr_version=$(echo $dist_version | cut -f1 -d.)
+
+elif [[ "$unamestr" == 'Darwin' ]]; then
+    platform='mac'
+fi
+
 MACPROMPTFORXCODE=true
 MACPROMPTFORBREW=true
 USEOLDPY=false
@@ -98,29 +143,13 @@ BUILDROOT="${MPBASE}/.build/server"
 BUILD_LOG_FILE="/tmp/MPServerBuild.log"
 TMP_DIR="${MPBASE}/.build/tmp"
 SRC_DIR="${MPSERVERBASE}/conf/src/server"
-OWNERGRP="79:70"
 CA_CERT="NA"
 
 majorVer="0"
 minorVer="0"
 buildVer="0"
 
-if [[ $platform == 'linux' ]]; then
-
-    distName=`cat /etc/os-release | grep "NAME=" | head -n1`
-    if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
-        USERHEL=true
-    elif [[ $LNXDIST == "Ubuntu" ]]; then
-        USEUBUNTU=true
-    else
-        echo "Not running a supported version of Linux."
-        exit 1
-    fi
-
-    USELINUX=true
-    OWNERGRP="www-data:www-data"
-
-elif [[ "$unamestr" == 'Darwin' ]]; then
+if [[ "$unamestr" == 'Darwin' ]]; then
     USEMACOS=true
 
     systemVersion=`/usr/bin/sw_vers -productVersion`
@@ -139,32 +168,32 @@ function logit {
 }
 
 function mkdirP {
-  #
-  # Function for creating directory and echo it
-  #
-  if [ ! -n "$1" ]; then
-    logit "Enter a directory name"
-  elif [ -d $1 ]; then
-    logit "$1 already exists"
-  else
-    logit " - Creating directory $1"
-    mkdir -p $1
-  fi
+    #
+    # Function for creating directory and echo it
+    #
+    if [ ! -n "$1" ]; then
+        logit "Enter a directory name"
+    elif [ -d $1 ]; then
+        logit "$1 already exists"
+    else
+        logit " - Creating directory $1"
+        mkdir -p $1
+    fi
 }
 
 function rmF {
-  #
-  # Function for remove files and dirs and echos
-  #
-  if [ ! -n "$1" ]; then
-    echo "Enter a path"
-  elif [ -d $1 ]; then
-    echo " - Removing $1"
-    rm -rf $1
-  elif [ -f $1 ]; then
-    echo " - Removing $1"
-    rm -rf $1
-  fi
+    #
+    # Function for remove files and dirs and echos
+    #
+    if [ ! -n "$1" ]; then
+        echo "Enter a path"
+    elif [ -d $1 ]; then
+        echo " - Removing $1"
+        rm -rf $1
+    elif [ -f $1 ]; then
+        echo " - Removing $1"
+        rm -rf $1
+    fi
 }
 
 function command_exists () {
@@ -289,11 +318,17 @@ for f in $pyLst; do
         pyMax="$f"
         pyFound=true
         pyApp=${f}
-        continue
+        break
     fi
 done
 
-if !$pyFound; then
+if $pyFound; then
+    if [ ! $pyMax == "NA" ]; then
+        pyApp=${pyMax}
+    else
+        pyApp=${pyMin}
+    fi
+else
     clear
     echo
     echo "* WARNING"
@@ -305,12 +340,6 @@ if !$pyFound; then
     echo
     logit "Python requirements not meet. Exiting script"
     exit 1    
-else
-    if [ ! $pyMax == "NA" ]; then
-        pyApp=${pyMax}
-    else
-        pyApp=${pyMin}
-    fi
 fi
 
 # ----------------------------------------------------------------------------
@@ -437,7 +466,11 @@ if $USELINUX; then
         # Add the Yarn repo
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
-        pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "swig" "nodejs" "yarn")
+        if [ $majr_version -eq 7 ]; then
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "openssl11" "openssl11-devel" "epel-release" "swig" "nodejs" "yarn")
+        else
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "swig" "nodejs" "yarn")
+        fi
         for i in "${pkgs[@]}"
         do
             p=`rpm -qa --qf '%{NAME}\n' | grep -e ${i}$ | head -1`
@@ -496,8 +529,6 @@ fi
 # ------------------
 # Upgrade Python Modules/Binaries
 # ------------------
-
-
 
 # ------------------
 # Build NGINX
@@ -688,19 +719,37 @@ else
     logit "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/env/server/bin/activate
     ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
+    if [ $majr_version -eq 7 ]; then
+        sed -i '/M2Crypto==0.41.0/d' ${MPSERVERBASE}/apps/pyRequiredServer.txt
+        ${MPSERVERBASE}/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
+        env SWIG_FEATURES="-cpperraswarn -includeall -D__`uname -m`__ -I/usr/include/openssl11" ${MPSERVERBASE}/env/server/bin/pip3 -q install M2Crypto==0.41.0
+    else
+        ${MPSERVERBASE}/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt >> ${BUILD_LOG_FILE}
+    fi
     deactivate
 
     logit "Creating api virtual env..."
     source ${MPSERVERBASE}/env/api/bin/activate 
     ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt >> ${BUILD_LOG_FILE}
+    if [ $majr_version -eq 7 ]; then
+        sed -i '/M2Crypto==0.41.0/d' ${MPSERVERBASE}/apps/pyRequiredAPI.txt
+        ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt >> ${BUILD_LOG_FILE}
+        env SWIG_FEATURES="-cpperraswarn -includeall -D__`uname -m`__ -I/usr/include/openssl11" ${MPSERVERBASE}/env/api/bin/pip3 -q install M2Crypto==0.41.0
+    else
+        ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt >> ${BUILD_LOG_FILE}
+    fi
     deactivate
 
     logit "Creating console virtual env..."
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir >> ${BUILD_LOG_FILE}
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt >> ${BUILD_LOG_FILE}
+    if [ $majr_version -eq 7 ]; then
+        sed -i '/M2Crypto==0.41.0/d' ${MPSERVERBASE}/apps/pyRequiredConsole.txt
+        ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt >> ${BUILD_LOG_FILE}
+        env SWIG_FEATURES="-cpperraswarn -includeall -D__`uname -m`__ -I/usr/include/openssl11" ${MPSERVERBASE}/env/server/bin/pip3 -q install M2Crypto==0.41.0
+    else
+        ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt >> ${BUILD_LOG_FILE}
+    fi
     deactivate
 fi
 
