@@ -34,7 +34,7 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client36/$DATETIME"
+BUILDROOT="/private/var/tmp/MP/Client"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
