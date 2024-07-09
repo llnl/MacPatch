@@ -128,11 +128,14 @@ class MPTaskJobs():
 				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsert('mdm_intune_corporate_devices',device,onlyData=True)
 			if i % 1000 == 0:
 				sqlInsertStr = sqlInsertStr + ";"
-				db.engine.execute(text(sqlInsertStr))
+				with db.engine.connect() as sql_con:
+					sql_con.execute(text(sqlInsertStr))
 				isFirst = True
 
 		sqlInsertStr = sqlInsertStr + ";"
-		db.engine.execute(text(sqlInsertStr))
+		with db.engine.connect() as sql_con:
+			sql_con.execute(text(sqlInsertStr))
+
 		db.session.commit()
 		log("[GetCorpDevices]: Stop Adding Rows")
 
@@ -182,11 +185,13 @@ class MPTaskJobs():
 				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsert('mdm_intune_devices_config_profiles',profile,onlyData=True)
 			if i % 1000 == 0:
 				sqlInsertStr = sqlInsertStr + ";"
-				db.engine.execute(text(sqlInsertStr))
+				with db.engine.connect() as sql_con:
+					sql_con.execute(text(sqlInsertStr))
 				isFirst = True
 
 		sqlInsertStr = sqlInsertStr + ";"
-		db.engine.execute(text(sqlInsertStr))
+		with db.engine.connect() as sql_con:
+			sql_con.execute(text(sqlInsertStr))
 		db.session.commit()
 		log("[GetDeviceConfigProfiles]: Stop Adding Rows")
 

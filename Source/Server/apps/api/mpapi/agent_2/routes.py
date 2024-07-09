@@ -690,9 +690,11 @@ class AgentUpdates():
 				INET_ATON(SUBSTRING_INDEX(CONCAT(agent_ver,'.0.0.0.0.0'),'.',6)) DESC,
 				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
 				"""
-		res = db.engine.execute(_sql).first()
-		if res is not None:
-			return res[0]
+		with db.engine.connect() as sql_con:
+			_res = sql_con.execute(_sql)
+			res = _res.mappings().first()
+			if res is not None:
+				return res
 
 		return None
 
@@ -706,9 +708,11 @@ class AgentUpdates():
 				INET_ATON(SUBSTRING_INDEX(CONCAT(agent_ver,'.0.0.0.0.0'),'.',6)) DESC,
 				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
 				"""
-		res = db.engine.execute(_sql).first()
-		if res is not None:
-			return res[0]
+		with db.engine.connect() as sql_con:
+			_res = sql_con.execute(_sql)
+			res = _res.mappings().first()
+			if res is not None:
+				return res
 
 		return None
 

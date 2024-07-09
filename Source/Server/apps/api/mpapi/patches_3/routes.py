@@ -109,20 +109,23 @@ class PatchGroupPatches(MPResource):
 							ap.supatchname = mpa.supatchname""")
 
 		results_pre = []
-		q_data = db.engine.execute(sql_str)
+		with db.engine.connect() as sql_con:
+			res = sql_con.execute(sql_str)
+			q_data = res.mappings().all()
 
-		if q_data.rowcount <= 0:
+		if len(q_data) <= 0:
 			return results_pre
 
 		# results from sqlalchemy are returned as a list of tuples; this procedure converts it into a list of dicts
-		for row_number, row in enumerate(q_data):
-			results_pre.append({})
-			for column_number, value in enumerate(row):
-				results_pre[row_number][list(row.keys())[column_number]] = value
+		#for row_number, row in enumerate(q_data):
+		#	results_pre.append({})
+		#	for column_number, value in enumerate(row):
+		#		results_pre[row_number][list(row.keys())[column_number]] = value
 
 		# set the reboot override
 		results = []
-		for row in results_pre:
+		#for row in results_pre:
+		for row in q_data:
 			if row["restartaction"] == 'NoRestart' and row['patch_reboot'] == 1:
 				row['restartaction'] = 'RequireRestart'
 			elif row["restartaction"] == 'RequireRestart' and row['patch_reboot'] == 0:

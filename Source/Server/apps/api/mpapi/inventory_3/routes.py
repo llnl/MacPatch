@@ -306,9 +306,12 @@ class Inventory:
 
 		# Get Tables
 		sqlStr = text("SHOW TABLES;")
-		result = db.engine.execute(sqlStr)
-		for (table_name,) in result:
-			_tables.append(table_name)
+		with db.engine.connect() as sql_con:
+			_res = sql_con.execute(sqlStr)
+			res = _res.mappings().all()
+			
+			for (table_name,) in res:
+				_tables.append(table_name)
 
 		return _tables
 
@@ -322,23 +325,25 @@ class Inventory:
 					  WHERE table_schema='""" + dbName + """' 
 					  AND table_name = '""" + tableName + """'
 					  """)
+		with db.engine.connect() as sql_con:
+			resultRaw = sql_con.execute(sqlStr)
+			result = resultRaw.mappings().all()
 
-		result = db.engine.execute(sqlStr)
-		for row in result:
-			tmp = {
-				'name': '',
-				'dataType': '',
-				'length': 0
-			}
-			tmp['name'] = row.COLUMN_NAME
-			tmp['dataType'] = row.DATA_TYPE
-			if row.NUMERIC_PRECISION is not None:
-				tmp['length'] = row.NUMERIC_PRECISION
+			for row in result:
+				tmp = {
+					'name': '',
+					'dataType': '',
+					'length': 0
+				}
+				tmp['name'] = row.COLUMN_NAME
+				tmp['dataType'] = row.DATA_TYPE
+				if row.NUMERIC_PRECISION is not None:
+					tmp['length'] = row.NUMERIC_PRECISION
 
-			if row.CHARACTER_MAXIMUM_LENGTH is not None:
-				tmp['length'] = row.CHARACTER_MAXIMUM_LENGTH
+				if row.CHARACTER_MAXIMUM_LENGTH is not None:
+					tmp['length'] = row.CHARACTER_MAXIMUM_LENGTH
 
-			columns.append(tmp)
+				columns.append(tmp)
 
 		return columns
 
@@ -467,8 +472,9 @@ class Inventory:
 		log_Debug(_sqlStrExec)
 
 		try:
-			result = db.engine.execute(_sqlStrExec)
-			return True
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStrExec)
+				return True
 
 		except OSError as err:
 			log_Error(format(err))
@@ -519,8 +525,9 @@ class Inventory:
 		log_Debug(_sqlStr)
 
 		try:
-			result = db.engine.execute(_sqlStr)
-			return True
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStr)
+				return True
 
 		except OSError as err:
 			log_Error(format(err))
@@ -571,8 +578,9 @@ class Inventory:
 		log_Debug(_sqlStr)
 
 		try:
-			result = db.engine.execute(_sqlStr)
-			return True
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStr)
+				return True
 
 		except OSError as err:
 			log_Error(format(err))
@@ -589,8 +597,9 @@ class Inventory:
 		log_Debug(_sqlStr)
 
 		try:
-			result = db.engine.execute(_sqlStr)
-			return True
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStr)
+				return True
 
 		except OSError as err:
 			log_Error(format(err))
@@ -625,8 +634,9 @@ class Inventory:
 		log_Debug(_sqlStr)
 
 		try:
-			result = db.engine.execute(_sqlStr)
-			return True
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStr)
+				return True
 
 		except OSError as err:
 			log_Error(format(err))
@@ -664,9 +674,10 @@ class Inventory:
 		log_Debug(_sqlStr)
 
 		try:
-			result = db.engine.execute(_sqlStr)
-			return True
-
+			with db.engine.connect() as sql_con:
+				sql_con.execute(_sqlStr)
+				return True
+			
 		except OSError as err:
 			log_Error(format(err))
 			return False

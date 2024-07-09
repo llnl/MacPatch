@@ -137,20 +137,22 @@ class PatchGroupPatches(MPResource):
 							ap.supatchname = mpa.supatchname""")
 
 		results_pre = []
-		q_data = db.engine.execute(sql_str)
+		with db.engine.connect() as sql_con:
+			res = sql_con.execute(sql_str)
+			q_data = res.mappings().all()
 
-		if q_data.rowcount <= 0:
+		if len(q_data) <= 0:
 			return results_pre
 
 		# results from sqlalchemy are returned as a list of tuples; this procedure converts it into a list of dicts
-		for row_number, row in enumerate(q_data):
-			results_pre.append({})
-			for column_number, value in enumerate(row):
-				results_pre[row_number][list(row.keys())[column_number]] = value
+		#for row_number, row in enumerate(q_data):
+		#	results_pre.append({})
+		#	for column_number, value in enumerate(row):
+		#		results_pre[row_number][list(row.keys())[column_number]] = value
 
 		# set the reboot override
 		results = []
-		for row in results_pre:
+		for row in q_data:
 			if row["restartaction"] == 'NoRestart' and row['patch_reboot'] == 1:
 				row['restartaction'] = 'RequireRestart'
 			elif row["restartaction"] == 'RequireRestart' and row['patch_reboot'] == 0:
@@ -260,9 +262,12 @@ class PatchGroupPatchesDyn(MPResource):
 		_patches_data = []
 
 		sql = text("SELECT * from combined_patches_view")
-		result = db.engine.execute(sql)
+		with db.engine.connect() as sql_con:
+			_result = sql_con.execute(sql)
+			result = _result.mappings().all()
+
 		for v in result:
-			_combined_patches.append(dict(v))
+			_combined_patches.append(v)
 
 		_q_apple_criteria = ApplePatchCriteria.query.all()
 		for c in _q_apple_criteria:

@@ -642,18 +642,22 @@ class AgentUpdates():
 	''' Get the RID of the latest updater agent update '''
 
 	def agentUpdaterUpdateID(self):
-		res = db.engine.execute("CALL AgentUpdateRID('update')").first()
-		if res is not None:
-			return res.rid
+		with db.engine.connect() as sql_con:
+			_res = sql_con.execute("CALL AgentUpdateRID('update')")
+			res = _res.mappings().first()
+			if res is not None:
+				return res['rid']
 
 		return None
 
 	''' Get the RID of the latest agent update '''
 
 	def agentUpdateID(self):
-		res = db.engine.execute("CALL AgentUpdateRID('app')").first()
-		if res is not None:
-			return res.rid
+		with db.engine.connect() as sql_con:
+			_res = sql_con.execute("CALL AgentUpdateRID('app')")
+			res = _res.mappings().first()
+			if res is not None:
+				return res['rid']
 
 		return None
 
