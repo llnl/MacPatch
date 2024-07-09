@@ -1,7 +1,7 @@
 #!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
-    Copyright (c) 2018, Lawrence Livermore National Security, LLC.
+    Copyright (c) 2024, Lawrence Livermore National Security, LLC.
     Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
     Written by Charles Heizer <heizer1 at llnl.gov>.
     LLNL-CODE-636469 All rights reserved.
@@ -25,7 +25,12 @@
 
 '''
     Script: MPInventory.py
-    Version: 1.7.1
+    Version: 1.7.2
+    History:
+
+    1.7.1: Base
+    1.7.2: Updated to support new dotfile config
+
 '''
 
 import logging
@@ -37,17 +42,14 @@ import time
 import glob
 import json
 import pprint
-import re
 import mysql.connector as mydb
 from datetime import datetime
-from urllib.parse import urlparse
-import xml.etree.ElementTree as ET
 from uuid import UUID
 import shutil
 import json
 import os.path
-import platform
 
+from dotenv import load_dotenv
 from multiprocessing import Pool
 
 gDebug = False
@@ -68,25 +70,10 @@ myConfig = {
 logger        = logging.getLogger('MPInventory')
 
 MP_SRV_BASE   = "/opt/MacPatch/Server"
-MP_FLASK_FILE = MP_SRV_BASE+"/apps/config.cfg"
+MP_FLASK_FILE = MP_SRV_BASE+"/apps/.mpglobal"
 logFile       = MP_SRV_BASE+"/logs/MPInventory.log"
 invFilesDir   = MP_SRV_BASE+"/InvData/files"
 confFile      = MP_SRV_BASE+"/etc/siteconfig.json"
-
-# ----------------------------------------------------------------------------
-# Read flask config data from file
-# ----------------------------------------------------------------------------
-
-def read_config_file(file_path):
-    config = {}
-    with open(file_path) as f:
-        lines = (line.rstrip() for line in f)
-        for l in lines:
-            if l.rstrip():
-                if l.startswith("#") == False:
-                    config[l.split('=')[0].strip()] = l.split('=')[1].strip().replace("'","")
-
-    return config
 
 # --------------------------------------------
 # Define Classes
@@ -942,7 +929,6 @@ def main():
     '''Main command processing'''
     parser = argparse.ArgumentParser(description='Process some args.')
     parser.add_argument('--config', help="Flask Global config file", required=False, default=None)
-    parser.add_argument('--config-old', help="SiteConfig.json file", required=False, default=None)
     parser.add_argument('--debug', help='Set log level to debug', action='store_true')
     parser.add_argument('--files', help="JSON files to process", required=True)
     parser.add_argument('--save', help='Saves JSON files', action='store_true')
@@ -970,77 +956,32 @@ def main():
         print("%s" % e)
         sys.exit(1)
 
-    # Make Sure the Config Exists
-    useOldConfig=False
-    confData = []
-    confFile = None
-    if args.config_old:
-        if not os.path.exists(args.config_old):
-            print("Unable to open " + args.config_old +". File not found.")
+    
+    # Parse Config
+    if args.config:
+        if not os.path.exists(MP_FLASK_FILE):
+            print("Unable to open " + MP_FLASK_FILE +". File not found.")
             sys.exit(1)
         else:
-            confFile = MP_FLASK_FILE
-            with open(confFile) as data_file:
-                confData = json.load(data_file)
+            load_dotenv(MP_FLASK_FILE, override=True)
 
-            _cnf = None
-            if 'prod' in confData['settings']['database']:
-                _cnf = confData['settings']['database']['prod']
-                # pprint.pprint(_cnf)
-            else:
-                raise ValueError("Error, prod was not defined in db config")
-                return None
-
-            if 'dbName' in _cnf:
-                myConfig['database'] = _cnf['dbName']
-            else:
-                raise ValueError("Error, config missing key.")
-
-            if 'dbHost' in _cnf:
-                myConfig['host'] = _cnf['dbHost']
-            else:
-                raise ValueError("Error, config missing key.")
-
-            if 'dbPort' in _cnf:
-                myConfig['port'] = int(_cnf['dbPort'])
-            else:
-                raise ValueError("Error, config missing key.")
-
-            if 'username' in _cnf:
-                myConfig['user'] = _cnf['username']
-            else:
-                raise ValueError("Error, config missing key.")
-
-            if 'password' in _cnf:
-                myConfig['password'] = _cnf['password']
-            else:
-                raise ValueError("Error, config missing key.")
-
-    elif args.config:
-        if not os.path.exists(args.config):
-            print("Unable to open " + args.config +". File not found.")
-            sys.exit(1)
-        else:
-            confFile = MP_FLASK_FILE
-            confData = read_config_file(confFile)
-
-            if 'DB_NAME' in confData:
-                myConfig['database'] = confData['DB_NAME']
+            if 'DB_NAME' in os.environ:
+                myConfig['database'] = os.environ.get('DB_NAME')
             else:
                 raise ValueError("Error, config missing key DB_NAME.")
 
-            if 'DB_HOST' in confData:
-                myConfig['host'] = confData['DB_HOST']
+            if 'DB_HOST' in os.environ:
+                myConfig['host'] = os.environ.get('DB_HOST')
             else:
                 raise ValueError("Error, config missing key DB_HOST.")
 
-            if 'DB_USER' in confData:
-                myConfig['user'] = confData['DB_USER']
+            if 'DB_USER' in os.environ:
+                myConfig['user'] = os.environ.get('DB_USER')
             else:
                 raise ValueError("Error, config missing key DB_USER.")
 
-            if 'DB_PASS' in confData:
-                myConfig['password'] = confData['DB_PASS']
+            if 'DB_PASS' in os.environ:
+                myConfig['password'] = os.environ.get('DB_PASS')
             else:
                 raise ValueError("Error, config missing key DB_PASS.")
 
