@@ -73,7 +73,7 @@ while getopts "ach" opt; do
 done
 
 if [ "$APPSDIR" = false ] && [ "$CONFDIR" = false ]; then
-	echo "Script requires at least 1 argument, -a or -c.
+	echo "Script requires at least 1 argument, -a or -c."
 	exit 1
 fi
 
