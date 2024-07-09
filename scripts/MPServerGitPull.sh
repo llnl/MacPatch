@@ -101,7 +101,7 @@ fi
 # Backup
 # ----------------------------------------------------------------------------
 # 1) Shutdown all services
-$MPSERVERBASE/conf/scripts/setup/ServerSetup.py --unload All
+$MPSERVERBASE/conf/scripts/setup/ServerSetup.py --service All -a stop
 
 if $APPSDIR; then
 	# Copy app config files
@@ -168,4 +168,4 @@ if $CONFDIR; then
 fi
 
 # Start Services
-$MPSERVERBASE/conf/scripts/setup/ServerSetup.py --load All
+$MPSERVERBASE/conf/scripts/setup/ServerSetup.py --service All -a start
