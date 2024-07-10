@@ -2,6 +2,7 @@ from werkzeug.utils import secure_filename
 from flask import request, abort, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 from datetime import datetime
 from distutils.version import LooseVersion
 import sys
@@ -643,7 +644,7 @@ class AgentUpdates():
 
 	def agentUpdaterUpdateID(self):
 		with db.engine.connect() as sql_con:
-			_res = sql_con.execute("CALL AgentUpdateRID('update')")
+			_res = sql_con.execute(text("CALL AgentUpdateRID('update')"))
 			res = _res.mappings().first()
 			if res is not None:
 				return res['rid']
@@ -654,7 +655,7 @@ class AgentUpdates():
 
 	def agentUpdateID(self):
 		with db.engine.connect() as sql_con:
-			_res = sql_con.execute("CALL AgentUpdateRID('app')")
+			_res = sql_con.execute(text("CALL AgentUpdateRID('app')"))
 			res = _res.mappings().first()
 			if res is not None:
 				return res['rid']

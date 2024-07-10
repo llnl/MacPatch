@@ -1,6 +1,7 @@
 from flask import request, abort, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import text
 from distutils.version import LooseVersion, StrictVersion
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -691,7 +692,7 @@ class AgentUpdates():
 				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
 				"""
 		with db.engine.connect() as sql_con:
-			_res = sql_con.execute(_sql)
+			_res = sql_con.execute(text(_sql))
 			res = _res.mappings().first()
 			if res is not None:
 				return res
@@ -709,7 +710,7 @@ class AgentUpdates():
 				INET_ATON(SUBSTRING_INDEX(CONCAT(build,'.0.0.0.0.0'),'.',6)) DESC
 				"""
 		with db.engine.connect() as sql_con:
-			_res = sql_con.execute(_sql)
+			_res = sql_con.execute(text(_sql))
 			res = _res.mappings().first()
 			if res is not None:
 				return res

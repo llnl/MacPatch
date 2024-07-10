@@ -1,6 +1,6 @@
 from flask import request, current_app
 from flask_restful import reqparse
-from sqlalchemy import text
+from sqlalchemy import text, inspect
 from sqlalchemy.exc import IntegrityError
 from uuid import UUID
 import datetime
@@ -305,13 +305,8 @@ class Inventory:
 		_tables = []
 
 		# Get Tables
-		sqlStr = text("SHOW TABLES;")
-		with db.engine.connect() as sql_con:
-			_res = sql_con.execute(sqlStr)
-			res = _res.mappings().all()
-			
-			for (table_name,) in res:
-				_tables.append(table_name)
+		insp = inspect(db.engine)
+		_tables = insp.get_table_names()
 
 		return _tables
 
@@ -473,7 +468,7 @@ class Inventory:
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStrExec)
+				sql_con.execute(text(_sqlStrExec))
 				return True
 
 		except OSError as err:
@@ -526,7 +521,7 @@ class Inventory:
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStr)
+				sql_con.execute(text(_sqlStr))
 				return True
 
 		except OSError as err:
@@ -579,7 +574,7 @@ class Inventory:
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStr)
+				sql_con.execute(text(_sqlStr))
 				return True
 
 		except OSError as err:
@@ -593,12 +588,12 @@ class Inventory:
 
 	def removeKeyData(self, tableName, keyVal):
 
-		_sqlStr = "Delete from %s where cuuid = '%s'" % (str(tableName), str(keyVal))
+		_sqlStr = f"Delete from {str(tableName)} where cuuid = '{str(keyVal)}';"
 		log_Debug(_sqlStr)
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStr)
+				sql_con.execute(text(_sqlStr))
 				return True
 
 		except OSError as err:
@@ -613,12 +608,12 @@ class Inventory:
 	def updateRowData(self,tableName,keyVal,mdate,row):
 
 		_sqlArr = []
-		_sqlStrPre = "UPDATE %s SET" % tableName
-		_sqlStrPst = "WHERE cuuid='%s'" % keyVal
+		_sqlStrPre = f"UPDATE {tableName} SET"
+		_sqlStrPst = f"WHERE cuuid='{keyVal}'"
 		_sqlStr = ''
 
 		# Add mdate first
-		_str = "mdate='%s'" % mdate
+		_str = f"mdate='{mdate}'" 
 		_sqlArr.append(_str)
 
 		# Loop through and add the rest
@@ -626,16 +621,16 @@ class Inventory:
 			if key == "rid" or key == "cuuid":
 				continue
 			else:
-				_str = "%s='%s'" % (key, value)
+				_str = f"{key}='{value}'"
 				_sqlArr.append(_str)
 
 		# Build the SQL string
-		_sqlStr = "%s %s %s;" %(_sqlStrPre,','.join(_sqlArr),_sqlStrPst)
+		_sqlStr = f"{_sqlStrPre} {','.join(_sqlArr)} {_sqlStrPst};"
 		log_Debug(_sqlStr)
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStr)
+				sql_con.execute(text(_sqlStr))
 				return True
 
 		except OSError as err:
@@ -651,7 +646,7 @@ class Inventory:
 
 		_sqlArrCol = []
 		_sqlArrVal = []
-		_sqlStrPre = "INSERT INTO %s" % tableName
+		_sqlStrPre = f"INSERT INTO {tableName}"
 		_sqlStr = ''
 
 		# Add the client id, mdate to the row
@@ -664,7 +659,7 @@ class Inventory:
 			if key == 'rid':
 				continue
 			else:
-				_colStr = "`%s`" % (key)
+				_colStr = f"`{key}`"
 				_sqlArrCol.append(_colStr)
 				_valStr = "'%s'" % (value.replace("'", "\\'"))
 				_sqlArrVal.append(_valStr)
@@ -675,7 +670,7 @@ class Inventory:
 
 		try:
 			with db.engine.connect() as sql_con:
-				sql_con.execute(_sqlStr)
+				sql_con.execute(text(_sqlStr))
 				return True
 			
 		except OSError as err:
