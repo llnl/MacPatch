@@ -1,7 +1,7 @@
 //
 //  MPNetworkUtils.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -41,7 +41,6 @@
 #define ql_component lcl_cMPNetUtils
 
 #define DEFAULT_TIMEOUT 3
-static int isalive(struct sockaddr_in scanaddr);
 
 @interface MPNetworkUtils()
 
@@ -50,53 +49,6 @@ static int isalive(struct sockaddr_in scanaddr);
 @implementation MPNetworkUtils
 
 @synthesize hostConfig;
-
-static int isalive(struct sockaddr_in scanaddr)
-{
-    short int sock;          /* our main socket */
-    long arg;                /* for non-block */
-    fd_set wset;             /* file handle for bloc mode */
-    struct timeval timeout;  /* timeout struct for connect() */
-    
-    sock = socket(AF_INET, SOCK_STREAM, 0);
-    
-    if( (arg = fcntl(sock, F_GETFL, NULL)) < 0) { 
-        fprintf(stderr,"Error fcntl(..., F_GETFL) (%s)\n",strerror(errno));
-        return 1;
-    }
-    
-    arg |= O_NONBLOCK;
-    if(fcntl(sock, F_SETFL, arg) < 0) {
-        fprintf(stderr,"Error fcntl(..., F_SETFL)  (%s)\n",strerror(errno));
-        return 1;
-    }
-    
-    /* 
-     * set result stat then try a select if it can take
-     * awhile. This is dirty but works 
-     */
-    int res = connect(sock,(struct sockaddr *)&scanaddr, sizeof(scanaddr));
-    
-    if (res < 0) {
-        if (errno == EINPROGRESS) {
-            timeout.tv_sec = DEFAULT_TIMEOUT;
-            timeout.tv_usec = 0;
-            FD_ZERO(&wset);
-            FD_SET(sock, &wset);
-            int rc = select(sock + 1, NULL, &wset, NULL, &timeout);
-            
-            /* This works great on dead hosts */
-            if (rc == 0 && errno != EINTR) {
-                //printf("Error connecting\n");
-                close (sock);
-                return 1;
-            }
-        }
-    }
-    
-    close(sock);
-    return 0;
-}
 
 static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
 {
@@ -289,7 +241,6 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
             goto done;
         }
         
-        // isalive(address)
         if (isAliveWithTimeout(address, aTimeout)) {
             result = NO;
             goto done;

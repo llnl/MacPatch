@@ -2,7 +2,7 @@
 //  MPSoftware.m
 //  MPLibrary
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -166,6 +166,39 @@
 		}
 		
 	}
+    else if ([pkgType isEqualToString:@"PACKAGE"])
+    {
+        if (![fm fileExistsAtPath:dlSoftwareFile]) {
+            qlinfo(@"Need to download software task %@",swTask[@"id"]);
+            [self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+        }
+        
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        qlinfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
+        qlinfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
+        if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
+        {
+            qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+            return 1;
+        }
+        
+        // Run Pre Install Script
+        if ([self runInstallScript:[swTask objectForKey:@"Software"] type:0] == NO) {
+            result = 1;
+            return result;
+        }
+        
+        MPInstaller *installer = [MPInstaller new];
+        result = [installer installPkgFromPath:dlSoftwareFile environment:swTask[@"pkgEnv"]];
+        // Run Post Install Script, if copy was good
+        if (result == 0)
+        {
+            if ([self runInstallScript:[swTask objectForKey:@"Software"] type:1] == NO) {
+                qlerror(@"Error running post install script. Just log it as the install was good.");
+            }
+        }
+        
+    }
 	else if ([pkgType isEqualToString:@"APPZIP"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {

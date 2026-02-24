@@ -2,7 +2,7 @@
 //  main.m
 //  MPUpdater
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -31,7 +31,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.7.0.1"
+#define APPVERSION	@"4.0.0.1"
 #define APPNAME		@"MPUpdater"
 
 void usage(void);

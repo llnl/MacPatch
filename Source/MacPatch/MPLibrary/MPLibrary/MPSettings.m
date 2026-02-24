@@ -2,7 +2,7 @@
 //  MPSettings.m
 //  MPLibrary
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,6 +25,8 @@
  */
 
 #import "MPSettings.h"
+static const void *kMPSettingsMutationQueueKey = &kMPSettingsMutationQueueKey;
+
 #import <IOKit/IOKitLib.h>
 
 #import "Agent.h"
@@ -39,7 +41,9 @@
 #undef  ql_component
 #define ql_component lcl_cMPSettings
 
-static MPSettings *_instance;
+static MPSettings *_instance = nil; 
+static dispatch_once_t _onceToken;
+static dispatch_queue_t _settingsQueue = NULL;
 
 @interface MPSettings ()
 
@@ -57,6 +61,8 @@ static MPSettings *_instance;
 @property (nonatomic, strong, readwrite) NSArray *servers;
 @property (nonatomic, strong, readwrite) NSArray *suservers;
 @property (nonatomic, strong, readwrite) NSArray *tasks;
+
+@property (nonatomic, strong) dispatch_queue_t mutationQueue;
 
 @end
 
@@ -79,28 +85,28 @@ static MPSettings *_instance;
 
 + (MPSettings *)sharedInstance
 {
-    @synchronized(self)
-    {
-        if (_instance == nil)
-		{
-            _instance = [[super allocWithZone:NULL] init];
-            _instance = [[MPSettings alloc] init];
-            // Perform other initialisation...
-            _instance.fm = [NSFileManager defaultManager];
-            
-            // Set Permissions on db file
-            NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
-            [dict setObject:[NSNumber numberWithInt:511] forKey:NSFilePosixPermissions];
-            NSError *error = nil;
-            [_instance.fm setAttributes:dict ofItemAtPath:MP_AGENT_SETTINGS error:&error];
-            [_instance setCcuid:[_instance clientIDStr]];
-            [_instance setClientID:_instance.ccuid];
-            [_instance setSerialno:[_instance clientSerialNumber]];
-            [_instance collectOSInfo];
-            [_instance settings];
-			[_instance collectAgentVersionData];
+    dispatch_once(&_onceToken, ^{
+        _instance = [[super allocWithZone:NULL] init];
+        // Initialize
+        _instance.fm = [NSFileManager defaultManager];
+        {
+            dispatch_queue_t q = dispatch_queue_create("gov.llnl.mp.lib.settings", DISPATCH_QUEUE_SERIAL);
+            dispatch_queue_set_specific(q, kMPSettingsMutationQueueKey, (void *)kMPSettingsMutationQueueKey, NULL);
+            _instance.mutationQueue = q;
         }
-    }
+        _settingsQueue = _instance.mutationQueue;
+        // Set Permissions on db file
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc] init];
+        dict[NSFilePosixPermissions] = @511; // 0777
+        NSError *error = nil;
+        [_instance.fm setAttributes:dict ofItemAtPath:MP_AGENT_SETTINGS error:&error];
+        [_instance setCcuid:[_instance clientIDStr]];
+        [_instance setClientID:_instance.ccuid];
+        [_instance setSerialno:[_instance clientSerialNumber]];
+        [_instance collectOSInfo];
+        (void)[_instance settings];
+        [_instance collectAgentVersionData];
+    });
     return _instance;
 }
 
@@ -119,39 +125,55 @@ static MPSettings *_instance;
 #pragma mark - Public
 - (BOOL)refresh
 {
-    return [self settings];
+    __block BOOL ok = NO;
+    if (dispatch_get_specific(kMPSettingsMutationQueueKey)) {
+        ok = [self settings];
+    } else {
+        dispatch_sync(_settingsQueue, ^{
+            ok = [self settings];
+        });
+    }
+    return ok;
 }
 
 - (BOOL)settings
 {
-    NSDictionary *_settings;
-    
-    if (![fm fileExistsAtPath:MP_AGENT_SETTINGS])
-    {
-        // No Settings File, need to download and create
-        _settings = [self allSettingsFromServer:YES];
-        qlinfo(@"Writing new agent settings to disk.");
-        
-        if ([fm isWritableFileAtPath:[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]]) {
-            [_settings writeToFile:MP_AGENT_SETTINGS atomically:YES];
-        } else {
-            qlerror(@"Unable to write file to %@",[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]);
-            return NO;
+    __block BOOL success = YES;
+    void (^work)(void) = ^{
+        NSDictionary *_settings;
+        if (![self->fm fileExistsAtPath:MP_AGENT_SETTINGS])
+        {
+            _settings = [self allSettingsFromServer:YES];
+            qlinfo(@"Writing new agent settings to disk.");
+            if ([self->fm isWritableFileAtPath:[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]]) {
+                [_settings writeToFile:MP_AGENT_SETTINGS atomically:YES];
+            } else {
+                qlerror(@"Unable to write file to %@",[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]);
+                success = NO;
+                return;
+            }
         }
+        else
+        {
+            _settings = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+        }
+        // Build immutable snapshots
+        Agent *newAgent = [[Agent alloc] initWithDictionary:_settings[@"settings"][@"agent"][@"data"]];
+        NSArray *newServers = [[self serversFromDictionary:_settings[@"settings"][@"servers"]] copy];
+        NSArray *newSUServers = [[self suServersFromDictionary:_settings[@"settings"][@"suservers"]] copy];
+        NSArray *newTasks = [_settings[@"settings"][@"tasks"][@"data"] copy];
+        self->agent = newAgent;
+        self->servers = newServers;
+        self->suservers = newSUServers;
+        self->tasks = newTasks;
+        [self collectAgentVersionData];
+    };
+    if (dispatch_get_specific(kMPSettingsMutationQueueKey)) {
+        work();
+    } else {
+        dispatch_sync(_settingsQueue, work);
     }
-    else
-    {
-        _settings = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-    }
-    
-    self.agent      = [[Agent alloc] initWithDictionary:_settings[@"settings"][@"agent"][@"data"]];
-    self.servers    = [self serversFromDictionary:_settings[@"settings"][@"servers"]];
-    self.suservers  = [self suServersFromDictionary:_settings[@"settings"][@"suservers"]];
-    self.tasks      = [self tasksFromDictionary:_settings[@"settings"][@"tasks"]];
-	
-	[self collectAgentVersionData];
-    
-    return YES;
+    return success;
 }
 
 - (NSDictionary *)settingsRevisionsFromServer:(BOOL)useAgentPlist
@@ -211,123 +233,149 @@ static MPSettings *_instance;
 
 - (BOOL)compareAndUpdateSettings:(NSDictionary *)remoteSettingsRevs
 {
-	[self refresh];
-	
-    NSDictionary *local = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-    NSDictionary *localRevs = local[@"revs"];
-	NSString *localID = self.agent.groupId;
-	NSString *remoteID = @"";
-	NSDictionary *remoteRevs = remoteSettingsRevs[@"revs"];
-	if (!remoteSettingsRevs) {
-		qlerror(@"Unable to obtain remote data. Network connection may be down.");
-		return NO;
-	}
-	
-    if ([localRevs isEqualToDictionary:remoteRevs])
-	{
-        qldebug(@"Setting Revisions did match.");
-        return YES;
+    __block BOOL ok = YES;
+    void (^work)(void) = ^{
+        [self refresh];
+        
+        NSDictionary *local = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+        NSDictionary *localRevs = local[@"revs"];
+        NSString *localID = self.agent.groupId;
+        NSString *remoteID = @"";
+        NSDictionary *remoteRevs = remoteSettingsRevs[@"revs"];
+        if (!remoteSettingsRevs) {
+            qlerror(@"Unable to obtain remote data. Network connection may be down.");
+            ok = NO;
+            return;
+        }
+        
+        if ([localRevs isEqualToDictionary:remoteRevs])
+        {
+            qldebug(@"Setting Revisions did match.");
+            ok = YES;
+        } else {
+            qlinfo(@"Setting Revisions did not match. Updating settings.");
+            qlinfo(@"localRevs: %@",localRevs);
+            qlinfo(@"remoteSettingsRevs: %@",remoteRevs);
+            NSDictionary *remoteSettings = [self allSettingsFromServer:NO];
+            
+            if (!remoteSettingsRevs[@"id"]) {
+                remoteID = remoteSettings[@"settings"][@"agent"][@"data"][@"client_group_id"];
+            } else {
+                remoteID = remoteSettingsRevs[@"id"];
+            }
+            
+            if (![localID isEqualToString:remoteID])
+            {
+                // Update all, group id does not match
+                qlinfo(@"Client group has been changed. Update all settings.");
+                localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0,@"swrestrictions":@0};
+            }
+            
+            if ([[remoteRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
+                // Usdate Agent Settings
+                qlinfo(@"Update Agent Settings, settings did not match.");
+                [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];
+            }
+            if ([[remoteRevs objectForKey:@"servers"] intValue] != [[localRevs objectForKey:@"servers"] intValue]) {
+                // Usdate Servers
+                qlinfo(@"Update Agent Servers, servers did not match.");
+                // Massage data before entering it in to the plist
+                NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
+                [self updateSettingsUsingKey:@"servers" settings:d];
+            }
+            if ([[remoteRevs objectForKey:@"suservers"] intValue] != [[localRevs objectForKey:@"suservers"] intValue]) {
+                // Usdate SUServers
+                qlinfo(@"Update Agent SUServers, SUServers did not match.");
+                [self updateSettingsUsingKey:@"suservers" settings:remoteSettings[@"settings"][@"suservers"]];
+            }
+            if ([[remoteRevs objectForKey:@"tasks"] intValue] != [[localRevs objectForKey:@"tasks"] intValue]) {
+                // Usdate Tasks
+                qlinfo(@"Update Agent tasks, tasks did not match.");
+                [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
+            }
+            if ([[remoteRevs objectForKey:@"swrestrictions"] isEqualTo:[self readSoftwareRestrictionRevisionFromFile]]) {
+                // Usdate Tasks
+                qlinfo(@"Update Software restrictions, restrictions did not match.");
+                [self writeNewSoftwareRestritionsFile];
+                
+                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+                [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
+                [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+            }
+            qlinfo(@"Setting have been updated.");
+            ok = YES;
+        }
+    };
+    if (dispatch_get_specific(kMPSettingsMutationQueueKey)) {
+        work();
     } else {
-        qlinfo(@"Setting Revisions did not match. Updating settings.");
-		qlinfo(@"localRevs: %@",localRevs);
-		qlinfo(@"remoteSettingsRevs: %@",remoteRevs);
-        NSDictionary *remoteSettings = [self allSettingsFromServer:NO];
-		
-		if (!remoteSettingsRevs[@"id"]) {
-			remoteID = remoteSettings[@"settings"][@"agent"][@"data"][@"client_group_id"];
-		} else {
-			remoteID = remoteSettingsRevs[@"id"];
-		}
-		
-		if (![localID isEqualToString:remoteID])
-		{
-			// Update all, group id does not match
-			qlinfo(@"Client group has been changed. Update all settings.");
-			localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0,@"swrestrictions":@0};
-		}
-		
-        if ([[remoteRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
-            // Usdate Agent Settings
-            qlinfo(@"Update Agent Settings, settings did not match.");
-            [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];
-        }
-        if ([[remoteRevs objectForKey:@"servers"] intValue] != [[localRevs objectForKey:@"servers"] intValue]) {
-            // Usdate Servers
-            qlinfo(@"Update Agent Servers, servers did not match.");
-			// Massage data before entering it in to the plist
-			NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
-			[self updateSettingsUsingKey:@"servers" settings:d];
-        }
-        if ([[remoteRevs objectForKey:@"suservers"] intValue] != [[localRevs objectForKey:@"suservers"] intValue]) {
-            // Usdate SUServers
-            qlinfo(@"Update Agent SUServers, SUServers did not match.");
-            [self updateSettingsUsingKey:@"suservers" settings:remoteSettings[@"settings"][@"suservers"]];
-        }
-        if ([[remoteRevs objectForKey:@"tasks"] intValue] != [[localRevs objectForKey:@"tasks"] intValue]) {
-            // Usdate Tasks
-            qlinfo(@"Update Agent tasks, tasks did not match.");
-            [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
-        }
-		if ([[remoteRevs objectForKey:@"swrestrictions"] intValue] != [[self readSoftwareRestrictionRevisionFromFile] intValue]) {
-			// Usdate Tasks
-			qlinfo(@"Update Software restrictions, restrictions did not match.");
-			[self writeNewSoftwareRestritionsFile];
-		}
-        qlinfo(@"Setting have been updated.");
+        dispatch_sync(_settingsQueue, work);
     }
-    
-    return YES;
+    return ok;
 }
 
 - (void)updateSettingsUsingKey:(NSString *)key settings:(NSDictionary *)agentSettings
 {
-	if (agentSettings)
-	{
-		NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-		[dict[@"settings"] setObject:agentSettings forKey:key];
-		[dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
-		[dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
-	}
-	else
-	{
-		qlerror(@"Unable to update setting for key \"%@\", value was null.",key);
-	}
+    if (agentSettings)
+    {
+        if (dispatch_get_specific(kMPSettingsMutationQueueKey)) {
+            NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+            [dict[@"settings"] setObject:agentSettings forKey:key];
+            [dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
+            [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+        } else {
+            dispatch_sync(_settingsQueue, ^{
+                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+                [dict[@"settings"] setObject:agentSettings forKey:key];
+                [dict[@"revs"] setObject:agentSettings[@"rev"] forKey:key];
+                [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+            });
+        }
+    }
+    else
+    {
+        qlerror(@"Unable to update setting for key \"%@\", value was null.",key);
+    }
 }
 
 #pragma mark - Private
 
-- (NSString *)getIOPlatformAttributeForKey:(CFStringRef)key
-{
-	io_service_t service;
-
-	if (@available(macOS 12.0, *)) {
-		service = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
-	} else {
-		// Fallback on earlier versions
-		service = IOServiceGetMatchingService(kIOMasterPortDefault, IOServiceMatching("IOPlatformExpertDevice"));
-	}
-	if (!service)
-	{
-		qlerror(@"Couldn't get IO service to query for key (%@).", key);
-		return nil;
-	}
-
-	NSString *result = (__bridge_transfer NSString *)IORegistryEntryCreateCFProperty(service, key, kCFAllocatorDefault, 0);
-	IOObjectRelease(service);
-
-	return result;
-}
-
 - (NSString *)clientIDStr
 {
-	// Old Code for UUID Still Commented in MPAgent.m
-	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformUUIDKey)];
+    NSString *result = NULL;
+    io_struct_inband_t iokit_entry;
+    uint32_t bufferSize = 4096; // this signals the longest entry we will take
+    io_registry_entry_t ioRegistryRoot = IORegistryEntryFromPath(kIOMasterPortDefault, "IOService:/");
+    IORegistryEntryGetProperty(ioRegistryRoot, kIOPlatformUUIDKey, iokit_entry, &bufferSize);
+    result = [NSString stringWithCString:iokit_entry encoding:NSASCIIStringEncoding];
+    
+    IOObjectRelease((unsigned int) iokit_entry);
+    IOObjectRelease(ioRegistryRoot);
+    
+    return result;
 }
 
 - (NSString *)clientSerialNumber
 {
-	// Old Code for SN Still Commented in MPAgent.m
-	return [self getIOPlatformAttributeForKey: CFSTR(kIOPlatformSerialNumberKey)];
+    NSString *result = nil;
+    
+    io_registry_entry_t rootEntry = IORegistryEntryFromPath( kIOMasterPortDefault, "IOService:/" );
+    CFTypeRef serialAsCFString = NULL;
+    
+    serialAsCFString = IORegistryEntryCreateCFProperty( rootEntry,
+                                                       CFSTR(kIOPlatformSerialNumberKey),
+                                                       kCFAllocatorDefault,
+                                                       0);
+    
+    IOObjectRelease( rootEntry );
+    if (serialAsCFString == NULL) {
+        result = @"NA";
+    } else {
+        result = [NSString stringWithFormat:@"%@",(__bridge NSString *)serialAsCFString];
+        CFRelease(serialAsCFString);
+    }
+    
+    return result;
 }
 
 - (void)collectOSInfo
@@ -370,35 +418,32 @@ static MPSettings *_instance;
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
 {
     MPServerPing *ping = [MPServerPing new];
-	NSMutableArray *_srvs = [NSMutableArray new];
-	NSMutableArray *_srvsRaw = [NSMutableArray new];
-	NSArray *_raw_srvs = settings[@"data"];
-	
-	NSDictionary *_master = nil;
-	NSDictionary *_proxy = nil;
-	
-	for (NSDictionary *_srv in _raw_srvs)
-	{
-		if ([_srv[@"serverType"] integerValue] == 0) {
+    NSMutableArray *_srvs = [NSMutableArray new];
+    NSMutableArray *_srvsRaw = [NSMutableArray new];
+    NSArray *_raw_srvs = settings[@"data"];
+    
+    NSDictionary *_master = nil;
+    NSDictionary *_proxy = nil;
+    
+    for (NSDictionary *_srv in _raw_srvs)
+    {
+        if ([_srv[@"serverType"] integerValue] == 0) {
             _master = [_srv copy];
-			continue;
-		}
-		
-		if ([_srv[@"serverType"] integerValue] == 2) {
+            continue;
+        }
+        
+        if ([_srv[@"serverType"] integerValue] == 2) {
             if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
                 _proxy = [_srv copy];
             }
-			continue;
-		}
+            continue;
+        }
         
         if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
             [_srvsRaw addObject:[_srv copy]];
         }
-	}
-	
-	// Randomize the array of servers
-	//_srvsRaw = [[self randomizeArray:_srvsRaw] mutableCopy];
-
+    }
+    
     if (_srvsRaw.count >= 1) {
         if (_master) {
             if ([ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]]) {
@@ -417,9 +462,9 @@ static MPSettings *_instance;
         [_srvs addObject:[[Server alloc] initWithDictionary:_master]];
         qlerror(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
     }
-	
-	// Now we just read the plist, it's server list is randomized on version rev
-	return (NSArray *)_srvs;
+    
+    // Now we just read the plist, it's server list is randomized on version rev
+    return (NSArray *)_srvs;
 }
 
 
@@ -430,55 +475,55 @@ static MPSettings *_instance;
 /// @param settings servers dictionary
 - (NSDictionary *)serverSettingsFromDictionary:(NSDictionary *)settings
 {
-	NSMutableDictionary *_newSettings = [NSMutableDictionary dictionaryWithDictionary:settings];
-	NSMutableArray *_srvs = [NSMutableArray new];
-	NSArray *_raw_srvs = settings[@"data"];
-	
-	NSDictionary *_master = nil;
-	NSDictionary *_proxy = nil;
-	
-	for (NSDictionary *_srv in _raw_srvs)
-	{
-		if ([_srv[@"serverType"] integerValue] == 0) {
-			_master = [_srv copy];
-			continue;
-		}
-		
-		if ([_srv[@"serverType"] integerValue] == 2) {
-			_proxy = [_srv copy];
-			continue;
-		}
-		
-		[_srvs addObject:[_srv copy]];
-	}
-	
-	_srvs = [[self randomizeArray:_srvs] mutableCopy]; // Randomize the array of servers
-	if (_master) [_srvs addObject:_master]; // Add the master
-	if (_proxy) [_srvs addObject:_proxy]; // Add the proxy
-	
-	_newSettings[@"data"] = _srvs;
-	return _newSettings;
+    NSMutableDictionary *_newSettings = [NSMutableDictionary dictionaryWithDictionary:settings];
+    NSMutableArray *_srvs = [NSMutableArray new];
+    NSArray *_raw_srvs = settings[@"data"];
+    
+    NSDictionary *_master = nil;
+    NSDictionary *_proxy = nil;
+    
+    for (NSDictionary *_srv in _raw_srvs)
+    {
+        if ([_srv[@"serverType"] integerValue] == 0) {
+            _master = [_srv copy];
+            continue;
+        }
+        
+        if ([_srv[@"serverType"] integerValue] == 2) {
+            _proxy = [_srv copy];
+            continue;
+        }
+        
+        [_srvs addObject:[_srv copy]];
+    }
+    
+    _srvs = [[self randomizeArray:_srvs] mutableCopy]; // Randomize the array of servers
+    if (_master) [_srvs addObject:_master]; // Add the master
+    if (_proxy) [_srvs addObject:_proxy]; // Add the proxy
+    
+    _newSettings[@"data"] = _srvs;
+    return _newSettings;
 }
 
 - (NSArray *)suServersFromDictionary:(NSDictionary *)settings
 {
-	NSMutableArray *_srvs = [NSMutableArray new];
-	if (@available(macOS 11.0, *)) {
-		// macOS 10.13 or later code path
-		qltrace(@"suServersFromDictionary is no longer supported by Apple.");
-	} else {
-		// code for earlier than 10.14
-		
-		NSArray *_raw_srvs = settings[@"data"];
-		
-		NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"serverType" ascending:YES];
-		_raw_srvs = [_raw_srvs sortedArrayUsingDescriptors:@[descriptor]];
-		
-		for (NSDictionary *_srv in _raw_srvs)
-		{
-			[_srvs addObject:[[Suserver alloc] initWithDictionary:_srv]];
-		}
-	}
+    NSMutableArray *_srvs = [NSMutableArray new];
+    if (@available(macOS 11.0, *)) {
+        // macOS 10.13 or later code path
+        qltrace(@"suServersFromDictionary is no longer supported by Apple.");
+    } else {
+        // code for earlier than 10.14
+        
+        NSArray *_raw_srvs = settings[@"data"];
+        
+        NSSortDescriptor * descriptor = [[NSSortDescriptor alloc] initWithKey:@"serverType" ascending:YES];
+        _raw_srvs = [_raw_srvs sortedArrayUsingDescriptors:@[descriptor]];
+        
+        for (NSDictionary *_srv in _raw_srvs)
+        {
+            [_srvs addObject:[[Suserver alloc] initWithDictionary:_srv]];
+        }
+    }
     return (NSArray *)_srvs;
 }
 
@@ -503,46 +548,62 @@ static MPSettings *_instance;
 
 - (NSString *)readSoftwareRestrictionRevisionFromFile
 {
-	if (![fm fileExistsAtPath:SW_RESTRICTIONS_PLIST]) return @"0-0";
-	
-	NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:SW_RESTRICTIONS_PLIST];
-	if ([d objectForKey:@"revision"]) {
-		return [d objectForKey:@"revision"];
-	}
-	
-	return @"0-0";
+    if (![fm fileExistsAtPath:SW_RESTRICTIONS_PLIST]) return @"0-0";
+    
+    NSDictionary *d = [NSDictionary dictionaryWithContentsOfFile:SW_RESTRICTIONS_PLIST];
+    if ([d objectForKey:@"revision"]) {
+        return [d objectForKey:@"revision"];
+    }
+    
+    return @"0-0";
 }
 
 - (BOOL)writeNewSoftwareRestritionsFile
 {
-	NSError *err = nil;
-	MPRESTfull *mpr = [MPRESTfull new];
-	NSDictionary *res = [mpr getSoftwareRestrictions:&err];
-	if (err) {
-		qlerror(@"%@",err.localizedDescription);
-		return NO;
-	}
-	[res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
-	return YES;
+    NSError *err = nil;
+    MPRESTfull *mpr = [MPRESTfull new];
+    NSDictionary *res = [mpr getSoftwareRestrictions:&err];
+    if (err) {
+        qlerror(@"%@",err.localizedDescription);
+        return NO;
+    }
+    qlinfo(@"[writeNewSoftwareRestritionsFile]: write restrictions to %@",SW_RESTRICTIONS_PLIST);
+    qlinfo(@"[writeNewSoftwareRestritionsFile]: restrictions data = %@",res);
+    [res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
+    return YES;
 }
 
 - (void)collectAgentVersionData
 {
-	NSDictionary *verData = nil;
-	if ([fm fileExistsAtPath:AGENT_VER_PLIST]) {
-		if ([fm isReadableFileAtPath:AGENT_VER_PLIST] == NO ) {
-			[fm setAttributes:[NSDictionary dictionaryWithObject:[NSNumber numberWithUnsignedLong:0664UL] forKey:NSFilePosixPermissions]
-				 ofItemAtPath:AGENT_VER_PLIST
-						error:NULL];
-		}
-		verData = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
-	} else {
-		verData = [NSDictionary dictionaryWithObjects:[NSArray arrayWithObjects:@"NA",@"NA",@"NA",@"NA",@"NA",@"NA",nil]
-											   forKeys:[NSArray arrayWithObjects:@"version",@"major",@"minor",@"bug",@"build",@"framework",nil]];
-	}
-	
-	agentVer = [NSString stringWithFormat:@"%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"]];
-	clientVer = [NSString stringWithFormat:@"%@.%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"],verData[@"build"]];
+    if (dispatch_get_specific(kMPSettingsMutationQueueKey)) {
+        NSDictionary *verData = nil;
+        if ([self->fm fileExistsAtPath:AGENT_VER_PLIST]) {
+            if ([self->fm isReadableFileAtPath:AGENT_VER_PLIST] == NO ) {
+                [self->fm setAttributes:@{NSFilePosixPermissions:@(0664)} ofItemAtPath:AGENT_VER_PLIST error:NULL];
+            }
+            verData = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
+        } else {
+            verData = [NSDictionary dictionaryWithObjects:@[@"NA",@"NA",@"NA",@"NA",@"NA",@"NA"]
+                                                   forKeys:@[@"version",@"major",@"minor",@"bug",@"build",@"framework"]];
+        }
+        self->agentVer = [NSString stringWithFormat:@"%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"]];
+        self->clientVer = [NSString stringWithFormat:@"%@.%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"],verData[@"build"]];
+    } else {
+        dispatch_sync(_settingsQueue, ^{
+            NSDictionary *verData = nil;
+            if ([self->fm fileExistsAtPath:AGENT_VER_PLIST]) {
+                if ([self->fm isReadableFileAtPath:AGENT_VER_PLIST] == NO ) {
+                    [self->fm setAttributes:@{NSFilePosixPermissions:@(0664)} ofItemAtPath:AGENT_VER_PLIST error:NULL];
+                }
+                verData = [NSDictionary dictionaryWithContentsOfFile:AGENT_VER_PLIST];
+            } else {
+                verData = [NSDictionary dictionaryWithObjects:@[@"NA",@"NA",@"NA",@"NA",@"NA",@"NA"]
+                                                       forKeys:@[@"version",@"major",@"minor",@"bug",@"build",@"framework"]];
+            }
+            self->agentVer = [NSString stringWithFormat:@"%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"]];
+            self->clientVer = [NSString stringWithFormat:@"%@.%@.%@.%@",verData[@"major"],verData[@"minor"],verData[@"bug"],verData[@"build"]];
+        });
+    }
 }
 
 - (void)serversCache
@@ -550,3 +611,5 @@ static MPSettings *_instance;
     
 }
 @end
+
+

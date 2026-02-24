@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Installer
-# ver 2.3
+# ver 2.4
 # Created By Charles Heizer
 # LLNL
 #
@@ -125,11 +125,6 @@ rm -rf "/Library/MacPatch/Client/Logs"
 rm -rf "/Library/MacPatch/Client/Lib"
 rm -rf "/Library/MacPatch/Client/Data"
 rm -rf "/Library/MacPatch/Client/Tools"
-
-# ***************************************************************************************
-# Clear Softwareupdate catalog url, prevents incorrect url's from being maintained.
-#
-/usr/sbin/softwareupdate --clear-catalog
 
 # ******************************************************************
 # Set Agent Plist data ...

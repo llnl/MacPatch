@@ -16,7 +16,7 @@
 	NSFileManager *dm = [NSFileManager defaultManager];
 	if ([dm fileExistsAtPath:xmlFile] == NO)
 	{
-		logit(lcl_vError,@"Inventory cache file was not found. Data will not be parsed.");
+		LogError(@"Inventory cache file was not found. Data will not be parsed.");
 		return result;
 	}
 

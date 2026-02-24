@@ -11,6 +11,7 @@
 #import "MPWSResult.h"
 #import "STHTTPRequest.h"
 #import "MPDownloadManager.h"
+static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 #import <CommonCrypto/CommonHMAC.h>
 
 #undef  ql_component
@@ -22,6 +23,7 @@
     MPSettings      *settings;
 }
 
+@property (nonatomic, strong) dispatch_queue_t stateQueue;
 @property (nonatomic)         BOOL      allowSelfSignedCert;
 @property (nonatomic, strong) NSArray   *serverArray;
 @property (nonatomic)         NSInteger requestCount;
@@ -54,11 +56,25 @@
     self = [super init];
     if (self)
     {
+        {
+            dispatch_queue_t q = dispatch_queue_create("gov.llnl.mphttprequest.state", DISPATCH_QUEUE_SERIAL);
+            dispatch_queue_set_specific(q, kMPHTTPRequestStateQueueKey, (void *)kMPHTTPRequestStateQueueKey, NULL);
+            self.stateQueue = q;
+        }
+        
         fm       = [NSFileManager defaultManager];
         settings = [MPSettings sharedInstance];
-        
-        self.requestCount = -1;
-        self.allowSelfSignedCert = NO;
+
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.requestCount = -1;
+            self.allowSelfSignedCert = NO;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.requestCount = -1;
+                self.allowSelfSignedCert = NO;
+            });
+        }
+
 		self.requestTimeout = 10;
 		self.resourceTimeout = 60;
         
@@ -74,10 +90,24 @@
     self = [super init];
     if (self)
     {
+        {
+            dispatch_queue_t q = dispatch_queue_create("gov.llnl.mphttprequest.state", DISPATCH_QUEUE_SERIAL);
+            dispatch_queue_set_specific(q, kMPHTTPRequestStateQueueKey, (void *)kMPHTTPRequestStateQueueKey, NULL);
+            self.stateQueue = q;
+        }
+
         fm = [NSFileManager defaultManager];
-        
-        self.requestCount = -1;
-        self.allowSelfSignedCert = NO;
+
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.requestCount = -1;
+            self.allowSelfSignedCert = NO;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.requestCount = -1;
+                self.allowSelfSignedCert = NO;
+            });
+        }
+
 		self.requestTimeout = 10;
 		self.resourceTimeout = 60;
         
@@ -89,10 +119,19 @@
 
 - (void)setDelegate:(id )aDelegate
 {
-	if (delegate != aDelegate) {
-		delegate = aDelegate;
-		delegateRespondsTo.downloadProgress = [delegate respondsToSelector:@selector(downloadProgress:)];
-	}
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        if (delegate != aDelegate) {
+            delegate = aDelegate;
+            delegateRespondsTo.downloadProgress = [delegate respondsToSelector:@selector(downloadProgress:)];
+        }
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            if (delegate != aDelegate) {
+                delegate = aDelegate;
+                delegateRespondsTo.downloadProgress = [delegate respondsToSelector:@selector(downloadProgress:)];
+            }
+        });
+    }
 }
 
 - (void)populateServerArray
@@ -103,8 +142,18 @@
     }
     else
     {
-		[settings refresh];
-        self.serverArray = [settings.servers copy];
+		// [settings refresh]; // Removed per instructions
+
+        NSArray *serversSnapshot = [settings.servers copy];
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.serverArray = serversSnapshot;
+            self.requestCount = -1;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.serverArray = serversSnapshot;
+                self.requestCount = -1;
+            });
+        }
     }
 }
 
@@ -136,7 +185,15 @@
             [_servers addObject:server2];
         }
     }
-    self.serverArray = _servers;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        self.serverArray = _servers;
+        self.requestCount = -1;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.serverArray = _servers;
+            self.requestCount = -1;
+        });
+    }
 }
 
 - (NSString *)createTempDownloadDir:(NSString *)urlPath
@@ -168,30 +225,52 @@
 
 - (void)runASyncGET:(NSString *)urlPath completion:(void (^)(MPWSResult *result, NSError *error))completion
 {
-    
-    if (self.requestCount == -1) {
-        self.requestCount++;
-    } else {
-        if (self.requestCount >= (self.serverArray.count - 1)) {
-            NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not complete request, failed all servers."};
-            NSError *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
-            completion(nil, err);
-            return;
+    __block NSInteger index = -1;
+    __block NSArray *servers = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        if (self.requestCount == -1) {
+            self.requestCount = 0;
         } else {
             self.requestCount++;
         }
+        index = self.requestCount;
+        servers = [self.serverArray copy];
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            if (self.requestCount == -1) {
+                self.requestCount = 0;
+            } else {
+                self.requestCount++;
+            }
+            index = self.requestCount;
+            servers = [self.serverArray copy];
+        });
+    }
+    if (index < 0 || index >= (NSInteger)servers.count) {
+        NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not complete request, failed all servers."};
+        NSError *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
+        completion(nil, err);
+        return;
     }
     
-    self.allowSelfSignedCert = NO;
-    Server *server = [self.serverArray objectAtIndex:self.requestCount];
-    if (server.allowSelfSigned == 1)
-        self.allowSelfSignedCert = YES;
+    Server *server = [servers objectAtIndex:index];
+    
+    __block BOOL allowSelfSigned = NO;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        self.allowSelfSignedCert = (server.allowSelfSigned == 1);
+        allowSelfSigned = self.allowSelfSignedCert;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.allowSelfSignedCert = (server.allowSelfSigned == 1);
+            allowSelfSigned = self.allowSelfSignedCert;
+        });
+    }
     
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
     qldebug(@"[runASyncGET]URL: %@",url);
     
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
-    r.allowSelfSignedCert = server.allowSelfSigned;
+    r.allowSelfSignedCert = allowSelfSigned;
     
     NSString *ts = [self generateTimeStampForSignature];
     NSString *sg = [self signWSRequest:urlPath timeStamp:ts key:[self readClientKey]];
@@ -226,30 +305,52 @@
 
 - (void)runASyncPOST:(NSString *)urlPath body:(NSDictionary *)body completion:(void (^)(MPWSResult *result, NSError *error))completion
 {
-    
-    if (self.requestCount == -1) {
-        self.requestCount++;
-    } else {
-        if (self.requestCount >= (self.serverArray.count - 1)) {
-            NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not complete request, failed all servers."};
-            NSError *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
-            completion(nil, err);
-            return;
+    __block NSInteger index = -1;
+    __block NSArray *servers = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        if (self.requestCount == -1) {
+            self.requestCount = 0;
         } else {
             self.requestCount++;
         }
+        index = self.requestCount;
+        servers = [self.serverArray copy];
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            if (self.requestCount == -1) {
+                self.requestCount = 0;
+            } else {
+                self.requestCount++;
+            }
+            index = self.requestCount;
+            servers = [self.serverArray copy];
+        });
+    }
+    if (index < 0 || index >= (NSInteger)servers.count) {
+        NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not complete request, failed all servers."};
+        NSError *err = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
+        completion(nil, err);
+        return;
     }
     
-    self.allowSelfSignedCert = NO;
-    Server *server = [self.serverArray objectAtIndex:self.requestCount];
-    if (server.allowSelfSigned == 1)
-        self.allowSelfSignedCert = YES;
+    Server *server = [servers objectAtIndex:index];
+    
+    __block BOOL allowSelfSigned = NO;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        self.allowSelfSignedCert = (server.allowSelfSigned == 1);
+        allowSelfSigned = self.allowSelfSignedCert;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.allowSelfSignedCert = (server.allowSelfSigned == 1);
+            allowSelfSigned = self.allowSelfSignedCert;
+        });
+    }
     
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
     qldebug(@"[runASyncPOST]URL: %@",url);
     
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
-    r.allowSelfSignedCert = server.allowSelfSigned;
+    r.allowSelfSignedCert = allowSelfSigned;
     r.HTTPMethod = @"POST";
     [r setHeaderWithName:@"content-type" value:@"application/json; charset=utf-8"];
     [r setHeaderWithName:@"Accept" value:@"application/json"];
@@ -302,13 +403,20 @@
 {
     MPWSResult *wsResult = nil;
     NSString *url;
+
+    __block NSArray *servers = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        servers = [self.serverArray copy];
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            servers = [self.serverArray copy];
+        });
+    }
     
-    for (Server *server in self.serverArray)
+    for (Server *server in servers)
     {
-        self.allowSelfSignedCert = NO;
-        if (server.allowSelfSigned == 1)
-            self.allowSelfSignedCert = YES;
-        
+        BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         qlinfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
@@ -325,11 +433,19 @@
 {
     MPWSResult *wsResult = nil;
     NSString *url;
-    for (Server *server in self.serverArray)
+
+    __block NSArray *servers = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        servers = [self.serverArray copy];
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            servers = [self.serverArray copy];
+        });
+    }
+    
+    for (Server *server in servers)
     {
-        self.allowSelfSignedCert = NO;
-        if (server.allowSelfSigned == 1)
-            self.allowSelfSignedCert = YES;
+        BOOL allowSelfSigned = (server.allowSelfSigned == 1);
         
         qldebug(@"[runSyncPOST][server]: %@",server.toDictionary);
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
@@ -347,29 +463,73 @@
 
 - (NSString *)runSyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
+    return [self runSyncFileDownload:urlPath downloadDirectory:dlDir fromCloudServer:FALSE error:err];
+}
+
+
+- (NSString *)runSyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir fromCloudServer:(BOOL)fromCloud error:(NSError * __autoreleasing *)err
+{
 	int srvErrs = 0;
 	NSError *dlerror = nil;
 	NSString *url;
 	NSString *dlFilePath = [dlDir stringByAppendingPathComponent:[urlPath lastPathComponent]];
 	NSString *res;
     
-	for (Server *s in self.serverArray)
-	{
-		self.allowSelfSignedCert = (s.allowSelfSigned == 1) ? YES : NO;
-		url = [NSString stringWithFormat:@"%@://%@:%d%@",s.usessl ? @"https":@"http", s.host, (int)s.port, urlPath];
-		qlinfo(@"URL: %@",url);
-		dlerror = nil;
-		res = [self runSyncFileDownloadFromServer:url downloadDirectory:dlDir error:&dlerror];
-		qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
-		if (dlerror) {
-			qlerror(@"%@",dlerror.localizedDescription);
-			srvErrs++;
-			continue;
-		} else {
-			srvErrs = 0;
-			break;
-		}
-	}
+    if (fromCloud) {
+        qldebug(@"[runSyncFileDownload][fromCloud] dlFilePath: %@",dlFilePath);
+        qlinfo(@"[runSyncFileDownload][fromCloud] URL: %@",urlPath);
+        dlerror = nil;
+        // Set allowSelfSignedCert to NO for cloud downloads
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.allowSelfSignedCert = NO;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.allowSelfSignedCert = NO;
+            });
+        }
+        res = [self runSyncFileDownloadFromServer:urlPath downloadDirectory:dlDir error:&dlerror];
+        qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
+        if (dlerror) {
+            qlerror(@"%@",dlerror.localizedDescription);
+            srvErrs++;
+        }
+    } else {
+        __block NSArray *servers = nil;
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            servers = [self.serverArray copy];
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                servers = [self.serverArray copy];
+            });
+        }
+
+        for (Server *s in servers)
+        {
+            BOOL allowSelfSigned = (s.allowSelfSigned == 1);
+            // Set allowSelfSignedCert on the state queue for thread safety
+            if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+                self.allowSelfSignedCert = allowSelfSigned;
+            } else {
+                dispatch_sync(self.stateQueue, ^{
+                    self.allowSelfSignedCert = allowSelfSigned;
+                });
+            }
+            
+            url = [NSString stringWithFormat:@"%@://%@:%d%@",s.usessl ? @"https":@"http", s.host, (int)s.port, urlPath];
+            qlinfo(@"URL: %@",url);
+            dlerror = nil;
+            res = [self runSyncFileDownloadFromServer:url downloadDirectory:dlDir error:&dlerror];
+            qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
+            if (dlerror) {
+                qlerror(@"%@",dlerror.localizedDescription);
+                srvErrs++;
+                continue;
+            } else {
+                srvErrs = 0;
+                break;
+            }
+        }
+    }
 
 	if (srvErrs > 0) {
 		dlFilePath = @"ERR";
@@ -396,11 +556,21 @@
 		[fm removeItemAtPath:flPath error:NULL];
 	}
 	
+	// Safely get allowSelfSignedCert value
+	__block BOOL allowSelfSigned = NO;
+	if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+		allowSelfSigned = self.allowSelfSignedCert;
+	} else {
+		dispatch_sync(self.stateQueue, ^{
+			allowSelfSigned = self.allowSelfSignedCert;
+		});
+	}
+	
 	__block NSString *curPercent = @"";
 	__block NSString *dlFile = @"ERR";
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
-    dm.allowSelfSignedCert = self.allowSelfSignedCert;
+    dm.allowSelfSignedCert = allowSelfSigned;
 	dm.downloadUrl = urlPath;
 	dm.downloadDestination = dlDir;
 	
@@ -464,38 +634,47 @@
 	
 	// requestCount is the server index of the servers array
 	// this gets incremented on failed attempts
-	if (self.requestCount == -1)
-	{
-		self.requestCount++;
-	}
-	else
-	{
-		if (self.requestCount >= (self.serverArray.count - 1))
-		{
-			NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
-			NSError *srverr = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
-			if (err != NULL) *err = srverr;
-			return nil;
-		}
-		else
-		{
+	__block NSInteger index = -1;
+	__block NSArray *servers = nil;
+	if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+		if (self.requestCount == -1) {
+			self.requestCount = 0;
+		} else {
 			self.requestCount++;
 		}
+		index = self.requestCount;
+		servers = [self.serverArray copy];
+	} else {
+		dispatch_sync(self.stateQueue, ^{
+			if (self.requestCount == -1) {
+				self.requestCount = 0;
+			} else {
+				self.requestCount++;
+			}
+			index = self.requestCount;
+			servers = [self.serverArray copy];
+		});
 	}
-	
-	Server *server = [self.serverArray objectAtIndex:self.requestCount];
-	self.allowSelfSignedCert = (server.allowSelfSigned == 1) ? YES : NO;
-	
-    
+
+	if (index >= (NSInteger)servers.count)
+	{
+		NSDictionary *userInfo = @{NSLocalizedDescriptionKey: @"Error, could not download file, failed all servers."};
+		NSError *srverr = [NSError errorWithDomain:@"gov.llnl.mphttprequest" code:1001 userInfo:userInfo];
+		if (err != NULL) *err = srverr;
+		return nil;
+	}
+
+	Server *server = [servers objectAtIndex:index];
+	BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+
 	NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
 	qlinfo(@"URL: %@",url);
 	
-	//__block __typeof(self) weakSelf = self;
 	__block NSString *dlFile = @"ERR";
 	__block BOOL didFail = NO;
 	dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);
 	MPDownloadManager *dm = [MPDownloadManager sharedManager];
-    dm.allowSelfSignedCert = self.allowSelfSignedCert;
+    dm.allowSelfSignedCert = allowSelfSigned;
 	dm.downloadUrl = url;
 	dm.downloadDestination = dlDir;
 	
@@ -543,12 +722,19 @@
 	NSData *result = nil;
 	NSString *url;
     
-	for (Server *server in self.serverArray)
+	__block NSArray *servers = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        servers = [self.serverArray copy];
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            servers = [self.serverArray copy];
+        });
+    }
+    
+	for (Server *server in servers)
 	{
-		self.allowSelfSignedCert = NO;
-		if (server.allowSelfSigned == 1)
-			self.allowSelfSignedCert = YES;
-		
+		BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+
 		url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, aURLPath];
 		qlinfo(@"URL: %@",url);
 		//
@@ -645,6 +831,10 @@
     
     // Wait for semaphore signal
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    
+    // Invalidate session to prevent memory leak
+    [session finishTasksAndInvalidate];
+    
     if (sesErr) {
         error = sesErr;
     }
@@ -663,7 +853,7 @@
     
     // Create URLRequest
     NSURL *url = [NSURL URLWithString:aURL];
-	qlinfo(@"Post data to URL: %@",aURL);
+	qldebug(@"Post data to URL: %@",aURL);
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
@@ -729,6 +919,9 @@
     [task resume];
     // Wait for semaphore signal
     dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    
+    // Invalidate session to prevent memory leak
+    [session finishTasksAndInvalidate];
     
     return res;
 }
@@ -820,7 +1013,17 @@
         if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
             credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
         } else if (result == kSecTrustResultConfirm || result == kSecTrustResultRecoverableTrustFailure) {
-            if (self.allowSelfSignedCert) {
+            // Safely read allowSelfSignedCert
+            __block BOOL allowSelfSigned = NO;
+            if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+                allowSelfSigned = self.allowSelfSignedCert;
+            } else {
+                dispatch_sync(self.stateQueue, ^{
+                    allowSelfSigned = self.allowSelfSignedCert;
+                });
+            }
+            
+            if (allowSelfSigned) {
                 credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
             } else {
                 
@@ -838,6 +1041,16 @@
 	va_start(va, str);
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
-	[self.delegate downloadProgress:string];
+
+	__block id localDelegate = nil;
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        localDelegate = self->delegate;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            localDelegate = self->delegate;
+        });
+    }
+	[localDelegate downloadProgress:string];
 }
 @end
+

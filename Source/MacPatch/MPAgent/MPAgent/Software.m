@@ -1,10 +1,28 @@
 //
 //  Software.m
 //  MPAgent
-//
-//  Created by Charles Heizer on 7/26/18.
-//  Copyright © 2018 LLNL. All rights reserved.
-//
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "Software.h"
 #import "MacPatch.h"
@@ -62,8 +80,8 @@
 		return NO;
 	}
 	
-	logit(lcl_vInfo,@"Installing %@ (%@).",swTask[@"name"],swTask[@"id"]);
-	logit(lcl_vInfo,@"INFO: %@",[swTask valueForKeyPath:@"Software.sw_type"]);
+	LogInfo(@"Installing %@ (%@).",swTask[@"name"],swTask[@"id"]);
+	LogInfo(@"INFO: %@",[swTask valueForKeyPath:@"Software.sw_type"]);
 	
 	// Create Path to download software to
 	NSString *swLoc = NULL;
@@ -77,25 +95,25 @@
 	MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
 	if ([mpd diskHasEnoughSpaceForPackage:stringToLong] == NO)
 	{
-		logit(lcl_vError,@"This system does not have enough free disk space to install the following software %@",swTask[@"name"]);
+		LogError(@"This system does not have enough free disk space to install the following software %@",swTask[@"name"]);
 		return NO;
 	}
 	
 	// Create Download URL
 	NSString *_url = [@"/mp-content" stringByAppendingPathComponent:[swTask valueForKeyPath:@"Software.sw_url"]];
-	logit(lcl_vDebug,@"Download software from: %@",[swTask valueForKeyPath:@"Software.sw_type"]);
+	LogDebug(@"Download software from: %@",[swTask valueForKeyPath:@"Software.sw_type"]);
 	
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:NSTemporaryDirectory() error:&dlErr];
 	
 	if (dlErr) {
-		logit(lcl_vError,@"Error[%d], trying to download file.",(int)[dlErr code]);
+		LogError(@"Error[%d], trying to download file.",(int)[dlErr code]);
 		return NO;
 	}
 	if (!dlPath) {
-		logit(lcl_vError,@"Error, downloaded file path is nil.");
-		logit(lcl_vError,@"No install will occure.");
+		LogError(@"Error, downloaded file path is nil.");
+		LogError(@"No install will occure.");
 		return NO;
 	}
 	
@@ -104,7 +122,7 @@
 	if ([fm fileExistsAtPath:swLoc] == NO) {
 		[fm createDirectoryAtPath:swLoc withIntermediateDirectories:YES attributes:nil error:&dlErr];
 		if (dlErr) {
-			logit(lcl_vError,@"Error[%d], trying to create destination directory. %@.",(int)[dlErr code],swLoc);
+			LogError(@"Error[%d], trying to create destination directory. %@.",(int)[dlErr code],swLoc);
 		}
 	}
 	
@@ -114,15 +132,15 @@
 		dlErr = nil;
 		[fm removeItemAtPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]] error:&dlErr];
 		if (dlErr) {
-			logit(lcl_vError,@"%@",dlErr.localizedDescription);
+			LogError(@"%@",dlErr.localizedDescription);
 			return NO;
 		}
 	}
 	dlErr = nil;
 	[fm moveItemAtPath:dlPath toPath:[swLoc stringByAppendingPathComponent:[dlPath lastPathComponent]] error:&dlErr];
 	if (dlErr) {
-		logit(lcl_vError,@"Error[%d], trying to move downloaded file to %@.",(int)[dlErr code],swLoc);
-		logit(lcl_vError,@"No install will occure.");
+		LogError(@"Error[%d], trying to move downloaded file to %@.",(int)[dlErr code],swLoc);
+		LogError(@"No install will occure.");
 		return NO;
 	}
 	return YES;
@@ -151,21 +169,21 @@
 	{
 		zipFileName = [[swTaskDict valueForKeyPath:@"Software.sw_url"] lastPathComponent];
 		NSString *zipFile = [NSString pathWithComponents:@[SOFTWARE_DATA_DIR,@"sw",swTaskDict[@"id"],zipFileName]];
-		logit(lcl_vInfo,@"Verify %@ (%@)",swTaskDict[@"name"],zipFileName);
+		LogInfo(@"Verify %@ (%@)",swTaskDict[@"name"],zipFileName);
 		
 		fHash = [mpCrypto md5HashForFile:zipFile];
-		logit(lcl_vInfo,@"%@: %@",zipFile,fHash);
-		logit(lcl_vInfo,@"== %@",[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
+		LogInfo(@"%@: %@",zipFile,fHash);
+		LogInfo(@"== %@",[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTaskDict valueForKeyPath:@"Software.sw_hash"]]) {
-			logit(lcl_vError,@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
 			return 1;
 		}
 		
-		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
+		LogInfo(@"Unzipping file %@.",zipFile);
 		MPFileUtils *fu = [MPFileUtils new];
 		[fu unzip:zipFile error:&err];
 		if (err) {
-			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
+			LogError(@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
 		}
 		
@@ -198,15 +216,15 @@
 	
 		fHash = [mpCrypto md5HashForFile:zipFile];
 		if (![[fHash uppercaseString] isEqualToString:[swTaskDict valueForKeyPath:@"Software.sw_hash"]]) {
-			logit(lcl_vError,@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
 			return 1;
 		}
 		
-		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
+		LogInfo(@"Unzipping file %@.",zipFile);
 		MPFileUtils *fu = [MPFileUtils new];
 		[fu unzip:zipFile error:&err];
 		if (err) {
-			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
+			LogError(@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
 		}
 		// Run Pre Install Script
@@ -234,15 +252,15 @@
 		
 		fHash = [mpCrypto md5HashForFile:zipFile];
 		if (![[fHash uppercaseString] isEqualToString:[swTaskDict valueForKeyPath:@"Software.sw_hash"]]) {
-			logit(lcl_vError,@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[zipFile lastPathComponent]);
 			return 1;
 		}
 
-		logit(lcl_vInfo,@"Unzipping file %@.",zipFile);
+		LogInfo(@"Unzipping file %@.",zipFile);
 		MPFileUtils *fu = [MPFileUtils new];
 		[fu unzip:zipFile error:&err];
 		if (err) {
-			logit(lcl_vError,@"Error unzipping file %@. %@",zipFile,[err description]);
+			LogError(@"Error unzipping file %@. %@",zipFile,[err description]);
 			return 1;
 		}
 		
@@ -272,10 +290,10 @@
 		dmgFile = [self downloadedSWPath:swTaskDict];
 		
 		fHash = [mpCrypto md5HashForFile:dmgFile];
-		logit(lcl_vInfo,@"%@: %@",dmgFile,fHash);
-		logit(lcl_vInfo,@"== %@",[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
+		LogInfo(@"%@: %@",dmgFile,fHash);
+		LogInfo(@"== %@",[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTaskDict valueForKeyPath:@"Software.sw_hash"]]) {
-			logit(lcl_vError,@"Error unable to verify software hash for file %@.",[dmgFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[dmgFile lastPathComponent]);
 			return 1;
 		}
 		
@@ -307,8 +325,8 @@
 		
 		fHash = [mpCrypto md5HashForFile:dmgFile];
 		if (![[fHash uppercaseString] isEqualToString:[swTaskDict valueForKeyPath:@"Software.sw_hash"]]) {
-			logit(lcl_vError,@"Error unable to verify software hash for file %@.",[dmgFile lastPathComponent]);
-			logit(lcl_vError,@"%@: %@ (%@)",dmgFile,fHash,[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
+			LogError(@"Error unable to verify software hash for file %@.",[dmgFile lastPathComponent]);
+			LogError(@"%@: %@ (%@)",dmgFile,fHash,[swTaskDict valueForKeyPath:@"Software.sw_hash"]);
 			return 1;
 		}
 		
@@ -427,33 +445,33 @@
 // Private
 - (BOOL)softwareTaskCriteriaCheck:(NSDictionary *)aTask
 {
-	logit(lcl_vInfo,@"Checking %@ criteria.",[aTask objectForKey:@"name"]);
+	LogInfo(@"Checking %@ criteria.",[aTask objectForKey:@"name"]);
 	
 	MPOSCheck *mpos = [[MPOSCheck alloc] init];
 	NSDictionary *_SoftwareCriteria = [aTask objectForKey:@"SoftwareCriteria"];
 	
 	// OSArch
 	if ([mpos checkOSArch:[_SoftwareCriteria objectForKey:@"arch_type"]]) {
-		logit(lcl_vDebug,@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+		LogDebug(@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 	} else {
-		logit(lcl_vInfo,@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+		LogInfo(@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 		return NO;
 	}
 	
 	// OSType
     /* CEH: Dsable for now, no longer needed.
 	if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
-		logit(lcl_vDebug,@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+		LogDebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 	} else {
-		logit(lcl_vInfo,@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+		LogInfo(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 		return NO;
 	}
      */
 	// OSVersion
 	if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
-		logit(lcl_vDebug,@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+		LogDebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 	} else {
-		logit(lcl_vInfo,@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+		LogInfo(@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 		return NO;
 	}
 	
@@ -484,18 +502,18 @@
             l_envItems = nil;
             l_envItems = [item componentsSeparatedByString:@"="];
             if ([l_envItems count] == 2) {
-                logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+                LogDebug(@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
                 [environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
             } else {
-                logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+                LogError(@"Unable to set env variable. Variable not well formed %@",item);
             }
         }
     }
     
-    logit(lcl_vDebug,@"[task][environment]: %@",environment);
-    logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
-    logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
-    qlinfo(@"[task][setTimeout]: %d",taskTimeoutValue);
+    LogDebug(@"[task][environment]: %@",environment);
+    LogDebug(@"[task][setLaunchPath]: %@",aBinPath);
+    LogDebug(@"[task][setArguments]: %@",aBinArgs);
+    LogInfo(@"[task][setTimeout]: %d",taskTimeoutValue);
     
     NSString *result;
     NSError *error = nil;
@@ -547,20 +565,20 @@
 			l_envItems = nil;
 			l_envItems = [item componentsSeparatedByString:@"="];
 			if ([l_envItems count] == 2) {
-				logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+				LogDebug(@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
 				[environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
 			} else {
-				logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+				LogError(@"Unable to set env variable. Variable not well formed %@",item);
 			}
 		}
 	}
 	
 	[task setEnvironment:environment];
-	logit(lcl_vDebug,@"[task][environment]: %@",environment);
+	LogDebug(@"[task][environment]: %@",environment);
 	[task setLaunchPath:aBinPath];
-	logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
+	LogDebug(@"[task][setLaunchPath]: %@",aBinPath);
 	[task setArguments:aBinArgs];
-	logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
+	LogDebug(@"[task][setArguments]: %@",aBinArgs);
 	
 	// Launch The NSTask
 	@try {
@@ -572,7 +590,7 @@
 	}
 	@catch (NSException *e)
 	{
-		logit(lcl_vError,@"Install returned error. %@\n%@",[e reason],[e userInfo]);
+		LogError(@"Install returned error. %@\n%@",[e reason],[e userInfo]);
 		taskResult = 1;
 		goto done;
 	}
@@ -588,9 +606,9 @@
 		if ([[tmpStr trim] length] != 0)
 		{
 			if ([tmpStr containsString:@"PackageKit: Missing bundle path"] == NO) {
-				logit(lcl_vInfo,@"%@",tmpStr);
+				LogInfo(@"%@",tmpStr);
 			} else {
-				logit(lcl_vDebug,@"%@",tmpStr);
+				LogDebug(@"%@",tmpStr);
 			}
 		}
 		
@@ -601,7 +619,7 @@
 	[[aPipe fileHandleForReading] closeFile];
 	
 	if (taskTimedOut == YES) {
-		logit(lcl_vError,@"Task was terminated due to timeout.");
+		LogError(@"Task was terminated due to timeout.");
 		[NSThread sleepForTimeInterval:5.0];
 		[task terminate];
 		taskResult = 1;
@@ -621,19 +639,19 @@
 				}
 			}
 			// Task should be complete
-			logit(lcl_vInfo,@"Terminate Software Task.");
+			LogInfo(@"Terminate Software Task.");
 			[task terminate];
 		}
 		
 		int status = [task terminationStatus];
-		logit(lcl_vInfo,@"swTask terminationStatus: %d",status);
+		LogInfo(@"swTask terminationStatus: %d",status);
 		if (status == 0) {
 			taskResult = 0;
 		} else {
 			taskResult = 1;
 		}
 	} else {
-		logit(lcl_vError,@"Install returned error. Code:[%d]",[task terminationStatus]);
+		LogError(@"Install returned error. Code:[%d]",[task terminationStatus]);
 		taskResult = 1;
 	}
 	
@@ -653,7 +671,7 @@ done:
 	if (incomingData && [incomingData length])
 	{
 		NSString *incomingText = [[NSString alloc] initWithData:incomingData encoding:NSASCIIStringEncoding];
-		logit(lcl_vDebug,@"%@",incomingText);
+		LogDebug(@"%@",incomingText);
 		
 		[fh_task readInBackgroundAndNotify];
 		return;
@@ -673,7 +691,7 @@ done:
 	{
 		[timeoutTimer invalidate];
 		
-		logit(lcl_vInfo,@"Timeout is set to %d",taskTimeoutValue);
+		LogInfo(@"Timeout is set to %d",taskTimeoutValue);
 		NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
 														  target:self
 														selector:@selector(taskTimeout:)
@@ -689,7 +707,7 @@ done:
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	logit(lcl_vInfo,@"Task timedout, killing task.");
+	LogInfo(@"Task timedout, killing task.");
 	[timeoutTimer invalidate];
 	[self setTaskTimedOut:YES];
 	[task terminate];
@@ -759,15 +777,15 @@ done:
 				{
 					_script = [[aSWDict objectForKey:@"sw_pre_install"] decodeBase64AsString];
 					if (![mps runScript:_script]) {
-						logit(lcl_vError,@"Error running pre install script. No install will occure.");
+						LogError(@"Error running pre install script. No install will occure.");
 						return NO;
 					} else {
 						return YES;
 					}
 				}
 				@catch (NSException *exception) {
-					logit(lcl_vError,@"Exception Error running pre install script. No install will occure.");
-					logit(lcl_vError,@"%@",exception);
+					LogError(@"Exception Error running pre install script. No install will occure.");
+					LogError(@"%@",exception);
 					return NO;
 				}
 			} else {
@@ -786,15 +804,15 @@ done:
 				{
 					_script = [[aSWDict objectForKey:@"sw_post_install"] decodeBase64AsString];
 					if (![mps runScript:_script]) {
-						logit(lcl_vError,@"Error running post install script.");
+						LogError(@"Error running post install script.");
 						return NO;
 					} else {
 						return YES;
 					}
 				}
 				@catch (NSException *exception) {
-					logit(lcl_vError,@"Exception Error running post install script.");
-					logit(lcl_vError,@"%@",exception);
+					LogError(@"Exception Error running post install script.");
+					LogError(@"%@",exception);
 					return NO;
 				}
 			} else {
@@ -823,8 +841,8 @@ done:
 		err = nil;
 		scriptText = [NSString stringWithContentsOfFile:[aDir stringByAppendingPathComponent:scpt] encoding:NSUTF8StringEncoding error:&err];
 		if (err) {
-			logit(lcl_vError,@"Error reading script string: %@",[err description]);
-			logit(lcl_vError,@"%@",[err description]);
+			LogError(@"Error reading script string: %@",[err description]);
+			LogError(@"%@",[err description]);
 			result = 3;
 			break;
 		}
@@ -851,10 +869,10 @@ done:
 	NSError *err = nil;
 	for (NSString *app in onlyApps) {
 		if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]]) {
-			qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+			LogDebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
 			[fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
 			if (err) {
-				logit(lcl_vError,@"%@",[err description]);
+				LogError(@"%@",[err description]);
 				result = 3;
 				break;
 			}
@@ -869,7 +887,7 @@ done:
 		}
 		
 		if (err) {
-			logit(lcl_vError,@"%@",[err description]);
+			LogError(@"%@",[err description]);
 			result = 2;
 			break;
 		}
@@ -908,18 +926,18 @@ done:
 	if (![fm fileExistsAtPath:mountPoint]) {
 		[fm createDirectoryAtPath:mountPoint withIntermediateDirectories:YES attributes:nil error:&err];
 		if (err) {
-			logit(lcl_vError,@"%@",[err description]);
+			LogError(@"%@",[err description]);
 		}
 	} else {
 		[self unmountDMG:aDMG packageID:pkgID];
 		[fm createDirectoryAtPath:mountPoint withIntermediateDirectories:YES attributes:nil error:&err];
 		if (err) {
-			logit(lcl_vError,@"%@",[err description]);
+			LogError(@"%@",[err description]);
 		}
 	}
 	
 	if ([fm fileExistsAtPath:swLoc] == NO) {
-		logit(lcl_vError,@"File \"%@\" does not exist.",swLoc);
+		LogError(@"File \"%@\" does not exist.",swLoc);
 		return 1;
 	}
 	
@@ -1015,34 +1033,34 @@ done:
 	NSError *err = nil;
 	NSDictionary *patchForBundleID = [mprest getPatchForBundleID:aBundleID error:&err];
 	if (err) {
-		logit(lcl_vError,@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 		*error = err;
 		return result;
 	}
 	
 	if (!patchForBundleID) {
-		logit(lcl_vError,@"There was a issue getting the approved patch data for the bundle id, scan will exit.");
+		LogError(@"There was a issue getting the approved patch data for the bundle id, scan will exit.");
 		return result;
 	}
 	
-	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities...");
-	logit(lcl_vInfo,@"Scanning for custom patch vulnerabilities for %@", aBundleID);
+	LogInfo(@"Scanning for custom patch vulnerabilities...");
+	LogInfo(@"Scanning for custom patch vulnerabilities for %@", aBundleID);
 	
 	MPPatching *patching = [MPPatching new];
 	NSMutableArray *customPatchesFound = [[patching scanForPatchUsingBundleID:aBundleID] mutableCopy];
 	
-	logit(lcl_vDebug,@"Custom Patches Needed: %@",customPatchesFound);
-	logit(lcl_vDebug,@"Approved Patches: %@",patchForBundleID);
+	LogDebug(@"Custom Patches Needed: %@",customPatchesFound);
+	LogDebug(@"Approved Patches: %@",patchForBundleID);
 	
 	// Filter List of Patches containing only the approved patches
 	NSDictionary *customPatch;
-	logit(lcl_vInfo,@"Building approved patch list...");
+	LogInfo(@"Building approved patch list...");
 	for (int i=0; i < [customPatchesFound count]; i++)
 	{
 		customPatch	= [customPatchesFound objectAtIndex:i];
 		if ([customPatch[@"patch_id"] isEqualTo:patchForBundleID[@"puuid"]])
 		{
-			logit(lcl_vInfo,@"Patch %@ approved for update.",customPatch[@"patch"]);
+			LogInfo(@"Patch %@ approved for update.",customPatch[@"patch"]);
 			tmpDict = [[NSMutableDictionary alloc] init];
 			[tmpDict setObject:customPatch[@"patch"] forKey:@"patch"];
 			[tmpDict setObject:customPatch[@"description"] forKey:@"description"];
@@ -1060,9 +1078,9 @@ done:
 	
 	if (approvedUpdatesArray.count == 1) {
 		result = [approvedUpdatesArray[0] copy];
-		logit(lcl_vInfo,@"Patch found, %@ (%@)",result[@"patch"],result[@"patch_id"]);
+		LogInfo(@"Patch found, %@ (%@)",result[@"patch"],result[@"patch_id"]);
 	} else {
-		logit(lcl_vInfo,@"No update found for %@",aBundleID);
+		LogInfo(@"No update found for %@",aBundleID);
 	}
 	
 	return result;
@@ -1091,13 +1109,13 @@ done:
 	// ***************************************************
 	// Check for console user
 	//
-	logit(lcl_vInfo, @"Checking for any logged in users.");
+	LogInfo( @"Checking for any logged in users.");
 	BOOL hasConsoleUserLoggedIn = TRUE;
 	@try {
 		hasConsoleUserLoggedIn = [self isLocalUserLoggedIn];
 	}
 	@catch (NSException * e) {
-		logit(lcl_vInfo, @"Error getting console user status. %@",e);
+		LogInfo( @"Error getting console user status. %@",e);
 	}
 	
 	if (hasConsoleUserLoggedIn == YES)
@@ -1105,7 +1123,7 @@ done:
 		// Check if patch needs a reboot
 		if ([patch[@"restart"] stringToBoolValue] == YES)
 		{
-			logit(lcl_vInfo,@"%@(%@) requires a reboot, this patch will be installed on logout.",patch[@"patch"],patch[@"version"]);
+			LogInfo(@"%@(%@) requires a reboot, this patch will be installed on logout.",patch[@"patch"],patch[@"version"]);
 			launchRebootWindow++;
 		}
 	}
@@ -1121,7 +1139,7 @@ done:
 			if ([patch[@"patchData"] isKindOfClass:[NSDictionary class]]) {
 				patchData = patch[@"patchData"];
 			} else {
-				logit(lcl_vInfo,@"patchData Object found was not of type dictionary. No install will occur.");
+				LogInfo(@"patchData Object found was not of type dictionary. No install will occur.");
 				return;
 			}
 		}
@@ -1137,71 +1155,71 @@ done:
 		NSString *dlURL;
 		NSString *dlPatchLoc;
 		
-		logit(lcl_vInfo,@"Start install for patch %@.",patch[@"patch"]);
+		LogInfo(@"Start install for patch %@.",patch[@"patch"]);
 		// *****************************
 		// First we need to download the update
 		//
 		@try {
-			logit(lcl_vInfo,@"Start download for patch %@",[patchData[@"pkg_url"] lastPathComponent]);
+			LogInfo(@"Start download for patch %@",[patchData[@"pkg_url"] lastPathComponent]);
 			//Pre Proxy Config
 			dlURL = [NSString stringWithFormat:@"/mp-content%@",patchData[@"pkg_url"]];
-			logit(lcl_vInfo,@"Download patch from: %@",dlURL);
+			LogInfo(@"Download patch from: %@",dlURL);
 			err = nil;
 			
 			MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 			NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
 			dlPatchLoc = [req runSyncFileDownload:dlURL downloadDirectory:dlDir error:&err];
 			if (err) {
-				logit(lcl_vError,@"Error downloading a patch, skipping %@. Err Message: %@",patch[@"patch"],err.localizedDescription);
+				LogError(@"Error downloading a patch, skipping %@. Err Message: %@",patch[@"patch"],err.localizedDescription);
 				return;
 			}
-			logit(lcl_vInfo,@"File downloaded to %@",dlPatchLoc);
+			LogInfo(@"File downloaded to %@",dlPatchLoc);
 		}
 		@catch (NSException *e) {
-			logit(lcl_vError,@"%@", e);
+			LogError(@"%@", e);
 			return;
 		}
 		
 		// *****************************
 		// Validate hash, before install
 		//
-		logit(lcl_vInfo,@"Validating downloaded patch.");
+		LogInfo(@"Validating downloaded patch.");
 		crypto = [[MPCrypto alloc] init];
 		NSString *fileHash = [crypto md5HashForFile:dlPatchLoc];
 		crypto = nil;
-		logit(lcl_vInfo,@"Downloaded file hash: %@ (%@)",fileHash,patchData[@"pkg_hash"]);
+		LogInfo(@"Downloaded file hash: %@ (%@)",fileHash,patchData[@"pkg_hash"]);
 		if ([[patchData[@"pkg_hash"] uppercaseString] isEqualTo:[fileHash uppercaseString]] == NO)
 		{
-			logit(lcl_vError,@"The downloaded file did not pass the file hash validation. No install will occur.");
+			LogError(@"The downloaded file did not pass the file hash validation. No install will occur.");
 			return;
 		}
 		
 		// *****************************
 		// Now we need to unzip
 		//
-		logit(lcl_vInfo,@"Uncompressing patch, to begin install.");
-		logit(lcl_vInfo,@"Begin decompression of file, %@",dlPatchLoc);
+		LogInfo(@"Uncompressing patch, to begin install.");
+		LogInfo(@"Begin decompression of file, %@",dlPatchLoc);
 		err = nil;
 		MPFileUtils *fu = [MPFileUtils new];
 		[fu unzip:dlPatchLoc error:&err];
 		if (err) {
-			logit(lcl_vError,@"Error decompressing a patch, skipping %@. Err Message:%@",patch[@"patch"],err.localizedDescription);
+			LogError(@"Error decompressing a patch, skipping %@. Err Message:%@",patch[@"patch"],err.localizedDescription);
 			return;
 		}
-		logit(lcl_vInfo,@"Patch has been decompressed.");
+		LogInfo(@"Patch has been decompressed.");
 		
 		// *****************************
 		// Run PreInstall Script
 		//
 		if ([patchData[@"pkg_preinstall"] length] > 0 && [patchData[@"pkg_preinstall"] isEqualTo:@"NA"] == NO) {
-			logit(lcl_vInfo,@"Begin pre install script.");
+			LogInfo(@"Begin pre install script.");
 			NSString *preInstScript = [patchData[@"pkg_preinstall"] decodeBase64AsString];
-			logit(lcl_vDebug,@"preInstScript=%@",preInstScript);
+			LogDebug(@"preInstScript=%@",preInstScript);
 			
 			mpScript = [[MPScript alloc] init];
 			if ([mpScript runScript:preInstScript] == NO)
 			{
-				logit(lcl_vError,@"Error running pre-install script.");
+				LogError(@"Error running pre-install script.");
 				mpScript = nil;
 				return;
 			}
@@ -1224,21 +1242,21 @@ done:
 			for (int i = 0; i < [pkgList count]; i++)
 			{
 				pkgPath = [pkgBaseDir stringByAppendingPathComponent:[pkgList objectAtIndex:i]];
-				logit(lcl_vInfo,@"Installing %@",pkgFileName);
-				logit(lcl_vInfo,@"Start install of %@",pkgPath);
+				LogInfo(@"Installing %@",pkgFileName);
+				LogInfo(@"Start install of %@",pkgPath);
 				mpInstaller = [[MPInstaller alloc] init];
 				installResult = [mpInstaller installPkg:pkgPath target:@"/" env:patchData[@"pkg_env_var"]];
 				if (installResult != 0) {
-					logit(lcl_vError,@"Error installing package, error code %d.",installResult);
+					LogError(@"Error installing package, error code %d.",installResult);
 					return;
 				} else {
-					logit(lcl_vInfo,@"%@ was installed successfully.",pkgPath);
+					LogInfo(@"%@ was installed successfully.",pkgPath);
 				}
 			} // End Loop
 		}
 		@catch (NSException *e) {
-			logit(lcl_vError,@"%@", e);
-			logit(lcl_vError,@"Error attempting to install patch, skipping %@. Err Message:%@",[patch objectForKey:@"patch"],err.localizedDescription);
+			LogError(@"%@", e);
+			LogError(@"Error attempting to install patch, skipping %@. Err Message:%@",[patch objectForKey:@"patch"],err.localizedDescription);
 			return;
 		}
 		
@@ -1246,14 +1264,14 @@ done:
 		// Run PostInstall Script
 		//
 		if ([patchData[@"pkg_postinstall"] length] > 0 && [patchData[@"pkg_postinstall"] isEqualTo:@"NA"] == NO) {
-			logit(lcl_vInfo,@"Begin post install script.");
+			LogInfo(@"Begin post install script.");
 			NSString *postInstScript = [patchData[@"pkg_postinstall"] decodeBase64AsString];
-			logit(lcl_vDebug,@"postInstScript=%@",postInstScript);
+			LogDebug(@"postInstScript=%@",postInstScript);
 			
 			mpScript = [[MPScript alloc] init];
 			if ([mpScript runScript:postInstScript] == NO)
 			{
-				logit(lcl_vError,@"Error running post-install script.");
+				LogError(@"Error running post-install script.");
 			}
 			mpScript = nil;
 		}
@@ -1264,19 +1282,19 @@ done:
 		@try
 		{
 			NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch[@"patch_id"],@"third",settings.ccuid];
-			logit(lcl_vInfo,@"Posting patch (%@) install to web service.",patch[@"patch_id"]);
+			LogInfo(@"Posting patch (%@) install to web service.",patch[@"patch_id"]);
 			[self postDataToWS:urlPath data:nil];
 		}
 		@catch (NSException *e) {
-			logit(lcl_vError,@"%@", e);
+			LogError(@"%@", e);
 		}
 		
-		//logit(lcl_vInfo,@"Patch install completed.");
-        qlinfo(@"Install completed for %@",patch[@"patch"]);
+		//LogInfo(@"Patch install completed.");
+        LogInfo(@"Install completed for %@",patch[@"patch"]);
 	}
 	else
 	{
-		logit(lcl_vInfo,@"Patches that require reboot need to be installed. Opening reboot dialog now.");
+		LogInfo(@"Patches that require reboot need to be installed. Opening reboot dialog now.");
 		// 10.9 support
 		NSString *_rbFile = @"/private/tmp/.MPRebootRun.plist";
 		NSString *_rbText = @"reboot";
@@ -1299,11 +1317,11 @@ done:
 	result = [req runSyncPOST:urlPath body:data];
 	
 	if (result.statusCode >= 200 && result.statusCode <= 299) {
-		logit(lcl_vInfo,@"[Software][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
-		logit(lcl_vDebug,@"Data Result: %@",result.result);
+		LogInfo(@"[Software][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
+		LogDebug(@"Data Result: %@",result.result);
 	} else {
-		logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
-		logit(lcl_vDebug,@"%@",result.toDictionary);
+		LogError(@"Data post to web service (%@), returned false.", urlPath);
+		LogDebug(@"%@",result.toDictionary);
 		return NO;
 	}
 	
@@ -1320,7 +1338,7 @@ done:
 	
 	if (consoleUserName != NULL)
 	{
-		logit(lcl_vInfo,@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
+		LogInfo(@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
 		CFRelease(consoleUserName);
 	} else {
 		result = NO;

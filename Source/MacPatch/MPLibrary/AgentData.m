@@ -147,7 +147,7 @@
         [d setObject:result.base64 forKey:aKey];
         [NSKeyedArchiver archiveRootObject:d toFile:AGENT_REG_FILE];
     } else {
-        qlerror(@"Unable to write data for key.");
+        printf("Unable to write data for key.\n");
     }
 }
 

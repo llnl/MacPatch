@@ -3,7 +3,7 @@
 //  gov.llnl.mp.status.ui
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -65,6 +65,7 @@
         self->_listener.delegate = self;
         self->_selfPID = [self getPidNumber];
         self->SW_DATA_DIR = [self swDataDirURL];
+        self->swTaskTimeoutValue = 1200; // 15min timeout to install an item
         [self configDataDir];
         fm = [NSFileManager defaultManager];
         
@@ -184,14 +185,8 @@
 {
     // We specifically don't check for authorization here.  Everyone is always allowed to get
     // the version of the helper tool.
-    logit(lcl_vInfo,@"getTestWithReply");
-    
-    MPConfigProfiles *p = [[MPConfigProfiles alloc] init];
-    NSArray *cp = [p readProfileStoreReturnAsConfigProfile];
-    NSString *str = [NSString stringWithFormat:@"Profiles Found %lu",(unsigned long)cp.count];
-    
-    qldebug(@"getTestWithReply");
-    reply(str);
+    qlinfo(@"getTestWithReply");
+    reply(@"Test Reply");
 }
 
 #pragma mark • Client Checkin
@@ -244,7 +239,7 @@
     NSDictionary *authData = nil;
     NSError *err = nil;
     MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-    MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+    MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
     if (!err) {
         authData = [pi toDictionary];
     } else {
@@ -265,7 +260,11 @@
     "</dict></plist>\n"
     "EOF",authData[@"userName"],authData[@"userPass"]];
     
-    [script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
+    NSError *fileErr = nil;
+    [script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
+    if (fileErr) {
+        qlerror(@"Error writing file to /private/var/tmp/authScript : %@", fileErr);
+    }
     
     MPScript *mps = [MPScript new];
     BOOL res = [mps runScript:script];
@@ -304,8 +303,9 @@
         {
             if ([d[@"useRecovery"] boolValue])
             {
+                qldebug(@"Checking if recovery key is valid.");
                 MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-                MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+                MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
                 if (!err)
                 {
                     isValid = [self recoveryKeyIsValid:pi.userPass];
@@ -316,13 +316,14 @@
                         [d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
                     }
                 } else {
-                    qlerror(@"Could not retrievePassItemForService");
+                    qlerror(@"Could not retrievePassItemForService for recovery key.");
                     qlerror(@"%@",err.localizedDescription);
                 }
             } else {
+                qldebug(@"Checking if auth creds are valid.");
                 DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
                 MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-                MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+                MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
                 if (!err)
                 {
                     isValid = [dh checkPassword:pi.userPass forUserWithName:pi.userName];
@@ -399,8 +400,6 @@
 
 - (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
 {
-    //qlinfo(@"CEHD [postProvisioningData]: key:%@ dataType:%@",key,dataType);
-    
     NSError *err = nil;
     id _data = nil;
     
@@ -437,10 +436,8 @@
         }
         [_status addObject:_data];
         [_pFile setObject:_status forKey:key];
-        // _pFile[key] = _status;
     } else {
         [_pFile setObject:_data forKey:key];
-        // _pFile[key] = _data;
     }
     
     if (![_pFile writeToFile:MP_PROVISION_FILE atomically:NO]) {
@@ -448,8 +445,6 @@
         err = [NSError errorWithDomain:@"gov.llnl.mp.status.ui" code:101 userInfo:errDetail];
     }
     
-    //qlinfo(@"CEHD: Verify postProvisioningData");
-    //qlinfo(@"CEHD: Data: %@",[NSDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE]);
     reply(err);
 }
 
@@ -472,6 +467,867 @@
     reply(err);
 }
 
+- (void)runScriptFromString:(NSString *)script withReply:(void(^)(NSError * error, NSInteger result))reply
+{
+    NSError  *err = nil;
+    MPScript *mps = nil;
+    int res = 0;
+    
+    mps = [[MPScript alloc] init];
+    if ([mps runScript:script]) {
+        res = 0;
+    } else {
+        res = 1;
+    }
+    
+    mps = nil;
+    reply(err,res);
+}
+
+/*
+#pragma mark • Software
+- (void)installSoftware:(NSDictionary *)swItem withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+{
+    //__block NSError *err;
+    //__block NSInteger res;
+    //__block NSData *resData;
+    // Default timeout is 30min
+    [self installSoftware:swItem timeOut:1800 withReply:^(NSError *error, NSInteger resultCode, NSData *installData) {
+        //err = error;
+        //res = resultCode;
+        //resData = installData;
+        reply(error, resultCode, installData);
+    }];
+}
+
+- (void)installSoftware:(NSDictionary *)swItem timeOut:(NSInteger)timeout withReply:(void(^)(NSError *error, NSInteger resultCode, NSData *installData))reply
+{
+    qlinfo(@"Start install of %@",swItem[@"name"]);
+    qldebug(@"swItem: %@",swItem);
+    
+    NSError *err = nil;
+    NSString *errStr;
+    NSInteger result = 99; // Default result
+    NSData *installResultData = [NSData data];
+    
+    NSString *pkgType = [swItem valueForKeyPath:@"Software.sw_type"];
+    
+    MPFileUtils *fu;
+    NSString *fHash = nil;
+    MPScript *mpScript;
+    MPCrypto *mpCrypto = [[MPCrypto alloc] init];
+    
+    if (!SW_DATA_DIR) {
+        SW_DATA_DIR = [self swDataDirURL];
+    }
+    NSString *dlSoftwareFileName = [[swItem valueForKeyPath:@"Software.sw_url"] lastPathComponent];
+    NSString *dlSoftwareFile = [NSString pathWithComponents:@[[SW_DATA_DIR path],@"sw",swItem[@"id"],dlSoftwareFileName]];
+    
+    // -----------------------------------------
+    // Download Software
+    // -----------------------------------------
+    [self downloadSoftware:[swItem copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
+    
+    if ([pkgType isEqualToString:@"SCRIPTZIP" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Unzip Software
+        // ------------------------------------------------
+        [self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
+        qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+        fu = [MPFileUtils new];
+        BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+        if (!res || err) {
+            if (err) {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+                qlerror(@"%@", errStr);
+            } else {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+                qlerror(@"%@", errStr);
+            }
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Run Download Script
+        // ------------------------------------------------
+        [self postStatus:@"Running script..."];
+        err = nil;
+        mpScript = [[MPScript alloc] init];
+        if (![mpScript runScriptsFromDirectory:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err]) {
+            result = 1;
+            if (err) {
+                qlerror(@"%@", err.localizedDescription);
+            }
+            reply(err,1,installResultData);
+            return;
+        } else {
+            result = 0;
+        }
+        
+        // ------------------------------------------------
+        // Run Post Install Script, if copy was good
+        // ------------------------------------------------
+        if (result == 0)
+        {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
+    else if ([pkgType isEqualToString:@"PACKAGEZIP" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Unzip Software
+        // ------------------------------------------------
+        [self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
+        qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+        fu = [MPFileUtils new];
+        BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+        if (!res || err) {
+            if (err) {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+                qlerror(@"%@", errStr);
+            } else {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+                qlerror(@"%@", errStr);
+            }
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Install PKG
+        // ------------------------------------------------
+        [self postStatus:@"Installing %@",dlSoftwareFile.lastPathComponent];
+        result = [self installPkgFromZIP:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swItem[@"pkgEnv"]];
+        
+        // ------------------------------------------------
+        // Run Post Install Script, if copy was good
+        // ------------------------------------------------
+        if (result == 0)
+        {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
+    else if ([pkgType isEqualToString:@"APPZIP" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Unzip Software
+        // ------------------------------------------------
+        [self postStatus:[NSString stringWithFormat:@"Unzipping file %@.",dlSoftwareFileName]];
+        qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+        fu = [MPFileUtils new];
+        BOOL res = [fu unzipItemAtPath:dlSoftwareFile targetPath:[dlSoftwareFile stringByDeletingLastPathComponent] error:&err];
+        if (!res || err) {
+            if (err) {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@. %@",dlSoftwareFile,[err description]];
+                qlerror(@"%@", errStr);
+            } else {
+                errStr = [NSString stringWithFormat:@"Error unzipping file %@.",dlSoftwareFile];
+                qlerror(@"%@", errStr);
+            }
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileUnZipError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Copy App To Applications
+        // ------------------------------------------------
+        NSString *swUnzipDir = NULL;
+        NSString *swUnzipDirBase = [[SW_DATA_DIR path] stringByAppendingPathComponent:@"sw"];
+        swUnzipDir = [swUnzipDirBase stringByAppendingPathComponent:swItem[@"id"]];
+        [self postStatus:[NSString stringWithFormat:@"Installing %@ to Applications.",[swUnzipDir lastPathComponent]]];
+        result = [self copyAppFrom:swUnzipDir action:kMPMoveFile error:NULL];
+        
+        // ------------------------------------------------
+        // Run Post Install Script, if copy was good
+        // ------------------------------------------------
+        if (result == 0)
+        {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
+    else if ([pkgType isEqualToString:@"PACKAGEDMG" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+        }
+
+        // ------------------------------------------------
+        // Mount DMG
+        // ------------------------------------------------
+        int m = -1;
+        m = [self mountDMG:dlSoftwareFile packageID:swItem[@"id"]];
+        if (m != 0) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPMountDMGError userInfo:@{NSLocalizedDescriptionKey:@"Error mounting dmg."}];
+            reply(err,1,installResultData);
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+        }
+        
+        // ------------------------------------------------
+        // Install PKG
+        // ------------------------------------------------
+        [self postStatus:@"Installing %@",dlSoftwareFileName];
+        result = [self installPkgFromDMG:swItem[@"id"] environment:[swItem valueForKeyPath:@"Software.sw_env_var"]];
+
+        // ------------------------------------------------
+        // Run Post Install Script
+        // ------------------------------------------------
+        if (result == 0) {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
+    else if ([pkgType isEqualToString:@"APPDMG" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+        }
+        
+        // ------------------------------------------------
+        // Mount DMG
+        // ------------------------------------------------
+        int m = -1;
+        m = [self mountDMG:dlSoftwareFile packageID:swItem[@"id"]];
+        if (m != 0) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPMountDMGError userInfo:@{NSLocalizedDescriptionKey:@"Error mounting dmg."}];
+            reply(err,1,installResultData);
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+        }
+        
+        // ------------------------------------------------
+        // Copy App To Applications
+        // ------------------------------------------------
+        [self postStatus:@"Installing %@",dlSoftwareFileName];
+        result = [self copyAppFromDMG:swItem[@"id"]];
+        
+        // ------------------------------------------------
+        // Run Post Install Script
+        // ------------------------------------------------
+        if (result == 0) {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
+    else
+    {
+        qlerror(@"Install Type Not Supported for %@",swItem[@"name"]);
+        // Install Type Not Supported
+        result = 2;
+    }
+    
+    
+    if (result == 0)
+    {
+        if ([[swItem valueForKeyPath:@"Software.auto_patch"] intValue] == 1) {
+            err = nil;
+            // Install Pathes If Enabled
+            [self postStatus:@"Patching %@",swItem[@"name"]];
+            MPPatching *p = [MPPatching new];
+            NSArray *foundPatches = [p scanForPatchUsingBundleID:[swItem valueForKeyPath:@"Software.patch_bundle_id"]];
+            if (foundPatches)
+            {
+                if (foundPatches.count >= 1)
+                {
+                    [p installPatchesUsingTypeFilter:foundPatches typeFilter:kCustomPatches];
+                }
+            }
+        }
+    }
+    
+    NSDictionary *wsRes = @{@"tuuid":swItem[@"id"],
+                            @"suuid":[swItem valueForKeyPath:@"Software.sid"],
+                            @"action":@"i",
+                            @"result":[NSString stringWithFormat:@"%d",(int)result],
+                            @"resultString":@""};
+    MPRESTfull *mpr = [MPRESTfull new];
+    err = nil;
+    [mpr postSoftwareInstallResults:wsRes error:&err];
+    if (err) {
+        qlerror(@"Error posting software install results.");
+        qlerror(@"%@",err.localizedDescription);
+    }
+    
+    reply(err,result,installResultData);
+}
+
+- (BOOL)downloadSoftware:(NSDictionary *)swTask toDestination:(NSString *)toPath
+{
+    qlinfo(@"downloadSoftware for task %@",swTask[@"name"]);
+    NSString *_url;
+    NSInteger useS3 = [[swTask valueForKeyPath:@"Software.sw_useS3"] integerValue];
+    if (useS3 == 1) {
+        MPRESTfull *mpr = [MPRESTfull new];
+        NSDictionary *res = [mpr getS3URLForType:@"sw" id:swTask[@"id"]];
+        if (res) {
+            _url = res[@"url"];
+        } else {
+            qlerror(@"Result from getting the S3 url was nil. No download can occure.");
+            return FALSE;
+        }
+    } else {
+        _url = [NSString stringWithFormat:@"/mp-content%@",[swTask valueForKeyPath:@"Software.sw_url"]];
+    }
+    
+    NSError *dlErr = nil;
+    MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
+    req.delegate = self;
+    NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
+    qldebug(@"Downloaded software to %@",dlPath);
+    return YES;
+}
+*/
+/**
+ Method will run a script using MPScript.
+ 
+ aScript (NSString) is a Base64 encoded string.
+ 
+ aScriptType (int) is for the logging it's
+     values: 0 = pre and 1 = post
+ */
+/*
+-(BOOL)runSWInstallScript:(NSString *)aScript type:(int)aScriptType
+{
+    NSString *_script;
+    MPScript *mps = [[MPScript alloc] init];
+    if (!aScript) return YES;
+    if ([aScript isEqualToString:@""]) return YES;
+    
+    NSString *_scriptType = (aScriptType == 0) ? @"pre" : @"post";
+    
+    @try
+    {
+        _script = [aScript decodeBase64AsString];
+        if (![mps runScript:_script]) {
+            logit(lcl_vError,@"Error running %@ install script. No install will occure.", _scriptType);
+            return NO;
+        } else {
+            return YES;
+        }
+    }
+    @catch (NSException *exception) {
+        logit(lcl_vError,@"Exception Error running %@ install script. No install will occure.", _scriptType);
+        logit(lcl_vError,@"%@",exception);
+        return NO;
+    }
+    
+    qlerror(@"Reached end of runSWInstallScript, should not happen.");
+    return NO;
+}
+
+// Run Software Package Install
+- (void)installPackageFromZIP:(NSString *)pkgID environment:(NSString *)env withReply:(void(^)(NSError *error, NSInteger result))reply
+{
+    int result = 0;
+    NSString *mountPoint = NULL;
+    mountPoint = [NSString pathWithComponents:@[[SW_DATA_DIR path],@"sw",pkgID]];
+    
+    NSArray     *dirContents = [fm contentsOfDirectoryAtPath:mountPoint error:nil];
+    NSPredicate *fltr        = [NSPredicate predicateWithFormat:@"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"];
+    NSArray     *onlyPkgs    = [dirContents filteredArrayUsingPredicate:fltr];
+    
+    NSArray *installArgs;
+    NSString *pkgPath;
+    for (NSString *pkg in onlyPkgs)
+    {
+        pkgPath = [NSString pathWithComponents:@[[SW_DATA_DIR path],@"sw",pkgID, pkg]];
+        installArgs = @[@"-verboseR", @"-pkg", pkgPath, @"-target", @"/"];
+        
+        if ([self runTask:INSTALLER_BIN_PATH binArgs:installArgs environment:env] != 0) {
+            result++;
+        }
+        
+        pkgPath = nil;
+    }
+    
+    reply(nil,result);
+}
+
+// Install PKG from DMG
+- (void)installPkgFromDMG:(NSString *)dmgPath packageID:(NSString *)packageID environment:(NSString *)aEnv withReply:(void(^)(NSError *error, NSInteger result))reply
+{
+    if ([self mountDMG:dmgPath packageID:packageID] != 0) {
+        // Need a NSError reason
+        reply(nil, 1);
+        return;
+    }
+    
+    int result = 0;
+    NSString *mountPoint = [NSString pathWithComponents:@[[SW_DATA_DIR path], @"dmg", packageID]];
+    
+    NSArray     *dirContents = [fm contentsOfDirectoryAtPath:mountPoint error:nil];
+    NSPredicate *fltr        = [NSPredicate predicateWithFormat:@"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"];
+    NSArray     *onlyPkgs    = [dirContents filteredArrayUsingPredicate:fltr];
+    
+    int pkgInstallResult = -1;
+    NSArray *installArgs;
+    for (NSString *pkg in onlyPkgs)
+    {
+        //[self postDataToClient:[NSString stringWithFormat:@"Begin installing %@",pkg] type:kMPProcessStatus];
+        installArgs = @[@"-verboseR", @"-pkg", [mountPoint stringByAppendingPathComponent:pkg], @"-target", @"/"];
+        pkgInstallResult = [self runTask:INSTALLER_BIN_PATH binArgs:installArgs environment:aEnv];
+        if (pkgInstallResult != 0) {
+            result++;
+        }
+    }
+    
+    [self unmountDMG:dmgPath packageID:packageID];
+    reply(nil, result);
+}
+
+- (void)changeOwnershipOfApp:(NSString *)aApp owner:(NSString *)aOwner group:(NSString *)aGroup error:(NSError **)err
+{
+    NSDictionary *permDict = @{NSFileOwnerAccountName:aOwner,NSFileGroupOwnerAccountName:aGroup};
+    NSError *error = nil;
+    [fm setAttributes:permDict ofItemAtPath:aApp error:&error];
+    if (error) {
+        if (err != NULL) *err = error;
+        qlerror(@"Error settings permission %@",[error description]);
+        return;
+    }
+    
+    error = nil;
+    NSArray *aContents = [fm subpathsOfDirectoryAtPath:aApp error:&error];
+    if (error) {
+        if (err != NULL) *err = error;
+        qlerror(@"Error subpaths of Directory %@.\n%@",aApp,[error description]);
+        return;
+    }
+    if (!aContents) {
+        qlerror(@"No contents found for %@",aApp);
+        return;
+    }
+    
+    for (NSString *i in aContents)
+    {
+        error = nil;
+        [[NSFileManager defaultManager] setAttributes:permDict ofItemAtPath:[aApp stringByAppendingPathComponent:i] error:&error];
+        if (error) {
+            if (err != NULL) *err = error;
+            qlerror(@"Error settings permission %@",[error description]);
+        }
+    }
+}
+
+- (int)installPkgFromZIP:(NSString *)pkgPathDir environment:(NSString *)aEnv
+{
+    int result = 0;
+
+    NSArray *dirContents = [fm contentsOfDirectoryAtPath:pkgPathDir error:nil];
+    NSPredicate *fltr = [NSPredicate predicateWithFormat:@"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"];
+    NSArray *onlyPkgs = [dirContents filteredArrayUsingPredicate:fltr];
+    
+    int pkgInstallResult = -1;
+    NSArray *installArgs;
+    for (NSString *pkg in onlyPkgs)
+    {
+        qlinfo(@"Installing %@",pkg);
+        NSString *pkgPath = [pkgPathDir stringByAppendingPathComponent:pkg];
+        installArgs = @[@"-verboseR", @"-pkg", pkgPath, @"-target", @"/"];
+        pkgInstallResult = [self runTask:INSTALLER_BIN_PATH binArgs:installArgs environment:aEnv];
+        if (pkgInstallResult != 0) {
+            result++;
+        }
+    }
+    
+    return result;
+}
+
+- (int)mountDMG:(NSString *)dmgPath packageID:(NSString *)pkgID
+{
+    qlinfo(@"Mounting DMG %@",dmgPath);
+    NSString *mountPoint = [NSString pathWithComponents:@[[SW_DATA_DIR path], @"dmg", pkgID]];
+    logit(lcl_vDebug,@"[mountDMG] mountPoint: %@",mountPoint);
+    
+    NSError *err = nil;
+    if ([fm fileExistsAtPath:mountPoint]) {
+        [self unmountDMG:dmgPath packageID:pkgID]; // Unmount incase it's already mounted
+    }
+    [fm createDirectoryAtPath:mountPoint withIntermediateDirectories:YES attributes:nil error:&err];
+    if (err) {
+        logit(lcl_vError,@"%@",err.localizedDescription);
+        return 1;
+    }
+    
+    // Check if DMG exists
+    if ([fm fileExistsAtPath:dmgPath] == NO) {
+        logit(lcl_vError,@"File \"%@\" does not exist.",dmgPath);
+        return 1;
+    }
+    
+    NSArray *args = @[@"attach", @"-mountpoint", mountPoint, dmgPath, @"-nobrowse"];
+    NSTask  *aTask = [[NSTask alloc] init];
+    NSPipe  *pipe = [NSPipe pipe];
+    
+    [aTask setLaunchPath:@"/usr/bin/hdiutil"];
+    [aTask setArguments:args];
+    [aTask setStandardInput:pipe];
+    [aTask setStandardOutput:[NSFileHandle fileHandleWithNullDevice]];
+    [aTask setStandardError:[NSFileHandle fileHandleWithStandardError]];
+    [aTask launch];
+    [aTask waitUntilExit];
+    
+    int result = [aTask terminationStatus];
+    if (result == 0) {
+        qlinfo(@"DMG Mounted %@", mountPoint);
+    }
+    
+    return result;
+}
+
+- (int)unmountDMG:(NSString *)dmgPath packageID:(NSString *)pkgID
+{
+    NSString *mountPoint = [NSString pathWithComponents:@[[SW_DATA_DIR path], @"dmg", pkgID]];
+    qlinfo(@"Un-Mounting DMG %@",mountPoint);
+    
+    NSArray       *args  = @[@"detach", mountPoint, @"-force"];
+    NSTask        *aTask = [[NSTask alloc] init];
+    NSPipe        *pipe  = [NSPipe pipe];
+    
+    [aTask setLaunchPath:@"/usr/bin/hdiutil"];
+    [aTask setArguments:args];
+    [aTask setStandardInput:pipe];
+    [aTask setStandardOutput:[NSFileHandle fileHandleWithNullDevice]];
+    [aTask setStandardError:[NSFileHandle fileHandleWithStandardError]];
+    [aTask launch];
+    [aTask waitUntilExit];
+    
+    int result = [aTask terminationStatus];
+    if (result == 0) {
+        qlinfo(@"DMG Un-Mounted %@",dmgPath);
+    }
+    
+    return result;
+}
+
+- (int)installPkgFromDMG:(NSString *)pkgID environment:(NSString *)aEnv
+{
+    int result = 0;
+    NSString *mountPoint = NULL;
+    NSString *mountPointBase = [[SW_DATA_DIR path] stringByAppendingPathComponent:@"dmg"];
+    mountPoint = [mountPointBase stringByAppendingPathComponent:pkgID];
+    
+    NSArray *dirContents = [fm contentsOfDirectoryAtPath:mountPoint error:nil];
+    NSPredicate *fltr = [NSPredicate predicateWithFormat:@"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"];
+    NSArray *onlyPkgs = [dirContents filteredArrayUsingPredicate:fltr];
+    
+    int pkgInstallResult = -1;
+    NSArray *installArgs;
+    for (NSString *pkg in onlyPkgs)
+    {
+        qlinfo(@"Begin installing %@",pkg);
+        installArgs = [NSArray arrayWithObjects:@"-verboseR", @"-pkg", [mountPoint stringByAppendingPathComponent:pkg], @"-target", @"/", nil];
+        pkgInstallResult = [self runTask:INSTALLER_BIN_PATH binArgs:installArgs environment:aEnv];
+        if (pkgInstallResult != 0) {
+            result++;
+        }
+    }
+    
+    [self unmountDMG:mountPoint packageID:pkgID];
+    return result;
+}
+
+- (int)copyAppFromDMG:(NSString *)pkgID
+{
+    int result = 0;
+    NSString *mountPoint = NULL;
+    NSString *mountPointBase = [[SW_DATA_DIR path] stringByAppendingPathComponent:@"dmg"];
+    mountPoint = [mountPointBase stringByAppendingPathComponent:pkgID];
+    
+    result = [self copyAppFrom:mountPoint action:kMPCopyFile error:NULL];
+    
+    [self unmountDMG:mountPoint packageID:pkgID];
+    return result;
+}
+
+/**
+ Copy application from a directory to the Applications directory
+ 
+ action is MPFileMoveAction kMPFileCopy or kMPFileMove
+ 
+ Method also calls changeOwnershipOfItem
+ */
+/*
+- (int)copyAppFrom:(NSString *)aDir action:(MPFileMoveAction)action error:(NSError **)error
+{
+    int result = 0;
+    NSArray *dirContents = [fm contentsOfDirectoryAtPath:aDir error:nil];
+    NSPredicate *fltr = [NSPredicate predicateWithFormat:@"self ENDSWITH '.app'"];
+    NSArray *onlyApps = [dirContents filteredArrayUsingPredicate:fltr];
+    
+    NSError *err = nil;
+    for (NSString *app in onlyApps)
+    {
+        if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]])
+        {
+            qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+            [fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
+            if (err) {
+                if (error != NULL) *error = err;
+                result = 3;
+                break;
+            }
+        }
+        err = nil;
+        if (action == kMPCopyFile) {
+            [fm copyItemAtPath:[aDir stringByAppendingPathComponent:app] toPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
+        } else if (action == kMPMoveFile) {
+            [fm moveItemAtPath:[aDir stringByAppendingPathComponent:app] toPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
+        } else {
+            [fm copyItemAtPath:[aDir stringByAppendingPathComponent:app] toPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
+        }
+        
+        if (err)
+        {
+            if (error != NULL) *error = err;
+            result = 2;
+            break;
+        }
+        
+        [self changeOwnershipOfItem:[@"/Applications" stringByAppendingPathComponent:app] owner:@"root" group:@"admin"];
+    }
+    
+    return result;
+}
+*/
+/**
+ Method will change the ownership of a item at a given path, owner and group are strings
+ */
+/*
+- (void)changeOwnershipOfItem:(NSString *)aApp owner:(NSString *)aOwner group:(NSString *)aGroup
+{
+    NSDictionary *permDict = [NSDictionary dictionaryWithObjectsAndKeys:
+                              aOwner,NSFileOwnerAccountName,
+                              aGroup,NSFileGroupOwnerAccountName,nil];
+    
+    NSError *error = nil;
+    [fm setAttributes:permDict ofItemAtPath:aApp error:&error];
+    if(error)
+    {
+        qlerror(@"Error settings permission %@",[error description]);
+        return;
+    }
+    
+    error = nil;
+    NSArray *aContents = [fm subpathsOfDirectoryAtPath:aApp error:&error];
+    if(error)
+    {
+        qlerror(@"Error subpaths of Directory %@.\n%@",aApp,[error description]);
+        return;
+    }
+    if (!aContents)
+    {
+        qlerror(@"No contents found for %@",aApp);
+        return;
+    }
+    
+    for (NSString *i in aContents)
+    {
+        error = nil;
+        [[NSFileManager defaultManager] setAttributes:permDict ofItemAtPath:[aApp stringByAppendingPathComponent:i] error:&error];
+        if(error){
+            qlerror(@"Error settings permission %@",[error description]);
+        }
+    }
+}
+
+// Helpers
+- (int)runTask:(NSString *)aBinPath binArgs:(NSArray *)aBinArgs environment:(NSString *)env
+{
+    MPNSTask *task = [MPNSTask new];
+    task.taskTimeoutValue = swTaskTimeoutValue;
+    int taskResult = -1;
+    
+    // Parse the Environment variables for the install
+    NSDictionary *defaultEnvironment = [[NSProcessInfo processInfo] environment];
+    NSMutableDictionary *environment = [[NSMutableDictionary alloc] initWithDictionary:defaultEnvironment];
+    [environment setObject:@"YES" forKey:@"NSUnbufferedIO"];
+    [environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    
+    if ([env isEqualToString:@"NA"] == NO && [[env trim] length] > 0)
+    {
+        NSArray *l_envArray;
+        NSArray *l_envItems;
+        l_envArray = [env componentsSeparatedByString:@","];
+        for (id item in l_envArray) {
+            l_envItems = nil;
+            l_envItems = [item componentsSeparatedByString:@"="];
+            if ([l_envItems count] == 2) {
+                logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+                [environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
+            } else {
+                logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+            }
+        }
+    }
+    
+    logit(lcl_vDebug,@"[task][environment]: %@",environment);
+    logit(lcl_vDebug,@"[task][setLaunchPath]: %@",aBinPath);
+    logit(lcl_vDebug,@"[task][setArguments]: %@",aBinArgs);
+    qlinfo(@"[task][setTimeout]: %d",swTaskTimeoutValue);
+    
+    NSString *result;
+    NSError *error = nil;
+    result = [task runTaskWithBinPath:aBinPath args:aBinArgs environment:environment error:&error];
+    if (error) {
+        qlerror(@"%@",error.localizedDescription);
+    } else {
+        taskResult = task.taskTerminationStatus;
+    }
+
+    return taskResult;
+}
+
+
+
+#pragma mark • Agent Protocol
+
+// Software
+// Post Status Text
+- (void)postStatus:(NSString *)status,...
+{
+    @try {
+        va_list args;
+        va_start(args, status);
+        NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
+        va_end(args);
+        
+        qltrace(@"postStatus[XPCWorker]: %@",statusStr);
+        [[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPProcessStatus];
+    }
+    @catch (NSException *exception) {
+        qlerror(@"%@",exception);
+    }
+}
+
+*/
 # pragma mark - PID methods
 
 - (int)getPidNumber

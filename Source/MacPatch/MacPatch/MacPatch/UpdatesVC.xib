@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -27,7 +27,7 @@
             <rect key="frame" x="0.0" y="0.0" width="1000" height="600"/>
             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
             <subviews>
-                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dmX-ip-Xqs">
+                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dmX-ip-Xqs">
                     <rect key="frame" x="42" y="527" width="938" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" placeholderString="Installing ..." id="yoP-su-aXO">
@@ -44,9 +44,8 @@
                     <rect key="frame" x="20" y="505" width="960" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxY="YES"/>
                 </progressIndicator>
-                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZDQ-D3-VCH">
+                <textField hidden="YES" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZDQ-D3-VCH">
                     <rect key="frame" x="628" y="571" width="354" height="17"/>
-                    <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Label" id="CCo-CC-3UZ">
                         <font key="font" metaFont="system"/>
                         <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -81,10 +80,10 @@
                                         <tableColumnResizingMask key="resizingMask" resizeWithTable="YES" userResizable="YES"/>
                                         <prototypeCellViews>
                                             <tableCellView identifier="MainCell" id="2wz-EF-zfl" customClass="UpdatesCellView">
-                                                <rect key="frame" x="11" y="1" width="974" height="80"/>
+                                                <rect key="frame" x="1" y="1" width="974" height="80"/>
                                                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                 <subviews>
-                                                    <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r7C-ie-hLs">
+                                                    <textField hidden="YES" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r7C-ie-hLs">
                                                         <rect key="frame" x="664" y="17" width="211" height="17"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Label" id="7bK-Rh-ITF">
@@ -97,7 +96,7 @@
                                                         <rect key="frame" x="666" y="30" width="207" height="20"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                                                     </progressIndicator>
-                                                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WSM-6U-kTg">
+                                                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WSM-6U-kTg">
                                                         <rect key="frame" x="320" y="0.0" width="355" height="75"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                         <textFieldCell key="cell" selectable="YES" title="Multiline Label" id="Oc1-Hi-5Hk">
@@ -106,7 +105,7 @@
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
                                                     </textField>
-                                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="65t-m4-jvo">
+                                                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="65t-m4-jvo">
                                                         <rect key="frame" x="66" y="38" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Version" id="6mf-Aa-dc6">
@@ -115,7 +114,7 @@
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
                                                     </textField>
-                                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pe3-cA-v0J">
+                                                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="pe3-cA-v0J">
                                                         <rect key="frame" x="66" y="4" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Reboot" id="97I-Nh-jki">
@@ -124,7 +123,7 @@
                                                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                                         </textFieldCell>
                                                     </textField>
-                                                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Hxu-AT-I7c">
+                                                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Hxu-AT-I7c">
                                                         <rect key="frame" x="66" y="21" width="250" height="17"/>
                                                         <autoresizingMask key="autoresizingMask"/>
                                                         <textFieldCell key="cell" lineBreakMode="clipping" title="Size" id="299-BS-AYz">
@@ -157,7 +156,7 @@
                                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyUpOrDown" image="GoodImage" id="GEj-06-t3z"/>
                                                     </imageView>
-                                                    <button toolTip="Install Software Item" verticalHuggingPriority="750" fixedFrame="YES" springLoaded="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sD0-oU-ilT" customClass="SYFlatButton">
+                                                    <button toolTip="Install Software Item" springLoaded="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="sD0-oU-ilT" customClass="SYFlatButton">
                                                         <rect key="frame" x="882" y="30" width="79" height="20"/>
                                                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMinY="YES"/>
                                                         <buttonCell key="cell" type="smallSquare" title="Install" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="eGo-sc-Cbl">
@@ -241,7 +240,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
-                <textField hidden="YES" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Frf-m3-5GS">
+                <textField hidden="YES" focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Frf-m3-5GS">
                     <rect key="frame" x="130" y="571" width="389" height="17"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="left" title="Label" id="2BH-jN-HUn">
@@ -250,7 +249,7 @@
                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                     </textFieldCell>
                 </textField>
-                <button toolTip="Install Software Item" verticalHuggingPriority="750" fixedFrame="YES" springLoaded="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ks4-Ux-KKR" customClass="SYFlatButton">
+                <button toolTip="Install Software Item" springLoaded="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ks4-Ux-KKR" customClass="SYFlatButton">
                     <rect key="frame" x="20" y="570" width="80" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" title="Scan" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="0Wb-cP-VQS">
@@ -305,7 +304,7 @@
                         <action selector="scanForPatches:" target="-2" id="CAu-Jh-bNU"/>
                     </connections>
                 </button>
-                <button hidden="YES" toolTip="Install Software Item" verticalHuggingPriority="750" fixedFrame="YES" springLoaded="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vri-7I-gpp" customClass="SYFlatButton">
+                <button hidden="YES" toolTip="Install Software Item" springLoaded="YES" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vri-7I-gpp" customClass="SYFlatButton">
                     <rect key="frame" x="900" y="569" width="80" height="20"/>
                     <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="smallSquare" title="Update All" bezelStyle="smallSquare" alignment="center" lineBreakMode="truncatingTail" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="uRR-jI-UQq">
@@ -362,6 +361,10 @@
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                 </progressIndicator>
             </subviews>
+            <constraints>
+                <constraint firstAttribute="trailing" secondItem="ZDQ-D3-VCH" secondAttribute="trailing" constant="20" symbolic="YES" id="6uD-83-Pam"/>
+                <constraint firstItem="ZDQ-D3-VCH" firstAttribute="top" secondItem="Hz6-mo-xeY" secondAttribute="top" constant="12" id="EnT-M8-pkr"/>
+            </constraints>
             <point key="canvasLocation" x="109" y="-188"/>
         </customView>
     </objects>

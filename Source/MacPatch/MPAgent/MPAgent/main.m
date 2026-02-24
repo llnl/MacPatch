@@ -2,7 +2,7 @@
 //  main.m
 //  MPAgent
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -26,21 +26,24 @@
 
 #import <Foundation/Foundation.h>
 #import <SystemConfiguration/SystemConfiguration.h>
-#import "AgentController.h"
+#import "MacPatch.h"
 #import "SoftwareController.h"
 #import "MPAgentRegister.h"
+#import "CheckIn.h"
 #import "MPInv.h"
 #import "MPOSUpgrade.h"
-#import "AgentData.h"
-#import "MPAgent.h"
+#import "TasksDaemon.h"
 #import "MPProvision.h"
-#import "MPTaskData.h"
+#import "MPAgentUpdater.h"
+//#import "MPFailedRequests.h"
+#import "Patching.h"
+#import "MPFileVault.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"3.8.0.1"
+#define APPVERSION	@"4.0.0.0"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -49,593 +52,528 @@
 void usage(void);
 const char * consoleUser(void);
 
+typedef NS_ENUM(NSInteger, CommandType) {
+    CommandTypeNone,
+    CommandTypeDaemon,
+    CommandTypeCheckIn,
+    CommandTypePatchScan,
+    CommandTypePatchUpdate,
+    CommandTypeAgentUpdater,
+    CommandTypeInventory,
+    CommandTypeClientID,
+    CommandTypeVersion,
+    CommandTypeRegister,
+    CommandTypeFileVault,
+    CommandTypeOSMigration,
+    CommandTypeSoftware,
+    CommandTypeProvision,
+    CommandTypeProvisionConfig,
+    CommandTypePostFailedWebServiceRequests,
+    CommandTypePostAgentInstall
+};
+
+CommandType parseCommand(const char *cmd) {
+    if (strcmp(cmd, "daemon") == 0) return CommandTypeDaemon;
+    if (strcmp(cmd, "checkIn") == 0) return CommandTypeCheckIn;
+    if (strcmp(cmd, "checkin") == 0) return CommandTypeCheckIn;
+    if (strcmp(cmd, "-c") == 0) return CommandTypeCheckIn; // Legacy
+    if (strcmp(cmd, "patchScan") == 0) return CommandTypePatchScan;
+    if (strcmp(cmd, "scan") == 0) return CommandTypePatchScan;
+    if (strcmp(cmd, "patchUpdate") == 0) return CommandTypePatchUpdate;
+    if (strcmp(cmd, "update") == 0) return CommandTypePatchUpdate;
+    if (strcmp(cmd, "agentUpdater") == 0) return CommandTypeAgentUpdater;
+    if (strcmp(cmd, "inventory") == 0) return CommandTypeInventory;
+    if (strcmp(cmd, "inv") == 0) return CommandTypeInventory;
+    if (strcmp(cmd, "clientID") == 0) return CommandTypeClientID;
+    if (strcmp(cmd, "-C") == 0) return CommandTypeClientID; // Legacy
+    if (strcmp(cmd, "id") == 0) return CommandTypeClientID;
+    if (strcmp(cmd, "version") == 0) return CommandTypeVersion;
+    if (strcmp(cmd, "-v") == 0) return CommandTypeVersion;
+    if (strcmp(cmd, "--version") == 0) return CommandTypeVersion;
+    if (strcmp(cmd, "register") == 0) return CommandTypeRegister;
+    if (strcmp(cmd, "osupgrade") == 0) return CommandTypeOSMigration;
+    if (strcmp(cmd, "-k") == 0) return CommandTypeOSMigration; // Legacy
+    if (strcmp(cmd, "oslabel") == 0) return CommandTypeOSMigration;
+    if (strcmp(cmd, "-l") == 0) return CommandTypeOSMigration; // Legacy
+    if (strcmp(cmd, "osUpgradeID") == 0) return CommandTypeOSMigration;
+    if (strcmp(cmd, "-m") == 0) return CommandTypeOSMigration; // Legacy
+    if (strcmp(cmd, "fileVault") == 0) return CommandTypeFileVault;
+    if (strcmp(cmd, "authRestartStatus") == 0) return CommandTypeFileVault;
+    if (strcmp(cmd, "--fvCheck") == 0) return CommandTypeFileVault; // Legacy
+    if (strcmp(cmd, "-Z") == 0) return CommandTypeFileVault; // Legacy
+    if (strcmp(cmd, "software") == 0) return CommandTypeSoftware;
+    if (strcmp(cmd, "provision") == 0) return CommandTypeProvision;
+    if (strcmp(cmd, "-L") == 0) return CommandTypeProvision; // Legacy
+    if (strcmp(cmd, "provisionConfig") == 0) return CommandTypeProvisionConfig;
+    if (strcmp(cmd, "-z") == 0) return CommandTypeProvisionConfig; // Legacy
+    if (strcmp(cmd, "postFailedWSRequests") == 0) return CommandTypePostFailedWebServiceRequests;
+    if (strcmp(cmd, "agentInstall") == 0) return CommandTypePostAgentInstall;
+    if (strcmp(cmd, "--agentInstall") == 0) return CommandTypePostAgentInstall; // Legacy
+    if (strcmp(cmd, "-K") == 0) return CommandTypePostAgentInstall; // Legacy
+    
+    
+    return CommandTypeNone;
+}
+
+void printUsage(const char *progname) {
+    fprintf(stderr, "Usage: %s <command> [OPTIONS]\n\n", progname);
+    fprintf(stderr, "Commands:\n");
+    fprintf(stderr, "  daemon        Run in daemon mode\n");
+    fprintf(stderr, "  checkIn       Run client check in\n");
+    fprintf(stderr, "  patchScan     Run patch scan on host\n");
+    fprintf(stderr, "  patchUpdate   Run patch updates on host\n");
+    fprintf(stderr, "  agentUpdater  Scan and update the Agent updater\n");
+    fprintf(stderr, "  software      Install software for options\n");
+    fprintf(stderr, "    Options:\n");
+    fprintf(stderr, "    -g, --group        Software Group\n");
+    fprintf(stderr, "    -d, --swid         Software Task ID\n");
+    fprintf(stderr, "    -P, --plist        Software Task ID(s) Plist\n");
+    fprintf(stderr, "    -M, --mandatory    Scan and Install Mandatory Software\n\n");
+    fprintf(stderr, "  inventory     Run inventory collection on host\n");
+    fprintf(stderr, "    Options:\n");
+    fprintf(stderr, "    -t, --type INVENTORY TYPE\n\n");
+    fprintf(stderr, "    Inventory Types:\n");
+    fprintf(stderr, "     • All (Default when no type specified)\n");
+    fprintf(stderr, "     • SPHardwareDataType\n");
+    fprintf(stderr, "     • SPSoftwareDataType\n");
+    fprintf(stderr, "     • SPNetworkDataType (Depricated)\n");
+    fprintf(stderr, "     • SINetworkInfo\n");
+    fprintf(stderr, "     • SPApplicationsDataType\n");
+    fprintf(stderr, "     • SPFrameworksDataType\n");
+    fprintf(stderr, "     • SPExtensionsDataType\n");
+    fprintf(stderr, "     • DirectoryServices\n");
+    fprintf(stderr, "     • InternetPlugins\n");
+    fprintf(stderr, "     • AppUsage\n");
+    fprintf(stderr, "     • ClientTasks\n");
+    fprintf(stderr, "     • DiskInfo\n");
+    fprintf(stderr, "     • Users\n");
+    fprintf(stderr, "     • Groups\n");
+    fprintf(stderr, "     • LocalAdminAccounts\n");
+    fprintf(stderr, "     • FileVault\n");
+    fprintf(stderr, "     • PowerManagment\n");
+    fprintf(stderr, "     • BatteryInfo\n");
+    fprintf(stderr, "     • ConfigProfiles\n");
+    fprintf(stderr, "     • AppStoreApps\n");
+    fprintf(stderr, "     • MPServerList\n");
+    fprintf(stderr, "     • Plugins\n");
+    fprintf(stderr, "     • FirmwarePasswordInfo\n\n");
+    fprintf(stderr, "  fileVault    Check if file valut authrestart is set\n\n");
+    fprintf(stderr, "  register     Register Agent With Server\n");
+    fprintf(stderr, "    Options:\n");
+    fprintf(stderr, "    -k, --key        Agent Registration Key\n");
+    fprintf(stderr, "    -s, --status     Agent Registration Status\n\n");
+    fprintf(stderr, "  provisionConfig, -z  Download and create the provisioning config file.\n");
+    fprintf(stderr, "  provision, -L        Start the provisioing process. Including any pre-scripts and software installs\n\n");
+    fprintf(stderr, "  clientID, -C    Return Client ID\n");
+    
+    //fprintf(stderr, "  postFailedWSRequests     Try to repost any failed web service commands\n\n");
+    fprintf(stderr, "Global Options:\n");
+    fprintf(stderr, "  -V, --verbose       Enable verbose/debug logging\n");
+    fprintf(stderr, "  -e, --echo          Echo logging to stdout\n");
+}
+
 int main (int argc, char * argv[])
 {
 	@autoreleasepool
     {
-		int a_Type              = 99;
-		BOOL echoToConsole      = NO;
-		BOOL debugLogging       = NO;
-		BOOL traceLogging       = NO;
-		BOOL verboseLogging     = NO;
-		BOOL isILoadMode 		= NO;
-		BOOL forceRun			= NO;
-        
-        // Registration
-        BOOL doRegistration     = NO;
-        BOOL readRegInfo        = NO;
-        NSString *regKeyArg     = @"999999999";
-        NSString *regKeyHash    = @"999999999";
-        
-        // Inventory
-        NSString *invArg        = NULL;
-		
-		// Patching
-		MPPatchContentType updateType = kAllPatches;
-		NSString *updateBundle = nil;
-        NSString *patchType = nil;
-		
-		// Software
-		NSString *swArg			= NULL;
-		
-        // OS Migration
-        BOOL osMigration        = NO;
-        NSString *osMigAction   = NULL;
-        NSString *osMigLabel    = @"";
-        NSString *osMigID       = @"auto";
-        
-        // Tasks
-        MPTaskData *taskData = [MPTaskData new];
-		
-		// Setup argument processing
-		int c;
-		while (1)
-		{
-			static struct option long_options[] =
-			{
-				// Stdout & Logging
-				{"Echo"					,no_argument		,0, 'e'},
-				{"Debug"				,no_argument	    ,0, 'D'},
-				{"Trace"				,no_argument	    ,0, 'T'},
-				{"Verbose"				,no_argument		,0, 'V'},
-				
-				// Client Check-in
-				{"CheckIn"				,no_argument	    ,0, 'c'},
-				
-				// iload or iLoad, will echo to stdout and run scan & patch
-				{"iload"				,no_argument	    ,0, 'i'},
-				{"iLoad"				,no_argument	    ,0, 'I'},
-                {"iLoadEcho"            ,no_argument        ,0, 'Y'},
-				
-				// Patching
-				{"Scan"					,no_argument	    ,0, 's'},
-				{"Update"				,no_argument	    ,0, 'u'},
-				{"Critial"				,no_argument	    ,0, 'x'},
-				
-				// Patching Filters
-				{"UpdateFilter"			,required_argument	,0, 'f'},
-				{"UpdateBundle"			,required_argument	,0, 'B'},
-				{"FORCERUN"				,no_argument		,0, 'F'},
-				
-				// Inventory
-				{"type"             	,required_argument	,0, 't'},
-				{"Audit"            	,no_argument		,0, 'A'},
-				{"cuuid"            	,no_argument		,0, 'C'},
-				
-				// AV
-				{"AVScan"				,no_argument	    ,0, 'a'},
-				{"AVUpdate"				,no_argument	    ,0, 'U'},
-				
-				// Agent Updater
-				{"AgentUpdater"			,no_argument	    ,0, 'G'},
-				
-				// Mandatory Software Tasks for Client group
-                {"SWScanUpdate" 		,no_argument	    ,0, 'S'},
-                {"mandatorySoftware"    ,no_argument        ,0, 'M'},
-				
-				// Software Dist
-				{"installSWUsingGRP"    ,required_argument	,0, 'g'},
-				{"installSWUsingSID"    ,required_argument	,0, 'd'},
-				{"installSWUsingPLIST"  ,required_argument	,0, 'P'},
-                
-                // Provisioning
-                {"provision"            ,no_argument        ,0, 'L'},
-                {"provisionConfig"      ,no_argument        ,0, 'z'},
-				
-				// Profiles
-                {"Profile"          	,no_argument	    ,0, 'p'},
-
-				// Client Registration
-				{"register"		    	,optional_argument	,0,    'r'},
-				{"regInfo"		    	,optional_argument  ,NULL, 'R'},
-				{"echoReg"		    	,required_argument  ,0,	   'X'},
-				
-				// OS Migration
-				{"OSUpgrade"        	,required_argument	,0, 'k'},
-				{"OSLabel"          	,required_argument	,0, 'l'},
-				{"OSUpgradeID"      	,required_argument	,0, 'm'},
-				
-				// Agent Install
-				{"agentInstall"        	,no_argument		,0, 'K'},
-				
-				// Version Info
-				{"version"				,no_argument		,0, 'v'},
-				{"build"				,no_argument		,0, 'b'},
-				{"help"					,no_argument		,0, 'h'},
-                
-                // FV Check
-                {"fvCheck"              ,no_argument        ,0, 'Z'},
-                
-                // Tasks
-                {"readTasks"            ,no_argument        ,0, 'O'},
-                
-                // Test DB
-                {"installedApps"        ,no_argument        ,0, 'E'},
-                
-
-				{0, 0, 0, 0}
-			};
-			// getopt_long stores the option index here.
-			int option_index = 0;
-			c = getopt_long (argc, argv, "eDTVciIYsuxf:B:Ft:ACaUGSMg:d:P:Lzpr::R::X:k:l:m:Kvbh:ZEO", long_options, &option_index);
-			
-			// Detect the end of the options.
-			if (c == -1)
-				break;
-			
-			switch (c)
-			{
-				case 'e':
-					echoToConsole = YES;
-					break;
-				case 'D':
-					debugLogging = YES;
-					break;
-				case 'T':
-					traceLogging = YES;
-					break;
-				case 'V':
-					verboseLogging = YES;
-					break;
-				case 'c':
-					a_Type = 1;
-					break;
-				case 'i':
-					isILoadMode = YES;
-					a_Type = 4;
-					break;
-				case 'I':
-					isILoadMode = YES;
-					a_Type = 4;
-					break;
-                case 'Y':
-                    isILoadMode = YES;
-                    break;
-				case 's':
-					a_Type = 3;
-					break;
-				case 'u':
-					a_Type = 4;
-					break;
-				case 'x':
-					a_Type = 4;
-					break;
-				case 'f':
-					a_Type = 50;
-                    patchType = [NSString stringWithUTF8String:optarg];
-					if ([[patchType lowercaseString] isEqualTo:@"apple"]) {
-						updateType = kApplePatches;
-					} else if ([[patchType lowercaseString] isEqualTo:@"custom"] || [[patchType lowercaseString] isEqualTo:@"third"]) {
-						updateType = kCustomPatches;
-					} else if ([[patchType lowercaseString] isEqualTo:@"critical"]) {
-						updateType = kCriticalPatches;
-					}
-					break;
-				case 'B':
-					a_Type = 60;
-					updateBundle = [NSString stringWithUTF8String:optarg];
-					break;
-					// Inventory
-				case 'F':
-					forceRun = YES;
-					break;
-				case 't':
-					invArg = [NSString stringWithUTF8String:optarg];
-					a_Type = 12;
-					break;
-				case 'A':
-					invArg = @"Custom";
-					a_Type = 12;
-					break;
-				case 'C':
-					printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
-					return 0;
-				case 'a':
-					a_Type = 5;
-					break;
-				case 'U':
-					a_Type = 6;
-					break;
-				case 'G':
-					a_Type = 7;
-					break;
-				case 'S':
-					a_Type = 8;
-					break;
-                case 'M':
-                    a_Type = 21;
-                    break;
-				case 'g':
-					swArg = [NSString stringWithUTF8String:optarg];
-					a_Type = 13;
-					break;
-				case 'd':
-					swArg = [NSString stringWithUTF8String:optarg];
-					a_Type = 14;
-					break;
-                case 'P':
-					swArg = [NSString stringWithUTF8String:optarg];
-					a_Type = 15;
-					break;
-                case 'L':
-                    a_Type = 20;
-                    break;
-                case 'z':
-                    a_Type = 22;
-                    break;
-                case 'p':
-					a_Type = 9;
-					break;
-				case 'r':
-					a_Type = 16;
-					doRegistration = YES;
-					if (optarg) {
-						regKeyArg = [NSString stringWithUTF8String:optarg];
-					}
-					break;
-				case 'R':
-					a_Type = 17;
-					readRegInfo = YES;
-					if (optarg) {
-						regKeyHash = [NSString stringWithUTF8String:optarg];
-					}
-					break;
-				case 'X':
-					a_Type = 18;
-					if (optarg) {
-						// re-use variable, this is the client key
-						regKeyHash = [NSString stringWithUTF8String:optarg];
-					}
-					break;
-                case 'k':
-					a_Type = 10;
-                    if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"start"]) {
-                        osMigAction = @"start";
-                        osMigration = YES;
-                    } else if ([[[NSString stringWithUTF8String:optarg] lowercaseString] isEqualTo:@"stop"]) {
-                        osMigAction = @"stop";
-                        osMigration = YES;
-                    } else {
-                        osMigAction = @"ERR";
-                        printf("Error, \"OSUpgrade\" state must be either start or stop.\n");
-                        return 1;
-                    }
-                    break;
-                case 'l':
-                    osMigLabel = [NSString stringWithUTF8String:optarg];
-                    break;
-                case 'm':
-                    osMigID = [NSString stringWithUTF8String:optarg];
-                    break;
-				case 'K':
-					a_Type = 19;
-					break;
-				case 'v':
-					printf("%s\n",[APPVERSION UTF8String]);
-					return 0;
-				case 'b':
-					printf("%s\n",[APPBUILD UTF8String]);
-					return 0;
-                case 'Z':
-                    a_Type = 8888;
-                    break;
-                case 'E':
-                    a_Type = 7777;
-                    break;
-                case 'O':
-                    [taskData printAgentTasks];
-                    return 0;
-				case 'h':
-				case '?':
-				default:
-					usage();
-			}
-		}
-
-        if (optind < argc)
-		{
-            while (optind < argc) {
-                printf ("Invalid argument %s ", argv[optind++]);
-            }
-            usage();
-            exit(0);
+        if (argc < 2) {
+            printUsage(argv[0]);
+            return 1;
         }
-
-		// Make sure the user is root or is using sudo
-		if (getuid())
-		{
-			printf("You must be root to run this app. Try using sudo.\n");
-#if DEBUG
-			printf("Running as debug...\n");
-#else
-			exit(0);
-#endif
-		}
-
-    
+        
+        CommandType command = parseCommand(argv[1]);
+        if (command == CommandTypeNone) {
+            fprintf(stderr, "Error: Unknown command '%s'\n\n", argv[1]);
+            printUsage(argv[0]);
+            return 1;
+        }
+        
+        optind = 2;
+        
+        const char *short_opts;
+        struct option *long_opts;
+        
+        // Argparse Option Groups
+        static struct option global_options[] = {
+            {"echo", no_argument,       0, 'e'},
+            {"verbose", no_argument,    0, 'V'},
+            {"trace", no_argument,      0, 'T'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option daemon_options[] = {
+            {"echo", no_argument,       0, 'e'},
+            {"verbose", no_argument,    0, 'V'},
+            {"trace", no_argument,      0, 'T'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option patch_options[] = {
+            {"echo", no_argument,       0, 'e'},
+            {"verbose", no_argument,    0, 'V'},
+            {"trace", no_argument,      0, 'T'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option inventory_options[] = {
+            {"echo", no_argument,       0, 'e'},
+            {"verbose", no_argument,    0, 'V'},
+            {"trace", no_argument,      0, 'T'},
+            {"type", required_argument, 0, 't'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option register_options[] = {
+            {"echo",    no_argument,        0,    'e'},
+            {"verbose", no_argument,        0,    'V'},
+            {"trace",   no_argument,        0,    'T'},
+            {"key",     optional_argument,  NULL, 'k'},
+            {"status",  no_argument,        0,    's'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option osupgrade_options[] = {
+            {"echo",        no_argument,        0, 'e'},
+            {"verbose",     no_argument,        0, 'V'},
+            {"trace",       no_argument,        0, 'T'},
+            {"start",       no_argument,        0, 'b'},
+            {"stop",        no_argument,        0, 'f'},
+            {"label",       required_argument,  0, 'l'},
+            {"upgradeid",   required_argument,  0, 'm'},
+            {0, 0, 0, 0}
+        };
+        
+        static struct option software_options[] = {
+            {"echo",        no_argument,        0, 'e'},
+            {"verbose",     no_argument,        0, 'V'},
+            {"trace",       no_argument,        0, 'T'},
+            {"group",       required_argument,  0, 'g'},
+            {"swid",        required_argument,  0, 'd'},
+            {"plist",       required_argument,  0, 'P'},
+            {"mandatory",   no_argument,        0, 'M'},
+            {0, 0, 0, 0}
+        };
+                
+        switch (command) {
+            case CommandTypeDaemon:
+                short_opts = "VeT";
+                long_opts = daemon_options;
+                break;
+            case CommandTypeCheckIn:
+                short_opts = "VeT";
+                long_opts = patch_options;
+                break;
+            case CommandTypePatchScan:
+                short_opts = "VeT";
+                long_opts = patch_options;
+                break;
+            case CommandTypePatchUpdate:
+                short_opts = "VeT";
+                long_opts = patch_options;
+                break;
+            case CommandTypeInventory:
+                short_opts = "Vet:T";
+                long_opts = inventory_options;
+                break;
+            case CommandTypeClientID:
+                break;
+            case CommandTypeVersion:
+                break;
+            case CommandTypeRegister:
+                short_opts = "Vek:sT";
+                long_opts = register_options;
+                break;
+            case CommandTypeSoftware:
+                short_opts = "Veg:d:p:T";
+                long_opts = software_options;
+                break;
+            case CommandTypeProvision:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            case CommandTypeProvisionConfig:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            case CommandTypeFileVault:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            case CommandTypeAgentUpdater:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            case CommandTypePostFailedWebServiceRequests:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            case CommandTypePostAgentInstall:
+                short_opts = "VeT";
+                long_opts = global_options;
+                break;
+            default:
+                return 1;
+        }
+                
+        BOOL verbose = NO, debug = NO, echo = NO, trace = NO;
+        BOOL daemon = NO, osmigrationstart=NO, osmigrationstop=NO;
+        BOOL regStatus = NO, mandatory = NO, iload = NO;
+        NSString *invetoryType = @"all";
+        NSString *regKey = @"999999999";
+        NSString *osUpgradeLabel = nil;
+        NSString *osUpgradeID = @"auto";
+        // Software
+        NSString *group = nil;
+        NSString *swid = nil;
+        NSString *plist = nil;
+        
+        NSError  *err = nil;
+        
+        int opt;
+        while ((opt = getopt_long(argc, argv, short_opts, long_opts, NULL)) != -1) {
+            switch (opt) {
+                case 'V': verbose = YES; break;
+                case 'e': echo = YES; break;
+                case 'T': trace = YES; break;
+                case 't': invetoryType = [NSString stringWithUTF8String:optarg]; break;
+                case 'k':
+                    regKey = [NSString stringWithUTF8String:optarg];
+                    break;
+                case 's': regStatus = YES; break;
+                case 'b': osmigrationstart = YES; break;
+                case 'f': osmigrationstop = YES; break;
+                case 'l': osUpgradeLabel = [NSString stringWithUTF8String:optarg]; break;
+                case 'm': osUpgradeID = [NSString stringWithUTF8String:optarg]; break;
+                case 'd': daemon = YES; break;
+                case '?': return 1;
+                default: abort();
+            }
+        }
+        
         [[MPAgent sharedInstance] setG_agentVer:APPVERSION];
         [[MPAgent sharedInstance] setG_agentPid:[NSString stringWithFormat:@"%d",[[NSProcessInfo processInfo] processIdentifier]]];
-		
-		NSString *_logFile = @"/Library/Logs/MPAgent.log";
-		[MPLog setupLogging:_logFile level:lcl_vInfo];
-		
-		if (verboseLogging || debugLogging) {
-			lcl_configure_by_name("*", lcl_vDebug);
-			if (verboseLogging || echoToConsole) {
-				[LCLLogFile setMirrorsToStdErr:YES];
-			}
-			logit(lcl_vInfo,@"***** %@ v.%@ started -- Debug Enabled *****", APPNAME, APPVERSION);
-		} else if (traceLogging) {
-			lcl_configure_by_name("*", lcl_vTrace);
-			if (verboseLogging || echoToConsole) {
-				[LCLLogFile setMirrorsToStdErr:YES];
-			}
-			logit(lcl_vInfo,@"***** %@ v.%@ started -- Trace Enabled *****", APPNAME, APPVERSION);
-		} else {
-			lcl_configure_by_name("*", lcl_vInfo);
-			if (echoToConsole) {
-				[LCLLogFile setMirrorsToStdErr:YES];
-			}
-			if (a_Type == 99) {
-				logit(lcl_vInfo,@"***** %@ v.%@ (Daemon)started *****", APPNAME, APPVERSION);
-			} else {
-				logit(lcl_vInfo,@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
-			}
-			
-		}
         
-		MPInv *inv;
-		AgentController *mpac;
-		SoftwareController *swc;
-		NSString *uID;
-		MPOSUpgrade *mposu;
-		NSError *err = nil;
-		MPAgentRegister *mpar;
-		AgentData *mpad;
-		MPAgent *mpAgent;
-        MPProvision *mpProv;
-        NSArray *hist;
-        MPClientDB *cdb;
-		int result = 1;
-		switch (a_Type)
-		{
-            case 7777:
-                // Test
-                cdb = [[MPClientDB alloc] init];
-                hist = [cdb retrieveInstalledSoftwareTasksDict];
-                qlinfo(@"%@",hist);
+        // Setup Logging
+        NSString *_logFile = @"/Library/Logs/MPAgent.log";
+        Logger *logger = [Logger sharedLogger];
+        [logger setupWithLogPath:_logFile subsystem:@"gov.llnl.mp.mpagent" category:@"daemon"];
+        [logger setEnableFunctionName:NO];
+        [logger setEnableFileNameAndLineNumber:NO];
+        [logger setEnableStderrLogging:NO];
+        
+        if (verbose || debug) {
+            logger.minimumLogLevel = LogLevelDebug;
+            if (verbose || echo) {
+                logger.enableStderrLogging = YES;
+            }
+            LogInfo(@"***** %@ Debug Enabled *****", APPNAME);
+        } else if (trace) {
+            logger.minimumLogLevel = LogLevelDebug;
+            [logger setEnableFunctionName:YES];
+            [logger setEnableFileNameAndLineNumber:YES];
+            if (verbose || echo) {
+                logger.enableStderrLogging = YES;
+            }
+        } else {
+            logger.minimumLogLevel = LogLevelInfo;
+            if (echo) {
+                logger.enableStderrLogging = YES;
+            }
+        }
+                
+        // Execute command with parsed options
+        switch (command) {
+            case CommandTypeDaemon: {
+                LogInfo(@"***** %@ v%@ started *****", APPNAME, APPVERSION);
+                // Echo PID to stdout when requested and always log it
+                pid_t pid = getpid();
+                if (echo) {
+                    printf("%d\n", pid);
+                    fflush(stdout);
+                }
+                MPLOG_INFO(@"Daemon PID: %d", pid);
+                LogInfo( @"Daemon PID: %d", pid);
+                TasksDaemon *td = [[TasksDaemon alloc] init];
+                [td runAsDaemon];
                 return 0;
-                break;
-			case 1:
-				// Client Checkin
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 3:
-				// Patch Scan
-				mpac = [[AgentController alloc] init];
-				[mpac setILoadMode:isILoadMode];
-				[mpac runPatchScan:updateType forceRun:forceRun];
-				return 0;
-				break;
-			case 4:
-				// Patch Updates
-				mpac = [[AgentController alloc] init];
-				[mpac setILoadMode:isILoadMode];
-				[mpac setForceRun:forceRun];
-				[mpac runPatchScanAndUpdate:updateType bundleID:updateBundle];
-				return 0;
-				break;
-			case 5:
-				// AV Scan
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 6:
-				// AV Update
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 7:
-				// Update MPUpdate
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 8:
-				// Mandatory Software Tasks for Client group
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 9:
-				// Scan and install Mac OS Profiles
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				return 0;
-				break;
-			case 10:
-				// OS Migration
-				mposu = [[MPOSUpgrade alloc] init];
-				if ([[osMigID lowercaseString] isEqualTo:@"auto"]) {
-					if ([[osMigAction lowercaseString] isEqualTo:@"stop"]) {
-						uID = [mposu  migrationIDFromFile:OS_MIGRATION_STATUS];
-					} else {
-						uID = [[NSUUID UUID] UUIDString];
-					}
-				} else {
-					uID = osMigID;
-				}
-				err = nil;
-				result = [mposu postOSUpgradeStatus:osMigAction label:osMigLabel upgradeID:uID error:&err];
-				if (err) {
-					logit(lcl_vError,@"%@",err.localizedDescription);
-					fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
-					exit(1);
-				}
-				if (result != 0) {
-					fprintf(stderr, "Post OS Upgrade status failed.\n");
-					exit(1);
-				}
-				return 0;
-				break;
-			case 11:
-				// Hold
-				break;
-			case 12:
-				// Inventory
-				inv = [[MPInv alloc] init];
-				if (invArg != NULL)
-				{
-					if ([invArg isEqual:@"Custom"]) {
-						result = [inv collectAuditTypeData];
-					} else if ([invArg isEqual:@"All"]) {
-						result = [inv collectInventoryData];
-					} else {
-						result = [inv collectInventoryDataForType:invArg];
-					}
-				}
-				return result;
-				break;
-			case 13:
-				// Software - Install Group
-				swc = [SoftwareController new];
-				[swc setILoadMode:isILoadMode];
-				result = [swc installSoftwareTasksForGroup:swArg];
-				return result;
-				break;
-			case 14:
-				// Software - Install SW Task
-				// Arg is SW Task ID
-				swc = [SoftwareController new];
-				[swc setILoadMode:isILoadMode];
-				result = [swc installSoftwareTask:swArg];
-				return result;
-				break;
-			case 15:
-				// Software - Install SW Using Plist
-				swc = [SoftwareController new];
-				[swc setILoadMode:isILoadMode];
-				result = [swc installSoftwareTasksUsingPLIST:swArg];
-				return result;
-				break;
-			case 16:
-				// Register
-				mpar = [[MPAgentRegister alloc] init];
-				if (![regKeyArg isEqualToString:@"999999999"]) {
-					result = [mpar registerClient:regKeyArg error:&err];
-				} else {
-					result = [mpar registerClient:&err];
-				}
-				
-				if (err) {
-					NSLog(@"%@",err.localizedDescription);
-				}
-				
-				if (result == 0) {
-					printf("\nAgent has been registered.\n");
-				} else {
-					fprintf(stderr, "Agent registration has failed.\n");
-					exit(1);
-				}
-				
-				exit(0);
-				break;
-			case 17:
-				// Check Registration
-				mpar = [[MPAgentRegister alloc] init];
-				if (![regKeyHash isEqualToString:@"999999999"]) {
-					if ([mpar clientIsRegistered]) {
-						printf("\nAgent is registered.\n");
-						exit(0);
-					} else {
-						printf("Warning: Agent is not registered.\n");
-						exit(1);
-					}
-				} else {
-					// Will add additional check
-					if ([mpar clientIsRegistered]) {
-						printf("\nAgent is registered.\n");
-						exit(0);
-					} else {
-						printf("Warning: Agent is not registered.\n");
-						exit(1);
-					}
-				}
-				break;
-			case 18:
-				// Check Registration
-				mpad = [[AgentData alloc] init];
-				[mpad setAgentDataKey:regKeyHash];
-				[mpad echoAgentData];
-				exit(0);
-				break;
-			case 19:
-				// Post Agent Install
-				mpAgent = [MPAgent new];
-				[mpAgent postAgentHasBeenInstalled];
-				exit(0);
-				break;
-            case 20:
-                // Provison Host
-                mpProv = [MPProvision new];
-                [mpProv provisionHost];
-                exit(0);
-                break;
-            case 21:
-                // Mandatory Software
-                swc = [SoftwareController new];
-                result = [swc installMandatorySoftware];
+            } break;
+            case CommandTypeCheckIn: {
+                LogInfo( @"Running Local Command - Client Checkin...");
+                CheckIn *ac = [[CheckIn alloc] init];
+                [ac runClientCheckIn];
+                return 0;
+            } break;
+            case CommandTypePatchScan: {
+                LogInfo( @"Running Local Command - Patch Scan...");
+                Patching *p = [[Patching alloc] init];
+                [p patchScan];
+                return 0;
+            } break;
+            case CommandTypePatchUpdate: {
+                LogInfo( @"Running Local Command - Patch Scan & Update...");
+                Patching *p = [[Patching alloc] init];
+                [p patchScanAndUpdate];
+                return 0;
+            } break;
+            case CommandTypeInventory: {
+                int result = 1;
+                MPInv *inv = [[MPInv alloc] init];
+                if ([[invetoryType lowercaseString] isEqual:@"custom"]) {
+                    LogInfo( @"Running Local Command - Inventory with custome type...");
+                    result = [inv collectAuditTypeData];
+                } else if ([[invetoryType lowercaseString] isEqual:@"all"]) {
+                    LogInfo( @"Running Local Command - Inventory...");
+                    result = [inv collectInventoryData];
+                } else {
+                    LogInfo( @"Running Local Command - Inventory for type %@...", invetoryType);
+                    result = [inv collectInventoryDataForType:invetoryType];
+                }
                 return result;
+            } break;
+            case CommandTypeClientID:
+                printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
                 break;
-            case 22:
-                // Download Provisioning Config
-                mpac = [[AgentController alloc] init];
-                result = [mpac provisionSetupAndConfig];
-                exit(result);
+            case CommandTypeVersion:
+                printf("MPAgent Version: %s", [APPVERSION UTF8String]);
                 break;
-            case 8888:
-                mpac = [[AgentController alloc] init];
-                [mpac runWithType:a_Type];
+            case CommandTypeRegister: {
+                int result = 1;
+                MPAgentRegister *mpar = [[MPAgentRegister alloc] init];
+                if (regStatus) {
+                    if ([mpar clientIsRegistered]) {
+                        printf("\nAgent is registered.\n");
+                        exit(0);
+                    } else {
+                        printf("Warning: Agent is not registered.\n");
+                        exit(1);
+                    }
+                } else {
+                    // Can not register agent is regStatus is invoked
+                    LogInfo( @"Running Local Command - Agent Registration...");
+                    if (regKey) {
+                        if (![regKey isEqualToString:@"999999999"]) {
+                            result = [mpar registerClient:regKey error:&err];
+                        } else {
+                            result = [mpar registerClient:&err];
+                        }
+                    } else {
+                        result = [mpar registerClient:&err];
+                    }
+                    
+                    if (err) {
+                        LogError(@"Error registering agent. %@",err.localizedDescription);
+                    }
+                    
+                    if (result == 0) {
+                        printf("\nAgent has been registered.\n");
+                        exit(0);
+                    } else {
+                        fprintf(stderr, "Agent registration has failed.\n");
+                        exit(1);
+                    }
+                }
+                exit(0);
+            } break;
+            case CommandTypeAgentUpdater: {
+                LogInfo( @"Running Local Command - Agent Updater...");
+                MPAgentUpdater *agentUpdater = [[MPAgentUpdater alloc] init];
+                [agentUpdater scanAndUpdateAgentUpdater];
                 return 0;
+            } break;
+            case CommandTypeOSMigration: {
+                // OS Migration
+                LogInfo( @"Running Local Command - OS Migration...");
+                NSString *osMigAction = NULL;
+                if (osmigrationstart) {
+                    osMigAction = @"start";
+                } else if (osmigrationstop) {
+                    osMigAction = @"stop";
+                }
+                
+                NSString *uID = nil;
+                MPOSUpgrade *mposu = [[MPOSUpgrade alloc] init];
+                if ([[osUpgradeID lowercaseString] isEqualTo:@"auto"]) {
+                    if (osmigrationstop) {
+                        uID = [mposu  migrationIDFromFile:OS_MIGRATION_STATUS];
+                    } else {
+                        uID = [[NSUUID UUID] UUIDString];
+                    }
+                } else {
+                    uID = osUpgradeID;
+                }
+                NSError *err = nil;
+                int result = [mposu postOSUpgradeStatus:osMigAction label:osUpgradeLabel upgradeID:uID error:&err];
+                if (err) {
+                    LogError(@"%@",err.localizedDescription);
+                    fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
+                    exit(1);
+                }
+                if (result != 0) {
+                    LogError(@"Post OS Upgrade status failed with result %d.\n", result);
+                    fprintf(stderr, "Post OS Upgrade status failed.\n");
+                    exit(1);
+                }
+                return 0;
+            } break;
+            case CommandTypeSoftware: {
+                // Software - Install Group
+                int result = 1;
+                SoftwareController *swc = [[SoftwareController alloc] init];
+                if (group && !plist && !swid && !mandatory) {
+                    LogInfo( @"Running Local Command - Software install for group %@...", group);
+                    [swc setILoadMode:iload];
+                    result = [swc installSoftwareTasksForGroup:group];
+                    return result;
+                } else if (!group && plist && !swid && !mandatory) {
+                    LogInfo( @"Running Local Command - Software install using plist %@...", plist);
+                    [swc setILoadMode:iload];
+                    result = [swc installSoftwareTasksUsingPLIST:plist];
+                    return result;
+                } else if (!group && !plist && swid && !mandatory) {
+                    LogInfo( @"Running Local Command - Software install using task id %@...", swid);
+                    [swc setILoadMode:iload];
+                    result = [swc installSoftwareTask:swid];
+                    return result;
+                } else if (!group && !plist && !swid && mandatory) {
+                    [swc setILoadMode:iload];
+                    LogInfo( @"Running Local Command - Software install for mondatory apps...");
+                    result = [swc installMandatorySoftware];
+                    return result;
+                } else {
+                    fprintf(stderr, "Only one software option can be used at a time (group, swid, plist, mandatory).");
+                    exit(1);
+                }
+            } break;
+            case CommandTypeProvision: {
+                LogInfo( @"Running Local Command - Provision Host...");
+                MPProvision *mpProv = [[MPProvision alloc] init];
+                [mpProv provisionHost];
+            } break;
+            case CommandTypeProvisionConfig: {
+                LogInfo( @"Running Local Command - Provision Host Config...");
+                int result = 1;
+                MPProvision *mpProv = [[MPProvision alloc] init];
+                result = [mpProv provisionSetupAndConfig];
+                exit(result);
+            } break;
+            case CommandTypeFileVault: {
+                LogInfo( @"Running Local Command - Checking FileVault Authrestart status...");
+                MPFileVault *mpfv = [[MPFileVault alloc] init];
+                [mpfv authRestartCheck];
+                exit(0);
+            } break;
+            case CommandTypePostFailedWebServiceRequests: {
+                LogInfo( @"Running Local Command - Post any failed web service requests...");
+                MPFailedRequests *mpf = [[MPFailedRequests alloc] init];
+                [mpf postFailedRequests];
+            } break;
+            case CommandTypePostAgentInstall: {
+                MPAgent *agent = [[MPAgent alloc] init];
+                [agent postAgentHasBeenInstalled];
+            } break;
+            default:
                 break;
-			case 50:
-				break;
-			case 60:
-				break;
-			case 99:
-				// DEFAULT Daemon Mode
-				mpac = [[AgentController alloc] init];
-				[mpac runWithType:a_Type];
-				[[NSRunLoop currentRunLoop] run];
-				break;
-			default:
-				printf("Unknown arg type. Now exiting.\n");
-				return 0;
-		}
+        }
     }
     return 0;
 }
@@ -742,3 +680,4 @@ const char * consoleUser(void)
     
     return [result UTF8String];
 }
+

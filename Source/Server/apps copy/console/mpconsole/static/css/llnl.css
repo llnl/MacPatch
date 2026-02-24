@@ -1,0 +1,136 @@
+* {
+	font-size: 14px;
+	line-height: 1.428;
+ }
+ 
+a {
+    color: #3C92C9;
+    /* text-decoration: underline; */
+	text-decoration: none;
+
+}
+a:hover {
+	color: #3C92C9;
+}
+
+.sb-topnav .navbar-brand {
+	width: 180px;
+	margin: 0;
+}
+
+.navbar-brand-llnl {
+	color: #000000;
+}
+
+.navbar-brand-llnl:hover {
+	color: #000000;
+}
+
+.bg-llnl {
+	--bs-bg-opacity: 1;
+	background-color: #f0f0f0 !important;
+}
+
+.btn-link {
+    font-weight: 400;
+    color: #000000;
+    text-decoration: underline;
+
+}
+.btn-link:hover {
+  color: #000000;
+}
+
+.btn-primary {
+	color: #fff;
+	background-color: #3C92C9;
+	border-color: #3C92C9;
+  }
+
+  .btn-primary:hover {
+	color: #fff;
+	background-color: #3C92C9;
+	border-color: #3C92C9;
+}
+
+/* NAV LINK */
+.nav-link {
+	display: block;
+	padding: 0.5rem 0.5rem;
+	color: #3C92C9;
+	text-decoration: none;
+	transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out;
+}
+
+.nav-link:hover, .nav-link:focus {
+	color: #3C92C9;
+}
+
+
+/* SIDE NAV */
+.sb-sidenav .sb-sidenav-menu .nav .sb-sidenav-menu-heading {
+	padding: 1.75rem 1rem 0.75rem;
+	font-size: 0.75rem;
+	font-weight: bold;
+	text-transform: uppercase;
+  }
+
+.sb-sidenav .sb-sidenav-menu .nav .nav-link {
+	display: flex;
+	align-items: center;
+	padding-top: 0.25rem;
+	adding-bottom: 0.25rem;
+	position: relative;
+}
+
+/* NAV BAR */
+.sb-sidenav-light {
+	background-color: #e25353;
+	color: #212529;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .sb-sidenav-menu-heading {
+	color: #969ea5;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link .sb-nav-link-icon {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link .sb-sidenav-collapse-arrow {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link:hover {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link.active {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-menu .nav-link.active .sb-nav-link-icon {
+	color: #3C92C9;
+  }
+  .sb-sidenav-light .sb-sidenav-footer {
+	background-color: #f0f0f0;
+  }
+
+  /* Login */
+  .card {
+	background-color: #e9e9e9;
+  }
+
+  /* Misc */
+
+  .center-block {
+	display: block;
+	margin-right: auto;
+	margin-left: auto;
+  }
+
+  .navBarTitle {
+	background-color: rgb(245, 245, 245);
+  }
+
+  .navBarTitleRow  {
+	background-color: rgb(245, 245, 245);
+	margin-top: 10px;
+  }

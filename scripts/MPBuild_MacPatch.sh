@@ -1,0 +1,628 @@
+#!/bin/bash
+
+# -------------------------------------------------------------
+# Script: MPBuildClient.sh
+# Version: 2.7
+#
+# Description:
+# This is a very simple script to demonstrate how to automate
+# the build process of the MacPatch Agent.
+#
+# History:
+#	1.1		Added Code Signbing Support
+#	1.2		Added ability to save CODESIGNIDENTITY
+#	1.4		Script No Longer is static location
+#	1.5		Changed Vars for MP 3.1
+#	1.6		Updated version numbers
+#	1.7		Add OS Query to agent install
+#	1.8		Add PlanB support to base package as an option
+#	1.9		Update to PlanB syntax
+#	2.0		Updated to support new 3.2 agent and package name
+#	2.1		Add support external scripts for customizing
+#	2.2		Added planB save server address
+#	2.3		Update variables for version 3.5
+#	2.4		Added option for MDM type installer, dont want MP to install
+#			On existsing MP installs unless the apent is older.
+#	2.5		Removed MPLogout agent from build, no longer used with MP 3.6x
+#	2.6		Added option for setting build root
+#			Added logic for Distribution_Beta file to allow installs over the top
+#	2.7		Added gov.llnl.mp.status.ui to compile process 
+#
+# -------------------------------------------------------------
+
+SCRIPT_PARENT=$(dirname $(dirname $0))
+SRCROOT="$SCRIPT_PARENT/Source"
+PKGROOT="$SCRIPT_PARENT/Packages"
+DATETIME=`date "+%Y%m%d-%H%M%S"`
+BUILDROOT="/private/var/tmp/MP/Client40/$DATETIME"
+PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
+BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
+
+AGENT_VERS="4.0.0"
+AGENTVER="4.0.0.1"
+UPDATEVER="4.0.0.1"
+
+PKG_STATE=""
+CODESIGNIDENTITY="*"
+MIN_OS="11.15"
+INCPlanBSource=false
+MPPLANB_SRV_ADDR="localhost"
+BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
+
+# Extenral scripts run pre xcode compile
+EXTERNALSCRIPTS=false
+EXTERNALSCRIPTSDIR="/tmp/foo"
+# Post Extenral script, just befor pkg build
+PEXTERNALSCRIPTS=false
+PEXTERNALSCRIPTSDIR="/tmp/foo"
+MDMPACKAGE=false
+
+
+# Script Input Args ----------------------------------------------------------
+
+usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-b Build Root Dir] [-l settings plist][-m Is MDM PKG]" 1>&2; exit 1; }
+
+while getopts "hs:p:b:l:m" opt; do
+	case $opt in
+		s)
+			EXTERNALSCRIPTS=true
+			EXTERNALSCRIPTSDIR=${OPTARG}
+			;;
+		p)
+			PEXTERNALSCRIPTS=true
+			PEXTERNALSCRIPTSDIR=${OPTARG}
+			;;
+		b)
+			BUILDROOT=${OPTARG}
+			;;
+		l)
+			BUILDPLIST=${OPTARG}
+			;;
+		m)
+			MDMPACKAGE=true
+			;;
+		h)
+			echo
+			usage
+			exit 1
+			;;
+		\?)
+			echo "Invalid option: -$OPTARG" >&2
+			echo
+			usage
+			exit 1
+			;;
+		:)
+			#echo "Option -$OPTARG requires an argument." >&2
+			#echo
+			#usage
+			#exit 1
+			;;
+	esac
+done
+
+runExternalScripts ()
+{
+	if [ -z "$1" ]; then
+		# Scripts path is blank
+		return
+	fi
+	
+	spath="$1"
+	FILES="$1/*.sh"
+	
+	for f in $FILES
+	do
+		echo "Processing $f file..."
+		bash $f "$SCRIPT_PARENT" "$BUILDROOT"
+	done
+
+	return
+}
+
+if [ -f "$BUILDPLIST" ]; then
+	CODESIGNIDENTITYALT=`defaults read ${BUILDPLIST} name 2> /dev/null`
+fi
+
+#clear
+echo " ------------------------------------------------------------"
+echo "	Building MacPatch Client"
+echo " ------------------------------------------------------------"
+echo
+
+
+
+# ------------------------------------------------------------
+# Set Client Version
+# ------------------------------------------------------------
+if [ -f "$BUILDPLIST" ]; then
+	AGENT_VERS=`defaults read ${BUILDPLIST} client_version 2> /dev/null`
+	if (($? > 0)); then
+		AGENT_VERS="3.2.0"
+	fi
+fi
+echo
+echo " - Set overall MacPatch Client version ( e.g. $AGENT_VERS ) "
+read -p "Set MacPatch Client version [$AGENT_VERS]: " AGENT_VER
+AGENT_VER=${AGENT_VER:-$AGENT_VERS}
+BUILDROOT="$BUILDROOT/$AGENT_VER/$DATETIME"
+
+if [ -d "$BUILDROOT" ]; then
+	rm -rf ${BUILDROOT}
+else
+	mkdir -p ${BUILDROOT}
+	mkdir -p ${BUILDROOT}/logs
+fi
+
+echo "BUILDROOT set to $BUILDROOT"
+
+# ------------------------------------------------------------
+# Set Client Build Number
+# ------------------------------------------------------------
+AGENT_BUILDS="1"
+if [ -f "$BUILDPLIST" ]; then
+	AGENT_BUILDS=`defaults read ${BUILDPLIST} client_build 2> /dev/null`
+	if (($? > 0)); then
+		AGENT_BUILDS=1
+	fi
+fi
+echo
+echo " - Set overall MacPatch Client build number "
+echo " use \"i\" to increment or type in a number "
+read -p "Set MacPatch Client build number (current $AGENT_BUILDS),	[i]: " AGENT_BUILD
+AGENT_BUILD=${AGENT_BUILD:-$AGENT_BUILDS}
+
+BUILD_NO=0
+if [ "$AGENT_BUILD" == "i" ] || [ "$AGENT_BUILD" == "I" ]; then
+	let "BUILD_NO=AGENT_BUILDS+1"
+else
+	BUILD_NO=$AGENT_BUILD
+fi
+
+re='^[0-9]+$'
+if ! [[ $BUILD_NO =~ $re ]] ; then
+   echo "Error: Build number is not a number" >&2; exit 1
+fi
+AGENTVER="${AGENT_VER}.${BUILD_NO}"
+
+# ------------------------------------------------------------
+# MacPatch Client Release Level
+# ------------------------------------------------------------
+PKGSTATES="R"
+if [ -f "$BUILDPLIST" ]; then
+	PKGSTATES=`defaults read ${BUILDPLIST} package_state 2> /dev/null`
+	if (($? > 0)); then
+		PKGSTATES="R"
+	fi
+fi
+
+echo
+read -p "Please choose the desired state (R[elease]/B[eta]/A[lpha])? [$PKGSTATES]: " PKGSTATE
+PKGSTATE=${PKGSTATE:-$PKGSTATES}
+PKGSTATE=`echo $PKGSTATE | awk '{print toupper($0)}'`
+# osascript breaks on macOS Ventura with a permission error
+# Finder got an error: Network file permission error. (-5000)
+if [ "$PKGSTATE" == "B" ]; then
+	PKG_STATE="- (Beta)"
+	#osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 4"
+elif [ "$PKGSTATE" == "A" ]; then
+	PKG_STATE="- (Alpha)"
+	#osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 5"
+else
+	echo "Setting Package desired state to \"Release\""
+	#osascript -e "tell application \"Finder\" to set label index of alias POSIX file \"$BUILDROOT\" to 6"
+fi
+
+# ------------------------------------------------------------
+# Client Master Key
+# ------------------------------------------------------------
+SHOW_MASTER_KEY=false
+setMasterKey=false
+MASTER_KEY_SET="Y"
+ClientMasterKey="SuperSimpleKeyPleaseChangeThisInProduction"
+
+echo
+echo " - Client Master Key "
+read -p "Would you like to set the client master key, no will gen a random key (Y/N)? [$MASTER_KEY_SET]: " MASTER_KEY_TXT
+MASTER_KEY_TXT=${MASTER_KEY_TXT:-${MASTER_KEY_SET}}
+MASTER_KEY_TXT=`echo $MASTER_KEY_TXT | awk '{print toupper($0)}'`
+if [[ "$MASTER_KEY_TXT" == "Y" ]]; then
+	setMasterKey=true
+else
+	ClientMasterKey=`env LC_CTYPE=C LC_ALL=C tr -dc "a-zA-Z0-9-_\$\?" < /dev/urandom | head -c 20; echo`
+	SHOW_MASTER_KEY=true
+fi
+
+
+if $setMasterKey; then
+	MASTERKEY=$ClientMasterKey
+	if [ -f "$BUILDPLIST" ]; then
+		MASTERKEY=`defaults read ${BUILDPLIST} masterKey 2> /dev/null`
+		if (($? > 0)); then
+			MASTERKEY=$ClientMasterKey
+		fi
+	fi
+
+	echo
+	echo
+	read -p "Client Master Key [$MASTERKEY]: " CMASTERKEY
+	ClientMasterKey=${CMASTERKEY:-${MASTERKEY}}
+fi
+
+
+
+# ------------------------------------------------------------
+# Sign all binaries?
+# ------------------------------------------------------------
+SIGNCODES="Y"
+if [ -f "$BUILDPLIST" ]; then
+	SIGNCODES=`defaults read ${BUILDPLIST} code_sign 2> /dev/null`
+	if (($? > 0)); then
+		SIGNCODES="Y"
+	fi
+fi
+
+echo
+echo " - Code Signing"
+read -p "Would you like to code sign all binaries (Y/N)? [$SIGNCODES]: " SIGNCODE
+#SIGNCODE=${SIGNCODE:-Y}
+SIGNCODE=${SIGNCODE:-$SIGNCODES}
+SIGNCODE=`echo $SIGNCODE | awk '{print toupper($0)}'`
+if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
+
+	if $EXTERNALSCRIPTS; then
+		runExternalScripts $EXTERNALSCRIPTSDIR
+	fi
+
+	cp "${SRCROOT}/MacPatch/MPLibrary/AgentData.m" /private/tmp/AgentData.m.bak
+	sed -i '' "s/SimpleSecretKey/${ClientMasterKey}/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
+
+	if [ "$SIGNCODE" == "Y" ] ; then
+		# Compile the agent components
+		read -p "Please enter your code sigining identity [$CODESIGNIDENTITYALT]: " CODESIGNIDENTITY
+		CODESIGNIDENTITY=${CODESIGNIDENTITY:-$CODESIGNIDENTITYALT}
+
+		echo
+		echo "------------------------------------------------------------"
+		echo "Compiling MacPatch Client Components"
+		echo "------------------------------------------------------------"
+		echo
+
+		echo "------------------------------"
+		echo " - Compiling MPLibrary"
+		xcodebuild -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPLibrary \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+		build | grep -A 5 error:
+
+		echo "------------------------------"
+		echo " - Compiling MacPatch"
+		xcodebuild -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MacPatch \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+		OTHER_CODE_SIGN_FLAGS=--timestamp build | grep -A 5 error:
+		
+		
+		echo "------------------------------"
+		echo " - Compiling gov.llnl.mp.helper"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme gov.llnl.mp.helper \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+
+		echo "------------------------------"
+		echo " - Compiling MPClientStatus"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPClientStatus \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+
+		echo "------------------------------"
+		echo " - Compiling gov.llnl.mp.status.ui"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme gov.llnl.mp.status.ui \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+
+		echo "------------------------------"
+		echo " - Compiling MPAgent"
+		sed -i '' "s/\[BUILD\]/$BUILD_NO_STR/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPAgent \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		sed -i '' "s/$BUILD_NO_STR/\[BUILD\]/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
+
+		echo "------------------------------"
+		echo " - Compiling MPUpdater"
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPUpdater \
+		SYMROOT=${BUILDROOT} \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+
+		if $INCPlanBSource; then
+			echo " - Compiling Plan B"
+			xcodebuild build -configuration Release \
+			-project ${SRCROOT}/Client/planb/planb.xcodeproj \
+			-target planb \
+			SYMROOT=${PLANB_BUILDROOT} \
+			-destination 'platform=macOS' \
+			ARCHS='arm64 x86_64' \
+			ONLY_ACTIVE_ARCH=NO \
+			CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+			OTHER_CODE_SIGN_FLAGS=--timestamp \
+			CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		fi
+		echo
+		echo "Compiling completed."
+		echo
+	else
+
+		if $EXTERNALSCRIPTS; then
+			runExternalScripts $EXTERNALSCRIPTSDIR
+		fi
+
+		# Compile the agent components
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPLibrary SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.status.ui SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
+
+		if $INCPlanBSource; then
+			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
+		fi
+	fi
+
+	sed -i '' "s/${ClientMasterKey}/SimpleSecretKey/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
+else
+	echo "Invalid entry, now exiting."
+	exit 1
+fi
+
+exit 0
+# ------------------------------------------------------------
+# Remove the build and symbol files
+# ------------------------------------------------------------
+find ${BUILDROOT} -name "*.build" -print | xargs -I{} rm -rf {}
+find ${BUILDROOT} -name "*.dSYM" -print | xargs -I{} rm -rf {}
+
+# ------------------------------------------------------------
+# Remove the static library and header files
+# ------------------------------------------------------------
+if [ -f "${BUILDROOT}/Release/libMacPatch.a" ]; then
+	rm ${BUILDROOT}/Release/libMacPatch.a
+fi
+if [ -f "${BUILDROOT}/Release/libcrypto.a" ]; then
+	rm ${BUILDROOT}/Release/libcrypto.a
+fi
+if [ -f "${BUILDROOT}/Release/libssl.a" ]; then
+	rm ${BUILDROOT}/Release/libssl.a
+fi
+if [ -d "${BUILDROOT}/Release/usr" ]; then
+	rm -r ${BUILDROOT}/Release/usr
+fi
+
+# ------------------------------------------------------------
+# Copy files to package roots
+# ------------------------------------------------------------
+
+cp -R ${PKGROOT}/Client ${BUILDROOT}
+cp -R ${PKGROOT}/Updater ${BUILDROOT}
+cp -R ${PKGROOT}/Combined ${BUILDROOT}
+
+mv ${BUILDROOT}/Release/MacPatch.app ${BUILDROOT}/Client/Files/Applications/
+mv ${BUILDROOT}/Release/gov.llnl.mp.helper ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
+mv ${BUILDROOT}/Release/gov.llnl.mp.status.ui ${BUILDROOT}/Client/Files/Library/PrivilegedHelperTools/
+mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
+mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
+
+
+if [ "$PKGSTATE" == "A" ] || [ "$PKGSTATE" == "B" ]; then
+	rm ${BUILDROOT}/Combined/Distribution
+	mv ${BUILDROOT}/Combined/Distribution_Beta ${BUILDROOT}/Combined/Distribution
+fi
+
+if $MDMPACKAGE; then
+	if [ -f "$PKGROOT/MDM/Distribution" ]; then
+		cp ${PKGROOT}/MDM/Distribution ${BUILDROOT}/Combined/Distribution
+	else
+		echo "ERROR: Unable to copy ${PKGROOT}/MDM/Distribution to Combined"
+	fi
+fi
+
+# ------------------------------------------------------------
+# Copy PlanB files to base package root
+# ------------------------------------------------------------
+#if $INCPlanBSource; then
+##
+#	mkdir -p ${BUILDROOT}/Client/Files/usr/local/bin/
+#	mkdir -p ${BUILDROOT}/Client/Files/usr/local/sbin/
+#	mkdir -p ${BUILDROOT}/Client/Files/Library/Preferences/
+
+#	cp ${PLANB_BUILDROOT}/Release/planb ${BUILDROOT}/Client/Files/usr/local/sbin/
+#	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
+#	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
+#	cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
+#fi
+
+# ------------------------------------------------------------
+# Get Versions, set version info
+# ------------------------------------------------------------
+agent_ver=`${BUILDROOT}/Client/Files/Library/MacPatch/Client/MPAgent -v`
+update_ver=`${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/MPUpdater -v`
+
+sleep 5
+
+# Agent
+# @AGENTVER@
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+sed -i '' "s/@AGENTVER@/$agent_ver/g" "${BUILDROOT}/Combined/Distribution"
+# @APPVER@
+sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+# @AMINOS@
+sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@AMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+# @ABUILD@
+sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Client/Resources/mpInfo.plist"
+sed -i '' "s/@ABUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+
+# Updater
+# @UPDATEVER@
+sed -i '' "s/@UPDATEVER@/$update_ver/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+# @APPVER@
+sed -i '' "s/@APPVER@/$AGENT_VER/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+# @UMINOS@
+sed -i '' "s/@UMINOS@/$MIN_OS/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+# @UBUILD@
+sed -i '' "s/@UBUILD@/$BUILD_NO/g" "${BUILDROOT}/Combined/Resources/mpInfo.plist"
+
+# Find and remove .mpRM files, these are here as place holders so that GIT will keep the
+# directory structure
+find ${BUILDROOT} -name ".mpRM" -print | xargs -I{} rm -rf {}
+# Remove the compiled Release directory now that all of the files have been copied
+# rm -r ${BUILDROOT}/Release
+
+# Run the post external scripts
+if $PEXTERNALSCRIPTS; then
+	runExternalScripts $PEXTERNALSCRIPTSDIR
+fi
+
+mkdir ${BUILDROOT}/Combined/Packages
+
+# Remove the compiled Release directory now that all of the files have been copied
+# rm -r ${BUILDROOT}/Release
+# --sign "Developer ID Installer: Charles Heizer" \
+
+# ------------------------------------------------------------
+# Create the Client pkg
+# ------------------------------------------------------------
+pkgbuild --root ${BUILDROOT}/Client/Files \
+--component-plist ${BUILDROOT}/Client/Components.plist \
+--identifier gov.llnl.mp.agent.client \
+--install-location / \
+--scripts ${BUILDROOT}/Client/Scripts \
+--version $AGENTVER \
+${BUILDROOT}/Combined/Packages/Base.pkg
+
+# ------------------------------------------------------------
+# Create the Updater pkg
+# ------------------------------------------------------------
+pkgbuild --root ${BUILDROOT}/Updater/Files/Library \
+--identifier gov.llnl.mp.agent.updater \
+--install-location /Library \
+--scripts ${BUILDROOT}/Updater/Scripts \
+--version $UPDATEVER \
+${BUILDROOT}/Combined/Packages/Updater.pkg
+
+# ------------------------------------------------------------
+# Set Version Info in text files
+# ------------------------------------------------------------
+AGENT_VER_BUILD="$AGENTVER"
+sed -i '' "s/\[AGENT_VER\]/$AGENT_VER_BUILD/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
+sed -i '' "s/\[BUILD_NO\]/$BUILD_NO_STR/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
+sed -i '' "s/\[STATE\]/$PKG_STATE/g" "${BUILDROOT}/Combined/Resources/Welcome.rtf"
+
+BUILD_FILE="${BUILDROOT}/Combined/MP-$BASEPKGVER-$BUILD_NO_STR$PKG_STATE"
+echo "MP-$AGENT_VER_BUILD-$BUILD_NO_STR$PKG_STATE" > "${BUILD_FILE}"
+
+# ------------------------------------------------------------
+# Create the almost final package
+# --sign "Developer ID Installer: Charles Heizer" \
+# ------------------------------------------------------------
+echo "productbuild --distribution ${BUILDROOT}/Combined/Distribution --resources ${BUILDROOT}/Combined/Resources --package-path ${BUILDROOT}/Combined/Packages ${BUILDROOT}/Combined/MacPatchDist.pkg"
+
+productbuild --distribution ${BUILDROOT}/Combined/Distribution \
+--resources ${BUILDROOT}/Combined/Resources \
+--package-path ${BUILDROOT}/Combined/Packages \
+--product ${BUILDROOT}/Combined/Requirements.plist \
+${BUILDROOT}/Combined/MacPatchDist.pkg
+
+
+# Expand the newly created package so we can add the nessasary files
+pkgutil --expand ${BUILDROOT}/Combined/MacPatchDist.pkg ${BUILDROOT}/Combined/.MacPatchPKG
+
+
+# Copy MacPatch Package Info file for the web service
+#cp ${BUILDROOT}/Combined/Resources/mpInfo.ini ${BUILDROOT}/Combined/.MacPatchPKG/Resources/mpInfo.ini
+cp ${BUILDROOT}/Combined/Resources/mpInfo.plist ${BUILDROOT}/Combined/.MacPatchPKG/Resources/mpInfo.plist
+cp ${BUILDROOT}/Combined/Resources/Background_done.png ${BUILDROOT}/Combined/.MacPatchPKG/Resources/Background_done.png
+
+# Re-compress expanded package
+pkgutil --flatten ${BUILDROOT}/Combined/.MacPatchPKG ${BUILDROOT}/Combined/MacPatch.pkg
+
+# Clean Up
+rm -rf ${BUILDROOT}/Combined/.MacPatchPKG
+#rm -rf ${BUILDROOT}/Combined/MacPatchDist.pkg
+
+# Compress for upload
+ditto -c -k ${BUILDROOT}/Combined/MacPatch.pkg ${BUILDROOT}/Combined/MacPatch.pkg.zip
+
+echo
+read -p "Would you like to copy the installer to repo location for a pull request? (Y/N)? [N]: " COPYINSTALLPKG
+COPYINSTALLPKG=${COPYINSTALLPKG:-N}
+COPYINSTALLPKG=`echo $COPYINSTALLPKG | awk '{print toupper($0)}'`
+if [ "$COPYINSTALLPKG" == "Y" ]; then
+	rm -rf "${SRCROOT}/Agent"
+	mkdir "${SRCROOT}/Agent"
+	cp "${BUILDROOT}/Combined/MacPatch.pkg.zip" "${SRCROOT}/Agent/"
+	cp "$BUILD_FILE" "${SRCROOT}/Agent/InstallerBuildInfo.txt"
+fi
+
+echo
+echo "New Client is located in $BUILDROOT"
+open ${BUILDROOT}
+
+if $SHOW_MASTER_KEY; then
+	echo
+	echo "A random master client key has been set. Please write this down in a secure location."
+	echo "$ClientMasterKey"
+	echo
+fi

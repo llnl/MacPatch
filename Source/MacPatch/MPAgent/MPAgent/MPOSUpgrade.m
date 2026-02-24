@@ -1,7 +1,7 @@
 //
 //  MPOSUpgrade.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -45,12 +45,12 @@
         [mprest postOSMigrationStatus:action label:aLabel migrationID:aUpgradeID error:&err];
         if (err) {
             if (error != NULL) *error = err;
-            logit(lcl_vError,@"Error posting upgrade status.")
-            logit(lcl_vError,@"%@",err.localizedDescription);
+            LogError(@"Error posting upgrade status.");
+            LogError(@"%@",err.localizedDescription);
             fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
             result = 1;
         } else {
-            logit(lcl_vInfo,@"Posting upgrade status for %@ was successful.",action);
+            LogInfo(@"Posting upgrade status for %@ was successful.",action);
             if ([[action lowercaseString] isEqualToString:@"start"]) {
                 result = [self writeMigrationDataToDisk:aUpgradeID label:aLabel migrationIDFile:OS_MIGRATION_STATUS];
             }
@@ -77,15 +77,15 @@
     {
         [fm createDirectoryAtPath:parentDir withIntermediateDirectories:YES attributes:nil error:&err];
         if (err) {
-            logit(lcl_vError,@"Error creating directory (%@).", parentDir);
-            logit(lcl_vError,@"%@",err.localizedDescription);
+            LogError(@"Error creating directory (%@).", parentDir);
+            LogError(@"%@",err.localizedDescription);
             fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
             return 1;
         }
     } else {
         if (!isDir) {
-            logit(lcl_vError,@"Error directory (%@) is a file.", parentDir);
-            logit(lcl_vError,@"%@",err.localizedDescription);
+            LogError(@"Error directory (%@) is a file.", parentDir);
+            LogError(@"%@",err.localizedDescription);
             fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
             return 1;
         }
@@ -104,13 +104,13 @@
     err = nil;
     [fileData writeToFile:aFilePath atomically:NO encoding:NSUTF8StringEncoding error:&err];
     if (err) {
-        logit(lcl_vError,@"Error creating migration id file (%@).", aFilePath);
-        logit(lcl_vError,@"%@",err.localizedDescription);
+        LogError(@"Error creating migration id file (%@).", aFilePath);
+        LogError(@"%@",err.localizedDescription);
         fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
         return 1;
     }
     
-    qlinfo(@"Migration data written to disk.");
+    LogInfo(@"Migration data written to disk.");
     return 0;
 }
 

@@ -1,7 +1,7 @@
 //
 //  CHDisk.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -123,7 +123,7 @@
     NSError *error = nil;  
     NSDictionary *dictionary = [[NSFileManager defaultManager] attributesOfFileSystemForPath:@"/" error:&error];
     if (error) {
-		logit(lcl_vDebug,@"%@",[error description]);
+		LogDebug(@"%@",[error description]);
 	}
     
     if (dictionary) {  
@@ -131,9 +131,9 @@
         NSNumber *freeFileSystemSizeInBytes = [dictionary objectForKey:NSFileSystemFreeSize];
         totalSpace = [fileSystemSizeInBytes floatValue];
         totalFreeSpace = [freeFileSystemSizeInBytes floatValue];
-		logit(lcl_vDebug,@"Memory Capacity of %.fMB with %.fMB Free memory available.", ((totalSpace/1000.0f)/1000.0f), ((totalFreeSpace/1000.0f)/1000.0f));
+		LogDebug(@"Memory Capacity of %.fMB with %.fMB Free memory available.", ((totalSpace/1000.0f)/1000.0f), ((totalFreeSpace/1000.0f)/1000.0f));
     } else {  
-		logit(lcl_vError,@"Error Obtaining System Memory Info: Domain = %@, Code = %d", [error domain], (int)[error code]);  
+		LogError(@"Error Obtaining System Memory Info: Domain = %@, Code = %d", [error domain], (int)[error code]);  
     }  
     
     [d setObject:aPath forKey:@"VolumePath"];
@@ -141,7 +141,7 @@
     [d setObject:[NSString stringWithFormat:@"%d",(int)((totalSpace/1000)/1000)] forKey:@"totalSpaceMB"];
     [d setObject:[NSString stringWithFormat:@"%llu",(long long)totalFreeSpace]  forKey:@"totalFreeSpaceRaw"]; // Using Bytes for RAW Value
     [d setObject:[NSString stringWithFormat:@"%d",(int)((totalFreeSpace/1000)/1000)] forKey:@"totalFreeSpaceMB"];
-    logit(lcl_vDebug,@"volumeSizeInfo: %@",d);
+    LogDebug(@"volumeSizeInfo: %@",d);
 	
     return (NSDictionary *)d;
 }
