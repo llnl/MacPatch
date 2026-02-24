@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
-# ver 3.5.1
+# ver 3.7
 # Created By Charles Heizer @ LLNL
 #
 # ***************************************************************************************
@@ -50,11 +50,8 @@ existsAndDelete ()
 function runClientActions
 {
 	# Check in
-	/Library/MacPatch/Client/MPAgent -c
+	/Library/MacPatch/Client/MPAgent checkIn
 	sleep 1
-
-	# Run Profile Installs
-	/Library/MacPatch/Client/MPAgent -p
 }
 
 function removeOldRegFiles
@@ -226,7 +223,7 @@ fi
 # ******************************************************************
 # Check for Provision Done file
 if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
-	/Library/MacPatch/Client/MPAgent --provisionConfig
+	/Library/MacPatch/Client/MPAgent provisionConfig
 	if [ $? != 0 ]; then
 		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
 		rm /private/var/db/.MPProvisionBegin
@@ -235,7 +232,7 @@ fi
 
 # ******************************************************************
 # Run Client Check-in
-CLIENTID=`/Library/MacPatch/Client/MPAgent -C`
+CLIENTID=`/Library/MacPatch/Client/MPAgent clientID`
 
 regEnabled=`defaults read "${agentPrefsPlist}" registrationEnabled`
 case "$regEnabled" in
@@ -261,7 +258,7 @@ useParking=$c
 
 if [ $regEnabled == 1 ]; then
 	# Check to see if the client is already registered
-	res=`/Library/MacPatch/Client/MPAgent -R`
+	res=`/Library/MacPatch/Client/MPAgent register --status`
 	if [ $? == 1 ]; then
 		sleep 1
 		# Remove old reg files, since client is not registered
@@ -271,7 +268,7 @@ if [ $regEnabled == 1 ]; then
 		if [ -f "${SRC}/.mpreg.key" ]; then
 			regFile="${SRC}/.mpreg.key"
 			regKey=$(<$regFile)
-			/Library/MacPatch/Client/MPAgent -r $regKey
+			/Library/MacPatch/Client/MPAgent register --key $regKey
 			if [ $? == 0 ]; then
 				sleep 1
 				runClientActions
@@ -279,7 +276,7 @@ if [ $regEnabled == 1 ]; then
 		fi
 		# If Autoreg is enabled we use it
 		if [ $useAutoReg == 1 ]; then
-			/Library/MacPatch/Client/MPAgent -r
+			/Library/MacPatch/Client/MPAgent register
 			if [ $? == 0 ]; then
 				sleep 1
 				runClientActions
@@ -289,7 +286,7 @@ if [ $regEnabled == 1 ]; then
 		# If clientParking is enabled we use it
 		# we do not run any of the client actions
 		if [ $useParking == 1 ]; then
-			/Library/MacPatch/Client/MPAgent -r
+			/Library/MacPatch/Client/MPAgent register
 			sleep 1
 		fi
 	fi
@@ -352,7 +349,7 @@ if [ -d "${SRC}/profiles" ]; then
 fi
 
 # Post that agent software has been installed...
-/Library/MacPatch/Client/MPAgent -K
+/Library/MacPatch/Client/MPAgent agentInstall
 sleep 1
 
 touch /tmp/.mpagentinstalled
@@ -371,7 +368,12 @@ if [ -f "/private/tmp/clientStatusPID" ]; then
 fi
 
 # Show Whats New
-/usr/bin/touch /private/tmp/.mpResetWhatsNew
-chmod 777 /private/tmp/.mpResetWhatsNew
+# Copy in Skip Whats New File
+if [ -e "${SRC}/.MPSkipWhatsNew" ]; then
+	cp "${SRC}/.MPSkipWhatsNew" "/private/tmp/.MPSkipWhatsNew"
+else
+	/usr/bin/touch /private/tmp/.mpResetWhatsNew
+	chmod 777 /private/tmp/.mpResetWhatsNew
+fi
 
 exit 0;

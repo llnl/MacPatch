@@ -2,7 +2,7 @@
 // NSDate+Helper.h
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Cpyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -52,6 +52,11 @@
 - (NSDate *)weeklyNextRun:(NSDate *)startDate;
 - (NSDate *)monthlyNextRun:(NSDate *)startDate;
 
+// New
++ (NSDate *)parseDateFromString:(NSString *)timeString;
++ (NSDateComponents *)timeComponentsFromString:(NSString *)timeString;
++ (NSInteger)weekdayUnitFromCurrentDate;
+
 // Extend Other NSDate Category
 
 // + (NSString *)stringForDisplayFromDate:(NSDate *)date prefixed:(BOOL)prefixed alwaysDisplayTime:(BOOL)displayTime;
@@ -59,3 +64,4 @@
 // NSDateFormatter for bindings search
 - (NSString *)searchString;
 @end
+

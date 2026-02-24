@@ -971,6 +971,9 @@ static STHTTPRequestCookiesStorage globalCookiesStoragePolicy = STHTTPRequestCoo
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     
+    // Invalidate session to prevent memory leak
+    [defaultSession finishTasksAndInvalidate];
+    
     // If Error, return error
     if (blkErr) {
         if (error != NULL) *error = blkErr;

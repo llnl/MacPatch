@@ -1,0 +1,48 @@
+
+
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form method='post' action='#' id="savereport">
+		<div class="well" style="width: 62%">
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">Report Name</label>
+				<div class="col-sm-6">
+					<input id="reportName" class="form-control" name="name" type="text" value="{{data.name or ''}}">
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">Owner</label>
+				<div class="col-sm-6">
+					<input id="reportOwner" class="form-control" name="owner" type="text" value="{{session.user}}" disabled>
+				</div>
+			</div>
+
+			<div class="form-group row">
+				<label class="col-sm-3 col-form-label">Report Scope</label>
+				<div class="col-sm-6">
+					<select id="reportScope" class="form-control" name="scope">
+						<option value="1" {% if 1 == data.scope %}selected{% endif %}>Private</option>
+						<option value="0" {% if 0 == data.scope %}selected{% endif %}>Public</option>
+					</select>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}
+
+{% block javascript %}
+	<script>
+	$(document).ready(function()
+	{
+		
+	});
+	</script>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-editable/css/bootstrap-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{% endblock %}
+
+{% block pageHeader %}
+MDM - Enrolled Devices
+{% endblock %}
+
+{% block bodyPanel %}
+    {% for col in columns %}
+
+    {% endfor %}
+	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
+		<div id="toolbar">
+            {% if session.role[0] == 1 %}
+            <button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
+            {% endif %}
+            &nbsp;<div id="lastSync">Last Sync: {{ lastSync }}</div>
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+            url: "/mdm/enrolledDevices/list",
+			pagination: true,
+			sidePagination: 'client',
+			pageList: ['10', '20', '50', '100', 'All'],
+			search: true,
+			showRefresh: true,
+			resizable: true,
+			sortable: true,
+			showColumns: true,
+			icons: {
+				refresh: 'fa fa-refresh',
+				toggle: 'fa fa-th-list',
+				columns: 'fa fa-columns',
+				detailOpen: 'glyphicon glyphicon-info-sign',
+				detailClose: 'glyphicon glyphicon-minus-sign'
+			},
+			idField: 'rid',
+			columns: [
+			{% for col in columns %}
+            {% if col != 'rid' %}
+                {% if col.info %}
+			{
+
+                    field: '{{col.name}}',
+                    title: '{{col.info}}',
+                    {% if col.name == 'rid' or col.name == 'id' or col.name == 'userid' or col.name == 'udid' %}
+                    visible: false,
+                    {% endif %}
+                    sortable: true
+
+			},
+                {% endif %}
+            {% endif %}
+			{% endfor %}
+			],
+			data: [
+
+			]
+		});
+
+		$('#syncButton').click(function ()
+        {
+            var load = "<i class=\"fa fa-gear fa-spin\"></i> Getting Data"
+            document.getElementById("lastSync").innerHTML = load;
+            $.get("/mdm/runSync/enrolledDevices", function(data) {
+                var obj = JSON.parse(data);
+                document.getElementById("lastSync").innerHTML = "Last Sync: " + obj.lastSync;
+            }).fail(function() {
+                document.getElementById("lastSync").innerHTML = "Error getting sync data. ";
+            });
+        });
+	});
+
+
+	</script>
+{% endblock %}

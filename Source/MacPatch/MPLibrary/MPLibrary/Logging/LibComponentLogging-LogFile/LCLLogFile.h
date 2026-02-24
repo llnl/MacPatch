@@ -3,7 +3,7 @@
 // LCLLogFile.h
 //
 //
-// Copyright (c) 2008-2011 Arne Harren <ah@0xc0.de>
+// Copyright (c) 2008-2013 Arne Harren <ah@0xc0.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -24,8 +24,8 @@
 // THE SOFTWARE.
 
 #define _LCLLOGFILE_VERSION_MAJOR  1
-#define _LCLLOGFILE_VERSION_MINOR  1
-#define _LCLLOGFILE_VERSION_BUILD  5
+#define _LCLLOGFILE_VERSION_MINOR  2
+#define _LCLLOGFILE_VERSION_BUILD  3
 #define _LCLLOGFILE_VERSION_SUFFIX ""
 
 //
@@ -171,9 +171,6 @@
 // Returns the current size of the log file.
 + (size_t)size;
 
-// Returns the version of LCLLogFile.
-+ (NSString *)version;
-
 // Opens the log file.
 + (void)open;
 
@@ -263,17 +260,26 @@
 #   endif
 #endif
 #if _lcl_logger_autoreleasepool_arc
-#define _lcl_logger_autoreleasepool_begin                                      \
-    @autoreleasepool {
-#define _lcl_logger_autoreleasepool_end                                        \
-    }
+#   define _lcl_logger_autoreleasepool_begin                                   \
+        @autoreleasepool {
+#   define _lcl_logger_autoreleasepool_end                                     \
+        }
 #else
-#define _lcl_logger_autoreleasepool_begin                                      \
-    NSAutoreleasePool *_lcl_logger_autoreleasepool = [[NSAutoreleasePool alloc] init];
-#define _lcl_logger_autoreleasepool_end                                        \
-    [_lcl_logger_autoreleasepool release];
+#   define _lcl_logger_autoreleasepool_begin                                   \
+        NSAutoreleasePool *_lcl_logger_autoreleasepool = [[NSAutoreleasePool alloc] init];
+#   define _lcl_logger_autoreleasepool_end                                     \
+        [_lcl_logger_autoreleasepool release];
 #endif
 
+#ifndef _LCL_NO_IGNORE_WARNINGS
+#   ifdef __clang__
+    // Ignore some warnings about variadic macros when using '-Weverything'.
+#   pragma clang diagnostic push
+#   pragma clang diagnostic ignored "-Wunknown-pragmas"
+#   pragma clang diagnostic ignored "-Wvariadic-macros"
+#   pragma clang diagnostic ignored "-Wpedantic"
+#   endif
+#endif
 
 // Define the _lcl_logger macro which integrates LCLLogFile as a logging
 // back-end for LibComponentLogging and pass the header of a log component as
@@ -289,4 +295,10 @@
                                ## __VA_ARGS__];                                \
     _lcl_logger_autoreleasepool_end                                            \
 }
+
+#ifndef _LCL_NO_IGNORE_WARNINGS
+#   ifdef __clang__
+#   pragma clang diagnostic pop
+#   endif
+#endif
 

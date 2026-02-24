@@ -1,0 +1,87 @@
+[ 
+	{
+		"table":"mpi_SPHardwareOverview",
+		"name":"Hardware Overview",
+		"title":"SPHardwareOverview"
+	},
+	{
+		"table":"mpi_SPSystemOverview",
+		"name":"System Overview",
+		"title":"SPSystemOverview"
+	},
+	{
+		"table":"mpi_SPApplications",
+		"name":"Applications",
+		"title":"SPApplications"
+	},
+  	{
+		"table":"mpi_AppStoreApps",
+		"name":"AppStore Apps",
+		"title":"AppStoreApps"
+	},
+	{
+		"table":"mpi_DiskInfo",
+		"name":"Disk Info",
+		"title":"DiskInfo"
+	},
+	{
+		"table":"mpi_AppUsage",
+		"name":"App Usage",
+		"title":"AppUsage"
+	},
+	{
+		"table":"mpi_BatteryInfo",
+		"name":"Battery Info",
+		"title":"BatteryInfo"
+	},
+	{
+		"table":"mpi_DirectoryServices",
+		"name":"Directory Services",
+		"title":"DirectoryServices"
+	},
+	{
+		"table":"mpi_FileVault",
+		"name":"FileVault",
+		"title":"FileVault"
+	},
+	{
+		"table":"mpi_Users",
+		"name":"Users",
+		"title":"Users"
+	},
+	{
+		"table":"mpi_Groups",
+		"name":"Groups",
+		"title":"Groups"
+	},
+	{
+		"table":"mpi_InternetPlugins",
+		"name":"InternetPlugins",
+		"title":"InternetPlugins"
+	},	
+	{
+		"table":"mpi_PowerManagment",
+		"name":"Power Managment",
+		"title":"PowerManagment"
+	},
+	{
+		"table":"mpi_SINetworkInfo",
+		"name":"Network Info",
+		"title":"SINetworkInfo"
+	},
+	{
+		"table":"mpi_ConfigProfiles",
+		"name":"Config Profiles",
+		"title":"ConfigProfiles"
+	},
+	{
+		"table":"mpi_SPFrameworks",
+		"name":"Frameworks",
+		"title":"SPFrameworks"
+	},
+	{
+		"table":"mpi_ClientTasks",
+		"name":"Client Tasks",
+		"title":"ClientTasks"
+	}
+]

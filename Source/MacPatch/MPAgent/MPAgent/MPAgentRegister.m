@@ -3,7 +3,7 @@
 //  MPAgent
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -33,9 +33,6 @@
 
 #define AUTO_REG_KEY    @"999999999"
 #define SRV_PUB_KEY     @"/Library/Application Support/MacPatch/.keys/ServerPub.pem"
-
-#undef  ql_component
-#define ql_component lcl_cMPAgentRegister
 
 @interface MPAgentRegister ()
 {
@@ -77,7 +74,7 @@
             
         NSString *cKey = [agentData getClientKey];
         if (!cKey) {
-            logit(lcl_vError,@"Agent key data not found.");
+            LogError(@"Agent key data not found.");
             return FALSE;
         }
         
@@ -86,7 +83,7 @@
         MPCrypto *mpc = [[MPCrypto alloc] init];
         NSString *keyHash = [mpc getHashFromStringForType:cKey type:@"SHA1"];
         if (err) {
-            logit(lcl_vError,@"%@",err.localizedDescription);
+            LogError(@"%@",err.localizedDescription);
             return FALSE;
         }
         
@@ -94,7 +91,7 @@
         MPRESTfull *mprest = [[MPRESTfull alloc] initWithClientID:agent.g_cuuid];
         result = [mprest getAgentRegistrationStatusUsingKey:keyHash error:&err];
         if (err) {
-            logit(lcl_vError,@"%@",err.localizedDescription);
+            LogError(@"%@",err.localizedDescription);
             return FALSE;
         }
         
@@ -147,7 +144,7 @@
     NSError *err = nil;
     
     NSDictionary *regDict = [self generateRegistrationData:&err];
-    qldebug(@"[regDict]: %@", regDict);
+    LogDebug(@"[regDict]: %@", regDict);
     if (err) {
         if (error != NULL) {
             *error = err;
@@ -249,7 +246,7 @@
     }
 
     // Add the keys to the Keychain
-    OSStatus *result = [skc saveKeyItemWithService:aClientKeys service:kMPClientService error:&error];
+    OSStatus result = [skc saveKeyItemWithService:aClientKeys service:kMPClientService error:&error];
     if (error) {
         if (err != NULL) {
             *err = error;

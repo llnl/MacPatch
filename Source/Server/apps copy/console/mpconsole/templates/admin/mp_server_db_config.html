@@ -1,0 +1,46 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+	<style>
+		 .panel {
+			 width: 720px;
+		 }
+		 .well {
+			 width: 720px;
+			 height: 370px;
+		 }
+	</style>
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form role="form" id="myForm">
+		<div class="form-group">
+			<div class="well well-sm width2">
+
+				<div class="row">
+					<div class="col-sm-12">
+                        {% for result in data %}
+                        <div class="row row-grid top10">
+							<div class="col-sm-4">
+								<label>{{ result }}</label>
+							</div>
+							<div class="col-sm-8">
+                                <input class="form-control" type="text" value="{{data[result] or ''}}">
+							</div>
+						</div>
+                        {% endfor %}
+
+					</div>
+				</div>
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	});
+</script>

@@ -3,7 +3,7 @@
 //  gov.llnl.mp.worker
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -154,7 +154,8 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 {
     BOOL success = NO;
     NSError *err = nil;
-    
+    return YES;
+    /*
     int mePid = [self getPidNumber];
     NSString *mePidPath = [self pathForPid:mePid];
     logit(lcl_vDebug,@"self.pid %d, self.path %@",mePid,mePidPath);
@@ -183,6 +184,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     }
     
     return success;
+     */
 }
 
 # pragma mark - PID methods
@@ -222,14 +224,8 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 {
     // We specifically don't check for authorization here.  Everyone is always allowed to get
     // the version of the helper tool.
-	
-	
-	MPConfigProfiles *p = [[MPConfigProfiles alloc] init];
-	NSArray *cp = [p readProfileStoreReturnAsConfigProfile];
-	NSString *str = [NSString stringWithFormat:@"Profiles Found %lu",(unsigned long)cp.count];
-	
     qldebug(@"getTestWithReply");
-    reply(str);
+    reply(@"Test reply string");
 }
 
 - (void)getProfilesWithReply:(void(^)(NSString *aString, NSData *aData))reply
@@ -243,7 +239,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	NSData *data = [NSKeyedArchiver archivedDataWithRootObject:cp];
 	NSString *str = [NSString stringWithFormat:@"Profiles Found %lu",(unsigned long)cp.count];
 	
-	qldebug(@"getProfilesWithReply");
 	reply(str,data);
 }
 
@@ -254,8 +249,6 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 // Delegate Method
 - (void)appleScanProgress:(NSString *)data
 {
-	//qlinfo(@"appleScanProgress: %@",[data trim]);
-	//[self postPatchStatus:[data trim]];
 	[self postStatus:[data trim]];
 }
 
@@ -659,10 +652,10 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 {
     NSError *err = nil;
     @try {
-		/*
-        MPScanAndPatch *ma = [[MPScanAndPatch alloc] initForBundleUpdate];
-        [ma scanAndUpdateCustomWithPatchBundleID:[aSWDict valueForKeyPath:@"Software.patch_bundle_id"]];
-        res = [ma errorCode];
+		/* CEH
+        MPScanAndPatch *mpSAP = [[MPScanAndPatch alloc] initForBundleUpdate];
+        [mpSAP scanAndUpdateCustomWithPatchBundleID:[aSWDict valueForKeyPath:@"Software.patch_bundle_id"]];
+        res = [mpSAP errorCode];
         reply(err, res);
 		 */
 		reply(NULL,0);
@@ -858,6 +851,50 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 			}
 		}
 	}
+    else if ([pkgType isEqualToString:@"PACKAGE" ignoringCase:YES])
+    {
+        qlinfo(@"Software Task is of type %@.",pkgType);
+        // ------------------------------------------------
+        // Check File Hash
+        // ------------------------------------------------
+        [self postStatus:@"Checking file hash..."];
+        fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
+        if (![fHash isEqualToString:[swItem valueForKeyPath:@"Software.sw_hash"] ignoringCase:YES])
+        {
+            errStr = [NSString stringWithFormat:@"Error unable to verify software hash for file %@.",dlSoftwareFileName];
+            qlerror(@"%@", errStr);
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPFileHashCheckError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Run Pre Install Script
+        // ------------------------------------------------
+        [self postStatus:@"Running pre-install script..."];
+        if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_pre_install"] type:0]) {
+            err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPreInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running pre-insatll script."}];
+            reply(err,1,installResultData);
+            return;
+        }
+        
+        // ------------------------------------------------
+        // Install PKG
+        // ------------------------------------------------
+        [self postStatus:@"Installing %@",dlSoftwareFile.lastPathComponent];
+        result = [self installPkgFromZIP:[dlSoftwareFile stringByDeletingLastPathComponent] environment:swItem[@"pkgEnv"]];
+        
+        // ------------------------------------------------
+        // Run Post Install Script, if copy was good
+        // ------------------------------------------------
+        if (result == 0)
+        {
+            [self postStatus:@"Running post-install script..."];
+            if (![self runSWInstallScript:[swItem valueForKeyPath:@"Software.sw_post_install"] type:0]) {
+                err = [NSError errorWithDomain:MPXPCErrorDomain code:MPPostInstallScriptError userInfo:@{NSLocalizedDescriptionKey:@"Error running post-insatll script."}];
+            }
+        }
+    }
 	else if ([pkgType isEqualToString:@"PACKAGEZIP" ignoringCase:YES])
 	{
 		qlinfo(@"Software Task is of type %@.",pkgType);
@@ -1138,9 +1175,11 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
     qlinfo(@"downloadSoftware for task %@",swTask[@"name"]);
 	NSString *_url;
 	NSInteger useS3 = [[swTask valueForKeyPath:@"Software.sw_useS3"] integerValue];
+    BOOL useCloud = useS3 >= 1;
 	if (useS3 == 1) {
 		MPRESTfull *mpr = [MPRESTfull new];
 		NSDictionary *res = [mpr getS3URLForType:@"sw" id:swTask[@"id"]];
+        qlinfo(@"getS3URLForType result = %@", res);
 		if (res) {
 			_url = res[@"url"];
 		} else {
@@ -1154,7 +1193,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 	req.delegate = self;
-	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
+    NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath fromCloudServer:useCloud error:&dlErr];
 	qldebug(@"Downloaded software to %@",dlPath);
 	return YES;
 }
@@ -2104,7 +2143,7 @@ done:
 	[pi setUserName:userName];
 	[pi setUserPass:userPass];
 
-	[kc savePassItemWithService:pi service:@"mpauthrestart" error:&err];
+    [kc savePassItemWithService:pi service:MP_AUTHSTATUS_ITEM error:&err];
 	if (err) {
 		qlerror(@"Save Error: %@",err.localizedDescription);
 		result = 1;
@@ -2124,7 +2163,7 @@ done:
     NSDictionary *authData = nil;
     NSError *err = nil;
     MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-    MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+    MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
     if (!err) {
         authData = [pi toDictionary];
     } else {
@@ -2178,7 +2217,7 @@ done:
     NSDictionary *authData = nil;
     NSError *err = nil;
     MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-    MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+    MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
     if (!err) {
         authData = [pi toDictionary];
     } else {
@@ -2198,6 +2237,7 @@ done:
     "    <string>%@</string> \n"
     "</dict></plist>\n"
     "EOF",authData[@"userName"],authData[@"userPass"]];
+    
     
     [script writeToFile:@"/private/var/tmp/authScript" atomically:NO encoding:NSUTF8StringEncoding error:NULL];
     
@@ -2231,7 +2271,7 @@ done:
 	NSDictionary *result = nil;
 	NSError *err = nil;
 	MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-	MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+	MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
 	if (!err) {
 		result = [pi toDictionary];
 	}
@@ -2244,12 +2284,14 @@ done:
 	NSError *err = nil;
 	NSFileManager *fs = [NSFileManager defaultManager];
     
-    MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-    OSStatus delRes = [kc deleteKeyChain];
-    if (delRes != noErr) {
-        qlerror(@"Error deleteing keychain.");
-        err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:NULL];
-        result = NO;
+    if ([fs fileExistsAtPath:MP_AUTHSTATUS_KEYCHAIN]) {
+        MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
+        OSStatus delRes = [kc deleteKeyChain];
+        if (delRes != noErr) {
+            qlerror(@"Error deleteing keychain.");
+            err = [NSError errorWithDomain:@"gov.llnl.MPSimpleKeychain" code:20001 userInfo:NULL];
+            result = NO;
+        }
     }
     
 	if ([fs fileExistsAtPath:MP_AUTHSTATUS_FILE]) {
@@ -2283,12 +2325,11 @@ done:
 			if ([d[@"useRecovery"] boolValue])
 			{
 				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
 				if (!err)
 				{
 					isValid = [self recoveryKeyIsValid:pi.userPass];
 					qldebug(@"Is FV Recovery Key Valid: %@",isValid ? @"Yes":@"No");
-					
 					if (!isValid) {
 						[d setObject:[NSNumber numberWithBool:YES] forKey:@"keyOutOfSync"];
 						[d writeToFile:MP_AUTHSTATUS_FILE atomically:NO];
@@ -2300,7 +2341,7 @@ done:
 			} else {
 				DHCachedPasswordUtil *dh = [DHCachedPasswordUtil new];
 				MPSimpleKeychain *kc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_AUTHSTATUS_KEYCHAIN];
-				MPPassItem *pi = [kc retrievePassItemForService:@"mpauthrestart" error:&err];
+				MPPassItem *pi = [kc retrievePassItemForService:MP_AUTHSTATUS_ITEM error:&err];
 				if (!err)
 				{
 					isValid = [dh checkPassword:pi.userPass forUserWithName:pi.userName];
@@ -2556,7 +2597,6 @@ done:
 
 - (void)patchProgress:(NSString *)progressStr
 {
-	//[self postPatchStatus:progressStr];
 	[self postStatus:progressStr];
 }
 
@@ -2576,7 +2616,6 @@ done:
 
 - (void)postProvisioningData:(NSString *)key dataForKey:(NSData *)data dataType:(NSString *)dataType withReply:(void(^)(NSError *error))reply
 {
-    // qlinfo(@"CEHD [postProvisioningData]: key:%@ dataType:%@",key,dataType);
     NSError *err = nil;
     id _data = nil;
     
@@ -2613,10 +2652,8 @@ done:
         }
         [_status addObject:_data];
         [_pFile setObject:_status forKey:key];
-        // _pFile[key] = _status;
     } else {
         [_pFile setObject:_data forKey:key];
-        // _pFile[key] = _data;
     }
     
     if (![_pFile writeToFile:MP_PROVISION_FILE atomically:NO]) {
@@ -2624,8 +2661,6 @@ done:
         err = [NSError errorWithDomain:@"gov.llnl.mp.helper" code:101 userInfo:errDetail];
     }
     
-    //qlinfo(@"CEHD: Verify postProvisioningData");
-    //qlinfo(@"CEHD: Data: %@",[NSDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE]);
     reply(err);
 }
 

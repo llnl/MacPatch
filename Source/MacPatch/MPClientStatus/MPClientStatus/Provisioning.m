@@ -56,6 +56,7 @@
 @property (weak) IBOutlet NSTabView *tabBar;
 @property (weak) IBOutlet NSButton *stepperButton;
 @property (weak) IBOutlet NSButton *skipButton;
+@property (weak) IBOutlet NSButton *finishScriptButton; // Testing
 @property (weak) IBOutlet NSTextView *softwareTextView;
 @property (weak) IBOutlet NSProgressIndicator *progressBar;
 @property (weak) IBOutlet NSProgressIndicator *progressWheel;
@@ -85,6 +86,106 @@
 @dynamic window;
 
 - (void)windowDidLoad
+{
+    [super windowDidLoad];
+    fm = [NSFileManager defaultManager];
+    BOOL backgroundOn = NO;
+    
+    if (backgroundOn)
+    {
+        NSRect screenFrame = [[NSScreen mainScreen] frame]; // Get Full Screen
+        self.backwindow  = [[NSWindow alloc] initWithContentRect:screenFrame styleMask:NSBorderlessWindowMask
+                                                         backing:NSBackingStoreBuffered defer:NO];
+        //[self.backwindow setOpaque:NO];
+        [self.backwindow setBackgroundColor:[[NSColor darkGrayColor] colorWithAlphaComponent:0.5]];
+        [self.backwindow setLevel:NSStatusWindowLevel];
+        [self.backwindow makeKeyAndOrderFront:NSApp];
+    }
+    
+    // Defensive loading and parsing of provision UI JSON
+    NSError *err = nil;
+    if (![fm fileExistsAtPath:MP_PROVISION_UI_FILE]) {
+        qlerror(@"Provision UI file does not exist at path: %@", MP_PROVISION_UI_FILE);
+        _provisionUIData = nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setMessageText:@"Provisioning File Not Found"];
+            [alert setInformativeText:@"The provisioning configuration file could not be found. Provisioning can not contiune."];
+            [alert setAlertStyle:NSCriticalAlertStyle];
+            [alert addButtonWithTitle:@"OK"];
+            
+            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                [self closeWindow:nil];
+            }];
+        });
+        return;
+    }
+
+    NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_UI_FILE];
+    if (data.length == 0) {
+        qlerror(@"Provision UI file is empty at path: %@", MP_PROVISION_UI_FILE);
+        _provisionUIData = nil;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSAlert *alert = [[NSAlert alloc] init];
+            [alert setMessageText:@"Provisioning File Is Empty"];
+            [alert setInformativeText:@"The provisioning configuration file is empty. Provisioning can not contiune."];
+            [alert setAlertStyle:NSCriticalAlertStyle];
+            [alert addButtonWithTitle:@"OK"];
+            
+            [alert beginSheetModalForWindow:self.window completionHandler:^(NSModalResponse returnCode) {
+                [self closeWindow:nil];
+            }];
+        });
+        return;
+    }
+
+    qlinfo(@"Loaded %lu bytes from %@", (unsigned long)data.length, MP_PROVISION_UI_FILE);
+
+    id jdata = nil;
+    @try {
+        jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
+    } @catch (NSException *exception) {
+        qlerror(@"Exception parsing JSON: %@ (%@)", exception.name, exception.reason);
+    }
+
+    if (err || ![jdata isKindOfClass:[NSDictionary class]]) {
+        if (err) {
+            qlerror(@"MP_PROVISION_UI_FILE is not valid JSON: %@", err.localizedDescription);
+        } else {
+            qlerror(@"MP_PROVISION_UI_FILE top-level object is not a dictionary as expected.");
+        }
+        _provisionUIData = nil;
+        [self.window close];
+        return;
+    }
+
+    _provisionUIData = [(NSDictionary *)jdata copy];
+    
+    // Implement this method to handle any initialization after your window controller's window has been loaded from its nib file.
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_stepperButton setTitle:@"Begin"];
+        [self->_stepperButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
+    });
+    
+    _tabBar.delegate = self;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_tabBar selectTabViewItemWithIdentifier:@"1"];
+        [self->_tabBar selectTabViewItemWithIdentifier:@"0"];
+        [self->_tabBar needsDisplay];
+    });
+    
+    _swGroup = @"Default";
+    if (_provisionUIData[@"softwareGroup"]) {
+        _swGroup = _provisionUIData[@"softwareGroup"];
+        qlinfo(@"Setting optional install group to %@",_swGroup);
+    }
+    
+    [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
+    [self performSelectorInBackground:@selector(runProvisionHostThread) withObject:nil];
+}
+
+
+- (void)windowDidLoadOLD
 {
     [super windowDidLoad];
     fm = [NSFileManager defaultManager];
@@ -325,6 +426,7 @@
 {
     [self.backwindow orderOut:self];
     [self.window orderOut:self];
+    qlinfo(@"closeWindow was called");
 }
 
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector { return NO; }
@@ -644,7 +746,7 @@
         // Unarchive the data object and locate the scriptsFinish key, then see if the array
         // has anything in it.
         if (pData[@"scriptsFinish"]) {
-            
+            qlinfo(@"Have Finish script(s) to run.");
             // Show quick message and wheel
             dispatch_async(dispatch_get_main_queue(), ^(void) {
                 [self->_finishProgressStatus setHidden:NO];
@@ -725,16 +827,16 @@
 - (int)runScript:(NSString *)script
 {
     qlinfo(@"Begin running script");
-    dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+    //dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
             qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
-            dispatch_semaphore_signal(sem);
+            // dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
                 qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
-                dispatch_semaphore_signal(sem);
+                // dispatch_semaphore_signal(sem);
             }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
                 res = result;
                 if (error) {
@@ -742,12 +844,12 @@
                     qlerror(@"%@",error.localizedDescription);
                 }
                 qlinfo(@"End running script");
-                dispatch_semaphore_signal(sem);
+                // dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
-    dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+    // dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
     qlinfo(@"Script result: %d",(int)res);
     return (int)res;
 }
@@ -1022,6 +1124,8 @@
 // Ensures that we're connected to our helper tool.
 {
     if (self.workerConnection == nil) {
+        qlinfo(@"[Provisioning.m][connectToHelperTool] self.workerConnection == nil");
+        qlinfo(@"[Provisioning.m][connectToHelperTool] init with %@",kHelperServiceName);
         self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
         self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
         
@@ -1096,4 +1200,47 @@
         //[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
     }
 }
+
+#pragma mark - Testing
+
+- (IBAction)runFinishScript:(id)sender
+{
+    // Check to see if the process needs to run any final scripts.
+    _provisionFileData = [self readProvisioningFile];
+    NSDictionary *pData = _provisionFileData[@"data"];
+    qlinfo(@"provisionFileData[3]: %@",pData);
+    
+    // Unarchive the data object and locate the scriptsFinish key, then see if the array
+    // has anything in it.
+    if (pData[@"scriptsFinish"]) {
+        qlinfo(@"[runFinishScript] Have Finish script(s) to run.");
+        
+        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^(void) {
+           
+            NSArray *scripts = [NSArray array];
+            if([pData[@"scriptsFinish"] isKindOfClass: [NSData class]]) {
+                scripts = [NSKeyedUnarchiver unarchiveObjectWithData:pData[@"scriptsFinish"]];
+            }
+            
+            if(scripts.count >= 1) {
+                // Sort Array by order ascending
+                NSSortDescriptor *orderDescriptor = [[NSSortDescriptor alloc] initWithKey:@"order" ascending:YES];
+                scripts = [scripts sortedArrayUsingDescriptors:[NSArray arrayWithObject:orderDescriptor]];
+                for (NSDictionary *script in scripts)
+                {
+                    if ([script[@"active"] intValue] == 1) {
+                        qlinfo(@"[SCRIPT] %@",script[@"script"]);
+                        if ([self runScript:script[@"script"]] != 0) {
+                            qlerror(@"Error running script, sid is %@", script[@"sid"]);
+                            qlerror(@"Script Data: %@",script[@"script"]);
+                        }
+                    }
+                }
+            }
+            
+        });
+    }
+}
 @end
+

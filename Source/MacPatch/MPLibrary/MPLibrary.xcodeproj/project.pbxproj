@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 53;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -53,12 +53,19 @@
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */; };
 		8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F222848A5C006E6BC5 /* GCDTask.m */; };
 		8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */; };
 		8FA139F221B7857D00124016 /* ConfigProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139EE21B7857D00124016 /* ConfigProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139EF21B7857D00124016 /* ConfigProfile.m */; };
 		8FA139F421B7857D00124016 /* MPConfigProfiles.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139F021B7857D00124016 /* MPConfigProfiles.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA139F521B7857D00124016 /* MPConfigProfiles.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139F121B7857D00124016 /* MPConfigProfiles.m */; };
+		8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21F892F16EE690016379E /* MPLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21F8B2F16EE6C0016379E /* MPLogger.m */; };
+		8FA21FBB2F2180CA0016379E /* Logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21FB92F2180CA0016379E /* Logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FA21FBC2F2180CA0016379E /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21FBA2F2180CA0016379E /* Logger.m */; };
+		8FA21FBE2F218DF30016379E /* OSLog.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA21FBD2F218DF30016379E /* OSLog.framework */; };
 		8FA28ED921939EE2005D5E92 /* FMDatabaseQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28ECE21939EE2005D5E92 /* FMDatabaseQueue.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8FA28EDA21939EE2005D5E92 /* FMDatabase.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28ECF21939EE2005D5E92 /* FMDatabase.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8FA28EDB21939EE2005D5E92 /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28ED021939EE2005D5E92 /* FMDatabaseQueue.m */; };
@@ -219,6 +226,8 @@
 		8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
 		8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
 		8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
+		8F8019F122848A5B006E6BC5 /* GCDTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDTask.h; sourceTree = "<group>"; };
+		8F8019F222848A5C006E6BC5 /* GCDTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDTask.m; sourceTree = "<group>"; };
 		8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+MPHelper.h"; sourceTree = "<group>"; };
 		8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+MPHelper.m"; sourceTree = "<group>"; };
 		8F87427116308AD2007BA7DB /* MPWebServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWebServices.h; sourceTree = "<group>"; };
@@ -228,6 +237,11 @@
 		8FA139F021B7857D00124016 /* MPConfigProfiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPConfigProfiles.h; sourceTree = "<group>"; };
 		8FA139F121B7857D00124016 /* MPConfigProfiles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPConfigProfiles.m; sourceTree = "<group>"; };
 		8FA13A1121B874A900124016 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = ../../../../../../../usr/lib/libz.1.dylib; sourceTree = "<group>"; };
+		8FA21F892F16EE690016379E /* MPLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLogger.h; sourceTree = "<group>"; };
+		8FA21F8B2F16EE6C0016379E /* MPLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPLogger.m; sourceTree = "<group>"; };
+		8FA21FB92F2180CA0016379E /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
+		8FA21FBA2F2180CA0016379E /* Logger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Logger.m; sourceTree = "<group>"; };
+		8FA21FBD2F218DF30016379E /* OSLog.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OSLog.framework; path = System/Library/Frameworks/OSLog.framework; sourceTree = SDKROOT; };
 		8FA28ECE21939EE2005D5E92 /* FMDatabaseQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabaseQueue.h; sourceTree = "<group>"; };
 		8FA28ECF21939EE2005D5E92 /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabase.h; sourceTree = "<group>"; };
 		8FA28ED021939EE2005D5E92 /* FMDatabaseQueue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseQueue.m; sourceTree = "<group>"; };
@@ -400,6 +414,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8FA21FBE2F218DF30016379E /* OSLog.framework in Frameworks */,
 				8FB1AB7027A4550F003DC95C /* libcurl.tbd in Frameworks */,
 				8FC0A8CD2181112F006C7FCB /* libz.tbd in Frameworks */,
 				8FE5609816DE6D6300BB7600 /* Security.framework in Frameworks */,
@@ -450,6 +465,8 @@
 				8FF3D65B2170113800059ACD /* MPNSTask.m */,
 				8FF3D6582170113800059ACD /* MPLog.h */,
 				8FF3D7212170196800059ACD /* MPLog.m */,
+				8FA21F892F16EE690016379E /* MPLogger.h */,
+				8FA21F8B2F16EE6C0016379E /* MPLogger.m */,
 				8FF3D65A2170113800059ACD /* MPClientInfo.h */,
 				8FF3D65D2170113900059ACD /* MPClientInfo.m */,
 				8FF3D6532170113800059ACD /* MPDiskUtil.h */,
@@ -576,6 +593,15 @@
 				8FF3D6BE2170131700059ACD /* MPSWTasks.m */,
 			);
 			name = "MacPatch+SWDist";
+			sourceTree = "<group>";
+		};
+		8F8019F022848A3A006E6BC5 /* GCDTask */ = {
+			isa = PBXGroup;
+			children = (
+				8F8019F122848A5B006E6BC5 /* GCDTask.h */,
+				8F8019F222848A5C006E6BC5 /* GCDTask.m */,
+			);
+			path = GCDTask;
 			sourceTree = "<group>";
 		};
 		8F83530E217E8B230034FEFB /* NSDate-Category */ = {
@@ -811,6 +837,7 @@
 		8FEA3EE51649726400103E80 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				8FA21FBD2F218DF30016379E /* OSLog.framework */,
 				8FB1AB6F27A4550F003DC95C /* libcurl.tbd */,
 				8FA13A1121B874A900124016 /* libz.1.dylib */,
 				8FC0A8CC2181112F006C7FCB /* libz.tbd */,
@@ -833,6 +860,7 @@
 		8FED881F1463165B00709F8E /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
+				8F8019F022848A3A006E6BC5 /* GCDTask */,
 				8FE7E9B422372E7C000FAA6A /* UAObfuscatedString */,
 				8FE7E9AB22372E28000FAA6A /* CocoaSecurity */,
 				8F83530E217E8B230034FEFB /* NSDate-Category */,
@@ -866,6 +894,8 @@
 				8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */,
 				8FBC255F2407417600996F5B /* DHCachedPasswordUtil.h */,
 				8FBC25602407417600996F5B /* DHCachedPasswordUtil.m */,
+				8FA21FB92F2180CA0016379E /* Logger.h */,
+				8FA21FBA2F2180CA0016379E /* Logger.m */,
 			);
 			name = NEW;
 			sourceTree = "<group>";
@@ -896,6 +926,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */,
 				8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */,
 				8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */,
 				8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */,
@@ -970,7 +1001,9 @@
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
 				8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */,
 				8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */,
+				8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */,
 				8FF3D73921701AB600059ACD /* NSString+Hash.h in Headers */,
+				8FA21FBB2F2180CA0016379E /* Logger.h in Headers */,
 				8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */,
 				8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */,
 				8F4B1E4316DD1D8C00E15A9E /* lcl_config_extensions.h in Headers */,
@@ -1018,7 +1051,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1540;
+				LastUpgradeCheck = 2620;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
 			compatibilityVersion = "Xcode 11.4";
@@ -1041,6 +1074,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		8FE5611316DE9D0800BB7600 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -1078,12 +1112,14 @@
 				8F4B1DFA16DD1D6400E15A9E /* MPAsus.m in Sources */,
 				8FF3D73B21701AB600059ACD /* NSMutableDictionary+Helper.m in Sources */,
 				8FE66410222EDD2200F12AC8 /* MPPatchScan.m in Sources */,
+				8FA21FBC2F2180CA0016379E /* Logger.m in Sources */,
 				8FF3D73721701AB600059ACD /* NSString+Helper.m in Sources */,
 				8F03BE982362334800987AD7 /* History.m in Sources */,
 				8F4B1DFC16DD1D6400E15A9E /* MPASUSCatalogs.m in Sources */,
 				8FC1CF542526920900DAD699 /* NSData+Base64.m in Sources */,
 				8FA28EFC21939EF8005D5E92 /* FMXDatabaseConfiguration.m in Sources */,
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
+				8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
@@ -1138,6 +1174,7 @@
 				8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */,
 				8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */,
 				8FF3D6832170123900059ACD /* STHTTPRequest.m in Sources */,
+				8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */,
 				8FF3D6A02170129B00059ACD /* MPCrypto.m in Sources */,
 				8FA28EDC21939EE2005D5E92 /* FMDatabasePool.m in Sources */,
 			);
@@ -1187,6 +1224,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Debug;
 		};
@@ -1229,6 +1267,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 11.5;
 				ONLY_ACTIVE_ARCH = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 			};
 			name = Release;
 		};
@@ -1272,7 +1311,8 @@
 					"$(inherited)",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
+				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -1318,7 +1358,7 @@
 					"$(inherited)",
 					"\"$(SYSTEM_APPS_DIR)/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.10.sdk/usr/lib\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = "$(RECOMMENDED_MACOSX_DEPLOYMENT_TARGET)";
+				MACOSX_DEPLOYMENT_TARGET = 11.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

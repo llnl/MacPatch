@@ -56,6 +56,7 @@
 - (MPWSResult *)runSyncPOST:(NSString *)urlPath body:(NSDictionary *)body;
 
 - (NSString *)runSyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError **)err;
+- (NSString *)runSyncFileDownload:(NSString *)urlPath downloadDirectory:(NSString *)dlDir fromCloudServer:(BOOL)fromCloud error:(NSError **)err;
 - (NSString *)runSyncFileDownloadFromServer:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError **)err;
 
 - (NSData *)dataForURLPath:(NSString *)aURLPath;

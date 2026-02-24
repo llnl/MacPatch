@@ -417,23 +417,29 @@
     OSStatus result;
     SecTrustedApplicationRef me;
     SecTrustedApplicationRef MPAgent = NULL;
-    SecTrustedApplicationRef MPWorker = NULL;
-    SecTrustedApplicationRef MPCatalog = NULL;
-    SecTrustedApplicationRef SelfPatch = NULL;
+    SecTrustedApplicationRef MacPatchApp = NULL;
     SecTrustedApplicationRef MPClientStatus = NULL;
-    SecTrustedApplicationRef MPLoginAgent = NULL;
+    SecTrustedApplicationRef MPUpdateAgent = NULL;
+    SecTrustedApplicationRef MPHelper = NULL;
+    SecTrustedApplicationRef MPStatusUI = NULL;
     
+
     result = SecTrustedApplicationCreateFromPath(NULL, &me);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPWorker", &MPWorker);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPCatalog.app", &MPCatalog);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/Self Patch.app", &SelfPatch);
+    result = SecTrustedApplicationCreateFromPath("/Applications/MacPatch.app", &MacPatchApp);
     result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
-    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
+    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
+    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.helper", &MPHelper);
+    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.status.ui", &MPStatusUI);
     
-    NSArray *trustedApplications = [NSArray arrayWithObjects:(__bridge_transfer id)me, (__bridge_transfer id)MPAgent,
-                                    (__bridge_transfer id)MPWorker,(__bridge_transfer id)MPCatalog,
-                                    (__bridge_transfer id)SelfPatch,(__bridge_transfer id)MPClientStatus,(__bridge_transfer id)MPLoginAgent,nil];
+    
+    NSArray *trustedApplications = @[(__bridge_transfer id)me,
+                                    (__bridge_transfer id)MPAgent,
+                                    (__bridge_transfer id)MacPatchApp,
+                                    (__bridge_transfer id)MPClientStatus,
+                                    (__bridge_transfer id)MPUpdateAgent,
+                                    (__bridge_transfer id)MPHelper,
+                                    (__bridge_transfer id)MPStatusUI];
     
     SecAccessRef accessObj = NULL;
     result = SecAccessCreate((__bridge CFStringRef)_accessLabel, (__bridge CFArrayRef)trustedApplications, &accessObj);
@@ -479,7 +485,7 @@
     OSStatus itemStatus = 0;
     BOOL res = [self itemInKeychain:aKey status:itemStatus];
     if (res) {
-        qldebug(@"OSStatus: %@",[self errorForOSStatus:itemStatus]);
+        qldebug(@"[deleteFromKeychainWithKey][itemInKeychain] OSStatus: %@",[self errorForOSStatus:itemStatus]);
     }
     
     OSStatus    osStatus;
@@ -493,7 +499,7 @@
     
     osStatus = SecItemDelete((CFDictionaryRef)deletableItemsQuery);
     if (osStatus != noErr) {
-        qlinfo(@"deleteFromKeychainWithKey :%d",osStatus);
+        qlerror(@"deleteFromKeychainWithKey %@ result = %d", aKey, osStatus);
     }
     
     return osStatus;

@@ -3,7 +3,7 @@
 // LCLLogFile.m
 //
 //
-// Copyright (c) 2008-2011 Arne Harren <ah@0xc0.de>
+// Copyright (c) 2008-2013 Arne Harren <ah@0xc0.de>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -128,7 +128,7 @@ static char *_LCLLogFile_filePath0_c = NULL;
 static pid_t _LCLLogFile_processId = 0;
 
 // The log level headers we use.
-const char * const _LCLLogFile_levelHeader[] = {
+static const char * const _LCLLogFile_levelHeader[] = {
     "-",
     "C",
     "E",
@@ -370,25 +370,12 @@ static NSString *_LCLLogFile_prefix(const char *identifier_c, uint32_t level,
     }
     
     // create prefix
-    NSString *prefix;
-	if (level == 4) {
-		prefix = [NSString stringWithFormat:@" [%u:%x][%s] %s -- ",
-				  /*    */
-				  /* %u */ _LCLLogFile_processId,
-				  /* %x */ mach_thread_self(),
-				  /* %s */ _lcl_level_header_3[level],
-				  /*    */
-				  /* %s */ identifier_c
-				  /* -- */
-				  /*    */
-				  ];
-	} else {
-		prefix = [NSString stringWithFormat:@" [%u:%x][%s] %s%s%s%s%s%s%s -- ",
+    NSString *prefix = [NSString stringWithFormat:@" %u:%x %s %s%s%s%s%s%s%s ",
                         /*    */
                         /* %u */ _LCLLogFile_processId,
                         /* %x */ mach_thread_self(),
                         /*    */
-                        /* %s */ _lcl_level_header_3[level],
+                        /* %s */ level_c,
                         /*    */
                         /* %s */ identifier_c,
                         /* %s */ show_file ? ":" : "",
@@ -399,7 +386,7 @@ static NSString *_LCLLogFile_prefix(const char *identifier_c, uint32_t level,
                         /* %s */ show_function ? function_c : ""
                         /*    */
                         ];
-    }
+    
     return prefix;
 }
 
@@ -428,8 +415,20 @@ static void _LCLLogFile_log(const char *identifier_c, uint32_t level,
         [emessage autorelease];
 #       endif
         [emessage appendString:message];
+#       ifndef _LCL_NO_IGNORE_WARNINGS
+#           ifdef __clang__
+#           pragma clang diagnostic push
+#           pragma clang diagnostic ignored "-Wunknown-pragmas"
+#           pragma clang diagnostic ignored "-Wassign-enum"
+#           endif
+#       endif
         [emessage replaceOccurrencesOfString:@"\\" withString:@"\\\\" options:0 range:NSMakeRange(0, [emessage length])];
         [emessage replaceOccurrencesOfString:@"\n" withString:@"\\n" options:0 range:NSMakeRange(0, [emessage length])];
+#       ifndef _LCL_NO_IGNORE_WARNINGS
+#           ifdef __clang__
+#           pragma clang diagnostic pop
+#           endif
+#       endif
         message = emessage;
     }
     
@@ -438,9 +437,9 @@ static void _LCLLogFile_log(const char *identifier_c, uint32_t level,
     const char *message_c = [message UTF8String];
     
     // get size of log entry
-    const int time_c_len = 24;
+    char time_c[24];
     const int backslash_n_len = 1;
-    size_t entry_len = time_c_len + strlen(prefix_c) + strlen(message_c) + backslash_n_len;
+    size_t entry_len = sizeof(time_c) + strlen(prefix_c) + strlen(message_c) + backslash_n_len;
     
     // under lock protection ...
     [_LCLLogFile_lock lock];
@@ -459,7 +458,6 @@ static void _LCLLogFile_log(const char *identifier_c, uint32_t level,
         // get current time
         struct timeval now;
         struct tm now_tm;
-        char time_c[time_c_len];
         gettimeofday(&now, NULL);
         localtime_r(&now.tv_sec, &now_tm);
         snprintf(time_c, sizeof(time_c), "%04d-%02d-%02d %02d:%02d:%02d.%03d",
@@ -527,7 +525,19 @@ static void _LCLLogFile_log(const char *identifier_c, uint32_t level,
     // write log message if the log file is opened or mirroring is enabled
     if (_LCLLogFile_fileHandle || _LCLLogFile_mirrorToStdErr) {
         // create log message
+#       ifndef _LCL_NO_IGNORE_WARNINGS
+#           ifdef __clang__
+#           pragma clang diagnostic push
+#           pragma clang diagnostic ignored "-Wunknown-pragmas"
+#           pragma clang diagnostic ignored "-Wformat-nonliteral"
+#           endif
+#       endif
         NSString *message = [[NSString alloc] initWithFormat:format arguments:args];
+#       ifndef _LCL_NO_IGNORE_WARNINGS
+#           ifdef __clang__
+#           pragma clang diagnostic pop
+#           endif
+#       endif
         
         // write log message
         _LCLLogFile_log(identifier, level, path, line, function, message);
@@ -716,16 +726,6 @@ static void _LCLLogFile_log(const char *identifier_c, uint32_t level,
     }
     [_LCLLogFile_lock unlock];
     return sz;
-}
-
-// Returns the version of LCLLogFile.
-+ (NSString *)version {
-#define __lcl_version_to_string( _text) __lcl_version_to_string0(_text)
-#define __lcl_version_to_string0(_text) #_text
-    return @__lcl_version_to_string(_LCLLOGFILE_VERSION_MAJOR)
-    "."     __lcl_version_to_string(_LCLLOGFILE_VERSION_MINOR)
-    "."     __lcl_version_to_string(_LCLLOGFILE_VERSION_BUILD)
-    ""      _LCLLOGFILE_VERSION_SUFFIX;
 }
 
 // Opens the log file.

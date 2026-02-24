@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+Datasources
+{%  endblock %}
+
+{% block bodyPanel %}
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+{% endblock %}

@@ -7,6 +7,8 @@
 
 #import "MPDownloadManager.h"
 
+static const void *kMPDownloadManagerStateQueueKey = &kMPDownloadManagerStateQueueKey;
+
 const NSInteger		 kSessionMaxConnection		= 1;
 const NSTimeInterval kSessionResourceTimeout	= 5400; // 30min
 const NSTimeInterval kSessionRequestTimeout		= 300; // 5min
@@ -21,6 +23,7 @@ NSString * const 	 kDownloadDirectory 		= @"/private/tmp";
 @property (nonatomic, strong) NSOperationQueue 			*sessionCallbackQueue;
 @property (nonatomic, assign) BOOL 						sessionPrepared;
 @property (nonatomic, assign) BOOL 						isRunning;
+@property (nonatomic, strong) dispatch_queue_t           stateQueue;
 
 // Private Read/Write Properties
 @property (nonatomic, copy, readwrite) NSURL		*downloadedFile;
@@ -47,10 +50,19 @@ NSString * const 	 kDownloadDirectory 		= @"/private/tmp";
 
 - (void)setDelegate:(id )aDelegate
 {
-	if (delegate != aDelegate) {
-		delegate = aDelegate;
-		delegateRespondsTo.downloadManagerProgress = [delegate respondsToSelector:@selector(downloadManagerProgress:)];
-	}
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        if (self->delegate != aDelegate) {
+            self->delegate = aDelegate;
+            self->delegateRespondsTo.downloadManagerProgress = [self->delegate respondsToSelector:@selector(downloadManagerProgress:)];
+        }
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            if (self->delegate != aDelegate) {
+                self->delegate = aDelegate;
+                self->delegateRespondsTo.downloadManagerProgress = [self->delegate respondsToSelector:@selector(downloadManagerProgress:)];
+            }
+        });
+    }
 }
 
 #pragma mark - singleton init
@@ -66,6 +78,11 @@ static id _sharedManager = nil;
 		[_sharedManager setResourceTimeout:kSessionResourceTimeout];
 		[_sharedManager setRequestTimeout:kSessionRequestTimeout];
         [_sharedManager setAllowSelfSignedCert:NO];
+        {
+            dispatch_queue_t q = dispatch_queue_create("gov.llnl.mpdownloadmanager.state", DISPATCH_QUEUE_SERIAL);
+            dispatch_queue_set_specific(q, kMPDownloadManagerStateQueueKey, (void *)kMPDownloadManagerStateQueueKey, NULL);
+            [_sharedManager setStateQueue:q];
+        }
 	});
 	return _sharedManager;
 }
@@ -90,42 +107,97 @@ static id _sharedManager = nil;
 
 - (void)beginDownload
 {
-	self.downloadError = nil;
-	self.downloadedFile = nil;
-	self.session = nil;
-	
-	self.session = [self createSession];
-	self.sessionPrepared = YES;
-
-	self.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
-	
-	[self.downloadTask resume];
+    __block NSURLSessionDownloadTask *task = nil;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        self.downloadError = nil;
+        self.downloadedFile = nil;
+        self.session = nil;
+        self.session = [self createSession];
+        self.sessionPrepared = YES;
+        task = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
+        self.downloadTask = task;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.downloadError = nil;
+            self.downloadedFile = nil;
+            self.session = nil;
+            self.session = [self createSession];
+            self.sessionPrepared = YES;
+            task = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
+            self.downloadTask = task;
+        });
+    }
+    [task resume];
 }
 
 - (NSURL *)beginSynchronousDownload
 {
-	self.downloadError = nil;
-	self.downloadedFile = nil;
-	self.session = nil;
-	
-	self.session = [self createSession];
-	self.sessionPrepared = YES;
-	
-	self.downloadTask = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
-	[self.downloadTask resume];
-	
-	while (self.downloadTask)
-	{
-		[[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
-	}
-	
-	return self.downloadedFile;
+    __block NSURLSessionDownloadTask *task = nil;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        self.downloadError = nil;
+        self.downloadedFile = nil;
+        self.session = nil;
+        self.session = [self createSession];
+        self.sessionPrepared = YES;
+        task = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
+        self.downloadTask = task;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.downloadError = nil;
+            self.downloadedFile = nil;
+            self.session = nil;
+            self.session = [self createSession];
+            self.sessionPrepared = YES;
+            task = [self.session downloadTaskWithURL:[NSURL URLWithString:self.downloadUrl]];
+            self.downloadTask = task;
+        });
+    }
+    
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    __block NSURL *result = nil;
+    // Wrap existing completion to signal semaphore
+    __block void (^origCompletion)(int, NSURL *, NSError *) = nil;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        origCompletion = self.completionHandler;
+        self.completionHandler = ^(int status, NSURL *url, NSError *err) {
+            if (origCompletion) origCompletion(status, url, err);
+            result = url;
+            dispatch_semaphore_signal(sema);
+        };
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            origCompletion = self.completionHandler;
+            self.completionHandler = ^(int status, NSURL *url, NSError *err) {
+                if (origCompletion) origCompletion(status, url, err);
+                result = url;
+                dispatch_semaphore_signal(sema);
+            };
+        });
+    }
+    [task resume];
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    // Restore original completion
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        self.completionHandler = origCompletion;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.completionHandler = origCompletion;
+        });
+    }
+    return result;
 }
 
 - (void)reset
 {
-	self.downloadTask = nil;
-	self.sessionPrepared = NO;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        self.downloadTask = nil;
+        self.sessionPrepared = NO;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.downloadTask = nil;
+            self.sessionPrepared = NO;
+        });
+    }
 }
 
 #pragma mark create session
@@ -171,10 +243,22 @@ static id _sharedManager = nil;
 #pragma mark - NSURLSession Delegates
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didWriteData:(int64_t)bytesWritten totalBytesWritten:(int64_t)totalBytesWritten totalBytesExpectedToWrite:(int64_t)totalBytesExpectedToWrite
 {
-	double progress = 1.0 * totalBytesWritten / totalBytesExpectedToWrite;
-	if (self.progressHandler) self.progressHandler(progress * 100, totalBytesWritten, totalBytesExpectedToWrite);
-	[self.delegate downloadManagerProgress:progress * 100];
-	
+    double progress = 1.0 * totalBytesWritten / totalBytesExpectedToWrite;
+    __block void (^progressBlock)(double,double,double) = nil;
+    __block id localDelegate = nil;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        progressBlock = self.progressHandler;
+        localDelegate = self->delegate;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            progressBlock = self.progressHandler;
+            localDelegate = self->delegate;
+        });
+    }
+    if (progressBlock) progressBlock(progress * 100, totalBytesWritten, totalBytesExpectedToWrite);
+    if ([localDelegate respondsToSelector:@selector(downloadManagerProgress:)]) {
+        [localDelegate downloadManagerProgress:progress * 100];
+    }
 }
 
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didResumeAtOffset:(int64_t)fileOffset expectedTotalBytes:(int64_t)expectedTotalBytes {
@@ -184,23 +268,51 @@ static id _sharedManager = nil;
 - (void)URLSession:(NSURLSession *)session downloadTask:(NSURLSessionDownloadTask *)downloadTask didFinishDownloadingToURL:(NSURL *)location
 {
 	NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)downloadTask.response;
-	self.httpStatusCode = httpResponse.statusCode;
-	if (httpResponse.statusCode >= 200 && httpResponse.statusCode <= 304)
-	{
-		NSString *fileName = downloadTask.response.suggestedFilename;
-		NSString *destinationPath = [downloadDestination stringByAppendingPathComponent:fileName];
-		
-		NSError *error = nil;
-		self.downloadedFile = [self moveDownloadAtPath:location.path toPath:destinationPath isFileDelete:YES error:&error];
-		if (error) {
-			self.downloadError = error;
-		}
-	} else {
-		self.downloadError = [NSError errorWithDomain:@"gov.llnl.mp" code:httpResponse.statusCode userInfo:@{NSLocalizedDescriptionKey:@"Error downloading file."}];
-	}
-	
-	if (self.completionHandler) self.completionHandler((int)self.httpStatusCode, self.downloadedFile, self.downloadError);
-	[self reset];
+    __block void (^completion)(int, NSURL *, NSError *) = nil;
+    __block NSInteger status = httpResponse.statusCode;
+    __block NSURL *movedURL = nil;
+    __block NSError *dError = nil;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        self.httpStatusCode = status;
+        if (httpResponse.statusCode >= 200 && httpResponse.statusCode <= 304)
+        {
+            NSString *fileName = downloadTask.response.suggestedFilename;
+            NSString *destinationPath = [self->downloadDestination stringByAppendingPathComponent:fileName];
+            NSError *error = nil;
+            NSURL *dest = [self moveDownloadAtPath:location.path toPath:destinationPath isFileDelete:YES error:&error];
+            self.downloadedFile = dest;
+            if (error) { self.downloadError = error; }
+        }
+        else
+        {
+            self.downloadError = [NSError errorWithDomain:@"gov.llnl.mp" code:httpResponse.statusCode userInfo:@{NSLocalizedDescriptionKey:@"Error downloading file."}];
+        }
+        movedURL = self.downloadedFile;
+        dError = self.downloadError;
+        completion = self.completionHandler;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.httpStatusCode = status;
+            if (httpResponse.statusCode >= 200 && httpResponse.statusCode <= 304)
+            {
+                NSString *fileName = downloadTask.response.suggestedFilename;
+                NSString *destinationPath = [self->downloadDestination stringByAppendingPathComponent:fileName];
+                NSError *error = nil;
+                NSURL *dest = [self moveDownloadAtPath:location.path toPath:destinationPath isFileDelete:YES error:&error];
+                self.downloadedFile = dest;
+                if (error) { self.downloadError = error; }
+            }
+            else
+            {
+                self.downloadError = [NSError errorWithDomain:@"gov.llnl.mp" code:httpResponse.statusCode userInfo:@{NSLocalizedDescriptionKey:@"Error downloading file."}];
+            }
+            movedURL = self.downloadedFile;
+            dError = self.downloadError;
+            completion = self.completionHandler;
+        });
+    }
+    if (completion) completion((int)status, movedURL, dError);
+    [self reset];
 }
 
 - (void)URLSession:(NSURLSession *)session dataTask:(NSURLSessionDataTask *)dataTask didReceiveResponse:(NSURLResponse *)response completionHandler:(void (^)(NSURLSessionResponseDisposition disposition))completionHandler
@@ -211,6 +323,7 @@ static id _sharedManager = nil;
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(void (^)(NSURLSessionAuthChallengeDisposition disposition, NSURLCredential *credential))completionHandler
 {
     // accept self-signed SSL certificates
+    BOOL allowSelfSigned = self.allowSelfSignedCert;
     SecTrustRef serverTrust = challenge.protectionSpace.serverTrust;
     SecTrustResultType result;
     SecTrustEvaluate(serverTrust, &result);
@@ -222,7 +335,7 @@ static id _sharedManager = nil;
         if (result == kSecTrustResultProceed || result == kSecTrustResultUnspecified) {
             credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
         } else if (result == kSecTrustResultConfirm || result == kSecTrustResultRecoverableTrustFailure) {
-            if (self.allowSelfSignedCert) {
+            if (allowSelfSigned) {
                 credential = [NSURLCredential credentialForTrust:challenge.protectionSpace.serverTrust];
             } else {
                 
@@ -241,13 +354,29 @@ static id _sharedManager = nil;
 
 - (void)URLSession:(NSURLSession *)session task:(NSURLSessionTask *)task didCompleteWithError:(NSError *)error
 {
-	if (error) {
-		qlerror(@"MPDownloadManager [didCompleteWithError][Error] %@",error.localizedDescription);
-		self.downloadError = error;
-	}
-	
-	if (self.completionHandler) self.completionHandler((int)self.httpStatusCode, self.downloadedFile, self.downloadError);
-	[self reset];
+    __block void (^completion)(int, NSURL *, NSError *) = nil;
+    __block NSInteger status = 0;
+    __block NSURL *fileURL = nil;
+    __block NSError *dError = error;
+    if (dispatch_get_specific(kMPDownloadManagerStateQueueKey)) {
+        if (error) {
+            self.downloadError = error;
+        }
+        completion = self.completionHandler;
+        status = self.httpStatusCode;
+        fileURL = self.downloadedFile;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            if (error) {
+                self.downloadError = error;
+            }
+            completion = self.completionHandler;
+            status = self.httpStatusCode;
+            fileURL = self.downloadedFile;
+        });
+    }
+    if (completion) completion((int)status, fileURL, dError);
+    [self reset];
 }
 
 #pragma mark - Private
@@ -314,3 +443,4 @@ static id _sharedManager = nil;
 }
 
 @end
+

@@ -1,0 +1,108 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+
+	<style>
+		 .panel {
+			 width: 720px;
+		 }
+		 .well {
+			 width: 720px;
+			 height: 370px;
+		 }
+	</style>
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form role="form" id="myForm">
+		<div class="form-group">
+			<div class="well well-sm width2">
+
+				<div class="row">
+					<div class="col-sm-12">
+						<div class="row row-grid top10">
+							<div class="col-sm-3">
+								<label>Catalog URL</label>
+							</div>
+							<div class="col-sm-7">
+								<textarea class="form-control" id="catalog_url" rows="4" name="catalog_url">{{data['catalog_url'] or ''}}</textarea>
+
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-3">
+								<label>OS Major</label>
+							</div>
+							<div class="col-sm-7">
+								<input class="form-control" type="text" name="os_major" value="{{data['os_major'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-3">
+								<label>OS Minor</label>
+							</div>
+							<div class="col-sm-7">
+								<input class="form-control" type="text" name="os_minor" value="{{data['os_minor'] or ''}}">
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-3">
+								<label>Proxy</label>
+							</div>
+							<div class="col-sm-7">
+								<select class="form-control" name="proxy">
+									<option value="1" {% if 1 == data['proxy'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['proxy'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+						<div class="row row-grid top10">
+							<div class="col-sm-3">
+								<label>Active</label>
+							</div>
+							<div class="col-sm-7">
+								<select class="form-control" name="active">
+									<option value="1" {% if 1 == data['active'] %}selected{% endif %}>Yes</option>
+									<option value="0" {% if 0 == data['active'] %}selected{% endif %}>No</option>
+								</select>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<input type="hidden" name="rid" value="{{data['rid'] or ''}}">
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function()
+	   {
+			var formData = new FormData($('#myForm')[0]);
+
+			$.ajax({
+				type:'POST',
+				url: "/console/servers/asus/update",
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				async:true,
+				error: function(jqXHR, textStatus, errorThrown){
+					alert("Server Failed to Update");
+				},
+				success : function(data) {
+                    // optional: do something when server-side processing is done
+                }
+			});
+
+			$('#modalDialog').modal('hide');
+			$("#myForm") = '';
+	   });
+	});
+</script>

@@ -1,0 +1,59 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form method='post' action='/patches/patchGroups/update' id="myForm">
+		<table class="table-condensed">
+			<tbody>
+			<tr>
+				<td>
+					Patch Group:
+				</td>
+				<td>
+					<input type="text" name="name" value="{{data.name or ''}}">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Group Type:
+				</td>
+				<td>
+					<select name="type" size="1">
+						<option value="0" {% if data.type == 0 %} Selected {% endif %}>Production</option>
+						<option value="1" {% if data.type == 1 %} Selected {% endif %}>QA</option>
+						<option value="2" {% if data.type == 2 %} Selected {% endif %}>Dev</option>
+					</select>
+				</td>
+			</tr>
+			{% if type != "add" %}
+			<tr>
+				<td>
+					Owner:
+				</td>
+				<td>
+					<input type="text" name="owner" value="{{owner or ''}}">
+				</td>
+			</tr>
+			{% endif %}
+			<tr>
+				<td>
+					<input type="hidden" name="gid" value="{{data.id or ''}}">
+				</td>
+				<td>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function() {
+		   $("#myForm").submit();
+	   });
+	});
+</script>
