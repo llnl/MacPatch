@@ -1,20 +1,36 @@
 //
 //  CheckIn.m
 //  MPAgent
-//
-//  Created by Charles Heizer on 9/16/19.
-//  Copyright © 2019 LLNL. All rights reserved.
-//
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "CheckIn.h"
-
 #import "MPAgent.h"
 #import "MacPatch.h"
 #import "MPSettings.h"
 #import "Software.h"
-
-#undef  ql_component
-#define ql_component lcl_cCheckIn
+#import "TaskScheduler.h"
+#import <signal.h>
 
 @implementation CheckIn
 
@@ -25,7 +41,7 @@
 	NSDictionary *agentData = [ci agentData];
 	if (!agentData)
 	{
-		logit(lcl_vError,@"Agent data is nil, can not post client checkin data.");
+		LogError(@"Agent data is nil, can not post client checkin data.");
 		return;
 	}
 	
@@ -35,8 +51,8 @@
 	MPRESTfull *rest = [[MPRESTfull alloc] init];
 	revsDict = [rest postClientCheckinData:agentData error:&error];
 	if (error) {
-		logit(lcl_vError,@"Running client check in had an error.");
-		logit(lcl_vError,@"%@", error.localizedDescription);
+		LogError(@"Running client check in had an error.");
+		LogError(@"%@", error.localizedDescription);
 	}
 	else
 	{
@@ -44,7 +60,7 @@
 		[self installRequiredSoftware:revsDict];
 	}
 	
-	logit(lcl_vInfo,@"Running client check in completed.");
+	LogInfo(@"Running client check in completed.");
 	return;
 }
 
@@ -52,20 +68,50 @@
 {
 	// Query for Revisions
 	// Call MPSettings to update if nessasary
-	logit(lcl_vInfo,@"Check and Update Agent Settings.");
-	logit(lcl_vDebug,@"Setting Revisions from server: %@", settingRevisions);
+	LogInfo(@"Check and Update Agent Settings.");
+	//LogInfo(@"Setting Revisions from server: %@", settingRevisions);
+    
+    
+    NSDictionary *local = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+    //LogInfo(@"[updateGroupSettings][local]: %@", local);
+    
+    NSNumber *currTasksRev = [local valueForKeyPath:@"revs.tasks"];
+    NSNumber *newTasksRev = [settingRevisions valueForKeyPath:@"revs.tasks"];
+    
+    if (!newTasksRev || !currTasksRev) {
+        LogInfo(@"Missing revision information");
+    } else if ([newTasksRev compare:currTasksRev] == NSOrderedDescending) {
+        LogInfo(@"Update available: %@ -> %@", currTasksRev, newTasksRev);
+        // Perform update
+    } else if ([newTasksRev compare:currTasksRev] == NSOrderedSame) {
+        LogInfo(@"Revisions match, no update needed");
+    } else {
+        LogInfo(@"Local revision is newer");
+    }
+    
 	MPSettings *set = [MPSettings sharedInstance];
 	[set compareAndUpdateSettings:settingRevisions];
+    
+    if (newTasksRev > currTasksRev) {
+        LogInfo(@"[updateGroupSettings]: Reloading scheduled tasks with updated values.");
+        [[TaskScheduler sharedScheduler] listAllTasks];
+        [[TaskScheduler sharedScheduler] reloadTasksFromConfig];
+        [[TaskScheduler sharedScheduler] listAllTasks];
+        //TaskScheduler *scheduler = [[TaskScheduler alloc] init];
+        //[scheduler stopAllTasks];
+        //[scheduler reloadTasksFromConfig];
+        //[scheduler listAllTasks];
+    }
 	return;
 }
 
 - (void)installRequiredSoftware:(NSDictionary *)checkinResult
 {
-	logit(lcl_vInfo,@"Install required client group software.");
+	LogInfo(@"Install required client group software.");
 	
 	NSArray *swTasks;
 	if (!checkinResult[@"swTasks"]) {
-		logit(lcl_vError,@"Checkin result did not contain sw tasks object.");
+		LogError(@"Checkin result did not contain sw tasks object.");
 		return;
 	}
 	
@@ -86,13 +132,13 @@
 				MPRESTfull *mpRest = [[MPRESTfull alloc] init];
 				NSDictionary *swTask = [mpRest getSoftwareTaskUsingTaskID:task error:&err];
 				if (err) {
-					logit(lcl_vError,@"%@",err.localizedDescription);
+					LogError(@"%@",err.localizedDescription);
 					continue;
 				}
-				logit(lcl_vInfo,@"Begin installing %@.",swTask[@"name"]);
+				LogInfo(@"Begin installing %@.",swTask[@"name"]);
 				int res = [sw installSoftwareTask:swTask];
 				if (res != 0) {
-					logit(lcl_vError,@"Required software, %@ failed to install.",swTask[@"name"]);
+					LogError(@"Required software, %@ failed to install.",swTask[@"name"]);
 				}
 			}
 		}

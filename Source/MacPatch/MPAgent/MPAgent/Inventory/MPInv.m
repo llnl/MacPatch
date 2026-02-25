@@ -1,7 +1,7 @@
 //
 //  MPInv.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -44,6 +44,7 @@
 #import "SmartCardReaderList.h"
 #import "SysInfoCacheGen.h"
 #import "SPSmartCard.h"
+#import "MacPatch.h"
 
 
 #define kSP_DATA_Dir			@"/private/tmp/.mpData"
@@ -90,7 +91,7 @@
     MPRESTfull *rest = [[MPRESTfull alloc] init];
     result = [rest getAgentHasInventoryDataInDB:&error];
     if (error) {
-        logit(lcl_vError,@"%@",error.localizedDescription);
+        LogError(@"%@",error.localizedDescription);
         return NO;
     }
     return result;
@@ -103,7 +104,7 @@
     MPRESTfull *rest = [[MPRESTfull alloc] init];
     result = [rest postAgentHasInventoryData:&error];
     if (error) {
-        logit(lcl_vError,@"%@",error.localizedDescription);
+        LogError(@"%@",error.localizedDescription);
         return NO;
     }
     return result;
@@ -141,7 +142,7 @@
         invColTypes = [kINV_SUPPORTED_TYPES componentsSeparatedByString:@","];
 	} else {
 		if ([self validateCollectionType:aSPType] == NO) {
-			logit(lcl_vError,@"Inventory collection type %@ is not supported. Inventory will not run.",aSPType);
+			LogError(@"Inventory collection type %@ is not supported. Inventory will not run.",aSPType);
 			return 1;
 		}	
 		invColTypes = [NSArray arrayWithObject:aSPType];
@@ -166,14 +167,14 @@
 	for (NSString *invType in invColTypes)
 	{
         // Multiple Types, PREFIX of SP is system profiler and SI sysinfocachegen
-		logit(lcl_vInfo,@"Collecting inventory for type %@",invType);
+		LogInfo(@"Collecting inventory for type %@",invType);
         if (![invType hasPrefix:@"SI"])
         {
             err = nil;
             filePath = [self getProfileData:invType error:&err];
             if (err)
 			{
-                logit(lcl_vError,@"Gathering inventory for data type %@",invType);
+                LogError(@"Gathering inventory for data type %@",invType);
                 continue;
             }
 			else
@@ -350,8 +351,8 @@
         if (invPlugins) {
             for (NSDictionary *p in invPlugins)
             {
-                logit(lcl_vDebug, @"Plugin Object: %@",p);
-                logit(lcl_vInfo, @"Load and process plugin %@ v.%@",[p objectForKey:@"pluginName"],[p objectForKey:@"pluginVersion"]);
+                LogDebug( @"Plugin Object: %@",p);
+                LogInfo( @"Load and process plugin %@ v.%@",[p objectForKey:@"pluginName"],[p objectForKey:@"pluginVersion"]);
                 Class invObj = [p objectForKey:@"plugin"];
                 [invObj setPluginName:[p objectForKey:@"pluginName"]];
                 [invObj setPluginVersion:[p objectForKey:@"pluginVersion"]];
@@ -361,12 +362,12 @@
                     if ([[plugRes objectForKey:@"data"] isKindOfClass:[NSArray class]]) {
                         [self processInventoryData:[plugRes objectForKey:@"data"] inventoryNode:plugRes];
                     } else {
-                        logit(lcl_vError,@"Inventory Plugin Result for data was not of the right type. No data will be sent.");
+                        LogError(@"Inventory Plugin Result for data was not of the right type. No data will be sent.");
                         continue;
                     }
                     
                 }
-                logit(lcl_vDebug,@"Results: %@",plugRes);
+                LogDebug(@"Results: %@",plugRes);
             }
         }
     }
@@ -393,7 +394,7 @@
     // Gen a hash for the inv results, if it has not changed dont post it.
     invCollectionHash = [self hashForArray:dataArray];
     if ([self hasInvDataChanged:[invNode objectForKey:@"type"] hash:invCollectionHash] == NO) {
-        logit(lcl_vInfo,@"Results for %@ have not changed. No need to post.",[invNode objectForKey:@"type"]);
+        LogInfo(@"Results for %@ have not changed. No need to post.",[invNode objectForKey:@"type"]);
         return YES;
     }
     
@@ -407,10 +408,10 @@
     
     if ([self sendResultsToWebService:dataMgrData])
     {
-        logit(lcl_vInfo,@"Results for %@ posted.",[invNode objectForKey:@"wstype"]);
+        LogInfo(@"Results for %@ posted.",[invNode objectForKey:@"wstype"]);
         [self writeInvDataHashToFile:[invNode objectForKey:@"type"] hash:invCollectionHash];
     } else {
-        logit(lcl_vError,@"Results for %@ not posted.",[invNode objectForKey:@"wstype"]);
+        LogError(@"Results for %@ not posted.",[invNode objectForKey:@"wstype"]);
     }
     
     return YES;
@@ -433,17 +434,16 @@
 		}
 	}
 	
-	qldebug(@"api path = %@",apiPath);
     NSString *urlPath = [apiPath stringByAppendingPathComponent:[settings ccuid]];
     result = [req runSyncPOST:urlPath body:aDataMgrData];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"Data post, returned true.");
-        logit(lcl_vDebug,@"Data Result: %@",result.result);
+        LogInfo(@"Data post, returned true.");
+        LogDebug(@"Data Result: %@",result.result);
     } else {
-        logit(lcl_vError,@"Data post, returned false.");
-		logit(lcl_vError,@"API path: %@.",apiPath);
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"Data post, returned false.");
+		LogError(@"API path: %@.",apiPath);
+        LogDebug(@"%@",result.toDictionary);
         return NO;
     }
     
@@ -477,7 +477,7 @@
 	}
 	
 	if (![fm isWritableFileAtPath:kSP_DATA_Dir]) {
-		logit(lcl_vError, @"Temp directory (%@) is not writable. Inventory will no get processed properly.",kSP_DATA_Dir);
+		LogError( @"Temp directory (%@) is not writable. Inventory will no get processed properly.",kSP_DATA_Dir);
 	}
 	
 	// If File Exists then delete it
@@ -498,7 +498,7 @@
 	NSData *data = [file readDataToEndOfFile];
 	
     NSString *string = [[NSString alloc] initWithData: data encoding: NSUTF8StringEncoding];
-	logit(lcl_vInfo,@"Writing result to %@",[kSP_DATA_Dir stringByAppendingPathComponent:spFileName]);
+	LogInfo(@"Writing result to %@",[kSP_DATA_Dir stringByAppendingPathComponent:spFileName]);
 	[string writeToFile:[kSP_DATA_Dir stringByAppendingPathComponent:spFileName] atomically:YES encoding:NSUTF8StringEncoding error:NULL];
 	
 	return [kSP_DATA_Dir stringByAppendingPathComponent:spFileName];
@@ -517,7 +517,7 @@
 	}
 
 	if (![fm isWritableFileAtPath:kSP_DATA_Dir]) {
-		logit(lcl_vError, @"Temp directory (%@) is not writable. Inventory will no get processed properly.",kSP_DATA_Dir);
+		LogError( @"Temp directory (%@) is not writable. Inventory will no get processed properly.",kSP_DATA_Dir);
 	}
 
 	// If File Exists then delete it
@@ -525,7 +525,7 @@
 		if (!isDir) {
         	[fm removeItemAtPath:spFileName error:NULL];
 		} else {
-			logit(lcl_vError, @"%@ is a directory. Can not contiune.",spFileName);
+			LogError( @"%@ is a directory. Can not contiune.",spFileName);
 			return nil;
 		}
 	}
@@ -549,7 +549,7 @@
     string = [[NSString alloc] initWithData:data encoding: NSUTF8StringEncoding];
     qltrace(@"Completed running sysinfocachegen, %@",string);
     
-	logit(lcl_vInfo,@"Writing result to %@",spFileName);
+	LogInfo(@"Writing result to %@",spFileName);
     NSDictionary *_data = [NSDictionary dictionaryWithContentsOfFile:spFileName];
     if ([_data objectForKey:@"Objects"]) {
         if ([[_data objectForKey:@"Objects"] objectForKey:aType]) {
@@ -569,7 +569,7 @@
 
 - (int)collectAuditTypeData
 {
-	logit(lcl_vInfo,@"Collecting and processing audit files."); 
+	LogInfo(@"Collecting and processing audit files."); 
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSMutableArray *files = [NSMutableArray array];
 	NSString *thePath = [NSString pathWithComponents:[NSArray arrayWithObjects:MP_ROOT_CLIENT,@"Data",@"inv",nil]];
@@ -584,7 +584,7 @@
 		}
 	}
 	
-	logit(lcl_vInfo,@"%d audit files found to process.",(int)[files count]);
+	LogInfo(@"%d audit files found to process.",(int)[files count]);
 	int i = 0;
     NSError *jErr = nil;
 	NSString *jsonString;
@@ -628,7 +628,7 @@
         
         invDict = @{ @"wstype":[jsonDict objectForKey:@"tableName"], @"type":[jsonDict objectForKey:@"tableName"]};
         if ([self processInventoryData:[jsonDict objectForKey:@"dataRows"] inventoryNode:invDict]) {
-            qlinfo(@"Custom Inventory (%@) was processed successfully.",[jsonDict objectForKey:@"tableName"]);
+            LogInfo(@"Custom Inventory (%@) was processed successfully.",[jsonDict objectForKey:@"tableName"]);
             jErr = nil;
             [fm removeItemAtPath:[files objectAtIndex:i] error:&jErr];
             if (jErr) {
@@ -914,7 +914,7 @@
 	NSFileManager *dm = [NSFileManager defaultManager];
 	if ([dm fileExistsAtPath:xmlFileToParse] == NO)
 	{
-		logit(lcl_vError,@"Inventory cache file was not found. Data will not be parsed.");
+		LogError(@"Inventory cache file was not found. Data will not be parsed.");
 		return result;
 	}
 	
@@ -968,7 +968,7 @@
 	NSFileManager *dm = [NSFileManager defaultManager];
 	if ([dm fileExistsAtPath:xmlFileToParse] == NO)
 	{
-		logit(lcl_vError,@"Inventory cache file was not found. Data will not be parsed.");
+		LogError(@"Inventory cache file was not found. Data will not be parsed.");
 		return result;
 	}
 	/*
@@ -1038,7 +1038,7 @@
 	NSFileManager *dm = [NSFileManager defaultManager];
 	if ([dm fileExistsAtPath:xmlFileToParse] == NO)
 	{
-		logit(lcl_vError,@"Inventory cache file was not found. Data will not be parsed.");
+		LogError(@"Inventory cache file was not found. Data will not be parsed.");
 		return result;
 	}
 	
@@ -1194,7 +1194,7 @@
 						d = nil;
 					}	
 					@catch (NSException * e) {
-						logit(lcl_vError,@"Error: %@",[e description]);
+						LogError(@"Error: %@",[e description]);
 						d = nil;
 					}
 				}
@@ -1227,15 +1227,15 @@
 {	
 	NSDictionary *osVerInfo = [MPSystemInfo osVersionOctets];
 	if ([[osVerInfo objectForKey:@"minor"] intValue] <= 6) {
-		logit(lcl_vDebug,@"parseDirectoryServicesData <= 6");
+		LogDebug(@"parseDirectoryServicesData <= 6");
 		return [self parseDirectoryServicesDataForPreLion];
 	}
 	if ([[osVerInfo objectForKey:@"minor"] intValue] >= 7) {
-		logit(lcl_vDebug,@"parseDirectoryServicesData >= 7");
+		LogDebug(@"parseDirectoryServicesData >= 7");
 		return [self parseDirectoryServicesDataForLion];
 	}
 	
-	logit(lcl_vError,@"parseDirectoryServicesData, did not figure out os version for parsing.");
+	LogError(@"parseDirectoryServicesData, did not figure out os version for parsing.");
 	return nil;
 }
 
@@ -1253,7 +1253,7 @@
 		}
 		NSString *adPlist = [NSString stringWithFormat:@"%@/%@",dirPath,[dirContents objectAtIndex:0]];
         if (![fm fileExistsAtPath:adPlist]) {
-            logit(lcl_vDebug,@"%@",record);
+            LogDebug(@"%@",record);
             result = [NSArray arrayWithObject:record];
             return result;
         }
@@ -1313,7 +1313,7 @@
 		}
 		
 		if ([computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"]) {
-            logit(lcl_vDebug,@"dsAttrTypeNative:llnlHosts: %@",[computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"]);
+            LogDebug(@"dsAttrTypeNative:llnlHosts: %@",[computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"]);
 			if ([[computerAccountInfo objectForKey:@"dsAttrTypeNative:llnlHosts"] length] > 0) {
 				[record setObject:@"1" forKey:@"HasSLAM"];	
 			}
@@ -1321,12 +1321,12 @@
 			[record setObject:@"0" forKey:@"HasSLAM"];	
 		}
         
-        logit(lcl_vDebug,@"%@",record);
+        LogDebug(@"%@",record);
         result = [NSArray arrayWithObject:record];
         return result;
 	}
 	@catch (NSException * e) {
-		logit(lcl_vError,@"%@",[e description]);
+		LogError(@"%@",[e description]);
         return [NSArray new];
 	}
 
@@ -1400,29 +1400,29 @@
 		
 	}
 	@catch (NSException * e) {
-		logit(lcl_vError,@"%@",[e description]);
+		LogError(@"%@",[e description]);
 	}		
 	
 done:
-	logit(lcl_vDebug,@"%@",record);
+	LogDebug(@"%@",record);
 	result = [NSArray arrayWithObject:record];
 	return result;
 }
 
 - (NSArray *)parseAppUsageData
 {
-	logit(lcl_vInfo, @"Begin parsing application usage data.");
+	LogInfo( @"Begin parsing application usage data.");
 	NSFileManager *fm = [NSFileManager defaultManager];
 	NSString *appSupportDir = @"/Library/Application Support/MPClientStatus";
 	NSString *appDB = [appSupportDir stringByAppendingPathComponent:@"mpapp.db"];
 	
 	if ([fm fileExistsAtPath:appSupportDir] == NO) {
-		logit(lcl_vInfo, @"No application usage data to parse.");
+		LogInfo( @"No application usage data to parse.");
 		return nil;
 	}
 	
 	if ([fm fileExistsAtPath:appDB] == NO) {
-		logit(lcl_vWarning, @"Application usage data is missing. %@ file not found.",appDB);
+		LogWarning( @"Application usage data is missing. %@ file not found.",appDB);
 		return nil;
 	}
 	NSMutableArray *rows = [[NSMutableArray alloc] init];
@@ -1430,7 +1430,7 @@ done:
 	NSArray *columns = [NSArray arrayWithObjects:@"app_name",@"app_path",@"app_version",@"last_launched",@"times_launched",nil];
 	FMDatabase *db = [FMDatabase databaseWithPath:appDB];
 	if (![db open]) {
-        logit(lcl_vError,@"Could not open app usage data file.");
+        LogError(@"Could not open app usage data file.");
         return nil;
     }
 	FMResultSet *rs = [db executeQuery:@"select app_name,app_path,app_version,last_launched,times_launched from appUsage"];
@@ -1443,7 +1443,7 @@ done:
 				[_rec setObject:@"" forKey:col];
 			}
 		}
-		logit(lcl_vDebug, @"App Usage Row: %@",_rec);
+		LogDebug( @"App Usage Row: %@",_rec);
 		[rows addObject:_rec];
 		_rec = nil;
     }
@@ -1454,7 +1454,7 @@ done:
 	[db close];
 	NSArray *results = [NSArray arrayWithArray:rows];
 	rows = nil;
-	logit(lcl_vDebug, @"App Usage results: %@",results);
+	LogDebug( @"App Usage results: %@",results);
 	return results;
 }
 
@@ -1552,7 +1552,7 @@ done:
 			details = [NSMutableDictionary dictionary];
 			[details setValue:[NSString stringWithFormat:@"File %@ does not exist.",pathInfo] forKey:NSLocalizedDescriptionKey];
 			if (err != NULL)  *err = [NSError errorWithDomain:@"world" code:1 userInfo:details];
-			logit(lcl_vError, @"File %@ does not exist.",pathInfo);
+			LogError( @"File %@ does not exist.",pathInfo);
 		}
 		return result;
 	}
@@ -1569,7 +1569,7 @@ done:
 		details = [NSMutableDictionary dictionary];
 		[details setValue:[NSString stringWithFormat:@"Error, %@ reading plist %@.",l_error, pathInfo] forKey:NSLocalizedDescriptionKey];
 		if (err != NULL) *err = [NSError errorWithDomain:@"world" code:2 userInfo:details];
-		logit(lcl_vError, @"Error, %@ reading plist %@.",l_error, pathInfo);
+		LogError( @"Error, %@ reading plist %@.",l_error, pathInfo);
 		return result;
 	} 
 	
@@ -1593,7 +1593,7 @@ done:
     NSError *err = nil;
     NSArray *_users = [m getLocalUsers:&err];
     if (err) {
-        logit(lcl_vError,@"Getting local users, %@",[err description]);
+        LogError(@"Getting local users, %@",[err description]);
         return nil;
     }
     return _users;
@@ -1605,7 +1605,7 @@ done:
     NSError *err = nil;
     NSArray *_groups = [m getLocalGroups:&err];
     if (err) {
-        logit(lcl_vError,@"Getting local groups, %@",[err description]);
+        LogError(@"Getting local groups, %@",[err description]);
         return nil;
     }
     return _groups;
@@ -1617,7 +1617,7 @@ done:
 	NSArray *_groups = [la gatherLocalAdminAccounts];
 	if (_groups.count <= 0)
 	{
-		logit(lcl_vError,@"Error, no admin acounts found in query.");
+		LogError(@"Error, no admin acounts found in query.");
 		return nil;
 	}
 	
@@ -1662,11 +1662,11 @@ done:
             }
         }
         @catch (NSException *exception) {
-            logit(lcl_vError, @"%@",exception);
+            LogError( @"%@",exception);
         }
         
 	} else {
-        logit(lcl_vWarning, @"File %@ does not exist.",pmPlist);
+        LogWarning( @"File %@ does not exist.",pmPlist);
         return pwrDataProfiles;
 	}
     
@@ -1694,7 +1694,7 @@ done:
     NSFileManager *fm = [NSFileManager defaultManager];
     NSString *fileName = [NSString stringWithFormat: @"%.0f.%@", [NSDate timeIntervalSinceReferenceDate] * 1000.0, @"plist"];
     NSString *filePath = [NSTemporaryDirectory() stringByAppendingPathComponent:fileName];
-    qldebug(@"Config profile data: %@",filePath);
+    LogDebug(@"Config profile data: %@",filePath);
 
     // Write Profile Data To Plist
     NSArray *cmdArgs = [NSArray arrayWithObjects:@"-P",@"-o",filePath, nil];
@@ -1725,7 +1725,7 @@ done:
     }
     // Quick Clean Up
     //[fm removeItemAtPath:filePath error:NULL];
-    qldebug(@"Collected Profiles: %@",profiles);
+    LogDebug(@"Collected Profiles: %@",profiles);
     return [NSArray arrayWithArray:profiles];
 }
 
@@ -1859,10 +1859,10 @@ done:
 
             mpServerInfo = [NSArray arrayWithObject:mpServerListInfo];
         } else {
-            logit(lcl_vError, @"name object does not exist.");
+            LogError( @"name object does not exist.");
         }
     } else {
-        logit(lcl_vError, @"Parse Server Info. File %@ does not exist.",AGENT_SERVERS_PLIST);
+        LogError( @"Parse Server Info. File %@ does not exist.",AGENT_SERVERS_PLIST);
     }
 
     return mpServerInfo;
@@ -1887,10 +1887,10 @@ done:
                 [serverItems addObject:[se dictionaryRepresentation]];
             }
         } else {
-            logit(lcl_vError, @"servers object does not exist.");
+            LogError( @"servers object does not exist.");
         }
     } else {
-        logit(lcl_vError, @"File %@ does not exist.",AGENT_SERVERS_PLIST);
+        LogError( @"File %@ does not exist.",AGENT_SERVERS_PLIST);
     }
 
     mpServers = [NSArray arrayWithArray:serverItems];

@@ -1,0 +1,25 @@
+/* flashes styling */
+
+.flashes ul{
+    background: #FFD6A3;
+    color: #000;
+}
+
+article.flashes {
+    margin-bottom: 1em;
+}
+
+article.flashes {
+    margin-bottom: 1em;
+}
+
+.btn-login-alt {
+  background-color: #3C92C9 !important;
+  color: #fff;
+}
+
+.btn-login-alt:hover {
+  color: #fff;
+  background-color: #449d44;
+}
+

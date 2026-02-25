@@ -1,7 +1,7 @@
 //
 //  AntiVirus.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -79,7 +79,7 @@
     // Look for a Supported AV App, if not bail.
     NSDictionary *_avAppInfo = [self getAvAppInfo];
     if (_avAppInfo == nil) {
-        logit(lcl_vInfo,@"No AV software was found, nothing to post.");
+        LogInfo(@"No AV software was found, nothing to post.");
         return;
     }
     
@@ -88,10 +88,10 @@
     // Check for Valid Defs data, else post data, can not update
     NSString *_localDefsDate = [self getLocalDefsDate];
     if (_localDefsDate == nil) {
-        logit(lcl_vError,@"No AV Defs software was found, nothing to validate.");
+        LogError(@"No AV Defs software was found, nothing to validate.");
         [_avInfoToPost setValue:@"NA" forKey:@"defs_date"];
     } else {
-        logit(lcl_vInfo, @"Host AV defs date is %@",_localDefsDate);
+        LogInfo( @"Host AV defs date is %@",_localDefsDate);
         [_avInfoToPost setValue:_localDefsDate forKey:@"defs_date"];
     }
     // Get Latest Defs Date from Server
@@ -100,25 +100,25 @@
     if (isNewerSEPSW == YES) {
         if (_remoteAvDefsDate != nil)
         {
-            logit(lcl_vInfo, @"Latest AV defs date is %@",_remoteAvDefsDate);
+            LogInfo( @"Latest AV defs date is %@",_remoteAvDefsDate);
             NSString *justTheDateString = @"0";
             @try {
                 NSRange justTheDate = NSMakeRange(0, 8);
                 justTheDateString = [_localDefsDate substringWithRange:justTheDate];
             }
             @catch (NSException *exception) {
-                logit(lcl_vError,@"%@",exception);
+                LogError(@"%@",exception);
             }
             
             if (([_remoteAvDefsDate intValue] > [justTheDateString intValue]) && [justTheDateString intValue] != -1)
             {
-                logit(lcl_vInfo,@"AV Defs are out of date.")
+                LogInfo(@"AV Defs are out of date.");
                 if (runUpdate == YES)
                 {
                     int avUpdateRes = -1;
                     avUpdateRes = [self runAVDefsUpdate];
                     if (avUpdateRes == 0) {
-                        logit(lcl_vInfo,@"AV Defs were updated.");
+                        LogInfo(@"AV Defs were updated.");
                         // Get Defs Info and Update The Data to Post
                         _localDefsDate = [self getLocalDefsDate];
                         [_avInfoToPost setValue:_localDefsDate forKey:@"defs_date"];
@@ -129,23 +129,23 @@
     } else {
         if (_remoteAvDefsDate != nil)
         {
-            logit(lcl_vInfo, @"Latest AV defs date is %@",_remoteAvDefsDate);
+            LogInfo( @"Latest AV defs date is %@",_remoteAvDefsDate);
             // If Updates are enabled
             if (([_remoteAvDefsDate intValue] > [_localDefsDate intValue]) && [_localDefsDate intValue] != -1) {
-                logit(lcl_vInfo,@"AV Defs are out of date.")
+                LogInfo(@"AV Defs are out of date.");
                 if (runUpdate == YES)
                 {
-                    logit(lcl_vInfo,@"Run the AV Defs update, defs are out of date.")
+                    LogInfo(@"Run the AV Defs update, defs are out of date.");
                     // Install the Software
                     NSString *_avDefsURL = [self getAvUpdateURL];
-                    logit(lcl_vDebug,@"AV Defs URL: %@",_avDefsURL);
+                    LogDebug(@"AV Defs URL: %@",_avDefsURL);
                     if (_avDefsURL) {
                         int installResult = -1;
                         installResult = [self downloadUnzipAndInstall:_avDefsURL];
                         if (installResult != 0) {
-                            logit(lcl_vError,@"AV Defs were not updated. Please see the install.log file for reason.");
+                            LogError(@"AV Defs were not updated. Please see the install.log file for reason.");
                         } else {
-                            logit(lcl_vInfo,@"AV Defs were updated.");
+                            LogInfo(@"AV Defs were updated.");
                             // Get Defs Info and Update The Data to Post
                             _localDefsDate = [self getLocalDefsDate];
                             [_avInfoToPost setValue:_localDefsDate forKey:@"defs_date"];
@@ -153,7 +153,7 @@
                     }
                 }
             } else {
-                logit(lcl_vInfo, @"AV Defs are current.");
+                LogInfo( @"AV Defs are current.");
             }
         }
     }
@@ -175,14 +175,14 @@
             _localDefsDate = [[dict objectForKey:@"data"] objectForKey:@"defs_date"];
             _wsDefsDate = [self getLatestAVDefsDateForType:_type];
             if (!_wsDefsDate) {
-                logit(lcl_vInfo, @"Latest AV defs date is %@",_wsDefsDate);
+                LogInfo( @"Latest AV defs date is %@",_wsDefsDate);
                 if (([_wsDefsDate intValue] > [_localDefsDate intValue]) && [_localDefsDate intValue] != -1)
                 {
                     if ([_type isEqualToString:@"symantec"]) {
                         [self updateSymantecDefs:[dict objectForKey:@"data"]];
                     }
                     if ([_type isEqualToString:@"mcafee"]) {
-                        logit(lcl_vInfo, @"Updating McAfee defs is not supported at this time.");
+                        LogInfo( @"Updating McAfee defs is not supported at this time.");
                     }
                 }
             }
@@ -197,36 +197,36 @@
     for (NSString *a in _avArray) {
         if ([a isEqualToString:@"symantec"])
         {
-            logit(lcl_vInfo,@"Looking for Symantec AV Data.");
+            LogInfo(@"Looking for Symantec AV Data.");
             _avDataDict = [self symantecAppInfo];
             if (_avDataDict != nil) {
                 [_avCollectedData addObject:@{@"type":a,@"data":_avDataDict}];
-                logit(lcl_vInfo,@"Posting Symantec AV Application data.");
-                logit(lcl_vDebug,@"Symantec AV Application Data: %@", _avDataDict);
+                LogInfo(@"Posting Symantec AV Application data.");
+                LogDebug(@"Symantec AV Application Data: %@", _avDataDict);
                 if ([self postAVDataToWebService:_avDataDict]) {
-                    logit(lcl_vInfo,@"Symantec AV data was posted.");
+                    LogInfo(@"Symantec AV data was posted.");
                 } else {
-                    logit(lcl_vError,@"Symantec AV data was not posted.");
+                    LogError(@"Symantec AV data was not posted.");
                 }
             } else {
-                logit(lcl_vDebug,@"No symantec AV data found.");
+                LogDebug(@"No symantec AV data found.");
             }
         }
         if ([a isEqualToString:@"mcafee"])
         {
-            logit(lcl_vInfo,@"Looking for McAfee AV Data.");
+            LogInfo(@"Looking for McAfee AV Data.");
             _avDataDict = [self mcafeeAppInfo];
             if (_avDataDict != nil) {
                 [_avCollectedData addObject:@{@"type":a,@"data":_avDataDict}];
-                logit(lcl_vInfo,@"Posting mcafee av data.");
-                logit(lcl_vDebug,@"McAfee av data: %@", _avDataDict);
+                LogInfo(@"Posting mcafee av data.");
+                LogDebug(@"McAfee av data: %@", _avDataDict);
                 if ([self postAVDataToWebService:_avDataDict]) {
-                    logit(lcl_vInfo,@"McAfee av data was posted.");
+                    LogInfo(@"McAfee av data was posted.");
                 } else {
-                    logit(lcl_vError,@"McAfee av data was not posted.");
+                    LogError(@"McAfee av data was not posted.");
                 }
             } else {
-                logit(lcl_vDebug,@"No McAfee av data found.");
+                LogDebug(@"No McAfee av data found.");
             }
         }
     }
@@ -245,14 +245,14 @@
     // Find the
     for (NSString *item in avAppArray) {
         if ([fm fileExistsAtPath:item]) {
-            logit(lcl_vDebug,@"Found AV app, %@.",item);
+            LogDebug(@"Found AV app, %@.",item);
             avApplication = [NSString stringWithString:item];
             break;
         }
     }
     
     if (avApplication == nil) {
-        logit(lcl_vError,@"Unable to find a AV product.");
+        LogError(@"Unable to find a AV product.");
         return nil;
     }
     
@@ -288,7 +288,7 @@
     // Find the
     for (NSString *item in avDefsArray) {
         if ([fm fileExistsAtPath:item]) {
-            logit(lcl_vDebug,@"Reading defs file, %@",item);
+            LogDebug(@"Reading defs file, %@",item);
             _avDefsPath = [NSString stringWithString:item];
             break;
         }
@@ -297,7 +297,7 @@
     if (_avDefsPath == nil)
     {
         if ([fm fileExistsAtPath:avDefsAltPath]) {
-            logit(lcl_vDebug,@"Reading defs file, %@",avDefsAltPath);
+            LogDebug(@"Reading defs file, %@",avDefsAltPath);
             NSDictionary *newAVDefsFileData = [NSDictionary dictionaryWithContentsOfFile:avDefsAltPath];
             if (newAVDefsFileData)
             {
@@ -327,7 +327,7 @@
                 
             }
         }
-        logit(lcl_vError,@"Unable to find a AV Defs.");
+        LogError(@"Unable to find a AV Defs.");
         return @"NA";
     }
     
@@ -335,10 +335,10 @@
     NSError *err = nil;
     NSString *_avDefsFileData = [NSString stringWithContentsOfFile:_avDefsPath encoding:NSUTF8StringEncoding error:&err];
     if (err) {
-        logit(lcl_vError,@"Unable to read AV Defs file\n%@.",[err localizedDescription]);
+        LogError(@"Unable to read AV Defs file\n%@.",[err localizedDescription]);
         return @"NA";
     }
-    logit(lcl_vDebug,@"avDefsFile Data: %@",_avDefsFileData);
+    LogDebug(@"avDefsFile Data: %@",_avDefsFileData);
     
     // Parse Defs File
     NSString *_defsDate = nil;
@@ -346,16 +346,16 @@
     for (NSString *_line in _lines) {
         //LastModifiedGmtFormated
         if ([_line containsString:@"LastModifiedGmtFormated" ignoringCase:YES]) {
-            logit(lcl_vDebug,@"containsString: %@",_line);
+            LogDebug(@"containsString: %@",_line);
             _defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
-            logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+            LogDebug(@"_defsDate: %@",_defsDate);
             break;
         }
         else if ([_line containsString:@"CurDefs" ignoringCase:YES])
         {
-            logit(lcl_vDebug,@"containsString: %@",_line);
+            LogDebug(@"containsString: %@",_line);
             _defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
-            logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+            LogDebug(@"_defsDate: %@",_defsDate);
         }
     }
 	[self setAvDefsDate:[_defsDate copy]];
@@ -370,29 +370,29 @@
     {
         if (![self isProcessRunning:@"lutool"]) {
             if ([self runLUTool] == 0) {
-                logit(lcl_vInfo,@"AV Defs were updated.");
+                LogInfo(@"AV Defs were updated.");
                 [self postAVDataToWebService:[self symantecAppInfo]];
-                logit(lcl_vInfo,@"AV Data Posted To WebService.");
+                LogInfo(@"AV Data Posted To WebService.");
             } else {
-                logit(lcl_vError,@"AV Defs were not updated.");
+                LogError(@"AV Defs were not updated.");
             }
         } else {
-            logit(lcl_vWarning,@"LUTool is currently running. Not going to spawn another LUTool.");
+            LogWarning(@"LUTool is currently running. Not going to spawn another LUTool.");
         }
     } else {
-        logit(lcl_vInfo,@"Run the AV Defs update, defs are out of date.")
+        LogInfo(@"Run the AV Defs update, defs are out of date.");
         // Install the Software
         NSString *_avDefsURL = [self getAvUpdateURL];
-        logit(lcl_vDebug,@"AV Defs URL: %@",_avDefsURL);
+        LogDebug(@"AV Defs URL: %@",_avDefsURL);
         if (_avDefsURL) {
             int installResult = -1;
             installResult = [self downloadUnzipAndInstall:_avDefsURL];
             if (installResult != 0) {
-                logit(lcl_vError,@"AV Defs were not updated. Please see the install.log file for reason.");
+                LogError(@"AV Defs were not updated. Please see the install.log file for reason.");
             } else {
-                logit(lcl_vInfo,@"AV Defs were updated.");
+                LogInfo(@"AV Defs were updated.");
                 [self postAVDataToWebService:[self symantecAppInfo]];
-                logit(lcl_vInfo,@"AV Data Posted To WebService.");
+                LogInfo(@"AV Data Posted To WebService.");
             }
         }
     }
@@ -420,7 +420,7 @@
     }
     
     NSString *strResult = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-    logit(lcl_vDebug,@"runAVDefsUpdate Output: %@",strResult);
+    LogDebug(@"runAVDefsUpdate Output: %@",strResult);
     
     int taskTerminationStatus = 4;
     
@@ -428,27 +428,27 @@
         taskTerminationStatus = [task terminationStatus];
     }
     @catch (NSException *exception) {
-        logit(lcl_vError,@"%@",exception);
-        logit(lcl_vError,@"Setting result to LU error.");
+        LogError(@"%@",exception);
+        LogError(@"Setting result to LU error.");
     }
     
     int result = -1;
     switch (taskTerminationStatus)
     {
         case 0:
-            logit(lcl_vInfo,@"LU completed successfully with new update.");
+            LogInfo(@"LU completed successfully with new update.");
             result = 0;
             break;
         case 1:
-            logit(lcl_vInfo,@"LU found nothing new. It did successfully contact the LU server, but found nothing new to update.");
+            LogInfo(@"LU found nothing new. It did successfully contact the LU server, but found nothing new to update.");
             result = 0;
             break;
         case 4:
-            logit(lcl_vError,@"LU failed with error, such as network error.");
+            LogError(@"LU failed with error, such as network error.");
             result = 1;
             break;
         default:
-            logit(lcl_vError,@"LU failed with error (%d).",[task terminationStatus]);
+            LogError(@"LU failed with error (%d).",[task terminationStatus]);
             result = 1;
             break;
     }
@@ -477,14 +477,14 @@
     // Find the
     for (NSString *item in avAppArray) {
         if ([fm fileExistsAtPath:item]) {
-            logit(lcl_vDebug,@"Found AV app, %@.",item);
+            LogDebug(@"Found AV app, %@.",item);
             avApplication = [NSString stringWithString:item];
             break;
         }
     }
     
     if (avApplication == nil) {
-        qlinfo(@"Unable to find a McAfee AV product.");
+        LogInfo(@"Unable to find a McAfee AV product.");
         return nil;
     }
     // Get App Bundle Version, App Version and Suite Vers are different
@@ -519,12 +519,12 @@
     NSString *_avDefsPath = @"/Library/Preferences/com.mcafee.ssm.antimalware.plist";
     
     if ([fm fileExistsAtPath:_avDefsPath]) {
-        logit(lcl_vDebug,@"Reading defs file, %@",_avDefsPath);
+        LogDebug(@"Reading defs file, %@",_avDefsPath);
         NSDictionary *defsPlist = [NSDictionary dictionaryWithContentsOfFile:_avDefsPath];
         if (defsPlist) {
             if ([defsPlist objectForKey:@"Update_DATVersion"]) {
                 _defsDate = [defsPlist objectForKey:@"Update_DATVersion"];
-                logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+                LogDebug(@"_defsDate: %@",_defsDate);
             }
         }
     }
@@ -539,12 +539,12 @@
     NSString *_avDefsPath = @"/Library/Preferences/com.mcafee.ssm.antimalware.plist";
     
     if ([fm fileExistsAtPath:_avDefsPath]) {
-        logit(lcl_vDebug,@"Reading defs file, %@",_avDefsPath);
+        LogDebug(@"Reading defs file, %@",_avDefsPath);
         NSDictionary *defsPlist = [NSDictionary dictionaryWithContentsOfFile:_avDefsPath];
         if (defsPlist) {
             if ([defsPlist objectForKey:@"Update_EngineVersion"]) {
                 _defsDate = [defsPlist objectForKey:@"Update_EngineVersion"];
-                logit(lcl_vDebug,@"Update_EngineVersion: %@",_defsDate);
+                LogDebug(@"Update_EngineVersion: %@",_defsDate);
             }
         }
     }
@@ -565,11 +565,11 @@
     result = [req runSyncPOST:urlPath body:avData];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"AV Data post, returned true.");
-        logit(lcl_vDebug,@"AV Data Result: %@",result.result);
+        LogInfo(@"AV Data post, returned true.");
+        LogDebug(@"AV Data Result: %@",result.result);
     } else {
-        logit(lcl_vError,@"AV Data post, returned false.");
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"AV Data post, returned false.");
+        LogDebug(@"%@",result.toDictionary);
         return NO;
     }
     
@@ -624,14 +624,14 @@
     // Find the
     for (NSString *item in avAppArray) {
         if ([fm fileExistsAtPath:item]) {
-            logit(lcl_vDebug,@"Found AV app, %@.",item);
+            LogDebug(@"Found AV app, %@.",item);
             avApplication = [NSString stringWithString:item];
             break;
         }
     }
     
     if (avApplication == nil) {
-        logit(lcl_vError,@"Unable to find a AV product.");
+        LogError(@"Unable to find a AV product.");
         return nil;
     }
     
@@ -663,7 +663,7 @@
     // Find the
     for (NSString *item in avDefsArray) {
         if ([fm fileExistsAtPath:item]) {
-            logit(lcl_vDebug,@"Reading defs file, %@",item);
+            LogDebug(@"Reading defs file, %@",item);
             _avDefsPath = [NSString stringWithString:item];
             break;
         }
@@ -673,7 +673,7 @@
     {
         if ([fm fileExistsAtPath:avDefsAltPath])
 		{
-            logit(lcl_vDebug,@"Reading defs file, %@",avDefsAltPath);
+            LogDebug(@"Reading defs file, %@",avDefsAltPath);
             NSDictionary *newAVDefsFileData = [NSDictionary dictionaryWithContentsOfFile:avDefsAltPath];
             if (newAVDefsFileData)
 			{
@@ -704,7 +704,7 @@
             }
         }
         
-        logit(lcl_vError,@"Unable to find a AV Defs.");
+        LogError(@"Unable to find a AV Defs.");
         return nil;
     }
     
@@ -712,10 +712,10 @@
     NSError *err = nil;
     NSString *_avDefsFileData = [NSString stringWithContentsOfFile:_avDefsPath encoding:NSUTF8StringEncoding error:&err];
     if (err) {
-        logit(lcl_vError,@"Unable to read AV Defs file\n%@.",[err localizedDescription]);
+        LogError(@"Unable to read AV Defs file\n%@.",[err localizedDescription]);
         return nil;
     }
-    logit(lcl_vDebug,@"avDefsFile Data: %@",_avDefsFileData);
+    LogDebug(@"avDefsFile Data: %@",_avDefsFileData);
     
     // Parse Defs File
     NSString *_defsDate = nil;
@@ -723,16 +723,16 @@
     for (NSString *_line in _lines) {
         //LastModifiedGmtFormated
         if ([_line containsString:@"LastModifiedGmtFormated" ignoringCase:YES]) {
-            logit(lcl_vDebug,@"containsString: %@",_line);
+            LogDebug(@"containsString: %@",_line);
             _defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
-            logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+            LogDebug(@"_defsDate: %@",_defsDate);
             break;
         }
 		else if ([_line containsString:@"CurDefs" ignoringCase:YES])
 		{
-			logit(lcl_vDebug,@"containsString: %@",_line);
+			LogDebug(@"containsString: %@",_line);
 			_defsDate = [[[[_line componentsSeparatedByString:@"="] objectAtIndex:1] componentsSeparatedByString:@" "] objectAtIndex:0];
-			logit(lcl_vDebug,@"_defsDate: %@",_defsDate);
+			LogDebug(@"_defsDate: %@",_defsDate);
 		}
     }
     [self setAvDefsDate:[NSString stringWithString:_defsDate]];
@@ -741,7 +741,7 @@
 
 - (NSString *)parseNewDefsDateFormat:(NSString *)defsDate
 {
-    logit(lcl_vDebug,@"Raw Defs Date: %@",defsDate);
+    LogDebug(@"Raw Defs Date: %@",defsDate);
     NSString *result = @"NA";
     if (defsDate.length >= 6) {
         NSRange year = NSMakeRange(0, 2);
@@ -756,12 +756,12 @@
             strRev = [defsDate substringWithRange:rev];
         }
         @catch (NSException *exception) {
-            logit(lcl_vError,@"%@",exception);
+            LogError(@"%@",exception);
         }
 
 		result = [NSString stringWithFormat:@"%@%@%@.%@",strYear,strMonth,strDay,strRev];
     }
-    logit(lcl_vDebug,@"Parsed Defs Date: %@",result);
+    LogDebug(@"Parsed Defs Date: %@",result);
     return result;
 }
 
@@ -775,12 +775,12 @@
      NSError *wsErr = nil;
      result = [mpws getLatestAVDefsDate:&wsErr];
      if (wsErr) {
-     logit(lcl_vError,@"%@",wsErr.localizedDescription);
+     LogError(@"%@",wsErr.localizedDescription);
      return nil;
      }
      
      if ([result isEqualToString:@"NA"]) {
-     logit(lcl_vError,@"Did not recieve a vaild defs date.");
+     LogError(@"Did not recieve a vaild defs date.");
      return nil;
      }
      return result;
@@ -797,12 +797,12 @@
      NSError *wsErr = nil;
      result = [mpws getLatestAVDefsDate:&wsErr];
      if (wsErr) {
-     logit(lcl_vError,@"%@",wsErr.localizedDescription);
+     LogError(@"%@",wsErr.localizedDescription);
      return nil;
      }
      
      if ([result isEqualToString:@"NA"]) {
-     logit(lcl_vError,@"Did not recieve a vaild defs date.");
+     LogError(@"Did not recieve a vaild defs date.");
      return nil;
      }
      return result;
@@ -819,16 +819,16 @@
      NSError *wsErr = nil;
      result = [mpws getAvUpdateURL:&wsErr];
      if (wsErr) {
-     logit(lcl_vError,@"%@",wsErr.localizedDescription);
+     LogError(@"%@",wsErr.localizedDescription);
      return nil;
      }
      
      if ([result isEqualToString:@"NA"]) {
-     logit(lcl_vError,@"Did not recieve a vaild defs file.");
+     LogError(@"Did not recieve a vaild defs file.");
      return nil;
      }
      
-     logit(lcl_vDebug,@"[getAvUpdateURL] result: %@",result);
+     LogDebug(@"[getAvUpdateURL] result: %@",result);
      return result;
      */
     return nil;
@@ -844,22 +844,22 @@
 	NSString *dlPatchLoc = [req runSyncFileDownload:pkgURL downloadDirectory:dlDir error:&err];
     if (err)
 	{
-        logit(lcl_vError,@"Error downloading a patch, skipping %@. Err Message: %@",pkgURL, [err localizedDescription]);
+        LogError(@"Error downloading a patch, skipping %@. Err Message: %@",pkgURL, [err localizedDescription]);
         result = 1;
     }
     
     // Now we need to unzip
     if (result == 0) {
-        logit(lcl_vInfo,@"Uncompressing patch, to begin install.");
-        logit(lcl_vInfo,@"Begin decompression of file, %@",dlPatchLoc);
+        LogInfo(@"Uncompressing patch, to begin install.");
+        LogInfo(@"Begin decompression of file, %@",dlPatchLoc);
         err = nil;
 		MPFileUtils *fu = [MPFileUtils new];
         [fu unzip:dlPatchLoc error:&err];
         if (err) {
-            logit(lcl_vError,@"Error decompressing a patch, skipping %@. Err Message:%@",dlPatchLoc,[err localizedDescription]);
+            LogError(@"Error decompressing a patch, skipping %@. Err Message:%@",dlPatchLoc,[err localizedDescription]);
             result = 1;
         }
-        logit(lcl_vInfo,@"File has been decompressed.");
+        LogInfo(@"File has been decompressed.");
     }
     // *****************************
     // Install the update
@@ -873,10 +873,10 @@
         // Install pkg(s)
         for (id _pkg in pkgList) {
             pkgPath = [pkgBaseDir stringByAppendingPathComponent:_pkg];
-            logit(lcl_vInfo,@"Start install of %@",pkgPath);
+            LogInfo(@"Start install of %@",pkgPath);
             installResult = [mpi installPkg:pkgPath target:@"/" env:nil];
             if (installResult != 0) {
-                logit(lcl_vError,@"Error installing package, error code %d.",installResult);
+                LogError(@"Error installing package, error code %d.",installResult);
                 result = 1;
             }
         }
@@ -907,7 +907,7 @@
     }
     
     NSString *strResult = [[NSString alloc] initWithData:data encoding:NSASCIIStringEncoding];
-    logit(lcl_vDebug,@"runAVDefsUpdate Output: %@",strResult);
+    LogDebug(@"runAVDefsUpdate Output: %@",strResult);
     
     int taskTerminationStatus = 4;
     
@@ -915,27 +915,27 @@
         taskTerminationStatus = [task terminationStatus];
     }
     @catch (NSException *exception) {
-        logit(lcl_vError,@"%@",exception);
-        logit(lcl_vError,@"Setting result to LU error.");
+        LogError(@"%@",exception);
+        LogError(@"Setting result to LU error.");
     }
     
     int result = -1;
     switch (taskTerminationStatus)
     {
         case 0:
-            logit(lcl_vInfo,@"LU completed successfully with new update.");
+            LogInfo(@"LU completed successfully with new update.");
             result = 0;
             break;
         case 1:
-            logit(lcl_vInfo,@"LU found nothing new. It did successfully contact the LU server, but found nothing new to update.");
+            LogInfo(@"LU found nothing new. It did successfully contact the LU server, but found nothing new to update.");
             result = 0;
             break;
         case 4:
-            logit(lcl_vInfo,@"LU failed with error, such as network error.");
+            LogInfo(@"LU failed with error, such as network error.");
             result = 1;
             break;
         default:
-            logit(lcl_vInfo,@"LU failed with error (%d).",[task terminationStatus]);
+            LogInfo(@"LU failed with error (%d).",[task terminationStatus]);
             result = 1;
             break;
     }

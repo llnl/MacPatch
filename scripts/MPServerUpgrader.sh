@@ -133,6 +133,7 @@ if $MOVECONTENT; then
         mv $MPSERVERBASE/Content /tmp/MPUSrvUpgrade/Content
     fi
 fi
+#rm -rf /tmp/MPUSrvUpgrade/Content/Web/tools
 
 # Move Base Bir
 if [ -d /opt/MacPatch_back ]; then

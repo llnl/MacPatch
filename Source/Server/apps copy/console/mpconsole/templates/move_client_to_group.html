@@ -1,0 +1,47 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<div class="row">
+	<div class="col-sm-6">
+	<form method='post' action='/clients/move/client' id="myForm">
+		<input type="hidden" name="cuuid" value="{{cuuid or ''}}">
+		<input type="hidden" name="orig_group_id" value="" id="orig_group_id">
+		<input type="hidden" name="cuuids" value="" id="cuuids">
+		<div class="row">
+			<div class="col-sm-3">
+				<label>Current Group</label>
+				{% for g in groups %}
+					{% if g.group_id == curGroup %}
+						{{g.group_name}}
+					{% endif %}
+				{% endfor %}
+			</div>
+			<div class="col-sm-3">
+				<label>New Group</label>
+				<select name="group_id" size="1">
+					{% for g in groups %}
+						{% if g.group_id != curGroup %}
+						<option value="{{g.group_id}}">{{g.group_name}}</option>
+						{% endif %}
+					{% endfor %}
+				</select>
+			</div>
+
+	</form>
+	</div>
+	</div>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function() {
+		   $("#myForm").submit();
+	   });
+	});
+</script>

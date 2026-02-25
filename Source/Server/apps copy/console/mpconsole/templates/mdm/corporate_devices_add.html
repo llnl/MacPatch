@@ -1,0 +1,108 @@
+{% block styles %}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+<div class="form-group">
+
+	<form method='post' action='/mdm/corporateDevice/add' id="myForm">
+
+            <div class="well">
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Find Device - Computername</label>
+                    <div class="col-sm-6">
+                        <input class="typeahead" id="device"  type="text" data-provide="typeahead">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Serial Number</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="serialNumber" type="text" value="" name="importedDeviceIdentifier">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label class="col-sm-3 col-form-label">Device ID</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" id="description" type="text" value="" name="description">
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-sm-6">
+                    Please note, after the add it can take up to a hour for the device to show in the list.
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-default" data-dismiss="modal" id="cancelButton">Cancel</button>
+            <button type="button" class="btn btn-primary" id="saveButton">Save</button>
+	</form>
+</div>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+<script src="{{ url_for('static', filename='yarn_components/bootstrap-typeahead/bootstrap-typeahead.js') }}"></script>
+
+<script type="text/javascript">
+	$(document).ready(function()
+    {
+	    $('#device').typeahead(
+        {
+            items: 8,
+            minLength: 3,
+            source: function (query, result)
+            {
+                $.ajax({
+                    url: "/mdm/corporateDevice/search",
+					data: { 'device' : query },
+                    dataType: "json",
+                    type: "POST",
+                    success: function (data) {
+                        result(data.options);
+                    }
+                });
+            },
+            updater: function(item)
+            {
+                $.ajax({
+                    url: "/mdm/corporateDevice/search/host",
+                    type: 'post',
+                    data: { 'device': item },
+                    dataType: 'json',
+                    success: function (response)
+                    {
+                        var description = response.device.cuuid;
+                        var serialno = response.device.serialno;
+                        // Set value to textboxes
+                        document.getElementById('description').setAttribute('value', description);
+                        document.getElementById('serialNumber').setAttribute('value', serialno);
+                    }
+                });
+
+                return item;
+            }
+        });
+
+	   $("#saveButton").click(function()
+       {
+            var form = $('#myForm');
+            var url = form.attr('action');
+            $.ajax({
+                   type: "POST",
+                   url: url,
+                   data: form.serialize(), // serializes the form's elements.
+                   success: function(data) {
+                       alert(data); // show response from the php script.
+                       window.parent.$('#table').bootstrapTable('refresh');
+                       window.parent.closeModal();
+                   }
+            });
+	   });
+
+	   $("#cancelButton").click(function() {
+	       window.parent.closeModal();
+	   });
+	});
+</script>
+

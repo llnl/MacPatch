@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+{%  endblock %}
+
+{% block pageHeader %}
+	Admin Tasks
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<button id="btnClientsToGroups" type="button" class="btn btn-default">Add Clients To Group</button>
+	<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script>
+	$(document).ready(function() {
+		$('#btnClientsToGroups').on('click', function(e) {
+
+			$.ajax({
+				url: '/console/tasks/assignClientsToGroups',
+				type: 'POST',
+				success: function(data) {
+					alert(data);
+				},
+				error: function(e) {
+					//called when there is an error
+					alert(e.message);
+				}
+			});
+
+		});
+	});
+	</script>
+{% endblock %}

@@ -1,7 +1,7 @@
 //
 //  MPSimpleKeychain.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -66,7 +66,7 @@
             keyChainFile = [aKeyChainFile copy];
             OSStatus unlockResult = [self unlockKeyChain:aKeyChainFile];
             if (unlockResult != noErr) {
-                NSLog(@"Unlock Keychain error: %d",unlockResult);
+                qlerror(@"Unlock Keychain error: %d",unlockResult);
                 return nil;
             }
         } else {
@@ -97,11 +97,27 @@
 
 - (OSStatus)unlockKeyChain:(NSString *)aKeyChainFile
 {
+    NSLog(@"[self clientInfo]: %@",[self clientInfo]);
     const char *path = [aKeyChainFile UTF8String];
     const char *pass = [[self clientInfo] UTF8String];
     SecKeychainOpen(path, &xKeychain);
+    /*
     OSStatus unlockResult = SecKeychainUnlock(xKeychain, (UInt32) strlen(pass), pass, TRUE);
-	NSLog(@"unlockResult: %d",(int)unlockResult);
+    
+    if (unlockResult != errSecSuccess) {
+        CFStringRef errorMessage = SecCopyErrorMessageString(unlockResult, NULL);
+        NSLog(@"Failed to unlock keychain: %@", errorMessage);
+        CFRelease(errorMessage);
+    }
+    */
+    OSStatus unlockResult = SecKeychainUnlock(xKeychain, (UInt32)strlen(pass), pass, TRUE);
+
+    if (unlockResult != errSecSuccess) {
+        // Try again without a password - this will prompt the user
+        unlockResult = SecKeychainUnlock(xKeychain, 0, NULL, TRUE);
+    }
+    
+    qldebug(@"[unlockKeyChain]: unlockResult = %d",(int)unlockResult);
     return unlockResult;
 }
 
@@ -112,9 +128,14 @@
 
 - (OSStatus)deleteKeyChain
 {
-    OSStatus result = SecKeychainDelete(xKeychain);
-    CFRelease(xKeychain);
-    return result;
+    NSFileManager *fs = [NSFileManager defaultManager];
+    if ([fs fileExistsAtPath:MP_AUTHSTATUS_KEYCHAIN]) {
+        OSStatus result = SecKeychainDelete(xKeychain);
+        CFRelease(xKeychain);
+        return result;
+    } else {
+        return 0;
+    }
 }
 
 #pragma mark - MacPatch
@@ -151,6 +172,7 @@
     if(osStatus != noErr) {
         if (error != NULL) {
             *error = [self errorForOSStatus:osStatus];
+            qlerror(@"%@", [self errorForOSStatus:osStatus]);
         }
         return NO;
     }
@@ -165,19 +187,19 @@
         if ([[NSFileManager defaultManager] fileExistsAtPath:keyChainFile]) {
             if (![self keychainIsUnlocked]) {
                 if (![self unlockKeyChain:keyChainFile]) {
-                    NSLog(@"Keychain is locked, error trying to unlock it.");
+                    qlerror(@"Keychain %@ is locked, error trying to unlock it.", keyChainFile);
                     return NO;
                 }
             }
         }
-		
+
 		NSData *passData = [NSKeyedArchiver archivedDataWithRootObject:[aPasswordObj toDictionary]];
 		
 		// setup keychain storage properties
 		NSError *err = nil;
 		SecAccessRef kAccess = [self createAccessRefWithLabel:ACCESS_LABEL error:&err];
 		if (err) {
-			NSLog(@"%@",err.localizedDescription);
+            qlerror(@"[savePassItemWithService][createAccessRefWithLabel] %@",err.localizedDescription);
 			return false;
 		}
        
@@ -211,7 +233,7 @@
 		
 		return YES;
 	} @catch (NSException *exception) {
-		NSLog(@"%@",exception);
+        qlerror(@"[savePassItemWithService]: %@",exception);
 		return NO;
 	}
 }
@@ -265,36 +287,45 @@
 - (MPPassItem *)retrievePassItemForService:(NSString *)aService error:(NSError **)error
 {
     if (![self keychainIsUnlocked]) {
+        qldebug(@"[retrievePassItemForService]: keychain is locked");
         if (![self unlockKeyChain:keyChainFile]) {
+            qlerror(@"[retrievePassItemForService]: unable to unlock keychain %@",keyChainFile);
             return nil;
         }
     }
     
-    const char *serviceUTF8  = [aService UTF8String];
-    const char *accountUTF8  = [aService UTF8String];
-    char *passwordData;
-    UInt32 passwordLength;
-    
-    OSStatus status = SecKeychainFindGenericPassword(xKeychain,
-                                                     (UInt32)strlen(serviceUTF8),
-                                                     serviceUTF8,
-                                                     (UInt32)strlen(accountUTF8),
-                                                     accountUTF8,
-                                                     &passwordLength,
-                                                     (void **)&passwordData,
-                                                     NULL);
-    
-    if (status != noErr) {
-        if (error != NULL) {
-            *error = [self errorForOSStatus:status];
+    @try
+    {
+        const char *serviceUTF8  = [aService UTF8String];
+        const char *accountUTF8  = [aService UTF8String];
+        char *passwordData;
+        UInt32 passwordLength;
+        
+        OSStatus status = SecKeychainFindGenericPassword(xKeychain,
+                                                         (UInt32)strlen(serviceUTF8),
+                                                         serviceUTF8,
+                                                         (UInt32)strlen(accountUTF8),
+                                                         accountUTF8,
+                                                         &passwordLength,
+                                                         (void **)&passwordData,
+                                                         NULL);
+        
+        if (status != noErr) {
+            if (error != NULL) {
+                *error = [self errorForOSStatus:status];
+                qlerror(@"[retrievePassItemForService]: SecKeychainFindGenericPassword err = %@",[self errorForOSStatus:status]);
+            }
+            return nil;
         }
+        
+        NSData *data = [[NSData alloc] initWithBytesNoCopy:passwordData length:passwordLength];
+        NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+        MPPassItem *pi = [[MPPassItem alloc] initWithDictionary:storedDictionary];
+        return pi;
+    } @catch (NSException *exception) {
+        qlerror(@"[retrievePassItemForService]: %@",exception.description);
         return nil;
     }
-    
-    NSData *data = [[NSData alloc] initWithBytesNoCopy:passwordData length:passwordLength];
-    NSDictionary *storedDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-    MPPassItem *pi = [[MPPassItem alloc] initWithDictionary:storedDictionary];
-    return pi;
 }
 
 - (BOOL)updateKeyItemWithService:(MPKeyItem *)aPasswordObj service:(ServiceType)aService error:(NSError **)error
@@ -441,8 +472,8 @@
     OSStatus err = SecKeychainGetStatus(xKeychain, &keychainStatus);
     
     if (err != errSecSuccess) {
-        NSLog(@"Error getting Keychain status.");
-        NSLog(@"OSStatus: %@",[self errorForOSStatus:err]);
+        qlerror(@"Error getting Keychain status.");
+        qlerror(@"OSStatus: %@",[self errorForOSStatus:err]);
         return NO;
     }
     
@@ -462,41 +493,47 @@
 
 - (SecAccessRef)createAccessRefWithLabel:(NSString *)label error:(NSError **)err
 {
-    OSStatus result;
-    SecTrustedApplicationRef me;
-    SecTrustedApplicationRef MPAgent = NULL;
-    SecTrustedApplicationRef MacPatchApp1 = NULL;
-    SecTrustedApplicationRef MPClientStatus = NULL;
-    SecTrustedApplicationRef MPLoginAgent = NULL;
-    SecTrustedApplicationRef MPUpdateAgent = NULL;
-	SecTrustedApplicationRef MPHelper = NULL;
-    SecTrustedApplicationRef MPStatusUI = NULL;
-    
-    result = SecTrustedApplicationCreateFromPath(NULL, &me);
-	result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
-	result = SecTrustedApplicationCreateFromPath("/Applications/MacPatch.app", &MacPatchApp1);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
-    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/MPLoginAgent.app", &MPLoginAgent);
-    result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
-	result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.helper", &MPHelper);
-    result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.status.ui", &MPStatusUI);
-    
-    NSArray *trustedApplications = @[(__bridge_transfer id)me,
-									 (__bridge_transfer id)MPAgent,
-									 (__bridge_transfer id)MacPatchApp1,
-									 (__bridge_transfer id)MPClientStatus,
-									 (__bridge_transfer id)MPLoginAgent,
-									 (__bridge_transfer id)MPUpdateAgent,
-									 (__bridge_transfer id)MPHelper];
-    
     SecAccessRef accessObj = NULL;
-    result = SecAccessCreate((__bridge CFStringRef)label, (__bridge CFArrayRef)trustedApplications, &accessObj);
-    if (noErr != result) {
-        if (err != NULL) *err = [self errorForOSStatus:result];
-        return nil;
-    }
+    OSStatus result;
+    @try
+    {
+        SecTrustedApplicationRef me;
+        SecTrustedApplicationRef MPAgent = NULL;
+        SecTrustedApplicationRef MacPatchApp = NULL;
+        SecTrustedApplicationRef MPClientStatus = NULL;
+        SecTrustedApplicationRef MPUpdateAgent = NULL;
+        SecTrustedApplicationRef MPHelper = NULL;
+        SecTrustedApplicationRef MPStatusUI = NULL;
+        
+        result = SecTrustedApplicationCreateFromPath(NULL, &me);
+        result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPAgent", &MPAgent);
+        result = SecTrustedApplicationCreateFromPath("/Applications/MacPatch.app", &MacPatchApp);
+        result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Client/MPClientStatus.app", &MPClientStatus);
+        result = SecTrustedApplicationCreateFromPath("/Library/MacPatch/Updater/MPUpdater", &MPUpdateAgent);
+        result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.helper", &MPHelper);
+        result = SecTrustedApplicationCreateFromPath("/Library/PrivilegedHelperTools/gov.llnl.mp.status.ui", &MPStatusUI);
+        
+        NSArray *trustedApplications = @[(__bridge_transfer id)me,
+                                         (__bridge_transfer id)MPAgent,
+                                         (__bridge_transfer id)MacPatchApp,
+                                         (__bridge_transfer id)MPClientStatus,
+                                         (__bridge_transfer id)MPUpdateAgent,
+                                         (__bridge_transfer id)MPHelper,
+                                         (__bridge_transfer id)MPStatusUI];
     
-    return accessObj;
+        result = SecAccessCreate((__bridge CFStringRef)label, (__bridge CFArrayRef)trustedApplications, &accessObj);
+        
+        if (noErr != result) {
+            if (err != NULL) *err = [self errorForOSStatus:result];
+            return nil;
+        }
+        
+        return accessObj;
+        
+    } @catch (NSException *exception) {
+        qlerror(@"[createAccessRefWithLabel][accessObj]: %@",exception);
+        return accessObj;
+    }
 }
 
 #pragma mark Client Info

@@ -1,9 +1,7 @@
 //
 //  NSMetadataQuery+Synchronous.m
-//  TestPercent
-//
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -26,6 +24,7 @@
  */
 
 #import "NSMetadataQuery+Synchronous.h"
+#import "MacPatch.h"
 
 @implementation NSMetadataQuery (Synchronous)
 
@@ -54,7 +53,7 @@
 		return [self results];
 	} else {
 		[[NSNotificationCenter defaultCenter] removeObserver:self name:NSMetadataQueryDidFinishGatheringNotification object:nil];
-		qlerror(@"query failed to start: %@", searchString);
+		LogError(@"query failed to start: %@", searchString);
 	}
 	return nil;
 }

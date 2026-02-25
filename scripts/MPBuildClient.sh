@@ -2,7 +2,7 @@
 
 # -------------------------------------------------------------
 # Script: MPBuildClient.sh
-# Version: 2.7
+# Version: 2.8
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -27,6 +27,7 @@
 #	2.6		Added option for setting build root
 #			Added logic for Distribution_Beta file to allow installs over the top
 #	2.7		Added gov.llnl.mp.status.ui to compile process 
+#	2.8		Updated Xcode build commands to include arm64 and x86_64 architectures
 #
 # -------------------------------------------------------------
 
@@ -34,13 +35,13 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client"
+BUILDROOT="/private/var/tmp/MP/Client40/$DATETIME"
 PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENT_VERS="3.7.0"
-AGENTVER="3.7.0.1"
-UPDATEVER="3.7.0.1"
+AGENT_VERS="4.0.0"
+AGENTVER="4.0.0.1"
+UPDATEVER="4.0.0.1"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
@@ -353,37 +354,120 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		# Compile the agent components
 		read -p "Please enter your code sigining identity [$CODESIGNIDENTITYALT]: " CODESIGNIDENTITY
 		CODESIGNIDENTITY=${CODESIGNIDENTITY:-$CODESIGNIDENTITYALT}
-		if [ "$CODESIGNIDENTITY" != "$CODESIGNIDENTITYALT" ]; then
-			defaults write ${BUILDPLIST} name "${CODESIGNIDENTITY}"
-		fi
+
 		echo
 		echo "------------------------------------------------------------"
 		echo "Compiling MacPatch Client Components"
 		echo "------------------------------------------------------------"
 		echo
+
+		echo "------------------------------"
+		echo " - Compiling MPLibrary"
+		xcodebuild -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPLibrary \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+		build | grep -A 5 error:
+
+		echo "------------------------------"
 		echo " - Compiling MacPatch"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
-
+		xcodebuild -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MacPatch \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO \
+		OTHER_CODE_SIGN_FLAGS=--timestamp build | grep -A 5 error:
+		
+		
+		echo "------------------------------"
 		echo " - Compiling gov.llnl.mp.helper"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme gov.llnl.mp.helper \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
+		echo "------------------------------"
 		echo " - Compiling MPClientStatus"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPClientStatus \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
+		echo "------------------------------"
 		echo " - Compiling gov.llnl.mp.status.ui"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.status.ui SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme gov.llnl.mp.status.ui \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
+		echo "------------------------------"
 		echo " - Compiling MPAgent"
 		sed -i '' "s/\[BUILD\]/$BUILD_NO_STR/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPAgent \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		sed -i '' "s/$BUILD_NO_STR/\[BUILD\]/g" "${SRCROOT}/MacPatch/MPAgent/MPAgent/main.m"
 
+		echo "------------------------------"
 		echo " - Compiling MPUpdater"
-		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -destination "platform=macOS" -configuration Release CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace \
+		-scheme MPUpdater \
+		SYMROOT=${BUILDROOT} \
+		-configuration Release \
+		-destination 'platform=macOS' \
+		ARCHS='arm64 x86_64' \
+        ONLY_ACTIVE_ARCH=NO \
+		CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+		OTHER_CODE_SIGN_FLAGS=--timestamp \
+		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
 		if $INCPlanBSource; then
 			echo " - Compiling Plan B"
-			xcodebuild build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILDROOT} -destination "platform=macOS" CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" OTHER_CODE_SIGN_FLAGS=--timestamp CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
+			xcodebuild build -configuration Release \
+			-project ${SRCROOT}/Client/planb/planb.xcodeproj \
+			-target planb \
+			SYMROOT=${PLANB_BUILDROOT} \
+			-destination 'platform=macOS' \
+			ARCHS='arm64 x86_64' \
+			ONLY_ACTIVE_ARCH=NO \
+			CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
+			OTHER_CODE_SIGN_FLAGS=--timestamp \
+			CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 		fi
 		echo
 		echo "Compiling completed."
@@ -395,6 +479,7 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		fi
 
 		# Compile the agent components
+		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPlibrary SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MacPatch SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.helper SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPClientStatus SYMROOT=${BUILDROOT} -configuration Release
@@ -449,7 +534,6 @@ mv ${BUILDROOT}/Release/gov.llnl.mp.status.ui ${BUILDROOT}/Client/Files/Library/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
-
 
 if [ "$PKGSTATE" == "A" ] || [ "$PKGSTATE" == "B" ]; then
 	rm ${BUILDROOT}/Combined/Distribution

@@ -1,7 +1,7 @@
 //
 //  CHDiskInfo.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -88,7 +88,7 @@
     
     session = DASessionCreate(kCFAllocatorDefault);
     if(session == NULL) {
-		logit(lcl_vDebug,@"DASessionCreate");
+		LogDebug(@"DASessionCreate");
     }
     
     if ([bsdDiskArray count] >= 1) {

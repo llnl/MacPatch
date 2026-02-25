@@ -3,7 +3,7 @@
 //  MPAgent
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -123,7 +123,7 @@
 		[items addObject:result];
 	}
 	
-	qldebug(@"Parsed sysinfocachegen data: %@",items);
+	LogDebug(@"Parsed sysinfocachegen data: %@",items);
 	return [NSArray arrayWithArray:items];
 }
 
@@ -388,7 +388,7 @@
 	// If File Exists then delete it
 	if (([fm fileExistsAtPath:spFileName isDirectory:&isDir] && isDir) == NO) [fm removeItemAtPath:spFileName error:NULL];
 	
-	qlinfo(@"Begin running sysinfocachegen to collect data.");
+	LogInfo(@"Begin running sysinfocachegen to collect data.");
 	
 	NSTask *task;
 	task = [[NSTask alloc] init];
@@ -409,7 +409,7 @@
 	
 	NSString *string;
 	string = [[NSString alloc] initWithData:tData encoding: NSUTF8StringEncoding];
-	qlinfo(@"Completed running sysinfocachegen, %@",string);
+	LogInfo(@"Completed running sysinfocachegen, %@",string);
 
 	NSDictionary *ddata = [NSDictionary dictionaryWithContentsOfFile:spFileName];
 	if (ddata[@"Objects"])

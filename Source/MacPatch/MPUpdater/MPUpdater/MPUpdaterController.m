@@ -2,7 +2,7 @@
 //  MPUpdaterController.m
 //  MPUpdater
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -36,6 +36,8 @@ NSInteger const TaskErrorTimedOut = 900001;
 @property (nonatomic, assign) BOOL useMigrationConfig;
 @property (nonatomic, assign) BOOL verifyFingerprint;
 @property (nonatomic, strong) NSString *fingerprint;
+@property (nonatomic, strong) NSFileManager *fileManager;
+@property (nonatomic, strong) dispatch_queue_t updateQueue;
 
 - (NSDictionary *)collectVersionInfo;
 - (BOOL)compareVersionStrings:(NSString *)leftVersion operator:(NSString *)aOp compareTo:(NSString *)rightVersion;
@@ -47,9 +49,6 @@ NSInteger const TaskErrorTimedOut = 900001;
 - (NSString *)runTask:(NSString *)aBinPath binArgs:(NSArray *)aArgs environment:(NSDictionary *)aEnv error:(NSError **)err;
 
 - (NSString *)installPkgWithResult:(NSString *)pkgPath target:(NSString *)aTarget error:(NSError **)err;
-
-- (void)taskTimeoutThread;
-- (void)taskTimeout:(NSNotification *)aNotification;
 
 - (BOOL)scanForMigrationConfig;
 
@@ -65,27 +64,30 @@ NSInteger const TaskErrorTimedOut = 900001;
 @synthesize _osVerDictionary;
 @synthesize _migrationPlist;
 
-@synthesize taskTimeoutTimer;
-@synthesize taskTimeoutValue;
-@synthesize taskTimedOut;
-@synthesize useMigrationConfig;
-@synthesize verifyFingerprint;
-@synthesize fingerprint;
+@synthesize taskTimeoutTimer = _taskTimeoutTimer;
+@synthesize taskTimeoutValue = _taskTimeoutValue;
+@synthesize taskTimedOut = _taskTimedOut;
+@synthesize useMigrationConfig = _useMigrationConfig;
+@synthesize verifyFingerprint = _verifyFingerprint;
+@synthesize fingerprint = _fingerprint;
 
 - (id)init
 {
 	self = [super init];
 	if (self)
 	{
-		[self set_cuuid:[MPSystemInfo clientUUID]];
-		[self set_updateData:nil];
-		[self set_osVerDictionary:[MPSystemInfo osVersionOctets]];
-		[self set_migrationPlist:[NSString stringWithFormat:@"%@/.migration.plist",MP_ROOT_UPDATE]];
+		_cuuid = [MPSystemInfo clientUUID];
+		_updateData = nil;
+		_osVerDictionary = [MPSystemInfo osVersionOctets];
+		_migrationPlist = [NSString stringWithFormat:@"%@/.migration.plist", MP_ROOT_UPDATE];
 		
-		[self setTaskTimeoutValue:DEFAULT_TIMEOUT_VALUE];
-		[self setTaskTimedOut:NO];
-		[self setUseMigrationConfig:NO];
-		[self setVerifyFingerprint:NO];
+		_taskTimeoutValue = DEFAULT_TIMEOUT_VALUE;
+		_taskTimedOut = NO;
+		_useMigrationConfig = NO;
+		_verifyFingerprint = NO;
+		
+		_fileManager = [NSFileManager defaultManager];
+		_updateQueue = dispatch_queue_create("gov.llnl.mpupdater.queue", DISPATCH_QUEUE_SERIAL);
 		
 		mpDataMgr = [[MPDataMgr alloc] init];
 	}
@@ -166,6 +168,13 @@ NSInteger const TaskErrorTimedOut = 900001;
 	
 	// Build the download String
 	NSString *_dlURL = [_updateData objectForKey:@"pkg_url"];
+	
+	// Validate URL
+	if (!_dlURL || _dlURL.length == 0) {
+		qlerror(@"Error: Invalid or missing package URL");
+		return;
+	}
+	
 	qlinfo(@"Download update package from: %@",_dlURL);
 	
 	// Download the File
@@ -174,6 +183,13 @@ NSInteger const TaskErrorTimedOut = 900001;
 	if (err)
 	{
 		qlerror(@"Error downloading zip file, error code %d (%@)",(int)err.code, err.domain);
+		[self cleanupTempFiles:dlZipFile];
+		return;
+	}
+	
+	// Verify file was actually downloaded
+	if (!dlZipFile || ![self.fileManager fileExistsAtPath:dlZipFile]) {
+		qlerror(@"Error: Downloaded file does not exist at path: %@", dlZipFile);
 		return;
 	}
 	
@@ -182,6 +198,7 @@ NSInteger const TaskErrorTimedOut = 900001;
 	[self unzip:dlZipFile error:&err];
 	if (err) {
 		qlerror(@"Error unzip file, error code %d (%@)",(int)err.code, err.domain);
+		[self cleanupTempFiles:dlZipFile];
 		return;
 	}
 	
@@ -190,9 +207,22 @@ NSInteger const TaskErrorTimedOut = 900001;
 	NSString *pkgPath;
 	NSString *pkgBaseDir = [dlZipFile stringByDeletingLastPathComponent];
 	NSPredicate *pkgPredicate = [NSPredicate predicateWithFormat:@"(SELF like [cd] '*.pkg') OR (SELF like [cd] '*.mpkg')"];
-	NSArray *pkgList = [[[NSFileManager defaultManager] contentsOfDirectoryAtPath:[dlZipFile stringByDeletingLastPathComponent] error:NULL] filteredArrayUsingPredicate:pkgPredicate];
+	NSArray *pkgList = [[self.fileManager contentsOfDirectoryAtPath:pkgBaseDir error:&err] filteredArrayUsingPredicate:pkgPredicate];
+	
+	if (err) {
+		qlerror(@"Error reading package directory: %@", err.localizedDescription);
+		[self cleanupTempFiles:dlZipFile];
+		return;
+	}
+	
+	if (pkgList.count == 0) {
+		qlerror(@"Error: No packages found in downloaded archive");
+		[self cleanupTempFiles:dlZipFile];
+		return;
+	}
 	
 	// Install pkg(s)
+	BOOL installSuccess = NO;
 	for (int i = 0; i < [pkgList count]; i++)
 	{
 		pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[i]];
@@ -206,16 +236,42 @@ NSInteger const TaskErrorTimedOut = 900001;
 		}
 		
 		qlinfo(@"%@",installResult);
-		if (useMigrationConfig)
+		installSuccess = YES;
+	}
+	
+	// Cleanup on success
+	if (installSuccess && self.useMigrationConfig)
+	{
+		// Remove Migration Plist after successful install
+		qlinfo(@"Remove Migration Plist after successful install.");
+		err = nil;
+		[self.fileManager removeItemAtPath:_migrationPlist error:&err];
+		if (err)
 		{
-			// Remove Migration Plist after successful install
-			qlinfo(@"Remove Migration Plist after successful install.");
-			err = nil;
-			[[NSFileManager defaultManager] removeItemAtPath:_migrationPlist error:&err];
-			if (err)
-			{
-				qlerror(@"Error removing migration plist. %@",err.localizedDescription);
-			}
+			qlerror(@"Error removing migration plist. %@",err.localizedDescription);
+		}
+	}
+	
+	// Always cleanup temp files
+	[self cleanupTempFiles:dlZipFile];
+}
+
+#pragma mark - Cleanup
+
+- (void)cleanupTempFiles:(NSString *)filePath
+{
+	if (!filePath) return;
+	
+	NSError *err = nil;
+	NSString *dirPath = [filePath stringByDeletingLastPathComponent];
+	
+	// Remove the downloaded file and its parent temp directory
+	if ([self.fileManager fileExistsAtPath:dirPath]) {
+		[self.fileManager removeItemAtPath:dirPath error:&err];
+		if (err) {
+			qlerror(@"Error cleaning up temp files at %@: %@", dirPath, err.localizedDescription);
+		} else {
+			qlinfo(@"Cleaned up temporary files at: %@", dirPath);
 		}
 	}
 }
@@ -526,11 +582,9 @@ done:
 	return result;
 }
 
-
+/*
 - (void)taskTimeoutThread
 {
-	qlinfo(@"Task timeout thread called. (NON-OP)");
-	/*
 	@autoreleasepool
 	{
 		qldebug(@"Timeout is set to %f",taskTimeoutValue);
@@ -543,23 +597,22 @@ done:
 		while (taskTimedOut == NO && [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
 		
 	}
-	*/
+	
 }
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	qlinfo(@"Task timedout, killing task. (NON-OP)");
-	//[self.taskTimeoutTimer invalidate];
-	//[self setTaskTimedOut:YES];
+	qlinfo(@"Task timedout, killing task.");
+	[self.taskTimeoutTimer invalidate];
+	[self setTaskTimedOut:YES];
 }
-
+*/
 #pragma mark Migration methods
 
 - (BOOL)scanForMigrationConfig
 {
-	NSFileManager *fm = [NSFileManager defaultManager];
-	if ([fm fileExistsAtPath:_migrationPlist]) {
-		[self setUseMigrationConfig:YES];
+	if ([self.fileManager fileExistsAtPath:_migrationPlist]) {
+		self.useMigrationConfig = YES;
 		return YES;
 	}
 	

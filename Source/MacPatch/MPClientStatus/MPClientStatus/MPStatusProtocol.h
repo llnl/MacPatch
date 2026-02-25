@@ -2,7 +2,7 @@
 //  MPStatusProtocol.h
 //  gov.llnl.mp.status.ui
 /*
-Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+Copyright (c) 2026, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 Written by Charles Heizer <heizer1 at llnl.gov>.
 LLNL-CODE-636469 All rights reserved.
@@ -76,6 +76,13 @@ NS_ASSUME_NONNULL_END
 - (void)postProvisioningData:(NSString * _Nullable )key dataForKey:(NSData * _Nullable)data dataType:(NSString * _Nullable)dataType withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)touchFile:(NSString * _Nullable )filePath withReply:(nullable void(^)(NSError * _Nullable error))reply;
 - (void)rebootHost:(nullable void(^)(NSError * _Nullable error))reply;
+- (void)runScriptFromString:(NSString *_Nonnull)script withReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
+
+// ----------------------------------------
+// Software -------------------------------
+// ----------------------------------------
+
+- (void)installSoftware:(NSDictionary *_Nonnull)swItem timeOut:(NSInteger)timeout withReply:(nullable void(^)(NSError * _Nullable error, NSInteger resultCode, NSData * _Nullable installData))reply;
 
 // ----------------------------------------
 // Misc                          ----------

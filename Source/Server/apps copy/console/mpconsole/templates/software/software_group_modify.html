@@ -1,0 +1,49 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form method='post' action='/software/group/save' id="myForm">
+		<table class="table-condensed">
+			<tbody>
+			<tr>
+				<td>
+					User ID ("Owner"):
+				</td>
+				<td>
+					<input type="text" name="user_id" value="{{user or ''}}">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Group Name:
+				</td>
+				<td>
+					<input type="text" name="group_name" value="{{group_name or ''}}">
+				</td>
+			</tr>
+			<tr>
+				<td>
+					Description:
+				</td>
+				<td>
+					<input type="text" name="group_description" value="{{group_description or ''}}">
+					<input type="hidden" name="group_id" value="{{group_id or ''}}">
+				</td>
+			</tr>
+			</tbody>
+		</table>
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function() {
+		   $("#myForm").submit();
+	   });
+	});
+</script>

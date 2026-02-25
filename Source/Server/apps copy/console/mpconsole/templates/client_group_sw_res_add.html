@@ -1,0 +1,61 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+	<form method='post' action='/clients/group/{{data.group_id}}/sw/res/add' id="myForm">
+		<div class="form-group row">
+			<div class="col-sm-5">
+			<label for="swResIDLst">Software Restriction</label>
+			<select id="swResIDLst" name="appID" required="yes"></select>
+			<small id="swHelp" class="form-text text-muted">Please select or search for software restriction.</small>
+			</div>
+		</div>
+		<div class="form-group row">
+			<div class="col-sm-5">
+				<input type="hidden" name="group_id" value="{{data.group_id or ''}}">
+				<button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+			{% if type == "add" %}
+				<button type="button" class="btn btn-primary mb-2" data-dismiss="modal" id="myButton">Add</button>
+			{% else %}
+				<button type="button" class="btn btn-primary mb-2" data-dismiss="modal" id="myButton">Update</button>
+			{% endif %}
+			</div>
+		</div>
+	</form>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#myButton").click(function() {
+		   $("#myForm").submit();
+	   });
+
+	   function getSelectData()
+		{
+			$('#swResIDLst').append("<option value=''>...</option>");
+			{% for s in swResData %}
+				$('#swResIDLst').append("<option value='{{ s.appID }}' selected>{{ s.displayName }}</option>");
+			{% endfor %}
+			$('#swResIDLst').selectize({
+				create: true,
+				sortField: {field: 'text'}
+			});
+		}
+
+		function populateData()
+		{
+			getSelectData();
+		}
+
+		// Call funtion to load any criteria data
+		window.onload = populateData();
+	});
+</script>

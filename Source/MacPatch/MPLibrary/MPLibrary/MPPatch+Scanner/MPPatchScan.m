@@ -1,7 +1,7 @@
 //
 //  MPPatchScan.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -380,7 +380,7 @@ done:
 	return result;
 }
 
-- (NSDictionary *)patchDataForIDUsingArray:(NSString *)patchID patchArray:(NSArray *)approvedPatches
+- (NSDictionary *)patchDataForIDUsingArrayOLD:(NSString *)patchID patchArray:(NSArray *)approvedPatches
 {
 	qldebug(@"Searching for %@",patchID );
 	
@@ -397,6 +397,43 @@ done:
 	}
 	return result;
 }
+
+- (NSDictionary *)patchDataForIDUsingArray:(NSString *)patchID patchArray:(NSArray *)approvedPatches
+{
+    qldebug(@"Searching for %@", patchID);
+
+    // Validate inputs
+    if (![approvedPatches isKindOfClass:[NSArray class]]) {
+        qlerror(@"approvedPatches is not an NSArray: %@", approvedPatches);
+        return nil;
+    }
+
+    if (patchID.length == 0) {
+        qlwarning(@"patchID is nil or empty.");
+        return nil;
+    }
+
+    // Use a block-based predicate to avoid KVC crashes on unexpected types
+    NSPredicate *predicate = [NSPredicate predicateWithBlock:^BOOL(id obj, NSDictionary<NSString *, id> * _Nullable bindings) {
+        if (![obj isKindOfClass:[NSDictionary class]]) { return NO; }
+        id value = [(NSDictionary *)obj objectForKey:@"puuid"];
+        if (![value isKindOfClass:[NSString class]]) { return NO; }
+        return [(NSString *)value isEqualToString:patchID];
+    }];
+
+    NSArray *filteredArray = [approvedPatches filteredArrayUsingPredicate:predicate];
+
+    if (filteredArray.count == 1) {
+        return filteredArray.firstObject;
+    } else if (filteredArray.count > 1) {
+        qlwarning(@"Multiple entries found for puuid=%@; returning first.", patchID);
+        return filteredArray.firstObject;
+    } else {
+        qldebug(@"%@ was not found.", patchID);
+        return nil;
+    }
+}
+
 
 - (NSArray *)retrieveCustomPatchScanList
 {

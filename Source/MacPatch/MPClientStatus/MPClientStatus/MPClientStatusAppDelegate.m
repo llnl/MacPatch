@@ -1,7 +1,7 @@
 //
 //  MPClientStatusAppDelegate.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -261,7 +261,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     qlinfo(@"start applicationDidFinishLaunching");
-    [self resetWhatsNew];
+    //[self resetWhatsNew];
     
     // Show/hide Quit Menu Item
     NSTimer *t = [NSTimer timerWithTimeInterval:0.1 target:self selector:@selector(updateMenu:) userInfo:statusMenu repeats:YES];
@@ -331,13 +331,18 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         }
     } else {
         NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
-        [defaults synchronize];
-        if ([defaults boolForKey:@"showWhatsNew"]) {
-            [self loadWhatsNewWebView:nil];
-            [whatsNewWindow makeKeyAndOrderFront:nil];
-            [whatsNewWindow center];
-            [NSApp activateIgnoringOtherApps:YES];
+        if ([fm fileExistsAtPath:@"/tmp/.MPSkipWhatsNew"]) {
+            [defaults setObject:[NSNumber numberWithBool:NO] forKey:@"showWhatsNew"];
+        } else {
+            if ([defaults boolForKey:@"showWhatsNew"]) {
+                [self loadWhatsNewWebView:nil];
+                [whatsNewWindow makeKeyAndOrderFront:nil];
+                [whatsNewWindow center];
+                [NSApp activateIgnoringOtherApps:YES];
+                
+            }
         }
+        [defaults synchronize];
     }
     qlinfo(@"end applicationDidFinishLaunching");
 }
@@ -396,7 +401,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     
     [self connectAndExecuteCommandBlock:^(NSError * connectError)
-     {
+    {
          if (connectError != nil) {
              qlerror(@"connectError: %@",connectError.localizedDescription);
              dispatch_semaphore_signal(sem);
@@ -663,37 +668,35 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         NSDictionary *prefs = [NSDictionary dictionaryWithContentsOfFile:MP_AUTHSTATUS_FILE];
         if ([prefs[@"enabled"] boolValue]) {
             
+            dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+            
+            [self connectAndExecuteCommandBlock:^(NSError * connectError)
+             {
+                if (connectError != nil)
+                {
+                    qlerror(@"connectError: %@",connectError.localizedDescription);
+                }
+                else
+                {
+                    [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                        qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                        dispatch_semaphore_signal(sem);
+                    }] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
+                        if (err) {
+                            qlerror(@"%@",err.localizedDescription);
+                        }
+                        
+                        // User account is out of sync, post notification.
+                        if (!result) {
+                            [self postUserNotificationForFVAuthRestart];
+                        }
+                        dispatch_semaphore_signal(sem);
+                    }];
+                }
+            }];
+            
+            dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
         }
-        
-		
-		dispatch_semaphore_t sem = dispatch_semaphore_create(0);
-		
-		[self connectAndExecuteCommandBlock:^(NSError * connectError)
-		{
-			if (connectError != nil)
-			{
-				qlerror(@"connectError: %@",connectError.localizedDescription);
-			}
-			else
-			{
-				[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-					qlerror(@"proxyError: %@",proxyError.localizedDescription);
-                    dispatch_semaphore_signal(sem);
-				}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
-					if (err) {
-						qlerror(@"%@",err.localizedDescription);
-					}
-					
-					// User account is out of sync, post notification.
-					if (!result) {
-						[self postUserNotificationForFVAuthRestart];
-					}
-					dispatch_semaphore_signal(sem);
-				}];
-			}
-		}];
-		
-		dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
 	}
 }
 
@@ -734,6 +737,20 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             }];
         }
     }];
+    /* */
+    /*
+    [self connectAndExecuteCommandBlock:^(NSError * connectError) {
+        if (connectError != nil) {
+            qlerror(@"connectError: %@",connectError.localizedDescription);
+        } else {
+            [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
+                qlerror(@"proxyError: %@",proxyError.localizedDescription);
+            }] getTestWithReply:^(NSString *verData) {
+                qlinfo(@"Calling getTestWithReply, %@",verData);
+            }];
+        }
+    }];
+    */
 }
 
 

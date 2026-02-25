@@ -1,0 +1,101 @@
+{% block styles %}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container-fluid">
+	<form method='post' id="myForm" class="form-horizontal">
+		{% if data.rid is defined %}
+		{% if data.rid >= 1 %}
+		<div class="form-group">
+			<label for="name" class="col-xs-3">Key</label>
+			<div class="col-xs-8">
+				<input id="regKey" class="form-control" type="text" value="{{data.regKey or ''}}" readonly />
+			</div>
+		</div>
+		{% endif %}
+		{% endif %}
+		<div class="form-group">
+			<label for="name" class="col-xs-3">Key Type</label>
+			<div class="col-xs-8">
+				<select class="form-control" id="sel1" name="keyType">
+					<option value="0" {% if 0 == data['keyType'] %}selected{% endif %}>Client</option>
+					<option value="1" {% if 1 == data['keyType'] %}selected{% endif %}>Group</option>
+				</select>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="keyQuery" class="col-xs-3">Key Query</label>
+			<div class="col-xs-8">
+				<input name='keyQuery' id="keyQuery" class="form-control" type="text" value="{{data.keyQuery or ''}}" />
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="name" class="col-xs-3">Valid From</label>
+			<div class='col-xs-8 input-group date form_datetime'>
+				<input name="validFromDate" type='text' class="form-control" value="{{data.validFromDate or ''}}" />
+				<span class="input-group-addon">
+					<span class="glyphicon glyphicon-calendar"></span>
+				</span>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="name" class="col-xs-3">Valid To</label>
+			<div class='col-xs-8 input-group date form_datetime'>
+				<input name="validToDate" type='text'class="form-control" value="{{data.validToDate or ''}}" />
+				<span class="input-group-addon">
+					<span class="glyphicon glyphicon-calendar"></span>
+				</span>
+			</div>
+		</div>
+		<div class="form-group">
+			<label for="name" class="col-xs-3">Active</label>
+			<div class="col-xs-8 pull-left">
+				<select class="form-control" id="sel1" name='active'>
+					<option value="0" {% if 0 == data['active'] %}selected{% endif %}>No</option>
+					<option value="1" {% if 1 == data['active'] %}selected{% endif %}>Yes</option>
+				</select>
+			</div>
+		</div>
+
+		<input type="hidden" name="rid" value="{{data.rid or '0'}}">
+	</form>
+</div>
+{% endblock %}
+
+<script type="text/javascript">
+	$(document).ready(function() {
+	   $("#modalSaveButton").click(function()
+	   {
+			var formData = new FormData($('#myForm')[0]);
+			$.ajax({
+				type:'POST',
+				url: '/registration/key/add',
+				data: formData,
+				cache: false,
+				processData: false,
+				contentType: false,
+				success: function(){
+					alert("Key updated successfully");
+				},
+				error: function(jqXHR, textStatus, errorThrown){
+					alert("Failed to add new key.");
+				}
+			});
+
+			$('#modalDialog').modal('hide');
+			$('#myForm') = '';
+	   });
+
+	   $('.form_datetime').datetimepicker({
+			weekStart: 1,
+			todayBtn:  1,
+			autoclose: 1,
+			todayHighlight: 1,
+			startView: 2,
+			forceParse: 0
+		});
+	});
+</script>

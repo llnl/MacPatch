@@ -1,7 +1,7 @@
 //
 //  MPTaskValidate.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -24,6 +24,7 @@
  */
 
 #import "MPTaskValidate.h"
+#import "MacPatch.h"
 
 NSString * const kMPCheckIn			= @"Every@300";
 NSString * const kMPAgentCheck		= @"Every@3600";
@@ -102,7 +103,7 @@ NSString * const kMPPatchCrit		= @"EVERY@1800";
 	NSArray *intervalArray = [[aTask objectForKey:@"interval"] componentsSeparatedByString:@"@"];
 	// If there are not enough args for the Interval
 	if ([intervalArray count] <= 1) {
-		logit(lcl_vError,@"Major error found in tasks file. Replacing current tasks file with default config.");
+		LogError(@"Major error found in tasks file. Replacing current tasks file with default config.");
 		return 1;
 	}
     NSArray *approvedTasks = [NSArray arrayWithObjects:@"KMPCHECKIN",@"KMPAGENTCHECK",@"KMPVULSCAN",@"KMPVULUPDATE",@"KMPAVCHECK",@"KMPINVSCAN",

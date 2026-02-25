@@ -1,0 +1,27 @@
+{% block styles %}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container">
+<div class="form-group">
+    <div class="well">
+        <pre>{{ payload }}</pre>
+    </div>
+</div>
+</div>
+{% endblock %}
+
+<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+
+<script type="text/javascript">
+	$(document).ready(function()
+    {
+	   $("#cancelButton").click(function()
+       {
+	       window.parent.closeModal();
+	   });
+	});
+</script>
+
