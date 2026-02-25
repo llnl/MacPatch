@@ -1,7 +1,7 @@
 //
 //  MPAsus.h
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -60,6 +60,13 @@
  @return BOOL
  */
 - (BOOL)installAppleSoftwareUpdate:(NSString *)approvedUpdate;
+
+/**
+ Install all apple software updates
+
+ @return BOOL
+ */
+- (BOOL)installAllAppleSoftwareUpdates;
 
 /**
  Download Apple Update for install with out network connection.

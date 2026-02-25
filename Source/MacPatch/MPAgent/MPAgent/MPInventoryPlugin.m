@@ -2,7 +2,7 @@
 //  MPInventoryPlugin.m
 //  MPAgent
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -27,7 +27,9 @@
 
 #import "MPInventoryPlugin.h"
 #import "InventoryPlugin.h"
+#import "MacPatch.h"
 #include <CommonCrypto/CommonCrypto.h>
+
 
 #define kMPInvPluginsDir    @"/Library/MacPatch/Client/lib/PlugIns"
 
@@ -65,12 +67,12 @@
 		
         // Check to see if valid hash
         NSString *_pluginHash = [self getPluginHash:fullFilePath];
-		qldebug(@"Plugimn Hash: %@",_pluginHash);
+		LogDebug(@"Plugimn Hash: %@",_pluginHash);
         BOOL validPlugin = [self isValidPlugin:[[pluginBundle infoDictionary] valueForKey:@"CFBundleName"]
                                       bundleID:[[pluginBundle infoDictionary] valueForKey:@"CFBundleIdentifier"]
                                        version:[[pluginBundle infoDictionary] valueForKey:@"CFBundleShortVersionString"] pluginHash:_pluginHash];
         if (!validPlugin) {
-            logit(lcl_vError, @"Will not load %@. Invalid plugin.",[[pluginBundle infoDictionary] valueForKey:@"CFBundleName"]);
+            LogError( @"Will not load %@. Invalid plugin.",[[pluginBundle infoDictionary] valueForKey:@"CFBundleName"]);
             continue;
         }
         
@@ -93,17 +95,17 @@
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     NSString *wsHash = [mprest getHashForPluginName:pluginName pluginBunleID:pluginBundleID pluginVersion:pluginVersion error:&err];
     if (err) {
-        logit(lcl_vError,@"%@",err.description);
+        LogError(@"%@",err.description);
         return result;
     }
-    logit(lcl_vDebug,@"Web Service returned hash: %@",wsHash);
+    LogDebug(@"Web Service returned hash: %@",wsHash);
     
     if ([[wsHash uppercaseString] isEqualToString:[aHash uppercaseString]]) {
         result = YES;
     } else {
-        logit(lcl_vError,@"Hashes did not match. Plugin is not valid.")
-        logit(lcl_vDebug,@"Web Service hash: %@",wsHash);
-        logit(lcl_vDebug,@"Plugin hash: %@",aHash);
+        LogError(@"Hashes did not match. Plugin is not valid.");
+        LogDebug(@"Web Service hash: %@",wsHash);
+        LogDebug(@"Plugin hash: %@",aHash);
     }
     
     return result;

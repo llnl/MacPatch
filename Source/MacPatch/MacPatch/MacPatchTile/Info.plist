@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>MPInfo</key>
+	<string>MacPatch 4.0.0 Client Software</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en_US</string>
 	<key>CFBundleExecutable</key>
@@ -19,7 +21,7 @@
 	<key>CFBundleVersion</key>
 	<string>1</string>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2019 Heizer, Charles. All rights reserved.</string>
+	<string>Copyright © 2026 Lawrence Livremore National Laboratory. All rights reserved.</string>
 	<key>NSPrincipalClass</key>
 	<string>DockTile</string>
 </dict>

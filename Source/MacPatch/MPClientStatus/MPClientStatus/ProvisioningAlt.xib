@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="17701" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="23504" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="17701"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -19,7 +19,7 @@
         <window allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" animationBehavior="default" id="F0z-JX-Cv5">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="196" y="240" width="800" height="600"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="3200" height="1775"/>
             <value key="minSize" type="size" width="800" height="600"/>
             <value key="maxSize" type="size" width="800" height="600"/>
             <view key="contentView" id="se5-gp-TjO" customClass="MPGradientView">
@@ -90,16 +90,16 @@
                             </tabViewItem>
                             <tabViewItem label="Collection" identifier="" id="q0I-Au-nkR">
                                 <view key="view" id="95w-Y7-HgH">
-                                    <rect key="frame" x="10" y="33" width="818" height="506"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="824" height="536"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bQ6-RM-hiF">
-                                            <rect key="frame" x="361" y="401" width="96" height="96"/>
+                                            <rect key="frame" x="361" y="431" width="96" height="96"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="cJX-wU-e3Y"/>
                                         </imageView>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="SxL-gJ-1VT">
-                                            <rect key="frame" x="27" y="359" width="764" height="34"/>
+                                            <rect key="frame" x="27" y="389" width="764" height="34"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="MacPatch macOS Provisioning" id="wRD-2p-Dya">
                                                 <font key="font" metaFont="systemSemibold" size="24"/>
@@ -134,16 +134,16 @@
                             </tabViewItem>
                             <tabViewItem label="Patch" identifier="" id="dEb-d0-3aD">
                                 <view key="view" id="WVw-qn-Pqa">
-                                    <rect key="frame" x="10" y="33" width="818" height="506"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="824" height="536"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dDz-Iq-Kfl">
-                                            <rect key="frame" x="361" y="401" width="96" height="96"/>
+                                            <rect key="frame" x="361" y="431" width="96" height="96"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="h4Z-zV-EzQ"/>
                                         </imageView>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="vs3-r6-HKx">
-                                            <rect key="frame" x="27" y="359" width="764" height="34"/>
+                                            <rect key="frame" x="27" y="389" width="764" height="34"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="MacPatch macOS Provisioning" id="xdp-ns-eDk">
                                                 <font key="font" metaFont="systemSemibold" size="24"/>
@@ -156,16 +156,16 @@
                             </tabViewItem>
                             <tabViewItem label="Finish" identifier="" id="CFd-Tk-6EJ">
                                 <view key="view" id="5fo-bw-3j6">
-                                    <rect key="frame" x="10" y="33" width="818" height="506"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="824" height="536"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
                                         <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Wpc-lG-scB">
-                                            <rect key="frame" x="361" y="401" width="96" height="96"/>
+                                            <rect key="frame" x="361" y="431" width="96" height="96"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="fJI-qK-92B"/>
                                         </imageView>
                                         <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="IMA-1w-Amz">
-                                            <rect key="frame" x="27" y="359" width="764" height="34"/>
+                                            <rect key="frame" x="27" y="389" width="764" height="34"/>
                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                             <textFieldCell key="cell" lineBreakMode="clipping" alignment="center" title="MacPatch macOS Provisioning" id="0Zr-8t-up4">
                                                 <font key="font" metaFont="systemSemibold" size="24"/>
@@ -187,7 +187,7 @@
         </window>
     </objects>
     <resources>
-        <image name="NSGoForwardTemplate" width="9" height="12"/>
+        <image name="NSGoForwardTemplate" width="12" height="17"/>
         <image name="appImage" width="128" height="128"/>
     </resources>
 </document>

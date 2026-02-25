@@ -1,7 +1,7 @@
 //
 //  MPAsus.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -128,14 +128,14 @@
     
     // Before we scan we will kickstart softwareupdated
     // This is an issue with 10.15 and higher
-    qlinfo(@"Run softwareupdated kickstart.");
-    [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"kickstart", @"-k", @"system/com.apple.softwareupdated"]];
-    
+    // Disable as of 15.0
+    // qlinfo(@"Run softwareupdated kickstart.");
+    // [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"kickstart", @"-k", @"system/com.apple.softwareupdated"]];
 	
 	NSTask *task = [[NSTask alloc] init];
 	[task setLaunchPath: ASUS_BIN_PATH];
-	[task setArguments: @[@"-l"]];
-
+	[task setArguments: [NSArray arrayWithObjects: @"-l", nil]];
+	
 	//if ((int)NSAppKitVersionNumber >= 1504 /* 10.12 */) {
 	//	[task setArguments: [NSArray arrayWithObjects: @"-l", @"--include-config-data", nil]];
 	//} else {
@@ -266,6 +266,45 @@
 	}
 
 	return result;
+}
+
+- (BOOL)installAllAppleSoftwareUpdates
+{
+    [self postStringToDelegate:@"Install all apple software updates."];
+    [self setPatchMustShutdown:NO];
+    BOOL result = FALSE;
+
+    NSMutableDictionary *environment = [NSMutableDictionary new];
+    [environment setObject:@"YES" forKey:@"NSUnbufferedIO"];
+    
+    if ([self isMacPatchAppRunning]) {
+        [environment setObject:@"1" forKey:@"COMMAND_LINE_INSTALL"];
+    }
+    
+    NSError *taskErr = nil;
+    MPNSTask *_task = [MPNSTask new];
+    _task.delegate = self;
+    NSArray *taskArgs = @[@"--install",@"--all",@"--restart"];
+    NSString *taskStr = [_task runTask:ASUS_BIN_PATH
+                               binArgs:taskArgs
+                           environment:environment
+                                 error:&taskErr];
+    if (taskErr) {
+        qlerror(@"Error installing all apple updates.");
+        qlerror(@"%@.",taskErr.localizedDescription);
+    } else {
+        qltrace(@"%@",taskStr);
+        result = TRUE;
+        if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
+        {
+            [self setPatchMustShutdown:YES];
+        } else if ([taskStr containsString:@"Error installing updates." ignoringCase:YES]) {
+            result = FALSE;
+        }
+        
+    }
+
+    return result;
 }
 
 - (BOOL)downloadAppleUpdate:(NSString *)updateName

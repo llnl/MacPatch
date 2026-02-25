@@ -9,10 +9,11 @@
 #import <Cocoa/Cocoa.h>
 #import <WebKit/WebKit.h>
 #import "ProvisionHost.h"
+#import "MPHelperProtocol.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Provisioning : NSWindowController <NSTabViewDelegate, WKUIDelegate, WKNavigationDelegate, ProvisionHostDelegate>
+@interface Provisioning : NSWindowController <NSTabViewDelegate, WKUIDelegate, WKNavigationDelegate, ProvisionHostDelegate, MPHelperProtocol>
 {
     
 }

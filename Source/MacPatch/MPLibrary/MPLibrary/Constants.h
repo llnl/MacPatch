@@ -1,7 +1,7 @@
 //
 //  Constants.h
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -92,6 +92,7 @@ extern NSString * const MP_AUTHRUN_FILE;
 extern NSString * const MP_PATCH_ON_LOGOUT_FILE;
 extern NSString * const MP_AUTHSTATUS_KEYCHAIN;
 extern NSString * const MP_AUTHSTATUS_FILE;
+extern NSString * const MP_AUTHSTATUS_ITEM;
 
 extern NSString * const MP_PROVISION_DIR;
 extern NSString * const MP_PROVISION_FILE;

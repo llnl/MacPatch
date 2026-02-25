@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<!-- Bootstrap Core CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+		<!-- Custom CSS -->
+		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+		<!-- Custom Fonts -->
+		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+
+
+
+	<link href="{{ url_for('static', filename='css/query-builder.mp.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/chosen-js/chosen.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<style>
+		#builderButtons {
+			display: none;
+		}
+		#queryButtons {
+			display: none;
+		}
+		#preview, #alert, #save, #btn-preview-filter {
+			display: none;
+		}
+		#iTable {
+			width: "800px";
+			border-collapse: separate;
+			border-spacing: 20px;
+		}
+		.panel-heading .chevron:after {
+			content: "\f078";
+		}
+		.panel-heading.collapsed .chevron:after {
+			content: "\f054";
+		}
+		* {
+			margin: 0;
+			padding: 0;
+		}
+		.full-width {
+			width: 98%;
+			min-width: 98%;
+			max-width: 98%;
+		}
+	</style>
+{%  endblock %}
+
+{% block pageHeader %}
+	Report Builder
+{%  endblock %}
+
+{% block bodyPanel %}
+<div class="container full-width">
+	<div class="row">
+		<div class="panel panel-default">
+			<div class="panel-heading collapsed" data-toggle="collapse" data-target="#collapseOrderItems1">
+				<strong>Tables & Columns</strong> <i class="chevron fa fa-fw" ></i></div>
+			<div class="collapse" id="collapseOrderItems1">
+				<table id="iTable">
+					<tr>
+						<td>
+							<strong>Table</strong>
+						</td>
+						<td>
+							<strong>Columns</strong>
+						</td>
+					</tr>
+					<tr>
+						<td>
+							<select name="tables" size="14" multiple="no" style="min-width:320px;" id='tables'>
+								{% for table in tables %}
+									<option {% if table[1] == 1 %}selected{% endif %}>{{table[0]}}</option>
+								{% endfor %}
+							</select>
+						</td>
+						<td>
+							<select name="tables" size="14" multiple="yes" style="min-width:320px;" id='columns'></select>
+						</td>
+					</tr>
+					<tr>
+						<td></td>
+						<td align="right">
+							<div id="queryButtons">
+								<button type="button" id='btn-rules' class="btn btn-primary set-sql btn-xs">
+									<i class="fa fa-search" aria-hidden="true"></i> Filter Query
+								</button>
+								<button type="button" id='btn-runquery' class="btn btn-primary btn-xs">
+									<i class="fa fa-search" aria-hidden="true"></i> Preview Query
+								</button>
+							</div>
+						</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<div class="row">
+		<div id="builder"></div>
+	</div>
+
+	<div class="row" style="padding-top: 6px; padding-bottom: 8px;">
+		<button id='btn-preview-filter' type="button" class="btn btn-primary btn-xs pull-right">
+			<i class="fa fa-search" aria-hidden="true"></i> Preview Filter
+		</button> &nbsp;
+		<button id='save' type="button" id='btn-preview' class="btn btn-primary btn-xs pull-right">
+			<i class="fa fa-floppy-o" aria-hidden="true"></i> Save Report
+		</button>
+	</div>
+
+	<div class="row">
+		<div id="alert" class="alert alert-info" style="margin: 0 auto;">
+			<strong>NOTE:</strong> Queries limited to only 10 records.
+		</div>
+		<div id="preview">
+			<table id="table" data-toolbar="#toolbar" class="table table-condensed" style="width:auto;"></table>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+	{{ super() }}
+
+	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/jquery-extendext/jquery-extendext.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/jQuery-QueryBuilder/dist/js/query-builder.standalone.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/sql-parser-mistic/browser/sql-parser.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/interactjs/dist/interact.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/chosen-js/chosen.jquery.js') }}"></script>
+
+
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+	function hideAll() {
+		$('#save').hide();
+		$('#alert').hide();
+		$('#btn-preview-filter').hide();
+		$('#builderButtons').hide();
+		$('#builder').queryBuilder('destroy');
+		$('#table').bootstrapTable('destroy');
+		$('#queryButtons').hide();
+	}
+	function showPreview() {
+		$('#alert').show();
+		$('#preview').show();
+		$('#save').show();
+	}
+
+	$(document).ready(function()
+	{
+		$('#reports').addClass("active");
+
+		$('.collapse').collapse()
+		var $table = $('#table');
+		var selected_table = "";
+		var selected_colums = "";
+		var table_filters = "";
+
+		// Check to see if we need to get columns
+		$('#tables option').each(function()
+		{
+			if($(this).is(':selected'))
+			{
+				selected_table = this.value;
+				var cols = {{ selColumns|tojson }};
+				_url = "/reports/table/fields/"+this.value;
+				$.get(_url, function(data, status) {
+					var jData = $.parseJSON(data);
+					table_filters = jData.data;
+					// Populate Columns
+					$('#columns').empty();
+					$('#columns').append($('<option></option>').val("*").html("*"));
+					$.each(jData.data, function(i, p) {
+						var _selected = false;
+						for (var i in cols) {
+							if (cols[i].trim() == p.id) {
+								_selected = true;
+								break;
+							}
+						}
+						if (_selected) {
+							$('#columns').append($('<option selected></option>').val(p.id).html(p.id));
+						} else {
+							$('#columns').append($('<option></option>').val(p.id).html(p.id));
+						}
+					});
+
+					if (cols.length >= 1) {
+						$('#queryButtons').show();
+						{% if selQuery %};
+							setupQueryBuilder(table_filters, '');
+							$('#builder').queryBuilder('setRulesFromSQL', "{{selQuery|safe}}");
+							$('#btn-preview-filter').show();
+						{% endif %}
+					}
+				});
+			}
+		});
+
+		$('#tables').on('change', function()
+		{
+			// hide the buttons unitl column is selected
+			hideAll();
+			// Set the selected table as variable
+			selected_table = this.value;
+			_url = "/reports/table/fields/"+selected_table;
+			$.get(_url, function(data, status)
+			{
+				var jData = $.parseJSON(data);
+				table_filters = jData.data;
+				// Populate Columns
+				$('#columns').empty();
+				$('#columns').append($('<option></option>').val("*").html("*"));
+				$.each(jData.data, function(i, p) {
+					$('#columns').append($('<option></option>').val(p.id).html(p.id));
+				});
+			});
+		});
+
+		$('#columns').on('change', function()
+		{
+			// Show Buttons Once a column is selected
+			$('#queryButtons').show();
+		});
+
+		$('#btn-get-sql1').on('click', function()
+		{
+			var result = $('#builder').queryBuilder('getSQL');
+			if (result.sql.length) {
+				alert(result.sql);
+			}
+		});
+
+		// Shows the Query Builder
+		$('#btn-rules').on('click', function()
+		{
+			// Remove any previous queryBuilder
+			$('#builder').queryBuilder('destroy');
+			// Show new queryBuilder
+			setupQueryBuilder(table_filters, '');
+			// Show Preview Filter Query Button
+			$('#btn-preview-filter').show();
+		});
+
+		$('#btn-runquery').on('click', function()
+		{
+			showPreview();
+			showPreviewData(selected_table,'');
+		});
+
+		// Show Filtered Query Preview Data
+		$('#btn-preview-filter').on('click', function()
+		{
+			showPreview();
+			$('#btn-preview-filter').show();
+			// Get the SQL from the filter UI
+			var _query = $('#builder').queryBuilder('getSQL');
+			showPreviewData(selected_table, _query.sql);
+		});
+
+		// Show the preview data table
+		function showPreviewData(table, query)
+		{
+			var items = [];
+			$('#columns option:selected').each(function(){ items.push($(this).val()); });
+			selected_colums = items.join(', ');
+
+			_url = "/reports/table/preview/"+table;
+			$.post( _url , { columns: selected_colums, sql: query }).done(function( data )
+			{
+				var jData = $.parseJSON(data);
+				$('#table').bootstrapTable('destroy')
+				$table.bootstrapTable({data: jData.data, columns: jData.cols });
+			});
+		}
+
+		// Save report
+		$('#save').on('click', function()
+		{
+			$.get( "/reports/save").done(function(data) {
+				$('#modalTitle').html('Save Inventory Report');
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-mid");
+				$('#modalBody').css({'height':'44vh'});
+				$('#modalDialog').modal('show');
+			});
+
+			$("#modalSaveButton").click(function()
+			{
+				$('#modalSaveButton').unbind('click');
+
+				var _reportName = $("#reportName").val();
+				var _reportOwner = $("#reportOwner").val();
+				var _reportScope = $("#reportScope").val();
+				try {
+					var _sql_query = $('#builder').queryBuilder('getSQL').sql;
+				} catch(err) {
+					var _sql_query = "";
+				}
+
+				var formData = new FormData();
+				formData.append('name', _reportName);
+				formData.append('owner', _reportOwner);
+				formData.append('scope', _reportScope);
+				formData.append('table', selected_table);
+				formData.append('columns', selected_colums);
+				formData.append('query', _sql_query);
+
+				$.ajax({
+					type:'POST',
+					url: '/reports/save/report',
+					data: formData,
+					cache: false,
+					processData: false,
+					contentType: false,
+					dataType: "json",
+					success: function(msg){
+						var jData = msg;
+						alert("Report Updated Successfully");
+						$('#modalDialog').modal('hide');
+						$("#reports ul").append('<li><a href="/reports/show/'+jData.id+'"><i class="fa fa-cube fa-fw"></i> DATA </a></li>');
+						window.location.replace('/reports/show/'+jData.id);
+					},
+					error: function(jqXHR, textStatus, errorThrown){
+						alert("Report Failed to Save");
+						$('#modalDialog').modal('hide');
+					}
+				});
+
+				//<a href=" url_for('reports.test') }}"><i class="fa fa-cube fa-fw"></i> Test</a>
+
+			});
+
+		});
+	});
+
+	function setupQueryBuilder(filters, rules)
+	{
+		/*
+		plugins: [
+			'bt-tooltip-errors',
+			'not-group'
+		],
+		filters: [{id:'Name', label:"Name"},{id:'size',label:"Size",type:'integer'},{id:'bob',label:"Person"}], // Columns
+		rules: [
+			{'id': 'Name', 'operator': 'equal', 'value': 'Tom'} // Queries
+		] // You need to implement this
+		*/
+		$('#builder').queryBuilder(
+		{
+			plugins: [
+				'not-group',
+				'sortable'
+			],
+			filters: filters
+		});
+	}
+
+	</script>
+{% endblock %}

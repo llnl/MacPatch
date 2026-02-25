@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+
+    <div class="container-fluid">
+        <div class="pull-left">{{pageTitle}}</div>
+        <div class="pull-right">
+            <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
+                    data-placement="left"
+                    data-content="Mismatched apple patches are patches that have been discovered by a scan but don’t have a corresponding patch in the MacPatch Apple patches. Sometimes editing the patch name will resolve the issue.">
+              <i class="fa fa-question"></i>
+            </button>
+        </div>
+    </div>
+{%  endblock %}
+
+{% block bodyPanel %}
+
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar" data-show-export="true">
+		<div id="toolbar"></div>
+	</table>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+
+    <script src="{{ url_for('static', filename='static_components/popper/popper.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<script>
+
+	$( document ).ready(function()
+	{
+	    $(function () {
+          $('[data-toggle="popover"]').popover()
+        })
+		$('#table').bootstrapTable(
+		{
+			ajax: function loadMyRows(params)
+			{
+				var _url = "/patches/apple/mismatch/list";
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							me: 'required',
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			search: true,
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			pagination: true,
+			queryParamsType: "limit",
+			sidePagination: "client",
+			idField: 'patch',
+			sortable: true,
+			sortName: 'count',
+			sortOrder: 'desc',
+			showRefresh: true,
+			exportTypes: ['csv', 'excel', 'json', 'xml', 'txt'],
+			columns: [
+				{% for col in columns %}
+					{
+						{% if col[2] == '0' %}
+						visible: false,
+						{% endif %}
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+					},
+				{% endfor %}
+			]
+		});
+
+	});
+
+	</script>
+{% endblock %}

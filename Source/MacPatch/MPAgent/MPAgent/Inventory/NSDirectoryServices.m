@@ -99,11 +99,11 @@ static tDirStatus dsDataBufferAppendData(tDataBufferPtr  buf,
 				}
 				else
 				{
-					logit(lcl_vError,@"dsGetDirNodeName error = %d, count = %d", (int)dirStatus, (int)bufferCount );
+					LogError(@"dsGetDirNodeName error = %d, count = %d", (int)dirStatus, (int)bufferCount );
 				}
 			}
 			else
-				logit(lcl_vError,@"Error %d from dsFindDirNodes", (int)dirStatus);
+				LogError(@"Error %d from dsFindDirNodes", (int)dirStatus);
 			done = (context == 0);
 		}
 		dsDataBufferDeAllocate( _dirRef, dataBuffer );
@@ -145,11 +145,11 @@ static tDirStatus dsDataBufferAppendData(tDataBufferPtr  buf,
 				}
 				else
 				{
-					logit(lcl_vError,@"dsGetDirNodeName error = %d, count = %d", (int)dirStatus, (int)bufferCount );
+					LogError(@"dsGetDirNodeName error = %d, count = %d", (int)dirStatus, (int)bufferCount );
 				}
 			}
 			else
-				logit(lcl_vError,@"Error %d from dsFindDirNodes", (int)dirStatus);
+				LogError(@"Error %d from dsFindDirNodes", (int)dirStatus);
 			done = (context == 0);
 		}
 		dsDataBufferDeAllocate( _dirRef, dataBuffer );
@@ -333,7 +333,7 @@ static tDirStatus dsDataBufferAppendData(tDataBufferPtr  buf,
 			//NSLog(@"Number records: %ld", recCount);
 			break;
 		} else if (recCount > 1) {
-			qlinfo(@"Shaft. There are %i records", recCount);
+			LogInfo(@"Shaft. There are %i records", recCount);
 			NSMutableDictionary *theOther = [NSMutableDictionary dictionary];
 			[self addRecordAtIndex:2 toDictionary:theOther withBuffer:dataBuffer];
 											 NSLog(@"The other record is this one: %@", theOther);

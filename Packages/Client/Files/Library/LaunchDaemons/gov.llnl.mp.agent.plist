@@ -9,6 +9,7 @@
 	<key>ProgramArguments</key>
 	<array>
 		<string>/Library/MacPatch/Client/MPAgent</string>
+		<string>daemon</string>
 	</array>
 	<key>RunAtLoad</key>
 	<true/>

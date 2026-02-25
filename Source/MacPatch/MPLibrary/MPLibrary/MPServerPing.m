@@ -2,7 +2,7 @@
 //  MPServerPing.m
 //  MPLibrary
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -39,6 +39,7 @@ static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
 {
     BOOL res = NO;
     NSString *hostURL = [NSString stringWithFormat:@"https://%@:%ld%@",hostName,(long)port,ServerTestURI];
+    //qlinfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
     const char *hostURLStr = [hostURL cStringUsingEncoding:NSASCIIStringEncoding];
     
     CURL *curl;
@@ -49,7 +50,52 @@ static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
     if(curl)
     {
         curl_easy_setopt(curl, CURLOPT_URL, hostURLStr);
-        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 1);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 6L);
+        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 6L);
+        curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
+        curl_easy_setopt(curl, CURLOPT_USERAGENT, "MacPatch/1.0");
+
+        // TLS verification (prefer to keep these ON in production)
+        // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+        // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+
+        // Optional: fail on HTTP errors >= 400
+        curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+        
+        curlRes = curl_easy_perform(curl);
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+        curl_easy_cleanup(curl);
+    }
+    curl_global_cleanup();
+    
+    if (curlRes == CURLE_OK && http_code == 200) {
+        res = YES;
+    }
+    //if (curlRes == 0) {
+    //    if (http_code == 200 && curlRes != CURLE_ABORTED_BY_CALLBACK) {
+    //        res = YES;
+    //    }
+    //}
+    
+    return res;
+}
+
+- (BOOL)serverHostIsReachableOLD:(NSString *)hostName port:(NSInteger)port
+{
+    BOOL res = NO;
+    NSString *hostURL = [NSString stringWithFormat:@"https://%@:%ld%@",hostName,(long)port,ServerTestURI];
+    //qlinfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
+    const char *hostURLStr = [hostURL cStringUsingEncoding:NSASCIIStringEncoding];
+    
+    CURL *curl;
+    CURLcode curlRes = 0;
+    long http_code = 0;
+    curl_global_init(CURL_GLOBAL_ALL);
+    curl = curl_easy_init();
+    if(curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, hostURLStr);
+        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 6);
         curl_easy_setopt(curl, CURLOPT_NOBODY, 1);
         curlRes = curl_easy_perform(curl);
         curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);

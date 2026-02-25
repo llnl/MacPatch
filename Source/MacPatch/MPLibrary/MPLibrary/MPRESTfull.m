@@ -481,7 +481,6 @@
     NSDictionary *ws_result;
     NSArray *result = nil;
     
-    //NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",self.ccuid, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.clientID, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
     qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
@@ -785,10 +784,8 @@
 - (NSDictionary *)getS3URLForType:(NSString *)type id:(NSString *)packageID
 {
 	// /url/<string:type>/<string:id>/<string:cuuid>
-	
 	NSError *ws_err = nil;
 	NSDictionary *ws_result;
-	NSDictionary *result = nil;
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.clientID];
 	qldebug(@"[getS3URLForType][urlPath] %@",urlPath);
@@ -799,22 +796,22 @@
 		//*err = ws_err;
 		return nil;
 	}
-	
-	if ([ws_result objectForKey:@"result"])
-	{
-		if ([[ws_result objectForKey:@"result"] isKindOfClass:[NSDictionary class]])
-		{
-			qldebug(@"Web Servce result: %@",ws_result);
-			result = [ws_result objectForKey:@"result"];
-		}
-		else
-		{
-			qlerror(@"Result was not of type dictionary.");
-			qlerror(@"Result: %@", ws_result);
-		}
-	}
-	
-	return result;
+    
+    qldebug(@"Web Servce result: %@",ws_result);
+    if ([ws_result isKindOfClass:[NSDictionary class]]) {
+        if  ([ws_result objectForKey:@"url"] && [ws_result objectForKey:@"type"]) {
+            qldebug(@"Web Servce result: %@",ws_result);
+            return ws_result;
+        } else {
+            qlerror(@"Required keys not found in result. URL data will not be returned.");
+            return nil;
+        }
+    } else {
+        qlerror(@"Result was not of type dictionary.");
+        qlerror(@"Result: %@", ws_result);
+        return nil;
+    }
+    
 }
 
 /**

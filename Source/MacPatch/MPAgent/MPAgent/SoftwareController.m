@@ -2,9 +2,28 @@
 //  SoftwareController.m
 //  MPAgent
 //
-//  Created by Charles Heizer on 5/9/19.
-//  Copyright © 2019 LLNL. All rights reserved.
-//
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "SoftwareController.h"
 
@@ -65,8 +84,8 @@
 	
 	NSArray *_tasksArray = [tasks componentsSeparatedByString:_delimiter];
 	if (!_tasksArray) {
-		qlerror(@"Software tasks list was empty. No installs will occure.");
-		qldebug(@"Task List String: %@",tasks);
+		LogError(@"Software tasks list was empty. No installs will occure.");
+		LogDebug(@"Task List String: %@",tasks);
 		return 1;
 	}
 	
@@ -76,7 +95,7 @@
 	}
 	
 	if (needsReboot >= 1) {
-		qlinfo(@"Software has been installed that requires a reboot.");
+		LogInfo(@"Software has been installed that requires a reboot.");
 		return 2;
 	}
 	
@@ -103,13 +122,13 @@
 	{
 		tasks = data[@"data"];
 		if ([tasks count] <= 0) {
-			qlerror(@"Group (%@) contains no tasks.",aGroupName);
+			LogError(@"Group (%@) contains no tasks.",aGroupName);
 			return 0;
 		}
 	}
 	else
 	{
-		qlerror(@"No tasks for group %@ were found.",aGroupName);
+		LogError(@"No tasks for group %@ were found.",aGroupName);
 		return result;
 	}
 	
@@ -117,13 +136,13 @@
 	{
         if (![self installSoftwareUsingTaskDictionary:task])
         {
-            qlinfo(@"Software has been installed that requires a reboot.");
+            LogInfo(@"Software has been installed that requires a reboot.");
             result++;
         }
 	}
 	
 	if (needsReboot >= 1) {
-		qlinfo(@"Software has been installed that requires a reboot.");
+		LogInfo(@"Software has been installed that requires a reboot.");
 		result = 2;
 	}
 	
@@ -145,14 +164,14 @@
 	
 	if ([fm fileExistsAtPath:aPlist] == NO)
 	{
-		logit(lcl_vError,@"No installs will occure. Plist %@ was not found.",aPlist);
+		LogError(@"No installs will occure. Plist %@ was not found.",aPlist);
 		return 1;
 	}
 	
 	NSDictionary *pData = [NSDictionary dictionaryWithContentsOfFile:aPlist];
 	if (![pData objectForKey:@"tasks"])
 	{
-		logit(lcl_vError,@"No installs will occure. No tasks found.");
+		LogError(@"No installs will occure. No tasks found.");
 		return 1;
 	}
 	
@@ -161,14 +180,14 @@
 	{
 		if (![self installSoftwareTask:aTask])
 		{
-			qlinfo(@"Software has been installed that requires a reboot.");
+			LogInfo(@"Software has been installed that requires a reboot.");
 			result++;
 		}
 	}
 	
 	if (needsReboot >= 1)
 	{
-		qlinfo(@"Software has been installed that requires a reboot.");
+		LogInfo(@"Software has been installed that requires a reboot.");
 		return 2;
 	}
 	
@@ -195,13 +214,13 @@
     {
         tasks = data[@"data"];
         if ([tasks count] <= 0) {
-            qlerror(@"Group (%@) contains no tasks.",clientGroup);
+            LogError(@"Group (%@) contains no tasks.",clientGroup);
             return 0;
         }
     }
     else
     {
-        qlerror(@"No tasks for group %@ were found.",clientGroup);
+        LogError(@"No tasks for group %@ were found.",clientGroup);
         return result;
     }
     
@@ -209,17 +228,17 @@
     {
         if ([task[@"sw_task_type"] isEqualToString:@"m"])
         {
-            qlinfo(@"Installing mandarory software task %@ (%@)",task[@"name"],task[@"id"]);
+            LogInfo(@"Installing mandarory software task %@ (%@)",task[@"name"],task[@"id"]);
             if (![self installSoftwareUsingTaskDictionary:task])
             {
-                qlinfo(@"Software has been installed that requires a reboot.");
+                LogInfo(@"Software has been installed that requires a reboot.");
                 result++;
             }
         }
     }
     
     if (needsReboot >= 1) {
-        qlinfo(@"Software has been installed that requires a reboot.");
+        LogInfo(@"Software has been installed that requires a reboot.");
         result = 2;
     }
     
@@ -239,19 +258,19 @@
 	NSDictionary *task = [self getSoftwareTaskForID:aTask];
 	
 	if (!task) {
-		qlerror(@"Error, no task to install.");
+		LogError(@"Error, no task to install.");
 		return NO;
 	}
 	MPSoftware *software = [MPSoftware new];
 	[self iLoadStatus:@"Begin: %@", task[@"name"]];
 	if ([software installSoftwareTask:task] == 0)
 	{
-		qlinfo(@"%@ task was installed.",task[@"name"]);
+		LogInfo(@"%@ task was installed.",task[@"name"]);
 		result = YES;
 		if ([self softwareTaskRequiresReboot:task]) needsReboot++;
 		[self iLoadStatus:@"Completed: %@\n", task[@"name"]];
 	} else {
-		qlerror(@"%@ task was not installed.",task[@"name"]);
+		LogError(@"%@ task was not installed.",task[@"name"]);
 		[self iLoadStatus:@"Completed: %@ Failed.\n", task[@"name"]];
 	}
 	return result;
@@ -272,12 +291,12 @@
     [self iLoadStatus:@"Begin: %@", task[@"name"]];
     if ([software installSoftwareTask:task] == 0)
     {
-        qlinfo(@"%@ task was installed.",task[@"name"]);
+        LogInfo(@"%@ task was installed.",task[@"name"]);
         result = YES;
         if ([self softwareTaskRequiresReboot:task]) needsReboot++;
         [self iLoadStatus:@"Completed: %@\n", task[@"name"]];
     } else {
-        qlerror(@"%@ task was not installed.",task[@"name"]);
+        LogError(@"%@ task was not installed.",task[@"name"]);
         [self iLoadStatus:@"Completed: %@ Failed.\n", task[@"name"]];
     }
     return result;
@@ -367,33 +386,33 @@
 // Private
 - (BOOL)softwareTaskCriteriaCheck:(NSDictionary *)aTask
 {
-	qlinfo(@"Checking %@ criteria.",[aTask objectForKey:@"name"]);
+	LogInfo(@"Checking %@ criteria.",[aTask objectForKey:@"name"]);
 	
 	MPOSCheck *mpos = [[MPOSCheck alloc] init];
 	NSDictionary *_SoftwareCriteria = [aTask objectForKey:@"SoftwareCriteria"];
 	
 	// OSArch
 	if ([mpos checkOSArch:[_SoftwareCriteria objectForKey:@"arch_type"]]) {
-		qldebug(@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+		LogDebug(@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 	} else {
-		qlinfo(@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+		LogInfo(@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 		return NO;
 	}
 	
 	// OSType
     /* CEH: Dsable for now, no longer needed.
 	if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
-		qldebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+		LogDebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 	} else {
-		qlinfo(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+		LogInfo(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 		return NO;
 	}
      */
 	// OSVersion
 	if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
-		qldebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+		LogDebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 	} else {
-		qlinfo(@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+		LogInfo(@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 		return NO;
 	}
 	
@@ -429,12 +448,12 @@
 	result = [req runSyncPOST:urlPath body:data];
 	
 	if (result.statusCode >= 200 && result.statusCode <= 299) {
-		qlinfo(@"[MPAgentExecController][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
-		//qldebug(@"Data post to web service (%@), returned true.", urlPath);
-		qldebug(@"Data Result: %@",result.result);
+		LogInfo(@"[MPAgentExecController][postDataToWS]: Data post to web service (%@), returned true.", urlPath);
+		//LogDebug(@"Data post to web service (%@), returned true.", urlPath);
+		LogDebug(@"Data Result: %@",result.result);
 	} else {
-		qlerror(@"Data post to web service (%@), returned false.", urlPath);
-		qldebug(@"%@",result.toDictionary);
+		LogError(@"Data post to web service (%@), returned false.", urlPath);
+		LogDebug(@"%@",result.toDictionary);
 		return NO;
 	}
 	
@@ -451,12 +470,12 @@
 	wsresult = [req runSyncGET:urlPath];
 	
 	if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
-		qldebug(@"Get Data from web service (%@) returned true.",urlPath);
-		qldebug(@"Data Result: %@",wsresult.result);
+		LogDebug(@"Get Data from web service (%@) returned true.",urlPath);
+		LogDebug(@"Data Result: %@",wsresult.result);
 		result = wsresult.result;
 	} else {
-		qlerror(@"Get Data from web service (%@), returned false.", urlPath);
-		qldebug(@"%@",wsresult.toDictionary);
+		LogError(@"Get Data from web service (%@), returned false.", urlPath);
+		LogDebug(@"%@",wsresult.toDictionary);
 	}
 	
 	return result;

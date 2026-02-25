@@ -1,7 +1,7 @@
 //
 //  Constants.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -92,6 +92,7 @@ NSString * const MP_AUTHRUN_FILE 			= @"/private/tmp/.MPAuthRun_CEH"; // No long
 NSString * const MP_PATCH_ON_LOGOUT_FILE 	= @"/private/tmp/.MPAuthRun_CEH"; // No longer used as of MP 3.6x
 NSString * const MP_AUTHSTATUS_KEYCHAIN 	= @"/Library/Application Support/MacPatch/.MPAuthStatus.keychain";
 NSString * const MP_AUTHSTATUS_FILE 		= @"/Library/Application Support/MacPatch/.MPAuthStatus.plist";
+NSString * const MP_AUTHSTATUS_ITEM         = @"mpauthrestart";
 
 NSString * const MP_PROVISION_DIR          = @"/Library/Application Support/MacPatch/Provision";
 NSString * const MP_PROVISION_FILE         = @"/Library/Application Support/MacPatch/Provision/MPProvision.plist"; // New - Provisioning Status and details

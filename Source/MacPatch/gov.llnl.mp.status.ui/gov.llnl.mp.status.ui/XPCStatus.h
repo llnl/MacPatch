@@ -3,7 +3,7 @@
 //  gov.llnl.mp.status.ui
 //
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -33,6 +33,14 @@
 @class MPNSTask;
 
 @interface XPCStatus : NSObject <MPAsusDelegate, MPPatchingDelegate, MPNSTaskDelegate> {
+    
+    NSTask              *nsTask;
+    NSPipe              *pipe_task;
+    NSFileHandle        *fh_task;
+    NSTimer             *swTaskTimer;
+    BOOL                swTaskTimedOut;
+    BOOL                swTaskIsRunning;
+    int                 swTaskTimeoutValue;
 }
 
 - (id)init;

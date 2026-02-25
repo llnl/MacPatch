@@ -1,0 +1,15 @@
+# This is an example configuration file
+# To learn more, see the full config.yaml reference: https://docs.continue.dev/reference
+
+name: LLNL
+version: 1.0.0
+schema: v1
+
+# Define which models can be used
+# https://docs.continue.dev/customization/models
+models:
+  - name: LLNL Calude X
+    provider: LLNL 
+    model: claude-sonnet-4.5
+    apiKey: sk-MXEA3wOJVGcpo_k5cgNdOA
+    baseUrl: https://livai-api.llnl.gov

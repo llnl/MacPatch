@@ -1,7 +1,7 @@
 //
 //  SoftwareCellView.m
 /*
-Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+Copyright (c) 2026, Lawrence Livermore National Security, LLC.
 Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
 Written by Charles Heizer <heizer1 at llnl.gov>.
 LLNL-CODE-636469 All rights reserved.
@@ -52,6 +52,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 #pragma mark - Main
 
+- (void)viewDidLoad
+{
+    qlinfo(@"[CELL IMAGE][viewDidLoad]: %@", _rowData[@"Software"][@"sw_img_path"]);
+}
+
+- (void)viewDidMoveToWindow
+{
+    qlinfo(@"[CELL IMAGE][viewDidMoveToWindow]: %@", _rowData[@"Software"][@"sw_img_path"]);
+}
+
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
@@ -90,9 +100,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     NSString *imgURL = _rowData[@"Software"][@"sw_img_path"];
 	if ([imgURL isEqualToString:@"None"]) return; //If no image then dont try
-    qldebug(@"[CELL IMAGE][1]: %@", imgURL);
-    qldebug(@"[loadImage][serverArray]: %@",self.serverArray);
-    qldebug(@"[loadImage][requestCount]: %ld",self.requestCount);
+    qlinfo(@"[CELL IMAGE][1]: %@", imgURL);
+    qlinfo(@"[loadImage][serverArray]: %@",self.serverArray);
+    qlinfo(@"[loadImage][requestCount]: %ld",self.requestCount);
     
     if (self.requestCount == -1) {
         self.requestCount++;

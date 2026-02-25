@@ -2,7 +2,7 @@
 //  MPPatching.m
 //  MPLibrary
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -1173,6 +1173,40 @@ typedef enum {
 							 @"patchesRequireHalt": [NSNumber numberWithInt:patchesRequireHalt],
 							 };
 	return result;
+}
+
+- (BOOL)installAllApplePatches
+{
+    BOOL hasUserLoggedIn = [MPSystemInfo isUserLoggedIn];
+    BOOL canInstallRebootPatches = NO;
+    
+    MPAsus              *mpAsus = nil;
+    
+    BOOL installResult = NO;
+    
+    // Reboot Patch Install Vars
+    if (!hasUserLoggedIn) canInstallRebootPatches = YES; //If no user logged in
+    if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
+    
+    qlinfo(@"Starting install for all apple patches.");
+
+    mpAsus = [MPAsus new];
+    mpAsus.delegate = self;
+    
+    // Run the patch install, now that the install has occured.
+    installResult = [mpAsus installAllAppleSoftwareUpdates];
+    
+    // If Install retuened anything but 0, the dont run post criteria
+    if (!installResult)
+    {
+        qlerror(@"The install(s) for the apple patches returned an error.");
+    }
+    
+    
+    // Update MP Client Status to reflect patch install
+    [[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRequiredPatchesChangeNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
+    
+    return installResult;
 }
 
 #pragma mark - Delegate Methods

@@ -1,7 +1,7 @@
 //
 //  MPAgentUpdater.m
 /*
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -59,11 +59,11 @@
 {
     BOOL result = NO;
     
-    logit(lcl_vInfo,@"Begin checking for agent updates.");
+    LogInfo(@"Begin checking for agent updates.");
     NSDictionary *updateDataRaw = [self getAgentUpdaterInfo];
     
     if (!updateDataRaw) {
-        logit(lcl_vError,@"Unable to get update data needed.");
+        LogError(@"Unable to get update data needed.");
         return result;
     }
     
@@ -71,21 +71,21 @@
     // This needs to be fixed in the next version.
     if (![updateDataRaw isKindOfClass:[NSDictionary class]])
     {
-        logit(lcl_vError,@"Agent updater info is not available.");
+        LogError(@"Agent updater info is not available.");
         return result;
     }
     
     // Check if update needed
     if (![updateDataRaw objectForKey:@"updateAvailable"] || [[updateDataRaw objectForKey:@"updateAvailable"] boolValue] == NO) {
-        logit(lcl_vInfo,@"No update needed.");
+        LogInfo(@"No update needed.");
         return result;
     } else {
-        logit(lcl_vInfo,@"Update needed.");
+        LogInfo(@"Update needed.");
         result = YES;
     }
     
     if (!updateDataRaw) {
-        logit(lcl_vError,@"No update data found.");
+        LogError(@"No update data found.");
         result = NO;
     } else {
         [self setAgentUpdateData:updateDataRaw];
@@ -98,7 +98,7 @@
 {
     BOOL result = NO;
     if (!self.agentUpdateData) {
-        logit(lcl_vError,@"Update can not be applied update data is nil.");
+        LogError(@"Update can not be applied update data is nil.");
         return result;
     }
     
@@ -110,52 +110,52 @@
     // First we need to download the update
     @try
 	{
-        logit(lcl_vInfo,@"Start download for patch %@",[[self.agentUpdateData objectForKey:@"pkg_url"] lastPathComponent]);
+        LogInfo(@"Start download for patch %@",[[self.agentUpdateData objectForKey:@"pkg_url"] lastPathComponent]);
         //Pre Proxy Config
         downloadURL = [self.agentUpdateData objectForKey:@"pkg_url"];
-        logit(lcl_vInfo,@"Download patch from: %@",downloadURL);
+        LogInfo(@"Download patch from: %@",downloadURL);
         err = nil;
         
 		MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 		NSString *dlDir = [@"/private/tmp" stringByAppendingPathComponent:[[NSUUID UUID] UUIDString]];
 		downloadFileLoc = [req runSyncFileDownload:downloadURL downloadDirectory:dlDir error:&err];
         if (err) {
-            logit(lcl_vError,@"Error downloading update %@. Err Message: %@",[downloadURL lastPathComponent],[err localizedDescription]);
+            LogError(@"Error downloading update %@. Err Message: %@",[downloadURL lastPathComponent],[err localizedDescription]);
             return result;
         }
-        logit(lcl_vInfo,@"File downloaded to %@",downloadFileLoc);
+        LogInfo(@"File downloaded to %@",downloadFileLoc);
     }
     @catch (NSException *e) {
-        logit(lcl_vError,@"%@", e);
+        LogError(@"%@", e);
         return result;
     }
     
     // *****************************
     // Validate hash, before install
-    logit(lcl_vInfo,@"Validating downloaded patch.");
+    LogInfo(@"Validating downloaded patch.");
     MPCrypto *_crypto = [[MPCrypto alloc] init];
     NSString *fileHash = [_crypto sha1HashForFile:downloadFileLoc];
     _crypto = nil;
-    logit(lcl_vInfo,@"Validating download file.");
-    logit(lcl_vDebug,@"Downloaded file hash: (%@) (%@)",fileHash,[self.agentUpdateData objectForKey:@"pkg_hash"]);
-    logit(lcl_vDebug,@"%@",self.agentUpdateData);
+    LogInfo(@"Validating download file.");
+    LogDebug(@"Downloaded file hash: (%@) (%@)",fileHash,[self.agentUpdateData objectForKey:@"pkg_hash"]);
+    LogDebug(@"%@",self.agentUpdateData);
     if ([[[self.agentUpdateData objectForKey:@"pkg_hash"] uppercaseString] isEqualToString:[fileHash uppercaseString]] == NO) {
-        logit(lcl_vError,@"The downloaded file did not pass the file hash validation. No install will occur.");
+        LogError(@"The downloaded file did not pass the file hash validation. No install will occur.");
         return result;
     }
     
     // *****************************
     // Now we need to unzip
-    logit(lcl_vInfo,@"Uncompressing patch, to begin install.");
-    logit(lcl_vInfo,@"Begin decompression of file, %@",downloadFileLoc);
+    LogInfo(@"Uncompressing patch, to begin install.");
+    LogInfo(@"Begin decompression of file, %@",downloadFileLoc);
     err = nil;
 	MPFileUtils *fu = [MPFileUtils new];
     [fu unzip:downloadFileLoc error:&err];
     if (err) {
-        logit(lcl_vError,@"Error decompressing a update %@. Err Message:%@",[downloadURL lastPathComponent],[err localizedDescription]);
+        LogError(@"Error decompressing a update %@. Err Message:%@",[downloadURL lastPathComponent],[err localizedDescription]);
         return result;
     }
-    logit(lcl_vInfo,@"Update has been decompressed.");
+    LogInfo(@"Update has been decompressed.");
     
     // *****************************
     // Install the update
@@ -172,26 +172,26 @@
         // Install pkg(s)
         for (int ii = 0; ii < [pkgList count]; ii++) {
             pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,[pkgList objectAtIndex:ii]];
-            logit(lcl_vInfo,@"Installing %@",[pkgPath lastPathComponent]);
-            logit(lcl_vInfo,@"Start install of %@",pkgPath);
+            LogInfo(@"Installing %@",[pkgPath lastPathComponent]);
+            LogInfo(@"Start install of %@",pkgPath);
             mpInstaller = [[MPInstaller alloc] init];
             installResult = [mpInstaller installPkgToRoot:pkgPath];
             if (installResult != 0) {
-                logit(lcl_vError,@"Error installing package, error code %d.",installResult);
+                LogError(@"Error installing package, error code %d.",installResult);
                 hadErr = YES;
                 break;
             } else {
-                logit(lcl_vInfo,@"%@ was installed successfully.",pkgPath);
+                LogInfo(@"%@ was installed successfully.",pkgPath);
                 result = YES;
             }
         } // End Loop
     }
     @catch (NSException *e) {
-        logit(lcl_vError,@"%@", e);
-        logit(lcl_vError,@"Error attempting to install update %@. Err Message:%@",[downloadURL lastPathComponent],[err localizedDescription]);
+        LogError(@"%@", e);
+        LogError(@"Error attempting to install update %@. Err Message:%@",[downloadURL lastPathComponent],[err localizedDescription]);
     }
     
-    logit(lcl_vInfo,@"Checking for agent updates completed.");
+    LogInfo(@"Checking for agent updates completed.");
     return result;
 }
 
@@ -216,14 +216,14 @@
     MPCodeSign *cs = [[MPCodeSign alloc] init];
     BOOL verifyDevBin = [cs verifyAppleDevBinary:self.agentUpdaterPath error:&err];
     if (err) {
-        logit(lcl_vError,@"%ld: %@",err.code,err.localizedDescription);
+        LogError(@"%ld: %@",err.code,err.localizedDescription);
     }
     cs = nil;
     if (verifyDevBin == YES)
     {
         verString = [mpr runTask:self.agentUpdaterPath binArgs:[NSArray arrayWithObjects:@"-v", nil] error:&error];
         if (error) {
-            logit(lcl_vError,@"%@",[error description]);
+            LogError(@"%@",[error description]);
             verString = @"0";
         }
     }
@@ -245,11 +245,11 @@
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"Agent Settings data, returned true.");
+        LogInfo(@"Agent Settings data, returned true.");
         data = result.result[@"data"];
     } else {
-        logit(lcl_vError,@"Agent Settings data, returned false.");
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"Agent Settings data, returned false.");
+        LogDebug(@"%@",result.toDictionary);
         return nil;
     }
     
