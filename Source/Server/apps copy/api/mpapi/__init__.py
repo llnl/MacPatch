@@ -1,1 +1,0 @@
-from mpapi.app import create_app, db
