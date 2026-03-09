@@ -3,30 +3,33 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 52;
+	objectVersion = 54;
 	objects = {
 
 /* Begin PBXBuildFile section */
+		2BB14EDC2F5B4E52003D14F1 /* AppLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB14EDB2F5B4E52003D14F1 /* AppLogger.swift */; };
+		2BB14EE42F5B514D003D14F1 /* NetworkService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB14ED82F5B4CD9003D14F1 /* NetworkService.swift */; };
+		2BB14EE62F5B52A3003D14F1 /* ProcessRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB14EE52F5B52A3003D14F1 /* ProcessRunner.swift */; };
+		2BB14EEA2F5B5A81003D14F1 /* Notarizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB14EE92F5B5A70003D14F1 /* Notarizer.swift */; };
 		8F2BC9D11DF8805E009BA318 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9D01DF8805E009BA318 /* AppDelegate.swift */; };
 		8F2BC9D31DF8805E009BA318 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9D21DF8805E009BA318 /* ViewController.swift */; };
 		8F2BC9D51DF8805E009BA318 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8F2BC9D41DF8805E009BA318 /* Assets.xcassets */; };
 		8F2BC9D81DF8805E009BA318 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8F2BC9D61DF8805E009BA318 /* Main.storyboard */; };
 		8F2BC9E61DF88B84009BA318 /* AuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9E51DF88B84009BA318 /* AuthViewController.swift */; };
 		8F2BC9E81DF8B4A7009BA318 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9E71DF8B4A7009BA318 /* Constants.swift */; };
-		8F2BC9EA1DF8DA0E009BA318 /* Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9E91DF8DA0E009BA318 /* Spawn.swift */; };
 		8F2BC9F01DFA085C009BA318 /* MPCrypto.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9EF1DFA085C009BA318 /* MPCrypto.m */; };
 		8F4911BC1DFC6E160018CA70 /* Preferences.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 8F4911BB1DFC6E160018CA70 /* Preferences.storyboard */; };
 		8F4911C01DFC6E310018CA70 /* PreferencesWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911BD1DFC6E310018CA70 /* PreferencesWindowController.swift */; };
 		8F4911C11DFC6E310018CA70 /* PreferencesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911BE1DFC6E310018CA70 /* PreferencesViewController.swift */; };
 		8F4911C21DFC6E310018CA70 /* PreferencesGeneralViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4911BF1DFC6E310018CA70 /* PreferencesGeneralViewController.swift */; };
-		8F57DD6725E6CE1500BAECC8 /* LogKit in Frameworks */ = {isa = PBXBuildFile; productRef = 8F57DD6625E6CE1500BAECC8 /* LogKit */; };
-		8F57DD6A25E6CFBF00BAECC8 /* SwiftShell in Frameworks */ = {isa = PBXBuildFile; productRef = 8F57DD6925E6CFBF00BAECC8 /* SwiftShell */; };
-		8F57DD6D25E6D57F00BAECC8 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 8F57DD6C25E6D57F00BAECC8 /* Alamofire */; };
-		8F57DD8D25E80DED00BAECC8 /* Alamofire-Synchronous.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F2BC9EB1DF9CCA7009BA318 /* Alamofire-Synchronous.swift */; };
 		8FEEC2B31DFF5FB8001133F7 /* HeaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		2BB14ED82F5B4CD9003D14F1 /* NetworkService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkService.swift; sourceTree = "<group>"; };
+		2BB14EDB2F5B4E52003D14F1 /* AppLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLogger.swift; sourceTree = "<group>"; };
+		2BB14EE52F5B52A3003D14F1 /* ProcessRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessRunner.swift; sourceTree = "<group>"; };
+		2BB14EE92F5B5A70003D14F1 /* Notarizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notarizer.swift; sourceTree = "<group>"; };
 		8F2BC9CD1DF8805E009BA318 /* MPAgentUploader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MPAgentUploader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8F2BC9D01DF8805E009BA318 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8F2BC9D21DF8805E009BA318 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -35,8 +38,6 @@
 		8F2BC9D91DF8805E009BA318 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8F2BC9E51DF88B84009BA318 /* AuthViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthViewController.swift; sourceTree = "<group>"; };
 		8F2BC9E71DF8B4A7009BA318 /* Constants.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
-		8F2BC9E91DF8DA0E009BA318 /* Spawn.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Spawn.swift; sourceTree = "<group>"; };
-		8F2BC9EB1DF9CCA7009BA318 /* Alamofire-Synchronous.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = "Alamofire-Synchronous.swift"; sourceTree = "<group>"; };
 		8F2BC9ED1DFA0575009BA318 /* Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
 		8F2BC9EE1DFA085C009BA318 /* MPCrypto.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPCrypto.h; sourceTree = "<group>"; };
 		8F2BC9EF1DFA085C009BA318 /* MPCrypto.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPCrypto.m; sourceTree = "<group>"; };
@@ -44,8 +45,6 @@
 		8F4911BD1DFC6E310018CA70 /* PreferencesWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PreferencesWindowController.swift; path = Preferences/PreferencesWindowController.swift; sourceTree = "<group>"; };
 		8F4911BE1DFC6E310018CA70 /* PreferencesViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PreferencesViewController.swift; path = Preferences/PreferencesViewController.swift; sourceTree = "<group>"; };
 		8F4911BF1DFC6E310018CA70 /* PreferencesGeneralViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PreferencesGeneralViewController.swift; path = Preferences/PreferencesGeneralViewController.swift; sourceTree = "<group>"; };
-		8F4911C31DFDEB4E0018CA70 /* FileUploader.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileUploader.swift; sourceTree = "<group>"; };
-		8FD5E18423AD573C00A47F7C /* SwiftShell.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftShell.framework; path = MPAgentUploader/Frameworks/SwiftShell.framework; sourceTree = "<group>"; };
 		8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HeaderView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -54,9 +53,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F57DD6725E6CE1500BAECC8 /* LogKit in Frameworks */,
-				8F57DD6D25E6D57F00BAECC8 /* Alamofire in Frameworks */,
-				8F57DD6A25E6CFBF00BAECC8 /* SwiftShell in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -68,7 +64,6 @@
 			children = (
 				8F2BC9CF1DF8805E009BA318 /* MPAgentUploader */,
 				8F2BC9CE1DF8805E009BA318 /* Products */,
-				8F2BC9E01DF884EC009BA318 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -83,36 +78,21 @@
 		8F2BC9CF1DF8805E009BA318 /* MPAgentUploader */ = {
 			isa = PBXGroup;
 			children = (
+				2BB14EE92F5B5A70003D14F1 /* Notarizer.swift */,
 				8F2BC9E71DF8B4A7009BA318 /* Constants.swift */,
 				8F2BC9D01DF8805E009BA318 /* AppDelegate.swift */,
 				8F2BC9D21DF8805E009BA318 /* ViewController.swift */,
 				8F2BC9E51DF88B84009BA318 /* AuthViewController.swift */,
-				8F4911C31DFDEB4E0018CA70 /* FileUploader.swift */,
 				8FEEC2B21DFF5FB8001133F7 /* HeaderView.swift */,
 				8F2BC9D61DF8805E009BA318 /* Main.storyboard */,
 				8F4911BA1DFC6DD60018CA70 /* Preferences */,
-				8F4911A21DFA3B8D0018CA70 /* Third-Party */,
 				8F4911A31DFA3BA80018CA70 /* Objective-C */,
 				8F4911A41DFA3BC80018CA70 /* Supporting Files */,
+				2BB14EDB2F5B4E52003D14F1 /* AppLogger.swift */,
+				2BB14EE52F5B52A3003D14F1 /* ProcessRunner.swift */,
+				2BB14ED82F5B4CD9003D14F1 /* NetworkService.swift */,
 			);
 			path = MPAgentUploader;
-			sourceTree = "<group>";
-		};
-		8F2BC9E01DF884EC009BA318 /* Frameworks */ = {
-			isa = PBXGroup;
-			children = (
-				8FD5E18423AD573C00A47F7C /* SwiftShell.framework */,
-			);
-			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		8F4911A21DFA3B8D0018CA70 /* Third-Party */ = {
-			isa = PBXGroup;
-			children = (
-				8F2BC9E91DF8DA0E009BA318 /* Spawn.swift */,
-				8F2BC9EB1DF9CCA7009BA318 /* Alamofire-Synchronous.swift */,
-			);
-			name = "Third-Party";
 			sourceTree = "<group>";
 		};
 		8F4911A31DFA3BA80018CA70 /* Objective-C */ = {
@@ -162,9 +142,6 @@
 			);
 			name = MPAgentUploader;
 			packageProductDependencies = (
-				8F57DD6625E6CE1500BAECC8 /* LogKit */,
-				8F57DD6925E6CFBF00BAECC8 /* SwiftShell */,
-				8F57DD6C25E6D57F00BAECC8 /* Alamofire */,
 			);
 			productName = MPAgentUploader;
 			productReference = 8F2BC9CD1DF8805E009BA318 /* MPAgentUploader.app */;
@@ -176,8 +153,9 @@
 		8F2BC9C51DF8805E009BA318 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				BuildIndependentTargetsInParallel = YES;
 				LastSwiftUpdateCheck = 0810;
-				LastUpgradeCheck = 1240;
+				LastUpgradeCheck = 2620;
 				ORGANIZATIONNAME = "Lawrence Livermore Nat'l Lab";
 				TargetAttributes = {
 					8F2BC9CC1DF8805E009BA318 = {
@@ -198,9 +176,6 @@
 			);
 			mainGroup = 8F2BC9C41DF8805E009BA318;
 			packageReferences = (
-				8F57DD6525E6CE1500BAECC8 /* XCRemoteSwiftPackageReference "logkit" */,
-				8F57DD6825E6CFBF00BAECC8 /* XCRemoteSwiftPackageReference "SwiftShell" */,
-				8F57DD6B25E6D57F00BAECC8 /* XCRemoteSwiftPackageReference "Alamofire" */,
 			);
 			productRefGroup = 8F2BC9CE1DF8805E009BA318 /* Products */;
 			projectDirPath = "";
@@ -229,12 +204,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				2BB14EE42F5B514D003D14F1 /* NetworkService.swift in Sources */,
 				8F2BC9F01DFA085C009BA318 /* MPCrypto.m in Sources */,
+				2BB14EEA2F5B5A81003D14F1 /* Notarizer.swift in Sources */,
 				8F2BC9D31DF8805E009BA318 /* ViewController.swift in Sources */,
-				8F57DD8D25E80DED00BAECC8 /* Alamofire-Synchronous.swift in Sources */,
+				2BB14EE62F5B52A3003D14F1 /* ProcessRunner.swift in Sources */,
+				2BB14EDC2F5B4E52003D14F1 /* AppLogger.swift in Sources */,
 				8F4911C11DFC6E310018CA70 /* PreferencesViewController.swift in Sources */,
 				8F2BC9E61DF88B84009BA318 /* AuthViewController.swift in Sources */,
-				8F2BC9EA1DF8DA0E009BA318 /* Spawn.swift in Sources */,
 				8F2BC9D11DF8805E009BA318 /* AppDelegate.swift in Sources */,
 				8FEEC2B31DFF5FB8001133F7 /* HeaderView.swift in Sources */,
 				8F4911C01DFC6E310018CA70 /* PreferencesWindowController.swift in Sources */,
@@ -291,9 +268,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = BLZUAP2L36;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -312,6 +292,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.2;
@@ -352,9 +333,12 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_IDENTITY = "-";
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = BLZUAP2L36;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -366,6 +350,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 4.2;
@@ -378,7 +363,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = BLZUAP2L36;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -390,9 +376,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0;
-				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 4.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.agentuploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -405,7 +391,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COMBINE_HIDPI_IMAGES = YES;
-				DEVELOPMENT_TEAM = BLZUAP2L36;
+				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				ENABLE_HARDENED_RUNTIME = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -417,9 +404,9 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.13;
-				MARKETING_VERSION = 3.6.0;
-				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.MPAgentUploader;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 4.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = gov.llnl.mp.agentuploader;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MPAgentUploader/Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -448,51 +435,6 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		8F57DD6525E6CE1500BAECC8 /* XCRemoteSwiftPackageReference "logkit" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/cheizer/logkit.git";
-			requirement = {
-				branch = master;
-				kind = branch;
-			};
-		};
-		8F57DD6825E6CFBF00BAECC8 /* XCRemoteSwiftPackageReference "SwiftShell" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/kareman/SwiftShell.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.1.0;
-			};
-		};
-		8F57DD6B25E6D57F00BAECC8 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 5.4.1;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
-		8F57DD6625E6CE1500BAECC8 /* LogKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8F57DD6525E6CE1500BAECC8 /* XCRemoteSwiftPackageReference "logkit" */;
-			productName = LogKit;
-		};
-		8F57DD6925E6CFBF00BAECC8 /* SwiftShell */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8F57DD6825E6CFBF00BAECC8 /* XCRemoteSwiftPackageReference "SwiftShell" */;
-			productName = SwiftShell;
-		};
-		8F57DD6C25E6D57F00BAECC8 /* Alamofire */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 8F57DD6B25E6D57F00BAECC8 /* XCRemoteSwiftPackageReference "Alamofire" */;
-			productName = Alamofire;
-		};
-/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8F2BC9C51DF8805E009BA318 /* Project object */;
 }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="18122" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,18 +15,18 @@
         <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" toolbarStyle="expanded" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="335" y="390" width="840" height="680"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <value key="minSize" type="size" width="840" height="680"/>
             <value key="maxSize" type="size" width="1000" height="1600"/>
             <view key="contentView" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="840" height="680"/>
+                <rect key="frame" x="0.0" y="0.0" width="840" height="673"/>
                 <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                 <subviews>
                     <box autoresizesSubviews="NO" fixedFrame="YES" borderType="none" title="Box" titlePosition="noTitle" translatesAutoresizingMaskIntoConstraints="NO" id="BoI-Qm-Tfv">
-                        <rect key="frame" x="-3" y="-4" width="846" height="686"/>
+                        <rect key="frame" x="-3" y="-4" width="846" height="679"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <view key="contentView" id="waw-Oq-zgO">
-                            <rect key="frame" x="0.0" y="0.0" width="846" height="686"/>
+                            <rect key="frame" x="0.0" y="0.0" width="846" height="679"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         </view>
                     </box>
@@ -162,7 +162,7 @@
         <window title="Reboot System" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="HVp-h7-rzM">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <view key="contentView" id="LsG-PG-hCS">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -256,7 +256,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="843" width="495" height="197"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <view key="contentView" id="Bdb-Ky-3Ye">
                 <rect key="frame" x="0.0" y="0.0" width="495" height="197"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -284,7 +284,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="appImage" id="26R-EQ-M9B"/>
                     </imageView>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="99" translatesAutoresizingMaskIntoConstraints="NO" id="k9m-hV-F5d">
+                    <button tag="99" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="k9m-hV-F5d">
                         <rect key="frame" x="396" y="13" width="85" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Restart" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="6od-1w-zBg">
@@ -295,7 +295,7 @@
                             <action selector="restartOrShutdown:" target="Voe-Tx-rLC" id="AoD-hg-GPq"/>
                         </connections>
                     </button>
-                    <button verticalHuggingPriority="750" fixedFrame="YES" tag="98" translatesAutoresizingMaskIntoConstraints="NO" id="cKr-qD-KD6">
+                    <button tag="98" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cKr-qD-KD6">
                         <rect key="frame" x="318" y="13" width="75" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <buttonCell key="cell" type="push" title="Close" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="aFE-QE-2qK">
@@ -314,7 +314,7 @@
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="hWJ-We-6J9" userLabel="Reboot Required FileVault">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="383"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <view key="contentView" id="Cdu-ql-HYh">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="383"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -354,7 +354,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                         <rect key="frame" x="17" y="57" width="518" height="183"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <view key="contentView" id="cGX-HZ-hXo">
-                            <rect key="frame" x="3" y="3" width="512" height="165"/>
+                            <rect key="frame" x="0.0" y="0.0" width="518" height="171"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GX8-eg-nrJ">
@@ -386,7 +386,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                     </textFieldCell>
                                 </textField>
                                 <secureTextField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R6a-n1-WaY">
-                                    <rect key="frame" x="100" y="67" width="390" height="21"/>
+                                    <rect key="frame" x="100" y="73" width="390" height="21"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <secureTextFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" usesSingleLineMode="YES" id="Oi5-Pw-uoO">
                                         <font key="font" metaFont="system"/>
@@ -425,7 +425,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                     </textFieldCell>
                                 </textField>
                                 <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kxU-Oa-7mh">
-                                    <rect key="frame" x="382" y="16" width="108" height="17"/>
+                                    <rect key="frame" x="382" y="22" width="108" height="17"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <buttonCell key="cell" type="inline" title="Set Auth-Restart" bezelStyle="inline" alignment="center" borderStyle="border" inset="2" id="4zi-zf-cPt">
                                         <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
@@ -433,7 +433,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                     </buttonCell>
                                 </button>
                                 <imageView horizontalHuggingPriority="251" verticalHuggingPriority="251" id="vpd-pn-OvR">
-                                    <rect key="frame" x="360" y="17" width="16" height="16"/>
+                                    <rect key="frame" x="360" y="23" width="16" height="16"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="GoodImage" id="pz9-8G-JaF"/>
                                 </imageView>
@@ -711,7 +711,7 @@ DQ
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="RL9-pv-Gy5">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="194"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <view key="contentView" id="oIZ-6f-v09">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="194"/>
                 <autoresizingMask key="autoresizingMask"/>
@@ -779,7 +779,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
         <window title="Apply System Updates" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="czy-cF-asX" userLabel="Update Warning">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="3840" height="1055"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <view key="contentView" id="YA1-yW-mdE">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>

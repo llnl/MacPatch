@@ -1,12 +1,12 @@
 MacPatch - Changes
 
-MacPatch v4.0.0
+MacPatch v4.1.0
 
 * Client
-- MPAgent has been refactored and many memory bugs have been resolved
-- MPAgent has all new command line switches
-- MPAgent Logging has been updated to use os_log
-- MPAgent agent tasks are now using GCD dispatch sources
-- Many of the deprecated Apple APIS have been updated as part of MPLibrary
+- MPAgent fixed issue with settings and nil values
+- MacPatch added ability to hide Software tab
 
 
+* Server
+- Updated Nginx source
+- Removed old sources

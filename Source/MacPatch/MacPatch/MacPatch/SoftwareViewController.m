@@ -267,7 +267,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		
 		if (error) {
 			qlerror(@"%@",error.localizedDescription);
-			[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+			dispatch_async(dispatch_get_main_queue(), ^{
+                if (self->settings.agent.swDistGroup) {
+                    [self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+                }
+			});
 			return;
 		}
 		
