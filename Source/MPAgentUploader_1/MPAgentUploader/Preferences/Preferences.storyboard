@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="11542" systemVersion="16C60b" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="map-cP-kFL">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11542"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--Window Controller-->
+        <scene sceneID="wnb-Pe-RNZ">
+            <objects>
+                <windowController showSeguePresentationStyle="single" id="map-cP-kFL" customClass="PreferencesWindowController" customModule="MPAgentUploder" customModuleProvider="target" sceneMemberID="viewController">
+                    <window key="window" title="General" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" animationBehavior="default" id="QOw-BM-GKl">
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES"/>
+                        <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+                        <rect key="contentRect" x="294" y="362" width="480" height="270"/>
+                        <rect key="screenRect" x="0.0" y="0.0" width="1920" height="1177"/>
+                        <value key="minSize" type="size" width="480" height="270"/>
+                        <value key="minFullScreenContentSize" type="size" width="480" height="270"/>
+                    </window>
+                    <connections>
+                        <segue destination="hVY-gq-v56" kind="relationship" relationship="window.shadowedContentViewController" id="L4l-wd-xtp"/>
+                    </connections>
+                </windowController>
+                <customObject id="wiC-RD-tAu" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="566" y="62"/>
+        </scene>
+        <!--Preferences View Controller-->
+        <scene sceneID="tzP-Db-G1S">
+            <objects>
+                <tabViewController storyboardIdentifier="preferencesViewControllerIdentifier" showSeguePresentationStyle="single" tabStyle="toolbar" id="hVY-gq-v56" customClass="PreferencesViewController" customModule="MPAgentUploder" customModuleProvider="target" sceneMemberID="viewController">
+                    <tabViewItems>
+                        <tabViewItem label="General" image="NSPreferencesGeneral" id="r5G-6I-5xq"/>
+                    </tabViewItems>
+                    <viewControllerTransitionOptions key="transitionOptions" allowUserInteraction="YES"/>
+                    <tabView key="tabView" type="noTabsNoBorder" id="SS2-JJ-fG8">
+                        <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <font key="font" metaFont="message"/>
+                        <tabViewItems/>
+                        <connections>
+                            <outlet property="delegate" destination="hVY-gq-v56" id="pqp-kw-y1o"/>
+                        </connections>
+                    </tabView>
+                    <connections>
+                        <segue destination="Yil-VZ-ttf" kind="relationship" relationship="tabItems" id="yxw-76-Wrs"/>
+                    </connections>
+                </tabViewController>
+                <customObject id="4Ts-BM-gQ7" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="566" y="483"/>
+        </scene>
+        <!--General-->
+        <scene sceneID="fgF-CH-hBP">
+            <objects>
+                <viewController title="General" showSeguePresentationStyle="single" id="Yil-VZ-ttf" customClass="PreferencesGeneralViewController" customModule="MPAgentUploder" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" id="aKI-tT-xOh">
+                        <rect key="frame" x="0.0" y="0.0" width="447" height="143"/>
+                        <autoresizingMask key="autoresizingMask"/>
+                        <subviews>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="HOL-hS-Bz6">
+                                <rect key="frame" x="18" y="18" width="117" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="Debug Logging" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="foc-9J-g3s">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="debugOption:" target="Yil-VZ-ttf" id="Kz4-B6-3fl"/>
+                                </connections>
+                            </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="kSD-cy-ItS">
+                                <rect key="frame" x="18" y="107" width="383" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="Do not upload package, for testing only. (Will Open Folder)" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="J0Z-Mx-vvF">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="uploadOption:" target="Yil-VZ-ttf" id="37O-DN-40Q"/>
+                                </connections>
+                            </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="j2G-HE-M2m">
+                                <rect key="frame" x="18" y="87" width="280" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="Allow Self-Signed Certificates for requests" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="Uw1-Nd-BGw">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="selfSignedOption:" target="Yil-VZ-ttf" id="PuQ-jF-Ijh"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                    </view>
+                    <connections>
+                        <outlet property="agentUploadButton" destination="kSD-cy-ItS" id="xBt-5y-Q9V"/>
+                        <outlet property="loggingButton" destination="HOL-hS-Bz6" id="Uxs-hy-9NW"/>
+                        <outlet property="selfSignedButton" destination="j2G-HE-M2m" id="bP5-Xi-J14"/>
+                    </connections>
+                </viewController>
+                <customObject id="aRd-Wn-fkq" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1257.5" y="186.5"/>
+        </scene>
+    </scenes>
+    <resources>
+        <image name="NSPreferencesGeneral" width="32" height="32"/>
+    </resources>
+</document>

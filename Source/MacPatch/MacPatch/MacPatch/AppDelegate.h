@@ -51,6 +51,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)ShowHistoryView:(id)sender;
 - (IBAction)showUpdatesView:(id)sender;
 
+- (void)updateToolbarVisibility;
+
 - (void)showRebootWindow;
 - (void)showRestartWindow:(int)action;
 - (void)showSWRebootWindow;

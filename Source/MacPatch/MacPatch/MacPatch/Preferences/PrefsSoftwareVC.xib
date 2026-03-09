@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="14490.64" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="14490.64"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
         <customObject id="-2" userLabel="File's Owner" customClass="PrefsSoftwareVC">
             <connections>
+                <outlet property="showHideSoftwareCheckBox" destination="rIp-qx-0SQ" id="tIm-NL-hhm"/>
                 <outlet property="view" destination="Hz6-mo-xeY" id="0bl-1N-x8E"/>
             </connections>
         </customObject>
@@ -25,8 +26,19 @@
                         <font key="font" metaFont="system"/>
                     </buttonCell>
                 </button>
+                <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rIp-qx-0SQ">
+                    <rect key="frame" x="18" y="188" width="356" height="18"/>
+                    <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                    <buttonCell key="cell" type="check" title="Show Software Tab and View" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="K8J-ZR-mN8">
+                        <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                    <connections>
+                        <action selector="changeSoftwareViewOnLaunch:" target="-2" id="Gdt-IQ-WzV"/>
+                    </connections>
+                </button>
                 <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yQ4-xW-say">
-                    <rect key="frame" x="18" y="216" width="356" height="18"/>
+                    <rect key="frame" x="18" y="212" width="356" height="18"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                     <buttonCell key="cell" type="check" title="Remove Downloaded Software After Install" bezelStyle="regularSquare" imagePosition="left" alignment="left" state="on" inset="2" id="fuJ-bw-U8e">
                         <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -34,6 +46,7 @@
                     </buttonCell>
                 </button>
             </subviews>
+            <point key="canvasLocation" x="0.0" y="160"/>
         </customView>
     </objects>
 </document>

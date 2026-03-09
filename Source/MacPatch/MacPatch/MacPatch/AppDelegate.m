@@ -37,6 +37,22 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 #import "PrefsUpdatesVC.h"
 #import "PrefsAdvancedVC.h"
 
+// Constants
+static NSString * const MPEventActionPatchScan = @"PatchScan";
+static NSString * const MPEventActionPatchPrefs = @"PatchPrefs";
+static NSString * const MPNotificationPatchScan = @"PatchScanNotification";
+static NSString * const MPUserDefaultsPatchCount = @"PatchCount";
+static NSString * const MPUserDefaultsShowSoftwareView = @"showSoftwareView";
+static NSString * const MPDistributedNotificationTile = @"gov.llnl.mp.MacPatch.MacPatchTile";
+
+// View Controller Indices
+typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
+    MPViewControllerIndexSoftware = 0,
+    MPViewControllerIndexUpdates = 1,
+    MPViewControllerIndexHistory = 2,
+    MPViewControllerIndexAgent = 3
+};
+
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NSWindow *window;
@@ -50,14 +66,18 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (weak) IBOutlet NSButton *HistoryToolbarButton;
 @property (weak) IBOutlet NSButton *AgentToolbarButton;
 
-@property (weak) NSString *eventAction;
-
+@property (nonatomic, copy) NSString *eventAction;
+@property (nonatomic, strong) NSMutableArray<NSViewController *> *availableControllers;
 
 // Helper Setup
 @property (atomic, strong, readwrite) NSXPCConnection *worker;
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
+- (void)ensureDatabaseExists;
+- (void)displayViewController:(NSViewController *)controller;
+- (void)handleEventActionIfNeeded;
+- (void)updateToolbarVisibility;
 
 @end
 
@@ -74,6 +94,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
 	// [defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
     [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"allowRebootPatchInstalls"];
+	//[defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showSoftwareView"];
 	
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 }
@@ -89,8 +110,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	qlinfo(@"Logging up and running");
     
     // instantiate the controllers array
-    availableControllers = [[NSMutableArray alloc] init];
-
+    _availableControllers = [[NSMutableArray alloc] init];
     
     // define a controller
     NSViewController *controller;
@@ -101,32 +121,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     // toolbar button tag number)
 	
     controller = [[SoftwareViewController alloc] init];
-    [availableControllers addObject:controller];
+    [_availableControllers addObject:controller];
 	
 	controller = [[UpdatesVC alloc] init];
-	[availableControllers addObject:controller];
+	[_availableControllers addObject:controller];
 	
     controller = [[HistoryViewController alloc] init];
-    [availableControllers addObject:controller];
+    [_availableControllers addObject:controller];
 	
 	controller = [[AgentVC alloc] init];
-	[availableControllers addObject:controller];
+	[_availableControllers addObject:controller];
 	
-	NSFileManager *fm = [NSFileManager defaultManager];
-	if (![fm fileExistsAtPath:MP_AGENT_DB])
-	{
-		[self connectAndExecuteCommandBlock:^(NSError * connectError) {
-			if (connectError != nil) {
-				qlerror(@"connectError: %@",connectError.localizedDescription);
-			} else {
-				[[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-					qlerror(@"proxyError: %@",proxyError.localizedDescription);
-				}] createAndUpdateDatabase:^(BOOL result) {
-					qlinfo(@"MacPatch Database created and updated.");
-				}];
-			}
-		}];
-	}
+	[self ensureDatabaseExists];
+	
     return self;
 }
 
@@ -145,12 +152,18 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     // Insert code here to initialize your application
     self.toolBar.delegate = self;
     
+    NSLog(@"%@",[[NSUserDefaults standardUserDefaults] dictionaryRepresentation]);
+    
     // This will be a nsdefault
     NSButton *button = [[NSButton alloc] init];
-    button.tag = 0;
+	BOOL showSoftware = [[NSUserDefaults standardUserDefaults] boolForKey:MPUserDefaultsShowSoftwareView];
+    button.tag = showSoftware ? 0 : 1; // Default to Software if shown, otherwise Updates
     
     [self changeView:button];
 	[self setDefaultPatchCount:0];
+    
+    // Update toolbar visibility based on preferences
+    [self updateToolbarVisibility];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -163,99 +176,41 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	return YES;
 }
 
-- (IBAction)ShowSoftwareView:(id)sender {
-}
-
-- (IBAction)ShowHistoryView:(id)sender {
-}
-
-- (IBAction)showUpdatesView:(id)sender {
-}
-
-- (IBAction)changeView:(id)sender
+/**
+ * Transitions the main window to display the specified view controller.
+ * The window is animated to resize appropriately for the new view.
+ *
+ * @param sender The toolbar button that was clicked, with its tag indicating the view index
+ */
+- (IBAction)changeView:(NSButton *)sender
 {
-    int i = (int)[sender tag];
-    switch (i) {
-			
-        case 0:
-            // Software
-            [_SoftwareToolbarButton setState:NSControlStateValueOn];
-            [_UpdatesToolbarButton setState:NSControlStateValueOff];
-            [_HistoryToolbarButton setState:NSControlStateValueOff];
-            [_AgentToolbarButton setState:NSControlStateValueOff];
+    MPViewControllerIndex index = (MPViewControllerIndex)[sender tag];
+    
+    // Reset all button states
+    NSArray<NSButton *> *buttons = @[_SoftwareToolbarButton, _UpdatesToolbarButton, 
+                                      _HistoryToolbarButton, _AgentToolbarButton];
+    for (NSButton *button in buttons) {
+        button.state = NSControlStateValueOff;
+    }
+    
+    // Set the selected button
+    switch (index) {
+        case MPViewControllerIndexSoftware:
+            _SoftwareToolbarButton.state = NSControlStateValueOn;
             break;
-        case 1:
-            // Updates
-            [_SoftwareToolbarButton setState:NSControlStateValueOff];
-            [_UpdatesToolbarButton setState:NSControlStateValueOn];
-            [_HistoryToolbarButton setState:NSControlStateValueOff];
-            [_AgentToolbarButton setState:NSControlStateValueOff];
+        case MPViewControllerIndexUpdates:
+            _UpdatesToolbarButton.state = NSControlStateValueOn;
             break;
-        case 2:
-            // History
-            [_SoftwareToolbarButton setState:NSControlStateValueOff];
-            [_UpdatesToolbarButton setState:NSControlStateValueOff];
-            [_HistoryToolbarButton setState:NSControlStateValueOn];
-            [_AgentToolbarButton setState:NSControlStateValueOff];
+        case MPViewControllerIndexHistory:
+            _HistoryToolbarButton.state = NSControlStateValueOn;
             break;
-        case 3:
-            // Agent
-            [_SoftwareToolbarButton setState:NSControlStateValueOff];
-            [_UpdatesToolbarButton setState:NSControlStateValueOff];
-            [_HistoryToolbarButton setState:NSControlStateValueOff];
-            [_AgentToolbarButton setState:NSControlStateValueOn];
-            break;
-        default:
-            [_SoftwareToolbarButton setState:NSControlStateValueOff];
-            [_UpdatesToolbarButton setState:NSControlStateValueOff];
-            [_HistoryToolbarButton setState:NSControlStateValueOn];
-            [_AgentToolbarButton setState:NSControlStateValueOff];
+        case MPViewControllerIndexAgent:
+            _AgentToolbarButton.state = NSControlStateValueOn;
             break;
     }
     
-    
-    NSViewController *controller = [availableControllers objectAtIndex:i];
-    NSView *view = [controller view];
-    
-    // calculate window size
-    NSSize currentSize = [[viewHolder contentView] frame].size;
-    NSSize newSize = [view frame].size;
-    
-    //NSLog(@"current view: %.0f, %.0f", currentSize.width, currentSize.height);
-    //NSLog(@"new view: %.0f, %.0f", newSize.width, newSize.height);
-    
-    float deltaWidth = newSize.width - currentSize.width;
-    float deltaHeight = newSize.height - currentSize.height;
-    
-    //NSLog(@"deltas: %.0f, %.0f", deltaWidth, deltaHeight);
-    
-    NSRect frame = [_window frame];
-    
-    //NSLog(@"current frame: %.0f, %.0f", frame.size.width, frame.size.height);
-    
-    frame.size.height += deltaHeight;
-    frame.origin.y -= deltaHeight;
-    frame.size.width += deltaWidth;
-    
-    //NSLog(@"new frame: %.0f, %.0f", frame.size.width, frame.size.height);
-    
-    // unset current view
-    [viewHolder setContentView:nil];
-    
-    // do animate
-    [_window setFrame:frame display:YES animate:YES];
-    
-    // set requested view after resizing the window
-    [viewHolder setContentView:view];
-    
-    [view setNextResponder:controller];
-    [controller setNextResponder:viewHolder];
-	if (_eventAction) {
-		if ([_eventAction isEqualToString:@"PatchScan"]) {
-			[[NSNotificationCenter defaultCenter] postNotificationName:@"PatchScanNotification" object:nil userInfo:@{}];
-			_eventAction = nil;
-		}
-	}
+    [self displayViewController:_availableControllers[index]];
+    [self handleEventActionIfNeeded];
 }
 
 -(IBAction)showPreferences:(id)sender
@@ -272,12 +227,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         _preferencesWindowController = [[RHPreferencesWindowController alloc] initWithViewControllers:controllers];
     }
     
-    
-	if ([_eventAction isEqualToString:@"PatchPrefs"]) {
+	if ([_eventAction isEqualToString:MPEventActionPatchPrefs]) {
 		[_preferencesWindowController setSelectedIndex:2];
 	}
     [_preferencesWindowController showWindow:self];
-	[_preferencesWindowController setWindowTitle:@"Preferences"];
+	[_preferencesWindowController setWindowTitle:@"MacPatch - Settings"];
+    [_preferencesWindowController setWindowTitleShouldAutomaticlyUpdateToReflectSelectedViewController:NO];
 }
 
 - (NSArray *)toolbarSelectableItemIdentifiers:(NSToolbar *)toolbar
@@ -386,11 +341,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 	
 	// We just save the value out, we don't keep a copy of the high score in the app.
-	[defaults setInteger:pCount forKey:@"PatchCount"];
+	[defaults setInteger:pCount forKey:MPUserDefaultsPatchCount];
 	[defaults synchronize];
 	
 	// And post a notification so the plug-in sees the change.
-	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"gov.llnl.mp.MacPatch.MacPatchTile" object:nil];
+	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:MPDistributedNotificationTile object:nil];
 	
 	// Now update the dock tile. Note that a more general way to do this would be to observe the highScore property, but we're just keeping things short and sweet here, trying to demo how to write a plug-in.
 	if (pCount >= 1) {
@@ -398,7 +353,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	} else {
 		[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 	}
-	
 }
 
 #pragma mark - URL Scheme
@@ -412,19 +366,110 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if ([query isEqualToString:@"openAndScan"])
 	{
 		qlinfo(@"openAndScan");
-		_eventAction = @"PatchScan";
+		_eventAction = MPEventActionPatchScan;
 		[self changeView:self->_UpdatesToolbarButton];
-		dispatch_async(dispatch_get_main_queue(), ^{
-			//[NSThread sleepForTimeInterval:0.5];		
-		});
 	}
 	else if ([query isEqualToString:@"openAndPatchPrefs"])
 	{
-		_eventAction = @"PatchPrefs";
+		_eventAction = MPEventActionPatchPrefs;
 		[self showPreferences:nil];
 	}
 }
 
+#pragma mark - Helper Methods
+
+/**
+ * Ensures the MacPatch database exists, creating it if necessary.
+ */
+- (void)ensureDatabaseExists
+{
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:MP_AGENT_DB]) {
+        return;
+    }
+    
+    [self connectAndExecuteCommandBlock:^(NSError *connectError) {
+        if (connectError != nil) {
+            qlerror(@"Failed to connect to helper for database creation: %@", 
+                    connectError.localizedDescription);
+            return;
+        }
+        
+        [[self.worker remoteObjectProxyWithErrorHandler:^(NSError *proxyError) {
+            qlerror(@"Failed to create database proxy: %@", proxyError.localizedDescription);
+        }] createAndUpdateDatabase:^(BOOL result) {
+            if (result) {
+                qlinfo(@"MacPatch Database created and updated successfully.");
+            } else {
+                qlerror(@"MacPatch Database creation failed.");
+            }
+        }];
+    }];
+}
+
+/**
+ * Displays the specified view controller in the main window with animation.
+ *
+ * @param controller The view controller to display
+ */
+- (void)displayViewController:(NSViewController *)controller
+{
+    NSView *view = controller.view;
+    
+    // Calculate window size
+    NSSize currentSize = viewHolder.contentView.frame.size;
+    NSSize newSize = view.frame.size;
+    
+    CGFloat deltaWidth = newSize.width - currentSize.width;
+    CGFloat deltaHeight = newSize.height - currentSize.height;
+    
+    NSRect frame = _window.frame;
+    frame.size.height += deltaHeight;
+    frame.origin.y -= deltaHeight;
+    frame.size.width += deltaWidth;
+    
+    // Unset current view
+    viewHolder.contentView = nil;
+    
+    // Animate window resize
+    [_window setFrame:frame display:YES animate:YES];
+    
+    // Set requested view after resizing
+    viewHolder.contentView = view;
+    
+    view.nextResponder = controller;
+    controller.nextResponder = viewHolder;
+}
+
+/**
+ * Handles any pending event actions after a view change.
+ */
+- (void)handleEventActionIfNeeded
+{
+    if ([_eventAction isEqualToString:MPEventActionPatchScan]) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:MPNotificationPatchScan 
+                                                            object:nil 
+                                                          userInfo:@{}];
+        _eventAction = nil;
+    }
+}
+
+/**
+ * Updates the toolbar visibility based on user preferences.
+ * Hides or shows the Software view toolbar item.
+ */
+- (void)updateToolbarVisibility
+{
+	BOOL showSoftware = [[NSUserDefaults standardUserDefaults] boolForKey:MPUserDefaultsShowSoftwareView];
+	
+	// Hide or show the Software toolbar item
+	_SoftwareToolbarItem.hidden = !showSoftware;
+	
+	// If currently showing Software view and it's being hidden, switch to Updates
+	if (!showSoftware && _SoftwareToolbarButton.state == NSControlStateValueOn) {
+		[self changeView:_UpdatesToolbarButton];
+	}
+}
 
 #pragma mark - Helper
 
@@ -464,12 +509,20 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 // Connects to the helper tool and then executes the supplied command block on the
 // main thread, passing it an error indicating if the connection was successful.
 {
+	NSParameterAssert(commandBlock != nil);
 	assert([NSThread isMainThread]);
 	
 	// Ensure that there's a helper tool connection in place.
-	// self.workerConnection = nil;
 	[self connectToHelperTool];
 	
-	commandBlock(nil);
+	if (self.worker == nil) {
+		NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.MacPatch" 
+											 code:-1 
+										 userInfo:@{NSLocalizedDescriptionKey: @"Failed to connect to helper tool"}];
+		commandBlock(error);
+	} else {
+		commandBlock(nil);
+	}
 }
+
 @end
