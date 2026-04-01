@@ -1,7 +1,7 @@
 #!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,9 +25,11 @@
 
 '''
   MacPatch Patch Loader Setup Script
-  MacPatch Version 3.8.x
+  MacPatch Version 4.1.x
 
-  Script Version 2.4.3
+  Script Version 2.5.0
+
+  2.5.0: Replaced M2Crypto module with Cryptography
 '''
 
 import os
@@ -42,7 +44,8 @@ import types
 from packaging.version import Version
 import sys
 from sys import exit
-from Crypto.PublicKey import RSA
+from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from dotenv.main import dotenv_values
 from dotenv import set_key
 import distro
@@ -746,9 +749,16 @@ class MPConfigDefaults:
 		return config
 
 	def genServerKeys(self):
-		new_key = RSA.generate(4096, e=65537)
-		public_key = new_key.publickey().exportKey("PEM")
-		private_key = new_key.exportKey("PEM")
+		new_key = rsa.generate_private_key(public_exponent=65537, key_size=4096)
+		private_key = new_key.private_bytes(
+			encoding=serialization.Encoding.PEM,
+			format=serialization.PrivateFormat.TraditionalOpenSSL,
+			encryption_algorithm=serialization.NoEncryption()
+		)
+		public_key = new_key.public_key().public_bytes(
+			encoding=serialization.Encoding.PEM,
+			format=serialization.PublicFormat.SubjectPublicKeyInfo
+		)
 		return private_key, public_key
 
 	def writeConfig(self, config):
