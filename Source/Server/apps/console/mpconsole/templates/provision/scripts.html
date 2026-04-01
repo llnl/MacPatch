@@ -36,7 +36,7 @@
 
 {% block javascript %}
 	{{ super() }}
-	<script src="{{ url_for('static', filename='static_components/popper/popper.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/popper.js/dist/umd/popper.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>

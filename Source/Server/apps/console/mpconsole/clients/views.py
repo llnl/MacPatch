@@ -612,7 +612,8 @@ def groupDefaultSettings(id):
 			'allow_reboot':'1',
 			'verify_signatures':'0',
 			'patch_state':'Production',
-			'pre_stage_patches':'1'}
+			'pre_stage_patches':'1',
+			'show_software':'1'}
 
 	# Revision Increment
 	cfg = MPGroupConfig().query.filter(MPGroupConfig.group_id == id).first()

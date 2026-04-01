@@ -5,7 +5,9 @@ import base64
 import hashlib
 from datetime import datetime
 
-import M2Crypto
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 from flask_restful import reqparse
 
 from . import *
@@ -164,8 +166,13 @@ def verifyClientHash(encodedKey, hash):
 def decodeClientKey(encodedKey):
 	try:
 		priKeyFile = return_data_for_server_key('priKey')
-		priv = M2Crypto.RSA.load_key(priKeyFile)
-		decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_oaep_padding)
+		with open(priKeyFile, 'rb') as f:
+			priv = load_pem_private_key(f.read(), password=None)
+		decrypted = priv.decrypt(base64.b64decode(encodedKey), padding.OAEP(
+			mgf=padding.MGF1(algorithm=hashes.SHA1()),
+			algorithm=hashes.SHA1(),
+			label=None
+		))
 
 		return decrypted
 	except Exception as e:
