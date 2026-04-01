@@ -11,7 +11,9 @@ from .. wsresult import *
 from .. shared.agentRegistration import *
 from .. MSIntune import MPTaskJobs
 
-import M2Crypto
+from cryptography.hazmat.primitives.serialization import load_pem_private_key
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives import hashes
 import hashlib
 import base64
 import uuid
@@ -205,19 +207,12 @@ def verifyClientHash(encodedKey, hash):
 def decodeClientKey(encodedKey):
 	try:
 		qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
-		priKeyFile = "/tmp/." + str(uuid.uuid4())
-		f = open(priKeyFile, "w")
-		f.write(qKeys.priKey)
-		f.close()
-
-		priv = M2Crypto.RSA.load_key(priKeyFile)
-
-		# old
-		#decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_padding)
-		# new
-		decrypted = priv.private_decrypt(base64.b64decode(encodedKey), M2Crypto.RSA.pkcs1_oaep_padding)
-
-		os.remove(priKeyFile)
+		priv = load_pem_private_key(qKeys.priKey.encode(), password=None)
+		decrypted = priv.decrypt(base64.b64decode(encodedKey), padding.OAEP(
+			mgf=padding.MGF1(algorithm=hashes.SHA1()),
+			algorithm=hashes.SHA1(),
+			label=None
+		))
 		return decrypted
 
 	except Exception as e:
