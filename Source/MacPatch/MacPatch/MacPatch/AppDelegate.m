@@ -94,14 +94,21 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
 	// [defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
     [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"allowRebootPatchInstalls"];
-	//[defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showSoftwareView"];
-	
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 }
 
 - (id)init
 {
     self = [super init];
+    
+    // Check MPSettings for the Software Catalog display state
+    MPSettings *mps = [MPSettings sharedInstance];
+    [mps refresh];
+    Agent *agentData = [mps agent];
+    BOOL swState = (agentData.swDistEnable != 0) ? YES : NO;
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    [defaults setBool:swState forKey:@"showSoftwareView"];
+    [defaults synchronize];
 	
 	NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MacPatch.log"];
 	[MPLog setupLogging:_logFile level:lcl_vInfo];
@@ -526,3 +533,4 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 }
 
 @end
+
