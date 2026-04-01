@@ -1,1 +1,0 @@
-from mpconsole.app import create_app, db
