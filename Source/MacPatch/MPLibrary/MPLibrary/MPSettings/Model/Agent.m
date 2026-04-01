@@ -37,6 +37,7 @@ NSString *const kAgentPatchGroup        = @"patch_group";		//*
 NSString *const kAgentPatchServer       = @"allow_server";		//*
 NSString *const kAgentPatchState        = @"patch_state";		//*
 NSString *const kAgentReboot            = @"allow_reboot";		//*
+NSString *const kAgentEnableSW          = @"show_software";
 NSString *const kAgentSwDistGroup       = @"software_group";	//*
 
 NSString *const kAgentSwDistGroupAdd   		= @"inherited_software_group";
@@ -60,6 +61,8 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 -(instancetype)initWithDictionary:(NSDictionary *)dictionary
 {	
 	self = [super init];
+    NSLog(@"dictionary: %@",dictionary);
+    
 	if(![dictionary[kAgentDescriptionField] isKindOfClass:[NSNull class]]){
 		self.descriptionField = dictionary[kAgentDescriptionField];
 	}
@@ -99,7 +102,10 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 	if(![dictionary[kAgentReboot] isKindOfClass:[NSNull class]]){
 		self.reboot = [dictionary[kAgentReboot] integerValue];
 	}
-
+    
+    id _swDistEnable = dictionary[kAgentEnableSW];
+    self.swDistEnable = _swDistEnable ? [_swDistEnable integerValue] : 1;
+    
 	if(![dictionary[kAgentSwDistGroup] isKindOfClass:[NSNull class]]){
 		self.swDistGroup = dictionary[kAgentSwDistGroup];
 	}
@@ -163,6 +169,7 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
     dictionary[kAgentPatchServer] = @(self.patchServer);
 	dictionary[kAgentPatchState] = @(self.patchState);
 	dictionary[kAgentReboot] = @(self.reboot);
+    dictionary[kAgentEnableSW] = @(self.swDistEnable);
 	
     if(self.swDistGroup != nil){
 		dictionary[kAgentSwDistGroup] = self.swDistGroup;
@@ -221,6 +228,7 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
     [aCoder encodeObject:@(self.patchServer) forKey:kAgentPatchServer];
     [aCoder encodeObject:@(self.patchState) forKey:kAgentPatchState];
     [aCoder encodeObject:@(self.reboot) forKey:kAgentReboot];
+    [aCoder encodeObject:@(self.swDistEnable) forKey:kAgentEnableSW];
     
     if(self.swDistGroup != nil){
 		[aCoder encodeObject:self.swDistGroup forKey:kAgentSwDistGroup];
@@ -256,6 +264,7 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 	self.patchServer = [[aDecoder decodeObjectForKey:kAgentPatchServer] integerValue];
 	self.patchState = [[aDecoder decodeObjectForKey:kAgentPatchState] integerValue];
 	self.reboot = [[aDecoder decodeObjectForKey:kAgentReboot] integerValue];
+    self.swDistEnable = [[aDecoder decodeObjectForKey:kAgentEnableSW] integerValue];
 	self.swDistGroup = [aDecoder decodeObjectForKey:kAgentSwDistGroup];
 	self.swDistGroupAdd = [aDecoder decodeObjectForKey:kAgentSwDistGroupAdd];
 	self.swDistGroupAddID = [aDecoder decodeObjectForKey:kAgentSwDistGroupAddID];
@@ -280,6 +289,7 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 	copy.patchServer = self.patchServer;
 	copy.patchState = self.patchState;
 	copy.reboot = self.reboot;
+    copy.swDistEnable = self.swDistEnable;
 	copy.swDistGroup = [self.swDistGroup copy];
 	copy.swDistGroupAdd = [self.swDistGroupAdd copy];
 	copy.swDistGroupAddID = [self.swDistGroupAddID copy];
