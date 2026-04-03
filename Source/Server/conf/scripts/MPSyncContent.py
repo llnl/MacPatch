@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.6.0
+	Version: 1.6.1
 '''
 
 import datetime
@@ -49,7 +49,7 @@ MP_SRV_APPS	= MP_SRV_BASE+'/apps'
 logFile		= MP_SRV_BASE+"/logs/MPSyncContent.log"
 
 # Rsync Path
-SYNC_DIR_NAME="mpContentWeb3"
+SYNC_DIR_NAME="mpContentWeb"
 # Rsync Server
 MASTER_SERVER="localhost"
 # Sync Content to...
