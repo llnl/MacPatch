@@ -470,7 +470,11 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	BOOL showSoftware = [[NSUserDefaults standardUserDefaults] boolForKey:MPUserDefaultsShowSoftwareView];
 	
 	// Hide or show the Software toolbar item
-	_SoftwareToolbarItem.hidden = !showSoftware;
+    if (@available(macOS 15.0, *)) {
+        _SoftwareToolbarItem.hidden = !showSoftware;
+    } else {
+        // Fallback on earlier versions
+    }
 	
 	// If currently showing Software view and it's being hidden, switch to Updates
 	if (!showSoftware && _SoftwareToolbarButton.state == NSControlStateValueOn) {

@@ -234,7 +234,7 @@
 			name = Agent;
 			sourceTree = "<group>";
 		};
-		8F130BA1219E3B350036C8DD /*  Updates */ = {
+		8F130BA1219E3B350036C8DD /* Updates */ = {
 			isa = PBXGroup;
 			children = (
 				8F130BA2219E3B6B0036C8DD /* UpdatesVC.h */,
@@ -248,7 +248,7 @@
 				8F6FE7242385DFD200403A41 /* LongPatchWindow.xib */,
 				8F130BA4219E3B6B0036C8DD /* UpdatesVC.xib */,
 			);
-			name = " Updates";
+			name = Updates;
 			sourceTree = "<group>";
 		};
 		8F2486851A40A5C6003E24C9 /* ThridParty */ = {
@@ -381,7 +381,7 @@
 				8FB201F61A3F90C60013C622 /* AppDelegate.h */,
 				8FB201F71A3F90C60013C622 /* AppDelegate.m */,
 				8FE4CDB01F17DE4400F770FA /* Software */,
-				8F130BA1219E3B350036C8DD /*  Updates */,
+				8F130BA1219E3B350036C8DD /* Updates */,
 				8FE4CDB11F17DE5300F770FA /* History */,
 				8F130B84219BFB460036C8DD /* Agent */,
 				8FB201FD1A3F90C60013C622 /* MainMenu.xib */,
