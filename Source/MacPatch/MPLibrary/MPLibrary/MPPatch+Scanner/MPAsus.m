@@ -50,6 +50,7 @@
 
 - (NSString *)getSizeFromDescription:(NSString *)aDesc;
 - (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
+- (BOOL)isOSUpgradeNotPatch:(NSString *)softwareUpdateString;
 
 @end
 
@@ -198,6 +199,13 @@
 				@try
 				{
 					lineCleanStart = [self cleanLine:_line];
+                    // Apple now can include a majore upgrade as a patch. If this is
+                    // the case then we will skip the patch detection.
+                    if ([[lineCleanStart lowercaseString] containsString:@"macos"]) {
+                        if ([self isOSUpgradeNotPatch:lineCleanStart]) {
+                            continue; // IS a major upgrade, skip it.
+                        }
+                    }
 					tmpDict = [[NSMutableDictionary alloc] init];
 					[tmpDict setObject:lineCleanStart forKey:@"patch"];
 					[tmpDict setObject:@"Apple" forKey:@"type"];
@@ -476,6 +484,43 @@
         result = YES;
     }
     return result;
+}
+
+- (BOOL)isOSUpgradeNotPatch:(NSString *)softwareUpdateString
+{
+    // Get current macOS major version
+    NSInteger currentMajor = NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
+
+    // Match Label lines like: "* Label: macOS Tahoe 26.4.1-25E253"
+    // Extracts the major version number before the first dot.
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression
+        regularExpressionWithPattern:@"\\*\\s*Label:\\s*macOS\\s+\\S+\\s+(\\d+)\\."
+                             options:NSRegularExpressionCaseInsensitive
+                               error:&error];
+    if (error) {
+        NSLog(@"Regex error: %@", error.localizedDescription);
+        return NO;
+    }
+
+    NSArray<NSTextCheckingResult *> *matches =
+        [regex matchesInString:softwareUpdateString
+                       options:0
+                         range:NSMakeRange(0, softwareUpdateString.length)];
+
+    for (NSTextCheckingResult *match in matches) {
+        NSString *majorStr = [softwareUpdateString substringWithRange:[match rangeAtIndex:1]];
+        NSInteger updateMajor = majorStr.integerValue;
+
+        NSLog(@"Found macOS label — current major: %ld, update major: %ld",
+              (long)currentMajor, (long)updateMajor);
+
+        if (updateMajor > currentMajor) {
+            return YES;  // major upgrade available
+        }
+    }
+
+    return NO; // no major upgrade found
 }
 
 @end
