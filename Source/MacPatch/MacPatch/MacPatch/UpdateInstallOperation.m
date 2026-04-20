@@ -184,7 +184,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		isFinished = YES;
 		[self didChangeValueForKey:@"isFinished"];
 	} else {
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:nil];
+		NSString *patchID = [patch[@"type"] isEqualToString:@"Apple"] ? patch[@"patch"] : patch[@"patch_id"];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:@{@"patch_id": patchID ?: @""}];
 		[self willChangeValueForKey:@"isExecuting"];
 		[self performSelectorInBackground:@selector(main) withObject:nil];
 		isExecuting = YES;
@@ -364,17 +365,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)postPatchStatus:(NSString *)status
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status}];
+	NSString *patchID = [patch[@"type"] isEqualToString:@"Apple"] ? patch[@"patch"] : patch[@"patch_id"];
+	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status, @"patch_id": patchID ?: @""}];
 }
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
+	NSString *patchID = [patch[@"type"] isEqualToString:@"Apple"] ? patch[@"patch"] : patch[@"patch_id"];
 	NSError *err = nil;
 	if (arg1) {
 		err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err, @"patch_id": patchID ?: @""}];
 	} else {
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"patch_id": patchID ?: @""}];
 	}
 }
 

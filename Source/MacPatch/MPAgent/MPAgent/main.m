@@ -43,7 +43,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.1.0.0"
+#define APPVERSION	@"4.1.2.0"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -190,8 +190,8 @@ int main (int argc, char * argv[])
         
         optind = 2;
         
-        const char *short_opts;
-        struct option *long_opts;
+        const char *short_opts = NULL;
+        struct option *long_opts = NULL;
         
         // Argparse Option Groups
         static struct option global_options[] = {
@@ -434,7 +434,7 @@ int main (int argc, char * argv[])
                 printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
                 break;
             case CommandTypeVersion:
-                printf("MPAgent Version: %s", [APPVERSION UTF8String]);
+                printf("MPAgent Version: %s\n", [APPVERSION UTF8String]);
                 break;
             case CommandTypeRegister: {
                 int result = 1;
@@ -472,7 +472,6 @@ int main (int argc, char * argv[])
                         exit(1);
                     }
                 }
-                exit(0);
             } break;
             case CommandTypeAgentUpdater: {
                 LogInfo( @"Running Local Command - Agent Updater...");

@@ -29,7 +29,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 #import "GlobalQueueManager.h"
 #import "MPFileMonitor.h"
 
-@interface UpdatesVC () <MPFileMonitorDelegate>
+@interface UpdatesVC () <MPFileMonitorDelegate, UpdatesCellViewDelegate>
 
 @property (nonatomic)         IBOutlet NSButton                *scanButton;
 @property (nonatomic)         IBOutlet NSButton                *updateAllButton;
@@ -524,6 +524,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	{
 		NSDictionary *d = _content[row];
 		UpdatesCellView* cell = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
+		cell.delegate = self;
+		
 		// Set some defaults
 		cell.updateButton.title = @"Install";
 		[cell.updateButton setState:0];
@@ -562,6 +564,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 		
 		cell.rowData = [d copy];
+		
+		// CRITICAL: Configure cell UI after all properties are set
+		[cell configureCellUI];
+		
 		return cell;
 	}
 		
@@ -809,6 +815,76 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self.scanButton setEnabled:YES];
+        });
+    }
+}
+
+#pragma mark - UpdatesCellViewDelegate Methods
+
+- (void)updatesCellViewDidStartInstall:(UpdatesCellView *)cell rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= _content.count) { return; }
+    NSMutableDictionary *patch = _content[row];
+    patch[@"isInstalling"] = @YES;
+    patch[@"progress"] = @0;
+    patch[@"statusText"] = @"Starting…";
+    
+    // Update the visible cell directly (only if it's the right cell)
+    UpdatesCellView *visibleCell = (UpdatesCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.patchProgressBar.hidden = NO;
+            visibleCell.patchProgressBar.indeterminate = NO;
+            visibleCell.patchProgressBar.minValue = 0.0;
+            visibleCell.patchProgressBar.maxValue = 100.0;
+            visibleCell.patchProgressBar.doubleValue = 0.0;
+            
+            visibleCell.patchStatus.hidden = NO;
+            visibleCell.patchStatus.stringValue = @"Starting…";
+        });
+    }
+}
+
+- (void)updatesCellView:(UpdatesCellView *)cell didUpdateProgress:(double)progress status:(NSString *)status rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= _content.count) { return; }
+    NSMutableDictionary *patch = _content[row];
+    patch[@"isInstalling"] = @YES;
+    patch[@"progress"] = @(progress);
+    if (status) { patch[@"statusText"] = status; }
+
+    // Update the visible cell directly (only if it's the right cell)
+    UpdatesCellView *visibleCell = (UpdatesCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.patchProgressBar.hidden = NO;
+            visibleCell.patchProgressBar.indeterminate = NO;
+            visibleCell.patchProgressBar.doubleValue = progress;
+            
+            visibleCell.patchStatus.hidden = NO;
+            visibleCell.patchStatus.stringValue = status ?: @"";
+        });
+    }
+}
+
+- (void)updatesCellViewDidFinish:(UpdatesCellView *)cell success:(BOOL)success errorMessage:(NSString *)message rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= _content.count) { return; }
+    NSMutableDictionary *patch = _content[row];
+    patch[@"isInstalling"] = @NO;
+    patch[@"progress"] = @0;
+    patch[@"statusText"] = success ? @"" : (message ?: @"Error");
+
+    // Update the visible cell directly (only if it's the right cell)
+    UpdatesCellView *visibleCell = (UpdatesCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.patchProgressBar.hidden = YES;
+            visibleCell.patchProgressBar.indeterminate = YES;
+            visibleCell.patchProgressBar.doubleValue = 0.0;
+            
+            visibleCell.patchStatus.hidden = YES;
+            visibleCell.patchStatus.stringValue = patch[@"statusText"];
         });
     }
 }
