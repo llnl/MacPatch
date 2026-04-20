@@ -124,7 +124,7 @@
 		[self didChangeValueForKey:@"isFinished"];
 	} else {
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"disableSWCatalogMenu" object:nil userInfo:@{}];
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:@{@"id": swTask[@"id"] ?: @""}];
 		[self willChangeValueForKey:@"isExecuting"];
 		[self performSelectorInBackground:@selector(main) withObject:nil];
 		isExecuting = YES;
@@ -283,7 +283,7 @@
 
 - (void)postSWStatus:(NSString *)status
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status}];
+	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status, @"id": swTask[@"id"] ?: @""}];
 }
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
@@ -292,9 +292,9 @@
 	NSError *err = nil;
 	if (arg1) {
 		err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err, @"id": swTask[@"id"] ?: @""}];
 	} else {
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"id": swTask[@"id"] ?: @""}];
 	}
 }
 
