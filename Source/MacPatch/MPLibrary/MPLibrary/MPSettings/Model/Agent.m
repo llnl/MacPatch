@@ -61,7 +61,6 @@ NSString *const kAgentPreStagePatches   = @"pre_stage_patches";	//*
 -(instancetype)initWithDictionary:(NSDictionary *)dictionary
 {	
 	self = [super init];
-    NSLog(@"dictionary: %@",dictionary);
     
 	if(![dictionary[kAgentDescriptionField] isKindOfClass:[NSNull class]]){
 		self.descriptionField = dictionary[kAgentDescriptionField];

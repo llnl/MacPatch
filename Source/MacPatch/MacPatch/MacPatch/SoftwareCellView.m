@@ -15,8 +15,8 @@ Software Foundation) version 2, dated June 1991.
 
 MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
-License for more details.
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General
+Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with MacPatch; if not, write to the Free Software Foundation, Inc.,
@@ -52,6 +52,95 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 #pragma mark - Main
 
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    if (!self.progressBarNew) {
+        self.progressBarNew = [[MPOProgressBar alloc] init];
+        self.progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
+        self.progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
+        [self.layer addSublayer:self.progressBarNew];
+        NSRect pbar = self.progressBar.frame;
+        self.progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+        [self.progressBarNew setHidden:YES];
+    }
+}
+
+// Configure cell UI based on rowData state - called every time cell is reused
+- (void)configureCellUI
+{
+    [self connectToHelperTool];
+    [self loadImage];
+    
+    // Check if this row is currently installing/uninstalling
+    BOOL isInstalling = [_rowData[@"isInstalling"] boolValue];
+    
+    if (isInstalling) {
+        // Row is currently installing/uninstalling - restore the operation UI from model
+        NSNumber *progress = _rowData[@"progress"] ?: @0;
+        NSString *statusText = _rowData[@"statusText"] ?: @"Processing...";
+        NSString *operationType = _rowData[@"operationType"] ?: @"Install";
+        
+        BOOL isUninstall = [operationType isEqualToString:@"Uninstall"];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_errorImage setHidden:YES];
+            [self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)];
+            
+            // Configure progress bars based on progress value
+            if (progress.doubleValue > 0) {
+                [self->_progressBar setHidden:YES];
+                self.progressBarNew.progressMode = MPOProgressBarModeDeterminate;
+                self.progressBarNew.progress = progress.doubleValue / 100.0;
+                [self.progressBarNew setHidden:NO];
+            } else {
+                [self->_progressBar setHidden:YES];
+                self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+                [self.progressBarNew startAnimation];
+                [self.progressBarNew setHidden:NO];
+            }
+            
+            [self->_swActionStatusText setHidden:NO];
+            self->_swActionStatusText.stringValue = statusText;
+            
+            [self.actionButton setEnabled:NO];
+            [self.actionButton setTitle:isUninstall ? @"Uninstalling" : @"Installing"];
+        });
+        
+        // Re-setup notifications for this specific row ID
+        if (isUninstall) {
+            [self setupUninstallNotification];
+        } else {
+            [self setupNotification];
+        }
+        
+    } else {
+        // Normal state - no operation in progress
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_progressBar setHidden:YES];
+            [self.progressBarNew stopAnimation];
+            [self.progressBarNew setHidden:YES];
+            [self->_swActionStatusText setHidden:YES];
+            self->_swActionStatusText.stringValue = @"";
+            [self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
+            
+            if (self->_isAppInstalled) {
+                [self.actionButton setTitle:@"Uninstall"];
+                self->_installedStateImage.image = [NSImage imageNamed:@"GoodImage"];
+            } else {
+                [self.actionButton setTitle:@"Install"];
+            }
+            
+            if (self->_isLocalAppInstalled) {
+                self->_installedStateImage.image = [NSImage imageNamed:@"GoodImageHD"];
+                self->_installedStateImage.toolTip = @"Application is installed, but not managed by MacPatch.";
+            }
+            
+            [self.actionButton setEnabled:YES];
+        });
+    }
+}
+
 - (void)viewDidLoad
 {
     qlinfo(@"[CELL IMAGE][viewDidLoad]: %@", _rowData[@"Software"][@"sw_img_path"]);
@@ -65,34 +154,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
-	
-	_progressBarNew = [[MPOProgressBar alloc] init];
-	_progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
-	_progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
-	[self.layer addSublayer:_progressBarNew];
-	
-
-	NSRect pbar = _progressBar.frame;
-	_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
-	[_progressBarNew setHidden:YES];
-	
-	if (_isAppInstalled) {
-		dispatch_async(dispatch_get_main_queue(), ^{
-			[self.actionButton setTitle:@"Uninstall"];
-			self->_installedStateImage.image = [NSImage imageNamed:@"GoodImage"];
-		});
-	}
-    
-    if (_isLocalAppInstalled) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            self->_installedStateImage.image = [NSImage imageNamed:@"GoodImageHD"];
-            self->_installedStateImage.toolTip = @"Application is installed, but not managed by MacPatch.";
-        });
-    }
-	
-	[self connectToHelperTool];
-	[self loadImage];
-	//[self setupCell];
     // Drawing code here.
 }
 
@@ -158,11 +219,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSString *cellProgressNote = [NSString stringWithFormat:@"swProg-%@",_rowData[@"id"]];
 	NSString *cellStopNote = [NSString stringWithFormat:@"swStop-%@",_rowData[@"id"]];
 	
+	// Remove any existing observers first to prevent duplicates
+	[self removeNotificationObserver];
+	
 	[[NSNotificationCenter defaultCenter] addObserverForName:cellStartNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 //NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 [self->_actionButton setTitle:@"Installing..."];
+			 // Verify this cell still represents the same row
+			 NSString *notificationID = note.userInfo[@"id"] ?: self->_rowData[@"id"];
+			 if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				 [self->_actionButton setTitle:@"Installing..."];
+			 }
 		 });
 	 }];
 	
@@ -170,8 +237,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	 {
 		NSDictionary *userInfo = note.userInfo;
 		dispatch_async(dispatch_get_main_queue(), ^{
-			if (userInfo[@"status"]) {
-				self->_swActionStatusText.stringValue = userInfo[@"status"];
+			// Verify this cell still represents the same row
+			NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
+			if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				if (userInfo[@"status"]) {
+					self->_swActionStatusText.stringValue = userInfo[@"status"];
+				}
+				if ([self.delegate respondsToSelector:@selector(softwareCellView:didUpdateProgress:status:rowData:)]) {
+					NSNumber *prog = userInfo[@"progress"] ?: @0;
+					[self.delegate softwareCellView:self didUpdateProgress:prog.doubleValue status:(userInfo[@"status"] ?: @"") rowData:self.rowData];
+				}
 			}
 		});
 	 }];
@@ -180,11 +255,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	{
 		NSDictionary *userInfo = note.userInfo;
 		dispatch_async(dispatch_get_main_queue(), ^{
-			if (userInfo[@"error"]) {
-				self->_swActionStatusText.stringValue = userInfo[@"status"];
-				[self stopInstallWithError:YES];
-			} else {
-				[self stopInstallWithError:NO];
+			// Verify this cell still represents the same row
+			NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
+			if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				if (userInfo[@"error"]) {
+					self->_swActionStatusText.stringValue = userInfo[@"status"];
+					[self stopInstallWithError:YES];
+				} else {
+					[self stopInstallWithError:NO];
+				}
 			}
 		});
 	 }];
@@ -196,11 +275,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSString *cellProgressNote = [NSString stringWithFormat:@"swUnProg-%@",_rowData[@"id"]];
 	NSString *cellStopNote = [NSString stringWithFormat:@"swUnStop-%@",_rowData[@"id"]];
 	
+	// Remove any existing observers first to prevent duplicates
+	[self removeUninstallNotificationObserver];
+	
 	[[NSNotificationCenter defaultCenter] addObserverForName:cellStartNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
-		 //NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 [self->_actionButton setTitle:@"Uninstalling..."];
+			 // Verify this cell still represents the same row
+			 NSString *notificationID = note.userInfo[@"id"] ?: self->_rowData[@"id"];
+			 if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				 [self->_actionButton setTitle:@"Uninstalling..."];
+			 }
 		 });
 	 }];
 	
@@ -208,8 +293,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	 {
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 if (userInfo[@"status"]) {
-				 self->_swActionStatusText.stringValue = userInfo[@"status"];
+			 // Verify this cell still represents the same row
+			 NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
+			 if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				 if (userInfo[@"status"]) {
+					 self->_swActionStatusText.stringValue = userInfo[@"status"];
+				 }
 			 }
 		 });
 	 }];
@@ -218,11 +307,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	 {
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 if (userInfo[@"error"]) {
-				 self->_swActionStatusText.stringValue = userInfo[@"status"];
-				 [self stopUninstallWithError:YES];
-			 } else {
-				 [self stopUninstallWithError:NO];
+			 // Verify this cell still represents the same row
+			 NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
+			 if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
+				 if (userInfo[@"error"]) {
+					 self->_swActionStatusText.stringValue = userInfo[@"status"];
+					 [self stopUninstallWithError:YES];
+				 } else {
+					 [self stopUninstallWithError:NO];
+				 }
 			 }
 		 });
 	 }];
@@ -318,6 +411,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if ([title isEqualToString:@"Install"])
 	{
 		[self setupNotification];
+        if ([self.delegate respondsToSelector:@selector(softwareCellViewDidStartInstall:rowData:)]) {
+            [self.delegate softwareCellViewDidStartInstall:self rowData:self.rowData];
+        }
 		[self setupCellUIForInstall];
 		
 		dispatch_async(dispatch_get_main_queue(), ^(void) {
@@ -379,12 +475,68 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	});
 }
 
+- (void)prepareForReuse
+{
+    [super prepareForReuse];
+    
+    // CRITICAL: Remove notification observers to prevent cross-cell updates
+    [self removeNotificationObserver];
+    [self removeUninstallNotificationObserver];
+    
+    // Reset NSProgressIndicator
+    [_progressBar stopAnimation:nil];
+    [_progressBar setIndeterminate:YES];
+    [_progressBar setHidden:YES];
+
+    // Reset MPOProgressBar (custom progress bar)
+    if (self.progressBarNew) {
+        [self.progressBarNew stopAnimation];
+        [self.progressBarNew setHidden:YES];
+    }
+
+    // Reset status text and images
+    _swActionStatusText.hidden = YES;
+    _swActionStatusText.stringValue = @"";
+    [self.errorImage setHidden:YES];
+    [self.actionButton setEnabled:YES];
+    
+    // Reset action button state
+    [self.actionButton setTitle:@"Install"];
+    [self.actionButton setState:0];
+    
+    // Reset installed state image
+    [self.installedStateImage setImage:[NSImage imageNamed:@"EmptyImage"]];
+}
+
+- (void)prepareForReuseLikeReset
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // Reset NSProgressIndicator
+        [self->_progressBar stopAnimation:nil];
+        [self->_progressBar setIndeterminate:YES];
+        [self->_progressBar setHidden:YES];
+        [self->_progressBar display];
+
+        // Reset MPOProgressBar (custom progress bar)
+        if (self.progressBarNew) {
+            [self.progressBarNew stopAnimation];
+            [self.progressBarNew setHidden:YES];
+        }
+
+        // Reset status text and images
+        self->_swActionStatusText.hidden = YES;
+        self->_swActionStatusText.stringValue = @"";
+        [self.errorImage setHidden:YES];
+        [self.actionButton setEnabled:YES];
+    });
+}
+
 - (void)setupCellUIForInstall
 {
     dispatch_async(dispatch_get_main_queue(), ^{
 		[self->_errorImage setHidden:YES];
 		[self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
-        //[self->_progressBar setHidden:NO];
+        [self->_progressBar setHidden:YES];
         //[self->_progressBar startAnimation:nil];
 		
 		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
@@ -408,7 +560,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	dispatch_async(dispatch_get_main_queue(), ^{
 		[self->_errorImage setHidden:YES];
 		[self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
-		//[self->_progressBar setHidden:NO];
+		[self->_progressBar setHidden:YES];
 		//[self->_progressBar startAnimation:nil];
 		
 		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
@@ -481,6 +633,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         
         [self.actionButton setEnabled:YES];
         [self->_swDescription setFrameSize:NSMakeSize(500.0, 86.0)];
+        
+        if ([self.delegate respondsToSelector:@selector(softwareCellViewDidFinish:success:errorMessage:rowData:)]) {
+            BOOL success = !hadError;
+            [self.delegate softwareCellViewDidFinish:self success:success errorMessage:errStr rowData:self.rowData];
+        }
     });
 	
 	

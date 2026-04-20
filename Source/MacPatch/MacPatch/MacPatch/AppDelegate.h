@@ -31,7 +31,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSToolbarDelegate>
 {
-    NSMutableArray                  *availableControllers;
     IBOutlet NSBox                  *viewHolder;
     RHPreferencesWindowController   *_preferencesWindowController;
 }
