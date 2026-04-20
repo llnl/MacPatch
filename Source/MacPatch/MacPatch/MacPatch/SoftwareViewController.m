@@ -15,8 +15,8 @@ Software Foundation) version 2, dated June 1991.
 
 MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
-License for more details.
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General
+Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with MacPatch; if not, write to the Free Software Foundation, Inc.,
@@ -32,7 +32,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 #define MP_INSTALLED_DATA       @".installed.plist"
 
-@interface SoftwareViewController ()
+@interface SoftwareViewController () <SoftwareCellViewDelegate>
 {
     NSUserDefaults  	*defaults;
 	MPSettings 			*settings;
@@ -693,12 +693,44 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch/SW_Data"];
 
         SoftwareCellView *cellView = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
+        cellView.delegate = self;
         cellView.serverArray = [settings.servers copy];
         cellView.mp_SOFTWARE_DATA_DIR = appSupportMPDir;
         cellView.rowData = [sw copy];
         cellView.actionButton.title = @"Install";
         [cellView.actionButton setState:0];
-        [cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
+        
+        // Removed setting target/action here to keep original SoftwareCellView runInstall: action
+        
+        // CRITICAL: Reset and configure per-row UI state based on model
+        // This ensures cells are properly configured when reused
+        NSNumber *isInstalling = sw[@"isInstalling"] ?: @NO;
+        NSNumber *progress = sw[@"progress"] ?: @0;
+        NSString *statusText = sw[@"statusText"] ?: @"";
+
+        // Configure the NSProgressIndicator
+        cellView.progressBar.hidden = !isInstalling.boolValue;
+        if (isInstalling.boolValue) {
+            cellView.progressBar.indeterminate = NO;
+            cellView.progressBar.minValue = 0.0;
+            cellView.progressBar.maxValue = 100.0;
+            cellView.progressBar.doubleValue = progress.doubleValue;
+        } else {
+            cellView.progressBar.indeterminate = YES;
+            cellView.progressBar.doubleValue = 0.0;
+        }
+
+        // Configure status text
+        cellView.swActionStatusText.hidden = !isInstalling.boolValue;
+        cellView.swActionStatusText.stringValue = statusText;
+        
+        // Configure action button based on install state
+        if (isInstalling.boolValue) {
+            cellView.actionButton.enabled = NO;
+            // Keep the current title from notifications
+        } else {
+            cellView.actionButton.enabled = YES;
+        }
         
         //NSString *appImage = sw[@"image"]?:@"AppStore";
         [cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
@@ -758,6 +790,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 [cellView runInstall:cellView.actionButton];
             }
         }
+        
+        // CRITICAL: Configure cell UI after all properties are set
+        [cellView configureCellUI];
         
         return cellView;
     }
@@ -913,4 +948,110 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	decisionHandler(WKNavigationActionPolicyAllow);
 }
 
+- (void)handleCellActionButton:(NSButton *)sender {
+    // Find the row for this button
+    NSPoint pointInTable = [sender convertPoint:NSZeroPoint toView:self.tableView];
+    NSInteger row = [self.tableView rowAtPoint:pointInTable];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    // Initialize install state when user taps install
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = @"Starting…";
+
+    // Reload just this row to apply consistent UI state
+    NSIndexSet *rowSet = [NSIndexSet indexSetWithIndex:row];
+    NSIndexSet *colSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
+    [self.tableView reloadDataForRowIndexes:rowSet columnIndexes:colSet];
+}
+
+#pragma mark - SoftwareCellViewDelegate Methods
+
+- (void)softwareCellViewDidStartInstall:(SoftwareCellView *)cell rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = @"Starting…";
+    
+    // Store the operation type (Install or Uninstall) based on current install state
+    if (cell.isAppInstalled) {
+        sw[@"operationType"] = @"Uninstall";
+    } else {
+        sw[@"operationType"] = @"Install";
+    }
+    
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = NO;
+            visibleCell.progressBar.indeterminate = NO;
+            visibleCell.progressBar.minValue = 0.0;
+            visibleCell.progressBar.maxValue = 100.0;
+            visibleCell.progressBar.doubleValue = 0.0;
+            
+            visibleCell.swActionStatusText.hidden = NO;
+            visibleCell.swActionStatusText.stringValue = @"Starting…";
+        });
+    }
+}
+
+- (void)softwareCellView:(SoftwareCellView *)cell didUpdateProgress:(double)progress status:(NSString *)status rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @(progress);
+    if (status) { sw[@"statusText"] = status; }
+
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = NO;
+            visibleCell.progressBar.indeterminate = NO;
+            visibleCell.progressBar.doubleValue = progress;
+            
+            visibleCell.swActionStatusText.hidden = NO;
+            visibleCell.swActionStatusText.stringValue = status ?: @"";
+        });
+    }
+}
+
+- (void)softwareCellViewDidFinish:(SoftwareCellView *)cell success:(BOOL)success errorMessage:(NSString *)message rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @NO;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = success ? @"" : (message ?: @"Error");
+    sw[@"operationType"] = nil; // Clear operation type
+
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = YES;
+            visibleCell.progressBar.indeterminate = YES;
+            visibleCell.progressBar.doubleValue = 0.0;
+            
+            visibleCell.swActionStatusText.hidden = YES;
+            visibleCell.swActionStatusText.stringValue = sw[@"statusText"];
+        });
+    } else if (!visibleCell) {
+        // Cell is not visible, will be configured correctly when it scrolls back
+        NSIndexSet *rowSet = [NSIndexSet indexSetWithIndex:row];
+        NSIndexSet *colSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadDataForRowIndexes:rowSet columnIndexes:colSet];
+        });
+    }
+}
+
 @end
+
+
+

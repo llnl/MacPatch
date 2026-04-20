@@ -26,6 +26,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 #import <Cocoa/Cocoa.h>
 #import "SYFlatButton.h"
 
+@protocol SoftwareCellViewDelegate <NSObject>
+@optional
+- (void)softwareCellViewDidStartInstall:(nonnull id)cell rowData:(nonnull NSDictionary *)rowData;
+- (void)softwareCellView:(nonnull id)cell didUpdateProgress:(double)progress status:(nonnull NSString *)status rowData:(nonnull NSDictionary *)rowData;
+- (void)softwareCellViewDidFinish:(nonnull id)cell success:(BOOL)success errorMessage:(nullable NSString *)message rowData:(nonnull NSDictionary *)rowData;
+@end
+
 @interface SoftwareCellView : NSTableCellView
 {
     long long				maxValLong;
@@ -34,27 +41,30 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	//Tile * __weak **grid;
 }
-@property (nonatomic, strong) NSURL         *mp_SOFTWARE_DATA_DIR;
-@property (nonatomic, strong) NSDictionary  *rowData;
-@property (nonatomic, strong) NSArray		*serverArray;
+@property (nonatomic, weak, nullable) id<SoftwareCellViewDelegate> delegate;
+
+@property (nonatomic, strong, nonnull) NSURL         *mp_SOFTWARE_DATA_DIR;
+@property (nonatomic, strong, nullable) NSDictionary  *rowData;
+@property (nonatomic, strong, nullable) NSArray		*serverArray;
 @property (nonatomic, assign) BOOL 			isAppInstalled;
 @property (nonatomic, assign) BOOL          isLocalAppInstalled;
 
-@property (nonatomic, strong) IBOutlet NSProgressIndicator *progressBar;
-@property (nonatomic, strong) IBOutlet SYFlatButton *actionButton;
-@property (nonatomic, strong) IBOutlet NSImageView *installedStateImage;
-@property (nonatomic, strong) IBOutlet NSImageView *errorImage;
-@property (nonatomic, strong) IBOutlet NSTextField *swRebootTextFlag;
-@property (nonatomic, strong) IBOutlet NSImageView *swIcon;
-@property (nonatomic, strong) IBOutlet NSTextField *swTitle;
-@property (nonatomic, strong) IBOutlet NSTextField *swCompany;
-@property (nonatomic, strong) IBOutlet NSTextField *swVersion;
-@property (nonatomic, strong) IBOutlet NSTextField *swSize;
-@property (nonatomic, strong) IBOutlet NSTextField *swInstallBy;
-@property (nonatomic, strong) IBOutlet NSTextField *swDescription;
-@property (nonatomic, strong) IBOutlet NSTextField *swActionStatusText;
+@property (nonatomic, strong, nullable) IBOutlet NSProgressIndicator *progressBar;
+@property (nonatomic, strong, nullable) IBOutlet SYFlatButton *actionButton;
+@property (nonatomic, strong, nullable) IBOutlet NSImageView *installedStateImage;
+@property (nonatomic, strong, nullable) IBOutlet NSImageView *errorImage;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swRebootTextFlag;
+@property (nonatomic, strong, nullable) IBOutlet NSImageView *swIcon;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swTitle;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swCompany;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swVersion;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swSize;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swInstallBy;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swDescription;
+@property (nonatomic, strong, nullable) IBOutlet NSTextField *swActionStatusText;
 
 
-- (IBAction)runInstall:(id)sender;
+- (IBAction)runInstall:(nullable id)sender;
+- (void)configureCellUI;
 
 @end

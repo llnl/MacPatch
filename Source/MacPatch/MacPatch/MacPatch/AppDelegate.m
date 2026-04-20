@@ -220,6 +220,21 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     [self handleEventActionIfNeeded];
 }
 
+- (IBAction)ShowSoftwareView:(id)sender
+{
+    [self changeView:_SoftwareToolbarButton];
+}
+
+- (IBAction)showUpdatesView:(id)sender
+{
+    [self changeView:_UpdatesToolbarButton];
+}
+
+- (IBAction)ShowHistoryView:(id)sender
+{
+    [self changeView:_HistoryToolbarButton];
+}
+
 -(IBAction)showPreferences:(id)sender
 {
     //if we have not created the window controller yet, create it now
