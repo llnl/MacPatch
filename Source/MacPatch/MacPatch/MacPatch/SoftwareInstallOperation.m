@@ -35,6 +35,7 @@
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
 - (void)postSWStatus:(NSString *)status;
+- (void)postSWStatus:(NSString *)status progress:(double)progress;
 
 @end
 
@@ -283,7 +284,16 @@
 
 - (void)postSWStatus:(NSString *)status
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status, @"id": swTask[@"id"] ?: @""}];
+	[self postSWStatus:status progress:0.0];
+}
+
+- (void)postSWStatus:(NSString *)status progress:(double)progress
+{
+	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote 
+														object:nil 
+													  userInfo:@{@"status":status, 
+																 @"progress":@(progress),
+																 @"id": swTask[@"id"] ?: @""}];
 }
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
