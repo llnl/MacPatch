@@ -32,6 +32,33 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 #define MP_INSTALLED_DATA       @".installed.plist"
 
+// Add this helper category at the top of the implementation
+@interface NSDictionary (SafeStringAccess)
+- (NSString *)safeStringForKey:(NSString *)key;
+- (NSString *)safeStringForKey:(NSString *)key defaultValue:(NSString *)defaultValue;
+@end
+
+@implementation NSDictionary (SafeStringAccess)
+- (NSString *)safeStringForKey:(NSString *)key {
+    return [self safeStringForKey:key defaultValue:@""];
+}
+
+- (NSString *)safeStringForKey:(NSString *)key defaultValue:(NSString *)defaultValue {
+    id value = self[key];
+    if (value == nil || value == [NSNull null]) {
+        return defaultValue;
+    }
+    if ([value isKindOfClass:[NSString class]]) {
+        return value;
+    }
+    // If it's a number or other type, convert it
+    if ([value respondsToSelector:@selector(stringValue)]) {
+        return [value stringValue];
+    }
+    return defaultValue;
+}
+@end
+
 @interface SoftwareViewController () <SoftwareCellViewDelegate>
 {
     NSUserDefaults  	*defaults;
@@ -357,7 +384,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			dispatch_async(dispatch_get_main_queue(), ^{
 				qlerror(@"%@",err.localizedDescription);
 				self->_swNetworkStatusImage.hidden = NO;
-				[self->_swNetworkStatusText setStringValue:err.localizedDescription];
+				[self->_swNetworkStatusText setStringValue:err.localizedDescription ?: @""];
 			});
 			return;
 		} else {
@@ -671,7 +698,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)workerStatusText:(NSString *)aStatus
 {
-    _swNetworkStatusText.stringValue = aStatus;
+    _swNetworkStatusText.stringValue = aStatus ?: @"";
 }
 
 #pragma mark - TableView
@@ -711,10 +738,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         // Configure the NSProgressIndicator
         cellView.progressBar.hidden = !isInstalling.boolValue;
         if (isInstalling.boolValue) {
-            cellView.progressBar.indeterminate = NO;
-            cellView.progressBar.minValue = 0.0;
-            cellView.progressBar.maxValue = 100.0;
-            cellView.progressBar.doubleValue = progress.doubleValue;
+            //cellView.progressBar.indeterminate = NO;
+            cellView.progressBar.indeterminate = YES;
+            //cellView.progressBar.minValue = 0.0;
+            //cellView.progressBar.maxValue = 100.0;
+            //cellView.progressBar.doubleValue = progress.doubleValue;
         } else {
             cellView.progressBar.indeterminate = YES;
             cellView.progressBar.doubleValue = 0.0;
@@ -735,26 +763,27 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         //NSString *appImage = sw[@"image"]?:@"AppStore";
         [cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
         
-        [cellView.swTitle setStringValue:sw[@"name"]];
+        // FIX: Use safeStringForKey for all dictionary accesses
+        [cellView.swTitle setStringValue:[sw safeStringForKey:@"name"]];
         [cellView.swCompany setPlaceholderString:@""];
-        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
-        [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
+        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@", [sw[@"Software"] safeStringForKey:@"vendor"]]];
+        [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@", [sw[@"Software"] safeStringForKey:@"version"]]];
         
-        long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
+        long lSize = ([[sw[@"Software"] safeStringForKey:@"sw_size"] longLongValue] * 1000);
         NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
-        [cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
+        [cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@", xSize]];
         [cellView.swDescription setPlaceholderString:@""];
-        [cellView.swDescription setStringValue:sw[@"Software"][@"description"]];
+        [cellView.swDescription setStringValue:[sw[@"Software"] safeStringForKey:@"description"]];
         
         if ([sw[@"sw_task_type"] isEqualToString:@"om"]) {
-            NSString *istBy = [NSString stringWithFormat:@"Install by: %@",sw[@"sw_end_datetime"]];
+            NSString *istBy = [NSString stringWithFormat:@"Install by: %@", [sw safeStringForKey:@"sw_end_datetime"]];
             [cellView.swInstallBy setStringValue:istBy];
         } else if ([sw[@"sw_task_type"] isEqualToString:@"m"]) {
             isMandatory = YES;
         } else {
             [cellView.swInstallBy setStringValue:@""];
         }
-        if ([sw[@"Software"][@"reboot"] isEqualToString:@"0"]) {
+        if ([[sw[@"Software"] safeStringForKey:@"reboot"] isEqualToString:@"0"]) {
             [cellView.swRebootTextFlag setStringValue:@""];
             [cellView.installedStateImage setImage:[NSImage imageNamed:@"EmptyImage"]];
         } else {
@@ -775,9 +804,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         
         // if sw_app_path exists and is does not have a value of None
         if (sw[@"Software"][@"sw_app_path"]) {
-            if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
+            if (![[sw[@"Software"] safeStringForKey:@"sw_app_path"] isEqualToString:@"None"])
             {
-                if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
+                if ([self isAppInstalledOnSystem:[sw[@"Software"] safeStringForKey:@"sw_app_path"]]) {
                     //[cellView.installedStateImage setImage:[NSImage imageNamed:@"GoodImageHD"]];
                     cellView.isLocalAppInstalled = YES;
                     //cellView.isAppInstalled = YES;
@@ -988,10 +1017,10 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
     if (visibleCell == cell) {
         dispatch_async(dispatch_get_main_queue(), ^{
             visibleCell.progressBar.hidden = NO;
-            visibleCell.progressBar.indeterminate = NO;
-            visibleCell.progressBar.minValue = 0.0;
-            visibleCell.progressBar.maxValue = 100.0;
-            visibleCell.progressBar.doubleValue = 0.0;
+            visibleCell.progressBar.indeterminate = YES; //was no
+            //visibleCell.progressBar.minValue = 0.0;
+            //visibleCell.progressBar.maxValue = 100.0;
+            //visibleCell.progressBar.doubleValue = 0.0;
             
             visibleCell.swActionStatusText.hidden = NO;
             visibleCell.swActionStatusText.stringValue = @"Starting…";
@@ -1012,11 +1041,23 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
     if (visibleCell == cell) {
         dispatch_async(dispatch_get_main_queue(), ^{
             visibleCell.progressBar.hidden = NO;
-            visibleCell.progressBar.indeterminate = NO;
-            visibleCell.progressBar.doubleValue = progress;
+            visibleCell.progressBar.indeterminate = YES;
+            /*
+            if (progress == 0) {
+                visibleCell.progressBar.indeterminate = YES;
+            } else {
+                visibleCell.progressBar.indeterminate = NO;
+                //visibleCell.progressBar.doubleValue = progress;
+            }
+            */
             
             visibleCell.swActionStatusText.hidden = NO;
             visibleCell.swActionStatusText.stringValue = status ?: @"";
+            /*
+            NSLog(@"[NSLOG] sw = %@",sw);
+            NSLog(@"[NSLOG] progress = %f",progress);
+            NSLog(@"[NSLOG] status = %@",status);
+             */
         });
     }
 }
@@ -1052,6 +1093,3 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 }
 
 @end
-
-
-
