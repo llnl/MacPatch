@@ -578,6 +578,9 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             // Compress Packages
             // ---------------------------------
             log.info("Compress Packages")
+            log.debug("Flattened packages count: \(flattend_packages.count)")
+            log.debug("Flattened packages: \(flattend_packages.joined(separator: ", "))")
+            
             await MainActor.run {
                 self.compressPackageImage.image = NSImage.init(named: NSImage.removeTemplateName)
             }
@@ -627,17 +630,42 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             log.info("Post Package")
             if (!doNotUpload)
             {
-                let xp: [String] = flattend_packages.map { fpkg in
-                    fpkg.replacingOccurrences(of: "toSign_", with: "").stringByAppendingPathExtension(ext: "zip")!
+                log.debug("Processing \(flattend_packages.count) packages for upload")
+                let xp: [String] = flattend_packages.compactMap { fpkg in
+                    log.debug("Processing package: \(fpkg)")
+                    let cleanedPath = fpkg.replacingOccurrences(of: "toSign_", with: "")
+                    log.debug("Cleaned path: \(cleanedPath)")
+                    guard let withExtension = cleanedPath.stringByAppendingPathExtension(ext: "zip") else {
+                        log.error("Failed to append .zip extension to: \(cleanedPath)")
+                        return nil
+                    }
+                    log.debug("Final package path: \(withExtension)")
+                    return withExtension
+                }
+                
+                log.info("Successfully prepared \(xp.count) packages for upload")
+                if xp.isEmpty {
+                    log.error("No valid packages to upload after processing")
+                    await MainActor.run {
+                        self.postPackageImage.image = NSImage.init(named: "RedDot")
+                        self.postPackageStatus.stringValue = "Error: No valid packages to upload."
+                        self.toggleUIEnd()
+                    }
+                    return
                 }
                 
                 // Gather Plugins and Profiles data
                 
-                
+                log.debug("Collecting plugins and profiles data...")
                 let fdata: [String: Any] = await MainActor.run {
-                    ["app": self.agent_dictionary, "update": self.updater_dictionary,
-                     "plugins": self.collectPluginsData(), "profiles": self.collectProfilesData()]
+                    let pluginsData = self.collectPluginsData()
+                    let profilesData = self.collectProfilesData()
+                    log.debug("Collected \(pluginsData.count) plugins and \(profilesData.count) profiles")
+                    return ["app": self.agent_dictionary, "update": self.updater_dictionary,
+                     "plugins": pluginsData, "profiles": profilesData]
                 }
+                
+                log.debug("Form data prepared with \((fdata["plugins"] as? [[String:Any]])?.count ?? 0) plugins and \((fdata["profiles"] as? [[String:Any]])?.count ?? 0) profiles")
                 
                 let uploadResult = await MainActor.run {
                     self.uploadPackagesToServer(packages: xp, formData: fdata, serverHost: serverHost, serverPort: serverPort, useSSL: serverUseSSL, apiToken: apiToken)
@@ -849,16 +877,20 @@ class ViewController: NSViewController, AuthViewControllerDelegate
      */
     func getAgentConfigurationData(token: String) async -> [String:Any]?
     {
+        log.debug("Getting agent configuration with token: \(token.prefix(10))...")
         
         let _ssl = await MainActor.run { (useSSL.state == .on) ? "https" : "http" }
         let serverHost = await MainActor.run { mpServerHost.stringValue }
         let serverPort = await MainActor.run { mpServerPort.stringValue }
         let _url = "\(_ssl)://\(serverHost):\(serverPort)/api/v2/agent/config/\(token)"
         
+        log.debug("Configuration URL: \(_url)")
+        
         return await withCheckedContinuation { continuation in
             NetworkService.shared.request(_url) { response in
                 // Validate status code manually
                 if let statusCode = response.statusCode {
+                    log.debug("Configuration response status code: \(statusCode)")
                     guard NetworkService.shared.validateStatusCode(statusCode, in: 200...299) else {
                         log.error("Invalid status code: \(statusCode)")
                         continuation.resume(returning: nil)
@@ -869,10 +901,17 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 switch response.result {
                 case .success(let JSON):
                     let result = JSON as! NSDictionary
-                    log.debug("result: \(result)")
-                    continuation.resume(returning: result["result"] as? [String:Any])
+                    log.debug("Configuration response received")
+                    
+                    if let configData = result["result"] as? [String:Any] {
+                        log.debug("Configuration keys: \(configData.keys.joined(separator: ", "))")
+                        continuation.resume(returning: configData)
+                    } else {
+                        log.error("No result data in configuration response")
+                        continuation.resume(returning: nil)
+                    }
                 case .failure(let error):
-                    log.error("\(error)")
+                    log.error("Configuration request failed: \(error)")
                     continuation.resume(returning: nil)
                 }
             }
@@ -911,29 +950,42 @@ class ViewController: NSViewController, AuthViewControllerDelegate
      */
     func extractAgentPKG(package: String) -> Bool
     {
+        log.debug("Extracting agent package: \(package)")
+        
+        // Verify package exists
+        guard fm.fileExists(atPath: package) else {
+            log.error("Package does not exist at path: \(package)")
+            return false
+        }
+        
         self.pkg_tmp_dir = "" // Clear any old variable value
         
         // Delete existing dir if found
         let tmpDir = NSTemporaryDirectory().stringByAppendingPathComponent(path: "mpPKG")
+        log.debug("Using temporary directory: \(tmpDir)")
+        
         if (fm.fileExists(atPath: tmpDir)) {
+            log.debug("Removing existing temporary directory")
             do {
                 try fm.removeItem(atPath: tmpDir)
             } catch let error as NSError {
-                log.error(error.debugDescription)
+                log.error("Failed to remove existing temp directory: \(error.debugDescription)")
                 return false
             }
         }
         
         // Create Temp Dir
         do {
+            log.debug("Creating temporary directory")
             try fm.createDirectory(atPath: tmpDir, withIntermediateDirectories: true, attributes: nil)
         } catch let error as NSError {
-            log.error(error.debugDescription)
+            log.error("Failed to create temp directory: \(error.debugDescription)")
             return false
         }
         
         // Assign temp di path to global variable
         self.pkg_tmp_dir = tmpDir
+        log.debug("Temporary directory set to: \(self.pkg_tmp_dir)")
         
         // Extract Packages
         do {
@@ -941,8 +993,9 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             _ = try ProcessRunner(args: ["/usr/bin/ditto", "-x", "-k", package, tmpDir]) { str in
                 log.debug(str)
             }
+            log.debug("Package extraction successful")
         } catch {
-            log.error("\(error)")
+            log.error("Failed to extract package: \(error)")
             return false
         }
         
@@ -950,18 +1003,23 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         let pkgName = tmpDir.stringByAppendingPathComponent(path: package.lastPathComponent).stringByDeletingPathExtension
         let expandedPkgDir = tmpDir.stringByAppendingPathComponent(path: "MacPatch")
         
+        log.debug("Package name: \(pkgName)")
+        log.debug("Expanded package directory: \(expandedPkgDir)")
+        
         // Expand Package
         do {
             log.info("Expand package, \(pkgName)")
             _ = try ProcessRunner(args: ["/usr/sbin/pkgutil", "--expand", pkgName, expandedPkgDir]) { str in
                 log.debug(str)
             }
+            log.debug("Package expansion successful")
             try fm.removeItem(atPath: pkgName)
         } catch {
-            log.error("\(error)")
+            log.error("Failed to expand package: \(error)")
             return false
         }
         
+        log.info("Successfully extracted and expanded package")
         return true
     }
     
@@ -1355,11 +1413,15 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         var flat_packages: [String] = []
         let sign = shouldSign
         
+        log.debug("Flattening \(packages.count) packages in directory: \(working_dir)")
+        log.debug("Signing enabled: \(sign)")
         
         for p in packages
         {
             var pkg_name: String
             var flatten_pkg_path: String
+            
+            log.debug("Processing package: \(p)")
             
             // Assign the package name
             if (sign == true) {
@@ -1368,27 +1430,41 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 pkg_name = p.lastPathComponent
             }
             
+            log.debug("Package name will be: \(pkg_name)")
+            
             // Create the path for the flattened package
             if (p.lastPathComponent.pathExtension == "pkg") {
                 flatten_pkg_path = working_dir.stringByAppendingPathComponent(path: pkg_name)
             } else {
-                flatten_pkg_path = working_dir.stringByAppendingPathComponent(path: pkg_name.stringByAppendingPathExtension(ext: "pkg")!)
+                guard let pathWithExt = pkg_name.stringByAppendingPathExtension(ext: "pkg") else {
+                    log.error("Failed to append .pkg extension to: \(pkg_name)")
+                    continue
+                }
+                flatten_pkg_path = working_dir.stringByAppendingPathComponent(path: pathWithExt)
             }
+            
+            log.debug("Flattened package path: \(flatten_pkg_path)")
             
             // Flatten the package
             if (self.flattenPackage(package: p, flatten_package: flatten_pkg_path)) {
                 flat_packages.append(flatten_pkg_path)
+                log.debug("Successfully flattened package to: \(flatten_pkg_path)")
             } else {
                 log.error("Error flattening package \(p)")
             }
             
             // Sign the flatten package
             if (sign == true) {
+                log.debug("Attempting to sign package: \(flatten_pkg_path)")
                 if (!self.signPackage(flatten_pkg_path)) {
+                    log.error("Failed to sign package: \(flatten_pkg_path)")
                     return []
                 }
+                log.debug("Successfully signed package")
             }
         }
+        
+        log.info("Flattened \(flat_packages.count) packages successfully")
         return flat_packages
     }
     
@@ -1488,37 +1564,62 @@ class ViewController: NSViewController, AuthViewControllerDelegate
      */
     func uploadPackagesToServer(packages: [String], formData: [String: Any], serverHost: String, serverPort: String, useSSL: Bool, apiToken: String) -> Bool
     {
+        log.debug("Starting upload of \(packages.count) packages")
+        log.debug("Packages to upload: \(packages.joined(separator: ", "))")
+        
         let aid: String = UUID.init().uuidString
         let _ssl = useSSL ? "https" : "http"
         let _url: String = "\(_ssl)://\(serverHost):\(serverPort)/api/v2/agent/upload/\(aid)/\(apiToken)"
         log.info("API URL: \(_url)")
+        log.debug("Upload ID: \(aid)")
         
         var pkgs = [[String:Any]]()
         var fileData: NSData
         
         for p in packages
         {
+            log.debug("Preparing package for upload: \(p)")
+            
+            // Verify file exists
+            guard fm.fileExists(atPath: p) else {
+                log.error("Package file does not exist: \(p)")
+                continue
+            }
+            
+            // Get file size for logging
+            if let attrs = try? fm.attributesOfItem(atPath: p),
+               let fileSize = attrs[.size] as? Int {
+                let fileSizeMB = Double(fileSize) / 1_048_576.0
+                log.debug("Package size: \(String(format: "%.2f", fileSizeMB)) MB")
+            }
+            
             fileData = try! NSData.init(contentsOfFile: p)
             let d: [String: Any]
             
             if (p.lastPathComponent.contains("Base.pkg") || p.lastPathComponent.contains("Client.pkg"))
             {
+                log.debug("Adding Base/Client package")
                 d = ["name": "fBase", "fileName": p.lastPathComponent, "data": fileData as Data]
             }
             else if (p.lastPathComponent.contains("MacPatch.pkg"))
             {
+                log.debug("Adding Complete package")
                 d = ["name": "fComplete", "fileName": p.lastPathComponent, "data": fileData as Data]
             }
             else if (p.lastPathComponent.contains("Updater.pkg"))
             {
+                log.debug("Adding Updater package")
                 d = ["name": "fUpdate", "fileName": p.lastPathComponent, "data": fileData as Data]
             }
             else
             {
+                log.warning("Unknown package type, skipping: \(p.lastPathComponent)")
                 continue
             }
             pkgs.append(d)
         }
+        
+        log.info("Prepared \(pkgs.count) packages for upload")
         var didUpload = false
         let jsonData = try! JSONSerialization.data(withJSONObject: formData, options: [])
         let semaphore = DispatchSemaphore(value: 0)
@@ -1601,17 +1702,27 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     {
         var result = [[String:Any]]()
         
+        log.debug("Collecting plugins from path: \(self.pluginsPath.stringValue)")
         let _plugins: [String] = self.getPluginsFromDirectory(path: self.pluginsPath.stringValue) ?? []
+        log.debug("Found \(_plugins.count) plugins")
+        
         for p in _plugins
         {
+            log.debug("Processing plugin: \(p)")
             let b = Bundle.init(path: p)
             let d = b?.infoDictionary
+            
+            if d == nil {
+                log.warning("Could not read info dictionary for plugin: \(p)")
+            }
+            
             let x = ["plugin": p.lastPathComponent,
                      "bundleIdentifier": (d?["CFBundleIdentifier"] ?? "NA"),
                      "version": (d?["CFBundleShortVersionString"] ?? "NA")]
             result.append(x)
         }
 
+        log.info("Collected data for \(result.count) plugins")
         return result
     }
     
@@ -1623,12 +1734,22 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     func collectProfilesData() -> [[String:Any]]
     {
         var result = [[String:Any]]()
+        
+        log.debug("Collecting profiles from path: \(self.profilesPath.stringValue)")
         let _profiles: [String] = self.getProfilesFromDirectory(path: self.profilesPath.stringValue) ?? []
+        log.debug("Found \(_profiles.count) profiles")
+        
         for p in _profiles
         {
+            log.debug("Processing profile: \(p)")
             let _profileConverted = self.convertSignedProfile(profile: p)
             let payload: NSDictionary? = NSDictionary(contentsOfFile: _profileConverted)
             _ = try? FileManager.default.removeItem(atPath: _profileConverted)
+            
+            if payload == nil {
+                log.warning("Could not read payload for profile: \(p)")
+            }
+            
             let x = ["displayName": (payload?["PayloadDisplayName"] ?? "NA"),
                      "identifier": (payload?["PayloadIdentifier"] ?? "NA"),
                      "organization": (payload?["PayloadOrganization"] ?? "NA"),
@@ -1638,6 +1759,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
             result.append(x)
         }
         
+        log.info("Collected data for \(result.count) profiles")
         return result
     }
     
