@@ -32,7 +32,7 @@
         <!--Preferences View Controller-->
         <scene sceneID="tzP-Db-G1S">
             <objects>
-                <tabViewController storyboardIdentifier="preferencesViewControllerIdentifier" showSeguePresentationStyle="single" tabStyle="toolbar" id="hVY-gq-v56" customClass="PreferencesViewController" customModule="MPAgentUploader" customModuleProvider="target" sceneMemberID="viewController">
+                <tabViewController storyboardIdentifier="preferencesViewControllerIdentifier" showSeguePresentationStyle="single" selectedTabViewItemIndex="0" tabStyle="toolbar" id="hVY-gq-v56" customClass="PreferencesViewController" customModule="MPAgentUploader" customModuleProvider="target" sceneMemberID="viewController">
                     <tabViewItems>
                         <tabViewItem label="General" image="NSPreferencesGeneral" id="r5G-6I-5xq"/>
                     </tabViewItems>

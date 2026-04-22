@@ -29,10 +29,72 @@
 
 import Cocoa
 
-class PreferencesWindowController: NSWindowController {
-
+class PreferencesWindowController: NSWindowController, NSWindowDelegate, NSToolbarDelegate {
+    
+    private var toolbarConfigured = false
+    
     override func windowDidLoad() {
         super.windowDidLoad()
         self.window?.center()
+    }
+    
+    // MARK: - NSWindowDelegate
+    
+    func windowDidBecomeKey(_ notification: Notification) {
+        if !toolbarConfigured {
+            configureToolbar()
+        }
+    }
+    
+    func windowDidUpdate(_ notification: Notification) {
+        if !toolbarConfigured {
+            configureToolbar()
+        }
+    }
+    
+    private func configureToolbar() {
+        guard let toolbar = window?.toolbar else { return }
+        guard !toolbarConfigured else { return }
+        
+        // Set ourselves as the delegate to control the toolbar
+        toolbar.delegate = self
+        
+        toolbarConfigured = true
+    }
+    
+    // MARK: - NSToolbarDelegate
+    
+    func toolbarDefaultItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        // Get the current items (which includes the tab view controller's segmented control)
+        let currentIdentifiers = toolbar.items.map { $0.itemIdentifier }
+        
+        // Add flexible space after the first item to push everything else to the right
+        // This leaves the tab selector on the left
+        var identifiers: [NSToolbarItem.Identifier] = []
+        
+        if let firstIdentifier = currentIdentifiers.first {
+            identifiers.append(firstIdentifier)
+            identifiers.append(.flexibleSpace)
+        }
+        
+        // Add any remaining identifiers
+        identifiers.append(contentsOf: currentIdentifiers.dropFirst())
+        
+        return identifiers
+    }
+    
+    func toolbarAllowedItemIdentifiers(_ toolbar: NSToolbar) -> [NSToolbarItem.Identifier] {
+        var identifiers = toolbar.items.map { $0.itemIdentifier }
+        
+        if !identifiers.contains(.flexibleSpace) {
+            identifiers.append(.flexibleSpace)
+        }
+        
+        return identifiers
+    }
+    
+    func toolbar(_ toolbar: NSToolbar, itemForItemIdentifier itemIdentifier: NSToolbarItem.Identifier, willBeInsertedIntoToolbar flag: Bool) -> NSToolbarItem? {
+        // Return nil to use default items, or create custom items here
+        return nil
     }
 }

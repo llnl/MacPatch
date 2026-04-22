@@ -108,7 +108,9 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     override func viewDidLoad()
     {
         super.viewDidLoad()
-        self.uploadButton.isEnabled = false
+        
+        // Safely configure upload button
+        uploadButton?.isEnabled = false
 
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleLoggingLevel(notification:)), name: Notification.Name("LogLevel"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleAgentUpload(notification:)), name: Notification.Name("AgentUpload"), object: nil)
@@ -117,9 +119,21 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleSkipWhatsNew(notification:)), name: Notification.Name("SkipWhatsNew"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.resetAuthToken(notification:)), name: Notification.Name("ResetAuthToken"), object: nil)
         
-        self.headerView.wantsLayer = true
-        headerViewVersionLabel.stringValue = "Version " + (Bundle.main.infoDictionary!["CFBundleShortVersionString"] as! String)
-        self.mpServerHost.placeholderString = "MacPatch Server"
+        // Safely configure header view
+        headerView?.wantsLayer = true
+        
+        // Safely set version label
+        if let versionLabel = headerViewVersionLabel {
+            if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+                versionLabel.stringValue = "Version " + version
+            } else {
+                versionLabel.stringValue = "Version Unknown"
+            }
+        }
+        
+        // Safely set placeholder
+        mpServerHost?.placeholderString = "MacPatch Server"
+        
         self.resetUI()
     }
 
@@ -294,8 +308,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         let serverPort = self.mpServerPort.stringValue
         let serverUseSSL = self.useSSL.state == .on
         let apiToken = self.api_token
-        let skipWhatsNew = defaults.object(forKey: "skipWhatsNew") as? Bool ?? false
-
+        let skipWhatsNew = self.defaults.bool(forKey: "skipWhatsNew")
         
         Task.detached(priority: .background)
         {
@@ -673,13 +686,12 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 log.debug("Collecting plugins and profiles data...")
                 let fdata: [String: Any] = await MainActor.run {
                     let pluginsData = self.collectPluginsData()
-                    let profilesData = self.collectProfilesData()
-                    log.debug("Collected \(pluginsData.count) plugins and \(profilesData.count) profiles")
+                    log.debug("Collected \(pluginsData.count) plugins")
                     return ["app": self.agent_dictionary, "update": self.updater_dictionary,
-                     "plugins": pluginsData, "profiles": profilesData]
+                     "plugins": pluginsData, "profiles": []]
                 }
                 
-                log.debug("Form data prepared with \((fdata["plugins"] as? [[String:Any]])?.count ?? 0) plugins and \((fdata["profiles"] as? [[String:Any]])?.count ?? 0) profiles")
+                log.debug("Form data prepared with \((fdata["plugins"] as? [[String:Any]])?.count ?? 0) plugins")
                 
                 let uploadResult = await MainActor.run {
                     self.uploadPackagesToServer(packages: xp, formData: fdata, serverHost: serverHost, serverPort: serverPort, useSSL: serverUseSSL, apiToken: apiToken)
@@ -1783,7 +1795,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 log.warning("Could not read info dictionary for plugin: \(p)")
             }
             
-            let x = ["plugin": p.lastPathComponent,
+            let x: [String: Any] = ["plugin": p.lastPathComponent,
                      "bundleIdentifier": (d?["CFBundleIdentifier"] ?? "NA"),
                      "version": (d?["CFBundleShortVersionString"] ?? "NA")]
             result.append(x)
@@ -1792,51 +1804,6 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         log.info("Collected data for \(result.count) plugins")
         return result
     }
-    
-    /**
-    Collects info on all profiles included with the agent install
-    
-    - returns: Array of Dictionaries
-    */
-    func collectProfilesData() -> [[String:Any]]
-    {
-        var result = [[String:Any]]()
-        
-        log.debug("Collecting profiles from path: \(self.profilesPath.stringValue)")
-        let _profiles: [String] = self.getProfilesFromDirectory(path: self.profilesPath.stringValue) ?? []
-        log.debug("Found \(_profiles.count) profiles")
-        
-        for p in _profiles
-        {
-            log.debug("Processing profile: \(p)")
-            let _profileConverted = self.convertSignedProfile(profile: p)
-            let payload: NSDictionary? = NSDictionary(contentsOfFile: _profileConverted)
-            _ = try? FileManager.default.removeItem(atPath: _profileConverted)
-            
-            if payload == nil {
-                log.warning("Could not read payload for profile: \(p)")
-            }
-            
-            let x = ["displayName": (payload?["PayloadDisplayName"] ?? "NA"),
-                     "identifier": (payload?["PayloadIdentifier"] ?? "NA"),
-                     "organization": (payload?["PayloadOrganization"] ?? "NA"),
-                     "version": (payload?["PayloadVersion"] ?? "NA"),
-                     "fileName": p.lastPathComponent]
-            
-            result.append(x)
-        }
-        
-        log.info("Collected data for \(result.count) profiles")
-        return result
-    }
-    
-    func convertSignedProfile(profile: String) -> String
-    {
-        let uuid = "/tmp/\(UUID().uuidString)"
-        _ = run("/usr/bin/security", "cms", "-D", "-i", profile, "-o", uuid)
-        return uuid
-    }
-    
     
 // MARK: - Notifications
     
@@ -1902,17 +1869,18 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     
     @objc func toggleSkipWhatsNew(notification: Notification)
     {
+        log.info("toggleSkipWhatsNew \(defaults.bool(forKey: "skipWhatsNew"))")
         if (defaults.object(forKey: "skipWhatsNew") != nil) {
             if defaults.bool(forKey: "skipWhatsNew") {
                 log.info("Disable Skip Whats New Popup")
-                defaults.set(true, forKey: "skipWhatsNew")
+                defaults.set(false, forKey: "skipWhatsNew")
             } else {
                 log.info("Enable Skip Whats New Popup")
-                defaults.set(false, forKey: "skipWhatsNew")
+                defaults.set(true, forKey: "skipWhatsNew")
             }
         } else {
-            log.info("Enable Skip Whats New Popup")
-            defaults.set(false, forKey: "selfSigned")
+            log.info("Disable Skip Whats New Popup")
+            defaults.set(false, forKey: "skipWhatsNew")
         }
         
         defaults.synchronize()

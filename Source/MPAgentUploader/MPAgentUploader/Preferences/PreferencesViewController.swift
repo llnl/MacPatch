@@ -32,6 +32,37 @@ import Cocoa
 class PreferencesViewController: NSTabViewController
 {
     lazy var originalSizes = [String : NSSize]()
+    private var hasConfiguredToolbar = false
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+    }
+    
+    override func viewDidAppear() {
+        super.viewDidAppear()
+        
+        // Configure toolbar after the view appears and toolbar is created
+        if !hasConfiguredToolbar {
+            configureToolbar()
+            hasConfiguredToolbar = true
+        }
+    }
+    
+    private func configureToolbar() {
+        guard let window = view.window else { return }
+        guard let toolbar = window.toolbar else { return }
+        
+        // Insert a flexible space after the first item (the tab selector)
+        if toolbar.items.count > 0 {
+            // Find if flexible space already exists
+            let hasFlexibleSpace = toolbar.items.contains { $0.itemIdentifier == .flexibleSpace }
+            
+            if !hasFlexibleSpace {
+                // Insert flexible space after the first item
+                toolbar.insertItem(withItemIdentifier: .flexibleSpace, at: 1)
+            }
+        }
+    }
     
     // MARK: - NSTabViewDelegate
     
