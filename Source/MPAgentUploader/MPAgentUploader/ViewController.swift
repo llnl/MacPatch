@@ -247,9 +247,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     @IBAction func processAndUploadAgent(sender: AnyObject)
     {
         self.resetUI()
-        
-        
-        
+
         // Check to see if we need to enable Self-Signed Certs
         if defaults.bool(forKey: "selfSigned") {
             NetworkService.shared.configureSession(allowSelfSigned: true, trustedHost: self.mpServerHost.stringValue)
