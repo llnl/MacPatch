@@ -434,7 +434,7 @@ int main (int argc, char * argv[])
                 printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
                 break;
             case CommandTypeVersion:
-                printf("MPAgent Version: %s\n", [APPVERSION UTF8String]);
+                printf("%s\n", [APPVERSION UTF8String]);
                 break;
             case CommandTypeRegister: {
                 int result = 1;
