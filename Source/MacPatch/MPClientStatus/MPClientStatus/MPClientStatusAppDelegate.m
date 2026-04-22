@@ -523,8 +523,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     appName.stringValue = [[NSProcessInfo processInfo] processName];
     appVersion.stringValue = [NSString stringWithFormat:@"Version %@ (%@)",[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"],[[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleVersion"]];
     [appIcon setImage:[NSImage imageNamed:@"NSApplicationIcon"]];
-    [aboutWindow makeKeyAndOrderFront:sender];
+    // Ensure app is active and bring About window to the very front
     [aboutWindow center];
+    [NSApp activateIgnoringOtherApps:YES];
+    [aboutWindow makeKeyAndOrderFront:sender];
+    [aboutWindow orderFrontRegardless];
 }
 
 #pragma mark -
@@ -1489,3 +1492,4 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 }
 
 @end
+

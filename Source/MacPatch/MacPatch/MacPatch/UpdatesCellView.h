@@ -27,7 +27,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 NS_ASSUME_NONNULL_BEGIN
 
+@protocol UpdatesCellViewDelegate <NSObject>
+@optional
+- (void)updatesCellViewDidStartInstall:(nonnull id)cell rowData:(nonnull NSDictionary *)rowData;
+- (void)updatesCellView:(nonnull id)cell didUpdateProgress:(double)progress status:(nonnull NSString *)status rowData:(nonnull NSDictionary *)rowData;
+- (void)updatesCellViewDidFinish:(nonnull id)cell success:(BOOL)success errorMessage:(nullable NSString *)message rowData:(nonnull NSDictionary *)rowData;
+@end
+
 @interface UpdatesCellView : NSTableCellView
+
+@property (nonatomic, weak, nullable) id<UpdatesCellViewDelegate> delegate;
 
 @property (nonatomic, strong) IBOutlet NSDictionary     	*rowData;
 @property (nonatomic, strong) IBOutlet NSTextField			*patchStatus;
@@ -50,6 +59,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (IBAction)runInstall:(NSButton *)sender;
 - (IBAction)runInstallAlt:(NSButton *)sender;
+- (void)configureCellUI;
 
 @end
 

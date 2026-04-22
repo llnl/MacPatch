@@ -278,6 +278,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     [r setHeaderWithName:@"X-API-Signature" value:sg];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
 	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
+    [r setHeaderWithName:@"User-Agent" value:[NSString stringWithFormat:@"MacPatch/%@ (%@)", settings.clientVer, [[NSProcessInfo processInfo] processName]]];
     
     
     __weak STHTTPRequest *wr = r;
@@ -356,6 +357,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     [r setHeaderWithName:@"Accept" value:@"application/json"];
     [r setHeaderWithName:@"X-Agent-ID" value:@"MacPatch"];
 	[r setHeaderWithName:@"X-Agent-VER" value:settings.clientVer];
+    [r setHeaderWithName:@"User-Agent" value:[NSString stringWithFormat:@"MacPatch/%@ (%@)", settings.clientVer, [[NSProcessInfo processInfo] processName]]];
     
     NSError *jerror = nil;
     // Convert body to JSON Data

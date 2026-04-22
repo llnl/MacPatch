@@ -5,7 +5,7 @@
 //  Created by Charles Heizer on 12/7/16.
 //
 /*
- Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,10 +28,9 @@
  */
 
 import Foundation
-import Alamofire
 
 let URI_PREFIX = "/api/v1"
-let logPath: String = ("~/Library/Logs/AgentUploader.log" as NSString).expandingTildeInPath
+let logPath: String = ("~/Library/Logs/MPAgentUploader.log" as NSString).expandingTildeInPath
 
 extension String {
     

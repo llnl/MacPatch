@@ -5,7 +5,7 @@
 //  Created by Charles Heizer on 12/7/16.
 //
 /*
- Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,14 +28,11 @@
  */
 
 import Cocoa
-import Alamofire
-import LogKit
-var log = LXLogger()
+
+var log = AppLogger()
 
 //import SwiftyBeaver
 //let log = SwiftyBeaver.self
-
-var MPAlamofire = Alamofire.Session()
 
 @NSApplicationMain
 class AppDelegate: NSObject, NSApplicationDelegate {
@@ -45,19 +42,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     func applicationDidFinishLaunching(_ aNotification: Notification)
 	{
-        log = LXLogger(endpoints: [
-            
-            LXRotatingFileEndpoint(
-                baseURL: URL(fileURLWithPath: logPath),
-                numberOfFiles: 7,
-                maxFileSizeKiB: (10 * 1024 * 1024),
-                minimumPriorityLevel: .all,
-                dateFormatter: LXDateFormatter(formatString: "yyyy-MM-dd HH:mm:ss",timeZone: NSTimeZone.local),
-                entryFormatter: LXEntryFormatter({ entry in return
-                    "\(entry.dateTime) [\(entry.level)] [\(entry.fileName)] \(entry.functionName):\(entry.lineNumber) --- \(entry.message)"
-                })
-            )
-        ])
+        log = AppLogger(
+            fileURL: URL(fileURLWithPath: logPath),
+            numberOfFiles: 7,
+            maxFileSizeKB: 10 * 1024,
+            minimumLevel: .info
+        )
         
         NotificationCenter.default.post(name: Notification.Name("setLogLevel"), object: nil)
     }
@@ -84,9 +74,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     
     @IBAction func showLogFileInConsole(_ sender: NSObject?)
     {
-        let logFile = NSHomeDirectory().stringByAppendingPathComponent(path: "Library/Logs/1_AgentUploader.log")
-        NSWorkspace.shared.openFile(logFile, withApplication: "Console")
+        let logFileURL = log.currentLogFileURL()
+        let consoleURL = NSWorkspace.shared.urlForApplication(withBundleIdentifier: "com.apple.Console")
         
+        if let consoleURL = consoleURL {
+            let configuration = NSWorkspace.OpenConfiguration()
+            NSWorkspace.shared.open([logFileURL], withApplicationAt: consoleURL, configuration: configuration) { _, error in
+                if let error = error {
+                    log.error("Failed to open log file in Console: \(error.localizedDescription)")
+                }
+            }
+        } else {
+            log.error("Failed to locate Console application")
+        }
     }
 	
 	@IBAction func resetAuthInfo(_ sender: NSObject?)

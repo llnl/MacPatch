@@ -31,7 +31,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSToolbarDelegate>
 {
-    NSMutableArray                  *availableControllers;
     IBOutlet NSBox                  *viewHolder;
     RHPreferencesWindowController   *_preferencesWindowController;
 }
@@ -50,6 +49,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)ShowSoftwareView:(id)sender;
 - (IBAction)ShowHistoryView:(id)sender;
 - (IBAction)showUpdatesView:(id)sender;
+
+- (void)updateToolbarVisibility;
 
 - (void)showRebootWindow;
 - (void)showRestartWindow:(int)action;

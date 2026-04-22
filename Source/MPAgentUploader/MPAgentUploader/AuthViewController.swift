@@ -5,7 +5,7 @@
 //  Created by Charles Heizer on 12/7/16.
 //
 /*
- Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -28,9 +28,8 @@
  */
 
 import Cocoa
-import Alamofire
 
-protocol AuthViewControllerDelegate: class {
+protocol AuthViewControllerDelegate: AnyObject {
     func didFinishAuthRequest(sender: AuthViewController, token:String)
 }
 
@@ -55,13 +54,7 @@ class AuthViewController: NSViewController
         super.viewDidLoad()
         
         if defaults.bool(forKey: "selfSigned") {
-            MPAlamofire={ ()->Alamofire.Session in
-                //let policies:[String:ServerTrustPolicy]=[self.x_mpServer!: .disableEvaluation]
-                //let manager=Alamofire.SessionManager(serverTrustPolicyManager:ServerTrustPolicyManager(policies:policies))
-                let manager = ServerTrustManager(evaluators: [self.x_mpServer!: DisabledTrustEvaluator()])
-                let session = Session(serverTrustManager: manager)
-                return session
-            }()
+            NetworkService.shared.configureSession(allowSelfSigned: true, trustedHost: self.x_mpServer)
         }
     }
     
@@ -80,9 +73,9 @@ class AuthViewController: NSViewController
         let _url: String = "\(_ssl)://\(x_mpServer!):\(x_mpPort!)\(URI_PREFIX)/auth/token"
 		log.debug("Auth Request URL: \(_url)")
 		
-        let _params: Parameters = ["authUser":authUserID.stringValue, "authPass":authUserPass.stringValue]
+        let _params: [String: Any] = ["authUser":authUserID.stringValue, "authPass":authUserPass.stringValue]
         
-        MPAlamofire.request(_url, method: .post, parameters: _params, encoding: JSONEncoding.default).validate().responseJSON
+        NetworkService.shared.request(_url, method: .post, parameters: _params, encoding: .json)
         { response in
 
             switch response.result

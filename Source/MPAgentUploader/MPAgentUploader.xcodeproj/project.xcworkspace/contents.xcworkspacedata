@@ -4,4 +4,16 @@
    <FileRef
       location = "self:">
    </FileRef>
+   <FileRef
+      location = "group:ProcessRunner.swift">
+   </FileRef>
+   <FileRef
+      location = "group:Spawn.swift">
+   </FileRef>
+   <FileRef
+      location = "group:PROCESS_MIGRATION_GUIDE.md">
+   </FileRef>
+   <FileRef
+      location = "group:QUICK_REFERENCE_ALL.md">
+   </FileRef>
 </Workspace>

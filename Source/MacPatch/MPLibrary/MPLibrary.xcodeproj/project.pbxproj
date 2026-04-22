@@ -378,7 +378,6 @@
 		8FF3D6A1217012D500059ACD /* MPKeyItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPKeyItem.m; path = MPLibrary/MPKeyItem.m; sourceTree = "<group>"; };
 		8FF3D6A2217012D600059ACD /* MPSimpleKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPSimpleKeychain.m; path = MPLibrary/MPSimpleKeychain.m; sourceTree = "<group>"; };
 		8FF3D6A3217012D600059ACD /* MPClientKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPClientKey.h; path = MPLibrary/MPClientKey.h; sourceTree = "<group>"; };
-		8FF3D6A4217012D600059ACD /* MPKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPKeychain.h; path = MPLibrary/MPKeychain.h; sourceTree = "<group>"; };
 		8FF3D6A5217012D600059ACD /* MPCodeSign.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPCodeSign.h; path = MPLibrary/MPCodeSign.h; sourceTree = "<group>"; };
 		8FF3D6A6217012D600059ACD /* MPRemoteFingerprint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPRemoteFingerprint.h; path = MPLibrary/MPRemoteFingerprint.h; sourceTree = "<group>"; };
 		8FF3D6A7217012D600059ACD /* MPKeyItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPKeyItem.h; path = MPLibrary/MPKeyItem.h; sourceTree = "<group>"; };
@@ -386,7 +385,6 @@
 		8FF3D6A9217012D600059ACD /* MPRemoteFingerprint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPRemoteFingerprint.m; path = MPLibrary/MPRemoteFingerprint.m; sourceTree = "<group>"; };
 		8FF3D6AA217012D600059ACD /* MPSimpleKeychain.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSimpleKeychain.h; path = MPLibrary/MPSimpleKeychain.h; sourceTree = "<group>"; };
 		8FF3D6AB217012D600059ACD /* MPCodeSign.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPCodeSign.m; path = MPLibrary/MPCodeSign.m; sourceTree = "<group>"; };
-		8FF3D6AC217012D600059ACD /* MPKeychain.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPKeychain.m; path = MPLibrary/MPKeychain.m; sourceTree = "<group>"; };
 		8FF3D6BA2170131700059ACD /* MPSWTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSWTasks.h; path = MPLibrary/MPSWTasks.h; sourceTree = "<group>"; };
 		8FF3D6BE2170131700059ACD /* MPSWTasks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPSWTasks.m; path = MPLibrary/MPSWTasks.m; sourceTree = "<group>"; };
 		8FF3D7212170196800059ACD /* MPLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPLog.m; path = MPLibrary/MPLog.m; sourceTree = "<group>"; };
@@ -762,12 +760,12 @@
 				8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */,
 				8FF3D72621701AB500059ACD /* NSDictionary+Helper.h */,
 				8FF3D72C21701AB600059ACD /* NSDictionary+Helper.m */,
+				8FF3D72821701AB600059ACD /* NSMutableDictionary+Helper.h */,
+				8FF3D72D21701AB600059ACD /* NSMutableDictionary+Helper.m */,
 				8FF3D72421701AB500059ACD /* NSFileManager+DirectoryLocations.h */,
 				8FF3D72721701AB600059ACD /* NSFileManager+DirectoryLocations.m */,
 				8FF3D72A21701AB600059ACD /* NSFileManager+Helper.h */,
 				8FF3D72F21701AB600059ACD /* NSFileManager+Helper.m */,
-				8FF3D72821701AB600059ACD /* NSMutableDictionary+Helper.h */,
-				8FF3D72D21701AB600059ACD /* NSMutableDictionary+Helper.m */,
 				8FF3D72B21701AB600059ACD /* NSString+Hash.h */,
 				8FF3D72521701AB500059ACD /* NSString+Hash.m */,
 				8FF3D73021701AB600059ACD /* NSString+Helper.h */,
@@ -798,8 +796,6 @@
 				8FF3D6A8217012D600059ACD /* MPClientKey.m */,
 				8FF3D6A5217012D600059ACD /* MPCodeSign.h */,
 				8FF3D6AB217012D600059ACD /* MPCodeSign.m */,
-				8FF3D6A4217012D600059ACD /* MPKeychain.h */,
-				8FF3D6AC217012D600059ACD /* MPKeychain.m */,
 				8FF3D6A7217012D600059ACD /* MPKeyItem.h */,
 				8FF3D6A1217012D500059ACD /* MPKeyItem.m */,
 				8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */,
@@ -1051,7 +1047,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2620;
+				LastUpgradeCheck = 2640;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
 			compatibilityVersion = "Xcode 11.4";
@@ -1186,6 +1182,7 @@
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;
@@ -1231,6 +1228,7 @@
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
 				CLANG_WARN_BOOL_CONVERSION = YES;

@@ -37,7 +37,7 @@ int main(int argc, const char * argv[])
     {
         if (argc >= 2) {
             if (strcmp(argv[1], "-v") == 0) {
-                printf("3.9.2\n");
+                printf("4.1.3\n");
                 return (0);
             }
         }
@@ -50,7 +50,7 @@ int main(int argc, const char * argv[])
     return 0;
 }
 
-static void setUpLogging ()
+static void setUpLogging (void)
 {
     // Setup logging
     BOOL enableDebug = NO;

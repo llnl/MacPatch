@@ -24,6 +24,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 */
 
 #import "PrefsSoftwareVC.h"
+#import "AppDelegate.h"
+
+static NSString * const MPUserDefaultsShowSoftwareView = @"showSoftwareView";
 
 @interface PrefsSoftwareVC ()
 
@@ -36,9 +39,25 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)viewDidLoad
 {
 	[super viewDidLoad];
-	// Do view setup here.
-	self.windowTitle = @"Fool";
-	//self.title = @"Foo";
+    [self.showHideSoftwareCheckBox setState:[self softwareViewOnLaunch]];
+}
+
+- (BOOL)softwareViewOnLaunch
+{
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    return [d boolForKey:@"showSoftwareView"];
+}
+
+- (IBAction)changeSoftwareViewOnLaunch:(id)sender
+{
+    int state = (int)[self.showHideSoftwareCheckBox state];
+    NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
+    [d setBool:state forKey:@"showSoftwareView"];
+    [d synchronize];
+    
+    // Update the toolbar visibility in AppDelegate
+    AppDelegate *appDelegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
+    [appDelegate updateToolbarVisibility];
 }
 
 #pragma mark - RHPreferencesViewControllerProtocol

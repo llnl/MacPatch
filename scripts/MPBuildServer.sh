@@ -43,6 +43,7 @@
 # 3.6.1     Updated Nodejs install for yarn
 # 3.6.2     Updated, now using npm to install yarn
 #           Add redis to server install, updated to python3.11 or python3.12
+# 3.7.0     Updated logic for CentOS
 #
 # ----------------------------------------------------------------------------
 
@@ -84,6 +85,7 @@ fi
 
 USELINUX=false
 USERHEL=false
+USECENTOS=false
 USEUBUNTU=false
 USEMACOS=false
 MACPROMPTFORXCODE=true
@@ -109,17 +111,20 @@ if [[ $platform == 'linux' ]]; then
     distName=`cat /etc/os-release | grep "NAME=" | head -n1`
     if [[ $distName == *"Red"*  || $distName == *"Cent"* ]]; then
         USERHEL=true
+        if [[ $distName == *"Cent"* ]]; then
+            USECENTOS=true
+        fi
         rhel_ver=$(awk -F'=' '/VERSION_ID/{ gsub(/"/,""); print $2}' /etc/os-release)
         
         case $rhel_ver in
-        *"7."*)
+        7|7.*)
             RHEL_MAJOR="7"
             ;;
-        *"8."*)
+        8|8.*)
             RHEL_MAJOR="8"
             py3="python3.11"
             ;;
-        *"9."*)
+        9|9.*)
             RHEL_MAJOR="9"
             py3="python3.12"
             ;;
@@ -250,6 +255,28 @@ if $USELINUX; then
   else
       echo "Create user www-data"
     useradd -r -M -s /dev/null -U www-data
+  fi
+
+  if $USERHEL; then
+    if $USECENTOS; then
+      if dnf repolist enabled | grep -q '^crb'; then
+        echo "CRB repo is enabled"
+      else
+        if ! rpm -q dnf-plugins-core > /dev/null 2>&1; then
+          echo "Install dnf-plugins-core"
+          yum install -y -q -e 1 dnf-plugins-core
+        fi
+        echo "Enable CRB repo"
+        dnf config-manager --set-enabled crb
+      fi
+    fi
+
+    if rpm -q epel-release > /dev/null 2>&1; then
+      echo "epel-release is installed"
+    else
+      echo "Install epel-release"
+      yum install -y -q -e 1 epel-release
+    fi
   fi
 fi
 
@@ -397,10 +424,11 @@ if $USELINUX; then
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
         if [ $RHEL_MAJOR == "8" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3.11" "python3.11-devel" "python3.11-setuptools" "python3.11-pip" "swig" "yarn" "redis6")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.11" "python3.11-devel" "python3.11-setuptools" "python3.11-pip" "swig" "yarn" "redis6")
         elif [ $RHEL_MAJOR == "9" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "epel-release" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "swig" "yarn" "redis")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "swig" "yarn" "redis")
         fi
+
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then

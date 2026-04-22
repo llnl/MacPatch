@@ -29,5 +29,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @interface PrefsSoftwareVC : NSViewController <RHPreferencesViewControllerProtocol>
 
 @property (nonatomic, readonly, retain) NSString *windowTitle;
+@property (nonatomic, retain) IBOutlet NSButton *showHideSoftwareCheckBox;
+
+- (IBAction)changeSoftwareViewOnLaunch:(id)sender;
 
 @end
