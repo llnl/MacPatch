@@ -2,17 +2,26 @@
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Installer
-# ver 2.4
+# ver 2.5
 # Created By Charles Heizer
 # LLNL
 #
+# Improvements in v2.5:
+# - Fixed reversed logic for clientStatusPID and config file checks
+# - Modernized syntax (replaced backticks with $(...))
+# - Updated launchctl commands with fallback for macOS 10.12+ compatibility
+# - Fixed directory removal commands
+# - Improved error handling and quoting
+# - Added better safety checks
+# - Added unloadLaunchItem function with modern/legacy method fallback
 #
 # ***************************************************************************************
 
-systemVersion=`/usr/bin/sw_vers -productVersion`
-majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
-minorVer=`echo $systemVersion | cut -d . -f 2`
-buildVer=`echo $systemVersion | cut -d . -f 3`
+# Get macOS version information (available for future version-specific logic)
+systemVersion=$(/usr/bin/sw_vers -productVersion)
+majorVer=$(echo "$systemVersion" | cut -d . -f 1,2 | sed 's/\.//g')
+minorVer=$(echo "$systemVersion" | cut -d . -f 2)
+buildVer=$(echo "$systemVersion" | cut -d . -f 3)
 
 # Script Parent Dir Path
 SRC="$(dirname "$0")"
@@ -21,26 +30,50 @@ SRC="$(dirname "$0")"
 # consoleUserID at login window is 0
 consoleUserID=$(stat -f%u /dev/console)
 
+# ***************************************************************************************
+# Save or cleanup running process PIDs
+
 clientStatusPID=$(ps -ae | grep MPClientStatus | grep -v grep | awk '{ print $1 }')
-if [ $? == 1 ]; then
+if [ -n "$clientStatusPID" ]; then
+	echo "$clientStatusPID" > /private/tmp/clientStatusPID
+else
 	if [ -f "/private/tmp/clientStatusPID" ]; then
 		rm -f "/private/tmp/clientStatusPID"
 	fi
-	echo $clientStatusPID > /private/tmp/clientStatusPID
 fi
 
 macPatchPID=$(ps -ae | grep MacPatch.app | grep -v grep | awk '{ print $1 }')
-if [ ! -z "$macPatchPID" ]; then
-	/bin/kill -9 $macPatchPID
+if [ -n "$macPatchPID" ]; then
+	echo "Killing MacPatch.app process (PID: $macPatchPID)"
+	/bin/kill -9 "$macPatchPID" 2>/dev/null || true
 fi
 
 # ***************************************************************************************
-# Kill the running MP processes
+# Stop and unload LaunchDaemons and LaunchAgents
+
+# Function to unload launch items with compatibility for macOS 10.12+
+unloadLaunchItem() {
+	local item_path="$1"
+	local item_label="$2"
+	local item_domain="$3"  # "system" for daemons, "gui/$uid" for agents
+
+	# Try modern bootout method first (macOS 10.11+)
+	if /bin/launchctl bootout "$item_domain" "$item_path" 2>/dev/null; then
+		return 0
+	fi
+
+	# Fall back to legacy methods for compatibility
+	if [ -n "$item_label" ]; then
+		/bin/launchctl remove "$item_label" 2>/dev/null || true
+	fi
+	/bin/launchctl unload "$item_path" 2>/dev/null || true
+}
 
 # Launch Agents
 if [ -f "/Library/LaunchAgents/gov.llnl.mp.status.plist" ]; then
 	if [ "$consoleUserID" != "0" ]; then
-    /bin/launchctl bootout gui/$consoleUserID /Library/LaunchAgents/gov.llnl.mp.status.plist
+		unloadLaunchItem "/Library/LaunchAgents/gov.llnl.mp.status.plist" "gov.llnl.mp.status" "gui/$consoleUserID"
+		sleep 1
 	fi
 
 	rm -f /Library/LaunchAgents/gov.llnl.mp.status.plist
@@ -48,45 +81,39 @@ fi
 
 # Launch Daemons
 if [ -f "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" ]; then
-	/bin/launchctl remove gov.llnl.mp.helper
-	sleep 2
-	/bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.helper.plist
-	sleep 2
+	unloadLaunchItem "/Library/LaunchDaemons/gov.llnl.mp.helper.plist" "gov.llnl.mp.helper" "system"
+	sleep 1
 
 	rm -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 	rm -f /Library/Logs/gov.llnl.mp.helper.log
 fi
 
 if [ -f "/Library/LaunchDaemons/gov.llnl.mp.status.ui.plist" ]; then
-	/bin/launchctl remove gov.llnl.mp.status.ui
-	sleep 2
-	/bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
-	sleep 2
+	unloadLaunchItem "/Library/LaunchDaemons/gov.llnl.mp.status.ui.plist" "gov.llnl.mp.status.ui" "system"
+	sleep 1
 
 	rm -f /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
-	rm -f /Library/Logs/gov.llnl.mp.status.ui.plist
+	rm -f /Library/Logs/gov.llnl.mp.status.ui.log
 fi
 
 if [ -f "/Library/LaunchDaemons/gov.llnl.mp.agent.plist" ]; then
-    /bin/launchctl remove gov.llnl.mp.agent
-    sleep 2
-    /bin/launchctl unload /Library/LaunchDaemons/gov.llnl.mp.agent.plist
-    sleep 2
+	unloadLaunchItem "/Library/LaunchDaemons/gov.llnl.mp.agent.plist" "gov.llnl.mp.agent" "system"
+	sleep 1
 
-    rm -f /Library/LaunchDaemons/gov.llnl.mp.agent.plist
+	rm -f /Library/LaunchDaemons/gov.llnl.mp.agent.plist
 fi
 
 
 # ***************************************************************************************
-# MacPatch Pre-Deployment
+# Remove old MacPatch components before installation
 #
 
 if [ -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper" ]; then
 	rm -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper"
 fi
 
-if [ -f "/Library/PrivilegedHelperTools/MPLoginAgent.app" ]; then
-	rm -f "/Library/PrivilegedHelperTools/MPLoginAgent.app"
+if [ -d "/Library/PrivilegedHelperTools/MPLoginAgent.app" ]; then
+	rm -rf "/Library/PrivilegedHelperTools/MPLoginAgent.app"
 fi
 
 if [ -d "/Library/MacPatch/Client/MacPatch.app" ]; then
@@ -118,27 +145,34 @@ if [ -f "/Library/MacPatch/Client/MPAgent" ]; then
 fi
 
 if [ -d "/Library/Application Support/MacPatch/SW_Data" ]; then
-	rm -rf "/Library/Application Support/MacPatch/SW_Data/*"
+	rm -rf "/Library/Application Support/MacPatch/SW_Data"/*
 fi
 
-rm -rf "/Library/MacPatch/Client/Logs"
-rm -rf "/Library/MacPatch/Client/Lib"
-rm -rf "/Library/MacPatch/Client/Data"
-rm -rf "/Library/MacPatch/Client/Tools"
+# Clean up old client directories
+[ -d "/Library/MacPatch/Client/Logs" ] && rm -rf "/Library/MacPatch/Client/Logs"
+[ -d "/Library/MacPatch/Client/Lib" ] && rm -rf "/Library/MacPatch/Client/Lib"
+[ -d "/Library/MacPatch/Client/Data" ] && rm -rf "/Library/MacPatch/Client/Data"
+[ -d "/Library/MacPatch/Client/Tools" ] && rm -rf "/Library/MacPatch/Client/Tools"
 
 # ******************************************************************
 # Set Agent Plist data ...
 # Moved this to pre-install to make sure the plist is there.
 #
-if [ ! -d /Library/Application\ Support/MacPatch ]; then
-	mkdir -p /Library/Application\ Support/MacPatch
+if [ ! -d "/Library/Application Support/MacPatch" ]; then
+	mkdir -p "/Library/Application Support/MacPatch"
 fi
 
 # Add Initial Agent Config Data
-cp "${SRC}/gov.llnl.mpagent.plist" /Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist
+if [ -f "${SRC}/gov.llnl.mpagent.plist" ]; then
+	cp "${SRC}/gov.llnl.mpagent.plist" "/Library/Application Support/MacPatch/gov.llnl.mpagent.plist"
+else
+	echo "Error: Source file ${SRC}/gov.llnl.mpagent.plist not found"
+	exit 1
+fi
 
-if [ -e "/Library/Application\ Support/MacPatch/gov.llnl.mpagent.plist" ]; then
-	echo "/L/AS/M/gov.llnl.mpagent.plist missing"
+if [ ! -e "/Library/Application Support/MacPatch/gov.llnl.mpagent.plist" ]; then
+	echo "Error: Failed to copy gov.llnl.mpagent.plist to /Library/Application Support/MacPatch/"
+	exit 1
 fi
 
 # Set Permissions
