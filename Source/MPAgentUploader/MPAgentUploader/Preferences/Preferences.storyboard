@@ -85,7 +85,7 @@
                                 </connections>
                             </button>
                             <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="j2G-HE-M2m">
-                                <rect key="frame" x="18" y="87" width="280" height="18"/>
+                                <rect key="frame" x="18" y="83" width="280" height="18"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                 <buttonCell key="cell" type="check" title="Allow Self-Signed Certificates for requests" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="Uw1-Nd-BGw">
                                     <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
@@ -95,12 +95,24 @@
                                     <action selector="selfSignedOption:" target="Yil-VZ-ttf" id="PuQ-jF-Ijh"/>
                                 </connections>
                             </button>
+                            <button fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="MOK-cZ-olh">
+                                <rect key="frame" x="18" y="59" width="280" height="18"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                                <buttonCell key="cell" type="check" title="Skip whats new pop-up" bezelStyle="regularSquare" imagePosition="left" alignment="left" inset="2" id="5Dv-Cz-R57">
+                                    <behavior key="behavior" changeContents="YES" doesNotDimImage="YES" lightByContents="YES"/>
+                                    <font key="font" metaFont="system"/>
+                                </buttonCell>
+                                <connections>
+                                    <action selector="skipWhatsNewOption:" target="Yil-VZ-ttf" id="cCx-Ax-H5M"/>
+                                </connections>
+                            </button>
                         </subviews>
                     </view>
                     <connections>
                         <outlet property="agentUploadButton" destination="kSD-cy-ItS" id="xBt-5y-Q9V"/>
                         <outlet property="loggingButton" destination="HOL-hS-Bz6" id="Uxs-hy-9NW"/>
                         <outlet property="selfSignedButton" destination="j2G-HE-M2m" id="bP5-Xi-J14"/>
+                        <outlet property="skipWhatsNewButton" destination="MOK-cZ-olh" id="wRi-4H-GYl"/>
                     </connections>
                 </viewController>
                 <customObject id="aRd-Wn-fkq" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

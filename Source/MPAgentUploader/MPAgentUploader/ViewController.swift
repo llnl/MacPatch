@@ -114,6 +114,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleAgentUpload(notification:)), name: Notification.Name("AgentUpload"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.setLogLevel(notification:)), name: Notification.Name("setLogLevel"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.toggleSelfSigned(notification:)), name: Notification.Name("SelfSigned"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(self.toggleSkipWhatsNew(notification:)), name: Notification.Name("SkipWhatsNew"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(self.resetAuthToken(notification:)), name: Notification.Name("ResetAuthToken"), object: nil)
         
         self.headerView.wantsLayer = true
@@ -293,6 +294,8 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         let serverPort = self.mpServerPort.stringValue
         let serverUseSSL = self.useSSL.state == .on
         let apiToken = self.api_token
+        let skipWhatsNew = defaults.object(forKey: "skipWhatsNew") as? Bool ?? false
+
         
         Task.detached(priority: .background)
         {
@@ -422,6 +425,19 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                     self.toggleUIEnd()
                 }
                 return
+            }
+            
+            // Write skip whats new if needed
+            if skipWhatsNew == true {
+                log.info("Running write for skip whats new.")
+                let writeSkipWhatsNewResult = await MainActor.run { [packages] in
+                    self.writeSkipWhatsNewToPackage(packages: packages, skipWhatsNew: skipWhatsNew)
+                }
+                
+                if (!writeSkipWhatsNewResult)
+                {
+                    log.error("Error writing skip what's new setting.")
+                }
             }
             
             // Write config plist to packages
@@ -594,7 +610,7 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 }
                 
                 if (shouldNotarize) {
-                    log.info("Notorizing \(xFpkg)")
+                    log.info("Notarizing \(xFpkg)")
                     await MainActor.run {
                         self.compressPackageStatus.stringValue = "Notarizing \(xFpkg.lastPathComponent)"
                     }
@@ -1055,6 +1071,59 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                         log.error("Package hashes did not match.")
                         return false
                     }
+                }
+            }
+        }
+        
+        return false
+    }
+    
+    /**
+     Write skip what's new setting to Package
+     
+     - parameter packages: Array of packages
+     - parameter skipWhatsNew: Boolean indicating whether to skip what's new popup
+     
+     - returns: Boolean if succeeds
+     */
+    func writeSkipWhatsNewToPackage(packages: [String], skipWhatsNew: Bool) -> Bool
+    {
+        if (packages.isEmpty) {
+            log.error("Packages array is empty.")
+            return false
+        }
+        
+        for p in packages
+        {
+            if (p.lastPathComponent == "Base.pkg" || p.lastPathComponent == "Client.pkg")
+            {
+                if fm.fileExists(atPath: p.stringByAppendingPathComponent(path: "Scripts"))
+                {
+                    let skipFile = p.stringByAppendingPathComponent(path: "Scripts/.mpSkipWhatsNew")
+                    log.debug("Write skip what's new setting to \(skipFile)")
+                    
+                    if skipWhatsNew {
+                        do {
+                            // Write a marker file to indicate skip what's new
+                            try "1".write(toFile: skipFile, atomically: false, encoding: String.Encoding.utf8)
+                            log.info("Skip what's new setting enabled for \(p.lastPathComponent)")
+                        } catch {
+                            log.error("Failed to write skip what's new file: \(error)")
+                            return false
+                        }
+                    } else {
+                        // Remove the file if it exists and skip is disabled
+                        if fm.fileExists(atPath: skipFile) {
+                            do {
+                                try fm.removeItem(atPath: skipFile)
+                                log.info("Skip what's new setting disabled for \(p.lastPathComponent)")
+                            } catch {
+                                log.error("Failed to remove skip what's new file: \(error)")
+                                return false
+                            }
+                        }
+                    }
+                    return true
                 }
             }
         }
@@ -1831,6 +1900,24 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         defaults.synchronize()
     }
     
+    @objc func toggleSkipWhatsNew(notification: Notification)
+    {
+        if (defaults.object(forKey: "skipWhatsNew") != nil) {
+            if defaults.bool(forKey: "skipWhatsNew") {
+                log.info("Disable Skip Whats New Popup")
+                defaults.set(true, forKey: "skipWhatsNew")
+            } else {
+                log.info("Enable Skip Whats New Popup")
+                defaults.set(false, forKey: "skipWhatsNew")
+            }
+        } else {
+            log.info("Enable Skip Whats New Popup")
+            defaults.set(false, forKey: "selfSigned")
+        }
+        
+        defaults.synchronize()
+    }
+    
     @objc func setLogLevel(notification: Notification)
     {
         if (defaults.object(forKey: "Debug") != nil)
@@ -1857,6 +1944,3 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         }
     }
 }
-
-
-

@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
-# ver 3.9
+# ver 3.10
 # Created By Charles Heizer @ LLNL
 #
 # Improvements in v3.8:
@@ -23,6 +23,8 @@
 # - Better error messages and progress feedback
 # - Added automatic Python 2 to Python 3 migration
 #
+# Improvements in v3.10:
+# - Added skip whats new popup to script
 # ***************************************************************************************
 
 MP_ROOT="/Library/MacPatch"
@@ -279,6 +281,11 @@ if [ -e "${SRC}/.mpVersion.plist" ]; then
 	cp "${SRC}/.mpVersion.plist" "/Library/MacPatch/Client/.mpVersion.plist"
 fi
 
+# Write Skip Whats New
+if [ -e "${SRC}/.mpSkipWhatsNew" ]; then
+	touch "/tmp/.MPSkipWhatsNew"
+fi
+
 # Set Permissions
 chown -R root:admin "/Library/Application Support/MacPatch"
 chmod -R 775 "/Library/Application Support/MacPatch"
@@ -425,33 +432,51 @@ fi
 if [ "$consoleUserID" != "0" ] && [ -f /Library/LaunchAgents/gov.llnl.mp.status.plist ]; then
 	echo "Loading LaunchAgent for user ID: $consoleUserID"
 
-	# load and start it
-	# Try using launchctl asuser for proper user context (works on 10.12+)
-	if /bin/launchctl asuser "$consoleUserID" /bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
-		echo "LaunchAgent loaded successfully using asuser"
-	else
-		# Try bootstrap method as fallback
-		if /bin/launchctl bootstrap "gui/$consoleUserID" /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
-			echo "LaunchAgent loaded successfully using bootstrap"
-		else
-			# Last resort: direct load (will load on next login if this fails)
-			/bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null || true
-			echo "LaunchAgent will load on next user login"
-		fi
+	# Check if service is already loaded
+	serviceLoaded=false
+	if /bin/launchctl print "gui/$consoleUserID/gov.llnl.mp.status" >/dev/null 2>&1; then
+		echo "Service gov.llnl.mp.status is already loaded"
+		serviceLoaded=true
 	fi
 
-	# Verify the service is loaded and kickstart it if needed
-	sleep 1
-	if /bin/launchctl print "gui/$consoleUserID/gov.llnl.mp.status" >/dev/null 2>&1; then
-		# Service is loaded, now check if it's actually running
-		if ! /bin/launchctl list | grep -q "gov.llnl.mp.status"; then
-			echo "Service loaded but not running, attempting kickstart..."
-			/bin/launchctl kickstart -k "gui/$consoleUserID/gov.llnl.mp.status" 2>/dev/null || echo "Kickstart failed, service will start on demand"
+	# Load the service if not already loaded
+	if [ "$serviceLoaded" = false ]; then
+		# Try using launchctl asuser for proper user context (works on 10.12+)
+		if /bin/launchctl asuser "$consoleUserID" /bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
+			echo "LaunchAgent loaded successfully using asuser"
 		else
-			echo "Service gov.llnl.mp.status is running successfully"
+			# Try bootstrap method as fallback
+			if /bin/launchctl bootstrap "gui/$consoleUserID" /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
+				echo "LaunchAgent loaded successfully using bootstrap"
+			else
+				# Last resort: direct load (will load on next login if this fails)
+				/bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null || true
+				echo "LaunchAgent will load on next user login"
+			fi
+		fi
+		sleep 1
+	fi
+
+	# Force start the service using kickstart (always, even if already loaded)
+	echo "Starting gov.llnl.mp.status service..."
+	if /bin/launchctl kickstart -kp "gui/$consoleUserID/gov.llnl.mp.status" 2>/dev/null; then
+		echo "Service started successfully with kickstart"
+		sleep 1
+
+		# Verify it's actually running
+		if /bin/launchctl print "gui/$consoleUserID/gov.llnl.mp.status" 2>/dev/null | grep -q "state = running"; then
+			echo "Verified: gov.llnl.mp.status is running"
+		else
+			echo "Warning: Service loaded but state may be 'not running' - will start on trigger"
 		fi
 	else
-		echo "Warning: Could not verify service status. It will start on next user login."
+		echo "Kickstart failed, trying alternative start methods..."
+		# Try direct start command
+		if /bin/launchctl asuser "$consoleUserID" /bin/launchctl start gov.llnl.mp.status 2>/dev/null; then
+			echo "Service started with asuser start"
+		else
+			echo "Warning: Could not force-start service. It will start on first trigger/login."
+		fi
 	fi
 fi
 
