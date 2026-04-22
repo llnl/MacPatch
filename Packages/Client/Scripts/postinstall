@@ -281,11 +281,6 @@ if [ -e "${SRC}/.mpVersion.plist" ]; then
 	cp "${SRC}/.mpVersion.plist" "/Library/MacPatch/Client/.mpVersion.plist"
 fi
 
-# Write Skip Whats New
-if [ -e "${SRC}/.mpSkipWhatsNew" ]; then
-	touch "/tmp/.MPSkipWhatsNew"
-fi
-
 # Set Permissions
 chown -R root:admin "/Library/Application Support/MacPatch"
 chmod -R 775 "/Library/Application Support/MacPatch"
@@ -343,6 +338,18 @@ if [ ! -e "/private/var/db/.MPProvisionDone" ]; then
 		echo "Error getting provisioning config. .MPProvisionBegin will not be created."
 		rm -f /private/var/db/.MPProvisionBegin
 	fi
+fi
+
+# ******************************************************************
+# Copy in Skip Whats New File
+
+if [ -e "${SRC}/.mpSkipWhatsNew" ]; then
+	echo "Write, skipping whats new popup."
+	touch "/private/tmp/.MPSkipWhatsNew"
+	chmod 644 "/tmp/.MPSkipWhatsNew"
+else
+	/usr/bin/touch /private/tmp/.mpResetWhatsNew
+	chmod 644 /private/tmp/.mpResetWhatsNew
 fi
 
 # ******************************************************************
@@ -514,15 +521,6 @@ if [ -f "/private/tmp/clientStatusPID" ]; then
 	else
 		rm -f /private/tmp/clientStatusPID
 	fi
-fi
-
-# Show Whats New
-# Copy in Skip Whats New File
-if [ -e "${SRC}/.MPSkipWhatsNew" ]; then
-	cp "${SRC}/.MPSkipWhatsNew" "/private/tmp/.MPSkipWhatsNew"
-else
-	/usr/bin/touch /private/tmp/.mpResetWhatsNew
-	chmod 644 /private/tmp/.mpResetWhatsNew
 fi
 
 exit 0;
