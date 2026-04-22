@@ -1,11 +1,21 @@
-pycryptodome==3.20.0
-simplejson==3.19.2
-requests==2.31.0
-mysql-connector-python==8.3.0
-pymysql==1.1.0
-psutil==5.9.8
-python-crontab==3.0.0
-M2Crypto==0.41.0
-packaging==24.0
-python-dotenv==1.0.1
+# MacPatch v4.1.0.0
+# ------------------
+# Updated from 3.20.0 
+pycryptodome==3.23.0
+# Updated from 3.19.2
+simplejson==3.20.2
+# Updated from 2.31.0
+requests==2.33.1
+# Updated from 1.1.0
+pymysql==1.1.2
+# Updated from 5.9.8
+psutil==7.2.2
+# Updated from 3.0.0
+python-crontab==3.3.0
+# Updated from 0.41.0
+M2Crypto==0.47.0
+# Updated from 24.0
+packaging==26.0
+# Updated from 1.0.1
+python-dotenv==1.2.2
 distro==1.9.0

@@ -15,8 +15,8 @@ Software Foundation) version 2, dated June 1991.
 
 MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
-License for more details.
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General
+Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with MacPatch; if not, write to the Free Software Foundation, Inc.,
@@ -49,21 +49,160 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @implementation UpdatesCellView
 
+- (void)awakeFromNib
+{
+    [super awakeFromNib];
+    
+    // CRITICAL: Ensure the view is layer-backed
+    [self setWantsLayer:YES];
+    
+    if (!_progressBarNew) {
+        _progressBarNew = [[MPOProgressBar alloc] init];
+        _progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
+        _progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
+        
+        // CRITICAL: Ensure layer is properly configured
+        _progressBarNew.masksToBounds = YES;
+        _progressBarNew.contentsScale = [[NSScreen mainScreen] backingScaleFactor];
+        
+        [self.layer addSublayer:_progressBarNew];
+        
+        // Set frame - use dispatch_async to ensure layout is complete
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSRect pbar = self->_patchProgressBar.frame;
+            
+            // CRITICAL: Check if frame is valid
+            if (NSIsEmptyRect(pbar) || pbar.size.width <= 0) {
+                qlwarning(@"[awakeFromNib] _patchProgressBar frame is invalid, using fallback positioning");
+                // Use a fallback position relative to the cell view
+                pbar = NSMakeRect(20, 20, self.bounds.size.width - 40, 4);
+            }
+            
+            self->_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+            
+            // CRITICAL: Ensure the layer is at the correct z-position
+            self->_progressBarNew.zPosition = 100; // Put it on top
+            
+            [self->_progressBarNew setHidden:YES];
+        });
+    }
+}
+
+// CRITICAL: Override this to ensure progress bar is positioned correctly after layout
+- (void)layout
+{
+    [super layout];
+    
+    // Reposition progress bar if needed
+    if (self.progressBarNew && !CGRectIsEmpty(self.progressBarNew.frame)) {
+        NSRect pbar = _patchProgressBar.frame;
+        if (!NSIsEmptyRect(pbar) && pbar.size.width > 0) {
+            CGRect newFrame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
+            if (!CGRectEqualToRect(self.progressBarNew.frame, newFrame)) {
+                self.progressBarNew.frame = newFrame;
+            }
+        }
+    }
+}
+
+// Configure cell UI based on rowData state - called every time cell is reused
+- (void)configureCellUI
+{
+    [self connectToHelperTool];
+    
+    // Check if this patch is currently installing
+    BOOL isInstalling = [_rowData[@"isInstalling"] boolValue];
+    
+    if (isInstalling) {
+        // Patch is currently installing - restore the operation UI from model
+        NSNumber *progress = _rowData[@"progress"] ?: @0;
+        NSString *statusText = _rowData[@"statusText"] ?: @"Installing...";
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // Configure progress bars based on progress value
+            if (progress.doubleValue > 0) {
+                [self->_patchProgressBar setHidden:YES];
+                self.progressBarNew.progressMode = MPOProgressBarModeDeterminate;
+                
+                [CATransaction begin];
+                [CATransaction setDisableActions:NO];
+                [CATransaction setAnimationDuration:0.3];
+                self.progressBarNew.progress = progress.doubleValue / 100.0;
+                [CATransaction commit];
+                
+                // CRITICAL: Ensure visibility
+                self.progressBarNew.opacity = 1.0;
+                [self.progressBarNew setHidden:NO];
+                [self.progressBarNew setNeedsDisplay];
+            } else {
+                [self->_patchProgressBar setHidden:YES];
+                self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
+                self.progressBarNew.opacity = 1.0;
+                [self.progressBarNew setHidden:NO];
+                [self.progressBarNew startAnimation];
+                [self.progressBarNew setNeedsDisplay];
+            }
+            
+            [self.patchStatus setHidden:NO];
+            self.patchStatus.stringValue = statusText ?: @"";
+            
+            [self.updateButton setEnabled:NO];
+            [self.updateButton setTitle:@"Installing"];
+        });
+        
+        // Re-setup notifications for this specific patch
+        [self setupNotification];
+        
+    } else {
+        // Normal state - no operation in progress
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self->_patchProgressBar setHidden:YES];
+            [self.progressBarNew stopAnimation];
+            [self.progressBarNew setHidden:YES];
+            [self.patchStatus setHidden:YES];
+            self.patchStatus.stringValue = @"";
+            
+            [self.updateButton setTitle:@"Install"];
+            [self.updateButton setEnabled:YES];
+        });
+    }
+}
+
 - (void)drawRect:(NSRect)dirtyRect
 {
     [super drawRect:dirtyRect];
-	
-	_progressBarNew = [[MPOProgressBar alloc] init];
-	_progressBarNew.backgroundColor = [NSColor colorWithRed:180.0/255 green:207.0/255 blue:240.0/255 alpha:1.0].CGColor;
-	_progressBarNew.fillColor = [NSColor colorWithRed:66.0/255 green:139.0/255 blue:237.0/255 alpha:1.0].CGColor;
-	[self.layer addSublayer:_progressBarNew];
-	
-
-	NSRect pbar = _patchProgressBar.frame;
-	_progressBarNew.frame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
-	[_progressBarNew setHidden:YES];
-    
     // Drawing code here.
+}
+
+- (void)prepareForReuse
+{
+    [super prepareForReuse];
+    
+    // CRITICAL: Remove notification observers to prevent cross-cell updates
+    [self removeNotificationObserver];
+    
+    // Reset progress indicators
+    [_patchProgressBar stopAnimation:nil];
+    [_patchProgressBar setIndeterminate:YES];
+    [_patchProgressBar setHidden:YES];
+    
+    // Reset custom progress bar
+    if (self.progressBarNew) {
+        [self.progressBarNew stopAnimation];
+        [self.progressBarNew setHidden:YES];
+    }
+    
+    // Reset status text and images
+    _patchStatus.hidden = YES;
+    _patchStatus.stringValue = @"";
+    [self.updateButton setEnabled:YES];
+    
+    // Reset button state
+    [self.updateButton setTitle:@"Install"];
+    [self.updateButton setState:0];
+    
+    // Reset completion icon
+    [self.patchCompletionIcon setImage:[NSImage imageNamed:@"EmptyImage"]];
 }
 
 #pragma mark - Helper
@@ -148,6 +287,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if (![sender isKindOfClass:[NSButton class]])
 		return;
 	
+	// Call delegate to mark install start
+	if ([self.delegate respondsToSelector:@selector(updatesCellViewDidStartInstall:rowData:)]) {
+		[self.delegate updatesCellViewDidStartInstall:self rowData:self.rowData];
+	}
+	
 	[self setupNotification];
 	[self setupCellInstall];
 	
@@ -173,7 +317,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		inst.patch = [self.rowData copy];
 		[q.globalQueue addOperation:inst];
 	}
-	
 }
 
 - (IBAction)runInstallAlt:(NSButton *)sender
@@ -211,18 +354,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		inst.patch = [self.rowData copy];
 		[q.globalQueue addOperation:inst];
 	}
-	
 }
 
 - (void)workerStatusText:(NSString *)aStatus
 {
 	qlinfo(@"WST: %@",aStatus);
 	dispatch_async(dispatch_get_main_queue(), ^{
-		self->_patchStatus.stringValue = aStatus;
+		self->_patchStatus.stringValue = aStatus ?: @"";
 	});
 }
 
-// Setup User Notification for Software Install Operation
+// Setup User Notification for Patch Install Operation
 - (void)setupNotification
 {
 	NSString *pID = @"NA";
@@ -238,11 +380,20 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	_cellProgressNote = [NSString stringWithFormat:@"patchProg-%@",pID];
 	_cellStopNote = [NSString stringWithFormat:@"patchStop-%@",pID];
 	
+	// Remove any existing observers first to prevent duplicates
+	[self removeNotificationObserver];
+	
 	__weak typeof(self) weakSelf = self;
 	[nc addObserverForName:_cellStartNote object:nil queue:nil usingBlock:^(NSNotification *note)
 	 {
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 [weakSelf.updateButton setTitle:@"Installing..."];
+			 // Verify this cell still represents the same patch
+			 NSString *notificationPatchID = note.userInfo[@"patch_id"];
+			 NSString *currentPatchID = [weakSelf.rowData[@"type"] isEqualToString:@"Apple"] ? 
+			                            weakSelf.rowData[@"patch"] : weakSelf.rowData[@"patch_id"];
+			 if (!notificationPatchID || [currentPatchID isEqualToString:notificationPatchID]) {
+				 [weakSelf.updateButton setTitle:@"Installing..."];
+			 }
 		 });
 	 }];
 	
@@ -250,8 +401,20 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	 {
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 if (userInfo[@"status"]) {
-				 weakSelf.patchStatus.stringValue = userInfo[@"status"];
+			 // Verify this cell still represents the same patch
+			 NSString *notificationPatchID = userInfo[@"patch_id"];
+			 NSString *currentPatchID = [weakSelf.rowData[@"type"] isEqualToString:@"Apple"] ? 
+			                            weakSelf.rowData[@"patch"] : weakSelf.rowData[@"patch_id"];
+			 if (!notificationPatchID || [currentPatchID isEqualToString:notificationPatchID]) {
+				 if (userInfo[@"status"]) {
+					 weakSelf.patchStatus.stringValue = userInfo[@"status"];
+				 }
+				 // Call delegate to update model
+				 if ([weakSelf.delegate respondsToSelector:@selector(updatesCellView:didUpdateProgress:status:rowData:)]) {
+					 NSNumber *prog = userInfo[@"progress"] ?: @0;
+					 [weakSelf.delegate updatesCellView:weakSelf didUpdateProgress:prog.doubleValue 
+					                             status:(userInfo[@"status"] ?: @"") rowData:weakSelf.rowData];
+				 }
 			 }
 		 });
 	 }];
@@ -260,11 +423,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	 {
 		 NSDictionary *userInfo = note.userInfo;
 		 dispatch_async(dispatch_get_main_queue(), ^{
-			 if (userInfo[@"error"]) {
-				 weakSelf.patchStatus.stringValue = userInfo[@"status"];
-				 [weakSelf stopCellInstallWithError:YES];
-			 } else {
-				 [weakSelf stopCellInstallWithError:NO];
+			 // Verify this cell still represents the same patch
+			 NSString *notificationPatchID = userInfo[@"patch_id"];
+			 NSString *currentPatchID = [weakSelf.rowData[@"type"] isEqualToString:@"Apple"] ? 
+			                            weakSelf.rowData[@"patch"] : weakSelf.rowData[@"patch_id"];
+			 if (!notificationPatchID || [currentPatchID isEqualToString:notificationPatchID]) {
+				 if (userInfo[@"error"]) {
+					 weakSelf.patchStatus.stringValue = userInfo[@"status"] ?: @"Error";
+					 [weakSelf stopCellInstallWithError:YES];
+				 } else {
+					 [weakSelf stopCellInstallWithError:NO];
+				 }
 			 }
 		 });
 	 }];
@@ -282,9 +451,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
-		[self.progressBarNew startAnimation];
+		self.progressBarNew.opacity = 1.0;
 		[self.progressBarNew setHidden:NO];
-		[self.progressBarNew display];
+		[self.progressBarNew startAnimation];
+		[self.progressBarNew setNeedsDisplay];
 		
 		[self->_patchStatus setHidden:NO];
 		self->_patchStatus.stringValue = @"Starting install...";
@@ -343,40 +513,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				[[[NSApplication sharedApplication] dockTile] setBadgeLabel:@""];
 			}
 		}
+		
+		// Call delegate to notify install finished
+		if ([self.delegate respondsToSelector:@selector(updatesCellViewDidFinish:success:errorMessage:rowData:)]) {
+			BOOL success = !hadError;
+			[self.delegate updatesCellViewDidFinish:self success:success errorMessage:errStr rowData:self.rowData];
+		}
 	});
 	
-	/*
-	if (!hadError)
-	{
-		[self connectAndExecuteCommandBlock:^(NSError * connectError)
-		 {
-			 if (connectError != nil)
-			 {
-				 qlerror(@"connectError: %@",connectError.localizedDescription);
-			 }
-			 else
-			 {
-				 [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-					 qlerror(@"proxyError: %@",proxyError.localizedDescription);
-				 }] recordPatchInstall:self.rowData withReply:^(NSInteger result) {
-					 qlinfo(@"Code %ld",(long)result);
-				 }];
-			 }
-		}];
-	}
-     */
 	[self removeNotificationObserver];
-    
-    // Add Reboot Notification
-    /*
-    if ([self.patchRestart.stringValue isEqualToString:@"Restart Required"]) {
-        qlinfo(@"GlobalQueueManager sharedInstance].globalQueue.operationCount = %lu",(unsigned long)[GlobalQueueManager sharedInstance].globalQueue.operationCount);
-        if ([GlobalQueueManager sharedInstance].globalQueue.operationCount <= 0) {
-            AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
-            [appDelegate showRebootWindow];
-        }
-    }
-    */
 }
 
 - (void)stopCellInstallIsRebootPatch
@@ -412,10 +557,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			 }];
 		 }
 	 }];
-
-    // Reboot window is called from operation
-	//AppDelegate *appDelegate = (AppDelegate *)NSApp.delegate;
-	//[appDelegate showRebootWindow];
 }
 
 @end

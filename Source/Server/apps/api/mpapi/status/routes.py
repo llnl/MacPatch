@@ -3,8 +3,6 @@ from flask import request
 from flask_restful import reqparse
 from ast import literal_eval
 
-from M2Crypto import RSA, util
-
 from . import *
 from mpapi.app import db
 from mpapi.mputil import *

@@ -5,7 +5,7 @@
 //  Created by Charles Heizer on 12/7/16.
 //
 /*
- Copyright (c) 2016, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -37,16 +37,19 @@ class PreferencesGeneralViewController: NSViewController
     @IBOutlet weak var agentUploadButton: NSButton!
     @IBOutlet weak var loggingButton: NSButton!
     @IBOutlet weak var selfSignedButton: NSButton!
+    @IBOutlet weak var skipWhatsNewButton: NSButton!
     
     override func viewDidAppear()
     {
         let _agentUploadState = defaults.bool(forKey: "doNotUpload") ? NSControl.StateValue.on : NSControl.StateValue.off
         let _debugState = defaults.bool(forKey: "Debug")  ? NSControl.StateValue.on : NSControl.StateValue.off
         let _selfSignedState = defaults.bool(forKey: "selfSigned")  ? NSControl.StateValue.on : NSControl.StateValue.off
+        let _skipWhatsNew = defaults.bool(forKey: "skipWhatsNew")  ? NSControl.StateValue.on : NSControl.StateValue.off
         
         self.agentUploadButton.state = _agentUploadState
         self.loggingButton.state = _debugState
         self.selfSignedButton.state = _selfSignedState
+        self.skipWhatsNewButton.state = _skipWhatsNew
     }
 
     @IBAction func debugOption(_ sender: AnyObject) {
@@ -61,4 +64,7 @@ class PreferencesGeneralViewController: NSViewController
         NotificationCenter.default.post(name: Notification.Name("SelfSigned"), object: nil)
     }
 
+    @IBAction func skipWhatsNewOption(_ sender: AnyObject) {
+        NotificationCenter.default.post(name: Notification.Name("SkipWhatsNew"), object: nil)
+    }
 }

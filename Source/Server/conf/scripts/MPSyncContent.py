@@ -1,7 +1,7 @@
 #!/opt/MacPatch/Server/env/server/bin/python3
 
 '''
- Copyright (c) 2024, Lawrence Livermore National Security, LLC.
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
  Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
  Written by Charles Heizer <heizer1 at llnl.gov>.
  LLNL-CODE-636469 All rights reserved.
@@ -25,7 +25,7 @@
 
 '''
 	Script: MPSyncContent
-	Version: 1.6.0
+	Version: 1.6.1
 '''
 
 import datetime
@@ -49,7 +49,7 @@ MP_SRV_APPS	= MP_SRV_BASE+'/apps'
 logFile		= MP_SRV_BASE+"/logs/MPSyncContent.log"
 
 # Rsync Path
-SYNC_DIR_NAME="mpContentWeb3"
+SYNC_DIR_NAME="mpContentWeb"
 # Rsync Server
 MASTER_SERVER="localhost"
 # Sync Content to...

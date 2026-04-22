@@ -34,6 +34,7 @@
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
 - (void)postSWStatus:(NSString *)status;
+- (void)postSWStatus:(NSString *)status progress:(double)progress;
 
 @end
 
@@ -110,7 +111,7 @@
 		[self didChangeValueForKey:@"isFinished"];
 	} else {
 		[[NSNotificationCenter defaultCenter] postNotificationName:@"disableSWCatalogMenu" object:nil userInfo:@{}];
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:nil];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStartNote object:nil userInfo:@{@"id": swTask[@"id"] ?: @""}];
 		[self willChangeValueForKey:@"isExecuting"];
 		[self performSelectorInBackground:@selector(main) withObject:nil];
 		isExecuting = YES;
@@ -249,7 +250,16 @@
 
 - (void)postSWStatus:(NSString *)status
 {
-	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote object:nil userInfo:@{@"status":status}];
+	[self postSWStatus:status progress:0.0];
+}
+
+- (void)postSWStatus:(NSString *)status progress:(double)progress
+{
+	[[NSNotificationCenter defaultCenter] postNotificationName:cellProgressNote 
+														object:nil 
+													  userInfo:@{@"status":status,
+																 @"progress":@(progress),
+																 @"id": swTask[@"id"] ?: @""}];
 }
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
@@ -257,9 +267,9 @@
 	NSError *err = nil;
 	if (arg1) {
 		err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"error":err, @"id": swTask[@"id"] ?: @""}];
 	} else {
-		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{}];
+		[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:@{@"id": swTask[@"id"] ?: @""}];
 	}
 }
 

@@ -33,6 +33,7 @@
 @property (nonatomic, assign) NSInteger patchServer;
 @property (nonatomic, assign) NSInteger patchState;
 @property (nonatomic, assign) NSInteger reboot;
+@property (nonatomic, assign) NSInteger swDistEnable;
 @property (nonatomic, strong) NSString *swDistGroup;
 @property (nonatomic, strong) NSString *swDistGroupAdd;
 @property (nonatomic, strong) NSString *swDistGroupAddID;

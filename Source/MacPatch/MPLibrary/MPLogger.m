@@ -34,7 +34,7 @@
 @property (nonatomic, strong) NSDateFormatter *dateFormatter;
 @property (nonatomic, assign) BOOL mirrorToStderr;
 @property (nonatomic, strong) dispatch_queue_t logQueue;
-@property (nonatomic, assign) os_log_t oslog;
+@property (nonatomic, strong) os_log_t oslog;
 
 @end
 
@@ -80,7 +80,6 @@ static MPLogger *_sharedLogger = nil;
             }
         }
         
-        NSError *fileHandleError = nil;
         _fileHandle = [NSFileHandle fileHandleForWritingAtPath:_filePath];
         if (!_fileHandle) {
             NSLog(@"MPLogger: Failed to open file handle for writing at %@", _filePath);
@@ -151,3 +150,4 @@ static MPLogger *_sharedLogger = nil;
 }
 
 @end
+

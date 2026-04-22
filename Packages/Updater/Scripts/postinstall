@@ -2,8 +2,17 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Updater Installer
-# ver 2.1.1
+# ver 2.2.0
 # Created By Charles Heizer @ LLNL
+#
+# Improvements in v2.2.0:
+# - Fixed security issue with overly permissive chmod 777
+# - Added macOS 10.12+ compatible launchctl commands
+# - Fixed file loop to handle spaces in filenames
+# - Fixed backup log file restoration logic
+# - Added symlink safety check
+# - Improved error handling throughout
+# - Better quoting for path safety
 #
 # ***************************************************************************************
 
@@ -11,38 +20,87 @@ MPBaseDir="/Library/MacPatch"
 MPUpdaterDir="${MPBaseDir}/Updater"
 
 # Script Parent Dir Path
-SRC=$(cd $(dirname "$0"); pwd)
+SRC=$(cd "$(dirname "$0")" && pwd)
 
-if [ -e "${SRC}/migration.plist" ]; then
-	# Copy migration.plist to host
+# ***************************************************************************************
+# Copy migration configuration if present
+
+if [ -f "${SRC}/migration.plist" ]; then
+	echo "Copying migration.plist to ${MPUpdaterDir}/.migration.plist"
 	cp "${SRC}/migration.plist" "${MPUpdaterDir}/.migration.plist"
 fi
 
-# Create .mpUpdate
+# ***************************************************************************************
+# Create .mpUpdate directory for update operations
+
 if [ ! -d "/Users/Shared/.mpUpdate" ]; then
-	mkdir "/Users/Shared/.mpUpdate"
+	echo "Creating /Users/Shared/.mpUpdate"
+	mkdir -p "/Users/Shared/.mpUpdate"
 fi
 
-# Set ownership of .mpUpdate
-chmod 777 "/Users/Shared/.mpUpdate"
+# Set ownership and permissions of .mpUpdate
 chown root:admin "/Users/Shared/.mpUpdate"
+chmod 775 "/Users/Shared/.mpUpdate"
 
-if [ -e "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
-	# Launch the swupd daemon...
-	/bin/launchctl load -wF /Library/LaunchDaemons/gov.llnl.mp.updater.plist
-	/bin/sleep 2
+# ***************************************************************************************
+# Load and start the updater daemon
+
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
+	echo "Loading gov.llnl.mp.updater daemon..."
+
+	# Try modern bootstrap method first (macOS 10.11+)
+	if /bin/launchctl bootstrap system /Library/LaunchDaemons/gov.llnl.mp.updater.plist 2>/dev/null; then
+		echo "Loaded using bootstrap"
+	else
+		# Fall back to legacy load method for compatibility
+		/bin/launchctl load -wF /Library/LaunchDaemons/gov.llnl.mp.updater.plist 2>/dev/null || true
+		echo "Loaded using legacy method"
+	fi
+
+	sleep 2
 fi
 
-# Copy Backup Log Files Back To Updater Logs Dir
+# ***************************************************************************************
+# Restore backup log files to Updater logs directory
+
 if [ -d "/Library/MacPatch/.logs" ]; then
-	FILES="/Library/MacPatch/.logs/MPAgentUp2Date*"
-	for f in $FILES
-	do
-		mv "$f" "/Library/MacPatch/Updater/Logs/${f}"
-	done
+	echo "Restoring backup log files..."
+
+	# Ensure target log directory exists
+	if [ ! -d "/Library/MacPatch/Updater/Logs" ]; then
+		mkdir -p "/Library/MacPatch/Updater/Logs"
+	fi
+
+	# Move backup log files if they exist
+	if ls /Library/MacPatch/.logs/MPAgentUp2Date* 1>/dev/null 2>&1; then
+		for f in /Library/MacPatch/.logs/MPAgentUp2Date*; do
+			if [ -f "$f" ]; then
+				filename=$(basename "$f")
+				echo "  Restoring $filename"
+				mv "$f" "/Library/MacPatch/Updater/Logs/$filename" 2>/dev/null || echo "  Warning: Could not restore $filename"
+			fi
+		done
+	else
+		echo "  No backup log files found"
+	fi
 fi
 
-# Create symlink for inhouse tool support
-ln -s ${MPUpdaterDir}/MPUpdater ${MPUpdaterDir}/MPAgentUp2Date
+# ***************************************************************************************
+# Create symlink for legacy tool compatibility
 
-exit 0;
+if [ -f "${MPUpdaterDir}/MPUpdater" ]; then
+	echo "Creating symlink MPAgentUp2Date -> MPUpdater"
+
+	# Remove existing symlink or file if present
+	if [ -L "${MPUpdaterDir}/MPAgentUp2Date" ] || [ -e "${MPUpdaterDir}/MPAgentUp2Date" ]; then
+		rm -f "${MPUpdaterDir}/MPAgentUp2Date"
+	fi
+
+	ln -s "${MPUpdaterDir}/MPUpdater" "${MPUpdaterDir}/MPAgentUp2Date"
+else
+	echo "Warning: ${MPUpdaterDir}/MPUpdater not found, cannot create symlink"
+fi
+
+echo "Updater postinstall completed successfully"
+
+exit 0

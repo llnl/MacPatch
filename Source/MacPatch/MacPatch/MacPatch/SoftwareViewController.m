@@ -15,8 +15,8 @@ Software Foundation) version 2, dated June 1991.
 
 MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
 WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
-FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
-License for more details.
+FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General
+Public License for more details.
 
 You should have received a copy of the GNU General Public License along
 with MacPatch; if not, write to the Free Software Foundation, Inc.,
@@ -32,7 +32,34 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 #define MP_INSTALLED_DATA       @".installed.plist"
 
-@interface SoftwareViewController ()
+// Add this helper category at the top of the implementation
+@interface NSDictionary (SafeStringAccess)
+- (NSString *)safeStringForKey:(NSString *)key;
+- (NSString *)safeStringForKey:(NSString *)key defaultValue:(NSString *)defaultValue;
+@end
+
+@implementation NSDictionary (SafeStringAccess)
+- (NSString *)safeStringForKey:(NSString *)key {
+    return [self safeStringForKey:key defaultValue:@""];
+}
+
+- (NSString *)safeStringForKey:(NSString *)key defaultValue:(NSString *)defaultValue {
+    id value = self[key];
+    if (value == nil || value == [NSNull null]) {
+        return defaultValue;
+    }
+    if ([value isKindOfClass:[NSString class]]) {
+        return value;
+    }
+    // If it's a number or other type, convert it
+    if ([value respondsToSelector:@selector(stringValue)]) {
+        return [value stringValue];
+    }
+    return defaultValue;
+}
+@end
+
+@interface SoftwareViewController () <SoftwareCellViewDelegate>
 {
     NSUserDefaults  	*defaults;
 	MPSettings 			*settings;
@@ -267,7 +294,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		
 		if (error) {
 			qlerror(@"%@",error.localizedDescription);
-			[self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+			dispatch_async(dispatch_get_main_queue(), ^{
+                if (self->settings.agent.swDistGroup) {
+                    [self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
+                }
+			});
 			return;
 		}
 		
@@ -353,7 +384,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			dispatch_async(dispatch_get_main_queue(), ^{
 				qlerror(@"%@",err.localizedDescription);
 				self->_swNetworkStatusImage.hidden = NO;
-				[self->_swNetworkStatusText setStringValue:err.localizedDescription];
+				[self->_swNetworkStatusText setStringValue:err.localizedDescription ?: @""];
 			});
 			return;
 		} else {
@@ -667,7 +698,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)workerStatusText:(NSString *)aStatus
 {
-    _swNetworkStatusText.stringValue = aStatus;
+    _swNetworkStatusText.stringValue = aStatus ?: @"";
 }
 
 #pragma mark - TableView
@@ -689,36 +720,70 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         NSURL *appSupportMPDir = [appSupportDir URLByAppendingPathComponent:@"MacPatch/SW_Data"];
 
         SoftwareCellView *cellView = [tableView makeViewWithIdentifier:@"MainCell" owner:self];
+        cellView.delegate = self;
         cellView.serverArray = [settings.servers copy];
         cellView.mp_SOFTWARE_DATA_DIR = appSupportMPDir;
         cellView.rowData = [sw copy];
         cellView.actionButton.title = @"Install";
         [cellView.actionButton setState:0];
-        [cellView.errorImage setImage:[NSImage imageNamed:@"EmptyImage"]];
+        
+        // Removed setting target/action here to keep original SoftwareCellView runInstall: action
+        
+        // CRITICAL: Reset and configure per-row UI state based on model
+        // This ensures cells are properly configured when reused
+        NSNumber *isInstalling = sw[@"isInstalling"] ?: @NO;
+        NSNumber *progress = sw[@"progress"] ?: @0;
+        NSString *statusText = sw[@"statusText"] ?: @"";
+
+        // Configure the NSProgressIndicator
+        cellView.progressBar.hidden = !isInstalling.boolValue;
+        if (isInstalling.boolValue) {
+            //cellView.progressBar.indeterminate = NO;
+            cellView.progressBar.indeterminate = YES;
+            //cellView.progressBar.minValue = 0.0;
+            //cellView.progressBar.maxValue = 100.0;
+            //cellView.progressBar.doubleValue = progress.doubleValue;
+        } else {
+            cellView.progressBar.indeterminate = YES;
+            cellView.progressBar.doubleValue = 0.0;
+        }
+
+        // Configure status text
+        cellView.swActionStatusText.hidden = !isInstalling.boolValue;
+        cellView.swActionStatusText.stringValue = statusText;
+        
+        // Configure action button based on install state
+        if (isInstalling.boolValue) {
+            cellView.actionButton.enabled = NO;
+            // Keep the current title from notifications
+        } else {
+            cellView.actionButton.enabled = YES;
+        }
         
         //NSString *appImage = sw[@"image"]?:@"AppStore";
         [cellView.swIcon setImage:[NSImage imageNamed:@"AppStore"]];
         
-        [cellView.swTitle setStringValue:sw[@"name"]];
+        // FIX: Use safeStringForKey for all dictionary accesses
+        [cellView.swTitle setStringValue:[sw safeStringForKey:@"name"]];
         [cellView.swCompany setPlaceholderString:@""];
-        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@",sw[@"Software"][@"vendor"]]];
-        [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@",sw[@"Software"][@"version"]]];
+        [cellView.swCompany setStringValue:[NSString stringWithFormat:@"%@", [sw[@"Software"] safeStringForKey:@"vendor"]]];
+        [cellView.swVersion setStringValue:[NSString stringWithFormat:@"Version %@", [sw[@"Software"] safeStringForKey:@"version"]]];
         
-        long lSize = ([sw[@"Software"][@"sw_size"] longLongValue] * 1000);
+        long lSize = ([[sw[@"Software"] safeStringForKey:@"sw_size"] longLongValue] * 1000);
         NSString *xSize = [NSByteCountFormatter stringFromByteCount:lSize countStyle:NSByteCountFormatterCountStyleFile];
-        [cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@",xSize]];
+        [cellView.swSize setStringValue:[NSString stringWithFormat:@"Size: %@", xSize]];
         [cellView.swDescription setPlaceholderString:@""];
-        [cellView.swDescription setStringValue:sw[@"Software"][@"description"]];
+        [cellView.swDescription setStringValue:[sw[@"Software"] safeStringForKey:@"description"]];
         
         if ([sw[@"sw_task_type"] isEqualToString:@"om"]) {
-            NSString *istBy = [NSString stringWithFormat:@"Install by: %@",sw[@"sw_end_datetime"]];
+            NSString *istBy = [NSString stringWithFormat:@"Install by: %@", [sw safeStringForKey:@"sw_end_datetime"]];
             [cellView.swInstallBy setStringValue:istBy];
         } else if ([sw[@"sw_task_type"] isEqualToString:@"m"]) {
             isMandatory = YES;
         } else {
             [cellView.swInstallBy setStringValue:@""];
         }
-        if ([sw[@"Software"][@"reboot"] isEqualToString:@"0"]) {
+        if ([[sw[@"Software"] safeStringForKey:@"reboot"] isEqualToString:@"0"]) {
             [cellView.swRebootTextFlag setStringValue:@""];
             [cellView.installedStateImage setImage:[NSImage imageNamed:@"EmptyImage"]];
         } else {
@@ -739,9 +804,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         
         // if sw_app_path exists and is does not have a value of None
         if (sw[@"Software"][@"sw_app_path"]) {
-            if (![sw[@"Software"][@"sw_app_path"] isEqualToString:@"None"])
+            if (![[sw[@"Software"] safeStringForKey:@"sw_app_path"] isEqualToString:@"None"])
             {
-                if ([self isAppInstalledOnSystem:sw[@"Software"][@"sw_app_path"]]) {
+                if ([self isAppInstalledOnSystem:[sw[@"Software"] safeStringForKey:@"sw_app_path"]]) {
                     //[cellView.installedStateImage setImage:[NSImage imageNamed:@"GoodImageHD"]];
                     cellView.isLocalAppInstalled = YES;
                     //cellView.isAppInstalled = YES;
@@ -754,6 +819,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 [cellView runInstall:cellView.actionButton];
             }
         }
+        
+        // CRITICAL: Configure cell UI after all properties are set
+        [cellView configureCellUI];
         
         return cellView;
     }
@@ -907,6 +975,121 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	}
 	
 	decisionHandler(WKNavigationActionPolicyAllow);
+}
+
+- (void)handleCellActionButton:(NSButton *)sender {
+    // Find the row for this button
+    NSPoint pointInTable = [sender convertPoint:NSZeroPoint toView:self.tableView];
+    NSInteger row = [self.tableView rowAtPoint:pointInTable];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    // Initialize install state when user taps install
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = @"Starting…";
+
+    // Reload just this row to apply consistent UI state
+    NSIndexSet *rowSet = [NSIndexSet indexSetWithIndex:row];
+    NSIndexSet *colSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
+    [self.tableView reloadDataForRowIndexes:rowSet columnIndexes:colSet];
+}
+
+#pragma mark - SoftwareCellViewDelegate Methods
+
+- (void)softwareCellViewDidStartInstall:(SoftwareCellView *)cell rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = @"Starting…";
+    
+    // Store the operation type (Install or Uninstall) based on current install state
+    if (cell.isAppInstalled) {
+        sw[@"operationType"] = @"Uninstall";
+    } else {
+        sw[@"operationType"] = @"Install";
+    }
+    
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = NO;
+            visibleCell.progressBar.indeterminate = YES; //was no
+            //visibleCell.progressBar.minValue = 0.0;
+            //visibleCell.progressBar.maxValue = 100.0;
+            //visibleCell.progressBar.doubleValue = 0.0;
+            
+            visibleCell.swActionStatusText.hidden = NO;
+            visibleCell.swActionStatusText.stringValue = @"Starting…";
+        });
+    }
+}
+
+- (void)softwareCellView:(SoftwareCellView *)cell didUpdateProgress:(double)progress status:(NSString *)status rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @YES;
+    sw[@"progress"] = @(progress);
+    if (status) { sw[@"statusText"] = status; }
+
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = NO;
+            visibleCell.progressBar.indeterminate = YES;
+            /*
+            if (progress == 0) {
+                visibleCell.progressBar.indeterminate = YES;
+            } else {
+                visibleCell.progressBar.indeterminate = NO;
+                //visibleCell.progressBar.doubleValue = progress;
+            }
+            */
+            
+            visibleCell.swActionStatusText.hidden = NO;
+            visibleCell.swActionStatusText.stringValue = status ?: @"";
+            /*
+            NSLog(@"[NSLOG] sw = %@",sw);
+            NSLog(@"[NSLOG] progress = %f",progress);
+            NSLog(@"[NSLOG] status = %@",status);
+             */
+        });
+    }
+}
+
+- (void)softwareCellViewDidFinish:(SoftwareCellView *)cell success:(BOOL)success errorMessage:(NSString *)message rowData:(NSDictionary *)rowData {
+    NSInteger row = [self.tableView rowForView:cell];
+    if (row == -1 || row >= self->filteredSwTasks.count) { return; }
+    NSMutableDictionary *sw = self->filteredSwTasks[row];
+    sw[@"isInstalling"] = @NO;
+    sw[@"progress"] = @0;
+    sw[@"statusText"] = success ? @"" : (message ?: @"Error");
+    sw[@"operationType"] = nil; // Clear operation type
+
+    // Update the visible cell directly (only if it's the right cell)
+    SoftwareCellView *visibleCell = (SoftwareCellView *)[self.tableView viewAtColumn:0 row:row makeIfNecessary:NO];
+    if (visibleCell == cell) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            visibleCell.progressBar.hidden = YES;
+            visibleCell.progressBar.indeterminate = YES;
+            visibleCell.progressBar.doubleValue = 0.0;
+            
+            visibleCell.swActionStatusText.hidden = YES;
+            visibleCell.swActionStatusText.stringValue = sw[@"statusText"];
+        });
+    } else if (!visibleCell) {
+        // Cell is not visible, will be configured correctly when it scrolls back
+        NSIndexSet *rowSet = [NSIndexSet indexSetWithIndex:row];
+        NSIndexSet *colSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadDataForRowIndexes:rowSet columnIndexes:colSet];
+        });
+    }
 }
 
 @end

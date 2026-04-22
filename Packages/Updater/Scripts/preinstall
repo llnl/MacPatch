@@ -1,40 +1,65 @@
-#!/bin/bash	
+#!/bin/bash
 
 # ***************************************************************************************
 # PreFlight Script for MacPatch Client Updater Installer
-# ver 2.1.0
+# ver 2.2.0
 # Created By Charles Heizer @ LLNL
-# 
+#
+# Improvements in v2.2.0:
+# - Modernized syntax (replaced backticks with $(...))
+# - Added macOS 10.12+ compatible launchctl commands
+# - Added unloadLaunchItem function with fallback support
+# - Improved error handling
+# - Better process cleanup with stop + unload
 #
 # ***************************************************************************************
 
 MPBaseDir="/Library/MacPatch"
 MPUpdaterDir="${MPBaseDir}/Updater"
 
-systemVersion=`/usr/bin/sw_vers -productVersion`
-majorVer=`echo $systemVersion | cut -d . -f 1,2  | sed 's/\.//g'`
-minorVer=`echo $systemVersion | cut -d . -f 2`
-buildVer=`echo $systemVersion | cut -d . -f 3`
+# Get macOS version information (available for future version-specific logic)
+systemVersion=$(/usr/bin/sw_vers -productVersion)
+majorVer=$(echo "$systemVersion" | cut -d . -f 1,2 | sed 's/\.//g')
+minorVer=$(echo "$systemVersion" | cut -d . -f 2)
+buildVer=$(echo "$systemVersion" | cut -d . -f 3)
 
-dts=`date +%Y%m%d%H%M%S`
+# Function to unload launch items with compatibility for macOS 10.12+
+unloadLaunchItem() {
+	local item_path="$1"
+	local item_label="$2"
 
-if [ -e "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" ]; then
-	
-	/bin/launchctl stop gov.llnl.mp.agentUpdater
+	# Stop the service first if it's running
+	/bin/launchctl stop "$item_label" 2>/dev/null || true
+
+	# Try modern bootout method first (macOS 10.11+)
+	if /bin/launchctl bootout system "$item_path" 2>/dev/null; then
+		return 0
+	fi
+
+	# Fall back to legacy methods for compatibility
+	if [ -n "$item_label" ]; then
+		/bin/launchctl remove "$item_label" 2>/dev/null || true
+	fi
+	/bin/launchctl unload -w "$item_path" 2>/dev/null || true
+}
+
+# ***************************************************************************************
+# Stop and unload LaunchDaemons
+
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" ]; then
+	echo "Unloading gov.llnl.mp.agentUpdater..."
+	unloadLaunchItem "/Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist" "gov.llnl.mp.agentUpdater"
 	sleep 1
-	/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.agentUpdater.plist
+fi
+
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
+	echo "Unloading gov.llnl.mp.updater..."
+	unloadLaunchItem "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" "gov.llnl.mp.updater"
 	sleep 1
-	
 fi	
 
-if [ -e "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
-	
-	/bin/launchctl stop gov.llnl.mp.updater
-	sleep 1
-	/bin/launchctl unload -w /Library/LaunchDaemons/gov.llnl.mp.updater.plist
-	sleep 1
-	
-fi	
+# ***************************************************************************************
+# Remove old Updater components before installation
 
 if [ -d "$MPUpdaterDir" ]; then
 	echo "Removing $MPUpdaterDir"
@@ -50,5 +75,7 @@ if [ -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist" ]; then
 	echo "Removing /Library/LaunchDaemons/gov.llnl.mp.updater.plist"
 	rm -f "/Library/LaunchDaemons/gov.llnl.mp.updater.plist"
 fi
+
+echo "Updater preinstall completed successfully"
 
 exit 0

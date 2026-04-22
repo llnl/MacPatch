@@ -57,13 +57,15 @@ EXTERNALSCRIPTSDIR="/tmp/foo"
 PEXTERNALSCRIPTS=false
 PEXTERNALSCRIPTSDIR="/tmp/foo"
 MDMPACKAGE=false
+HASBANNER=false
+DEFAULT_BANNERDIR="/tmp"
 
 
 # Script Input Args ----------------------------------------------------------
 
 usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-b Build Root Dir] [-l settings plist][-m Is MDM PKG]" 1>&2; exit 1; }
 
-while getopts "hs:p:b:l:m" opt; do
+while getopts "hs:p:b:l:mB:" opt; do
 	case $opt in
 		s)
 			EXTERNALSCRIPTS=true
@@ -81,6 +83,10 @@ while getopts "hs:p:b:l:m" opt; do
 			;;
 		m)
 			MDMPACKAGE=true
+			;;
+		B)
+			HASBANNER=true
+			DEFAULT_BANNERDIR=${OPTARG}
 			;;
 		h)
 			echo
@@ -534,6 +540,11 @@ mv ${BUILDROOT}/Release/gov.llnl.mp.status.ui ${BUILDROOT}/Client/Files/Library/
 mv ${BUILDROOT}/Release/MPClientStatus.app ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPAgent ${BUILDROOT}/Client/Files/Library/MacPatch/Client
 mv ${BUILDROOT}/Release/MPUpdater ${BUILDROOT}/Updater/Files/Library/MacPatch/Updater/
+
+if $HASBANNER; then
+	echo "Copy Banner"
+	cp -r $DEFAULT_BANNERDIR ${BUILDROOT}/Client/Files/Library/MacPatch/Client/Data/MacPatch/banner/
+fi
 
 if [ "$PKGSTATE" == "A" ] || [ "$PKGSTATE" == "B" ]; then
 	rm ${BUILDROOT}/Combined/Distribution

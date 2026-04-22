@@ -50,6 +50,7 @@
 
 - (NSString *)getSizeFromDescription:(NSString *)aDesc;
 - (NSString *)getRecommendedFromDescription:(NSString *)aDesc;
+- (BOOL)isOSUpgradeNotPatch:(NSString *)softwareUpdateString;
 
 @end
 
@@ -197,7 +198,17 @@
 			{
 				@try
 				{
-					lineCleanStart = [self cleanLine:_line];
+                    // Apple now can include a majore upgrade as a patch. If this is
+                    // the case then we will skip the patch detection.
+                    if ([[tmpStr lowercaseString] containsString:@"macos"]) {
+                        qlinfo(@"line contains macos");
+                        qlinfo(@"%@",tmpStr);
+                        if ([self isOSUpgradeNotPatch:tmpStr]) {
+                            qlinfo(@"isOSUpgradeNotPatch == TRUE");
+                            continue; // IS a major upgrade, skip it.
+                        }
+                    }
+                    lineCleanStart = [self cleanLine:_line];
 					tmpDict = [[NSMutableDictionary alloc] init];
 					[tmpDict setObject:lineCleanStart forKey:@"patch"];
 					[tmpDict setObject:@"Apple" forKey:@"type"];
@@ -476,6 +487,46 @@
         result = YES;
     }
     return result;
+}
+
+- (BOOL)isOSUpgradeNotPatch:(NSString *)softwareUpdateString
+{
+    qlinfo(@"[isOSUpgradeNotPatch] softwareUpdateString = %@",softwareUpdateString);
+    // Get current macOS major version
+    NSInteger currentMajor = NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
+
+    // Match Label lines like: "* Label: macOS Tahoe 26.4.1-25E253"
+    // Extracts the major version number before the first dot.
+    // OLD
+    //regularExpressionWithPattern:@"\\*\\s*Label:\\s*macOS\\s+\\S+\\s+(\\d+)\\."
+    NSError *error = nil;
+    NSRegularExpression *regex = [NSRegularExpression
+        regularExpressionWithPattern:@"(?:Match Label lines like:\\s*)?(?:\\*\\s*Label:\\s*)?macOS\\s+\\S+(?:\\s+\\S+)*\\s+(\\d+)\\.\\d+(?:\\.\\d+)?-\\S+"
+                             options:NSRegularExpressionCaseInsensitive
+                               error:&error];
+    if (error) {
+        qlerror(@"[isOSUpgradeNotPatch] Regex error: %@", error.localizedDescription);
+        return NO;
+    }
+
+    NSArray<NSTextCheckingResult *> *matches =
+        [regex matchesInString:softwareUpdateString
+                       options:0
+                         range:NSMakeRange(0, softwareUpdateString.length)];
+
+    for (NSTextCheckingResult *match in matches) {
+        NSString *majorStr = [softwareUpdateString substringWithRange:[match rangeAtIndex:1]];
+        qlinfo(@"[isOSUpgradeNotPatch] NSTextCheckingResult: majorStr = %@",majorStr);
+        NSInteger updateMajor = majorStr.integerValue;
+
+        qlinfo(@"Found macOS label — current major: %ld, update major: %ld", (long)currentMajor, (long)updateMajor);
+        if (updateMajor > currentMajor) {
+            qlinfo(@"[isOSUpgradeNotPatch] return yes");
+            return YES;  // major upgrade available
+        }
+    }
+    qlinfo(@"[isOSUpgradeNotPatch] return no");
+    return NO; // no major upgrade found
 }
 
 @end
