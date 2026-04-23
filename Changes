@@ -1,12 +1,7 @@
 MacPatch - Changes
 
-MacPatch v4.1.0
+MacPatch v4.2.0
 
 * Client
-- MPAgent fixed issue with settings and nil values
-- MacPatch added ability to hide Software tab
-
 
 * Server
-- Updated Nginx source
-- Removed old sources
