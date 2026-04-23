@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from ast import arg
 import subprocess
 import shutil
 import os, fnmatch
@@ -21,6 +20,31 @@ from datetime import datetime
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+# -----------------------------------------------------------------------
+# Platform / Xcode check — must run on macOS with Xcode installed
+# -----------------------------------------------------------------------
+import sys
+import platform
+
+def _check_platform():
+    if platform.system() != "Darwin":
+        sys.exit("Error: This script must be run on macOS.")
+
+    result = subprocess.run(
+        ["xcode-select", "-p"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE
+    )
+    if result.returncode != 0:
+        sys.exit("Error: Xcode Command Line Tools are not installed. Run: xcode-select --install")
+
+    xcode_path = result.stdout.decode().strip()
+    if not os.path.isdir(xcode_path):
+        sys.exit(f"Error: Xcode tools path not found: {xcode_path}")
+
+_check_platform()
+# -----------------------------------------------------------------------
+
 AGENT_DICTIONARY = {}
 UPDATER_DICTIONARY = {}
 
@@ -36,6 +60,7 @@ API_USR_PASS = None
 API_TOKEN    = "NA"
 
 USE_SSL = True
+VERIFY_SSL = True
 MP_SERVER = None
 MP_PORT = 3600
 URI_PREFIX = "/api/v1"
@@ -47,6 +72,8 @@ SIGN_IDENTITY = None
 
 # Notorize PKG
 NOTORIZE = True
+# Notarization tool: "altool" (legacy, Xcode < 15) or "notarytool" (Xcode 15+)
+NOTARIZE_TOOL = "notarytool"
 
 # the email address of your developer account
 DEV_ACCOUNT = None
@@ -61,6 +88,22 @@ APPLE_ID_APP_PASSWORD = None
 version="1.0"
 identifier="gov.llnl.mp.pkg"
 productname="MacPatch"
+
+
+def _build_url(path, prefix=None):
+	"""
+	Build a full API URL from a path fragment.
+
+	Uses the global USE_SSL, MP_SERVER, MP_PORT, and URI_PREFIX values.
+	Pass a custom prefix to override URI_PREFIX for a specific call.
+
+	:param path: URL path fragment, e.g. '/auth/token'
+	:param prefix: optional prefix override (default: URI_PREFIX)
+	:returns: fully-qualified URL string
+	"""
+	scheme = "https" if USE_SSL else "http"
+	base_prefix = prefix if prefix is not None else URI_PREFIX
+	return "{}://{}:{}{}{}".format(scheme, MP_SERVER, MP_PORT, base_prefix, path)
 
 class Notorize:
 
@@ -116,24 +159,94 @@ class Notorize:
 
 		return result
 
-'''
-Make Auth Request for token
-'''
+
+class NotarizeTool:
+
+	def __init__(self, user, passwd, team_id):
+		"""
+		Notarize packages using xcrun notarytool (Xcode 15+).
+
+		:param user: Apple ID / developer account email
+		:param passwd: app-specific password for the Apple ID
+		:param team_id: 10-digit Apple Developer Team ID
+		"""
+		self.user = user
+		self.passwd = passwd
+		self.team_id = team_id
+
+	def notarizePackage(self, package, bundleID):
+		"""
+		Submit a package for notarization and wait for the result.
+
+		notarytool handles polling internally via --wait, so no manual
+		polling loop is needed. On failure the submission log is fetched
+		and printed to aid diagnosis.
+
+		:param package: path to the .pkg file to notarize
+		:param bundleID: bundle identifier string
+		"""
+		print("Begin notarization of {} (notarytool)".format(package))
+		cli_args = [
+			'/usr/bin/xcrun', 'notarytool', 'submit', package,
+			'--apple-id', self.user,
+			'--password', self.passwd,
+			'--team-id', self.team_id,
+			'--wait'
+		]
+		res = subprocess.run(cli_args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+		print(res.stdout)
+
+		if res.returncode != 0:
+			print("Error: notarytool submission failed for {}".format(package))
+			print(res.stderr)
+			self._fetchLog(package)
+			return False
+
+		if "status: Accepted" not in res.stdout:
+			print("Error: notarization was not accepted for {}".format(package))
+			self._fetchLog(package)
+			return False
+
+		print("Notarization accepted for {}".format(package))
+		return True
+
+	def _fetchLog(self, package):
+		"""Fetch and print the notarization log for a failed submission."""
+		# Extract the submission ID from a prior notarytool history call
+		log_args = [
+			'/usr/bin/xcrun', 'notarytool', 'history',
+			'--apple-id', self.user,
+			'--password', self.passwd,
+			'--team-id', self.team_id,
+			'--output-format', 'json'
+		]
+		res = subprocess.run(log_args, stdout=subprocess.PIPE, text=True)
+		try:
+			history = json.loads(res.stdout)
+			submission_id = history['history'][0]['id']
+			fetch_args = [
+				'/usr/bin/xcrun', 'notarytool', 'log', submission_id,
+				'--apple-id', self.user,
+				'--password', self.passwd,
+				'--team-id', self.team_id,
+			]
+			log_res = subprocess.run(fetch_args, stdout=subprocess.PIPE, text=True)
+			print("Notarization log:\n" + log_res.stdout)
+		except (json.JSONDecodeError, KeyError, IndexError):
+			print("Could not retrieve notarization log.")
+
 def makeAuthRequest(authUser, authPass):
+	"""Make Auth Request for token."""
 	print("Getting API Token ...")
 	global API_TOKEN
 	API_TOKEN = "NA" # Reset value
 
 	result = False
-	_ssl = "http"
-	if USE_SSL:
-		_ssl = "https"
-
-	_url = "{}://{}:{}{}/auth/token".format(_ssl,MP_SERVER,MP_PORT,URI_PREFIX)
+	_url = _build_url("/auth/token")
 	_params = {'authUser': authUser, 'authPass': authPass}
 
 	try:
-		_response = requests.post(_url, json=_params, verify=False)
+		_response = requests.post(_url, json=_params, verify=VERIFY_SSL)
 		if(_response.ok):
 			res = _response.json()
 			_resDict = res["result"]
@@ -154,23 +267,18 @@ def makeAuthRequest(authUser, authPass):
 
 	return result
 
-'''
-Query Web API to see if auth token is valid
-
-- parameter token: auth token
-- returns: Bool
-'''
 def isTokenValid(token):
-	global USE_SSL,MP_SERVER,MP_PORT,URI_PREFIX
-	result = False
-	_ssl = "http"
-	if USE_SSL:
-		_ssl = "https"
+	"""
+	Query Web API to see if auth token is valid.
 
-	_url = "{}://{}:{}{}/token/valid/{}".format(_ssl,MP_SERVER,MP_PORT,URI_PREFIX,token)
+	:param token: auth token
+	:returns: Bool
+	"""
+	result = False
+	_url = _build_url("/token/valid/{}".format(token))
 	
 	try:
-		_response = requests.get(_url, verify=False)
+		_response = requests.get(_url, verify=VERIFY_SSL)
 		_response.raise_for_status()
 		if(_response.ok):
 			res = _response.json()
@@ -188,23 +296,17 @@ def isTokenValid(token):
 
 	return result
 
-'''
-Get Agent Configuration Data from Web API
-
-- parameter token  auth token
-- returns: Dictionary of result
-'''
 def getAgentConfigurationData(token):
-	global USE_SSL,MP_SERVER,MP_PORT,URI_PREFIX
+	"""
+	Get Agent Configuration Data from Web API.
 
+	:param token: auth token
+	:returns: Dictionary of result
+	"""
 	result = None
-	_ssl = "http"
-	if USE_SSL:
-		_ssl = "https"
-
-	_url = "{}://{}:{}/api/v2/agent/config/{}".format(_ssl,MP_SERVER,MP_PORT,token)
+	_url = _build_url("/agent/config/{}".format(token), prefix="/api/v2")
 	try:
-		_response = requests.get(_url, verify=False)
+		_response = requests.get(_url, verify=VERIFY_SSL)
 		_response.raise_for_status()
 		if(_response.ok):
 			result = _response.json()
@@ -221,13 +323,13 @@ def getAgentConfigurationData(token):
 
 	return result
 
-'''
-Get Array of PKG's from a path
-
-- parameter path: Directory Path
-- returns: Array of Strings
-'''
 def getPackagesFromArchiveDir(path):
+	"""
+	Get Array of PKG's from a path.
+
+	:param path: Directory Path
+	:returns: Array of Strings
+	"""
 	result = []
 	x = fnmatch.filter(os.listdir(path), '*.pkg')
 	for r in x:
@@ -238,13 +340,13 @@ def getPackagesFromArchiveDir(path):
 	else:
 		return result
 
-'''
-Extract Zipped Package and Expand the Package
-
-- parameter package: Zip Package path
-- returns: Boolean if succeeds
-'''
 def extractAgentPKG(package, destDir=None):
+	"""
+	Extract Zipped Package and Expand the Package.
+
+	:param package: Zip Package path
+	:returns: Boolean if succeeds
+	"""
 	global PKG_TMP_DIR
 
 	now = datetime.now() # current date and time
@@ -283,15 +385,15 @@ def extractAgentPKG(package, destDir=None):
 
 	return True
 
-'''
-Write MP Server Env Public Key to packages
-
-- parameter packages: Array of packages
-- parameter pubKey: plublic key string
-- parameter keyHash: md5 hash of the key
-- returns: Boolean if succeeds
-'''
 def writeServerPubKeyToPackage(packages, pubKey, keyHash):
+	"""
+	Write MP Server Env Public Key to packages.
+
+	:param packages: Array of packages
+	:param pubKey: public key string
+	:param keyHash: md5 hash of the key
+	:returns: Boolean if succeeds
+	"""
 
 	for p in packages:
 		if "Base.pkg" in p or "Client.pkg" in p:
@@ -300,9 +402,8 @@ def writeServerPubKeyToPackage(packages, pubKey, keyHash):
 				os.makedirs(scripts_dir)
 
 			_keyFile = os.path.join(p,"Scripts/ServerPub.pem")
-			f = open(_keyFile, "w")
-			f.write(pubKey)
-			f.close()
+			with open(_keyFile, "w") as f:
+				f.write(pubKey)
 
 			_keyFileHash = hashlib.md5(open(_keyFile,'rb').read()).hexdigest()
 			# Check hash
@@ -313,13 +414,14 @@ def writeServerPubKeyToPackage(packages, pubKey, keyHash):
 
 	return False
 
-'''
-Write plist data to Package
-- parameter packages: Array of packages
-- parameter plist: plist data
-- returns: Boolean if succeeds
-'''
 def writePlistToPackage(packages, plistData):
+	"""
+	Write plist data to Package.
+
+	:param packages: Array of packages
+	:param plistData: plist data
+	:returns: Boolean if succeeds
+	"""
 	global MIGRATION_PLIST
 
 	for p in packages:
@@ -343,25 +445,25 @@ def writePlistToPackage(packages, plistData):
 
 	return True
 
-'''
-Get Array of plugins from a path
-
-- parameter path: Directory Path
-- returns: Array of Strings
-'''
 def getPluginsFromDirectory(path):
+	"""
+	Get Array of plugins from a path.
+
+	:param path: Directory Path
+	:returns: Array of Strings
+	"""
 	x = []
 	x = fnmatch.filter(os.listdir(path), '*.bundle')
 	return x
 
-'''Write plugins to Package
-
-- parameter packages: Array of packages
-- parameter plugins: directory containing plugins
-
-- returns: Boolean if succeeds
-'''
 def writePluginsToPackage(packages, plugins_dir):
+	"""
+	Write plugins to Package.
+
+	:param packages: Array of packages
+	:param plugins_dir: directory containing plugins
+	:returns: Boolean if succeeds
+	"""
 
 	for p in packages:
 		if "Base.pkg" in p or "Client.pkg" in p:
@@ -379,25 +481,24 @@ def writePluginsToPackage(packages, plugins_dir):
 						print("Copy {} to {}".format(plugin,plugin_dir))
 						shutil.copytree(src_plugin_path, dst_plugin_path)
 					else:
-						if not os.path.exists(d):
+						if not os.path.exists(dst_plugin_path):
 							print("Copy {} to {}".format(plugin,plugin_dir))
 							shutil.copy2(src_plugin_path, dst_plugin_path)
 
 	return True
 
-'''
-Write version info plist to package. Also populates dictionaries for
-post to web api durning upload
-
-- parameter packages: package path
-- parameter version_file: version file
-
-- returns: Boolean if succeeds
-'''
 def writeVersionInfoToPackage(package, version_file):
+	"""
+	Write version info plist to package. Also populates dictionaries for
+	post to web API during upload.
+
+	:param package: package path
+	:param version_file: version file
+	:returns: Boolean if succeeds
+	"""
 	global AGENT_DICTIONARY, UPDATER_DICTIONARY
 
-	type = None
+	pkg_type = None
 	base_dict = {}
 	ver_dict = {}
 	with open(version_file, 'rb') as fp:
@@ -406,13 +507,13 @@ def writeVersionInfoToPackage(package, version_file):
 	if "Base.pkg" in package:
 		if "Agent" in info_dict:
 			ver_dict = info_dict['Agent']
-			type = 'app'
+			pkg_type = 'app'
 	elif "Updater.pkg" in package:
 		if "Updater" in info_dict:
 			ver_dict = info_dict['Updater']
-			type = 'update'
+			pkg_type = 'update'
 	else:
-		print("Err")
+		print("Error: unrecognized package type for: {}".format(package))
 
 	vers = None
 	if "agent_version" in ver_dict:
@@ -433,26 +534,26 @@ def writeVersionInfoToPackage(package, version_file):
 
 		# Set Data needed for agent upload
 		base_dict["pkg_name"] = os.path.basename(os.path.normpath(package))
-		base_dict["type"] = type
+		base_dict["type"] = pkg_type
 		base_dict["osver"] = ver_dict["osver"]
 		base_dict["agent_ver"] = ver_dict["agent_version"]
 		base_dict["ver"] = ver_dict["version"]
 
-		if type == "app":
+		if pkg_type == "app":
 			AGENT_DICTIONARY = base_dict
 		else:
 			UPDATER_DICTIONARY = base_dict
 
 	return True
 
-'''
-Write registration key to file in package
-
-- parameter packages: package array
-- parameter regKey: registration key string
-- returns: Boolean if succeeds
-'''
 def writeRegKeyToPackage(packages, regKey):
+	"""
+	Write registration key to file in package.
+
+	:param packages: package array
+	:param regKey: registration key string
+	:returns: Boolean if succeeds
+	"""
 	if len(packages) <= 0:
 		return False
 
@@ -464,22 +565,21 @@ def writeRegKeyToPackage(packages, regKey):
 			scriptsDir = os.path.join(p, "Scripts")
 			regFile = os.path.join(p, "Scripts", ".mpreg.key")
 			if os.path.exists(scriptsDir):
-				f = open(regFile, "a")
-				f.write(regKey)
-				f.close()
+				with open(regFile, "w") as f:
+					f.write(regKey)
 
 				return True
 
 	return False
 
-'''
-Flatten Package
-
- - parameter package: path of package to flatten
- - parameter flatten_package: the resulting flattened package
- - returns: Bool
-'''
 def flattenPackage(pkgPath, flattenPkgPath):
+	"""
+	Flatten Package.
+
+	:param pkgPath: path of package to flatten
+	:param flattenPkgPath: the resulting flattened package
+	:returns: Bool
+	"""
 	cli_args = ["/usr/sbin/pkgutil", "--flatten", pkgPath, flattenPkgPath]
 	res = subprocess.run(cli_args)
 
@@ -489,13 +589,14 @@ def flattenPackage(pkgPath, flattenPkgPath):
 		print("The exit code was: %d" % res.returncode)
 		return False
 
-'''
-Code Sign Package
-
- - parameter package: path of package to sign
- - returns: Bool
-'''
 def signPackage(pkgPath, signingIdentity):
+	"""
+	Code Sign Package.
+
+	:param pkgPath: path of package to sign
+	:param signingIdentity: signing identity string
+	:returns: Bool
+	"""
 	print("Signing {}".format(pkgPath))
 	signed_pkg_name = pkgPath.replace("toSign_", "")
 	cli_args = ["/usr/bin/productsign", "--sign", signingIdentity, pkgPath, signed_pkg_name]
@@ -508,14 +609,15 @@ def signPackage(pkgPath, signingIdentity):
 		print("The exit code was: %d" % res.returncode)
 		return False
 
-'''
-Flatten Packages for distribution, if signing is turned on
-packages will be signed as well.
-
-- parameter packages: array of package paths
-- returns: Array of flatten packages
-'''
 def flattenPackages(packages, working_dir):
+	"""
+	Flatten Packages for distribution. If signing is enabled,
+	packages will be signed as well.
+
+	:param packages: array of package paths
+	:param working_dir: working directory for output
+	:returns: Array of flattened packages
+	"""
 	global SIGN_PKG
 	_flat_packages = []
 
@@ -546,13 +648,13 @@ def flattenPackages(packages, working_dir):
 
 	return _flat_packages
 
-'''
-Compress Package
-
- - parameter packages: array of packages
- - returns: Bool
- '''
 def compressPackage(pkgPath):
+	"""
+	Compress Package.
+
+	:param pkgPath: path of package to compress
+	:returns: Bool
+	"""
 	print("Compressing {}".format(pkgPath))
 	compressed_pkg = "{}.zip".format(pkgPath)
 	cli_args = ["/usr/bin/ditto", "-c", "-k", pkgPath, compressed_pkg]
@@ -562,14 +664,13 @@ def compressPackage(pkgPath):
 	else:
 		return False
 
-'''
-Change the background image
-post to web api durning upload
-
-- parameter path: base dir for Background images
-- returns: Boolean if succeeds
-'''
 def changeBackgroundImageToDoneImage(path):
+	"""
+	Replace the installer background image with the 'done' variant.
+
+	:param path: base dir for Background images
+	:returns: Boolean if succeeds
+	"""
 	image = os.path.join(path, "Resources/Background.png")
 	image_done = os.path.join(path, "Resources/Background_done.png")
 	if os.path.exists(image) and os.path.exists(image_done):
@@ -578,150 +679,140 @@ def changeBackgroundImageToDoneImage(path):
 
 	return True
 
-'''
-Process the agent package from the MPClientBuild script
+def _authenticate():
+	"""
+	Prompt for credentials if needed and obtain an API auth token.
 
-'''
-def processAgentPackage():
-	global API_USR_NAME, API_USR_PASS, API_TOKEN, AGENT_PACKAGE_PATH, PKG_TMP_DIR, PKG_DEST_DIR
-	global DEV_ACCOUNT, APPLE_ID_APP_PASSWORD, NOTORIZE
-	global AGENT_DICTIONARY, UPDATER_DICTIONARY, PLUGINS_DIRECTORY
+	:returns: True on success, False on failure
+	"""
+	global API_USR_NAME, API_USR_PASS
 
 	if API_USR_NAME is None:
-		print("processAgentPackage")
 		API_USR_NAME = input("API User Name: ")
 	if API_USR_PASS is None:
 		API_USR_PASS = getpass.getpass('Password:')
 
-	print("Begin Processing Agent Packages")
-	agent_config = None
-	pubKey = None
-	pubKeyHash = None
-	formData = {"app": {}, "update": {}, "plugins": [], "profiles": [] }
+	if not makeAuthRequest(API_USR_NAME, API_USR_PASS):
+		print("Error: failed to get auth token. Please verify user and password.")
+		return False
 
-	# --------------------------------------
-	# Get Auth Token
-	tokenResult = makeAuthRequest(API_USR_NAME, API_USR_PASS)
-	if tokenResult == False:
-		print("Error, failed to get auth token. Please verify user and password.")
-		return
+	if API_TOKEN == "NA":
+		print("Error: auth token is NA.")
+		return False
 
-	# --------------------------------------
-	# Download Agent Configuration Data
-	agentConfig = None
+	return True
 
-	if API_TOKEN != "NA":
-		print("Download agent configuration")
-		agent_config_res = getAgentConfigurationData(API_TOKEN)
-		if not agent_config_res:
-			print("Error getting agent configuration, is None")
-			return
-		else:
-			if "plist" in agent_config_res:
-				_tmp_datafile = '/tmp/agentConfig.plist'
-				if os.path.exists(_tmp_datafile):
-					os.remove(_tmp_datafile) # Delete, dont want to append to file
 
-				_agent_config_xml = agent_config_res['plist']
-				f = open(_tmp_datafile, "x")
-				f.write(_agent_config_xml)
-				f.close()
+def _downloadAgentConfig():
+	"""
+	Download agent configuration from the server and parse it.
 
-				_dict = {}
-				with open('/tmp/agentConfig.plist', 'rb') as fp:
-					_dict = plistlib.load(fp)
+	:returns: tuple of (agent_config dict, pubKey str, pubKeyHash str),
+	          or (None, None, None) on failure
+	"""
+	print("Download agent configuration")
+	agent_config_res = getAgentConfigurationData(API_TOKEN)
+	if not agent_config_res:
+		print("Error getting agent configuration, is None")
+		return None, None, None
 
-				agent_config = _dict['default']
+	if "plist" not in agent_config_res:
+		print("Error: agent configuration is missing plist key.")
+		return None, None, None
 
-			else:
-				print("Error agent configuration is missing plist key.")
-				return
+	if "pubKey" not in agent_config_res:
+		print("Error: agent configuration is missing pubKey.")
+		return None, None, None
 
-			if "pubKey" in agent_config_res:
-				pubKey = agent_config_res['pubKey']
-			else:
-				print("Error agent configuration is missing pubkey.")
-				return
+	if "pubKeyHash" not in agent_config_res:
+		print("Error: agent configuration is missing pubKeyHash.")
+		return None, None, None
 
-			if "pubKeyHash" in agent_config_res:
-				pubKeyHash = agent_config_res['pubKeyHash']
-			else:
-				print("Error agent configuration is missing pubKeyHash.")
-				return
+	# Write plist XML to a temp file and load it back as a dict
+	_tmp_datafile = '/tmp/agentConfig.plist'
+	if os.path.exists(_tmp_datafile):
+		os.remove(_tmp_datafile)
+	with open(_tmp_datafile, "w") as f:
+		f.write(agent_config_res['plist'])
+	with open(_tmp_datafile, 'rb') as fp:
+		_dict = plistlib.load(fp)
 
-	else:
-		print("Error, auth token is NA.")
-		return
+	return _dict['default'], agent_config_res['pubKey'], agent_config_res['pubKeyHash']
 
-	# --------------------------------------
-	# Unzip and extract packages
+
+def _preparePackages(agent_config, pubKey, pubKeyHash):
+	"""
+	Extract, configure, flatten, notarize, and compress the agent packages.
+
+	:param agent_config: agent configuration dict
+	:param pubKey: server public key string
+	:param pubKeyHash: md5 hash of the public key
+	:returns: list of finished .zip package paths, or None on failure
+	"""
+	global PKG_TMP_DIR
+
+	# Extract and expand
 	print("Unzip and extract package")
-	if os.path.exists(AGENT_PACKAGE_PATH) == False:
-		print("Error agent package path is not defined or not found.")
-		return
-	
-	print("PKG_DEST_DIR: "+ PKG_DEST_DIR)
-	exRes = extractAgentPKG(AGENT_PACKAGE_PATH, PKG_DEST_DIR)
-	if exRes == False:
-		return
+	if not os.path.exists(AGENT_PACKAGE_PATH):
+		print("Error: agent package path is not defined or not found.")
+		return None
 
-	# --------------------------------------
-	# Write config data to packages
-	print("Write config data to packages.")
+	print("PKG_DEST_DIR: " + PKG_DEST_DIR)
+	if not extractAgentPKG(AGENT_PACKAGE_PATH, PKG_DEST_DIR):
+		return None
+
 	if PKG_TMP_DIR is None:
-		print("Error package tmp dir is not defined.")
-		return
-	base_dir = os.path.join(PKG_TMP_DIR,"MacPatch")
+		print("Error: package tmp dir is not defined.")
+		return None
+
+	base_dir = os.path.join(PKG_TMP_DIR, "MacPatch")
 	print("Working dir (base_dir) is {}".format(base_dir))
 
 	packages = getPackagesFromArchiveDir(base_dir)
 	if packages is None:
-		print("Error no packages to process.")
-		return
+		print("Error: no packages to process.")
+		return None
 
-	# Write Server Public Key
-	if not writeServerPubKeyToPackage(packages,pubKey,pubKeyHash):
+	# Write config data into packages
+	print("Write config data to packages.")
+	if not writeServerPubKeyToPackage(packages, pubKey, pubKeyHash):
 		print("Error writing server public key data")
-		return
+		return None
 
-	# Write config plist to packages
 	if not writePlistToPackage(packages, agent_config):
 		print("Error writing agent config data")
-		return
+		return None
 
-	# Copy plugins to packages
 	if PLUGINS_DIRECTORY is not None:
 		if not writePluginsToPackage(packages, PLUGINS_DIRECTORY):
 			print("Error copying plugins to packages.")
 
-	#  Write Version info to packages
-	ver_info_file = os.path.join(base_dir,"Resources/mpInfo.plist")
+	ver_info_file = os.path.join(base_dir, "Resources/mpInfo.plist")
 	if os.path.exists(ver_info_file):
 		for p in packages:
-			if not writeVersionInfoToPackage(p,ver_info_file):
+			if not writeVersionInfoToPackage(p, ver_info_file):
 				print("Error writing version info to packages.")
 
-	# Write registration key to packages
 	if REGISTRATION_KEY is not None:
 		if not writeRegKeyToPackage(packages, REGISTRATION_KEY):
 			print("Error writing registration key to packages.")
 
-	# Apply Background image done
 	if not changeBackgroundImageToDoneImage(base_dir):
-		print("Error changing pkg backgground image.")
+		print("Error changing pkg background image.")
 
-	# --------------------------------------
-	# Flatten packages
-	flatten_packages = []
+	# Flatten (and optionally sign)
 	packages.append(base_dir)
-	flatten_packages = flattenPackages(packages,PKG_TMP_DIR)
+	flatten_packages = flattenPackages(packages, PKG_TMP_DIR)
 
-	n = None
+	# Notarize and compress
 	if NOTORIZE:
-		n = Notorize(DEV_ACCOUNT, APPLE_ID_APP_PASSWORD)
+		if NOTARIZE_TOOL == "notarytool":
+			n = NotarizeTool(DEV_ACCOUNT, APPLE_ID_APP_PASSWORD, DEV_TEAM)
+		else:
+			n = Notorize(DEV_ACCOUNT, APPLE_ID_APP_PASSWORD)
+	else:
+		n = None
 
-	# --------------------------------------
-	# Compress packages
 	_finished_packages = []
 	for f in flatten_packages:
 		removePKG = False
@@ -733,34 +824,60 @@ def processAgentPackage():
 		if NOTORIZE:
 			print("Notarize ...")
 			if "Base.pkg" in f:
-				n.notarizePackage(f,"gov.llnl.mp.base.pkg")
+				n.notarizePackage(f, "gov.llnl.mp.base.pkg")
 			elif "Updater.pkg" in f:
-				n.notarizePackage(f,"gov.llnl.mp.updater.pkg")
+				n.notarizePackage(f, "gov.llnl.mp.updater.pkg")
 			elif "MacPatch.pkg" in f:
-				n.notarizePackage(f,"gov.llnl.mp.pkg")
+				n.notarizePackage(f, "gov.llnl.mp.pkg")
 
 		if not compressPackage(f):
 			print("Error compressing {}".format(f))
 		else:
-			_finished_packages.append(f+'.zip')
+			_finished_packages.append(f + '.zip')
 			if removePKG:
 				os.remove(removePKGPath)
 
-	# --------------------------------------
-	# Post packages
-	formData['app'] = AGENT_DICTIONARY
-	formData['update'] = UPDATER_DICTIONARY
+	return _finished_packages
 
-	# Data for uploading confirmed packages
-	uploadData = {'pkgs':_finished_packages,'data':formData, 'token':API_TOKEN, 'pkgDir':PKG_TMP_DIR}
-	uploadDataFile = os.path.join(PKG_TMP_DIR,'uploadData.json')
+
+def _uploadPackages(finished_packages):
+	"""
+	Save upload manifest to disk and optionally post packages to the server.
+
+	:param finished_packages: list of .zip package paths to upload
+	"""
+	formData = {"app": AGENT_DICTIONARY, "update": UPDATER_DICTIONARY, "plugins": [], "profiles": []}
+
+	uploadData = {'pkgs': finished_packages, 'data': formData, 'token': API_TOKEN, 'pkgDir': PKG_TMP_DIR}
+	uploadDataFile = os.path.join(PKG_TMP_DIR, 'uploadData.json')
 	with open(uploadDataFile, 'w') as outfile:
 		json.dump(uploadData, outfile)
 
 	if UPLOAD_PKGS:
-		uploadPackagesToServer(_finished_packages, formData )
+		uploadPackagesToServer(finished_packages, formData)
 	else:
 		print("Upload packages is disabled.")
+
+
+def processAgentPackage():
+	"""
+	Orchestrate the full agent package build and upload pipeline:
+	authenticate, download config, prepare packages, and upload.
+	"""
+	print("Begin Processing Agent Packages")
+
+	if not _authenticate():
+		return
+
+	agent_config, pubKey, pubKeyHash = _downloadAgentConfig()
+	if agent_config is None:
+		return
+
+	finished_packages = _preparePackages(agent_config, pubKey, pubKeyHash)
+	if finished_packages is None:
+		return
+
+	_uploadPackages(finished_packages)
 
 	subprocess.run(['/usr/bin/open', PKG_TMP_DIR])
 
@@ -769,12 +886,8 @@ def uploadPackagesToServer(packages, formData):
 	global API_USR_NAME, API_USR_PASS, API_TOKEN
 
 	result = False
-	_ssl = "http"
-	if USE_SSL:
-		_ssl = "https"
-
 	aid = str(uuid.uuid4())
-	_url = "{}://{}:{}/api/v3/agent/upload/{}/{}".format(_ssl,MP_SERVER,MP_PORT,aid,API_TOKEN)
+	_url = _build_url("/agent/upload/{}/{}".format(aid, API_TOKEN), prefix="/api/v3")
 
 	pkgs = []
 	fileData = {}
@@ -793,11 +906,8 @@ def uploadPackagesToServer(packages, formData):
 	_files = {'fBase': fileData['fBase'], 'fUpdate': fileData['fUpdate'], 'fComplete': fileData['fComplete'], 'jData': ('', json.dumps(formData), 'application/json') }
 
 	try:
-		_jData = json.dumps(formData)
-		_jDataB64 = base64.b64encode(_jData.encode("ascii"))
-		headers = {"Content-type": "multipart/form-data", "Accept": "application/json"}
 		print("Uploading packages to MacPatch server ...")
-		_response = requests.post(_url, files = _files, verify=False)
+		_response = requests.post(_url, files = _files, verify=VERIFY_SSL)
 
 		print(_response.text)
 
@@ -828,7 +938,7 @@ def uploadTestedPackagesToServer(dataFile):
 
 	uploadData = None
 	with open(dataFile) as f:
-  		uploadData = json.load(f)
+		uploadData = json.load(f)
 
 	API_TOKEN = uploadData['token']
 	PKG_TMP_DIR = uploadData['pkgDir']
@@ -838,7 +948,7 @@ def uploadTestedPackagesToServer(dataFile):
 def main():
 	global PKG_DEST_DIR
 	global API_USR_NAME, API_USR_PASS, AGENT_PACKAGE_PATH, NOTORIZE, PLUGINS_DIRECTORY
-	global MP_SERVER, MP_PORT, REGISTRATION_KEY, MIGRATION_PLIST, UPLOAD_PKGS
+	global MP_SERVER, MP_PORT, REGISTRATION_KEY, MIGRATION_PLIST, UPLOAD_PKGS, VERIFY_SSL, NOTARIZE_TOOL
 	os.system('clear')
 	print("")
 	print("******* MacPatch Agent Uploader *******")
@@ -861,6 +971,11 @@ def main():
 
 	parser.add_argument('-d', dest='noUpload', action='store_true', default=False, help='Do not upload completed package to server.')
 	parser.add_argument('-n', dest='notorize', action='store_false', default=True, help='Do not notorize packages.')
+
+	parser.add_argument('--notarize-tool', dest='notarizeTool', choices=['altool', 'notarytool'], default=None,
+					help='Notarization tool to use: altool (legacy, Xcode <15) or notarytool (Xcode 15+, default).')
+
+	parser.add_argument('--no-verify-ssl', dest='noVerifySSL', action='store_true', default=False, help='Disable SSL certificate verification (use for self-signed certs).')
 
 	parser.add_argument('-c', dest='configFile', help='External Config File for agent upload')
 
@@ -904,9 +1019,15 @@ def main():
 	if args.noUpload:
 		UPLOAD_PKGS = False
 
-	if args.notorize == False:
+	if args.noVerifySSL:
+		VERIFY_SSL = False
+
+	if args.notarizeTool is not None:
+		NOTARIZE_TOOL = args.notarizeTool
+
+	if not args.notorize:
 		NOTORIZE = False
-	elif args.notorize == True and NOTORIZE == False:
+	elif args.notorize and not NOTORIZE:
 		NOTORIZE = False
 
 	if args.pkgDestDir is not None:
