@@ -20,8 +20,8 @@ How to run MPAgentUploader.py
 
 The most common way to test a new agent build is. This will build the installer but wont notarize or upload the agent to the MacPatch server.
 
-% ./MPAgentUploader.py -c ./MPAgentUpload.config -d -n -p /Users/smith1/MP-Build/3.6.4/20220208-084745/Combined/MacPatch.pkg.zip --destDir /Users/smith1/MP-Build/3.6.4/20220208-084745
+% python3 ./MPAgentUploader.py -c ./MPAgentUpload.config -d -n -p /Users/smith1/MP-Build/3.6.4/20220208-084745/Combined/MacPatch.pkg.zip --destDir /Users/smith1/MP-Build/3.6.4/20220208-084745
 
 If the build is good and you wish to upload it to the server. The "uploadData.json" file is in the "Completed" directory.
 
-% ./MPAgentUploader.py -c ./MPAgentUpload.config -j /Users/smith1/MP-Build/3.6.4/20220208-084745/Completed/MacPatch_20220208084918/uploadData.json
+% python3 ./MPAgentUploader.py -c ./MPAgentUpload.config -j /Users/smith1/MP-Build/3.6.4/20220208-084745/Completed/MacPatch_20220208084918/uploadData.json
