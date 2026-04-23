@@ -32,6 +32,7 @@
 		"sb-admin-2": "^3.3.8",
 		"selectize": "^0.12.6",
 		"sql-parser-mistic": "^1.2.3",
-		"tableexport.jquery.plugin": "^1.30.0"
+		"tableexport.jquery.plugin": "^1.30.0",
+		"dompurify": "^3.4.0"
 	}
 }
