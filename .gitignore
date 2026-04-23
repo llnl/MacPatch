@@ -131,6 +131,7 @@ Source_dev/
 ._static
 *.log
 *.log.*
+yarn.lock
 working/
 
 # MacPatch, ignore root dir items
