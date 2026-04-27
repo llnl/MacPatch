@@ -80,7 +80,10 @@ dispatch_source_t CreateDispatchTimer(double interval, dispatch_queue_t queue, d
 
 @implementation MPClientStatusAppDelegate
 {
-    dispatch_source_t _timer;
+    dispatch_source_t _lastCheckInTimer;
+    dispatch_source_t _fvUserCheckTimer;
+    dispatch_source_t _patchDisplayTimer;
+    dispatch_source_t _userNotificationTimer;
 	dispatch_source_t _timerSWRules;
 }
 
@@ -583,6 +586,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     logit(lcl_vInfo, @"Start Last CheckIn Data Thread");
     logit(lcl_vInfo, @"Run every %f", secondsToFire);
     
+    if (_lastCheckInTimer) {
+        dispatch_source_cancel(_lastCheckInTimer);
+        _lastCheckInTimer = nil;
+    }
+    
     // Show Menu Once, then use timer
     [self performSelectorOnMainThread:@selector(showLastCheckInMethod)
                            withObject:nil
@@ -591,7 +599,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
-    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+    _lastCheckInTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
         logit(lcl_vInfo, @"Start, Display Last CheckIn Data in menu.");
         logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(showLastCheckInMethod)
@@ -645,6 +653,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     logit(lcl_vInfo, @"Start FileVault User Check Thread");
     logit(lcl_vInfo, @"Run every %f", secondsToFire);
     
+    if (_fvUserCheckTimer) {
+        dispatch_source_cancel(_fvUserCheckTimer);
+        _fvUserCheckTimer = nil;
+    }
+    
     // Show Menu Once, then use timer
     [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
                            withObject:nil
@@ -653,7 +666,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
-    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+    _fvUserCheckTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
         [self performSelectorOnMainThread:@selector(fvUserCheckMethod)
                                withObject:nil
                             waitUntilDone:NO
@@ -761,6 +774,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)displayPatchData
 {
+    if (_patchDisplayTimer) {
+        dispatch_source_cancel(_patchDisplayTimer);
+        _patchDisplayTimer = nil;
+    }
+    
     // Show Menu Once, then use timer
     [self performSelectorOnMainThread:@selector(displayPatchDataMethod)
                            withObject:nil
@@ -770,7 +788,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     double secondsToFire = 120.0;
     
-    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+    _patchDisplayTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
         logit(lcl_vInfo, @"Start, Display Patch Data Info in menu.");
         logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(displayPatchDataMethod)
@@ -907,33 +925,38 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (NSDictionary *)readRequiredPatches
 {
-	@try
-	{
-		MPClientDB *cdb = [MPClientDB new];
-		
-		// Query all records
-		NSArray *records = [cdb retrieveRequiredPatches];
-		qldebug(@"Required patches found %lu.",(unsigned long)records.count);
-		
-		int needsReboot = 0;
-		NSMutableArray *patches = [NSMutableArray new];
-		for (RequiredPatch *p in records)
-		{
-			NSString *restart = (p.patch_reboot == 1) ? @"Y" : @"N";
-			[patches addObject:@{@"name":p.patch,@"version":p.patch_version,@"reboot":restart}];
-			if (p.patch_reboot == 1) {
-				needsReboot++;
-			}
+	__block NSDictionary *result = @{@"patches":[NSArray array],@"needsReboot":@"N"};
+	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
+	
+	[self connectAndExecuteCommandBlock:^(NSError *connectError) {
+		if (connectError != nil) {
+			qlerror(@"connectError: %@", connectError.localizedDescription);
+			dispatch_semaphore_signal(sem);
+			return;
 		}
 		
-		return @{@"patches":(NSArray*)patches,@"needsReboot":((needsReboot >= 1) ? @"Y" : @"N")};
-	}
-	@catch (NSException *exception)
-	{
-		qlerror(@"%@",exception);
-	}
-
-	return @{@"patches":[NSArray array],@"needsReboot":@"N"};
+		id proxy = [self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError *proxyError) {
+			qlerror(@"proxyError: %@", proxyError.localizedDescription);
+			dispatch_semaphore_signal(sem);
+		}];
+		
+		if ([proxy respondsToSelector:@selector(retrieveRequiredPatchesWithReply:)]) {
+			[proxy retrieveRequiredPatchesWithReply:^(NSError *err, NSDictionary *xpcResult) {
+				if (err) {
+					qlerror(@"%@", err.localizedDescription);
+				} else if ([xpcResult isKindOfClass:[NSDictionary class]]) {
+					result = xpcResult;
+				}
+				dispatch_semaphore_signal(sem);
+			}];
+		} else {
+			qlerror(@"retrieveRequiredPatchesWithReply: is not implemented by gov.llnl.mp.status.ui");
+			dispatch_semaphore_signal(sem);
+		}
+	}];
+	
+	dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
+	return result;
 }
 
 - (IBAction)refreshClientStatus:(id)sender
@@ -1159,6 +1182,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)runMPUserNotificationCenter
 {
+    if (_userNotificationTimer) {
+        dispatch_source_cancel(_userNotificationTimer);
+        _userNotificationTimer = nil;
+    }
+    
     // Show Menu Once, then use timer
     [self performSelectorOnMainThread:@selector(showMPUserNotificationCenterMethod)
                            withObject:nil
@@ -1168,7 +1196,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     double secondsToFire = 1200.0; // 1200.0 = 20 Minutes
     
-    _timer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
+    _userNotificationTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
         logit(lcl_vInfo, @"Start, Display Patch Data Info in menu.");
         logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(showMPUserNotificationCenterMethod)
@@ -1425,6 +1453,11 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	logit(lcl_vInfo, @"Start Software Rules Update Thread");
 	logit(lcl_vInfo, @"Run every %f", secondsToFire);
 	
+    if (_timerSWRules) {
+        dispatch_source_cancel(_timerSWRules);
+        _timerSWRules = nil;
+    }
+    
 	// Show Menu Once, then use timer
 	[self performSelectorOnMainThread:@selector(processSoftwareRules)
 						   withObject:nil
@@ -1492,4 +1525,3 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 }
 
 @end
-
