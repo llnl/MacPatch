@@ -231,6 +231,40 @@
     return;
 }
 
+#pragma mark • Patch Status
+
+- (void)retrieveRequiredPatchesWithReply:(void(^)(NSError *error, NSDictionary *result))reply
+{
+    @try
+    {
+        MPClientDB *cdb = [MPClientDB new];
+        NSArray *records = [cdb retrieveRequiredPatches];
+        
+        int needsReboot = 0;
+        NSMutableArray *patches = [NSMutableArray new];
+        for (RequiredPatch *p in records)
+        {
+            NSString *restart = (p.patch_reboot == 1) ? @"Y" : @"N";
+            [patches addObject:@{@"name":p.patch ?: @"",
+                                 @"version":p.patch_version ?: @"",
+                                 @"reboot":restart}];
+            if (p.patch_reboot == 1) {
+                needsReboot++;
+            }
+        }
+        
+        reply(nil, @{@"patches":[patches copy],
+                     @"needsReboot":((needsReboot >= 1) ? @"Y" : @"N")});
+    }
+    @catch (NSException *exception)
+    {
+        NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.status.ui"
+                                           code:1001
+                                       userInfo:@{NSLocalizedDescriptionKey: exception.reason ?: @"Unknown error retrieving required patches."}];
+        reply(err, @{@"patches":@[], @"needsReboot":@"N"});
+    }
+}
+
 #pragma mark • FileVault
 
 - (void)runAuthRestartWithReply:(void(^)(NSError *error, NSInteger result))reply
