@@ -3,5 +3,10 @@ MacPatch - Changes
 MacPatch v4.2.0
 
 * Client
+- Fixed Issue with MacPatch.app where updates were not installing
+- Fixed Issue with MPClientStatus where ClientDB permissions were preventing use
+- Fixed Issue with MPClientStatus and timer objects on collecting client state
+- Added CLI aliases to MPAgent for patchScan and patchUpdate
 
 * Server
+--
