@@ -19,7 +19,7 @@
 #import <CommonCrypto/CommonDigest.h>
 
 #import "PBCommandController.h"
-#import "PBLogging.h"
+#import "Logger.h"
 #import "PBPackageInstaller.h"
 
 static NSString *const kHdiutilPath = @"/usr/bin/hdiutil";
@@ -53,7 +53,7 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 
 		_receiptName = [receipt copy];
 		_packageURL = [packageURL copy];
-		[self log:@"URL: %@",_packageURL];
+		[self log:@"URL: %@", _packageURL];
 		_mountPoint = [self generateMountPoint];
 
 		_downloadAttemptsMax = 5;
@@ -86,7 +86,7 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 											toPath:newPath
 											 error:NULL];
 
-	[self log:@"Mounting DMG to %@",self.mountPoint];
+	[self log:@"Mounting DMG to %@", self.mountPoint];
 	BOOL success = [self diskImageAttach:newPath];
 	if (!success) return NO;
 
@@ -98,7 +98,7 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 	// TODO(rah): Add ability to install to a different volume.
 	success = [self installPackageFromLocation:[self firstPackageOnImage] toVolume:@"/"];
 	if (success) {
-	[self log:@"Install complete"];
+		[self log:@"Install complete"];
 	}
 
 	// Success is not tied to whether detaching succeeded.
@@ -166,7 +166,7 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 		}
 	}
 
-  return path;
+	return path;
 }
 
 - (BOOL)diskImageAttach:(NSString *)path
@@ -174,18 +174,17 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 	PBCommandController *t = [[PBCommandController alloc] init];
 	t.launchPath = kHdiutilPath;
 	t.arguments = @[ @"attach",
-				   path,
-				   @"-nobrowse",
-				   @"-readonly",
-				   @"-mountpoint",
-				   self.mountPoint ];
+					 path,
+					 @"-nobrowse",
+					 @"-readonly",
+					 @"-mountpoint",
+					 self.mountPoint ];
 	t.timeout = 30;
-	
+
 	NSString *resStr;
 	int res = [t launchWithOutput:&resStr];
-	NSLog(@"%@",resStr);
-	
-	
+	NSLog(@"%@", resStr);
+
 	return res == 0;
 }
 
@@ -234,8 +233,8 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 {
 	unsigned char sha1[CC_SHA1_DIGEST_LENGTH];
 	NSData *fileData = [NSData dataWithContentsOfFile:path
-											options:NSDataReadingMappedIfSafe
-											  error:nil];
+											 options:NSDataReadingMappedIfSafe
+											   error:nil];
 
 	CC_SHA1(fileData.bytes, (CC_LONG)fileData.length, sha1);
 	NSMutableString *buf = [[NSMutableString alloc] initWithCapacity:CC_SHA1_DIGEST_LENGTH * 2];
@@ -254,8 +253,11 @@ static NSString *const kPkgutilPath = @"/usr/sbin/pkgutil";
 	NSString *formatted = [[NSString alloc] initWithFormat:fmt arguments:ap];
 	va_end(ap);
 
-	PBLog(@"%@ %@", self.logPrefix, formatted);
+	if (self.logPrefix.length) {
+		[[Logger sharedLogger] info:@"%@ %@", self.logPrefix, formatted];
+	} else {
+		[[Logger sharedLogger] info:@"%@", formatted];
+	}
 }
 
 @end
-

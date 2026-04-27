@@ -12,6 +12,7 @@
 		490A51ED18D7765500DA939E /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 490A51EC18D7765500DA939E /* main.m */; };
 		490A51EF18D7769200DA939E /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 490A51EE18D7769200DA939E /* Security.framework */; };
 		490A51F218D77D2400DA939E /* PBPackageInstaller.m in Sources */ = {isa = PBXBuildFile; fileRef = 490A51F118D77D2400DA939E /* PBPackageInstaller.m */; };
+		8F322A422F9FEACA0059EB74 /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F322A412F9FEACA0059EB74 /* Logger.m */; };
 		8FBB66C721376E4A005805C4 /* MOLAuthenticatingURLSession.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FBB66C421376E4A005805C4 /* MOLAuthenticatingURLSession.m */; };
 		8FBB66C821376E4A005805C4 /* MOLDERDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FBB66C621376E4A005805C4 /* MOLDERDecoder.m */; };
 		8FBB66CC21376E64005805C4 /* MOLCertificate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FBB66CB21376E64005805C4 /* MOLCertificate.m */; };
@@ -39,7 +40,8 @@
 		490A51EE18D7769200DA939E /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		490A51F018D77D2400DA939E /* PBPackageInstaller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBPackageInstaller.h; sourceTree = "<group>"; };
 		490A51F118D77D2400DA939E /* PBPackageInstaller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PBPackageInstaller.m; sourceTree = "<group>"; };
-		49B3480D1A02CAA800F4FE84 /* PBLogging.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PBLogging.h; sourceTree = "<group>"; };
+		8F322A402F9FEACA0059EB74 /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
+		8F322A412F9FEACA0059EB74 /* Logger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Logger.m; sourceTree = "<group>"; };
 		8FBB66C321376E4A005805C4 /* MOLAuthenticatingURLSession.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MOLAuthenticatingURLSession.h; path = MOLAuthenticatingURLSession/Source/MOLAuthenticatingURLSession.h; sourceTree = SOURCE_ROOT; };
 		8FBB66C421376E4A005805C4 /* MOLAuthenticatingURLSession.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MOLAuthenticatingURLSession.m; path = MOLAuthenticatingURLSession/Source/MOLAuthenticatingURLSession.m; sourceTree = SOURCE_ROOT; };
 		8FBB66C521376E4A005805C4 /* MOLDERDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MOLDERDecoder.h; path = MOLAuthenticatingURLSession/Source/MOLDERDecoder.h; sourceTree = SOURCE_ROOT; };
@@ -94,9 +96,10 @@
 			children = (
 				8FEE6299261FAF3B00F533F4 /* planb.entitlements */,
 				490A51EC18D7765500DA939E /* main.m */,
+				8F322A402F9FEACA0059EB74 /* Logger.h */,
+				8F322A412F9FEACA0059EB74 /* Logger.m */,
 				0D6D8EAC1EEEF53400B93029 /* PBCommandController.h */,
 				0D6D8EAD1EEEF53400B93029 /* PBCommandController.m */,
-				49B3480D1A02CAA800F4FE84 /* PBLogging.h */,
 				490A51F018D77D2400DA939E /* PBPackageInstaller.h */,
 				490A51F118D77D2400DA939E /* PBPackageInstaller.m */,
 				8FBB66C921376E57005805C4 /* MOLCertificate */,
@@ -211,6 +214,7 @@
 				8FBB66CC21376E64005805C4 /* MOLCertificate.m in Sources */,
 				0D6D8EAE1EEEF53400B93029 /* PBCommandController.m in Sources */,
 				490A51F218D77D2400DA939E /* PBPackageInstaller.m in Sources */,
+				8F322A422F9FEACA0059EB74 /* Logger.m in Sources */,
 				8FBB66C721376E4A005805C4 /* MOLAuthenticatingURLSession.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
