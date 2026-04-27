@@ -43,7 +43,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.1.3.0"
+#define APPVERSION	@"4.2.0.0"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -78,8 +78,10 @@ CommandType parseCommand(const char *cmd) {
     if (strcmp(cmd, "checkin") == 0) return CommandTypeCheckIn;
     if (strcmp(cmd, "-c") == 0) return CommandTypeCheckIn; // Legacy
     if (strcmp(cmd, "patchScan") == 0) return CommandTypePatchScan;
+    if (strcmp(cmd, "patchscan") == 0) return CommandTypePatchScan;
     if (strcmp(cmd, "scan") == 0) return CommandTypePatchScan;
     if (strcmp(cmd, "patchUpdate") == 0) return CommandTypePatchUpdate;
+    if (strcmp(cmd, "patchupdate") == 0) return CommandTypePatchUpdate;
     if (strcmp(cmd, "update") == 0) return CommandTypePatchUpdate;
     if (strcmp(cmd, "agentUpdater") == 0) return CommandTypeAgentUpdater;
     if (strcmp(cmd, "inventory") == 0) return CommandTypeInventory;
