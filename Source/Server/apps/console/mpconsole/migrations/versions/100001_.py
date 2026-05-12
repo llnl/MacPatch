@@ -816,28 +816,47 @@ def upgrade():
 	### Add MacPatch VIEWS ###
 	op.execute('DROP VIEW IF EXISTS `mp_clients_view`;')
 	qstr = '''CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `mp_clients_view` AS
-	select `mp_clients`.`cuuid` AS `cuuid`,`mp_clients`.`serialno` AS `serialNo`,
-	`mp_clients`.`hostname` AS `hostname`,`mp_clients`.`computername` AS `computername`,
-	`mp_clients`.`ipaddr` AS `ipaddr`,`mp_clients`.`macaddr` AS `macaddr`,`mp_clients`.`osver` AS `osver`,
-	`mp_clients`.`ostype` AS `ostype`,`mp_clients`.`consoleuser` AS `consoleUser`,
-	`mp_clients`.`needsreboot` AS `needsreboot`,`mp_clients`.`agent_version` AS `agent_version`,
-	`mp_clients`.`client_version` AS `client_version`,`mp_clients`.`agent_build` AS `agent_build`,
-	`mp_clients`.`mdate` AS `mdate` ,
-	`mp_clients_plist`.`EnableASUS` AS `EnableASUS`,
-	`mp_clients_plist`.`MPDLTimeout` AS `MPDLTimeout`,`mp_clients_plist`.`AllowClient` AS `AllowClient`,
-	`mp_clients_plist`.`MPServerSSL` AS `MPServerSSL`,`mp_clients_plist`.`Domain` AS `Domain`,
-	`mp_clients_plist`.`Name` AS `Name`,`mp_clients_plist`.`MPInstallTimeout` AS `MPInstallTimeout`,
-	`mp_clients_plist`.`MPServerDLLimit` AS `MPServerDLLimit`,`mp_clients_plist`.`PatchGroup` AS `PatchGroup`,
-	`mp_clients_plist`.`MPProxyEnabled` AS `MPProxyEnabled`,`mp_clients_plist`.`Description` AS `Description`,
-	`mp_clients_plist`.`MPDLConTimeout` AS `MPDLConTimeout`,`mp_clients_plist`.`MPProxyServerPort` AS `MPProxyServerPort`,
-	`mp_clients_plist`.`MPProxyServerAddress` AS `MPProxyServerAddress`,`mp_clients_plist`.`AllowServer` AS `AllowServer`,
-	`mp_clients_plist`.`MPServerAddress` AS `MPServerAddress`,`mp_clients_plist`.`MPServerPort` AS `MPServerPort`,
-	`mp_clients_plist`.`MPServerTimeout` AS `MPServerTimeout`,`mp_clients_plist`.`Reboot` AS `Reboot`,
-	`mp_clients_plist`.`DialogText` AS `DialogText`,`mp_clients_plist`.`PatchState` AS `PatchState`,
-	`mpi_DirectoryServices`.`mpa_distinguishedName` AS `DistinguishedName`,
-	substring_index(substring_index(`mpi_DirectoryServices`.`mpa_distinguishedName`,'OU=',-(1)),',',1) AS `AD-OU`
-	from ((`mp_clients` left join `mp_clients_plist` on((`mp_clients`.`cuuid` = `mp_clients_plist`.`cuuid`)))
-		left join `mpi_DirectoryServices` on((convert(`mp_clients`.`cuuid` using utf8) = `mpi_DirectoryServices`.`cuuid`)));
+	SELECT
+    mc.cuuid,
+    mc.serialno AS serialNo,
+    mc.hostname,
+    mc.computername,
+    mc.ipaddr,
+    mc.macaddr,
+    mc.osver,
+    mc.ostype,
+    mc.consoleuser AS consoleUser,
+    mc.needsreboot,
+    mc.agent_version,
+    mc.client_version,
+    mc.agent_build,
+    mc.mdate,
+    mcp.EnableASUS,
+    mcp.MPDLTimeout,
+    mcp.AllowClient,
+    mcp.MPServerSSL,
+    mcp.Domain,
+    mcp.Name,
+    mcp.MPInstallTimeout,
+    mcp.MPServerDLLimit,
+    mcp.PatchGroup,
+    mcp.MPProxyEnabled,
+    mcp.Description,
+    mcp.MPDLConTimeout,
+    mcp.MPProxyServerPort,
+    mcp.MPProxyServerAddress,
+    mcp.AllowServer,
+    mcp.MPServerAddress,
+    mcp.MPServerPort,
+    mcp.MPServerTimeout,
+    mcp.Reboot,
+    mcp.DialogText,
+    mcp.PatchState,
+    mds.mpa_distinguishedName AS DistinguishedName,
+    SUBSTRING_INDEX(SUBSTRING_INDEX(mds.mpa_distinguishedName, 'OU=', -1), ',', 1) AS `AD-OU`
+	FROM mp_clients mc
+	LEFT JOIN mp_clients_plist mcp ON mc.cuuid = mcp.cuuid
+	LEFT JOIN mpi_DirectoryServices mds ON mc.cuuid = mds.cuuid;
 	'''
 	op.execute(qstr)
 
@@ -862,17 +881,30 @@ def upgrade():
 
 	op.execute('DROP VIEW IF EXISTS `mp_client_patches_full_view`;')
 	qstr3='''CREATE ALGORITHM=UNDEFINED SQL SECURITY DEFINER VIEW `mp_client_patches_full_view` AS
-	select `mp_client_patches_apple_view`.`cuuid` AS `cuuid`,`mp_client_patches_apple_view`.`date` AS `date`,
-	`mp_client_patches_apple_view`.`patch` AS `patch`,`mp_client_patches_apple_view`.`type` AS `type`,
-	`mp_client_patches_apple_view`.`description` AS `description`,`mp_client_patches_apple_view`.`size` AS `size`,
-	`mp_client_patches_apple_view`.`recommended` AS `recommended`,`mp_client_patches_apple_view`.`restart` AS `restart`,
-	`mp_client_patches_apple_view`.`patch_id` AS `patch_id`
-	from `mp_client_patches_apple_view` union select `mp_client_patches_third_view`.`cuuid` AS `cuuid`,
-	`mp_client_patches_third_view`.`date` AS `date`,`mp_client_patches_third_view`.`patch` AS `patch`,
-	`mp_client_patches_third_view`.`type` AS `type`,`mp_client_patches_third_view`.`description` AS `description`,
-	`mp_client_patches_third_view`.`size` AS `size`,`mp_client_patches_third_view`.`recommended` AS `recommended`,
-	`mp_client_patches_third_view`.`restart` AS `restart`,`mp_client_patches_third_view`.`patch_id` AS `patch_id`
-	from `mp_client_patches_third_view`;
+	SELECT
+		`mpca`.`cuuid` AS `cuuid`,
+		`mpca`.`mdate` AS `date`,
+		`mpca`.`patch` AS `patch`,
+		`mpca`.`type` AS `type`,
+		`mpca`.`description` AS `description`,
+		`mpca`.`size` AS `size`,
+		`mpca`.`recommended` AS `recommended`,
+		`mpca`.`restart` AS `restart`,
+		`ap`.`akey` AS `patch_id`
+	FROM
+		(`mp_client_patches_apple` `mpca` LEFT JOIN `apple_patches` `ap` ON ((`ap`.`supatchname` = `mpca`.`patch`))) UNION ALL
+	SELECT
+		`mpct`.`cuuid` AS `cuuid`,
+		`mpct`.`mdate` AS `date`,
+		concat(`mpp`.`patch_name`, '-', `mpp`.`patch_ver`) AS `patch`,
+		`mpct`.`type` AS `type`,
+		`mpct`.`description` AS `description`,
+		`mpct`.`size` AS `size`,
+		`mpct`.`recommended` AS `recommended`,
+		`mpct`.`restart` AS `restart`,
+		`mpct`.`patch_id` AS `patch_id`
+	FROM
+		(`mp_client_patches_third` `mpct` JOIN `mp_patches` `mpp` ON ((`mpp`.`puuid` = `mpct`.`patch_id`)));
 	'''
 	op.execute(qstr3)
 
