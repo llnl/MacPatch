@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="15505" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24765" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="15505"/>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24765"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -18,7 +19,7 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES"/>
             <rect key="contentRect" x="196" y="806" width="480" height="193"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="5120" height="1417"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
             <value key="minSize" type="size" width="480" height="193"/>
             <value key="maxSize" type="size" width="480" height="193"/>
             <view key="contentView" id="se5-gp-TjO">
@@ -43,7 +44,7 @@
                             <action selector="performClose:" target="F0z-JX-Cv5" id="THI-Q8-0Gd"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dNg-4C-wOH">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dNg-4C-wOH">
                         <rect key="frame" x="124" y="61" width="338" height="81"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" continuous="YES" allowsUndo="NO" id="pH1-cl-3JG">
@@ -52,7 +53,7 @@
                             <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tR3-1A-J7j">
+                    <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tR3-1A-J7j">
                         <rect key="frame" x="124" y="150" width="338" height="23"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" lineBreakMode="clipping" title="Long Patch Install..." id="MV3-Bi-gPT">

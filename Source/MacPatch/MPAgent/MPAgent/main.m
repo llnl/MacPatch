@@ -43,7 +43,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.2.0.0"
+#define APPVERSION	@"4.2.1.0"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"
@@ -278,8 +278,12 @@ int main (int argc, char * argv[])
                 long_opts = inventory_options;
                 break;
             case CommandTypeClientID:
+                printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
+                return 0;
                 break;
             case CommandTypeVersion:
+                printf("%s\n", [APPVERSION UTF8String]);
+                return 0;
                 break;
             case CommandTypeRegister:
                 short_opts = "Vek:sT";
@@ -432,12 +436,6 @@ int main (int argc, char * argv[])
                 }
                 return result;
             } break;
-            case CommandTypeClientID:
-                printf("%s\n",[[MPSystemInfo clientUUID] UTF8String]);
-                break;
-            case CommandTypeVersion:
-                printf("%s\n", [APPVERSION UTF8String]);
-                break;
             case CommandTypeRegister: {
                 int result = 1;
                 MPAgentRegister *mpar = [[MPAgentRegister alloc] init];
