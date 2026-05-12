@@ -58,6 +58,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)connectToHelperTool;
 - (void)connectAndExecuteCommandBlock:(void(^)(NSError *))commandBlock;
+- (NSMutableDictionary *)mutablePatchAtRow:(NSInteger)row;
 
 @end
 
@@ -197,8 +198,16 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                         [patches addObject:mad];
                     }
                     
+                    NSMutableArray *mutableRows = [NSMutableArray arrayWithCapacity:patches.count];
+                    for (NSDictionary *row in patches) {
+                        if ([row isKindOfClass:[NSMutableDictionary class]]) {
+                            [mutableRows addObject:row];
+                        } else if ([row isKindOfClass:[NSDictionary class]]) {
+                            [mutableRows addObject:[row mutableCopy]];
+                        }
+                    }
                     
-					[self->_content addObjectsFromArray:[patches copy]];
+					[self->_content addObjectsFromArray:mutableRows];
 				} else {
 					[self->_content addObjectsFromArray:[NSArray array]];
 				}
@@ -370,6 +379,26 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (NSArray *)filterApprovedPatches:(NSArray *)foundPatches
 {
 	return nil;
+}
+
+- (NSMutableDictionary *)mutablePatchAtRow:(NSInteger)row
+{
+    if (row < 0 || row >= _content.count) {
+        return nil;
+    }
+    
+    id existing = _content[row];
+    if ([existing isKindOfClass:[NSMutableDictionary class]]) {
+        return existing;
+    }
+    
+    if ([existing isKindOfClass:[NSDictionary class]]) {
+        NSMutableDictionary *mutable = [existing mutableCopy];
+        [_content replaceObjectAtIndex:row withObject:mutable];
+        return mutable;
+    }
+    
+    return nil;
 }
 
 - (void)resizeTableViewForPatchAll
@@ -563,7 +592,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			[cell.updateButton setEnabled:NO];
 		}
 		
-		cell.rowData = [d copy];
+		cell.rowData = d;
 		
 		// CRITICAL: Configure cell UI after all properties are set
 		[cell configureCellUI];
@@ -824,7 +853,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)updatesCellViewDidStartInstall:(UpdatesCellView *)cell rowData:(NSDictionary *)rowData {
     NSInteger row = [self.tableView rowForView:cell];
     if (row == -1 || row >= _content.count) { return; }
-    NSMutableDictionary *patch = _content[row];
+    NSMutableDictionary *patch = [self mutablePatchAtRow:row];
+    if (!patch) {
+        qlerror(@"[updatesCellViewDidStartInstall] Could not get mutable patch at row %ld", (long)row);
+        return;
+    }
     patch[@"isInstalling"] = @YES;
     patch[@"progress"] = @0;
     patch[@"statusText"] = @"Starting…";
@@ -848,7 +881,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)updatesCellView:(UpdatesCellView *)cell didUpdateProgress:(double)progress status:(NSString *)status rowData:(NSDictionary *)rowData {
     NSInteger row = [self.tableView rowForView:cell];
     if (row == -1 || row >= _content.count) { return; }
-    NSMutableDictionary *patch = _content[row];
+    NSMutableDictionary *patch = [self mutablePatchAtRow:row];
+    if (!patch) {
+        qlerror(@"[updatesCellView:didUpdateProgress] Could not get mutable patch at row %ld", (long)row);
+        return;
+    }
     patch[@"isInstalling"] = @YES;
     patch[@"progress"] = @(progress);
     if (status) { patch[@"statusText"] = status; }
@@ -870,7 +907,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)updatesCellViewDidFinish:(UpdatesCellView *)cell success:(BOOL)success errorMessage:(NSString *)message rowData:(NSDictionary *)rowData {
     NSInteger row = [self.tableView rowForView:cell];
     if (row == -1 || row >= _content.count) { return; }
-    NSMutableDictionary *patch = _content[row];
+    NSMutableDictionary *patch = [self mutablePatchAtRow:row];
+    if (!patch) {
+        qlerror(@"[updatesCellViewDidFinish] Could not get mutable patch at row %ld", (long)row);
+        return;
+    }
     patch[@"isInstalling"] = @NO;
     patch[@"progress"] = @0;
     patch[@"statusText"] = success ? @"" : (message ?: @"Error");
@@ -885,6 +926,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             
             visibleCell.patchStatus.hidden = YES;
             visibleCell.patchStatus.stringValue = patch[@"statusText"];
+        });
+    } else if (!visibleCell) {
+        // Cell is not visible, will be configured correctly when it scrolls back
+        NSIndexSet *rowSet = [NSIndexSet indexSetWithIndex:row];
+        NSIndexSet *colSet = [NSIndexSet indexSetWithIndexesInRange:NSMakeRange(0, self.tableView.numberOfColumns)];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self.tableView reloadDataForRowIndexes:rowSet columnIndexes:colSet];
         });
     }
 }

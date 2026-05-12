@@ -269,6 +269,9 @@ class _AgentUpdate(MPResource):
 				else:
 					log_Error('[AgentUpdate][GET]: Failed to verify Signature for client (' + client_id + ')')
 					return {"result": {'type': 'AgentUpdate', 'data': {"updateAvailable": False}}, "errorno": 424, "errormsg": 'Failed to verify Signature'}, 424
+			
+			# Bug Fix
+			agentver = agentver.removeprefix('MPAgent Version: ')
 
 			_at = AgentUpdates()
 			log_Info('[AgentUpdate][GET]: Checking if update to Agent is needed for client_id: %s AGENTVER: %s' % (client_id, agentver))
@@ -679,6 +682,7 @@ class AgentUpdates():
 			log_Debug("[AgentUpdates][agentUpdates]: Client (%s) Update Data: %s" % (cuuid, update))
 			return update
 		else:
+			log_Info(f"[AgentUpdates][agentUpdates]: Client ({cuuid}}), filter excluded this agent.")
 			return {}
 
 	''' Get the RID of the latest updater agent update '''

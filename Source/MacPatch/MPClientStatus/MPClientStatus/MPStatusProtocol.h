@@ -64,6 +64,11 @@ NS_ASSUME_NONNULL_END
 - (void)runCheckInWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nonnull result))reply;
 
 // ----------------------------------------
+// Patch Status       ---------------------
+// ----------------------------------------
+- (void)retrieveRequiredPatchesWithReply:(nullable void(^)(NSError * _Nullable error, NSDictionary * _Nullable result))reply;
+
+// ----------------------------------------
 // FileVault                     ----------
 // ----------------------------------------
 - (void)runAuthRestartWithReply:(nullable void(^)(NSError * _Nullable error, NSInteger result))reply;
