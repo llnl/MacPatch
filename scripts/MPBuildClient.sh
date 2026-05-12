@@ -260,6 +260,7 @@ if ! [[ $BUILD_NO =~ $re ]] ; then
 fi
 defaults write ${BUILDPLIST} client_build "${BUILD_NO}"
 AGENTVER="${AGENT_VER}.${BUILD_NO}"
+UPDATEVER="${AGENT_VER}.${BUILD_NO}"
 
 # ------------------------------------------------------------
 # MacPatch Client Release Level

@@ -81,6 +81,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 @property (nonatomic, strong) NSURL *SOFTWARE_DATA_DIR;
 @property (nonatomic, strong) NSArray *SP_APPS;
 
+// Shared WKProcessPool for all WebViews
+@property (nonatomic, strong) WKProcessPool *sharedProcessPool;
+@property (nonatomic, strong) WKWebViewConfiguration *sharedWebViewConfiguration;
+
 // WebView
 @property (strong, nonatomic) IBOutlet NSProgressIndicator *webSpinner;
 @property (strong, nonatomic) IBOutlet NSWindow *webWindow;
@@ -115,16 +119,38 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			[defaults synchronize];
 		}
 		
-		[self setupSWDataDir];		
+		[self setupSWDataDir];
+		
+		// Initialize shared WKProcessPool and configuration
+		[self setupSharedWebViewConfiguration];
     }
 	
     [self setTitle:@"Software"];
     return self;
 }
 
+- (void)setupSharedWebViewConfiguration
+{
+	// Create shared process pool
+	_sharedProcessPool = [[WKProcessPool alloc] init];
+	
+	// Create shared configuration with the process pool
+	_sharedWebViewConfiguration = [[WKWebViewConfiguration alloc] init];
+	_sharedWebViewConfiguration.processPool = _sharedProcessPool;
+	
+	// Configure any other shared settings
+	_sharedWebViewConfiguration.suppressesIncrementalRendering = NO;
+	
+	qldebug(@"[SoftwareViewController] Created shared WKProcessPool for WebViews");
+}
+
 - (void)viewDidLoad
 {
 	[self.view setWantsLayer:YES];
+	
+	// Replace existing WebViews with new ones using shared process pool
+	[self replaceWebViewsWithSharedProcessPool];
+	
 	[self loadBannerView:nil];
 	
 	[settings refresh];
@@ -136,6 +162,57 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     if (@available(macOS 11.0, *)) {
         self.tableView.style = NSTableViewStyleFullWidth;
     }
+}
+
+- (void)replaceWebViewsWithSharedProcessPool
+{
+	// Replace _wkWebView (banner view) with a new instance using shared process pool
+	if (_wkWebView) {
+		NSRect frame = _wkWebView.frame;
+		NSView *superview = _wkWebView.superview;
+		NSArray *constraints = _wkWebView.constraints.copy;
+		BOOL usesAutoLayout = !_wkWebView.translatesAutoresizingMaskIntoConstraints;
+		
+		[_wkWebView removeFromSuperview];
+		
+		_wkWebView = [[WKWebView alloc] initWithFrame:frame configuration:_sharedWebViewConfiguration];
+		_wkWebView.translatesAutoresizingMaskIntoConstraints = !usesAutoLayout;
+		
+		[superview addSubview:_wkWebView];
+		
+		// Restore constraints if using Auto Layout
+		if (usesAutoLayout && constraints.count > 0) {
+			for (NSLayoutConstraint *constraint in constraints) {
+				NSLayoutConstraint *newConstraint = [NSLayoutConstraint
+					constraintWithItem:(constraint.firstItem == _wkWebView ? _wkWebView : constraint.firstItem)
+					attribute:constraint.firstAttribute
+					relatedBy:constraint.relation
+					toItem:(constraint.secondItem == _wkWebView ? _wkWebView : constraint.secondItem)
+					attribute:constraint.secondAttribute
+					multiplier:constraint.multiplier
+					constant:constraint.constant];
+				[newConstraint setActive:YES];
+			}
+		}
+		
+		qldebug(@"[SoftwareViewController] Replaced _wkWebView with shared process pool instance");
+	}
+	
+	// Replace webView (popup window) with a new instance using shared process pool
+	// This will be created when needed in showSoftwareInfoURLWithTitle:url:
+	if (self.webView) {
+		NSRect frame = self.webView.frame;
+		NSView *superview = self.webView.superview;
+		
+		[self.webView removeFromSuperview];
+		
+		self.webView = [[WKWebView alloc] initWithFrame:frame configuration:_sharedWebViewConfiguration];
+		self.webView.navigationDelegate = self;
+		
+		[superview addSubview:self.webView];
+		
+		qldebug(@"[SoftwareViewController] Replaced webView with shared process pool instance");
+	}
 }
 
 - (IBAction)loadBannerView:(id)sender
@@ -950,6 +1027,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)showSoftwareInfoURLWithTitle:(NSString *)windowTitle url:(NSString *)url;
 {
+	// Create webView if it doesn't exist, using shared process pool
+	if (!self.webView) {
+		NSRect frame = NSMakeRect(0, 0, 800, 600); // Default frame, will be resized
+		self.webView = [[WKWebView alloc] initWithFrame:frame configuration:_sharedWebViewConfiguration];
+		self.webView.navigationDelegate = self;
+		qldebug(@"[SoftwareViewController] Created webView on-demand with shared process pool");
+	}
+	
 	[_webSpinner startAnimation:nil];
 	[_webView.window setTitle:windowTitle];
 	[_webWindow makeKeyAndOrderFront:self];

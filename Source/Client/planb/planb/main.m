@@ -18,11 +18,11 @@
 @import Foundation;
 
 #include "roots.pem.h"
-#import "PBLogging.h"
+#import "Logger.h"
 #import "PBPackageInstaller.h"
 #import "MOLAuthenticatingURLSession.h"
 
-static NSString * const kBaseURL = @"https://mpprod01.llnl.gov/mp-content/planb";
+static NSString * const kBaseURL = @"https://mpprod.llnl.gov/mp-content/planb";
 static NSString * const kMachineInfo = @"/Library/Preferences/gov.llnl.planb.plist";
 static NSString * const kMachineInfoKey = @"ConfigurationTrack";
 static NSString * const kAssertionName = @"planb";
@@ -83,12 +83,22 @@ void CreatePowerAssertion() {
 
 int main(int argc, const char **argv) {
 	@autoreleasepool {
+        // Setup Logging
+        NSString *_logFile = @"/Library/Logs/MPPlanB.log";
+        Logger *logger = [Logger sharedLogger];
+        [logger setupWithLogPath:_logFile subsystem:@"gov.llnl.mp.planb" category:@"daemon"];
+        [logger setEnableFunctionName:NO];
+        [logger setEnableFileNameAndLineNumber:NO];
+        [logger setEnableStderrLogging:NO];
+        [logger setMinimumLogLevel:LogLevelInfo];
+        
+        
 		if (getuid() != 0) {
-			PBLog(@"%@ must be run as root!", [[NSProcessInfo processInfo] processName]);
+			LogError(@"%@ must be run as root!", [[NSProcessInfo processInfo] processName]);
 			//exit(99);
 		}
 
-		PBLog(@"Starting %@", [[NSProcessInfo processInfo] processName]);
+		LogInfo(@"Starting %@", [[NSProcessInfo processInfo] processName]);
 		CreatePowerAssertion();
 
 		NSURLSessionConfiguration *config = [NSURLSessionConfiguration ephemeralSessionConfiguration];
@@ -104,7 +114,7 @@ int main(int argc, const char **argv) {
 		// authURLSession.serverRootsPemData = [NSData dataWithBytes:ROOTS_PEM length:ROOTS_PEM_len];
 		// authURLSession.refusesRedirects = YES;
 		authURLSession.loggingBlock = ^(NSString *line) {
-			PBLog(@"Session: %@", line);
+            LogInfo(@"Session: %@", line);
 		};
 
 		__block BOOL success = YES;
@@ -114,15 +124,15 @@ int main(int argc, const char **argv) {
 			NSString *packagePath = [obj firstObject];
 			NSString *receiptName = [obj lastObject];
 			
-			PBLog(@"packagePath: %@", packagePath);
-			PBLog(@"receiptName: %@", receiptName);
+            LogInfo(@"packagePath: %@", packagePath);
+            LogInfo(@"receiptName: %@", receiptName);
 			NSURL *_xurl = URLForPackagePath(packagePath);
-			PBLog(@"_xurl: %@", _xurl);
+            LogInfo(@"_xurl: %@", _xurl);
 
 			PBPackageInstaller *pkgInstaller = [[PBPackageInstaller alloc] initWithURL:URLForPackagePath(packagePath) receiptName:receiptName];
 			pkgInstaller.logPrefix = [NSString stringWithFormat:@"[%lu/%lu %@]", (unsigned long)idx + 1, (unsigned long)packages.count, receiptName];
 			authURLSession.loggingBlock = ^(NSString *line) {
-				PBLog(@"%@ %@", pkgInstaller.logPrefix, line);
+                LogInfo(@"%@ %@", pkgInstaller.logPrefix, line);
 			};
 			pkgInstaller.session = authURLSession.session;
 			success &= [pkgInstaller install];

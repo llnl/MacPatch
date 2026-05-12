@@ -185,6 +185,65 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
             [_servers addObject:server2];
         }
     }
+    
+    // Sort the array so that:
+    // - Regular servers (isMaster = 0, isProxy = 0) come first
+    // - Master server (isMaster = 1) comes second to last
+    // - Proxy server (isProxy = 1) comes last
+    [_servers sortUsingComparator:^NSComparisonResult(Server *obj1, Server *obj2) {
+        // Calculate sort priority for each server
+        // Priority: 0 = regular, 1 = master, 2 = proxy
+        NSInteger priority1 = obj1.isProxy ? 2 : (obj1.isMaster ? 1 : 0);
+        NSInteger priority2 = obj2.isProxy ? 2 : (obj2.isMaster ? 1 : 0);
+        
+        if (priority1 < priority2) {
+            return NSOrderedAscending;
+        } else if (priority1 > priority2) {
+            return NSOrderedDescending;
+        } else {
+            return NSOrderedSame;
+        }
+    }];
+    
+    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+        self.serverArray = _servers;
+        self.requestCount = -1;
+    } else {
+        dispatch_sync(self.stateQueue, ^{
+            self.serverArray = _servers;
+            self.requestCount = -1;
+        });
+    }
+}
+
+- (void)populateServerArrayUsingAgentPlistOG
+{
+    NSMutableArray *_servers = [NSMutableArray new];
+    NSDictionary *agentData = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_DEPL_PLIST];
+    
+    Server *server1 = [[Server  alloc] init];
+    server1.host = agentData[@"MPServerAddress"];
+    server1.port = [agentData[@"MPServerPort"] integerValue];
+    server1.usessl = [agentData[@"MPServerSSL"] integerValue];
+    server1.allowSelfSigned = [agentData[@"MPServerAllowSelfSigned"] integerValue];
+    server1.isMaster = 1;
+    server1.isProxy = 0;
+    [_servers addObject:server1];
+    
+    if (agentData[@"MPProxyEnabled"])
+    {
+        if ([agentData[@"MPProxyEnabled"] integerValue] == 1)
+        {
+            Server *server2 = [[Server  alloc] init];
+            server2.host = agentData[@"MPProxyServerAddress"];
+            server2.port = [agentData[@"MPProxyServerPort"] integerValue];
+            server2.usessl = [agentData[@"MPServerSSL"] integerValue];
+            server2.allowSelfSigned = [agentData[@"MPServerAllowSelfSigned"] integerValue];
+            server2.isMaster = 0;
+            server2.isProxy = 1;
+            [_servers addObject:server2];
+        }
+    }
     if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
         self.serverArray = _servers;
         self.requestCount = -1;

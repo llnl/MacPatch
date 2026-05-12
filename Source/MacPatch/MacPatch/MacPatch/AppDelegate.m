@@ -104,6 +104,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     // Check MPSettings for the Software Catalog display state
     MPSettings *mps = [MPSettings sharedInstance];
     [mps refresh];
+    
     Agent *agentData = [mps agent];
     BOOL swState = (agentData.swDistEnable != 0) ? YES : NO;
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
@@ -140,7 +141,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	[_availableControllers addObject:controller];
 	
 	[self ensureDatabaseExists];
-	
+    
     return self;
 }
 
@@ -502,8 +503,10 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 - (void)connectToHelperTool
 // Ensures that we're connected to our helper tool.
 {
+    qlinfo(@"connectToHelperTool");
 	assert([NSThread isMainThread]);
 	if (self.worker == nil) {
+        qlinfo(@"connectToHelperTool: self.worker == nil");
 		self.worker = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
 		self.worker.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
 		
@@ -528,6 +531,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 		};
 #pragma clang diagnostic pop
 		[self.worker resume];
+        qlinfo(@"connectToHelperTool: [self.worker resume]");
 	}
 }
 
@@ -535,6 +539,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 // Connects to the helper tool and then executes the supplied command block on the
 // main thread, passing it an error indicating if the connection was successful.
 {
+    qlinfo(@"connectAndExecuteCommandBlock");
 	NSParameterAssert(commandBlock != nil);
 	assert([NSThread isMainThread]);
 	
@@ -545,8 +550,10 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 		NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.MacPatch" 
 											 code:-1 
 										 userInfo:@{NSLocalizedDescriptionKey: @"Failed to connect to helper tool"}];
+        qlerror(@"connectAndExecuteCommandBlock: %@", error);
 		commandBlock(error);
 	} else {
+        qlerror(@"connectAndExecuteCommandBlock: done");
 		commandBlock(nil);
 	}
 }
