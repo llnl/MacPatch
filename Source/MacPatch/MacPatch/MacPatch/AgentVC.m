@@ -65,13 +65,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	for (NSString *key in sortedKeys)
 	{
 		if ([agent[key] isEqualToString:@"0"] || [agent[key] isEqualToString:@"1"]) {
-			NSString *res = [agent[key] isEqualToString:@"0"] ? @"True" : @"False";
+			NSString *res = [agent[key] isEqualToString:@"1"] ? @"True" : @"False";
 			[htmlData appendFormat:@"<dt>%@:</dt><dd>%@</dd>",[[key stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString], res ];
 		} else {
 			[htmlData appendFormat:@"<dt>%@:</dt><dd>%@</dd>",[[key stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString], agent[key] ];
 		}
-		
-		
 	}
 	
 	NSString *filePath = [[NSBundle mainBundle] pathForResource:@"agent" ofType:@"html" inDirectory:@"html"];
