@@ -92,8 +92,8 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableDebugLogging"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableScanOnLaunch"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
-	// [defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
     [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"allowRebootPatchInstalls"];
+    [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showSoftwareView"];
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 }
 
