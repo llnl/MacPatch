@@ -121,7 +121,6 @@
 		8F9C2B551DDA1D17002A39D2 /* CKSoftwareProduct+ASProduct.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "CKSoftwareProduct+ASProduct.m"; sourceTree = "<group>"; };
 		8F9C2B571DDA1D4A002A39D2 /* CommerceKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CommerceKit.framework; path = ../../../../../../System/Library/PrivateFrameworks/CommerceKit.framework; sourceTree = "<group>"; };
 		8F9C2B591DDA1D6B002A39D2 /* StoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreFoundation.framework; path = ../../../../../../System/Library/PrivateFrameworks/StoreFoundation.framework; sourceTree = "<group>"; };
-		8FA21FD32F23DF940016379E /* LINKING_MPLIBRARY_GUIDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LINKING_MPLIBRARY_GUIDE.md; sourceTree = "<group>"; };
 		8FA6A85F1B9621BF006A329B /* BatteryInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BatteryInfo.h; sourceTree = "<group>"; };
 		8FA6A8601B9621BF006A329B /* BatteryInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BatteryInfo.m; sourceTree = "<group>"; };
 		8FA6A8611B9621BF006A329B /* CHDisk.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CHDisk.h; sourceTree = "<group>"; };
@@ -221,7 +220,6 @@
 				8F4B1EEE16DD77BD00E15A9E /* MPAgent */,
 				8F4B1EEB16DD77BD00E15A9E /* Frameworks */,
 				8F4B1EEA16DD77BD00E15A9E /* Products */,
-				8FA21FD32F23DF940016379E /* LINKING_MPLIBRARY_GUIDE.md */,
 			);
 			sourceTree = "<group>";
 		};

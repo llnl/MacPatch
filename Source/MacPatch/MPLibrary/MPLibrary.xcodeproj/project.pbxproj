@@ -230,8 +230,6 @@
 		8F8019F222848A5C006E6BC5 /* GCDTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDTask.m; sourceTree = "<group>"; };
 		8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+MPHelper.h"; sourceTree = "<group>"; };
 		8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+MPHelper.m"; sourceTree = "<group>"; };
-		8F87427116308AD2007BA7DB /* MPWebServices.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPWebServices.h; sourceTree = "<group>"; };
-		8F87427216308AD2007BA7DB /* MPWebServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPWebServices.m; sourceTree = "<group>"; };
 		8FA139EE21B7857D00124016 /* ConfigProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigProfile.h; sourceTree = "<group>"; };
 		8FA139EF21B7857D00124016 /* ConfigProfile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConfigProfile.m; sourceTree = "<group>"; };
 		8FA139F021B7857D00124016 /* MPConfigProfiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPConfigProfiles.h; sourceTree = "<group>"; };
@@ -676,8 +674,6 @@
 			children = (
 				8FAEF64F145F187C006284B2 /* MPDataMgr.h */,
 				8FAEF650145F187C006284B2 /* MPDataMgr.m */,
-				8F87427116308AD2007BA7DB /* MPWebServices.h */,
-				8F87427216308AD2007BA7DB /* MPWebServices.m */,
 				8F2E697919229A85001BF9D6 /* MPFailedRequests.h */,
 				8F2E697A19229A85001BF9D6 /* MPFailedRequests.m */,
 			);
