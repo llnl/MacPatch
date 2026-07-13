@@ -176,7 +176,8 @@ class SoftwareTaskForTaskID(MPResource):
 
 				for t in list(_task.keys()):
 					if t in q_task.__dict__:
-						t_Val = eval("q_task." + t)
+						# SECURITY FIX: Replace eval() with getattr()
+						t_Val = getattr(q_task, t)
 						if type(t_Val) is not datetime:
 							_task_data[t] = t_Val
 						else:
@@ -198,7 +199,8 @@ class SoftwareTaskForTaskID(MPResource):
 				_sw_data = _sw.struct()
 				for s in list(_sw.keys()):
 					if s in q_software.__dict__:
-						s_Val = eval("q_software." + s)
+						# SECURITY FIX: Replace eval() with getattr()
+						s_Val = getattr(q_software, s)
 						if type(s_Val) is not datetime:
 							if s == "sw_pre_install" or s == "sw_post_install" or s == "sw_uninstall":
 								_sw_data[s] = base64.b64encode(s_Val).decode('utf-8')
@@ -207,29 +209,30 @@ class SoftwareTaskForTaskID(MPResource):
 						else:
 							_sw_data[s] = s_Val.strftime("%Y-%m-%d %H:%M:%S")
 					else:
+						# SECURITY FIX: Replace eval() with getattr()
 						if s == "vendorUrl":
-							_sw_data['vendorUrl'] = eval("q_software.sVendorURL")
+							_sw_data['vendorUrl'] = getattr(q_software, 'sVendorURL')
 
 						elif s == "description":
-							_sw_data['description'] = eval("q_software.sDescription")
+							_sw_data['description'] = getattr(q_software, 'sDescription')
 
 						elif s == "vendor":
-							_sw_data['vendor'] = eval("q_software.sVendor")
+							_sw_data['vendor'] = getattr(q_software, 'sVendor')
 
 						elif s == "name":
-							_sw_data['name'] = eval("q_software.sName")
+							_sw_data['name'] = getattr(q_software, 'sName')
 
 						elif s == "state":
-							_sw_data['state'] = eval("q_software.sState")
+							_sw_data['state'] = getattr(q_software, 'sState')
 
 						elif s == "reboot":
-							_sw_data['reboot'] = eval("q_software.sReboot")
+							_sw_data['reboot'] = getattr(q_software, 'sReboot')
 
 						elif s == "version":
-							_sw_data['version'] = eval("q_software.sVersion")
+							_sw_data['version'] = getattr(q_software, 'sVersion')
 
 						elif s == "sid":
-							_sw_data['sid'] = eval("q_software.suuid")
+							_sw_data['sid'] = getattr(q_software, 'suuid')
 
 						elif s == "sw_post_install":
 							_sw_data['sw_post_install'] = b64EncodeAsString(rowWithDefault(q_software,"sw_post_install_script",defaultValue=''),defaultValue='')

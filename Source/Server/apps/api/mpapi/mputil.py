@@ -16,6 +16,7 @@ import pwd
 import grp
 import os
 import hmac
+import time
 from ldap3 import Server, Connection, ALL, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
@@ -80,6 +81,24 @@ def isValidSignature(Signature, ClientID, Data, TimeStamp):
 
 		log_Debug('[isValidSignature][Data]: (%s)' % (str(Data)))
 		log_Debug('[isValidSignature][Time]: (%s)' % (TimeStamp))
+
+		# SECURITY FIX: Check timestamp freshness to prevent replay attacks
+		try:
+			request_timestamp = int(TimeStamp)
+		except (ValueError, TypeError):
+			log_Error("[isValidSignature] Invalid timestamp format: %s" % TimeStamp)
+			return False
+
+		current_timestamp = int(time.time())
+		timestamp_window = current_app.config.get('SIGNATURE_TIMESTAMP_WINDOW', 300)  # Default 5 minutes
+
+		# Check if timestamp is within acceptable window (not too old, not too far in future)
+		time_diff = abs(current_timestamp - request_timestamp)
+		if time_diff > timestamp_window:
+			log_Error("[isValidSignature] Timestamp outside acceptable window. "
+					  f"Current: {current_timestamp}, Request: {request_timestamp}, "
+					  f"Diff: {time_diff}s, Max: {timestamp_window}s")
+			return False
 
 		secret = bytes(cKey,'utf-8')
 		message_str = '%s-%s' % (str(Data), TimeStamp)
@@ -347,26 +366,56 @@ def isValidToken(user, token):
 		return False
 
 def verify_auth_token(token):
-	try:
-		log_Info("verify_auth_token try")
-		log_Info(f"token: {token}")
-		data = jwt.decode(
-			token,
-			current_app.config['SECRET_KEY'],
-			#leeway=timedelta(seconds=10),
-			#leeway=30,
-			algorithms=["HS256"],
-			verify=True, options={'verify_exp':False}
-		)
-		log_Info(f"verify_auth_token: {data}")
-		log_Info(f"verify_auth_token: {data['id']}")
-		return data['id']
-	except jwt.exceptions.ExpiredSignatureError:
-		log_Error("[verify_auth_token]: Token has expired")
-		return "SignatureExpired"
-	except Exception as e:
-		log_Error(f"[verify_auth_token][Invalid Token]: {e}")
-		return "BadSignature"
+	"""
+	Verify JWT token with support for graceful key rotation.
+
+	Tries to validate the token with:
+	1. Current SECRET_KEY (primary)
+	2. SECRET_KEY_OLD (if set, for graceful rotation)
+	3. SECRET_KEY_OLD_2 (if set, for extended rotation)
+
+	This allows rotating keys without immediately invalidating all existing tokens.
+	"""
+	# Get all keys (primary + old keys for rotation)
+	secret_keys = current_app.config.get('SECRET_KEYS', [current_app.config['SECRET_KEY']])
+
+	# Try each key in order (primary first, then old keys)
+	last_exception = None
+	for i, secret_key in enumerate(secret_keys):
+		try:
+			data = jwt.decode(
+				token,
+				secret_key,
+				algorithms=["HS256"],
+				options={'verify_signature': True}  # Explicitly enable signature verification
+			)
+
+			if i > 0:
+				log_Info(f"verify_auth_token: Token validated with OLD key #{i} (consider key rotation)")
+
+			log_Info(f"verify_auth_token: {data}")
+			log_Info(f"verify_auth_token: {data['id']}")
+			return data['id']
+
+		except jwt.exceptions.ExpiredSignatureError as e:
+			# Token expired - don't try other keys
+			log_Error("[verify_auth_token]: Token has expired")
+			return "SignatureExpired"
+
+		except jwt.exceptions.InvalidSignatureError:
+			# Wrong key - try next one
+			last_exception = "InvalidSignature"
+			continue
+
+		except Exception as e:
+			# Other error - try next key
+			log_Error(f"[verify_auth_token][Key #{i}][Exception]: {e}")
+			last_exception = str(e)
+			continue
+
+	# None of the keys worked
+	log_Error(f"[verify_auth_token][Invalid Token]: Failed with all {len(secret_keys)} key(s)")
+	return "BadSignature"
 	
 
 def verify_auth_tokenOLD(token):

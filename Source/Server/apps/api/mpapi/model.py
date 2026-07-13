@@ -359,6 +359,16 @@ class MpClientSettings(CommonBase):
 	key         = Column(String(255), index=True, nullable=False)
 	value       = Column(String(255), nullable=False)
 
+# mp_client_settings_v2
+class MpClientSettingsV2(CommonBase):
+	__tablename__ = 'mp_client_settings_v2'
+
+	rid         = Column(BigInteger, primary_key=True, autoincrement=True)
+	group_id    = Column(String(50), index=True, nullable=False)
+	data        = Column(LONGTEXT(), nullable=False)
+	data64      = Column(LONGTEXT(), nullable=False)
+	mdate       = Column(DateTime, server_default='1970-01-01 00:00:00', info="Mod Date")
+
 # ------------------------------------------
 ## Patches Needed
 

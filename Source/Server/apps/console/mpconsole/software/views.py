@@ -175,6 +175,7 @@ def showFiltersForGroup(id):
 
 ''' AJAX Route '''
 @software.route('/group/filter/list/<id>/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def filtersForGroup(id,limit,offset,search,sort,order):
 
 	total = 0
@@ -409,6 +410,7 @@ def taskSave(id):
 
 ''' AJAX Method '''
 @software.route('/task/generate/<id>', methods=['POST'])
+@login_required
 def generateTask(id):
 
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
@@ -510,6 +512,7 @@ def swGroupTasks(id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/task/add/<task_id>')
+@login_required
 def swGroupTasksAdd(id, task_id):
 
 	qGet = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == id, MpSoftwareGroupTasks.sw_task_id == task_id).first()
@@ -527,6 +530,7 @@ def swGroupTasksAdd(id, task_id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/task/remove/<task_id>')
+@login_required
 def swGroupTasksRemove(id, task_id):
 
 	qGet = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == id, MpSoftwareGroupTasks.sw_task_id == task_id).first()
@@ -544,6 +548,7 @@ def swGroupTasksRemove(id, task_id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/tasks/save')
+@login_required
 def swGroupTasksSave(id):
 	tData = tasksForGroup(id)
 	if tData is None:
@@ -807,6 +812,7 @@ def editSWPackage(id):
 
 ''' AJAX Method '''
 @software.route('/package/save', methods=['POST'])
+@login_required
 def saveSWPackage():
 
 	# Check for SUUID, if missing gen one
@@ -826,19 +832,19 @@ def saveSWPackage():
 			if "preSWPKG_Order_" in v:
 					x = v.split("_")[-1]
 					_rowPre['suuid'] = _suuid
-					_rowPre['suuid_ref'] = eval("request.form.get('preSWPKG_"+x+"')")
+					_rowPre['suuid_ref'] = request.form.get(f'preSWPKG_{x}')
 					_rowPre['type'] = 0
 					_rowPre['type_txt'] = "PRE"
-					_rowPre['type_order'] = eval("request.form.get('preSWPKG_Order_"+x+"')")
+					_rowPre['type_order'] = request.form.get(f'preSWPKG_Order_{x}')
 					_reqsPre.append(_rowPre)
 
 			elif "postSWPKG_Order_" in v:
 					x = v.split("_")[-1]
 					_rowPost['suuid'] = _suuid
-					_rowPost['suuid_ref'] = eval("request.form.get('postSWPKG_"+x+"')")
+					_rowPost['suuid_ref'] = request.form.get(f'postSWPKG_{x}')
 					_rowPost['type'] = 1
 					_rowPost['type_txt'] = "POST"
-					_rowPost['type_order'] = eval("request.form.get('postSWPKG_Order_"+x+"')")
+					_rowPost['type_order'] = request.form.get(f'postSWPKG_Order_{x}')
 					_reqsPost.append(_rowPost)
 
 	_new = False
@@ -851,8 +857,34 @@ def saveSWPackage():
 		setattr(qSW, 'suuid', _suuid)
 		setattr(qSW, 'cdate', datetime.now())
 
+	# SECURITY: Whitelist of allowed columns to prevent mass assignment vulnerability
+	# Only user-editable fields should be in this list
+	ALLOWED_COLUMNS = {
+		'patch_bundle_id',
+		'auto_patch',
+		'sState',
+		'sName',
+		'sVendor',
+		'sVersion',
+		'sDescription',
+		'sVendorURL',
+		'sReboot',
+		'sw_app_path',
+		'sw_type',
+		'sw_path',
+		'sw_url',
+		'sw_useS3',
+		'sw_size',
+		'sw_hash',
+		'sw_pre_install_script',
+		'sw_post_install_script',
+		'sw_uninstall_script',
+		'sw_env_var',
+		'sw_img_path'
+	}
+
 	for v in request.form:
-		if v != 'suuid':
+		if v != 'suuid' and v in ALLOWED_COLUMNS:
 			setattr(qSW, v, request.form[v])
 
 	setattr(qSW, 'mdate', datetime.now())
@@ -1057,6 +1089,7 @@ def saveImageFile(suuid, file):
 
 ''' AJAX Method '''
 @software.route('/package/duplicate/<id>')
+@login_required
 def duplicateSWPackage(id):
 
 	_suuid = str(uuid.uuid4())
@@ -1094,6 +1127,7 @@ def duplicateSWPackage(id):
 
 ''' AJAX Method '''
 @software.route('/package/delete/<id>')
+@login_required
 def deleteSWPackage(id):
 
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
@@ -1132,6 +1166,7 @@ def deleteSWPackage(id):
 	return json.dumps({'error': 0}), 200
 
 @software.route('/s3url/<id>', methods=['GET'])
+@login_required
 def getS3URL(id):
 	aws = MPaws()
 	sw_S3path = aws.getS3UrlForSoftware(id)
