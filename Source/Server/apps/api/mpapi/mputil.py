@@ -393,8 +393,8 @@ def verify_auth_token(token):
 			if i > 0:
 				log_Info(f"verify_auth_token: Token validated with OLD key #{i} (consider key rotation)")
 
-			log_Info(f"verify_auth_token: {data}")
-			log_Info(f"verify_auth_token: {data['id']}")
+			log_Debug(f"verify_auth_token: {data}")
+			log_Debug(f"verify_auth_token: {data['id']}")
 			return data['id']
 
 		except jwt.exceptions.ExpiredSignatureError as e:
