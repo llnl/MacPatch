@@ -1,6 +1,7 @@
 from ldap3 import Server, Connection, ALL, SUBTREE, ALL_ATTRIBUTES, BASE
 from ldap3 import ServerPool, FIRST, ROUND_ROBIN
 from ldap3.core.exceptions import LDAPExceptionError, LDAPBindError
+from ldap3.utils.conv import escape_filter_chars
 
 import dns.resolver
 
@@ -33,7 +34,9 @@ class MPldap():
 			conn = Connection(self.ldap_servers, user=self.config['LDAP_SRVC_USERDN'], password=self.config['LDAP_SRVC_PASS'], auto_bind=True)
 			didBind = conn.bind()
 
-			search_criteria = f"(&(objectClass=*)(sAMAccountName={oun}))"
+			# SECURITY FIX: Escape user input to prevent LDAP filter injection
+			escaped_oun = escape_filter_chars(oun)
+			search_criteria = f"(&(objectClass=*)(sAMAccountName={escaped_oun}))"
 			didSearch = conn.search(search_base=self.config['LDAP_SRVC_SEARCHBASE'], search_filter=search_criteria,
 									search_scope=SUBTREE, attributes=['distinguishedName'], get_operational_attributes=True)
 
@@ -43,7 +46,7 @@ class MPldap():
 				return res[0].distinguishedName
 			else:
 				self.log_Error(f"[findOUN] OUN {oun} not found in directory")
-		
+
 		except LDAPExceptionError as lErr:
 			self.log_Error(lErr)
 			return None
@@ -52,12 +55,14 @@ class MPldap():
 		try:
 			_conn = Connection(self.ldap_servers, user=str(ounDN), password=str(ounPass), auto_bind=True, auto_referrals=False)
 			didBind = _conn.bind()
-				
-			_search_criteria = f"(&(objectClass=*)(sAMAccountName={oun}))"
+
+			# SECURITY FIX: Escape user input to prevent LDAP filter injection
+			escaped_oun = escape_filter_chars(oun)
+			_search_criteria = f"(&(objectClass=*)(sAMAccountName={escaped_oun}))"
 			didSearch = _conn.search(search_base=self.config['LDAP_SRVC_SEARCHBASE'], search_filter=_search_criteria,
-										search_scope=SUBTREE, attributes=ALL_ATTRIBUTES, 
+										search_scope=SUBTREE, attributes=ALL_ATTRIBUTES,
 										get_operational_attributes=True)
-			
+
 			res = _conn.entries
 
 			if not didSearch:
@@ -68,7 +73,7 @@ class MPldap():
 				_conn.unbind()
 				self.log_Error(f"[authOUN] Was able to authenticate {oun}")
 				return True
-			
+
 		except LDAPBindError:
 			self.log_Error(f"Authentication was not successful for user '{oun}'")
 		except Exception as lErr:
@@ -79,8 +84,9 @@ class MPldap():
 			conn = Connection(self.ldap_servers, user=self.config['LDAP_SRVC_USERDN'], password=self.config['LDAP_SRVC_PASS'], auto_bind=True)
 			didBind = conn.bind()
 
-			group_filter_str = '(&(objectClass=GROUP)(cn={group_name}))'
-			filter = group_filter_str.replace('{group_name}', groupName)
+			# SECURITY FIX: Escape user input to prevent LDAP filter injection
+			escaped_group_name = escape_filter_chars(groupName)
+			filter = f'(&(objectClass=GROUP)(cn={escaped_group_name}))'
 			conn.search(search_base=self.config['LDAP_SRVC_SEARCHBASE'],search_filter=filter, search_scope=SUBTREE, attributes=ALL_ATTRIBUTES)
 
 			members = []

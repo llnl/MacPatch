@@ -92,8 +92,6 @@ class DataBaseConfigData(MPResource):
 			dbConfig['DB_PORT'] = current_app.config['DB_PORT']
 		if current_app.config['DB_NAME']:
 			dbConfig['DB_NAME'] = current_app.config['DB_NAME']
-		if current_app.config['DB_URI_STRING']:
-			dbConfig['DATABASE_URI'] = current_app.config['DB_URI_STRING']
 		if current_app.config['SQLALCHEMY_TRACK_MODIFICATIONS']:
 			dbConfig['TRACK_MODIFICATIONS'] = current_app.config['SQLALCHEMY_TRACK_MODIFICATIONS']
 		if current_app.config['SQLALCHEMY_ENGINE_OPTIONS']:
@@ -107,4 +105,4 @@ class DataBaseConfigData(MPResource):
 srv_api.add_resource(SUSPatchData,			'/sus/patches/apple')
 
 # Database
-srv_api.add_resource(DataBaseConfigData,	'/db/config')
+# srv_api.add_resource(DataBaseConfigData,	'/db/config')

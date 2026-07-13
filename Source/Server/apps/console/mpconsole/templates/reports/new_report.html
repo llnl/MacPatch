@@ -195,7 +195,10 @@
 						$('#queryButtons').show();
 						{% if selQuery %};
 							setupQueryBuilder(table_filters, '');
-							$('#builder').queryBuilder('setRulesFromSQL', "{{selQuery|safe}}");
+							var selQuery = {{ selQuery|tojson }};
+							if (selQuery && selQuery.length > 0) {
+								$('#builder').queryBuilder('setRulesFromSQL', selQuery);
+							}
 							$('#btn-preview-filter').show();
 						{% endif %}
 					}

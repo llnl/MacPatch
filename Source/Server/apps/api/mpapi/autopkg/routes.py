@@ -1,10 +1,12 @@
 from flask import request
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
+from werkzeug.utils import secure_filename
 from datetime import datetime
 import uuid
 import base64
 import os
+import re
 
 from . import *
 from mpapi.app import db
@@ -70,7 +72,8 @@ class AddAutoPKGPatch(MPResource):
 					setattr(_mpPatch, col, datetime.now())
 				else:
 					if col in _patchKeys:
-						setattr(_mpPatch, col, eval('_patch.'+col))
+						# SECURITY FIX: Replace eval() with getattr()
+						setattr(_mpPatch, col, getattr(_patch, col))
 
 			setattr(_mpPatch, "patch_state", "AutoPKG")
 			setattr(_mpPatch, "active", "1")
@@ -169,6 +172,19 @@ class UploadAutoPKGPatch(MPResource):
 		self.reqparse = reqparse.RequestParser()
 		super(UploadAutoPKGPatch, self).__init__()
 
+	def validate_patch_id(self, patch_id):
+		"""
+		Validate patch_id is a valid UUID format.
+		Prevents path traversal via patch_id parameter.
+		"""
+		# UUID v4 format: xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
+		uuid_pattern = r'^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$'
+
+		if not re.match(uuid_pattern, patch_id.lower()):
+			raise ValueError(f"Invalid patch_id format: {patch_id}")
+
+		return patch_id
+
 	def post(self, patch_id, token):
 
 		try:
@@ -181,23 +197,61 @@ class UploadAutoPKGPatch(MPResource):
 				log_Error('[UploadAutoPKGPatch][Post]: Failed authorization check.')
 				return {"result": '', "errorno": 425, "errormsg": 'Failed authorization check.'}, 425
 
+			# SECURITY FIX 1: Validate patch_id format to prevent path traversal
+			try:
+				validated_patch_id = self.validate_patch_id(patch_id)
+			except ValueError as e:
+				log_Error(f'[UploadAutoPKGPatch][Post]: {e}')
+				return {"result": '', "errorno": 400, "errormsg": str(e)}, 400
+
+			# Check file was uploaded
+			if 'autoPKG' not in request.files:
+				log_Error('[UploadAutoPKGPatch][Post]: No file uploaded')
+				return {"result": '', "errorno": 400, "errormsg": 'No file uploaded'}, 400
+
 			file = request.files['autoPKG']
-			upload_dir = os.path.join(current_app.config['PATCH_CONTENT_DIR'], patch_id)
+
+			# Check file has a filename
+			if file.filename == '':
+				log_Error('[UploadAutoPKGPatch][Post]: Empty filename')
+				return {"result": '', "errorno": 400, "errormsg": 'Empty filename'}, 400
+
+			# Build upload directory with validated patch_id
+			upload_dir = os.path.join(current_app.config['PATCH_CONTENT_DIR'], validated_patch_id)
+
+			# Defense in depth: Verify upload_dir is within PATCH_CONTENT_DIR
+			upload_dir_real = os.path.realpath(upload_dir)
+			base_dir_real = os.path.realpath(current_app.config['PATCH_CONTENT_DIR'])
+
+			if not upload_dir_real.startswith(base_dir_real):
+				log_Error(f'[UploadAutoPKGPatch][Post]: Path traversal attempt blocked: {patch_id}')
+				return {"result": '', "errorno": 400, "errormsg": 'Invalid path'}, 400
 
 			if not os.path.isdir(upload_dir):
 				log_Debug('[UploadAutoPKGPatch][Post]: Create upload directory  %s' % (upload_dir))
-				os.makedirs(upload_dir)
+				os.makedirs(upload_dir, mode=0o755)
 
-			file.save(os.path.join(upload_dir, file.filename))
+			# SECURITY FIX 2: Sanitize filename to prevent path traversal
+			safe_filename = secure_filename(file.filename)
 
-			pkg_name    = os.path.splitext(file.filename)[0]
-			pkg_url     = os.path.join("/patches", patch_id, file.filename)
-			pkg_path    = os.path.join(upload_dir, file.filename)
+			if not safe_filename:
+				log_Error('[UploadAutoPKGPatch][Post]: Invalid filename after sanitization')
+				return {"result": '', "errorno": 400, "errormsg": 'Invalid filename'}, 400
+
+			# Build final file path
+			file_path = os.path.join(upload_dir, safe_filename)
+
+			# Save file
+			file.save(file_path)
+
+			pkg_name    = os.path.splitext(safe_filename)[0]
+			pkg_url     = os.path.join("/patches", validated_patch_id, safe_filename)
+			pkg_path    = file_path
 			pkg_sizeK   = os.path.getsize(pkg_path) / 1000
 			pkg_hash    = self.md5(pkg_path)
 
 			# Update Patch db record with patch file info
-			patch = MpPatch.query.filter_by(puuid = patch_id).first()
+			patch = MpPatch.query.filter_by(puuid=validated_patch_id).first()
 			if patch:
 				patch.pkg_name      = pkg_name
 				patch.pkg_size      = pkg_sizeK
@@ -209,7 +263,7 @@ class UploadAutoPKGPatch(MPResource):
 				db.session.commit()
 				return {"result": '', "errorno": 0, "errormsg": ""}, 202
 
-			log_Error('[UploadAutoPKGPatch][Post]: Error patch (%s) was not found to update.' % (patch_id))
+			log_Error('[UploadAutoPKGPatch][Post]: Error patch (%s) was not found to update.' % (validated_patch_id))
 			return {"result": '', "errorno": 104, "errormsg": ""}, 404
 
 		except Exception as e:

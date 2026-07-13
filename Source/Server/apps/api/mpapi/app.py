@@ -214,7 +214,6 @@ def setup_logging(app):
 	else:
 		app.logger.setLevel(logging.INFO)
 
-	app.logger.setLevel(logging.DEBUG)
 	handler = logging.StreamHandler(sys.stdout)
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
 	handler.setFormatter(formatter)

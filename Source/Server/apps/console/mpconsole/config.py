@@ -1,4 +1,5 @@
 import os
+import secrets
 from dotenv import load_dotenv
 from datetime import timedelta
 from redis import Redis
@@ -14,6 +15,57 @@ load_dotenv(dotFileConsole, override=True)
 
 MP_ROOT_DIR	= os.environ.get('MP_ROOT_DIR') or '/opt/MacPatch'
 MP_SRV_DIR	= MP_ROOT_DIR+'/Server'
+
+def get_secret_key():
+	"""
+	Get SECRET_KEY from environment variable.
+	CRITICAL SECURITY: SECRET_KEY must be set in environment or .mpglobal file.
+	If not set, application will fail to start (no insecure fallback).
+	"""
+	secret_key = os.environ.get('SECRET_KEY')
+	if not secret_key:
+		raise RuntimeError(
+			"CRITICAL SECURITY ERROR: SECRET_KEY environment variable is not set!\n"
+			"Generate a secure key with: python -c 'import secrets; print(secrets.token_hex(32))'\n"
+			"Set it in .mpglobal file or environment variable before starting the application."
+		)
+	if len(secret_key) < 32:
+		raise RuntimeError(
+			"CRITICAL SECURITY ERROR: SECRET_KEY must be at least 32 characters long.\n"
+			f"Current length: {len(secret_key)}. Generate a new key with:\n"
+			"python -c 'import secrets; print(secrets.token_hex(32))'"
+		)
+	return secret_key
+
+def get_secret_keys():
+	"""
+	Get list of SECRET_KEYs for graceful key rotation.
+
+	Returns a list with:
+	- Primary key (used for signing new tokens) - SECRET_KEY
+	- Old keys (accepted for verification only) - SECRET_KEY_OLD, SECRET_KEY_OLD_2, etc.
+
+	This allows graceful key rotation without immediately invalidating all tokens.
+
+	Example rotation workflow:
+	1. Set SECRET_KEY_OLD to current SECRET_KEY
+	2. Set SECRET_KEY to new key
+	3. Restart services
+	4. Wait for old tokens to expire (e.g., 24 hours)
+	5. Remove SECRET_KEY_OLD
+	"""
+	keys = [get_secret_key()]  # Primary key always first
+
+	# Add old keys for validation during transition
+	old_key = os.environ.get('SECRET_KEY_OLD')
+	if old_key and len(old_key) >= 32:
+		keys.append(old_key)
+
+	old_key_2 = os.environ.get('SECRET_KEY_OLD_2')
+	if old_key_2 and len(old_key_2) >= 32:
+		keys.append(old_key_2)
+
+	return keys
 
 def as_bool(value):
 	if value:
@@ -60,7 +112,10 @@ class Config(object):
                                   'pool_pre_ping': True }
 
 	# App Options
-	SECRET_KEY          		= '~t\x86\xc9\x1ew\x8bOcX\x85O\xb6\xa2\x11kL\xd1\xce\x7f\x14<y\x9e'
+	# CRITICAL SECURITY: SECRET_KEY must be set via environment variable
+	# The hardcoded key has been removed for security. Set SECRET_KEY in .mpglobal or environment.
+	SECRET_KEY          		= get_secret_key()
+	SECRET_KEYS                 = get_secret_keys()  # For graceful key rotation (primary + old keys)
 	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=10)
 
 	# Logging
