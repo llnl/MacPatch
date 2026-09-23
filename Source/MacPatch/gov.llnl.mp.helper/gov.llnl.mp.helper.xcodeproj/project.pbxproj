@@ -350,7 +350,7 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
@@ -384,7 +384,7 @@
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = "$(SRCROOT)/gov.llnl.mp.worker/Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",

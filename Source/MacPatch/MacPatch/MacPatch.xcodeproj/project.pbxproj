@@ -635,6 +635,7 @@
 				CODE_SIGN_INJECT_BASE_ENTITLEMENTS = NO;
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
@@ -645,7 +646,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MacPatchTile/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 4.2.2;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = (
@@ -676,6 +678,7 @@
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
 				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = "";
 				FRAMEWORK_SEARCH_PATHS = (
@@ -685,7 +688,8 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				INFOPLIST_FILE = MacPatchTile/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Bundles";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
+				MARKETING_VERSION = 4.2.2;
 				MTL_FAST_MATH = YES;
 				OTHER_LDFLAGS = (
 					"-framework",
@@ -843,12 +847,13 @@
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MacPatch;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 4.2.1;
+				MACOSX_DEPLOYMENT_TARGET = 12;
+				MARKETING_VERSION = 4.2.2;
 				ONLY_ACTIVE_ARCH = NO;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -899,12 +904,13 @@
 				GCC_WARN_MISSING_PARENTHESES = YES;
 				HEADER_SEARCH_PATHS = "$HOME/Developer/Xcode/MP32/include/**";
 				INFOPLIST_FILE = MacPatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = MacPatch;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
-				MARKETING_VERSION = 4.2.1;
+				MACOSX_DEPLOYMENT_TARGET = 12;
+				MARKETING_VERSION = 4.2.2;
 				OTHER_LDFLAGS = (
 					"-ObjC",
 					"-all_load",
