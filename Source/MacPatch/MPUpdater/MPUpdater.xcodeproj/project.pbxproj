@@ -345,7 +345,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 4.0.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
@@ -383,7 +383,7 @@
 					"$HOME/Developer/Xcode/MP32/include/**",
 				);
 				INFOPLIST_FILE = "$(SRCROOT)/MPUpdater/Supporting_Files/MPUpdater-Info.plist";
-				MACOSX_DEPLOYMENT_TARGET = 11.5;
+				MACOSX_DEPLOYMENT_TARGET = 14.6;
 				MARKETING_VERSION = 4.0.0;
 				OTHER_LDFLAGS = (
 					"-ObjC",
