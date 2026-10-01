@@ -91,6 +91,7 @@ xcuserdata/
 *.ipa
 *.dSYM.zip
 *.dSYM
+.build
 
 # CocoaPods
 #
