@@ -2,7 +2,7 @@ from flask import request, current_app, redirect
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from distutils.version import LooseVersion
+from packaging import version
 import base64
 
 from . import *
@@ -100,7 +100,7 @@ class SoftwareTasksForGroup(MPResource):
 							if osver in _ver :
 								_tasks_new.append(task)
 								break
-						elif LooseVersion(ver.strip()) == LooseVersion(osver.strip()):
+						elif version.parse(ver.strip()) == version.parse(osver.strip()):
 							_tasks_new.append(task)
 							break
 

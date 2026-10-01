@@ -5,7 +5,7 @@ from flask_mail import Message
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from distutils.version import LooseVersion
+from packaging import version
 import base64
 import os
 import shutil

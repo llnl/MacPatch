@@ -6,10 +6,14 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 consoledir = os.path.dirname(basedir)
 appsdir = os.path.dirname(consoledir)
 
+dotFileGlobalDev=os.path.join(appsdir, '.mpglobal_dev')
+dotFileConsoleDev=os.path.join(appsdir, '.mpapi_dev')
 dotFileGlobal=os.path.join(appsdir, '.mpglobal')
 dotFileConsole=os.path.join(appsdir, '.mpapi')
 load_dotenv(dotFileGlobal, override=True)
 load_dotenv(dotFileConsole, override=True)
+load_dotenv(dotFileGlobalDev, override=True)
+load_dotenv(dotFileConsoleDev, override=True)
 
 MP_ROOT_DIR	= os.environ.get('MP_ROOT_DIR') or '/opt/MacPatch'
 MP_SRV_DIR	= MP_ROOT_DIR+'/Server'

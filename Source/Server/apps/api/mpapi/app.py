@@ -6,7 +6,7 @@ import sys
 
 from flask import Flask, request, abort
 from datetime import datetime, date
-from distutils.version import LooseVersion
+from packaging import version
 
 from mpapi.config import Config
 from mpapi.extensions import db, migrate, cache, aws
@@ -65,7 +65,7 @@ def create_app(config_object=Config):
 
 				# Agent Ver is Less than Min Agent Ver
 				if app.config['VERIFY_MIN_AGENT_VER']:
-					if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
+					if version.parse(_req_agent_ver) < version.parse(str(app.config['MIN_AGENT_VER'])):
 						abort(409)
 						#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
 					else:

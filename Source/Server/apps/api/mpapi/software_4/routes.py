@@ -2,7 +2,7 @@ from flask import request,current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from datetime import datetime
-from distutils.version import LooseVersion
+from packaging import version
 import base64
 
 #from flask_sqlalchemy_cache import FromCache
