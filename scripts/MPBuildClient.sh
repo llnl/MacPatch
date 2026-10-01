@@ -15,11 +15,8 @@
 #	1.5		Changed Vars for MP 3.1
 #	1.6		Updated version numbers
 #	1.7		Add OS Query to agent install
-#	1.8		Add PlanB support to base package as an option
-#	1.9		Update to PlanB syntax
 #	2.0		Updated to support new 3.2 agent and package name
 #	2.1		Add support external scripts for customizing
-#	2.2		Added planB save server address
 #	2.3		Update variables for version 3.5
 #	2.4		Added option for MDM type installer, dont want MP to install
 #			On existsing MP installs unless the apent is older.
@@ -36,7 +33,6 @@ SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
 BUILDROOT="/private/var/tmp/MP/Client40/$DATETIME"
-PLANB_BUILDROOT=`mktemp -d /tmp/mpPlanB_XXXXXX`
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
 AGENT_VERS="4.0.0"
@@ -46,8 +42,6 @@ UPDATEVER="4.0.0.1"
 PKG_STATE=""
 CODESIGNIDENTITY="*"
 MIN_OS="11.15"
-INCPlanBSource=false
-MPPLANB_SRV_ADDR="localhost"
 BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
 
 # Extenral scripts run pre xcode compile
@@ -136,77 +130,6 @@ echo " ------------------------------------------------------------"
 echo "	Building MacPatch Client"
 echo " ------------------------------------------------------------"
 echo
-
-# ------------------------------------------------------------
-# Choose to include PlanB as part of base package
-# ------------------------------------------------------------
-
-# Convert bool to string
-if $INCPlanBSource; then
-	INC_PLANB_VAR="Y"
-else
-	INC_PLANB_VAR="N"
-fi
-
-# If There is a saved plist read it, and set string value
-if [ -f "$BUILDPLIST" ]; then
-	INC_PLANB_VAR=`defaults read ${BUILDPLIST} incPlanB 2> /dev/null`
-	if (($? > 0)); then
-		if $INCOSQUERY; then
-			INC_PLANB_VAR="Y"
-		else
-			INC_PLANB_VAR="N"
-		fi
-	else
-		if [[ $INC_PLANB_VAR == 1 ]]; then
-			INC_PLANB_VAR="Y"
-		else
-			INC_PLANB_VAR="N"
-		fi
-	fi
-fi
-
-echo
-echo " - Include PlanB with MacPatch Installer "
-read -p "Would you like to include PlanB with MacPatch (Y/N)? [$INC_PLANB_VAR]: " INC_PLANB_TXT
-INC_PLANB_TXT=${INC_PLANB_TXT:-${INC_PLANB_VAR}}
-INC_PLANB_TXT=`echo $INC_PLANB_TXT | awk '{print toupper($0)}'`
-if [ "$INC_PLANB_TXT" != "$INC_PLANB_VAR" ]; then
-	if [[ "$INC_PLANB_TXT" == "Y" ]]; then
-		defaults write ${BUILDPLIST} incPlanB -bool YES
-	else
-		defaults write ${BUILDPLIST} incPlanB -bool NO
-	fi
-fi
-
-if [[ "$INC_PLANB_TXT" == "Y" ]]; then
-	INCPlanBSource=true
-else
-	INCPlanBSource=false
-fi
-
-
-if $INCPlanBSource; then
-	PLANBSRV=$MPPLANB_SRV_ADDR
-	if [ -f "$BUILDPLIST" ]; then
-		PLANBSRV=`defaults read ${BUILDPLIST} planbServer 2> /dev/null`
-		if (($? > 0)); then
-			PLANBSRV=$MPPLANB_SRV_ADDR
-		fi
-	fi
-
-	echo
-	echo
-	read -p "Would you like to set the server address for PlanB, default is localhost. (Y/N)? [Y]: " MPPLANB_SRV
-	MPPLANB_SRV=${MPPLANB_SRV:-Y}
-	MPPLANB_SRV=`echo $MPPLANB_SRV | awk '{print toupper($0)}'`
-	if [[ "$MPPLANB_SRV" == "Y" ]] ; then
-		echo
-		read -p "Server address [$PLANBSRV]: " MPPLANB_SRV_ADDR
-		MPPLANB_SRV_ADDR=${MPPLANB_SRV_ADDR:-${PLANBSRV}}
-		defaults write ${BUILDPLIST} planbServer "${MPPLANB_SRV_ADDR}"
-	fi
-fi
 
 # ------------------------------------------------------------
 # Set Client Version
@@ -463,19 +386,6 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		OTHER_CODE_SIGN_FLAGS=--timestamp \
 		CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
 
-		if $INCPlanBSource; then
-			echo " - Compiling Plan B"
-			xcodebuild build -configuration Release \
-			-project ${SRCROOT}/Client/planb/planb.xcodeproj \
-			-target planb \
-			SYMROOT=${PLANB_BUILDROOT} \
-			-destination 'platform=macOS' \
-			ARCHS='arm64 x86_64' \
-			ONLY_ACTIVE_ARCH=NO \
-			CODE_SIGN_IDENTITY="${CODESIGNIDENTITY}" \
-			OTHER_CODE_SIGN_FLAGS=--timestamp \
-			CODE_SIGN_INJECT_BASE_ENTITLEMENTS=NO | grep -A 5 error:
-		fi
 		echo
 		echo "Compiling completed."
 		echo
@@ -493,10 +403,6 @@ if [ "$SIGNCODE" == "N" ] || [ "$SIGNCODE" == "Y" ]; then
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme gov.llnl.mp.status.ui SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPAgent SYMROOT=${BUILDROOT} -configuration Release
 		xcodebuild build -workspace ${SRCROOT}/MacPatch/MacPatch.xcworkspace -scheme MPUpdater SYMROOT=${BUILDROOT} -configuration Release
-
-		if $INCPlanBSource; then
-			xcodebuild clean build -configuration Release -project ${SRCROOT}/Client/planb/planb.xcodeproj -target planb SYMROOT=${PLANB_BUILD_ROOT}
-		fi
 	fi
 
 	sed -i '' "s/${ClientMasterKey}/SimpleSecretKey/g" "${SRCROOT}/MacPatch/MPLibrary/AgentData.m"
@@ -558,21 +464,6 @@ if $MDMPACKAGE; then
 	else
 		echo "ERROR: Unable to copy ${PKGROOT}/MDM/Distribution to Combined"
 	fi
-fi
-
-# ------------------------------------------------------------
-# Copy PlanB files to base package root
-# ------------------------------------------------------------
-if $INCPlanBSource; then
-
-	mkdir -p ${BUILDROOT}/Client/Files/usr/local/bin/
-	mkdir -p ${BUILDROOT}/Client/Files/usr/local/sbin/
-	mkdir -p ${BUILDROOT}/Client/Files/Library/Preferences/
-
-	cp ${PLANB_BUILDROOT}/Release/planb ${BUILDROOT}/Client/Files/usr/local/sbin/
-	cp ${SRCROOT}/Client/planb/mpPlanB ${BUILDROOT}/Client/Files/usr/local/bin/
-	cp ${SRCROOT}/Client/planb/gov.llnl.mp.planb.plist ${BUILDROOT}/Client/Files/Library/LaunchDaemons/
-	cp ${SRCROOT}/Client/planb/Preferences/gov.llnl.planb.plist ${BUILDROOT}/Client/Files/Library/Preferences/
 fi
 
 # ------------------------------------------------------------

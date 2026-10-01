@@ -112,10 +112,6 @@ if [ -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper" ]; then
 	rm -f "/Library/PrivilegedHelperTools/gov.llnl.mp.helper"
 fi
 
-if [ -d "/Library/PrivilegedHelperTools/MPLoginAgent.app" ]; then
-	rm -rf "/Library/PrivilegedHelperTools/MPLoginAgent.app"
-fi
-
 if [ -d "/Library/MacPatch/Client/MacPatch.app" ]; then
 	rm -rf "/Library/MacPatch/Client/MacPatch.app"
 fi
@@ -124,20 +120,8 @@ if [ -d "/Applications/MacPatch.app" ]; then
 	rm -rf "/Applications/MacPatch.app"
 fi
 
-if [ -d "/Library/MacPatch/Client/MPCatalog.app" ]; then
-	rm -rf "/Library/MacPatch/Client/MPCatalog.app"
-fi
-
 if [ -d "/Library/MacPatch/Client/Self Patch.app" ]; then
 	rm -rf "/Library/MacPatch/Client/Self Patch.app"
-fi
-
-if [ -f "/Library/MacPatch/Client/MPAgentExec" ]; then
-	rm -f "/Library/MacPatch/Client/MPAgentExec"
-fi
-
-if [ -f "/Library/MacPatch/Client/MPWorker" ]; then
-	rm -f "/Library/MacPatch/Client/MPWorker"
 fi
 
 if [ -f "/Library/MacPatch/Client/MPAgent" ]; then
