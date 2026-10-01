@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPNetworkUtils.h"
 #include <CoreFoundation/CoreFoundation.h>
 #include <SystemConfiguration/SCNetworkReachability.h>
@@ -162,7 +163,7 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
 	[NSURLConnection sendSynchronousRequest:request returningResponse:&response error:&error];
 	
 	if (error) {
-		qlinfo(@"error: %@",error.localizedDescription);
+		LogInfo(@"error: %@",error.localizedDescription);
 	}
 	
 	
@@ -171,7 +172,7 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
 	if (statusCode == aReturnCode) {
 		result = YES;
 	} else {
-		qlerror(@"isURLValid[statusCode]: %d",statusCode);
+		LogError(@"isURLValid[statusCode]: %d",statusCode);
 		result = NO;
 	}
 	
@@ -190,7 +191,7 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
 	/*
 	@try {
 		NSURL *url = [NSURL URLWithString:[NSString stringWithFormat:@"%@://%@:%d%@?method=WSLTest",aHTTP,aHost,aPort,WS_CLIENT_FILE]];
-        qldebug(@"isServerReachable url: %@",url);
+        LogDebug(@"isServerReachable url: %@",url);
 		ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
 		[request setValidatesSecureCertificate:NO];
 		[request setTimeOutSeconds:10];
@@ -201,16 +202,16 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
             qltrace(@"%@",response);
 			return YES;
 		} else {
-			qlerror(@"%@[%d]: %@",aHost,(int)[error code],[error localizedDescription]);
+			LogError(@"%@[%d]: %@",aHost,(int)[error code],[error localizedDescription]);
 		}
 
 	}
 	@catch (NSException * e) {
-		qlerror(@"%@",[e description]);
-        qlinfo(@"isServerReachable NSException: %@",[e description]);
+		LogError(@"%@",[e description]);
+        LogInfo(@"isServerReachable NSException: %@",[e description]);
 	}
      */
-    qlerror(@"isServerReachable always returns false");
+    LogError(@"isServerReachable always returns false");
 	return NO;
 }
 
@@ -237,7 +238,7 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
         if ((host_info = gethostbyname(addr))) {
             bcopy(host_info->h_addr,(char *)&address.sin_addr,host_info->h_length);
         } else if ((address.sin_addr.s_addr = inet_addr(addr)) == INADDR_NONE) {
-            qlinfo(@"Could not resolve host, %@",aHost);
+            LogInfo(@"Could not resolve host, %@",aHost);
             goto done;
         }
         
@@ -254,13 +255,13 @@ static int isAliveWithTimeout(struct sockaddr_in scanaddr, int timeoutSeconds)
             result = YES;
         } else {
             //printf("%i is not open on %s\n", port, argv[2]);
-            qlinfo(@"%d is not open on %@",aPort,aHost);
+            LogInfo(@"%d is not open on %@",aPort,aHost);
         }
         
         close(sock);
     }
     @catch (NSException * e) {
-        qlerror(@"%@",[e description]);
+        LogError(@"%@",[e description]);
     }
     
 done:
@@ -315,7 +316,7 @@ done:
 	[_res setObject:[NSString stringWithFormat:@"%@://%@:%@",HTTP_PREFIX,aHOST,aPORT] forKey:@"MP_JSON_URL_PLAIN"];
 	
 	if (!aDefaults) {
-		qlerror(@"Defaults dictionary was nil. No config can be checked.");
+		LogError(@"Defaults dictionary was nil. No config can be checked.");
 		return (NSDictionary *)_res;
 	}
 	
@@ -337,27 +338,27 @@ done:
 	
 	if ([self isServerReachable:aHOST port:[aPORT intValue] connection:HTTP_PREFIX] == NO)
 	{
-		qlinfo(@"%@ is unreachable. Attempting to use proxy.",aHOST);
+		LogInfo(@"%@ is unreachable. Attempting to use proxy.",aHOST);
 		if ([aDefaults objectForKey:@"MPProxyEnabled"] || [aDefaults objectForKey:@"MPProxyIsEnabled"]) {
 			if ([[aDefaults objectForKey:@"MPProxyEnabled"] isEqual:@"1"] || [[aDefaults objectForKey:@"MPProxyIsEnabled"] isEqual:@"1"]) {
-				qlinfo(@"Proxy is enabled, testing if reachable.");
+				LogInfo(@"Proxy is enabled, testing if reachable.");
 				// Define the server
 				if ([aDefaults objectForKey:@"MPProxyServerAddress"]) {
 					aHOST = [aDefaults objectForKey:@"MPProxyServerAddress"];
-					qlinfo(@"Setting server to %@.", aHOST);
+					LogInfo(@"Setting server to %@.", aHOST);
 				} else {
-					qlinfo(@"Proxy server is not configured, defaulting port to MPServerAddress.");
+					LogInfo(@"Proxy server is not configured, defaulting port to MPServerAddress.");
 				}
 				// Define the port
 				if ([aDefaults objectForKey:@"MPProxyServerPort"]) {
 					aPORT = [aDefaults objectForKey:@"MPProxyServerPort"];
-					qlinfo(@"Setting server port to %@.", aPORT);
+					LogInfo(@"Setting server port to %@.", aPORT);
 				} else if ([aDefaults objectForKey:@"MPProxyPort"]) {
 					aPORT = [aDefaults objectForKey:@"MPProxyPort"];
-					qlinfo(@"Setting server port to %@.", aPORT);
+					LogInfo(@"Setting server port to %@.", aPORT);
 				} else {
-					qlinfo(@"Proxy port is not configured, defaulting port to MPServerPort.");
-					qlinfo(@"Setting server port to %@.", aPORT);
+					LogInfo(@"Proxy port is not configured, defaulting port to MPServerPort.");
+					LogInfo(@"Setting server port to %@.", aPORT);
 				}
 				
                 // Re-Test Connection
@@ -368,10 +369,10 @@ done:
 				}
 				
 			} else {
-				qlinfo(@"MPProxy is configured, but not enabled.");
+				LogInfo(@"MPProxy is configured, but not enabled.");
 			}	
 		} else {
-			qlinfo(@"MPProxy is not enabled.");
+			LogInfo(@"MPProxy is not enabled.");
 		}
 	} else {
 		mpHostIsReachable = YES;
@@ -383,7 +384,7 @@ done:
 	[_res setObject:[NSString stringWithFormat:@"%@://%@:%@%@",HTTP_PREFIX,aHOST,aPORT,WS_CLIENT_FILE] forKey:@"MP_JSON_URL"];
 	[_res setObject:[NSString stringWithFormat:@"%@://%@:%@",HTTP_PREFIX,aHOST,aPORT] forKey:@"MP_JSON_URL_PLAIN"];
 	NSDictionary *result = [NSDictionary dictionaryWithDictionary:_res];
-	qldebug(@"mpHostConfig=%@",result);
+	LogDebug(@"mpHostConfig=%@",result);
 	return result;	
 }
 

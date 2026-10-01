@@ -6,6 +6,7 @@
 //  Copyright © 2021 LLNL. All rights reserved.
 //
 
+#import "Logger.h"
 #import "Survey.h"
 #import <WebKit/WebKit.h>
 
@@ -26,7 +27,7 @@
                 resultString = [NSString stringWithFormat:@"%@", result];
             }
         } else {
-            qlerror(@"evaluateJavaScript error : %@", error.localizedDescription);
+            LogError(@"evaluateJavaScript error : %@", error.localizedDescription);
         }
         finished = YES;
     }];
@@ -109,8 +110,8 @@
     NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_UI_FILE];
     NSDictionary *jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     if (err) {
-        qlerror(@"MP_PROVISION_UI_FILE contents are null. Unable to provision this system.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"MP_PROVISION_UI_FILE contents are null. Unable to provision this system.");
+        LogError(@"%@",err.localizedDescription);
         _provisionData = nil;
         [self.window close];
     } else {
@@ -124,7 +125,7 @@
     _swGroup = @"Default";
     if (_provisionData[@"softwareGroup"]) {
         _swGroup = _provisionData[@"softwareGroup"];
-        qlinfo(@"Setting optional install group to %@",_swGroup);
+        LogInfo(@"Setting optional install group to %@",_swGroup);
     }
     
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
@@ -249,7 +250,7 @@
                 {
                     if ([script[@"active"] intValue] == 1) {
                         if ([self runScript:script[@"script"]] != 0) {
-                            qlerror(@"Error running script, sid is %@", script[@"sid"]);
+                            LogError(@"Error running script, sid is %@", script[@"sid"]);
                         }
                     }
                 }
@@ -270,31 +271,31 @@
 
 - (int)runScript:(NSString *)script
 {
-    qlinfo(@"Begin running script");
+    LogInfo(@"Begin running script");
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 dispatch_semaphore_signal(sem);
             }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
                 res = result;
                 if (error) {
-                    qlerror(@"Error running script.");
-                    qlerror(@"%@",error.localizedDescription);
+                    LogError(@"Error running script.");
+                    LogError(@"%@",error.localizedDescription);
                 }
-                qlinfo(@"End running script");
+                LogInfo(@"End running script");
                 dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    qlinfo(@"Script result: %d",(int)res);
+    LogInfo(@"Script result: %d",(int)res);
     return (int)res;
 }
 
@@ -320,7 +321,7 @@
     }
     
     if (!tabData) {
-        qlwarning(@"No Data for tab");
+        LogWarning(@"No Data for tab");
         return @"";
     }
 
@@ -359,7 +360,7 @@
     }
     
     if (!tabData) {
-        qlwarning(@"No Data for tab");
+        LogWarning(@"No Data for tab");
         return @"";
     }
 

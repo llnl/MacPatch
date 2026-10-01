@@ -25,6 +25,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "SysInfoCacheGen.h"
 #import "MacPatch.h"
 
@@ -62,7 +63,7 @@
 		sysData = [self getSysInfoGenData:&err];
 		if (err)
 		{
-			qlerror(@"Error getting SysInfoGenData. %@",err.localizedDescription);
+			LogError(@"Error getting SysInfoGenData. %@",err.localizedDescription);
 		}
 	}
 	
@@ -74,7 +75,7 @@
 - (NSArray *)getNetworkData:(NSError **)error
 {
 	if (!sysData) {
-		qlerror(@"Can not get network data. Data is nil.");
+		LogError(@"Can not get network data. Data is nil.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1001 userInfo:@{@"Error reason": @"Data is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -82,7 +83,7 @@
 	
 	if (!sysData[@"Mac_NetworkInterfaceElement"])
 	{
-		qlerror(@"Mac_NetworkInterfaceElement was not found.");
+		LogError(@"Mac_NetworkInterfaceElement was not found.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1002 userInfo:@{@"Error reason": @"Mac_NetworkInterfaceElement is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -130,7 +131,7 @@
 - (NSArray *)getHardDriveData:(NSError **)error
 {
 	if (!sysData) {
-		qlerror(@"Can not get hard drive data. Data is nil.");
+		LogError(@"Can not get hard drive data. Data is nil.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1001 userInfo:@{@"Error reason": @"Data is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -138,7 +139,7 @@
 	
 	if (!sysData[@"Mac_HardDriveElement"])
 	{
-		qlerror(@"Mac_HardDriveElement was not found.");
+		LogError(@"Mac_HardDriveElement was not found.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1002 userInfo:@{@"Error reason": @"Mac_HardDriveElement is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -184,7 +185,7 @@
 - (NSArray *)getRAMData:(NSError **)error
 {
 	if (!sysData) {
-		qlerror(@"Can not get RAM data. Data is nil.");
+		LogError(@"Can not get RAM data. Data is nil.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1001 userInfo:@{@"Error reason": @"Data is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -192,7 +193,7 @@
 	
 	if (!sysData[@"Mac_RAMSlotElement"])
 	{
-		qlerror(@"Mac_RAMSlotElement was not found.");
+		LogError(@"Mac_RAMSlotElement was not found.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1002 userInfo:@{@"Error reason": @"Mac_RAMSlotElement is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -234,7 +235,7 @@
 - (NSArray *)getPCIData:(NSError **)error
 {
 	if (!sysData) {
-		qlerror(@"Can not get PCI data. Data is nil.");
+		LogError(@"Can not get PCI data. Data is nil.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1001 userInfo:@{@"Error reason": @"Data is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -242,7 +243,7 @@
 	
 	if (!sysData[@"Mac_PCIBusElement"])
 	{
-		qlerror(@"Mac_PCIBusElement was not found.");
+		LogError(@"Mac_PCIBusElement was not found.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1002 userInfo:@{@"Error reason": @"Mac_PCIBusElement is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -310,8 +311,8 @@
 		}
 		return [NSArray arrayWithArray:items];
 	} @catch (NSException *exception) {
-		qlerror(@"%@",exception);
-		qlerror(@"Mac_PCIBusElement: %@",sysData[@"Mac_PCIBusElement"]);
+		LogError(@"%@",exception);
+		LogError(@"Mac_PCIBusElement: %@",sysData[@"Mac_PCIBusElement"]);
 	}
 	
 	return (NSArray*)items;
@@ -320,7 +321,7 @@
 - (NSArray *)getUSBData:(NSError **)error
 {
 	if (!sysData) {
-		qlerror(@"Can not get USB data. Data is nil.");
+		LogError(@"Can not get USB data. Data is nil.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1001 userInfo:@{@"Error reason": @"Data is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -328,7 +329,7 @@
 	
 	if (!sysData[@"Mac_USBDeviceElement"])
 	{
-		qlerror(@"Mac_USBDeviceElement was not found.");
+		LogError(@"Mac_USBDeviceElement was not found.");
 		NSError *err = [NSError errorWithDomain:@"gov.llnl.mp.sysinfocachegen" code:1002 userInfo:@{@"Error reason": @"Mac_USBDeviceElement is nil."}];
 		if (error != NULL) *error = err;
 		return [NSArray array];
@@ -382,7 +383,7 @@
 	}
 	
 	if (![fm isWritableFileAtPath:dataDir]) {
-		qlerror(@"Temp directory (%@) is not writable. Inventory will no get processed properly.",dataDir);
+		LogError(@"Temp directory (%@) is not writable. Inventory will no get processed properly.",dataDir);
 	}
 	
 	// If File Exists then delete it
@@ -418,7 +419,7 @@
 	}
 	else
 	{
-		qlerror(@"Objects object was not found sys info data.");
+		LogError(@"Objects object was not found sys info data.");
 		return nil;
 	}
 	
@@ -436,14 +437,14 @@
 	if (!result)
 	{
 		// handle directory creation failure
-		qlerror(@"Error, unable to create temporary directory string.");
+		LogError(@"Error, unable to create temporary directory string.");
 	}
 	
 	NSString *tempDirectoryPath = [fm stringWithFileSystemRepresentation:tempDirectoryNameCString length:strlen(result)];
 	NSError *dirErr = nil;
 	[fm createDirectoryAtPath:tempDirectoryPath withIntermediateDirectories:YES attributes:NULL error:&dirErr];
 	if (dirErr) {
-		qlerror(@"Error creating temporary directory %@",tempDirectoryPath);
+		LogError(@"Error creating temporary directory %@",tempDirectoryPath);
 		if (error != NULL) *error = dirErr;
 	}
 	

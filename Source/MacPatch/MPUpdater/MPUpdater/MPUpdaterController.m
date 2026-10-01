@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPUpdaterController.h"
 #import "MacPatch.h"
 
@@ -97,7 +98,7 @@ NSInteger const TaskErrorTimedOut = 900001;
 - (int)scanForUpdate
 {
 	// Get local application versions
-	qlinfo(@"Collecting agent version information.");
+	LogInfo(@"Collecting agent version information.");
 	NSDictionary *_agentInfo = [self collectVersionInfo];
 	
 	BOOL isMigration = NO;
@@ -106,25 +107,25 @@ NSInteger const TaskErrorTimedOut = 900001;
 	NSError *wsErr = nil;
 	NSDictionary *updateInfo;
 	
-	if (isMigration) qlinfo(@"Migration plist was found, using alt settings.");
+	if (isMigration) LogInfo(@"Migration plist was found, using alt settings.");
 	
 	updateInfo = [self getAgentUpdates:_agentInfo[@"agentVersion"] build:_agentInfo[@"agentBuild"] error:&wsErr];
 	if (wsErr)
 	{
-		qlerror(@"%@, error code %d (%@)",wsErr.localizedDescription, (int)wsErr.code, wsErr.domain);
+		LogError(@"%@, error code %d (%@)",wsErr.localizedDescription, (int)wsErr.code, wsErr.domain);
 		return 0;
 	}
 	
 	if (![updateInfo isKindOfClass:[NSDictionary class]])
 	{
-		qlerror(@"Agent updater info is not available.");
+		LogError(@"Agent updater info is not available.");
 		return 0;
 	}
 	
 	NSDictionary *updateDataDict;
 	if (!updateInfo[@"data"])
 	{
-		qlerror(@"Agent updater info data is not available.");
+		LogError(@"Agent updater info data is not available.");
 		return 0;
 	}
 	else
@@ -132,19 +133,19 @@ NSInteger const TaskErrorTimedOut = 900001;
 		updateDataDict = updateInfo[@"data"];
 	}
 	
-	qldebug(@"WS Result: %@",updateDataDict);
-	qlinfo(@"Evaluate local versions for updates.");
+	LogDebug(@"WS Result: %@",updateDataDict);
+	LogInfo(@"Evaluate local versions for updates.");
 	// See if the update is needed
 	int needsUpdate = 0;
 	if ([updateDataDict[@"updateAvailable"] boolValue] == YES) needsUpdate++;
 	
 	if (needsUpdate >= 1)
 	{
-		qlinfo(@"Client agent needs updating, a newer version exists.");
+		LogInfo(@"Client agent needs updating, a newer version exists.");
 	}
 	else
 	{
-		qlinfo(@"Client agent is up to date.");
+		LogInfo(@"Client agent is up to date.");
 	}
 	
 	[self set_updateData:updateDataDict];
@@ -158,11 +159,11 @@ NSInteger const TaskErrorTimedOut = 900001;
 	
 	if (needsUpdate <= 0)
 	{
-		qlinfo(@"No update needed.");
+		LogInfo(@"No update needed.");
 		return;
 	}
 	
-	qlinfo(@"Update needed.");
+	LogInfo(@"Update needed.");
 	NSError *err = nil;
 	NSString *installResult;
 	
@@ -171,38 +172,38 @@ NSInteger const TaskErrorTimedOut = 900001;
 	
 	// Validate URL
 	if (!_dlURL || _dlURL.length == 0) {
-		qlerror(@"Error: Invalid or missing package URL");
+		LogError(@"Error: Invalid or missing package URL");
 		return;
 	}
 	
-	qlinfo(@"Download update package from: %@",_dlURL);
+	LogInfo(@"Download update package from: %@",_dlURL);
 	
 	// Download the File
 	NSString *dlZipFile = [self downloadUpdate:_dlURL error:&err];
-	qldebug(@"Downloaded File: %@",dlZipFile);
+	LogDebug(@"Downloaded File: %@",dlZipFile);
 	if (err)
 	{
-		qlerror(@"Error downloading zip file, error code %d (%@)",(int)err.code, err.domain);
+		LogError(@"Error downloading zip file, error code %d (%@)",(int)err.code, err.domain);
 		[self cleanupTempFiles:dlZipFile];
 		return;
 	}
 	
 	// Verify file was actually downloaded
 	if (!dlZipFile || ![self.fileManager fileExistsAtPath:dlZipFile]) {
-		qlerror(@"Error: Downloaded file does not exist at path: %@", dlZipFile);
+		LogError(@"Error: Downloaded file does not exist at path: %@", dlZipFile);
 		return;
 	}
 	
-	qlinfo(@"Unzip package.");
+	LogInfo(@"Unzip package.");
 	err = nil; //Reset the error
 	[self unzip:dlZipFile error:&err];
 	if (err) {
-		qlerror(@"Error unzip file, error code %d (%@)",(int)err.code, err.domain);
+		LogError(@"Error unzip file, error code %d (%@)",(int)err.code, err.domain);
 		[self cleanupTempFiles:dlZipFile];
 		return;
 	}
 	
-	qlinfo(@"Locate package(s) to install.");
+	LogInfo(@"Locate package(s) to install.");
 	// Get the pkg to install
 	NSString *pkgPath;
 	NSString *pkgBaseDir = [dlZipFile stringByDeletingLastPathComponent];
@@ -210,13 +211,13 @@ NSInteger const TaskErrorTimedOut = 900001;
 	NSArray *pkgList = [[self.fileManager contentsOfDirectoryAtPath:pkgBaseDir error:&err] filteredArrayUsingPredicate:pkgPredicate];
 	
 	if (err) {
-		qlerror(@"Error reading package directory: %@", err.localizedDescription);
+		LogError(@"Error reading package directory: %@", err.localizedDescription);
 		[self cleanupTempFiles:dlZipFile];
 		return;
 	}
 	
 	if (pkgList.count == 0) {
-		qlerror(@"Error: No packages found in downloaded archive");
+		LogError(@"Error: No packages found in downloaded archive");
 		[self cleanupTempFiles:dlZipFile];
 		return;
 	}
@@ -226,16 +227,16 @@ NSInteger const TaskErrorTimedOut = 900001;
 	for (int i = 0; i < [pkgList count]; i++)
 	{
 		pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[i]];
-		qlinfo(@"Start install of %@",pkgPath);
+		LogInfo(@"Start install of %@",pkgPath);
 		err = nil;
 		installResult = [self installPkgWithResult:pkgPath target:@"/" error:&err];
 		if (err)
 		{
-			qlerror(@"Error installing package, error code %d (%@)",(int)err.code, err.domain);
+			LogError(@"Error installing package, error code %d (%@)",(int)err.code, err.domain);
 			break;
 		}
 		
-		qlinfo(@"%@",installResult);
+		LogInfo(@"%@",installResult);
 		installSuccess = YES;
 	}
 	
@@ -243,12 +244,12 @@ NSInteger const TaskErrorTimedOut = 900001;
 	if (installSuccess && self.useMigrationConfig)
 	{
 		// Remove Migration Plist after successful install
-		qlinfo(@"Remove Migration Plist after successful install.");
+		LogInfo(@"Remove Migration Plist after successful install.");
 		err = nil;
 		[self.fileManager removeItemAtPath:_migrationPlist error:&err];
 		if (err)
 		{
-			qlerror(@"Error removing migration plist. %@",err.localizedDescription);
+			LogError(@"Error removing migration plist. %@",err.localizedDescription);
 		}
 	}
 	
@@ -269,9 +270,9 @@ NSInteger const TaskErrorTimedOut = 900001;
 	if ([self.fileManager fileExistsAtPath:dirPath]) {
 		[self.fileManager removeItemAtPath:dirPath error:&err];
 		if (err) {
-			qlerror(@"Error cleaning up temp files at %@: %@", dirPath, err.localizedDescription);
+			LogError(@"Error cleaning up temp files at %@: %@", dirPath, err.localizedDescription);
 		} else {
-			qlinfo(@"Cleaned up temporary files at: %@", dirPath);
+			LogInfo(@"Cleaned up temporary files at: %@", dirPath);
 		}
 	}
 }
@@ -396,19 +397,19 @@ done:
 	
 	if (dlErr)
 	{
-		qlerror(@"Error[%d], trying to download file.",(int)dlErr.code);
+		LogError(@"Error[%d], trying to download file.",(int)dlErr.code);
 		return res;
 	}
 	
 	if (!dlPath)
 	{
-		qlerror(@"Error, downloaded file path is nil.");
-		qlerror(@"No install will occure.");
+		LogError(@"Error, downloaded file path is nil.");
+		LogError(@"No install will occure.");
 		return res;
 	}
 	else
 	{
-		qldebug(@"Downloaded update file %@",dlPath);
+		LogDebug(@"Downloaded update file %@",dlPath);
 		res = dlPath;
 	}
 	
@@ -430,7 +431,7 @@ done:
 	{
 		// handle directory creation failure
 		free(tempDirectoryNameCString);
-		qlerror(@"Error, trying to create tmp directory.");
+		LogError(@"Error, trying to create tmp directory.");
 		return [@"/private/tmp" stringByAppendingPathComponent:appName];
 	}
 	
@@ -504,7 +505,7 @@ done:
 	}
 	@catch (NSException *e)
 	{
-		qlerror(@"Install returned error. %@\n%@",[e reason],[e userInfo]);
+		LogError(@"Install returned error. %@\n%@",[e reason],[e userInfo]);
 		if(taskTimeoutTimer) {
 			[taskTimeoutTimer invalidate];
 		}
@@ -522,7 +523,7 @@ done:
 	while (taskTimedOut == NO && (readData = [readHandle availableData]) && [readData length])
 	{
 		NSString *l_string = [[NSString alloc] initWithData:readData encoding:NSUTF8StringEncoding];
-		qldebug(@"%@",[l_string stringByFoldingWithOptions:NSDiacriticInsensitiveSearch locale:[NSLocale currentLocale]]);
+		LogDebug(@"%@",[l_string stringByFoldingWithOptions:NSDiacriticInsensitiveSearch locale:[NSLocale currentLocale]]);
 		[data appendData: readData];
 		l_string = nil;
 	}
@@ -544,9 +545,9 @@ done:
 	while ([task isRunning] && taskTimedOut == NO)
 	{
 		if ([task isRunning]) {
-			qlinfo(@"Task is running");
+			LogInfo(@"Task is running");
 		} else {
-			qlinfo(@"a) Task is running");
+			LogInfo(@"a) Task is running");
 		}
 		[NSThread sleepForTimeInterval:1.0];
 	}
@@ -562,10 +563,10 @@ done:
 	
 	
 	if ([task terminationStatus] != 0) {
-		qlerror(@"Error, unable to run task.");
+		LogError(@"Error, unable to run task.");
 		if (err != NULL) *err = [NSError errorWithDomain:@"RunTask" code:[task terminationStatus] userInfo:nil];
 	} else {
-		qlinfo(@"Task Terminated with 0.");
+		LogInfo(@"Task Terminated with 0.");
 	}
 	
 	return resultString;
@@ -587,7 +588,7 @@ done:
 {
 	@autoreleasepool
 	{
-		qldebug(@"Timeout is set to %f",taskTimeoutValue);
+		LogDebug(@"Timeout is set to %f",taskTimeoutValue);
 		NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
 														  target:self
 														selector:@selector(taskTimeout:)
@@ -602,7 +603,7 @@ done:
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	qlinfo(@"Task timedout, killing task.");
+	LogInfo(@"Task timedout, killing task.");
 	[self.taskTimeoutTimer invalidate];
 	[self setTaskTimedOut:YES];
 }
@@ -647,7 +648,7 @@ done:
 		}
 		else
 		{
-			qlerror(@"%@",error.localizedDescription);
+			LogError(@"%@",error.localizedDescription);
 		}
 	}
 	

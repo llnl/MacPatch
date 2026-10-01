@@ -228,38 +228,12 @@ void handleSignal(int sig)
 
 - (void)writeToStderr:(NSString *)logLine level:(LogLevel)level
 {
-    // Add ANSI color codes for stderr (optional, can be disabled)
-    NSString *colorCode = [self ansiColorForLevel:level];
-    NSString *resetCode = @"\033[0m";
-    NSString *coloredLine = [NSString stringWithFormat:@"%@%@%@\n", colorCode, logLine, resetCode];
-    
-    NSData *data = [coloredLine dataUsingEncoding:NSUTF8StringEncoding];
+    NSString *line = [logLine stringByAppendingString:@"\n"];
+    NSData *data = [line dataUsingEncoding:NSUTF8StringEncoding];
     @try {
         [self.stderrHandle writeData:data];
     } @catch (NSException *exception) {
         // Fail silently if stderr is closed
-    }
-}
-
-- (NSString *)ansiColorForLevel:(LogLevel)level
-{
-    // ANSI Color Codes Reference:
-    // Black: \033[30m, Red: \033[31m, Green: \033[32m, Yellow: \033[33m
-    // Blue: \033[34m, Magenta: \033[35m, Cyan: \033[36m, White: \033[37m
-    // Reset: \033[0m
-    
-    switch (level) {
-        case LogLevelDebug:
-            return @"\033[36m"; // Cyan
-        case LogLevelInfo:
-            //return @"\033[32m"; // Green
-            return @"\033[30m"; // Black
-        case LogLevelWarning:
-            return @"\033[33m"; // Yellow
-        case LogLevelError:
-            return @"\033[31m"; // Red
-        case LogLevelCritical:
-            return @"\033[35m"; // Magenta
     }
 }
 

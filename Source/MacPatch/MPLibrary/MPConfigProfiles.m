@@ -25,6 +25,7 @@
  */
 
 
+#import "Logger.h"
 #import "MPConfigProfiles.h"
 #import "ConfigProfile.h"
 #include <unistd.h>
@@ -41,7 +42,7 @@
 {
 	unsigned int myuid = getuid();
 	if (myuid != 0) {
-		qlinfo(@"Reading profiles requires root priviledges.");
+		LogInfo(@"Reading profiles requires root priviledges.");
 		return nil;
 	}
 	
@@ -56,10 +57,10 @@
 	[[NSTask launchedTaskWithLaunchPath:@"/usr/bin/profiles" arguments:cmdArgs] waitUntilExit];
 	
 	if (![fm fileExistsAtPath:filePath]) {
-		qlerror(@"Could not find/read profile data from %@",filePath);
+		LogError(@"Could not find/read profile data from %@",filePath);
 		return nil;
 	} else {
-		qldebug(@"Reading profiles file %@",filePath);
+		LogDebug(@"Reading profiles file %@",filePath);
 	}
 	
 	self.profileData = [NSDictionary dictionaryWithContentsOfFile:filePath];
@@ -73,7 +74,7 @@
 			[profiles addObject:[cp copy]];
 		}
 	} else {
-		qlinfo(@"No computerlevel profiles.");
+		LogInfo(@"No computerlevel profiles.");
 		return nil;
 	}
 	
@@ -85,10 +86,10 @@
 	NSFileManager *fm = [NSFileManager defaultManager];
 	
 	if (![fm fileExistsAtPath:profileStorePath]) {
-		qlerror(@"Could not find/read profile data from %@",profileStorePath);
+		LogError(@"Could not find/read profile data from %@",profileStorePath);
 		return nil;
 	} else {
-		qldebug(@"Reading profiles file %@",profileStorePath);
+		LogDebug(@"Reading profiles file %@",profileStorePath);
 	}
 	
 	self.profileData = [NSDictionary dictionaryWithContentsOfFile:profileStorePath];
@@ -102,7 +103,7 @@
 			[profiles addObject:[cp copy]];
 		}
 	} else {
-		qlinfo(@"No computerlevel profiles.");
+		LogInfo(@"No computerlevel profiles.");
 		return nil;
 	}
 	

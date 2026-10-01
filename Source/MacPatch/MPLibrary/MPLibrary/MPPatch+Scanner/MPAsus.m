@@ -111,7 +111,7 @@
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	
-    qldebug(@"postStringToDelegate: %@",string);
+    LogDebug(@"postStringToDelegate: %@",string);
 	[self.delegate asusProgress:string];
 }
 
@@ -122,7 +122,7 @@
 	MPASUSCatalogs *aCat = [MPASUSCatalogs new];
 	[aCat checkAndSetCatalogURL];
 	
-	qlinfo(@"Scanning for Apple software updates.");
+	LogInfo(@"Scanning for Apple software updates.");
 	[self postStringToDelegate:@"Configuring Apple software update scan."];
 	
 	NSArray *appleUpdates = nil;
@@ -130,7 +130,7 @@
     // Before we scan we will kickstart softwareupdated
     // This is an issue with 10.15 and higher
     // Disable as of 15.0
-    // qlinfo(@"Run softwareupdated kickstart.");
+    // LogInfo(@"Run softwareupdated kickstart.");
     // [NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"kickstart", @"-k", @"system/com.apple.softwareupdated"]];
 	
 	NSTask *task = [[NSTask alloc] init];
@@ -150,27 +150,27 @@
 	NSFileHandle *file = [pipe fileHandleForReading];
 	
 	[task launch];
-	qlinfo(@"Starting Apple software update scan.");
+	LogInfo(@"Starting Apple software update scan.");
 	[self postStringToDelegate:@"Scanning for Apple software updates."];
 	[task waitUntilExit];
 	
 	int status = [task terminationStatus];
 	if (status != 0) {
-		qlinfo(@"Error: softwareupdate exit code = %d",status);
+		LogInfo(@"Error: softwareupdate exit code = %d",status);
 		[self postStringToDelegate:@"Error: softwareupdate exit code = %d",status];
 		return appleUpdates;
 	} else {
-		qlinfo(@"Apple software update scan was completed.");
+		LogInfo(@"Apple software update scan was completed.");
 		[self postStringToDelegate:@"Apple software update scan was completed."];
 	}
 
 	NSData *data = [file readDataToEndOfFile];
 	NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
 	
-	qldebug(@"Apple software update full scan results\n%@",string);
+	LogDebug(@"Apple software update full scan results\n%@",string);
 	
 	if (!([string rangeOfString:@"No new"].location == NSNotFound)) {
-		qlinfo(@"No new updates.");
+		LogInfo(@"No new updates.");
 		[self postStringToDelegate:@"No new Apple updates."];
 		return appleUpdates;
 	}
@@ -201,10 +201,10 @@
                     // Apple now can include a majore upgrade as a patch. If this is
                     // the case then we will skip the patch detection.
                     if ([[tmpStr lowercaseString] containsString:@"macos"]) {
-                        qlinfo(@"line contains macos");
-                        qlinfo(@"%@",tmpStr);
+                        LogInfo(@"line contains macos");
+                        LogInfo(@"%@",tmpStr);
                         if ([self isOSUpgradeNotPatch:tmpStr]) {
-                            qlinfo(@"isOSUpgradeNotPatch == TRUE");
+                            LogInfo(@"isOSUpgradeNotPatch == TRUE");
                             continue; // IS a major upgrade, skip it.
                         }
                     }
@@ -233,14 +233,14 @@
 				}
 				@catch (NSException *exception)
 				{
-					qlerror(@"Error create patch dict. %@",exception);
+					LogError(@"Error create patch dict. %@",exception);
 				}
 			}
 		} // if / empty lines
 	} // for loop
 	
 	appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
-	qldebug(@"Apple Updates Found, %@",appleUpdates);
+	LogDebug(@"Apple Updates Found, %@",appleUpdates);
 	return appleUpdates;
 }
 
@@ -262,8 +262,8 @@
 	_task.delegate = self;
 	NSString *taskStr = [_task runTask:ASUS_BIN_PATH binArgs:@[@"-i", approvedUpdate] environment:environment error:&taskErr];
 	if (taskErr) {
-		qlerror(@"Error installing %@.",approvedUpdate);
-		qlerror(@"%@.",taskErr.localizedDescription);
+		LogError(@"Error installing %@.",approvedUpdate);
+		LogError(@"%@.",taskErr.localizedDescription);
 	} else {
 		qltrace(@"%@",taskStr);
 		result = TRUE;
@@ -301,8 +301,8 @@
                            environment:environment
                                  error:&taskErr];
     if (taskErr) {
-        qlerror(@"Error installing all apple updates.");
-        qlerror(@"%@.",taskErr.localizedDescription);
+        LogError(@"Error installing all apple updates.");
+        LogError(@"%@.",taskErr.localizedDescription);
     } else {
         qltrace(@"%@",taskStr);
         result = TRUE;
@@ -320,7 +320,7 @@
 
 - (BOOL)downloadAppleUpdate:(NSString *)updateName
 {
-    qlinfo(@"Downloading Apple software update %@.",updateName);
+    LogInfo(@"Downloading Apple software update %@.",updateName);
     
     NSTask *task = [[NSTask alloc] init];
     [task setLaunchPath: ASUS_BIN_PATH];
@@ -333,23 +333,23 @@
     NSFileHandle *file = [pipe fileHandleForReading];
     
     [task launch];
-    qlinfo(@"Starting Apple software update download.");
+    LogInfo(@"Starting Apple software update download.");
     [task waitUntilExit];
     
     int status = [task terminationStatus];
     if (status != 0) {
-        qlinfo(@"Error: softwareupdate exit code = %d",status);
+        LogInfo(@"Error: softwareupdate exit code = %d",status);
         return NO;
     } else {
-        qlinfo(@"Apple software update download completed.");
+        LogInfo(@"Apple software update download completed.");
     }
     
     NSData *data = [file readDataToEndOfFile];
     NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
-    qldebug(@"Apple software update full download results\n%@",string);
+    LogDebug(@"Apple software update full download results\n%@",string);
     
     if (!([string rangeOfString:@"No new"].location == NSNotFound)) {
-        qlinfo(@"No new updates.");
+        LogInfo(@"No new updates.");
         return NO;
     }
 
@@ -365,7 +365,7 @@
 		{
 			[self postStringToDelegate:[statusStr trim]];
 		} else {
-			qldebug(@"%@",statusStr);
+			LogDebug(@"%@",statusStr);
 		}
 	}
 }
@@ -382,7 +382,7 @@
 	{
 		[_asusTimeoutTimer invalidate];
 		
-		logit(lcl_vInfo,@"Timeout is set to %d",_taskTimeoutValue);
+		LogInfo(@"Timeout is set to %d",_taskTimeoutValue);
 		NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:_taskTimeoutValue
 														  target:self
 														selector:@selector(taskTimeout:)
@@ -396,7 +396,7 @@
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	logit(lcl_vInfo,@"Task timedout, killing task.");
+	LogInfo(@"Task timedout, killing task.");
 	[_asusTimeoutTimer invalidate];
 	[self setTaskTimedOut:YES];
 	[task terminate];
@@ -491,7 +491,7 @@
 
 - (BOOL)isOSUpgradeNotPatch:(NSString *)softwareUpdateString
 {
-    qlinfo(@"[isOSUpgradeNotPatch] softwareUpdateString = %@",softwareUpdateString);
+    LogInfo(@"[isOSUpgradeNotPatch] softwareUpdateString = %@",softwareUpdateString);
     // Get current macOS major version
     NSInteger currentMajor = NSProcessInfo.processInfo.operatingSystemVersion.majorVersion;
 
@@ -505,7 +505,7 @@
                              options:NSRegularExpressionCaseInsensitive
                                error:&error];
     if (error) {
-        qlerror(@"[isOSUpgradeNotPatch] Regex error: %@", error.localizedDescription);
+        LogError(@"[isOSUpgradeNotPatch] Regex error: %@", error.localizedDescription);
         return NO;
     }
 
@@ -516,16 +516,16 @@
 
     for (NSTextCheckingResult *match in matches) {
         NSString *majorStr = [softwareUpdateString substringWithRange:[match rangeAtIndex:1]];
-        qlinfo(@"[isOSUpgradeNotPatch] NSTextCheckingResult: majorStr = %@",majorStr);
+        LogInfo(@"[isOSUpgradeNotPatch] NSTextCheckingResult: majorStr = %@",majorStr);
         NSInteger updateMajor = majorStr.integerValue;
 
-        qlinfo(@"Found macOS label — current major: %ld, update major: %ld", (long)currentMajor, (long)updateMajor);
+        LogInfo(@"Found macOS label — current major: %ld, update major: %ld", (long)currentMajor, (long)updateMajor);
         if (updateMajor > currentMajor) {
-            qlinfo(@"[isOSUpgradeNotPatch] return yes");
+            LogInfo(@"[isOSUpgradeNotPatch] return yes");
             return YES;  // major upgrade available
         }
     }
-    qlinfo(@"[isOSUpgradeNotPatch] return no");
+    LogInfo(@"[isOSUpgradeNotPatch] return no");
     return NO; // no major upgrade found
 }
 

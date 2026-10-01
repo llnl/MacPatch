@@ -68,7 +68,7 @@ static void InstallHandleSIGTERMFromRunLoop(void)
 
 static void fixDefaultsIfNeeded(void)
 {
-    qlinfo(@"fixDefaultsIfNeeded");
+    LogInfo(@"fixDefaultsIfNeeded");
     
     NSArray *domains = NSSearchPathForDirectoriesInDomains(NSLibraryDirectory,NSSystemDomainMask,YES);
     //File should be in library
@@ -106,10 +106,16 @@ int main(int argc, char * argv[])
         return 0;
     } else {
         NSString *logFile = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"/Logs/MPLoginAgent.log"];
-        [MPLog setupLogging:logFile level:lcl_vDebug];
-        lcl_configure_by_name("*", lcl_vDebug);
-        
-        qlinfo(@"%@ file found.",MP_AUTHRUN_FILE.lastPathComponent);
+
+        // Setup new Logger
+        Logger *logger = [Logger sharedLogger];
+        [logger setupWithLogPath:logFile subsystem:@"gov.llnl.mp.loginagent" category:@"loginagent"];
+        logger.enableFileLogging = YES;
+        logger.enableConsoleLogging = NO;
+        logger.enableStderrLogging = YES;
+        logger.minimumLogLevel = LogLevelDebug;
+
+        LogInfo(@"%@ file found.",MP_AUTHRUN_FILE.lastPathComponent);
 		// This way it does not run over and over
 		[fm removeFileIfExistsAtPath:MP_AUTHRUN_FILE];
 		

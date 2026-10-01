@@ -68,14 +68,14 @@
     
     req = [[MPHTTPRequest alloc] init];
     wsresult = [req runSyncGET:urlPath];
-	qldebug(@"[getDataFromWS][result]:%ld",(long)wsresult.statusCode);
+	LogDebug(@"[getDataFromWS][result]:%ld",(long)wsresult.statusCode);
     if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
-        logit(lcl_vDebug,@"Get Data from web service (%@) returned true.",urlPath);
-        logit(lcl_vDebug,@"Data Result: %@",wsresult.result);
+        LogDebug(@"Get Data from web service (%@) returned true.",urlPath);
+        LogDebug(@"Data Result: %@",wsresult.result);
         result = wsresult.result;
     } else {
-        logit(lcl_vError,@"Get Data from web service (%@), returned false.", urlPath);
-        logit(lcl_vDebug,@"%@",wsresult.toDictionary);
+        LogError(@"Get Data from web service (%@), returned false.", urlPath);
+        LogDebug(@"%@",wsresult.toDictionary);
         
         *error = [NSError errorWithDomain:@"gov.llnl.mp.rest"
                                      code:wsresult.statusCode
@@ -102,11 +102,11 @@
     result = [req runSyncPOST:urlPath body:data];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vDebug,@"Data post to web service (%@), returned true.", urlPath);
-        logit(lcl_vDebug,@"Data Result: %@",result.result);
+        LogDebug(@"Data post to web service (%@), returned true.", urlPath);
+        LogDebug(@"Data Result: %@",result.result);
     } else {
-        logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"Data post to web service (%@), returned false.", urlPath);
+        LogDebug(@"%@",result.toDictionary);
         
         *error = [NSError errorWithDomain:@"gov.llnl.mp.rest"
                                      code:result.statusCode
@@ -134,14 +134,14 @@
     ws_result = [req runSyncPOST:urlPath body:data];
     
     if (ws_result.statusCode >= 200 && ws_result.statusCode <= 299) {
-        logit(lcl_vInfo,@"Running client base checkin, returned true.");
+        LogInfo(@"Running client base checkin, returned true.");
         return ws_result.result;
     } else {
-        logit(lcl_vError,@"Running client base checkin, returned false.");
-        logit(lcl_vDebug,@"%@",ws_result.toDictionary);
+        LogError(@"Running client base checkin, returned false.");
+        LogDebug(@"%@",ws_result.toDictionary);
     }
     
-    logit(lcl_vInfo,@"Running client check in completed.");
+    LogInfo(@"Running client check in completed.");
     return nil;
 }
 
@@ -178,11 +178,11 @@
     NSError *error = nil;
     NSDictionary *data = @{@"rows":scanData};
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/%d/%@",(int)type, self.clientID];
-    qldebug(@"[postClientScanDataWithType][urlPath] %@",urlPath);
+    LogDebug(@"[postClientScanDataWithType][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:data error:&error];
     if (result) {
-        qlinfo(@"Client Scan Data was posted to webservice.");
+        LogInfo(@"Client Scan Data was posted to webservice.");
     }
     
     return result;
@@ -220,13 +220,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSArray class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type array.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type array.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -259,13 +259,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type dictionary.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type dictionary.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -296,13 +296,13 @@
 	{
 		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
 		{
-			qldebug(@"Web Servce result: %@",ws_result);
+			LogDebug(@"Web Servce result: %@",ws_result);
 			result = [ws_result objectForKey:@"data"];
 		}
 		else
 		{
-			qlerror(@"Result was not of type dictionary.");
-			qlerror(@"Result: %@", ws_result);
+			LogError(@"Result was not of type dictionary.");
+			LogError(@"Result: %@", ws_result);
 		}
 	}
 	
@@ -322,11 +322,11 @@
     BOOL result = NO;
     NSError *error = nil;
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch,type,self.clientID];
-    qldebug(@"[postPatchInstallResults][urlPath] %@",urlPath);
+    LogDebug(@"[postPatchInstallResults][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
     if (result) {
-        qlinfo(@"Patch install data was posted to webservice.");
+        LogInfo(@"Patch install data was posted to webservice.");
     }
     
     return result;
@@ -352,11 +352,11 @@
     BOOL result = NO;
     NSError *error = nil;
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/migration/%@",self.clientID];
-    qldebug(@"[postOSMigrationStatus][urlPath] %@",urlPath);
+    LogDebug(@"[postOSMigrationStatus][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:data error:&error];
     if (result) {
-        qlinfo(@"OS Migration Status data was posted to webservice.");
+        LogInfo(@"OS Migration Status data was posted to webservice.");
     }
     
     return result;
@@ -382,12 +382,12 @@
         urlPath = [NSString stringWithFormat:@"/api/v2/client/register/%@/%@",self.clientID,key];
     }
     
-    qldebug(@"[postAgentRegistration][urlPath] %@",urlPath);
-    qldebug(@"[postAgentRegistration][data] %@",regData);
+    LogDebug(@"[postAgentRegistration][urlPath] %@",urlPath);
+    LogDebug(@"[postAgentRegistration][data] %@",regData);
     
     result = [self postDataToWS:urlPath data:regData error:&error];
     if (result) {
-        qlinfo(@"Agent registration data was posted to webservice.");
+        LogInfo(@"Agent registration data was posted to webservice.");
     }
     
     return result;
@@ -416,8 +416,8 @@
     req = [[MPHTTPRequest alloc] init];
     wsresult = [req runSyncGET:urlPath];
    
-    logit(lcl_vInfo,@"Web Service Status code %d",(int)wsresult.statusCode);
-    logit(lcl_vDebug,@"Data Result: %@",wsresult.result);
+    LogInfo(@"Web Service Status code %d",(int)wsresult.statusCode);
+    LogDebug(@"Data Result: %@",wsresult.result);
     
     switch (wsresult.statusCode) {
         case 200:
@@ -447,15 +447,15 @@
     BOOL result = NO;
     NSError *error = nil;
     NSString *urlPath = [@"/api/v1/sw/installed" stringByAppendingPathComponent:self.clientID];
-    qlinfo(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
-    qlinfo(@"[postSoftwareInstallResults][data] %@",data);
+    LogInfo(@"[postSoftwareInstallResults][urlPath] %@",urlPath);
+    LogInfo(@"[postSoftwareInstallResults][data] %@",data);
     
     result = [self postDataToWS:urlPath data:data error:&error];
     if (error) {
         *err = error;
     }
     if (result) {
-        qlinfo(@"Software install data was posted to webservice.");
+        LogInfo(@"Software install data was posted to webservice.");
     }
     
     return result;
@@ -482,7 +482,7 @@
     NSArray *result = nil;
     
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/tasks/%@/%@",self.clientID, [groupName stringByAddingPercentEncodingWithAllowedCharacters:[NSCharacterSet URLHostAllowedCharacterSet]]];
-    qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
+    LogDebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -494,13 +494,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSArray class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type array.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type array.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -527,7 +527,7 @@
 	NSDictionary *result = nil;
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/task/%@/%@",self.clientID, taskID];
-	qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
+	LogDebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
@@ -539,13 +539,13 @@
 	{
 		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
 		{
-			qldebug(@"Web Servce result: %@",ws_result);
+			LogDebug(@"Web Servce result: %@",ws_result);
 			result = [ws_result objectForKey:@"data"];
 		}
 		else
 		{
-			qlerror(@"Result was not of type dictionary.");
-			qlerror(@"Result: %@", ws_result);
+			LogError(@"Result was not of type dictionary.");
+			LogError(@"Result: %@", ws_result);
 		}
 	}
 	
@@ -568,7 +568,7 @@
     
     NSString *result;
     NSString *urlPath = [NSString stringWithFormat:@"/api/v2/agent/plugin/hash/%@/%@/%@/%@", plugin, bundleID, version, self.clientID];
-    qldebug(@"[urlPath] %@",urlPath);
+    LogDebug(@"[urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -580,13 +580,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSString class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type array.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type array.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -612,15 +612,15 @@
     
     if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299)
     {
-        logit(lcl_vDebug,@"Web Service Status code %d",(int)wsresult.statusCode);
-        logit(lcl_vDebug,@"Get Data from web service (%@) returned true.",urlPath);
-        logit(lcl_vDebug,@"Data Result: %@",wsresult.result);
+        LogDebug(@"Web Service Status code %d",(int)wsresult.statusCode);
+        LogDebug(@"Get Data from web service (%@) returned true.",urlPath);
+        LogDebug(@"Data Result: %@",wsresult.result);
         result = [[wsresult.result objectForKey:@"data"] boolValue];
     }
     else
     {
-        logit(lcl_vError,@"Get Data from web service (%@), returned false.", urlPath);
-        logit(lcl_vDebug,@"%@",wsresult.toDictionary);
+        LogError(@"Get Data from web service (%@), returned false.", urlPath);
+        LogDebug(@"%@",wsresult.toDictionary);
         
         NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.rest"
                                              code:wsresult.statusCode
@@ -644,7 +644,7 @@
     BOOL result = NO;
     NSError *error = nil;
     NSString *urlPath = [NSString stringWithFormat:@"/api/v2/client/inventory/state/%@",self.clientID];
-    qldebug(@"[postAgentHasInventoryData][urlPath] %@",urlPath);
+    LogDebug(@"[postAgentHasInventoryData][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
     if (error) {
@@ -666,7 +666,7 @@
     NSArray *result = nil;
     
     NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/groups/%@",self.clientID];
-    qldebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
+    LogDebug(@"[getSoftwareTasksForGroup][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -678,13 +678,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSArray class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type array.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type array.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -707,7 +707,7 @@
 	NSDictionary *result = nil;
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/patch/bundleID/%@/%@",bundleID,self.clientID];
-	qldebug(@"[getPatchForBundleID][urlPath] %@",urlPath);
+	LogDebug(@"[getPatchForBundleID][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
@@ -720,13 +720,13 @@
 	{
 		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
 		{
-			qldebug(@"Web Servce result: %@",ws_result);
+			LogDebug(@"Web Servce result: %@",ws_result);
 			result = [ws_result objectForKey:@"data"];
 		}
 		else
 		{
-			qlerror(@"Result was not of type dictionary.");
-			qlerror(@"Result: %@", ws_result);
+			LogError(@"Result was not of type dictionary.");
+			LogError(@"Result: %@", ws_result);
 		}
 	}
 	
@@ -746,11 +746,11 @@
 	NSDictionary *result = nil;
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/sw/restrictions/%@",self.clientID];
-	qldebug(@"[getSoftwareRestrictions][urlPath] %@",urlPath);
+	LogDebug(@"[getSoftwareRestrictions][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
-        qlerror(@"[getSoftwareRestrictions][ws_err] %@",ws_err.description);
+        LogError(@"[getSoftwareRestrictions][ws_err] %@",ws_err.description);
 		*err = ws_err;
 		return nil;
 	}
@@ -760,13 +760,13 @@
 	{
 		if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
 		{
-			qldebug(@"Web Servce result: %@",ws_result);
+			LogDebug(@"Web Servce result: %@",ws_result);
 			result = [ws_result objectForKey:@"data"];
 		}
 		else
 		{
-			qlerror(@"Result was not of type dictionary.");
-			qlerror(@"Result: %@", ws_result);
+			LogError(@"Result was not of type dictionary.");
+			LogError(@"Result: %@", ws_result);
 		}
 	}
 	
@@ -788,27 +788,27 @@
 	NSDictionary *ws_result;
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/aws/url/%@/%@/%@",type,packageID,self.clientID];
-	qldebug(@"[getS3URLForType][urlPath] %@",urlPath);
+	LogDebug(@"[getS3URLForType][urlPath] %@",urlPath);
 	
 	ws_result = [self getDataFromWS:urlPath error:&ws_err];
 	if (ws_err) {
-		qlerror(@"%@",ws_err.localizedDescription);
+		LogError(@"%@",ws_err.localizedDescription);
 		//*err = ws_err;
 		return nil;
 	}
     
-    qldebug(@"Web Servce result: %@",ws_result);
+    LogDebug(@"Web Servce result: %@",ws_result);
     if ([ws_result isKindOfClass:[NSDictionary class]]) {
         if  ([ws_result objectForKey:@"url"] && [ws_result objectForKey:@"type"]) {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             return ws_result;
         } else {
-            qlerror(@"Required keys not found in result. URL data will not be returned.");
+            LogError(@"Required keys not found in result. URL data will not be returned.");
             return nil;
         }
     } else {
-        qlerror(@"Result was not of type dictionary.");
-        qlerror(@"Result: %@", ws_result);
+        LogError(@"Result was not of type dictionary.");
+        LogError(@"Result: %@", ws_result);
         return nil;
     }
     
@@ -826,14 +826,14 @@
     BOOL result = NO;
     NSError *error = nil;
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v3/agent/install/%@/%@",self.clientID,agentVer];
-    qldebug(@"[postAgentInstall][urlPath] %@",urlPath);
+    LogDebug(@"[postAgentInstall][urlPath] %@",urlPath);
     
     result = [self postDataToWS:urlPath data:nil error:&error];
     if (error) {
         *err = error;
     }
     if (result) {
-        qlinfo(@"Agent install data was posted to webservice.");
+        LogInfo(@"Agent install data was posted to webservice.");
     }
     
     return result;
@@ -854,7 +854,7 @@
     NSDictionary *result = nil;
     
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/data/%@",self.clientID];
-    qldebug(@"[getProvisioningDataForHost][urlPath] %@",urlPath);
+    LogDebug(@"[getProvisioningDataForHost][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -867,13 +867,13 @@
     {
         if ([[ws_result objectForKey:@"data"] isKindOfClass:[NSDictionary class]])
         {
-            qldebug(@"Web Servce result: %@",ws_result);
+            LogDebug(@"Web Servce result: %@",ws_result);
             result = [ws_result objectForKey:@"data"];
         }
         else
         {
-            qlerror(@"Result was not of type dictionary.");
-            qlerror(@"Result: %@", ws_result);
+            LogError(@"Result was not of type dictionary.");
+            LogError(@"Result: %@", ws_result);
         }
     }
     
@@ -895,7 +895,7 @@
     NSString *result = nil;
     
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/config/%@",self.clientID];
-    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    LogDebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
@@ -906,7 +906,7 @@
     
     if ([ws_result objectForKey:@"data"])
     {
-        qldebug(@"Web Servce result: %@",ws_result);
+        LogDebug(@"Web Servce result: %@",ws_result);
         NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[ws_result objectForKey:@"data"] options:0];
         result = [[NSString alloc] initWithData:decodedData encoding:NSUTF8StringEncoding];
     }
@@ -930,7 +930,7 @@
     NSArray *result = [NSArray array];
     
     NSString *urlPath = [NSString stringWithFormat:@"/api/v1/provisioning/criteria/%@/%@",self.clientID,scope];
-    qldebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
+    LogDebug(@"[getProvisioningConfig][urlPath] %@",urlPath);
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];
     if (ws_err) {
