@@ -137,23 +137,25 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
 	NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
 
-    
     [defaults registerDefaults:[NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST]];
     NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MPClientStatus.log"];
-    [MPLog setupLogging:_logFile level:lcl_vInfo];
-    
+
+    // Setup new Logger
+    Logger *logger = [Logger sharedLogger];
+    [logger setupWithLogPath:_logFile subsystem:@"gov.llnl.mp.status" category:@"status"];
+    logger.enableFileLogging = YES;
+    logger.enableConsoleLogging = NO;
+    logger.enableStderrLogging = YES;
+    logger.minimumLogLevel = [defaults boolForKey:@"DeBug"] ? LogLevelDebug : LogLevelInfo;
+
     if ([defaults boolForKey:@"DeBug"] == YES)
     {
-        // enable logging for all components up to level Debug
-        lcl_configure_by_name("*", lcl_vDebug);
-        logit(lcl_vInfo,@"***** MPStatus started -- Debug Enabled *****");
+        LogInfo(@"***** MPStatus started -- Debug Enabled *****");
     } else {
-        // enable logging for all components up to level Info
-        lcl_configure_by_name("*", lcl_vInfo);
-        logit(lcl_vInfo,@"***** MPStatus started *****");
+        LogInfo(@"***** MPStatus started *****");
     }
-    
-    qlinfo(@"start initialize");
+
+    LogInfo(@"start initialize");
     
     
 	if ([[NSFileManager defaultManager] fileExistsAtPath:@"/private/tmp/.mpResetWhatsNew"])
@@ -167,13 +169,13 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	[defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showWhatsNew"];
 	[defaults registerDefaults:defaultValues];
 	[defaults synchronize];
-    qlinfo(@"end initialize");
+    LogInfo(@"end initialize");
 }
 
 #pragma mark UI Events
 -(void)awakeFromNib
 {
-    qlinfo(@"start awakeFromNib");
+    LogInfo(@"start awakeFromNib");
     fm = [NSFileManager defaultManager];
 	settings = [MPSettings sharedInstance];
 	[settings refresh];
@@ -217,7 +219,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	[self displayPatchDataMethod]; // Show needed patches
 	[self wakeMeUp];
-    qlinfo(@"end awakeFromNib");
+    LogInfo(@"end awakeFromNib");
 }
 
 - (void)applicationDidFinishLaunching_Test:(NSNotification *)aNotification
@@ -229,19 +231,16 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     //Setup Defaults
     NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
     [prefs registerDefaults:[NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST]];
-    
-    NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MPClientStatus.log"];
-    [MPLog setupLogging:_logFile level:lcl_vInfo];
-    
+
+    // Logger should already be setup in +initialize, just update level if needed
+    Logger *logger = [Logger sharedLogger];
+    logger.minimumLogLevel = [prefs boolForKey:@"DeBug"] ? LogLevelDebug : LogLevelInfo;
+
     if ([prefs boolForKey:@"DeBug"] == YES)
     {
-        // enable logging for all components up to level Debug
-        lcl_configure_by_name("*", lcl_vDebug);
-        logit(lcl_vInfo,@"***** MPStatus started -- Debug Enabled *****");
+        LogInfo(@"***** MPStatus started -- Debug Enabled *****");
     } else {
-        // enable logging for all components up to level Info
-        lcl_configure_by_name("*", lcl_vInfo);
-        logit(lcl_vInfo,@"***** MPStatus started *****");
+        LogInfo(@"***** MPStatus started *****");
     }
     
     // Watch for SoftwareUpdate Launches
@@ -263,7 +262,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    qlinfo(@"start applicationDidFinishLaunching");
+    LogInfo(@"start applicationDidFinishLaunching");
     //[self resetWhatsNew];
     
     // Show/hide Quit Menu Item
@@ -281,11 +280,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     {
         // enable logging for all components up to level Debug
         lcl_configure_by_name("*", lcl_vDebug);
-        logit(lcl_vInfo,@"***** MPStatus started -- Debug Enabled *****");
+        LogInfo(@"***** MPStatus started -- Debug Enabled *****");
     } else {
         // enable logging for all components up to level Info
         lcl_configure_by_name("*", lcl_vInfo);
-        logit(lcl_vInfo,@"***** MPStatus started *****");
+        LogInfo(@"***** MPStatus started *****");
     }
     */
     // Watch for SoftwareUpdate Launches
@@ -325,7 +324,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
     {
         if (![fm fileExistsAtPath:@"/tmp/.MPSkipIt"]) {
-            qlinfo(@".MPProvisionBegin found. Begin provisioning.");
+            LogInfo(@".MPProvisionBegin found. Begin provisioning.");
             self.provisionWindowController = [[Provisioning alloc] initWithWindowNibName:@"Provisioning"];
             [self.provisionWindowController showWindow:self];
             [self.provisionWindowController.window makeKeyAndOrderFront:nil];
@@ -347,7 +346,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         }
         [defaults synchronize];
     }
-    qlinfo(@"end applicationDidFinishLaunching");
+    LogInfo(@"end applicationDidFinishLaunching");
 }
 
 - (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication *)sender
@@ -406,11 +405,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     [self connectAndExecuteCommandBlock:^(NSError * connectError)
     {
          if (connectError != nil) {
-             qlerror(@"connectError: %@",connectError.localizedDescription);
+             LogError(@"connectError: %@",connectError.localizedDescription);
              dispatch_semaphore_signal(sem);
          } else {
              [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                 LogError(@"proxyError: %@",proxyError.localizedDescription);
              }] getVersionWithReply:^(NSString *verData) {
                  if ([verData isEqualToString:@"1"]) {
                      didConnect = YES;
@@ -432,11 +431,11 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         [self connectAndExecuteCommandBlock:^(NSError * connectError)
          {
              if (connectError != nil) {
-                 qlerror(@"connectError: %@",connectError.localizedDescription);
+                 LogError(@"connectError: %@",connectError.localizedDescription);
                  dispatch_semaphore_signal(sem);
              } else {
                  [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                     qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                     LogError(@"proxyError: %@",proxyError.localizedDescription);
                  }] removeFile:whatsNewFile withReply:^(NSInteger result) {
                      [defaults setObject:[NSNumber numberWithBool:YES] forKey:@"showWhatsNew"];
                      [defaults synchronize];
@@ -547,12 +546,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	 {
 		 if (connectError != nil)
 		 {
-			 qlerror(@"connectError: %@",connectError.localizedDescription);
+			 LogError(@"connectError: %@",connectError.localizedDescription);
 		 }
 		 else
 		 {
 			 [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				 LogError(@"proxyError: %@",proxyError.localizedDescription);
 			 }] runCheckInWithReply:^(NSError *err, NSDictionary *result) {
 				dispatch_sync(dispatch_get_main_queue(), ^()
 				   {
@@ -583,8 +582,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 - (void)showLastCheckIn
 {
     double secondsToFire = 300.0; // Every 5 min
-    logit(lcl_vInfo, @"Start Last CheckIn Data Thread");
-    logit(lcl_vInfo, @"Run every %f", secondsToFire);
+    LogInfo( @"Start Last CheckIn Data Thread");
+    LogInfo( @"Run every %f", secondsToFire);
     
     if (_lastCheckInTimer) {
         dispatch_source_cancel(_lastCheckInTimer);
@@ -600,8 +599,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
     
     _lastCheckInTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
-        logit(lcl_vInfo, @"Start, Display Last CheckIn Data in menu.");
-        logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
+        LogInfo( @"Start, Display Last CheckIn Data in menu.");
+        LogDebug( @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(showLastCheckInMethod)
                                withObject:nil
                             waitUntilDone:NO
@@ -627,7 +626,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     @autoreleasepool
     {
-        logit(lcl_vInfo, @"Running last agent check in date request.");
+        LogInfo( @"Running last agent check in date request.");
         NSDictionary *result;
         NSError *wsErr = nil;
         MPRESTfull *rest = [[MPRESTfull alloc] init];
@@ -636,9 +635,9 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
         NSDictionary *data;
         if ([result objectForKey:@"data"]) data = [result objectForKey:@"data"];
         
-        logit(lcl_vDebug,@"%@",result);
+        LogDebug(@"%@",result);
         
-        if (wsErr) logit(lcl_vError,@"%@",wsErr.localizedDescription);
+        if (wsErr) LogError(@"%@",wsErr.localizedDescription);
 			
         if ([data objectForKey:@"mdate1"]) {
             [checkInStatusMenuItem setTitle:[NSString stringWithFormat:@"Last Checkin: %@",[data objectForKey:@"mdate1"]]];
@@ -650,8 +649,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 - (void)fvUserCheck
 {
     double secondsToFire = 120.0; // Every 5 min
-    logit(lcl_vInfo, @"Start FileVault User Check Thread");
-    logit(lcl_vInfo, @"Run every %f", secondsToFire);
+    LogInfo( @"Start FileVault User Check Thread");
+    LogInfo( @"Run every %f", secondsToFire);
     
     if (_fvUserCheckTimer) {
         dispatch_source_cancel(_fvUserCheckTimer);
@@ -690,16 +689,16 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
              {
                 if (connectError != nil)
                 {
-                    qlerror(@"connectError: %@",connectError.localizedDescription);
+                    LogError(@"connectError: %@",connectError.localizedDescription);
                 }
                 else
                 {
                     [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                        qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                        LogError(@"proxyError: %@",proxyError.localizedDescription);
                         dispatch_semaphore_signal(sem);
                     }] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
                         if (err) {
-                            qlerror(@"%@",err.localizedDescription);
+                            LogError(@"%@",err.localizedDescription);
                         }
                         
                         // User account is out of sync, post notification.
@@ -735,13 +734,13 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"connectError: %@",connectError.localizedDescription);
+            LogError(@"connectError: %@",connectError.localizedDescription);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                LogError(@"proxyError: %@",proxyError.localizedDescription);
             }] runAuthRestartWithReply:^(NSError *error, NSInteger result) {
                 if (error) {
-                    qlerror(@"Error, unable to enable FileVault auth restart");
+                    LogError(@"Error, unable to enable FileVault auth restart");
                     NSAlert *alert = [[NSAlert alloc] init];
                     [alert addButtonWithTitle:@"OK"];
                     [alert setMessageText:@"Error Running Auth Restart"];
@@ -749,7 +748,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
                     [alert setAlertStyle:NSCriticalAlertStyle];
                     [alert runModal];
                 }
-                qlinfo(@"MPClientstatus called auth restart.");
+                LogInfo(@"MPClientstatus called auth restart.");
             }];
         }
     }];
@@ -757,12 +756,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     /*
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"connectError: %@",connectError.localizedDescription);
+            LogError(@"connectError: %@",connectError.localizedDescription);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                LogError(@"proxyError: %@",proxyError.localizedDescription);
             }] getTestWithReply:^(NSString *verData) {
-                qlinfo(@"Calling getTestWithReply, %@",verData);
+                LogInfo(@"Calling getTestWithReply, %@",verData);
             }];
         }
     }];
@@ -789,8 +788,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     double secondsToFire = 120.0;
     
     _patchDisplayTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
-        logit(lcl_vInfo, @"Start, Display Patch Data Info in menu.");
-        logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
+        LogInfo( @"Start, Display Patch Data Info in menu.");
+        LogDebug( @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(displayPatchDataMethod)
                                withObject:nil
                             waitUntilDone:NO
@@ -802,7 +801,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 {
     @autoreleasepool
     {
-        qlinfo(@"Running client patch status request.");
+        LogInfo(@"Running client patch status request.");
         
         self.patchNeedsReboot = NO;
         self.patchCount = 0;
@@ -930,27 +929,27 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 	
 	[self connectAndExecuteCommandBlock:^(NSError *connectError) {
 		if (connectError != nil) {
-			qlerror(@"connectError: %@", connectError.localizedDescription);
+			LogError(@"connectError: %@", connectError.localizedDescription);
 			dispatch_semaphore_signal(sem);
 			return;
 		}
 		
 		id proxy = [self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError *proxyError) {
-			qlerror(@"proxyError: %@", proxyError.localizedDescription);
+			LogError(@"proxyError: %@", proxyError.localizedDescription);
 			dispatch_semaphore_signal(sem);
 		}];
 		
 		if ([proxy respondsToSelector:@selector(retrieveRequiredPatchesWithReply:)]) {
 			[proxy retrieveRequiredPatchesWithReply:^(NSError *err, NSDictionary *xpcResult) {
 				if (err) {
-					qlerror(@"%@", err.localizedDescription);
+					LogError(@"%@", err.localizedDescription);
 				} else if ([xpcResult isKindOfClass:[NSDictionary class]]) {
 					result = xpcResult;
 				}
 				dispatch_semaphore_signal(sem);
 			}];
 		} else {
-			qlerror(@"retrieveRequiredPatchesWithReply: is not implemented by gov.llnl.mp.status.ui");
+			LogError(@"retrieveRequiredPatchesWithReply: is not implemented by gov.llnl.mp.status.ui");
 			dispatch_semaphore_signal(sem);
 		}
 	}];
@@ -1015,12 +1014,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
             [userInfo setObject:[[b infoDictionary] objectForKey:@"CFBundleShortVersionString"] forKey:@"CFBundleShortVersionString"];
             AppLaunchObject *alo = [AppLaunchObject appLaunchObjectWithDictionary:userInfo];
             
-            logit(lcl_vDebug,@"Application launched: %@ %@ %@",[alo appName],[alo appPath],[alo appVersion]);
+            LogDebug(@"Application launched: %@ %@ %@",[alo appName],[alo appPath],[alo appVersion]);
             [mpAppUsage insertLaunchDataForApp:[alo appName] appPath:[alo appPath] appVersion:[alo appVersion]];
         }
         @catch (NSException *exception)
         {
-            logit(lcl_vError,@"%@",exception);
+            LogError(@"%@",exception);
         }
     }
 }
@@ -1033,21 +1032,21 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     BOOL launchApp = NO;
     
     if ([self verifyAllow:note]) {
-        logit(lcl_vDebug,@"%@ is approved via allow list.",[note objectForKey:@"NSApplicationName"]);
+        LogDebug(@"%@ is approved via allow list.",[note objectForKey:@"NSApplicationName"]);
         launchApp = YES;
     } else {
-        logit(lcl_vInfo,@"%@ not approved via allow list.",[note objectForKey:@"NSApplicationName"]);
+        LogInfo(@"%@ not approved via allow list.",[note objectForKey:@"NSApplicationName"]);
     }
     
     if (![self verifyDeny:note]) {
-        logit(lcl_vDebug,@"%@ is approved via deny list.",[note objectForKey:@"NSApplicationName"]);
+        LogDebug(@"%@ is approved via deny list.",[note objectForKey:@"NSApplicationName"]);
     } else {
-        logit(lcl_vInfo,@"%@ not approved via deny list.",[note objectForKey:@"NSApplicationName"]);
+        LogInfo(@"%@ not approved via deny list.",[note objectForKey:@"NSApplicationName"]);
         launchApp = NO;
     }
     
     if (!launchApp) {
-        logit(lcl_vDebug,@"Killing application via pid (%@).",[note objectForKey:@"NSApplicationProcessIdentifier"]);
+        LogDebug(@"Killing application via pid (%@).",[note objectForKey:@"NSApplicationProcessIdentifier"]);
         [self killApplication:[note objectForKey:@"NSApplicationProcessIdentifier"]];
     }
 }
@@ -1197,8 +1196,8 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     double secondsToFire = 1200.0; // 1200.0 = 20 Minutes
     
     _userNotificationTimer = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
-        logit(lcl_vInfo, @"Start, Display Patch Data Info in menu.");
-        logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
+        LogInfo( @"Start, Display Patch Data Info in menu.");
+        LogDebug( @"Repeats every %f seconds", secondsToFire);
         [self performSelectorOnMainThread:@selector(showMPUserNotificationCenterMethod)
                                withObject:nil
                             waitUntilDone:NO
@@ -1246,7 +1245,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		return;
 	}
 	
-	qlinfo(@"postUserNotificationForReboot");
+	LogInfo(@"postUserNotificationForReboot");
 	// Look to see if we have posted already, if we have, no need to do it again
 	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
@@ -1266,7 +1265,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
 	[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
-	qlinfo(@"postUserNotificationForReboot deliverNotification");
+	LogInfo(@"postUserNotificationForReboot deliverNotification");
 }
 
 - (void)postUserNotificationForPatchesWithCount:(NSString *)aCount
@@ -1291,18 +1290,18 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)postUserNotificationForFVAuthRestart
 {
-	qldebug(@"postUserNotificationForFVAuthRestart");
+	LogDebug(@"postUserNotificationForFVAuthRestart");
 	// Look to see if we have posted already, if we have, no need to do it again
 	
 	for (NSUserNotification *deliveredNote in NSUserNotificationCenter.defaultUserNotificationCenter.deliveredNotifications)
 	{
-		qlinfo(@"deliveredNote: %@",deliveredNote.title);
+		LogInfo(@"deliveredNote: %@",deliveredNote.title);
 		if ([deliveredNote.title isEqualToString:@"Credentials Need Updating"]) {
-			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
+			LogInfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
 			return;
 		}
 		if ([deliveredNote.title isEqualToString:@"Recovery Key Need Updating"]) {
-			qlinfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
+			LogInfo(@"deliveredNote: %@ already posted.",deliveredNote.title);
 			return;
 		}
 	}
@@ -1333,12 +1332,12 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 	[[NSUserNotificationCenter defaultUserNotificationCenter] setDelegate:self];
 	[[NSUserNotificationCenter defaultUserNotificationCenter] deliverNotification:userNote];
-	qlinfo(@"postUserNotificationForFVAuthRestart deliverNotification");
+	LogInfo(@"postUserNotificationForFVAuthRestart deliverNotification");
 }
 
 - (void)userNotificationReceived:(NSNotification *)notification
 {
-	qldebug(@"[userNotificationReceived]: %@",notification.name);
+	LogDebug(@"[userNotificationReceived]: %@",notification.name);
     if ([notification.name isEqualToString: kShowPatchesRequiredNotification])
     {
         NSString *pc = [@(self.patchCount) stringValue];
@@ -1374,17 +1373,17 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didActivateNotification:(NSUserNotification *)notification
 {
-	qlinfo(@"didActivateNotification");
+	LogInfo(@"didActivateNotification");
     if (notification.activationType == NSUserNotificationActivationTypeActionButtonClicked)
     {
         if ([notification.actionButtonTitle isEqualToString:@"Patch"])
 		{
-			qlinfo(@"didActivateNotification openMacPatchApplication:nil");
+			LogInfo(@"didActivateNotification openMacPatchApplication:nil");
 			
 			NSUserDefaults *ud = [[NSUserDefaults alloc] initWithSuiteName:@"mp.cs.note"];
 			[ud setBool:NO forKey:@"patch"];
 			ud = nil;
-			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchScan");
+			LogInfo(@"didActivateNotification openMacPatchAppWithAction:PatchScan");
 			[self openMacPatchAppWithAction:@"PatchScan"];
         }
 		
@@ -1396,7 +1395,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 		
 		if ([notification.actionButtonTitle isEqualToString:@"Update"])
 		{
-			qlinfo(@"didActivateNotification openMacPatchAppWithAction:PatchPrefs");
+			LogInfo(@"didActivateNotification openMacPatchAppWithAction:PatchPrefs");
 			[self openMacPatchAppWithAction:@"PatchPrefs"];
         }
     }
@@ -1404,7 +1403,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 
 - (void)userNotificationCenter:(NSUserNotificationCenter *)center didDeliverNotification:(NSUserNotification *)notification
 {
-	//qlinfo(@"didDeliverNotification");
+	//LogInfo(@"didDeliverNotification");
     //if ([notification.actionButtonTitle isEqualToString:@"Patch"])
 	//{
         // Dont show patch info if reboot is required.
@@ -1450,8 +1449,8 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 - (void)updateSoftwareRestrictionRules
 {
 	double secondsToFire = 60.0; // Every 1 min
-	logit(lcl_vInfo, @"Start Software Rules Update Thread");
-	logit(lcl_vInfo, @"Run every %f", secondsToFire);
+	LogInfo( @"Start Software Rules Update Thread");
+	LogInfo( @"Run every %f", secondsToFire);
 	
     if (_timerSWRules) {
         dispatch_source_cancel(_timerSWRules);
@@ -1467,8 +1466,8 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 	dispatch_queue_t gcdQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	
 	_timerSWRules = CreateDispatchTimer(secondsToFire, gcdQueue, ^{
-		logit(lcl_vDebug, @"Start, Software Rules Update Thread");
-		logit(lcl_vDebug, @"Repeats every %f seconds", secondsToFire);
+		LogDebug( @"Start, Software Rules Update Thread");
+		LogDebug( @"Repeats every %f seconds", secondsToFire);
 		[self performSelectorOnMainThread:@selector(processSoftwareRules)
 							   withObject:nil
 							waitUntilDone:NO
@@ -1510,15 +1509,15 @@ decidePolicyForNavigationAction:(WKNavigationAction *)navigationAction decisionH
 
 - (void)runTestOnHelper
 {
-    logit(lcl_vInfo,@"Test connection to helper.");
+    LogInfo(@"Test connection to helper.");
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            logit(lcl_vError,@"connectError: %@",connectError.localizedDescription);
+            LogError(@"connectError: %@",connectError.localizedDescription);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                logit(lcl_vError,@"proxyError: %@",proxyError.localizedDescription);
+                LogError(@"proxyError: %@",proxyError.localizedDescription);
             }] getVersionWithReply:^(NSString * verData) {
-                logit(lcl_vInfo,@"Test connection to helper was succesful.");
+                LogInfo(@"Test connection to helper was succesful.");
             }];
         }
     }];

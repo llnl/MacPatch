@@ -37,16 +37,15 @@
 
 - (void)awakeFromNib
 {
-    NSString *logFile = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"/Logs/MPLoginAgent.log"];
+    // Logger should already be setup in main.m, just update level if needed
+    Logger *logger = [Logger sharedLogger];
+    logger.minimumLogLevel = [[NSUserDefaults standardUserDefaults] boolForKey:@"Debug"] ? LogLevelDebug : LogLevelInfo;
+
     if ([[NSUserDefaults standardUserDefaults] boolForKey:@"Debug"])
     {
-        [MPLog setupLogging:logFile level:lcl_vDebug];
-        lcl_configure_by_name("*", lcl_vDebug);
-        logit(lcl_vInfo,@"***** MPLoginAgent started -- Debug Enabled *****");
+        LogInfo(@"***** MPLoginAgent started -- Debug Enabled *****");
     } else {
-        [MPLog setupLogging:logFile level:lcl_vInfo];
-        lcl_configure_by_name("*", lcl_vInfo);
-        logit(lcl_vInfo,@"***** MPLoginAgent started *****");
+        LogInfo(@"***** MPLoginAgent started *****");
     }
     
     [[self panel] setBackgroundColor:[NSColor darkGrayColor]];

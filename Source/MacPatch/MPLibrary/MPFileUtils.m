@@ -25,6 +25,7 @@
  */
 
 
+#import "Logger.h"
 #import "MPFileUtils.h"
 
 @interface MPFileUtils ()
@@ -59,7 +60,7 @@
 {
 	if (![fm fileExistsAtPath:aZipFilePath])
 	{
-		qlerror(@"Error %@ was not found.",aZipFilePath);
+		LogError(@"Error %@ was not found.",aZipFilePath);
 		if (err != NULL) *err = [NSError errorWithDomain:@"MPFileUtils"
 													code:1001
 												userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"File to unzip was not found.", nil)}];
@@ -93,7 +94,7 @@
 	if (![fm fileExistsAtPath:aPath isDirectory:&isDir])
 	{
 		NSString *errStr = [NSString stringWithFormat:@"Error setting ownership. File %@ not found.",aPath];
-		qlerror(@"%@",errStr);
+		LogError(@"%@",errStr);
 		if (err != NULL) *err = [NSError errorWithDomain:@"MPFileUtils"
 													code:1001
 												userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(errStr, nil)}];
@@ -104,7 +105,7 @@
 	[fm setAttributes:permDict ofItemAtPath:aPath error:&error];
 	if(error){
 		if (err != NULL) *err = error;
-		qlerror(@"Error settings permission %@",error.localizedDescription);
+		LogError(@"Error settings permission %@",error.localizedDescription);
 		return;
 	}
 	
@@ -115,7 +116,7 @@
 	NSArray *aContents = [fm subpathsOfDirectoryAtPath:aPath error:&error];
 	if (error)
 	{
-		qlerror(@"Error subpaths of Directory %@.\n%@",aPath,error.localizedDescription);
+		LogError(@"Error subpaths of Directory %@.\n%@",aPath,error.localizedDescription);
 		return;
 	}
 
@@ -123,7 +124,7 @@
 	{
 		error = nil;
 		[fm setAttributes:permDict ofItemAtPath:[aPath stringByAppendingPathComponent:i] error:&error];
-		if (error) qlerror(@"Error settings permission %@",error.localizedDescription);
+		if (error) LogError(@"Error settings permission %@",error.localizedDescription);
 	}
 	
 }
@@ -142,7 +143,7 @@
 		NSError *error = nil;
 		BOOL result = [fm removeItemAtPath:[dirPath stringByAppendingPathComponent:file] error:&error];
 		if (!result && error) {
-			qlerror(@"Error: %@", error);
+			LogError(@"Error: %@", error);
 			errors++;
 		}
 	}
@@ -170,7 +171,7 @@
 	
 	if ([cmd terminationStatus] != 0)
 	{
-		qlerror(@"Error, unable to run task.");
+		LogError(@"Error, unable to run task.");
 		if (err != NULL) *err = [NSError errorWithDomain:@"MPFileUtils" code:[cmd terminationStatus] userInfo:nil];
 	}
 	

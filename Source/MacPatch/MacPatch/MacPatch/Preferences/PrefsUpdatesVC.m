@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "PrefsUpdatesVC.h"
 #import "MPauthrestartVC.h"
 
@@ -100,7 +101,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changeScanOnLaunch:(id)sender
 {
 	int state = (int)[scanOnLaunchCheckBox state];
-	qlinfo(@"Scan on launch state changed %d",state);
+	LogInfo(@"Scan on launch state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"enableScanOnLaunch"];
 	[d synchronize];
@@ -109,7 +110,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changeShowAllPatches:(id)sender
 {
 	int state = (int)[showAllPatchesBox state];
-	qlinfo(@"Show all patches state changed %d",state);
+	LogInfo(@"Show all patches state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"showAllPatches"];
 	[d synchronize];
@@ -118,7 +119,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changePreStageRebootPatches:(id)sender
 {
 	int state = (int)[preStageRebootPatchesBox state];
-	qlinfo(@"Pre stage reboot patches state changed %d",state);
+	LogInfo(@"Pre stage reboot patches state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"preStageRebootPatches"];
 	[d synchronize];
@@ -127,7 +128,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changeAllowInstallOfRebootPatches:(id)sender
 {
 	int state = (int)[allowInstallRebootPatchesCheckBox state];
-	qlinfo(@"Allow Reboot Patch Installs state changed %d",state);
+	LogInfo(@"Allow Reboot Patch Installs state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"allowRebootPatchInstalls"];
 	[d synchronize];
@@ -136,7 +137,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changePausePatching:(id)sender
 {
 	int state = (int)[pausePatchingCheckBox state];
-	qlinfo(@"Pause patching state changed %d",state);
+	LogInfo(@"Pause patching state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"pausePatching"];
 	[d synchronize];
@@ -146,17 +147,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+			LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
 		} else {
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"%@",proxyError);
+				LogError(@"%@",proxyError);
 			}] setStateOnPausePatching:_state withReply:^(BOOL result) {
 				
 				if (result) {
-					qlinfo(@"Patching paused state was written sucessfully.");
+					LogInfo(@"Patching paused state was written sucessfully.");
 				} else {
-					qlerror(@"Patching paused state was not written sucessfully.");
+					LogError(@"Patching paused state was not written sucessfully.");
 				}
 			}];
 			
@@ -296,7 +297,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				qlerror(@"connection invalidated");
+				LogError(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop

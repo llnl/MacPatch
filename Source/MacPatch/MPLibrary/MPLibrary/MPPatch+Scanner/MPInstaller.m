@@ -106,7 +106,7 @@
 	 */
 	NSError *taskErr = nil;
 	NSString *result = [self runInstallPkgTask:pkgPath target:aTarget env:aEnv error:&taskErr];
-	qldebug(@"Task Result: %@",result);
+	LogDebug(@"Task Result: %@",result);
 	return taskResult;
 }
 
@@ -117,7 +117,7 @@
 	}
 	// CEH - Improvement, add setting to allow configuration of install from unsigned pkgs -allowUntrusted
 	NSArray *appArgs = @[@"-verboseR", @"-allow", @"-pkg", pkg, @"-target", target];
-	qldebug(@"Pkg Install Args: %@",appArgs);
+	LogDebug(@"Pkg Install Args: %@",appArgs);
 	
 	NSError *taskErr = nil;
 	MPNSTask *mpTask = [MPNSTask new];
@@ -140,12 +140,12 @@
 				l_envItems = [item componentsSeparatedByString:@"="];
 				if ([l_envItems count] == 2)
 				{
-					qldebug(@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+					LogDebug(@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
 					[environment setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
 				}
 				else
 				{
-					qlerror(@"Unable to set env variable. Variable not well formed %@",item);
+					LogError(@"Unable to set env variable. Variable not well formed %@",item);
 				}
 			}
 		}
@@ -155,7 +155,7 @@
 	if (taskErr)
 	{
 		*err = taskErr;
-		qlerror(@"Error: %@",taskErr.localizedDescription);
+		LogError(@"Error: %@",taskErr.localizedDescription);
 		self.taskResult = 1;
 	} else {
 		self.taskResult = 0;
@@ -177,11 +177,11 @@
 	{
 		if ([fm fileExistsAtPath:[@"/Applications"  stringByAppendingPathComponent:app]])
 		{
-			qldebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
+			LogDebug(@"Found, %@. Now remove it.",[@"/Applications" stringByAppendingPathComponent:app]);
 			[fm removeItemAtPath:[@"/Applications" stringByAppendingPathComponent:app] error:&err];
 			if (err)
 			{
-				qlerror(@"%@",err.localizedDescription);
+				LogError(@"%@",err.localizedDescription);
 				result = 3;
 				break;
 			}
@@ -203,7 +203,7 @@
 		
 		if (err)
 		{
-			qlerror(@"%@",err.localizedDescription);
+			LogError(@"%@",err.localizedDescription);
 			result = 2;
 			break;
 		}
@@ -211,7 +211,7 @@
 		MPFileUtils *fu = [MPFileUtils new];
 		err = nil;
 		[fu setOwnership:[@"/Applications" stringByAppendingPathComponent:app] owner:@"root" group:@"admin" error:&err];
-		if (err) qlwarning(@"%@",err.localizedDescription);
+		if (err) LogWarning(@"%@",err.localizedDescription);
 	}
 	
 	return result;
@@ -234,10 +234,10 @@
 	int pkgInstallResult = -1;
 	for (NSString *pkg in onlyPkgs)
 	{
-		qlinfo(@"Begin installing %@",pkg);
+		LogInfo(@"Begin installing %@",pkg);
 		pkgInstallResult = [self installPkgToRoot:[mountPoint stringByAppendingPathComponent:pkg] env:aEnv];
 		if (pkgInstallResult != 0) {
-			qlerror(@"Failed to install package %@",[mountPoint stringByAppendingPathComponent:pkg]);
+			LogError(@"Failed to install package %@",[mountPoint stringByAppendingPathComponent:pkg]);
 			result++;
 		}
 	}
@@ -284,7 +284,7 @@
     if (incomingData && [incomingData length])
     {
         NSString *incomingText = [[NSString alloc] initWithData:incomingData encoding:NSASCIIStringEncoding];
-        logit(lcl_vDebug,@"%@",incomingText);
+        LogDebug(@"%@",incomingText);
 		
         [fh_task readInBackgroundAndNotify];
         return;
@@ -304,7 +304,7 @@
 
 - (int)mountDMG:(NSString *)aDMG mountID:(NSString *)mountID
 {
-	qlinfo(@"Mounting DMG %@",aDMG);
+	LogInfo(@"Mounting DMG %@",aDMG);
 	/*
 	NSString *swLoc = NULL;
 	NSString *swLocBase = [[mp_SOFTWARE_DATA_DIR path] stringByAppendingPathComponent:@"sw"];
@@ -318,12 +318,12 @@
 	{
 		[self unmountDMG:mountID];
 		[fm createDirectoryAtPath:mountPoint withIntermediateDirectories:YES attributes:nil error:&err];
-		if (err) logit(lcl_vError,@"%@",err.localizedDescription);
+		if (err) LogError(@"%@",err.localizedDescription);
 	}
 	else
 	{
 		[fm createDirectoryAtPath:mountPoint withIntermediateDirectories:YES attributes:nil error:&err];
-		if (err) logit(lcl_vError,@"%@",err.localizedDescription);
+		if (err) LogError(@"%@",err.localizedDescription);
 	}
 	
 	NSArray *args = [NSArray arrayWithObjects:@"attach", @"-mountpoint", mountPoint, aDMG, @"-nobrowse", nil];
@@ -341,14 +341,14 @@
 	[aTask waitUntilExit];
 	int result = [aTask terminationStatus];
 	if (result == 0) {
-		qlinfo(@"DMG Mounted at %@",mountPoint);
+		LogInfo(@"DMG Mounted at %@",mountPoint);
 	}
 	return result;
 }
 
 - (int)unmountDMG:(NSString *)mountID
 {
-	qlinfo(@"Un-Mounting DMG");
+	LogInfo(@"Un-Mounting DMG");
 	NSString *mountPoint = [@"/private/tmp" stringByAppendingPathComponent:mountID];
 	
 	NSArray       *args  = [NSArray arrayWithObjects:@"detach", mountPoint, @"-force", nil];
@@ -367,7 +367,7 @@
 	
 	int result = [aTask terminationStatus];
 	if (result == 0) {
-		qlinfo(@"DMG Un-mounted %@",mountPoint);
+		LogInfo(@"DMG Un-mounted %@",mountPoint);
 	}
 	return result;
 }

@@ -25,6 +25,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPAgentRegister.h"
 #import <SystemConfiguration/SystemConfiguration.h>
 #import "MacPatch.h"
@@ -98,7 +99,7 @@
         return result;
         
     } @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
     }
     
 	return result;
@@ -136,7 +137,7 @@
 - (int)registerClient:(NSString *)aRegKey error:(NSError **)error
 {
     if ([self clientIsRegistered]) {
-        qlwarning(@"Agent is already registered.");
+        LogWarning(@"Agent is already registered.");
         return 1;
     }
     
@@ -149,7 +150,7 @@
         if (error != NULL) {
             *error = err;
         } else {
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"%@",err.localizedDescription);
         }
         return 1;
     }
@@ -160,7 +161,7 @@
         if (error != NULL) {
             *error = err;
         } else {
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"%@",err.localizedDescription);
         }
         return 1;
     }

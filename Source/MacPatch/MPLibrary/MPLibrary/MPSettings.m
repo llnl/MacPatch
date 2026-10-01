@@ -144,11 +144,11 @@ static dispatch_queue_t _settingsQueue = NULL;
         if (![self->fm fileExistsAtPath:MP_AGENT_SETTINGS])
         {
             _settings = [self allSettingsFromServer:YES];
-            qlinfo(@"Writing new agent settings to disk.");
+            LogInfo(@"Writing new agent settings to disk.");
             if ([self->fm isWritableFileAtPath:[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]]) {
                 [_settings writeToFile:MP_AGENT_SETTINGS atomically:YES];
             } else {
-                qlerror(@"Unable to write file to %@",[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]);
+                LogError(@"Unable to write file to %@",[MP_AGENT_SETTINGS stringByDeletingLastPathComponent]);
                 success = NO;
                 return;
             }
@@ -192,11 +192,11 @@ static dispatch_queue_t _settingsQueue = NULL;
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"Agent Settings data, returned true.");
+        LogInfo(@"Agent Settings data, returned true.");
         data = result.result[@"data"][@"settings"];
     } else {
-        logit(lcl_vError,@"Agent Settings data, returned false.");
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"Agent Settings data, returned false.");
+        LogDebug(@"%@",result.toDictionary);
         return nil;
     }
     
@@ -210,7 +210,7 @@ static dispatch_queue_t _settingsQueue = NULL;
     MPWSResult *result;
     
     if (useAgentPlist) {
-        logit(lcl_vDebug,@"[MPHTTPRequest] Using Agent Plist");
+        LogDebug(@"[MPHTTPRequest] Using Agent Plist");
         req = [[MPHTTPRequest alloc] initWithAgentPlist];
     } else {
         req = [[MPHTTPRequest alloc] init];
@@ -220,11 +220,11 @@ static dispatch_queue_t _settingsQueue = NULL;
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
-        logit(lcl_vInfo,@"Agent Settings data, returned true.");
+        LogInfo(@"Agent Settings data, returned true.");
         data = result.result[@"data"];
     } else {
-        logit(lcl_vError,@"Agent Settings data, returned false.");
-        logit(lcl_vDebug,@"%@",result.toDictionary);
+        LogError(@"Agent Settings data, returned false.");
+        LogDebug(@"%@",result.toDictionary);
         return nil;
     }
     
@@ -243,19 +243,19 @@ static dispatch_queue_t _settingsQueue = NULL;
         NSString *remoteID = @"";
         NSDictionary *remoteRevs = remoteSettingsRevs[@"revs"];
         if (!remoteSettingsRevs) {
-            qlerror(@"Unable to obtain remote data. Network connection may be down.");
+            LogError(@"Unable to obtain remote data. Network connection may be down.");
             ok = NO;
             return;
         }
         
         if ([localRevs isEqualToDictionary:remoteRevs])
         {
-            qldebug(@"Setting Revisions did match.");
+            LogDebug(@"Setting Revisions did match.");
             ok = YES;
         } else {
-            qlinfo(@"Setting Revisions did not match. Updating settings.");
-            qlinfo(@"localRevs: %@",localRevs);
-            qlinfo(@"remoteSettingsRevs: %@",remoteRevs);
+            LogInfo(@"Setting Revisions did not match. Updating settings.");
+            LogInfo(@"localRevs: %@",localRevs);
+            LogInfo(@"remoteSettingsRevs: %@",remoteRevs);
             NSDictionary *remoteSettings = [self allSettingsFromServer:NO];
             
             if (!remoteSettingsRevs[@"id"]) {
@@ -267,42 +267,42 @@ static dispatch_queue_t _settingsQueue = NULL;
             if (![localID isEqualToString:remoteID])
             {
                 // Update all, group id does not match
-                qlinfo(@"Client group has been changed. Update all settings.");
+                LogInfo(@"Client group has been changed. Update all settings.");
                 localRevs = @{@"agent":@0,@"servers":@0,@"suservers":@0,@"tasks":@0,@"swrestrictions":@0};
             }
             
             if ([[remoteRevs objectForKey:@"agent"] intValue] != [[localRevs objectForKey:@"agent"] intValue]) {
                 // Usdate Agent Settings
-                qlinfo(@"Update Agent Settings, settings did not match.");
+                LogInfo(@"Update Agent Settings, settings did not match.");
                 [self updateSettingsUsingKey:@"agent" settings:remoteSettings[@"settings"][@"agent"]];
             }
             if ([[remoteRevs objectForKey:@"servers"] intValue] != [[localRevs objectForKey:@"servers"] intValue]) {
                 // Usdate Servers
-                qlinfo(@"Update Agent Servers, servers did not match.");
+                LogInfo(@"Update Agent Servers, servers did not match.");
                 // Massage data before entering it in to the plist
                 NSDictionary *d = [self serverSettingsFromDictionary:remoteSettings[@"settings"][@"servers"]];
                 [self updateSettingsUsingKey:@"servers" settings:d];
             }
             if ([[remoteRevs objectForKey:@"suservers"] intValue] != [[localRevs objectForKey:@"suservers"] intValue]) {
                 // Usdate SUServers
-                qlinfo(@"Update Agent SUServers, SUServers did not match.");
+                LogInfo(@"Update Agent SUServers, SUServers did not match.");
                 [self updateSettingsUsingKey:@"suservers" settings:remoteSettings[@"settings"][@"suservers"]];
             }
             if ([[remoteRevs objectForKey:@"tasks"] intValue] != [[localRevs objectForKey:@"tasks"] intValue]) {
                 // Usdate Tasks
-                qlinfo(@"Update Agent tasks, tasks did not match.");
+                LogInfo(@"Update Agent tasks, tasks did not match.");
                 [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
             }
             if ([[remoteRevs objectForKey:@"swrestrictions"] isEqualTo:[self readSoftwareRestrictionRevisionFromFile]]) {
                 // Usdate Tasks
-                qlinfo(@"Update Software restrictions, restrictions did not match.");
+                LogInfo(@"Update Software restrictions, restrictions did not match.");
                 [self writeNewSoftwareRestritionsFile];
                 
                 NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
                 [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
                 [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
             }
-            qlinfo(@"Setting have been updated.");
+            LogInfo(@"Setting have been updated.");
             ok = YES;
         }
     };
@@ -334,7 +334,7 @@ static dispatch_queue_t _settingsQueue = NULL;
     }
     else
     {
-        qlerror(@"Unable to update setting for key \"%@\", value was null.",key);
+        LogError(@"Unable to update setting for key \"%@\", value was null.",key);
     }
 }
 
@@ -460,7 +460,7 @@ static dispatch_queue_t _settingsQueue = NULL;
         // No servers which are reachable, add the master server so there
         // is at least 1 server in the array and it can timeout.
         [_srvs addObject:[[Server alloc] initWithDictionary:_master]];
-        qlerror(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
+        LogError(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
     }
     
     // Now we just read the plist, it's server list is randomized on version rev
@@ -564,11 +564,11 @@ static dispatch_queue_t _settingsQueue = NULL;
     MPRESTfull *mpr = [MPRESTfull new];
     NSDictionary *res = [mpr getSoftwareRestrictions:&err];
     if (err) {
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"%@",err.localizedDescription);
         return NO;
     }
-    qlinfo(@"[writeNewSoftwareRestritionsFile]: write restrictions to %@",SW_RESTRICTIONS_PLIST);
-    qlinfo(@"[writeNewSoftwareRestritionsFile]: restrictions data = %@",res);
+    LogInfo(@"[writeNewSoftwareRestritionsFile]: write restrictions to %@",SW_RESTRICTIONS_PLIST);
+    LogInfo(@"[writeNewSoftwareRestritionsFile]: restrictions data = %@",res);
     [res writeToFile:SW_RESTRICTIONS_PLIST atomically:NO];
     return YES;
 }

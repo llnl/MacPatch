@@ -63,7 +63,7 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "scan  -e"
+            argument = "checkIn  -V"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

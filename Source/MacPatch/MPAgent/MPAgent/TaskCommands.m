@@ -26,6 +26,7 @@
 
 #import "TaskCommands.h"
 #import <Foundation/Foundation.h>
+#import "Logger.h"
 
 #import "MacPatch.h"
 #import "CheckIn.h"
@@ -156,7 +157,7 @@ typedef NS_ENUM(NSInteger, TaskCommand) {
             LogDebug(@"kMPAppStore");
             break;
         default:
-            qlerror(@"Unknown command %@", cmd);
+            LogError(@"Unknown command %@", cmd);
             break;
     }
 }

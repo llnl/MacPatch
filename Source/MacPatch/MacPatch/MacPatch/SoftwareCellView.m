@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "SoftwareCellView.h"
 #import "GlobalQueueManager.h"
 #import "MacPatch.h"
@@ -82,7 +83,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             
             // CRITICAL: Check if frame is valid
             if (NSIsEmptyRect(pbar) || pbar.size.width <= 0) {
-                qlwarning(@"[setupProgressBar] _progressBar frame is invalid, using fallback positioning");
+                LogWarning(@"[setupProgressBar] _progressBar frame is invalid, using fallback positioning");
                 // Use a fallback position relative to the cell view
                 pbar = NSMakeRect(20, 20, self.bounds.size.width - 40, 4);
             }
@@ -96,7 +97,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             
             [self.progressBarNew setHidden:YES];
             
-            qldebug(@"[setupProgressBar] Created progressBarNew: frame = {%f, %f, %f, %f}, zPosition = %f",
+            LogDebug(@"[setupProgressBar] Created progressBarNew: frame = {%f, %f, %f, %f}, zPosition = %f",
                    newFrame.origin.x, newFrame.origin.y, newFrame.size.width, newFrame.size.height,
                    self.progressBarNew.zPosition);
             
@@ -117,7 +118,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         if (!NSIsEmptyRect(pbar) && pbar.size.width > 0) {
             CGRect newFrame = CGRectMake(pbar.origin.x, pbar.origin.y + 8, pbar.size.width, 4);
             if (!CGRectEqualToRect(self.progressBarNew.frame, newFrame)) {
-                qldebug(@"[layout] Repositioning progressBarNew to: {%f, %f, %f, %f}",
+                LogDebug(@"[layout] Repositioning progressBarNew to: {%f, %f, %f, %f}",
                        newFrame.origin.x, newFrame.origin.y, newFrame.size.width, newFrame.size.height);
                 self.progressBarNew.frame = newFrame;
             }
@@ -155,7 +156,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             
             // Configure progress bars based on progress value
             if (progress.doubleValue > 0) {
-                qldebug(@"[configureCellUI] Setting determinate progress: %f%%", progress.doubleValue);
+                LogDebug(@"[configureCellUI] Setting determinate progress: %f%%", progress.doubleValue);
                 [self.progressBarNew stopAnimation];
                 self.progressBarNew.progressMode = MPOProgressBarModeDeterminate;
                 
@@ -171,17 +172,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 [self.progressBarNew setHidden:NO];
                 [self.progressBarNew setNeedsDisplay];
                 
-                qldebug(@"[configureCellUI] progressBarNew shown - opacity: %f, hidden: %d",
+                LogDebug(@"[configureCellUI] progressBarNew shown - opacity: %f, hidden: %d",
                        self.progressBarNew.opacity, self.progressBarNew.hidden);
             } else {
-                qldebug(@"[configureCellUI] Setting indeterminate progress");
+                LogDebug(@"[configureCellUI] Setting indeterminate progress");
                 self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
                 self.progressBarNew.opacity = 1.0;
                 [self.progressBarNew setHidden:NO];
                 [self.progressBarNew startAnimation];
                 [self.progressBarNew setNeedsDisplay];
                 
-                qldebug(@"[configureCellUI] progressBarNew shown (indeterminate) - opacity: %f, hidden: %d",
+                LogDebug(@"[configureCellUI] progressBarNew shown (indeterminate) - opacity: %f, hidden: %d",
                        self.progressBarNew.opacity, self.progressBarNew.hidden);
             }
             
@@ -228,12 +229,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)viewDidLoad
 {
-    qldebug(@"[CELL IMAGE][viewDidLoad]: %@", _rowData[@"Software"][@"sw_img_path"] ?: @"(null)");
+    LogDebug(@"[CELL IMAGE][viewDidLoad]: %@", _rowData[@"Software"][@"sw_img_path"] ?: @"(null)");
 }
 
 - (void)viewDidMoveToWindow
 {
-    qldebug(@"[CELL IMAGE][viewDidMoveToWindow]: %@", _rowData[@"Software"][@"sw_img_path"] ?: @"(null)");
+    LogDebug(@"[CELL IMAGE][viewDidMoveToWindow]: %@", _rowData[@"Software"][@"sw_img_path"] ?: @"(null)");
 }
 
 - (void)drawRect:(NSRect)dirtyRect
@@ -246,15 +247,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     NSString *imgURL = _rowData[@"Software"][@"sw_img_path"];
     if ([imgURL isEqualToString:@"None"]) return; //If no image then dont try
-    qldebug(@"[CELL IMAGE][1]: %@", imgURL);
-    qldebug(@"[loadImage][serverArray]: %@",self.serverArray);
-    qldebug(@"[loadImage][requestCount]: %ld",self.requestCount);
+    LogDebug(@"[CELL IMAGE][1]: %@", imgURL);
+    LogDebug(@"[loadImage][serverArray]: %@",self.serverArray);
+    LogDebug(@"[loadImage][requestCount]: %ld",self.requestCount);
     
     if (self.requestCount == -1) {
         self.requestCount++;
     } else {
         if (self.requestCount >= (self.serverArray.count - 1)) {
-            qlerror(@"[SoftwareCellView][loadImage]: Error, could not complete request, failed all servers.");
+            LogError(@"[SoftwareCellView][loadImage]: Error, could not complete request, failed all servers.");
             self.requestCount = -1;
             return;
         } else {
@@ -265,9 +266,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     Server *server = [self.serverArray objectAtIndex:self.requestCount];
     NSString *urlPath = [NSString stringWithFormat:@"/mp-content%@",imgURL.urlEncode];
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-    qldebug(@"[CELL IMAGE][2]: %@", url);
-    //qldebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
-    //qlinfo(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+    LogDebug(@"[CELL IMAGE][2]: %@", url);
+    //LogDebug(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
+    //LogInfo(@"[CELL IMAGE][%@]: %@", _rowData[@"name"], url);
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
     r.allowSelfSignedCert = server.allowSelfSigned;
     __weak STHTTPRequest *wr = r;
@@ -289,7 +290,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     r.errorBlock = ^(NSError *error)
     {
         if (![error.localizedDescription containsString:@"pretending"]) { // CEH Dont want to see the error during testing
-            qlerror(@"%@",error.localizedDescription);
+            LogError(@"%@",error.localizedDescription);
         }
         [weakSelf loadImage];
     };
@@ -313,7 +314,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
              // Verify this cell still represents the same row
              NSString *notificationID = note.userInfo[@"id"] ?: self->_rowData[@"id"];
              if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
-                 qlinfo(@"[setupNotification] Start notification received");
+                 LogInfo(@"[setupNotification] Start notification received");
                  [self->_actionButton setTitle:@"Installing..."];
              }
          });
@@ -333,13 +334,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 
                 // FIX: Update the progress bar directly with CATransaction
                 NSNumber *prog = userInfo[@"progress"] ?: @0;
-                qldebug(@"[setupNotification] Progress update: %f%% (progressBarNew: %p, hidden: %d, opacity: %f)",
+                LogDebug(@"[setupNotification] Progress update: %f%% (progressBarNew: %p, hidden: %d, opacity: %f)",
                        prog.doubleValue, self.progressBarNew, self.progressBarNew.hidden, self.progressBarNew.opacity);
                 
                 if (prog.doubleValue > 0) {
                     // Switch to determinate mode and show progress
                     if (self.progressBarNew.progressMode != MPOProgressBarModeDeterminate) {
-                        qldebug(@"[setupNotification] Switching to determinate mode");
+                        LogDebug(@"[setupNotification] Switching to determinate mode");
                         [self.progressBarNew stopAnimation];
                         self.progressBarNew.progressMode = MPOProgressBarModeDeterminate;
                     }
@@ -356,7 +357,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                     [self.progressBarNew setHidden:NO];
                     [self.progressBarNew setNeedsDisplay];
                     
-                    qldebug(@"[setupNotification] Progress bar updated to: %f (%.1f%%), opacity: %f, hidden: %d",
+                    LogDebug(@"[setupNotification] Progress bar updated to: %f (%.1f%%), opacity: %f, hidden: %d",
                            self.progressBarNew.progress, prog.doubleValue, self.progressBarNew.opacity, self.progressBarNew.hidden);
                 }
                 
@@ -375,7 +376,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             // Verify this cell still represents the same row
             NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
             if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
-                qldebug(@"[setupNotification] Stop notification received");
+                LogDebug(@"[setupNotification] Stop notification received");
                 if (userInfo[@"error"]) {
                     self->_swActionStatusText.stringValue = userInfo[@"status"] ?: @"Error";
                     [self stopInstallWithError:YES];
@@ -402,7 +403,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
              // Verify this cell still represents the same row
              NSString *notificationID = note.userInfo[@"id"] ?: self->_rowData[@"id"];
              if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
-                 qlinfo(@"[setupUninstallNotification] Start notification received");
+                 LogInfo(@"[setupUninstallNotification] Start notification received");
                  [self->_actionButton setTitle:@"Uninstalling..."];
              }
          });
@@ -422,13 +423,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                  
                  // FIX: Update the progress bar directly with CATransaction
                  NSNumber *prog = userInfo[@"progress"] ?: @0;
-                 qldebug(@"[setupUninstallNotification] Progress update: %f%% (progressBarNew: %p, hidden: %d, opacity: %f)",
+                 LogDebug(@"[setupUninstallNotification] Progress update: %f%% (progressBarNew: %p, hidden: %d, opacity: %f)",
                         prog.doubleValue, self.progressBarNew, self.progressBarNew.hidden, self.progressBarNew.opacity);
                  
                  if (prog.doubleValue > 0) {
                      // Switch to determinate mode and show progress
                      if (self.progressBarNew.progressMode != MPOProgressBarModeDeterminate) {
-                         qldebug(@"[setupUninstallNotification] Switching to determinate mode");
+                         LogDebug(@"[setupUninstallNotification] Switching to determinate mode");
                          [self.progressBarNew stopAnimation];
                          self.progressBarNew.progressMode = MPOProgressBarModeDeterminate;
                      }
@@ -445,7 +446,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                      [self.progressBarNew setHidden:NO];
                      [self.progressBarNew setNeedsDisplay];
                      
-                     qldebug(@"[setupUninstallNotification] Progress bar updated to: %f (%.1f%%), opacity: %f, hidden: %d",
+                     LogDebug(@"[setupUninstallNotification] Progress bar updated to: %f (%.1f%%), opacity: %f, hidden: %d",
                             self.progressBarNew.progress, prog.doubleValue, self.progressBarNew.opacity, self.progressBarNew.hidden);
                  }
              }
@@ -459,7 +460,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
              // Verify this cell still represents the same row
              NSString *notificationID = userInfo[@"id"] ?: self->_rowData[@"id"];
              if ([self->_rowData[@"id"] isEqualToString:notificationID]) {
-                 qlinfo(@"[setupUninstallNotification] Stop notification received");
+                 LogInfo(@"[setupUninstallNotification] Stop notification received");
                  if (userInfo[@"error"]) {
                      self->_swActionStatusText.stringValue = userInfo[@"status"] ?: @"Error";
                      [self stopUninstallWithError:YES];
@@ -526,7 +527,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             self.worker.invalidationHandler = nil;
             [[NSOperationQueue mainQueue] addOperationWithBlock:^{
                 self.worker = nil;
-                qlerror(@"connection invalid ated");
+                LogError(@"connection invalid ated");
             }];
         };
 #pragma clang diagnostic pop
@@ -567,7 +568,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self setupCellUIForInstall];
         
         dispatch_async(dispatch_get_main_queue(), ^(void) {
-            qldebug(@"Operation Queue Count: %lu",(unsigned long)q.globalQueue.operationCount);
+            LogDebug(@"Operation Queue Count: %lu",(unsigned long)q.globalQueue.operationCount);
             if (q.globalQueue.operationCount > 1) {
                [self.actionButton setTitle:@"Waiting..."];
                [self.actionButton setEnabled:NO];
@@ -586,7 +587,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self setupCellUIForUninstall];
         
         dispatch_async(dispatch_get_main_queue(), ^(void) {
-            qldebug(@"Operation Queue Count: %lu",(unsigned long)q.globalQueue.operationCount);
+            LogDebug(@"Operation Queue Count: %lu",(unsigned long)q.globalQueue.operationCount);
             if (q.globalQueue.operationCount > 1) {
                 [self.actionButton setTitle:@"Waiting..."];
                 [self.actionButton setEnabled:NO];
@@ -684,7 +685,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)setupCellUIForInstall
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        qldebug(@"[setupCellUIForInstall] Starting setup");
+        LogDebug(@"[setupCellUIForInstall] Starting setup");
         [self->_errorImage setHidden:YES];
         [self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
         
@@ -696,7 +697,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self setupProgressBar];
         
         // Set up new progress bar
-        qldebug(@"[setupCellUIForInstall] Setting up progressBarNew (pointer: %p)", self.progressBarNew);
+        LogDebug(@"[setupCellUIForInstall] Setting up progressBarNew (pointer: %p)", self.progressBarNew);
         self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
         self.progressBarNew.progress = 0.0; // Explicitly set to 0
         
@@ -706,7 +707,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self.progressBarNew startAnimation];
         [self.progressBarNew setNeedsDisplay];
         
-        qldebug(@"[setupCellUIForInstall] progressBarNew configured - hidden: %d, progress: %f, opacity: %f",
+        LogDebug(@"[setupCellUIForInstall] progressBarNew configured - hidden: %d, progress: %f, opacity: %f",
                self.progressBarNew.hidden, self.progressBarNew.progress, self.progressBarNew.opacity);
         
         [self->_swActionStatusText setHidden:NO];
@@ -723,7 +724,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)setupCellUIForUninstall
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        qldebug(@"[setupCellUIForUninstall] Starting setup");
+        LogDebug(@"[setupCellUIForUninstall] Starting setup");
         [self->_errorImage setHidden:YES];
         [self->_swDescription setFrameSize:NSMakeSize(350.0, 86.0)]; // Resize the Description Field
         
@@ -735,7 +736,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self setupProgressBar];
         
         // Set up new progress bar
-        qldebug(@"[setupCellUIForUninstall] Setting up progressBarNew (pointer: %p)", self.progressBarNew);
+        LogDebug(@"[setupCellUIForUninstall] Setting up progressBarNew (pointer: %p)", self.progressBarNew);
         self.progressBarNew.progressMode = MPOProgressBarModeIndeterminate;
         self.progressBarNew.progress = 0.0; // Explicitly set to 0
         
@@ -745,7 +746,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         [self.progressBarNew startAnimation];
         [self.progressBarNew setNeedsDisplay];
         
-        qldebug(@"[setupCellUIForUninstall] progressBarNew configured - hidden: %d, progress: %f, opacity: %f",
+        LogDebug(@"[setupCellUIForUninstall] progressBarNew configured - hidden: %d, progress: %f, opacity: %f",
                self.progressBarNew.hidden, self.progressBarNew.progress, self.progressBarNew.opacity);
         
         [self->_swActionStatusText setHidden:NO];
@@ -824,7 +825,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil)
         {
-            qlerror(@"connectError: %@",connectError.localizedDescription);
+            LogError(@"connectError: %@",connectError.localizedDescription);
         }
         else
         {
@@ -833,7 +834,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 if (hadError)
                 {
                     [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                        qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                        LogError(@"proxyError: %@",proxyError.localizedDescription);
                     }] recordHistoryWithType:kMPSoftwareType name:self->_rowData[@"name"] uuid:self->_rowData[@"id"] action:kMPInstallAction result:1 errorMsg:@"" withReply:^(BOOL result) {
                         //[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
                     }];
@@ -841,7 +842,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 else
                 {
                     [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                        qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                        LogError(@"proxyError: %@",proxyError.localizedDescription);
                     }] recordSoftwareInstallAdd:self->_rowData withReply:^(NSInteger result) {
                         //[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
                     }];
@@ -894,14 +895,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil)
         {
-            qlerror(@"connectError: %@",connectError.localizedDescription);
+            LogError(@"connectError: %@",connectError.localizedDescription);
         }
         else
         {
             [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                LogError(@"proxyError: %@",proxyError.localizedDescription);
             }] recordSoftwareInstallRemove:self->_rowData[@"name"] taskID:self->_rowData[@"id"] withReply:^(BOOL result) {
-                //qlinfo(@"Code %ld",(long)result);
+                //LogInfo(@"Code %ld",(long)result);
                 //[[NSNotificationCenter defaultCenter] postNotificationName:kRefreshSoftwareTable object:nil userInfo:@{}];
             }];
         }

@@ -25,6 +25,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MinScanAndPatchVC.h"
 #import "MacPatch.h"
 #include <unistd.h>
@@ -140,7 +141,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		
 		// Scan host for patches
 		approvedUpdates = [patching scanForPatchesUsingTypeFilter:kAllPatches forceRun:YES];
-		qlinfo(@"approvedUpdates: %@",approvedUpdates);
+		LogInfo(@"approvedUpdates: %@",approvedUpdates);
 		if (approvedUpdates.count <= 0)
 		{
 			[self progress:@"No patches found..."];
@@ -171,8 +172,8 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		{
 			if (cancelTask) [self _stopThread];
 			
-			qlinfo(@"Installing: %@",patch[@"patch"]);
-			qldebug(@"Patch: %@",patch);
+			LogInfo(@"Installing: %@",patch[@"patch"]);
+			LogDebug(@"Patch: %@",patch);
 			[self progress:@"Installing %@",patch[@"patch"]];
 			MPPatchContentType pType = kCustomPatches;
 			if ([patch[@"type"] isEqualToString:@"Apple"]) {
@@ -183,7 +184,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			NSDictionary *res = [patching installPatchUsingTypeFilter:patch typeFilter:pType];
 			if (res[@"patchInstallErrors"]) {
 				if ([res[@"patchInstallErrors"] intValue] >= 1) {
-					qlerror(@"Error installing %@",patch[@"patch"]);
+					LogError(@"Error installing %@",patch[@"patch"]);
 					install_result = 1;
 				} else {
 					install_result = 0;
@@ -195,7 +196,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			}
 			
 			if (install_result != 0) {
-				qlerror(@"Patch %@ failed to install.",patch[@"patch"]);
+				LogError(@"Patch %@ failed to install.",patch[@"patch"]);
 				[failedPatches addObject:patch];
 			}
 			
@@ -209,10 +210,10 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		[NSThread sleepForTimeInterval:1.0];
 		
 		if (requiresHalt >= 1) {
-			qlinfo(@"Patches have been installed, system will now halt and reboot.");
+			LogInfo(@"Patches have been installed, system will now halt and reboot.");
 			[self countDownToClose:2];
 		} else {
-			qlinfo(@"Patches have been installed, system will now reboot.");
+			LogInfo(@"Patches have been installed, system will now reboot.");
 			[self countDownToClose];
 		}
 	}
@@ -264,19 +265,19 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"Error getting connection to helper. Authrestart will not occure.");
-			qlerror(@"%@",connectError);
+			LogError(@"Error getting connection to helper. Authrestart will not occure.");
+			LogError(@"%@",connectError);
 			dispatch_semaphore_signal(sem);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"Error getting remote object from helper. Authrestart will not occure.");
-				qlerror(@"%@",proxyError);
+				LogError(@"Error getting remote object from helper. Authrestart will not occure.");
+				LogError(@"%@",proxyError);
 				dispatch_semaphore_signal(sem);
 			}] getAuthRestartDataWithReply:^(NSError *error, NSDictionary *result) {
 				
 				if (error) {
-					qlerror(@"Error getting result from helper. Authrestart will not occure.");
-					qlerror(@"%@",error);
+					LogError(@"Error getting result from helper. Authrestart will not occure.");
+					LogError(@"%@",error);
 				} else {
 					authData = [result copy];
 				}
@@ -307,7 +308,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	MPScript *mps = [MPScript new];
 	BOOL res = [mps runScript:script];
 	if (!res) {
-		qlerror(@"bypassFileVaultForRestart script failed to run.");
+		LogError(@"bypassFileVaultForRestart script failed to run.");
 	}
 	
 	// Quick Sleep before the reboot
@@ -321,7 +322,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 		case 0:
 			[self bypassFileVaultForRestart];
 			[NSTask launchedTaskWithLaunchPath:@"/bin/launchctl" arguments:@[@"reboot"]];
-			qlinfo(@"MPAuthPlugin issued a launchctl reboot.");
+			LogInfo(@"MPAuthPlugin issued a launchctl reboot.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
 			break;
 		case 1:
@@ -332,7 +333,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 			// Firmware updates are needed requiring a shutdown (halt)
 			[self bypassFileVaultForRestart];
 			[NSTask launchedTaskWithLaunchPath:@"/sbin/halt" arguments:@[]];
-			qlinfo(@"MPAuthPlugin issued a launchctl reboot and halt.");
+			LogInfo(@"MPAuthPlugin issued a launchctl reboot and halt.");
 			[NSThread detachNewThreadSelector:@selector(countDownShowRebootButton) toTarget:self withObject:nil];
 			break;
 		default:
@@ -366,7 +367,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 	if ([cancelButton.title isEqualToString:@"Reboot"])
 	{
 		int rb = 0;
-		qlerror(@"User forced a reboot. Some items may not have gotten installed.");
+		LogError(@"User forced a reboot. Some items may not have gotten installed.");
 		rb = reboot(RB_AUTOBOOT);
 	}
 }
@@ -381,7 +382,7 @@ extern OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSend);
 
 OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
 {
-    qlinfo(@"MDSendAppleEventToSystemProcess called");
+    LogInfo(@"MDSendAppleEventToSystemProcess called");
     
     AEAddressDesc targetDesc;
     static const ProcessSerialNumber kPSNOfSystemProcess = {0, kSystemProcess };
@@ -440,12 +441,12 @@ OSStatus MDSendAppleEventToSystemProcess(AEEventID eventToSendID)
     MPRESTfull *rest = [[MPRESTfull alloc] init];
     result = [rest postPatchInstallResults:aPatch type:aType error:&wsErr];
     if (wsErr) {
-        qlerror(@"%@",wsErr.localizedDescription);
+        LogError(@"%@",wsErr.localizedDescription);
     } else {
         if (result == TRUE) {
-            qlinfo(@"Patch (%@) install result was posted to webservice.",aPatch);
+            LogInfo(@"Patch (%@) install result was posted to webservice.",aPatch);
         } else {
-            qlerror(@"Patch (%@) install result was not posted to webservice.",aPatch);
+            LogError(@"Patch (%@) install result was not posted to webservice.",aPatch);
         }
     }
     return;
