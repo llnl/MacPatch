@@ -231,3 +231,139 @@ class PatchScanV2():
 						break
 
 		return results
+
+# New Class, The new class Has New Criteria Format
+class PatchScanV3():
+
+	def __init__(self, patch_state='All'):
+		self.patch_state = patch_state
+
+	def custPatchList(self, severity=None):
+		patch_state = self.patch_state
+
+		if patch_state.lower() == "all":
+			_state = ["production", "qa"]
+		elif patch_state.lower() == "create":
+			_state = ["create"]
+		elif patch_state.lower() == "qa":
+			_state = ["qa"]
+		else:
+			_state = ["production"]
+
+		# Optimize: Filter in database, not in Python
+		_all = MpPatch.query.filter(
+			MpPatch.active == 1,
+			MpPatch.patch_state.in_(_state)
+		).all()
+
+		if not _all:
+			return None, None
+
+		# Use dict to group by bundle_id for O(n) instead of O(n²)
+		patches_by_bundle = {}
+		for row in _all:
+			patch = {
+				'bundle_id': row.bundle_id,
+				'patch_id': row.puuid,
+				'patch_reboot': row.patch_reboot,
+				'patch_version': row.patch_ver,
+				'query': []
+			}
+			if row.bundle_id not in patches_by_bundle:
+				patches_by_bundle[row.bundle_id] = []
+			patches_by_bundle[row.bundle_id].append(patch)
+
+		# Sort patches within each bundle by version
+		for bundle_id in patches_by_bundle:
+			patches_by_bundle[bundle_id].sort(
+				key=lambda p: tuple(int(v) for v in p['patch_version'].split('.')),
+				reverse=True
+			)
+
+		return set(patches_by_bundle.keys()), patches_by_bundle
+
+	def criteriaForPatch(self, criteria_dict, patch_id):
+		"""Optimized: use dict lookup instead of list iteration"""
+		results = criteria_dict.get(patch_id, [])
+		return sorted(results, key=lambda k: k['order'])
+
+	def osCheckForPatch(self, os_criteria_dict, patch_id, os='*'):
+		"""Optimized: use preloaded dict instead of database query"""
+		if os == '*':
+			return True
+
+		os_version = os_criteria_dict.get(patch_id)
+		if not os_version:
+			return True  # No restriction
+
+		if os_version == "*":
+			return True
+		if os in os_version:
+			return True
+		if "*" in os_version:
+			for i in os_version.split(','):
+				_i = i.split('.')
+				if len(_i) >= 2:
+					qOS = _i[0] + "." + _i[1]
+
+					_o = os.split('.')
+					if len(_o) >= 2:
+						cOS = _o[0] + "." + _o[1]
+						if qOS.strip() == cOS.strip():
+							return True
+
+		return False
+
+	# Really the only public method to be used
+	@cache.cached(timeout=300)
+	def getScanList(self, os=None, severity=None):
+		# Optimize: Select only needed columns from criteria
+		criteria_query = MpPatchesCriteria.query.with_entities(
+			MpPatchesCriteria.puuid,
+			MpPatchesCriteria.type,
+			MpPatchesCriteria.type_data,
+			MpPatchesCriteria.type_order
+		).all()
+
+		# Build efficient lookup dictionaries
+		criteria_by_patch = {}
+		os_criteria_by_patch = {}
+
+		for row in criteria_query:
+			puuid, ctype, type_data, type_order = row
+
+			# Store OS criteria separately for quick lookup
+			if ctype == "OSVersion":
+				os_criteria_by_patch[puuid] = type_data.strip()
+
+			# Store all criteria grouped by patch
+			if puuid not in criteria_by_patch:
+				criteria_by_patch[puuid] = []
+			criteria_by_patch[puuid].append({
+				'order': str(type_order),
+				'type': ctype.strip(),
+				'type_data': type_data.strip()
+			})
+
+		results = []
+		bundle_ids, patches_by_bundle = self.custPatchList(severity)
+
+		if not bundle_ids:
+			return results
+
+		# Process each bundle (already has highest version first)
+		for bundle_id in bundle_ids:
+			patches = patches_by_bundle[bundle_id]
+			# Take first patch (highest version)
+			patch = patches[0].copy()  # copy to avoid mutating cached data
+
+			# Check OS compatibility if needed
+			if os and os != "*":
+				if not self.osCheckForPatch(os_criteria_by_patch, patch["patch_id"], os):
+					continue
+
+			# Add criteria
+			patch['query'] = self.criteriaForPatch(criteria_by_patch, patch["patch_id"])
+			results.append(patch)
+
+		return results
