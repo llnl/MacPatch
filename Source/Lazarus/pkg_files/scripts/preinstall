@@ -1,0 +1,65 @@
+#!/bin/bash
+# MacPatch Lazarus Preinstall Script
+# Stop and unload existing daemon if running
+# Remove PlanB components before installing Lazarus
+
+set -u  # Exit on undefined variables
+
+LABEL="com.llnl.mp.lazarus"
+PLANB_LABEL="gov.llnl.mp.planb"
+
+# Function to stop a LaunchDaemon
+stop_launchditem() {
+    local label="$1"
+    local plist_path="$2"
+
+    if [[ -f "${plist_path}" ]]; then
+        echo "Stopping ${label}..."
+
+        # Try bootout for modern macOS
+        launchctl bootout system/"${label}" 2>/dev/null || true
+
+        # Fallback to remove/unload for compatibility
+        launchctl remove "${label}" 2>/dev/null || true
+        launchctl unload -w -F "${plist_path}" 2>/dev/null || true
+
+        sleep 1
+    fi
+}
+
+# Function to safely delete a file or directory
+exists_and_delete() {
+    local path="$1"
+
+    if [[ -f "${path}" ]]; then
+        echo "Removing file: ${path}"
+        rm -f "${path}" 2>/dev/null || echo "Warning: Failed to remove ${path}"
+    elif [[ -d "${path}" ]]; then
+        echo "Removing directory: ${path}"
+        rm -rf "${path}" 2>/dev/null || echo "Warning: Failed to remove ${path}"
+    fi
+}
+
+# Stop existing Lazarus daemon if running
+if launchctl list | grep -q "$LABEL" 2>/dev/null; then
+    echo "Stopping existing Lazarus daemon..."
+    launchctl stop "$LABEL" 2>/dev/null || true
+    launchctl unload "/Library/LaunchDaemons/$LABEL.plist" 2>/dev/null || true
+    echo "Existing daemon stopped"
+fi
+
+# Remove PlanB components (being replaced by Lazarus)
+echo "Removing PlanB components..."
+stop_launchditem "${PLANB_LABEL}" "/Library/LaunchDaemons/${PLANB_LABEL}.plist"
+
+# Remove PlanB files
+exists_and_delete "/usr/local/sbin/planb"
+exists_and_delete "/usr/local/bin/mpPlanB"
+exists_and_delete "/Library/LaunchDaemons/${PLANB_LABEL}.plist"
+
+# Forget PlanB package
+/usr/sbin/pkgutil --forget gov.llnl.mp.planb 2>/dev/null || true
+
+echo "PlanB removal complete"
+
+exit 0

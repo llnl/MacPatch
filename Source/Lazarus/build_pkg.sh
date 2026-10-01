@@ -1,0 +1,564 @@
+#!/bin/bash
+
+# MacPatch Lazarus Package Builder
+# This script builds the Lazarus binary and creates a distributable .pkg installer
+
+set -e
+
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+BUILD_DIR="$SCRIPT_DIR/build"
+PKG_ROOT="$BUILD_DIR/pkg_root"
+SCRIPTS_DIR="$BUILD_DIR/scripts"
+VERSION="1.0.0"
+IDENTIFIER="gov.llnl.mp.lazarus"
+CONFIG_FILE="$HOME/Library/Preferences/com.llnl.mp.lazarus.build_config"
+
+echo "╔════════════════════════════════════════════════╗"
+echo "║   MacPatch Lazarus Package Builder            ║"
+echo "╔════════════════════════════════════════════════╗"
+echo
+
+# Load previous configuration if it exists
+if [ -f "$CONFIG_FILE" ]; then
+    echo "Loading previous configuration..."
+    source "$CONFIG_FILE"
+    echo "  ✓ Configuration loaded from previous build"
+    echo
+fi
+
+# Function to prompt for input with default
+prompt_with_default() {
+    local prompt="$1"
+    local default="$2"
+    local result
+
+    read -p "${prompt} [${default}]: " result
+    echo "${result:-$default}"
+}
+
+# Function to validate server format
+validate_server() {
+    local server="$1"
+    # Remove protocol if present
+    server="${server#http://}"
+    server="${server#https://}"
+    # Remove trailing slash
+    server="${server%/}"
+    echo "$server"
+}
+
+# Prompt for signing and notarization
+echo "Signing & Notarization"
+echo "────────────────────────────────────────────────"
+echo
+
+# Use saved value as default, or default to "y" (signing enabled by default)
+DEFAULT_NOTARIZE="y"
+if [ "$SAVED_DO_NOTARIZE" = "n" ] || [ "$SAVED_DO_NOTARIZE" = "N" ]; then
+    DEFAULT_NOTARIZE="N"
+fi
+
+read -p "Sign and notarize package? [Y/n]: " DO_NOTARIZE
+DO_NOTARIZE=${DO_NOTARIZE:-$DEFAULT_NOTARIZE}
+
+if [[ "$DO_NOTARIZE" =~ ^[Yy]$ ]]; then
+    echo
+    echo "Available Developer ID Application certificates:"
+    security find-identity -p basic -v | grep "Developer ID Application" | sed 's/^[[:space:]]*[0-9]*)/  -/'
+    echo
+    SIGN_APP_IDENTITY=$(prompt_with_default "Developer ID Application identity" "${SAVED_SIGN_APP_IDENTITY:-}")
+
+    echo
+    echo "Available Developer ID Installer certificates:"
+    security find-identity -p basic -v | grep "Developer ID Installer" | sed 's/^[[:space:]]*[0-9]*)/  -/'
+    echo
+    SIGN_PKG_IDENTITY=$(prompt_with_default "Developer ID Installer identity" "${SAVED_SIGN_PKG_IDENTITY:-}")
+
+    echo
+    echo "Notarization uses a keychain profile stored with 'notarytool store-credentials'."
+    echo "If you haven't created one yet, run:"
+    echo "  xcrun notarytool store-credentials <profile-name> --apple-id <email> --team-id <team>"
+    echo "Or with API key:"
+    echo "  xcrun notarytool store-credentials <profile-name> --key <key.p8> --key-id <id> --issuer <issuer>"
+    echo
+
+    KEYCHAIN_PROFILE=$(prompt_with_default "Keychain profile name" "${SAVED_KEYCHAIN_PROFILE:-AC_NOTARY}")
+else
+    SIGN_APP_IDENTITY=""
+    SIGN_PKG_IDENTITY=""
+    KEYCHAIN_PROFILE=""
+fi
+
+echo
+echo "Package Configuration"
+echo "────────────────────────────────────────────────"
+echo
+
+MP_SERVER=$(prompt_with_default "MacPatch Server hostname/IP" "${SAVED_MP_SERVER:-mpprod.llnl.gov}")
+MP_SERVER=$(validate_server "$MP_SERVER")
+
+MIN_VERSION=$(prompt_with_default "Minimum Agent Version" "${SAVED_MIN_VERSION:-4.2.2.0}")
+DAYS_RANGE=$(prompt_with_default "Check-in days range" "${SAVED_DAYS_RANGE:-15}")
+IGNORE_SSL=$(prompt_with_default "Ignore SSL validation (true/false)" "${SAVED_IGNORE_SSL:-false}")
+
+# Optional hash check
+echo
+DEFAULT_ENABLE_HASH="N"
+if [ -n "$SAVED_AGENT_HASH" ]; then
+    DEFAULT_ENABLE_HASH="y"
+fi
+
+read -p "Enable agent hash validation? [y/N]: " ENABLE_HASH
+ENABLE_HASH=${ENABLE_HASH:-$DEFAULT_ENABLE_HASH}
+
+if [[ "$ENABLE_HASH" =~ ^[Yy]$ ]]; then
+    AGENT_HASH=$(prompt_with_default "Expected Agent SHA-256 hash" "${SAVED_AGENT_HASH:-}")
+    while [ -z "$AGENT_HASH" ]; do
+        echo "Hash cannot be empty when hash validation is enabled"
+        AGENT_HASH=$(prompt_with_default "Expected Agent SHA-256 hash" "")
+    done
+else
+    AGENT_HASH=""
+fi
+
+echo
+echo "Configuration Summary:"
+echo "  Server:           $MP_SERVER"
+echo "  Min Version:      $MIN_VERSION"
+echo "  Days Range:       $DAYS_RANGE"
+echo "  Ignore SSL:       $IGNORE_SSL"
+if [ -n "$AGENT_HASH" ]; then
+    echo "  Agent Hash:       $AGENT_HASH"
+else
+    echo "  Agent Hash:       (disabled)"
+fi
+echo
+echo "Signing & Notarization:"
+if [ -n "$SIGN_APP_IDENTITY" ]; then
+    echo "  App Identity:     $SIGN_APP_IDENTITY"
+    echo "  Pkg Identity:     $SIGN_PKG_IDENTITY"
+    echo "  Keychain Profile: $KEYCHAIN_PROFILE"
+else
+    echo "  Status:           Disabled (development build)"
+fi
+echo
+
+read -p "Proceed with build? [Y/n]: " CONFIRM
+if [[ ! "$CONFIRM" =~ ^[Yy]?$ ]]; then
+    echo "Build cancelled."
+    exit 0
+fi
+
+# Save configuration early so it's preserved even if build fails
+echo
+echo "Saving configuration..."
+cat > "$CONFIG_FILE" << CONFIGEOF
+# Build configuration saved on $(date)
+# This file is automatically generated and loaded by build_pkg.sh
+
+# Signing and Notarization
+SAVED_DO_NOTARIZE="$DO_NOTARIZE"
+SAVED_SIGN_APP_IDENTITY="$SIGN_APP_IDENTITY"
+SAVED_SIGN_PKG_IDENTITY="$SIGN_PKG_IDENTITY"
+SAVED_KEYCHAIN_PROFILE="$KEYCHAIN_PROFILE"
+
+# Package configuration
+SAVED_MP_SERVER="$MP_SERVER"
+SAVED_MIN_VERSION="$MIN_VERSION"
+SAVED_DAYS_RANGE="$DAYS_RANGE"
+SAVED_IGNORE_SSL="$IGNORE_SSL"
+SAVED_AGENT_HASH="$AGENT_HASH"
+CONFIGEOF
+echo "  ✓ Configuration saved to $CONFIG_FILE"
+
+echo
+echo "Building Package..."
+echo "────────────────────────────────────────────────"
+
+TOTAL_STEPS=10  # Without signing: 10 steps
+if [ -n "$SIGN_APP_IDENTITY" ]; then
+    TOTAL_STEPS=15  # With signing: +3 binary steps (sign, archive, notarize) +2 pkg steps (notarize, staple)
+fi
+CURRENT_STEP=0
+
+# Clean build directory
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Cleaning build directory..."
+rm -rf "$BUILD_DIR"
+mkdir -p "$PKG_ROOT/usr/local/sbin"
+mkdir -p "$PKG_ROOT/Library/LaunchDaemons"
+mkdir -p "$PKG_ROOT/Library/Application Support/.MacPatch"
+mkdir -p "$SCRIPTS_DIR"
+
+# Build the binary with xcodebuild
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Building Lazarus binary..."
+cd "$SCRIPT_DIR"
+xcodebuild -project Lazarus.xcodeproj \
+    -scheme Lazarus \
+    -configuration Release \
+    -derivedDataPath "$BUILD_DIR/DerivedData" \
+    build \
+    CODE_SIGN_IDENTITY="" \
+    CODE_SIGNING_REQUIRED=NO \
+    CODE_SIGNING_ALLOWED=NO \
+    > "$BUILD_DIR/build.log" 2>&1
+
+if [ ! -f "$BUILD_DIR/DerivedData/Build/Products/Release/Lazarus" ]; then
+    echo "Error: Build failed. Check $BUILD_DIR/build.log"
+    exit 1
+fi
+echo "  ✓ Binary built successfully"
+
+# Sign the binary if requested
+if [ -n "$SIGN_APP_IDENTITY" ]; then
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "[$CURRENT_STEP/$TOTAL_STEPS] Signing binary..."
+    codesign --sign "$SIGN_APP_IDENTITY" \
+        --force \
+        --timestamp \
+        --options runtime \
+        "$BUILD_DIR/DerivedData/Build/Products/Release/Lazarus" \
+        > "$BUILD_DIR/codesign.log" 2>&1
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Code signing failed. Check $BUILD_DIR/codesign.log"
+        cat "$BUILD_DIR/codesign.log"
+        echo ""
+        echo "Common issues:"
+        echo "  - Certificate not found. List available: security find-identity -p basic -v"
+        echo "  - Identity string doesn't match exactly"
+        echo "  - Certificate expired or not trusted"
+        exit 1
+    fi
+    echo "  ✓ Binary signed"
+
+    # Verify the signature
+    codesign -dvv "$BUILD_DIR/DerivedData/Build/Products/Release/Lazarus" >> "$BUILD_DIR/codesign.log" 2>&1
+    echo "  ✓ Signature verified"
+
+    # Create a temporary zip for notarization
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "[$CURRENT_STEP/$TOTAL_STEPS] Creating archive for notarization..."
+    ditto -c -k --keepParent "$BUILD_DIR/DerivedData/Build/Products/Release/Lazarus" "$BUILD_DIR/lazarus.zip"
+    echo "  ✓ Archive created"
+
+    # Submit for notarization
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "[$CURRENT_STEP/$TOTAL_STEPS] Submitting binary for notarization..."
+    echo "  (This may take several minutes...)"
+
+    xcrun notarytool submit "$BUILD_DIR/lazarus.zip" \
+        --keychain-profile "$KEYCHAIN_PROFILE" \
+        --wait \
+        > "$BUILD_DIR/notarize_app.log" 2>&1
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Binary notarization failed. Check $BUILD_DIR/notarize_app.log"
+        echo "       Make sure keychain profile '$KEYCHAIN_PROFILE' exists."
+        echo "       Run: xcrun notarytool store-credentials $KEYCHAIN_PROFILE --apple-id <email> --team-id <team>"
+        exit 1
+    fi
+    echo "  ✓ Binary notarized"
+
+    # Note: Cannot staple notarization to a naked binary (only bundles like .app or .pkg)
+    # The notarization ticket will be available online for verification
+    # We will staple to the final .pkg later
+    echo "  ℹ Stapling will be done on the final .pkg (binaries cannot be stapled)"
+fi
+
+# Copy binary to package root
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Copying binary to package..."
+cp "$BUILD_DIR/DerivedData/Build/Products/Release/Lazarus" "$PKG_ROOT/usr/local/sbin/lazarus"
+chmod 755 "$PKG_ROOT/usr/local/sbin/lazarus"
+echo "  ✓ Binary copied"
+
+# Create configuration plist with user-provided values
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Creating configuration file..."
+cat > "$PKG_ROOT/Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist" << EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Minimum required agent version -->
+    <key>minversion</key>
+    <string>$MIN_VERSION</string>
+    <!-- Number of days to check for client check-in -->
+    <key>daysrange</key>
+    <integer>$DAYS_RANGE</integer>
+    <!-- MacPatch server hostname or IP address -->
+    <key>mpserver</key>
+    <string>$MP_SERVER</string>
+    <!-- Ignore SSL certificate validation -->
+    <key>ignoressl</key>
+    <$IGNORE_SSL/>
+EOF
+
+# Only add mphash key if hash validation is enabled
+if [ -n "$AGENT_HASH" ]; then
+    cat >> "$PKG_ROOT/Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist" << EOF
+
+    <!-- Expected SHA-256 hash of MPAgent binary -->
+    <key>mphash</key>
+    <string>$AGENT_HASH</string>
+EOF
+fi
+
+cat >> "$PKG_ROOT/Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist" << EOF
+</dict>
+</plist>
+EOF
+echo "  ✓ Configuration created"
+
+# Copy LaunchDaemon plist
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Creating LaunchDaemon plist..."
+cp "$SCRIPT_DIR/LaunchDaemons/gov.llnl.mp.lazarus.plist" "$PKG_ROOT/Library/LaunchDaemons/"
+chmod 644 "$PKG_ROOT/Library/LaunchDaemons/gov.llnl.mp.lazarus.plist"
+echo "  ✓ LaunchDaemon plist copied"
+
+# Copy installation scripts
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Copying installation scripts..."
+cp "$SCRIPT_DIR/pkg_files/scripts/preinstall" "$SCRIPTS_DIR/"
+cp "$SCRIPT_DIR/pkg_files/scripts/postinstall" "$SCRIPTS_DIR/"
+chmod +x "$SCRIPTS_DIR/preinstall"
+chmod +x "$SCRIPTS_DIR/postinstall"
+echo "  ✓ Scripts copied"
+
+# Build the component package first
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Building component package..."
+COMPONENT_PKG="$BUILD_DIR/Lazarus-component.pkg"
+
+if [ -n "$SIGN_PKG_IDENTITY" ]; then
+    # Build and sign the component package
+    pkgbuild --root "$PKG_ROOT" \
+        --identifier "$IDENTIFIER" \
+        --version "$VERSION" \
+        --scripts "$SCRIPTS_DIR" \
+        --install-location "/" \
+        --sign "$SIGN_PKG_IDENTITY" \
+        "$COMPONENT_PKG" \
+        > "$BUILD_DIR/pkg.log" 2>&1
+else
+    # Build unsigned component package
+    pkgbuild --root "$PKG_ROOT" \
+        --identifier "$IDENTIFIER" \
+        --version "$VERSION" \
+        --scripts "$SCRIPTS_DIR" \
+        --install-location "/" \
+        "$COMPONENT_PKG" \
+        > "$BUILD_DIR/pkg.log" 2>&1
+fi
+
+if [ ! -f "$COMPONENT_PKG" ]; then
+    echo "Error: Component package creation failed. Check $BUILD_DIR/pkg.log"
+    exit 1
+fi
+echo "  ✓ Component package created"
+
+# Prepare resources directory with substituted values
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Preparing distribution package resources..."
+RESOURCES_DIR="$BUILD_DIR/Resources"
+DISTRIBUTION_XML="$BUILD_DIR/distribution.xml"
+PKG_NAME="MPLazarus.pkg"
+
+mkdir -p "$RESOURCES_DIR"
+
+# Copy static resources
+cp "$SCRIPT_DIR/pkg_files/Resources/License.rtf" "$RESOURCES_DIR/"
+cp "$SCRIPT_DIR/pkg_files/Resources/Background.png" "$RESOURCES_DIR/"
+
+# Copy and substitute values in distribution.xml
+sed -e "s/__VERSION__/$VERSION/g" \
+    "$SCRIPT_DIR/pkg_files/Resources/distribution.xml" > "$DISTRIBUTION_XML"
+
+# Copy and substitute values in Welcome.rtf
+sed -e "s/__VERSION__/$VERSION/g" \
+    -e "s/__MP_SERVER__/$MP_SERVER/g" \
+    -e "s/__MIN_VERSION__/$MIN_VERSION/g" \
+    -e "s/__DAYS_RANGE__/$DAYS_RANGE/g" \
+    "$SCRIPT_DIR/pkg_files/Resources/Welcome.rtf" > "$RESOURCES_DIR/Welcome.rtf"
+
+echo "  ✓ Resources prepared"
+
+# Build the distribution package with resources
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Building distribution package..."
+if [ -n "$SIGN_PKG_IDENTITY" ]; then
+    productbuild --distribution "$DISTRIBUTION_XML" \
+        --resources "$RESOURCES_DIR" \
+        --package-path "$BUILD_DIR" \
+        --sign "$SIGN_PKG_IDENTITY" \
+        "$BUILD_DIR/$PKG_NAME" \
+        >> "$BUILD_DIR/pkg.log" 2>&1
+else
+    productbuild --distribution "$DISTRIBUTION_XML" \
+        --resources "$RESOURCES_DIR" \
+        --package-path "$BUILD_DIR" \
+        "$BUILD_DIR/$PKG_NAME" \
+        >> "$BUILD_DIR/pkg.log" 2>&1
+fi
+
+if [ ! -f "$BUILD_DIR/$PKG_NAME" ]; then
+    echo "Error: Distribution package creation failed. Check $BUILD_DIR/pkg.log"
+    exit 1
+fi
+echo "  ✓ Distribution package created with resources"
+
+# Notarize the package if requested
+if [ -n "$SIGN_PKG_IDENTITY" ]; then
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "[$CURRENT_STEP/$TOTAL_STEPS] Submitting package for notarization..."
+    echo "  (This may take several minutes...)"
+
+    xcrun notarytool submit "$BUILD_DIR/$PKG_NAME" \
+        --keychain-profile "$KEYCHAIN_PROFILE" \
+        --wait \
+        > "$BUILD_DIR/notarize_pkg.log" 2>&1
+
+    if [ $? -ne 0 ]; then
+        echo "Error: Package notarization failed. Check $BUILD_DIR/notarize_pkg.log"
+        echo "       Make sure keychain profile '$KEYCHAIN_PROFILE' exists."
+        exit 1
+    fi
+    echo "  ✓ Package notarized"
+
+    # Staple the notarization to the package
+    CURRENT_STEP=$((CURRENT_STEP + 1))
+    echo "[$CURRENT_STEP/$TOTAL_STEPS] Stapling notarization ticket to package..."
+    xcrun stapler staple "$BUILD_DIR/$PKG_NAME" \
+        > "$BUILD_DIR/staple_pkg.log" 2>&1
+
+    if [ $? -ne 0 ]; then
+        echo "Warning: Stapling failed, but notarization succeeded. Package will work online."
+        echo "         Check $BUILD_DIR/staple_pkg.log for details"
+    else
+        echo "  ✓ Notarization ticket stapled"
+    fi
+fi
+
+# Create output directory and copy package
+CURRENT_STEP=$((CURRENT_STEP + 1))
+echo "[$CURRENT_STEP/$TOTAL_STEPS] Finalizing..."
+OUTPUT_DIR="$SCRIPT_DIR/Lazarus-${VERSION}-pkg"
+rm -rf "$OUTPUT_DIR"
+mkdir -p "$OUTPUT_DIR"
+cp "$BUILD_DIR/$PKG_NAME" "$OUTPUT_DIR/"
+PKG_SIZE=$(du -h "$OUTPUT_DIR/$PKG_NAME" | cut -f1)
+echo "  ✓ Package copied to $OUTPUT_DIR/"
+
+# Summary
+echo
+echo "╔════════════════════════════════════════════════╗"
+echo "║   Build Complete!                              ║"
+echo "╔════════════════════════════════════════════════╗"
+echo
+echo "Package Details:"
+echo "  Name:        $PKG_NAME"
+echo "  Directory:   $OUTPUT_DIR"
+echo "  Size:        $PKG_SIZE"
+echo "  Identifier:  $IDENTIFIER"
+echo "  Version:     $VERSION"
+echo
+echo "Configuration:"
+echo "  Server:      $MP_SERVER"
+echo "  Min Version: $MIN_VERSION"
+echo "  Days Range:  $DAYS_RANGE"
+echo "  Ignore SSL:  $IGNORE_SSL"
+if [ -n "$AGENT_HASH" ]; then
+    echo "  Agent Hash:  Enabled"
+else
+    echo "  Agent Hash:  Disabled"
+fi
+echo
+if [ -n "$SIGN_PKG_IDENTITY" ]; then
+    echo "Signing & Notarization:"
+    echo "  Status:           Signed and Notarized"
+    echo "  App Cert:         $SIGN_APP_IDENTITY"
+    echo "  Pkg Cert:         $SIGN_PKG_IDENTITY"
+    echo "  Keychain Profile: $KEYCHAIN_PROFILE"
+    echo
+fi
+echo "Installation:"
+echo "  cd $OUTPUT_DIR"
+echo "  sudo installer -pkg $PKG_NAME -target /"
+echo
+echo "Verification:"
+echo "  sudo launchctl list | grep lazarus"
+echo "  tail -f /Library/Logs/mp_lazarus.log"
+if [ -n "$SIGN_PKG_IDENTITY" ]; then
+    echo "  spctl --assess --verbose --type install $OUTPUT_DIR/$PKG_NAME"
+    echo "  pkgutil --check-signature $OUTPUT_DIR/$PKG_NAME"
+fi
+echo
+
+# Create a README with the package
+cat > "$OUTPUT_DIR/README.txt" << READMEEOF
+MacPatch Lazarus Package
+Version: $VERSION
+Built: $(date)
+
+Configuration:
+  Server:           $MP_SERVER
+  Min Version:      $MIN_VERSION
+  Check-in Range:   $DAYS_RANGE days
+  Ignore SSL:       $IGNORE_SSL
+  Agent Hash Check: $([ -z "$AGENT_HASH" ] && echo "Disabled" || echo "$AGENT_HASH")
+
+$(if [ -n "$SIGN_PKG_IDENTITY" ]; then cat << SIGNINGEOF
+Signing & Notarization:
+  Status:           Signed and Notarized
+  App Certificate:  $SIGN_APP_IDENTITY
+  Pkg Certificate:  $SIGN_PKG_IDENTITY
+  Keychain Profile: $KEYCHAIN_PROFILE
+
+SIGNINGEOF
+fi)
+Installation:
+  sudo installer -pkg MPLazarus.pkg -target /
+
+Verification:
+  sudo launchctl list | grep lazarus
+  tail -f /Library/Logs/mp_lazarus.log
+$(if [ -n "$SIGN_PKG_IDENTITY" ]; then cat << VERIFYSIGNINGEOF
+  spctl --assess --verbose --type install MPLazarus.pkg
+  pkgutil --check-signature MPLazarus.pkg
+VERIFYSIGNINGEOF
+fi)
+
+Management:
+  Status:  sudo launchctl list | grep lazarus
+  Restart: sudo launchctl kickstart -k system/com.llnl.mp.lazarus
+  Stop:    sudo launchctl unload /Library/LaunchDaemons/gov.llnl.mp.lazarus.plist
+  Start:   sudo launchctl load /Library/LaunchDaemons/gov.llnl.mp.lazarus.plist
+
+Configuration File:
+  /Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist
+
+Binary Location:
+  /usr/local/sbin/lazarus
+
+Log File:
+  /Library/Logs/mp_lazarus.log
+
+Uninstallation:
+  See uninstall.sh in the source directory
+READMEEOF
+
+echo "✓ README created: $OUTPUT_DIR/README.txt"
+
+# Cleanup option
+read -p "Clean up build artifacts? [Y/n]: " CLEANUP
+if [[ "$CLEANUP" =~ ^[Yy]?$ ]]; then
+    rm -rf "$BUILD_DIR"
+    echo "✓ Build directory cleaned"
+fi
+
+echo
+echo "Done!"
+echo

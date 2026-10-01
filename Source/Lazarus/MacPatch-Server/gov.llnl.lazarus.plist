@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Package</key>
+    <array>
+        <dict>
+            <key>MacPatch</key>
+            <string>MacPatch.pkg</string>
+            <key>Version</key>
+            <string>4.4.2.0</string>
+            <key>MinVersion</key>
+            <string>4.3.3.0</string>
+            <key>PkgHash</key>
+            <string>e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855</string>
+        </dict>
+    </array>
+</dict>
+</plist>
