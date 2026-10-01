@@ -48,6 +48,7 @@ NSXPCListenerDelegate, MPHelperProtocol, MBProgressHUDDelegate, WKNavigationDele
 @property (nonatomic, strong) IBOutlet NSPopUpButton        *swDistGroupsButton;
 
 @property (nonatomic, strong) IBOutlet WKWebView 			*wkWebView;
+@property (nonatomic, strong) NSArray *topLevelObjects;
 
 - (IBAction)refresh:(id)sender;
 - (IBAction)searchString:(id)sender;

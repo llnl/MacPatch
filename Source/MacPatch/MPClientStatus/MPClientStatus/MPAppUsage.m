@@ -54,7 +54,7 @@
 	db = [[FMDatabase alloc] initWithPath:dbPath];
 	if (![db open]) 
     {
-		logit(lcl_vError,@"Could not open db.");
+		LogError(@"Could not open db.");
         return 1;
     }
 	

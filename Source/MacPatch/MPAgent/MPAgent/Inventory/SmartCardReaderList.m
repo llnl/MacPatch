@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "SmartCardReaderList.h"
 
 #import <CoreFoundation/CFPlugInCOM.h>
@@ -76,7 +77,7 @@
 			readerName = NULL;
 		}
 		@catch (NSException *exception) {
-			qlerror(@"%@",exception);
+			LogError(@"%@",exception);
 		}
 		
 		while (mszReaders[++i] != 0) ;

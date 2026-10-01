@@ -66,7 +66,7 @@
 -(NSString *)getHashForFileForType:(NSString *)aFile type:(NSString *)aType
 {
     if ([[NSFileManager defaultManager] fileExistsAtPath:aFile] == FALSE) {
-        qlerror(@"Unable to get file hash for %@, file does not exist.",aFile);
+        LogError(@"Unable to get file hash for %@, file does not exist.",aFile);
         return @"ERROR_FILE_MISSING";
     }
     
@@ -96,7 +96,7 @@
 {
     NSFileManager *fm = [NSFileManager defaultManager];
     if (![fm fileExistsAtPath:aFilePath]) {
-        qlerror(@"Unable to find %@, MD5HashForFile failed.",aFilePath);
+        LogError(@"Unable to find %@, MD5HashForFile failed.",aFilePath);
         return @"ERROR FILE MISSING";
     }
     
@@ -152,7 +152,7 @@ done:
         CFReadStreamClose(readStream);
         CFRelease(readStream);
     }
-    qldebug(@"MD5 HASH=%@",hashStr);
+    LogDebug(@"MD5 HASH=%@",hashStr);
     return hashStr;
 }
 
@@ -160,7 +160,7 @@ done:
 {
     NSFileManager *fm = [NSFileManager defaultManager];
     if (![fm fileExistsAtPath:aFilePath]) {
-        qlerror(@"Unable to find %@, MD5HashForFile failed.",aFilePath);
+        LogError(@"Unable to find %@, MD5HashForFile failed.",aFilePath);
         return @"ERROR FILE MISSING";
     }
     
@@ -216,7 +216,7 @@ done:
         CFReadStreamClose(readStream);
         CFRelease(readStream);
     }
-    qldebug(@"SHA1 HASH=%@",hashStr);
+    LogDebug(@"SHA1 HASH=%@",hashStr);
     return hashStr;
 }
 
@@ -254,7 +254,7 @@ done:
 
 - (SecKeychainRef)genSecKeychainRef
 {
-    logit(lcl_vDebug,@"genSecKeychainRef called");
+    LogDebug(@"genSecKeychainRef called");
     OSStatus err;
     SecKeychainRef keychain = NULL;
 
@@ -262,15 +262,15 @@ done:
     NSString *_keychainFileName = [NSString stringWithFormat: @"%@.%@", _keyID, @"keychain"];
     NSString *_keychain = [NSTemporaryDirectory() stringByAppendingPathComponent:_keychainFileName];
     const char *pass = [_keyID UTF8String];
-    logit(lcl_vDebug,@"Create temporary keychain for rsa key gen.");
-    logit(lcl_vDebug,@"keyID: %@",_keyID);
-    logit(lcl_vDebug,@"keychainFileName: %@",_keychainFileName);
-    logit(lcl_vDebug,@"keychain: %@",_keychain);
+    LogDebug(@"Create temporary keychain for rsa key gen.");
+    LogDebug(@"keyID: %@",_keyID);
+    LogDebug(@"keychainFileName: %@",_keychainFileName);
+    LogDebug(@"keychain: %@",_keychain);
     
     err = SecKeychainCreate([_keychain UTF8String], (UInt32)strlen(pass), pass, FALSE, NULL, &keychain);
     
     if (err != noErr) {
-        logit(lcl_vError,@"%@",[self errorForOSStatus:err]);
+        LogError(@"%@",[self errorForOSStatus:err]);
     }
     
     return keychain;
@@ -344,7 +344,7 @@ done:
     //err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, kNilOptions, NULL, &imported);
     err = SecItemImport((__bridge CFDataRef)(aKeyData), (CFStringRef)@"pem", &format, NULL, kNilOptions, NULL, NULL, &imported);
     if (err != 0) {
-        qlerror(@"SecItemImport[importPublicKey]: %@ ERROR: %@", self.class, [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil]);
+        LogError(@"SecItemImport[importPublicKey]: %@ ERROR: %@", self.class, [NSError errorWithDomain:NSOSStatusErrorDomain code:err userInfo:nil]);
     }
     
     assert(err == errSecSuccess);
@@ -436,7 +436,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        LogError(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     
@@ -458,7 +458,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        LogError(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     
@@ -489,7 +489,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        LogError(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     /*
@@ -508,7 +508,7 @@ done:
     if (error) {
         if (err != NULL) *err = (__bridge NSError *)error;
         
-        qlerror(@"Encryption failed: %@\n", (__bridge NSError *)error);
+        LogError(@"Encryption failed: %@\n", (__bridge NSError *)error);
         return nil;
     }
     

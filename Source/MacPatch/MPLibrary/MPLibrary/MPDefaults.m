@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPDefaults.h"
 #import "Constants.h"
 
@@ -47,7 +48,7 @@
 {
 	self = [super init];
 	if (self) {
-		qldebug(@"Reading plist from file '%@'",sPlistPath);
+		LogDebug(@"Reading plist from file '%@'",sPlistPath);
         [self setPlist:sPlistPath];
 		[self readPlist:sPlistPath];
     }
@@ -114,12 +115,12 @@
 																				   format:&format 
 																		 errorDescription:&error];
 		if (!thePlist) {
-			qlerror(@"Error reading plist from file '%@', error = '%@'",aPlist,error);
+			LogError(@"Error reading plist from file '%@', error = '%@'",aPlist,error);
 			return;
 		} 
 		[self setDefaults:[NSDictionary dictionaryWithDictionary:thePlist]];
 	} else {
-		qlerror(@"Error plist file '%@' does not exist.",aPlist);
+		LogError(@"Error plist file '%@' does not exist.",aPlist);
 		exit(1);
 	}
     

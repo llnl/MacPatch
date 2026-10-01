@@ -56,7 +56,7 @@ typedef struct kinfo_proc kinfo_proc;
 	
 	if ([cUUID length] < 35) {
         cUUID = [[NSString stringWithFormat:@"00000000-0000-1000-8000-%@",[MPSystemInfo getMacAddressForInterface:@"en0"]] stringByReplacingOccurrencesOfString:@":" withString:@""];
-        qlwarning(@"Host is using old cuuid (%@) format.",cUUID);
+        LogWarning(@"Host is using old cuuid (%@) format.",cUUID);
     }    
 	
 	goto done;
@@ -117,12 +117,12 @@ done:
     
     SCDynamicStoreRef dynRef=SCDynamicStoreCreate(kCFAllocatorSystemDefault,(CFStringRef)@"", NULL, NULL);
     NSArray *interfaceList=(NSArray *)CFBridgingRelease(SCDynamicStoreCopyKeyList(dynRef,(CFStringRef)@"State:/Network/Interface/.*/IPv4"));
-    qldebug(@"interfaceList: %@",interfaceList);
+    LogDebug(@"interfaceList: %@",interfaceList);
     for (NSString *interface in interfaceList) 
     {
         if ([interface rangeOfString:bsdIfName].location != NSNotFound && [interface rangeOfString:@"lo0"].location == NSNotFound)
         {
-            qldebug(@"interface: %@",interface);
+            LogDebug(@"interface: %@",interface);
             NSDictionary *interfaceDict = (NSDictionary *)CFBridgingRelease(SCDynamicStoreCopyValue(dynRef,(__bridge CFStringRef)interface));
             NSArray *iList = nil;
             iList = [NSArray arrayWithArray:[interfaceDict objectForKey:@"Addresses"]];
@@ -323,7 +323,7 @@ done:
 		if ([_consoleUserName.lowercaseString isEqualToString:@"loginwindow"]) {
 			result = NO;
 		} else {
-			qlinfo(@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
+			LogInfo(@"%@ is currently logged in.",(__bridge NSString *)consoleUserName);
 			CFRelease(consoleUserName);
 		}
 	} else {
@@ -586,7 +586,7 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
 	} else {
 		NSString *strPID = [NSString stringWithContentsOfFile:taskFile encoding:NSUTF8StringEncoding error:&err];
 		if (err) {
-			qlerror(@"%ld: %@",err.code,err.localizedDescription);
+			LogError(@"%ld: %@",err.code,err.localizedDescription);
 		}
 		if ([strPID intValue] > 0) {
 			taskPID = [strPID intValue];
@@ -594,7 +594,7 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
 	}
 	
 	if (taskPID == -99) {
-		logit(lcl_vWarning,@"No task PID was defined");
+		LogWarning(@"No task PID was defined");
 		return;
 	}
 	
@@ -606,8 +606,8 @@ static int GetBSDProcessList(kinfo_proc **procList, size_t *procCount)
 	} else if ([filtered count] == 1 ) {
 		kill( taskPID, SIGKILL );
 	} else {
-		qlerror(@"Can not kill task using PID. Found to many using the predicate.");
-		qldebug(@"%@",filtered);
+		LogError(@"Can not kill task using PID. Found to many using the predicate.");
+		LogDebug(@"%@",filtered);
 	}
 }
 @end

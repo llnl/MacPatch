@@ -203,7 +203,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:swTaskDict[@"Software"] type:1] == NO) {
-				logit(lcl_vTrace,@"Error running post install script. Just log it as the install was good.");
+				LogDebug(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -239,7 +239,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:swTaskDict[@"Software"] type:1] == NO) {
-				logit(lcl_vTrace,@"Error running post install script. Just log it as the install was good.");
+				LogDebug(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -280,7 +280,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:swTaskDict[@"Software"] type:1] == NO) {
-				logit(lcl_vTrace,@"Error running post install script. Just log it as the install was good.");
+				LogDebug(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -313,7 +313,7 @@
 			if (result == 0)
 			{
 				if ([self runInstallScript:swTaskDict[@"Software"] type:1] == NO) {
-					logit(lcl_vTrace,@"Error running post install script. Just log it as the install was good.");
+					LogDebug(@"Error running post install script. Just log it as the install was good.");
 				}
 			}
 		}
@@ -346,7 +346,7 @@
 			if (result == 0)
 			{
 				if ([self runInstallScript:swTaskDict[@"Software"] type:1] == NO) {
-					logit(lcl_vTrace,@"Error running post install script. Just log it as the install was good.");
+					LogDebug(@"Error running post install script. Just log it as the install was good.");
 				}
 			}
 		}
@@ -383,8 +383,8 @@
     err = nil;
     [mpr postSoftwareInstallResults:wsRes error:&err];
     if (err) {
-        qlerror(@"Error posting software install results.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"Error posting software install results.");
+        LogError(@"%@",err.localizedDescription);
     }
 
 	return result;
@@ -519,7 +519,7 @@
     NSError *error = nil;
     result = [task runTaskWithBinPath:aBinPath args:aBinArgs environment:environment error:&error];
     if (error) {
-        qlerror(@"%@",error.localizedDescription);
+        LogError(@"%@",error.localizedDescription);
     } else {
         taskResult = task.taskTerminationStatus;
     }
@@ -993,18 +993,18 @@ done:
 	NSError *error = nil;
 	[fm setAttributes:permDict ofItemAtPath:aApp error:&error];
 	if(error){
-		qlerror(@"Error settings permission %@",[error description]);
+		LogError(@"Error settings permission %@",[error description]);
 		return;
 	}
 	
 	error = nil;
 	NSArray *aContents = [fm subpathsOfDirectoryAtPath:aApp error:&error];
 	if(error){
-		qlerror(@"Error subpaths of Directory %@.\n%@",aApp,[error description]);
+		LogError(@"Error subpaths of Directory %@.\n%@",aApp,[error description]);
 		return;
 	}
 	if (!aContents) {
-		qlerror(@"No contents found for %@",aApp);
+		LogError(@"No contents found for %@",aApp);
 		return;
 	}
 	
@@ -1013,7 +1013,7 @@ done:
 		error = nil;
 		[[NSFileManager defaultManager] setAttributes:permDict ofItemAtPath:[aApp stringByAppendingPathComponent:i] error:&error];
 		if(error){
-			qlerror(@"Error settings permission %@",[error description]);
+			LogError(@"Error settings permission %@",[error description]);
 		}
 	}
 	
@@ -1093,11 +1093,11 @@ done:
 	NSDictionary *patch;
 	patch = [self scanForPatchUsingBundleID:aBundleID error:&err];
 	if (err) {
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 		return;
 	}
 	if (!patch) {
-		qlerror(@"No patch found for %@.",aBundleID);
+		LogError(@"No patch found for %@.",aBundleID);
 		return;
 	}
 	

@@ -25,6 +25,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPDirectoryServices.h"
 #import <OpenDirectory/OpenDirectory.h>
 
@@ -47,7 +48,7 @@
         [self setMyOdNode:searchNodeName];
         odNode = [ODNode nodeWithSession:odSession name:searchNodeName error:&err];
         if (err) {
-            qlerror(@"Error initializing OpenDirectory node %@. Error returned %@", searchNodeName, err);
+            LogError(@"Error initializing OpenDirectory node %@. Error returned %@", searchNodeName, err);
         }
     }
     return self;
@@ -71,7 +72,7 @@
         }
     }
     if (err) {
-        qlerror(@"Error initializing new OpenDirectory node %@. Error returned is %@", nodeName, err);
+        LogError(@"Error initializing new OpenDirectory node %@. Error returned is %@", nodeName, err);
     }
 }
 
@@ -94,7 +95,7 @@
     error = nil;
     NSArray *qResults = [odQuery resultsAllowingPartial:NO error:&error];
     if (error) {
-        qlerror(@"Error on getting results. %@",error.localizedDescription);
+        LogError(@"Error on getting results. %@",error.localizedDescription);
         return nil;
     }
 

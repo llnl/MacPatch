@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPFailedRequests.h"
 
 @implementation MPFailedRequests
@@ -60,7 +61,7 @@
             fmErr = nil;
             [fm createDirectoryAtPath:[WS_FAILED_REQ_PLIST stringByDeletingLastPathComponent] withIntermediateDirectories:YES attributes:attr777 error:&fmErr];
             if (fmErr) {
-                qlerror(@"%@",fmErr.localizedDescription);
+                LogError(@"%@",fmErr.localizedDescription);
                 return NO;
             }
         }
@@ -71,7 +72,7 @@
     [aRequests writeToFile:WS_FAILED_REQ_PLIST atomically:NO];
     [fm setAttributes:attr775 ofItemAtPath:WS_FAILED_REQ_PLIST error:&fmErr];
     if (fmErr) {
-        qlerror(@"%@",fmErr.localizedDescription);
+        LogError(@"%@",fmErr.localizedDescription);
         return NO;
     }
 
@@ -107,7 +108,7 @@
     /*
     NSMutableDictionary *reqFile = [NSMutableDictionary dictionaryWithDictionary:[self readFailedRequestsPlist]];
     if (!reqFile) {
-        qlinfo(@"No failed requests to post. Failed requests file not found.");
+        LogInfo(@"No failed requests to post. Failed requests file not found.");
         return YES;
     }
 
@@ -116,11 +117,11 @@
     if ([reqFile objectForKey:@"failedAttempts"]) {
         reqs = [NSArray arrayWithArray:[reqFile objectForKey:@"failedAttempts"]];
         if ([reqs count] == 0) {
-            qlinfo(@"No failed requests to post");
+            LogInfo(@"No failed requests to post");
             return YES;
         }
     } else {
-        qlinfo(@"No failed requests to post");
+        LogInfo(@"No failed requests to post");
         return YES;
     }
 
@@ -134,12 +135,12 @@
         if (![req objectForKey:@"wsMethod"]) {
             continue;
         }
-        qlinfo(@"Attempting to re-post data for %@",[req objectForKey:@"wsMethod"]);
+        LogInfo(@"Attempting to re-post data for %@",[req objectForKey:@"wsMethod"]);
         if ([params objectForKey:@"aMethod"]) {
-            qldebug(@"Params Method: %@",[params objectForKey:@"aMethod"]);
+            LogDebug(@"Params Method: %@",[params objectForKey:@"aMethod"]);
         }
         if ([[req objectForKey:@"wsMethod"] isEqualToString:@"postPatchScanResultsForType"]) {
-            qlinfo(@"postPatchScanResultsForType is disabled");
+            LogInfo(@"postPatchScanResultsForType is disabled");
             //[mpws postPatchScanResultsForType:(NSInteger)[params objectForKey:@"aPatchScanType"] results:[params objectForKey:@"resultsDictionary"] error:&err];
 
         } else if ([[req objectForKey:@"wsMethod"] isEqualToString:@"postPatchInstallResultsToWebService"]) {
@@ -175,8 +176,8 @@
         }
 
         if (err) {
-            qlerror(@"Error re-posting data for %@",[req objectForKey:@"wsMethod"]);
-            qldebug(@"Params: %@",params);
+            LogError(@"Error re-posting data for %@",[req objectForKey:@"wsMethod"]);
+            LogDebug(@"Params: %@",params);
             if ([[req objectForKey:@"postAttempts"] intValue] <= 15) {
                 int p = [[req objectForKey:@"postAttempts"] intValue];
                 p++;
@@ -184,7 +185,7 @@
                 [newReq setObject:[NSNumber numberWithInt:p] forKey:@"postAttempts"];
                 [reqsFailed addObject:newReq];
             } else {
-                qlerror(@"%@ is being removed due to to many re-post attempts.",[req objectForKey:@"wsMethod"]);
+                LogError(@"%@ is being removed due to to many re-post attempts.",[req objectForKey:@"wsMethod"]);
             }
         }
     }

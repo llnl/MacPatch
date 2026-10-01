@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPFileVault.h"
 #import "MacPatch.h"
 
@@ -122,7 +123,7 @@
         printf("%s\n", [textStr cStringUsingEncoding:[NSString defaultCStringEncoding]]);
     }
     @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
     }
 }
 @end

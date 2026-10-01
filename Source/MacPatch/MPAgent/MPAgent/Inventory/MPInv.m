@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPInv.h"
 #import "MPSettings.h"
 #import "NSDirectoryServices.h"
@@ -555,10 +556,10 @@
         if ([[_data objectForKey:@"Objects"] objectForKey:aType]) {
             return [[_data objectForKey:@"Objects"] objectForKey:aType];
         } else {
-            qlerror(@"%@ was not found in Objects",aType);
+            LogError(@"%@ was not found in Objects",aType);
         }
     } else {
-        qlerror(@"Objects object was not found sys info data.");
+        LogError(@"Objects object was not found sys info data.");
         return nil;
     }
 
@@ -595,34 +596,34 @@
         jErr = nil;
         jsonString = [[NSString alloc] initWithContentsOfFile:[files objectAtIndex:i] encoding:NSUTF8StringEncoding error:&jErr];
         if (jErr) {
-            qlerror(@"%@",jErr.localizedDescription);
+            LogError(@"%@",jErr.localizedDescription);
             continue;
         }
         jErr = nil;
         jsonDict = [NSJSONSerialization JSONObjectWithData:[jsonString dataUsingEncoding:NSUTF8StringEncoding] options:kNilOptions error:&jErr];
         if (jErr) {
-            qlerror(@"%@",jErr.localizedDescription);
+            LogError(@"%@",jErr.localizedDescription);
             continue;
         }
         
         // Validate that the data contains the two attributes and their class types are correct
         if ([jsonDict objectForKey:@"tableName"]) {
             if (![[jsonDict objectForKey:@"tableName"] isKindOfClass:[NSString class]]) {
-                qlerror(@"JSON Parsing error, tableName attribute is not correct class type.");
+                LogError(@"JSON Parsing error, tableName attribute is not correct class type.");
                 continue;
             }
         } else {
-            qlerror(@"JSON Parsing error, tableName attribute not found.");
+            LogError(@"JSON Parsing error, tableName attribute not found.");
             continue;
         }
         
         if ([jsonDict objectForKey:@"dataRows"]) {
             if (![[jsonDict objectForKey:@"dataRows"] isKindOfClass:[NSArray class]]) {
-                qlerror(@"JSON Parsing error, dataRows attribute is not correct class type.");
+                LogError(@"JSON Parsing error, dataRows attribute is not correct class type.");
                 continue;
             }
         } else {
-            qlerror(@"JSON Parsing error, dataRows attribute not found.");
+            LogError(@"JSON Parsing error, dataRows attribute not found.");
             continue;
         }
         
@@ -632,10 +633,10 @@
             jErr = nil;
             [fm removeItemAtPath:[files objectAtIndex:i] error:&jErr];
             if (jErr) {
-                qlerror(@"%@",jErr.localizedDescription);
+                LogError(@"%@",jErr.localizedDescription);
             }
         } else {
-            qlerror(@"Custom Inventory (%@) was not processed successfully.",[jsonDict objectForKey:@"tableName"]);
+            LogError(@"Custom Inventory (%@) was not processed successfully.",[jsonDict objectForKey:@"tableName"]);
             [fm removeItemAtPath:[files objectAtIndex:i] error:&jErr];
         }
 	}
@@ -1736,8 +1737,8 @@ done:
 	NSArray *result = [NSArray array];
 	result = [sig getNetworkData:&err];
 	if (err) {
-		qlerror(@"Error getting network connection data.");
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"Error getting network connection data.");
+		LogError(@"%@",err.localizedDescription);
 		result = [NSArray array];
 	}
 	
@@ -1751,8 +1752,8 @@ done:
 	NSArray *result = [NSArray array];
 	result = [sig getHardDriveData:&err];
 	if (err) {
-		qlerror(@"Error getting network connection data.");
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"Error getting network connection data.");
+		LogError(@"%@",err.localizedDescription);
 		result = [NSArray array];
 	}
 	
@@ -1766,8 +1767,8 @@ done:
 	NSArray *result = [NSArray array];
 	result = [sig getPCIData:&err];
 	if (err) {
-		qlerror(@"Error getting network connection data.");
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"Error getting network connection data.");
+		LogError(@"%@",err.localizedDescription);
 		result = [NSArray array];
 	}
 	
@@ -1781,8 +1782,8 @@ done:
 	NSArray *result = [NSArray array];
 	result = [sig getRAMData:&err];
 	if (err) {
-		qlerror(@"Error getting network connection data.");
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"Error getting network connection data.");
+		LogError(@"%@",err.localizedDescription);
 		result = [NSArray array];
 	}
 	
@@ -1796,8 +1797,8 @@ done:
 	NSArray *result = [NSArray array];
 	result = [sig getUSBData:&err];
 	if (err) {
-		qlerror(@"Error getting network connection data.");
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"Error getting network connection data.");
+		LogError(@"%@",err.localizedDescription);
 		result = [NSArray array];
 	}
 	
@@ -1924,7 +1925,7 @@ done:
 	SPSmartCard *sc = [SPSmartCard new];
 	NSArray *scItems = [sc parseXMLFile:xmlFile];
 	if (!scItems) {
-		qlerror(@"Error, no data file to parse for SPSmartCard");
+		LogError(@"Error, no data file to parse for SPSmartCard");
 		return;
 	}
 	

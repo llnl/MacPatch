@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "SoftwareInstallOperation.h"
 #import "AppDelegate.h"
 
@@ -94,7 +95,7 @@
 
 - (void)finish
 {
-	qlinfo(@"Finish");
+	LogInfo(@"Finish");
 	[self willChangeValueForKey:@"isFinished"];
 	[self willChangeValueForKey:@"isExecuting"];
 	isExecuting = NO;
@@ -112,7 +113,7 @@
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[appDelegate showSWRebootWindow];
 			});
-			qlinfo(@"Show Reboot Window");
+			LogInfo(@"Show Reboot Window");
 		}
 	}
 }
@@ -139,7 +140,7 @@
 		[self runInstall];
 	}
 	@catch (NSException * e) {
-		qlerror(@"[NSException]: %@",e);
+		LogError(@"[NSException]: %@",e);
 	}
 	[self finish];
 }
@@ -148,8 +149,8 @@
 {
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
-	qlinfo(@"Install Software Task: %@",swTask[@"name"]);
-	qldebug(@"Task Data: %@",swTask);
+	LogInfo(@"Install Software Task: %@",swTask[@"name"]);
+	LogDebug(@"Task Data: %@",swTask);
 	
 	[self postSWStatus:@"Starting Install operation"];
 	NSDictionary *softwareObj = swTask[@"Software"];
@@ -161,7 +162,7 @@
 	NSScanner *scanner = [NSScanner scannerWithString:softwareObj[@"sw_size"]];
 	long long stringToLong;
 	if(![scanner scanLongLong:&stringToLong]) {
-		qlerror(@"Unable to convert size %@",softwareObj[@"sw_size"]);
+		LogError(@"Unable to convert size %@",softwareObj[@"sw_size"]);
 		[self postSWStatus:@"Unable to check disk size requirements"];
 		[self postStopHasError:YES errorString:@"Unable to check disk size requirements"];
 		return;
@@ -170,7 +171,7 @@
 	MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
 	if ([mpd diskHasEnoughSpaceForPackage:stringToLong] == NO)
 	{
-		qlerror(@"This system does not have enough free disk space to install the following software %@",softwareObj[@"name"]);
+		LogError(@"This system does not have enough free disk space to install the following software %@",softwareObj[@"name"]);
 		[self postSWStatus:@"System does not have enough free disk space"];
 		[self postStopHasError:YES errorString:@"System does not have enough free disk space"];
 		return;
@@ -178,14 +179,14 @@
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+			LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
 			[self willChangeValueForKey:@"userInfo"];
 			self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
 			[self didChangeValueForKey:@"userInfo"];
 			dispatch_semaphore_signal(sem);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+				LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
 				[self willChangeValueForKey:@"userInfo"];
 				self->userInfo = @{@"status":proxyError.localizedDescription, @"error":proxyError};
 				[self didChangeValueForKey:@"userInfo"];
@@ -198,9 +199,9 @@
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
 				} else {
-					qlerror(@"Error installing software task %@",self->swTask[@"Software"][@"name"]);
+					LogError(@"Error installing software task %@",self->swTask[@"Software"][@"name"]);
 					if (error) {
-						qlerror(@"Error: %@",error.localizedDescription);
+						LogError(@"Error: %@",error.localizedDescription);
 					} else {
 						error = [NSError errorWithDomain:@"InstallError"
 																 code:1
@@ -211,7 +212,7 @@
 					self->userInfo = @{@"status":@"Failed to install software task.", @"error":error};
 					[self didChangeValueForKey:@"userInfo"];
 					
-					qlerror(@"Error userInfo: %@",self->userInfo);
+					LogError(@"Error userInfo: %@",self->userInfo);
 				}
 				
 				dispatch_semaphore_signal(sem);
@@ -250,7 +251,7 @@
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				qlerror(@"connection invalidated");
+				LogError(@"connection invalidated");
 			}];
 		};
 		#pragma clang diagnostic pop
@@ -298,7 +299,7 @@
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
-	qlinfo(@"postStopHasError called %@",arg2);
+	LogInfo(@"postStopHasError called %@",arg2);
 	NSError *err = nil;
 	if (arg1) {
 		err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];

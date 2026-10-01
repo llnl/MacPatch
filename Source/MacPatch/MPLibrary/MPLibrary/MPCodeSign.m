@@ -125,7 +125,7 @@
     if (err != NULL) *err = error;
     
     if (result != YES) {
-        logit(lcl_vError,@"%@ is not signed or trusted.",aFilePath);
+        LogError(@"%@ is not signed or trusted.",aFilePath);
     }
     return result;
 }

@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPOSUpgrade.h"
 #import "MacPatch.h"
 #import "MPRESTfull.h"
@@ -94,8 +95,8 @@
     if ([fm fileExistsAtPath:aFilePath]) {
         [fm removeItemAtPath:aFilePath error:&err];
         if (err) {
-            qlerror(@"Error trying to remove file %@", aFilePath);
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"Error trying to remove file %@", aFilePath);
+            LogError(@"%@",err.localizedDescription);
             fprintf(stderr, "%s\n", [err.localizedDescription UTF8String]);
             return 1;
         }

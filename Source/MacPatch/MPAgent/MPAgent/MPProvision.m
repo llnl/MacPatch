@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPProvision.h"
 #import "MacPatch.h"
 #import "SoftwareController.h"
@@ -59,7 +60,7 @@
     // Get Data
     NSDictionary *provisionData = [self getProvisionData];
     if (!provisionData) {
-        qlerror(@"Provisioning data from web service is nil. Now exiting.");
+        LogError(@"Provisioning data from web service is nil. Now exiting.");
         res = 1;
         [self writeToKeyInProvisionFile:@"endDT" data:[MPDate dateTimeStamp]];
         [self writeToKeyInProvisionFile:@"completed" data:[NSNumber numberWithBool:YES]];
@@ -82,7 +83,7 @@
                     MPScript *scp = [MPScript new];
                     [scp runScript:s[@"script"]];
                 } @catch (NSException *exception) {
-                    qlerror(@"[PreScript]: %@",exception);
+                    LogError(@"[PreScript]: %@",exception);
                 }
                 
             }
@@ -106,7 +107,7 @@
                         [self writeToKeyInProvisionFile:@"status" data:[NSString stringWithFormat:@"Software: Failed to install %@ (%@)",s[@"name"],s[@"tuuid"]]];
                     }
                 } @catch (NSException *exception) {
-                    qlerror(@"[Software]: %@",exception);
+                    LogError(@"[Software]: %@",exception);
                 }
                 
             }
@@ -127,7 +128,7 @@
                     MPScript *scp = [MPScript new];
                     [scp runScript:s[@"script"]];
                 } @catch (NSException *exception) {
-                    qlerror(@"[PostScript]: %@",exception);
+                    LogError(@"[PostScript]: %@",exception);
                 }
                 
             }
@@ -149,8 +150,8 @@
     MPRESTfull *mpr = [MPRESTfull new];
     provCriteria = [mpr getProvisioningCriteriaUsingScope:@"prod" error:&err];
     if (err) {
-        qlerror(@"Error downloading provisioning criteria.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"Error downloading provisioning criteria.");
+        LogError(@"%@",err.localizedDescription);
     } else {
         if (provCriteria.count >= 1)
         {
@@ -175,7 +176,7 @@
                 if ([@"BundleID" isEqualToString:[qryArr objectAtIndex:0]]) {
                     mpbndl = [[MPBundle alloc] init];
                     if ([qryArr count] != 4) {
-                        qlerror(@"Error, not enough args for BundleID criteria query.");
+                        LogError(@"Error, not enough args for BundleID criteria query.");
                         continue;
                     }
 
@@ -190,7 +191,7 @@
                 if ([@"File" isEqualToString:[qryArr objectAtIndex:0]]) {
                     mpfile = [[MPFileCheck alloc] init];
                     if ([qryArr count] != 4) {
-                        qlerror(@"Error, not enough args for File criteria query.");
+                        LogError(@"Error, not enough args for File criteria query.");
                         continue;
                     }
 
@@ -205,7 +206,7 @@
                 if ([@"Script" isEqualToString:[qryArr objectAtIndex:0]]) {
                     mpscript = [[MPScript alloc] init];
                     if ([qryArr count] > 2) {
-                        qlerror(@"Error, too many args. Sript will not be run.");
+                        LogError(@"Error, too many args. Sript will not be run.");
                         continue;
                     }
                     NSData *decodedData = [[NSData alloc] initWithBase64EncodedString:[qryArr objectAtIndex:1] options:0];
@@ -226,8 +227,8 @@
                 err = nil;
                 [@"GO" writeToFile:MP_PROVISION_BEGIN atomically:NO encoding:NSUTF8StringEncoding error:&err];
                 if (err) {
-                    qlerror(@"Error writing %@ file.",MP_PROVISION_BEGIN);
-                    qlerror(@"%@",err.localizedDescription);
+                    LogError(@"Error writing %@ file.",MP_PROVISION_BEGIN);
+                    LogError(@"%@",err.localizedDescription);
                 }
             }
         }
@@ -246,8 +247,8 @@
     MPRESTfull *mpr = [MPRESTfull new];
     configJSON = [mpr getProvisioningConfig:&err];
     if (err) {
-        qlerror(@"Error downloading provisioning configuration.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"Error downloading provisioning configuration.");
+        LogError(@"%@",err.localizedDescription);
         return 1;
     }
     
@@ -257,8 +258,8 @@
     if (exists) {
         /* file exists */
         if (!isDir) {
-            qlerror(@"Error, %@ exists but is not a directory.",MP_PROVISION_DIR);
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"Error, %@ exists but is not a directory.",MP_PROVISION_DIR);
+            LogError(@"%@",err.localizedDescription);
             return 1;
         } else {
             // if config exists, remove so we can write a new one
@@ -266,8 +267,8 @@
             {
                 [fm removeItemAtPath:MP_PROVISION_UI_FILE error:&err]; // File exists, remove it
                 if (err) {
-                    qlerror(@"Error, unable to remove existsing %@ file.",[MP_PROVISION_UI_FILE lastPathComponent]);
-                    qlerror(@"%@",err.localizedDescription);
+                    LogError(@"Error, unable to remove existsing %@ file.",[MP_PROVISION_UI_FILE lastPathComponent]);
+                    LogError(@"%@",err.localizedDescription);
                     return 1;
                 }
             }
@@ -275,8 +276,8 @@
             // Write new config file
             [configJSON writeToFile:MP_PROVISION_UI_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
             if (err) {
-                qlerror(@"Error writing provisioning configuration to disk.");
-                qlerror(@"%@",err.localizedDescription);
+                LogError(@"Error writing provisioning configuration to disk.");
+                LogError(@"%@",err.localizedDescription);
             }
             
             LogDebug(@"%@",configJSON);
@@ -285,8 +286,8 @@
         [fm createDirectoryRecursivelyAtPath:MP_PROVISION_DIR];
         [configJSON writeToFile:MP_PROVISION_UI_FILE atomically:NO encoding:NSUTF8StringEncoding error:&err];
         if (err) {
-            qlerror(@"Error writing provisioning configuration to disk.");
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"Error writing provisioning configuration to disk.");
+            LogError(@"%@",err.localizedDescription);
             return 1;
         }
         LogDebug(@"%@",configJSON);
@@ -306,7 +307,7 @@
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     NSDictionary *data = [mprest getProvisioningDataForHost:settings.ccuid error:&err];
     if (err) {
-        qlerror(@"%@",err);
+        LogError(@"%@",err);
         return result;
     } else {
         LogDebug(@"%@",data);
