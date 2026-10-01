@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPSimpleKeychain.h"
 #import "MPKeyItem.h"
 #import "MPPassItem.h"
@@ -66,7 +67,7 @@
             keyChainFile = [aKeyChainFile copy];
             OSStatus unlockResult = [self unlockKeyChain:aKeyChainFile];
             if (unlockResult != noErr) {
-                qlerror(@"Unlock Keychain error: %d",unlockResult);
+                LogError(@"Unlock Keychain error: %d",unlockResult);
                 return nil;
             }
         } else {
@@ -117,7 +118,7 @@
         unlockResult = SecKeychainUnlock(xKeychain, 0, NULL, TRUE);
     }
     
-    qldebug(@"[unlockKeyChain]: unlockResult = %d",(int)unlockResult);
+    LogDebug(@"[unlockKeyChain]: unlockResult = %d",(int)unlockResult);
     return unlockResult;
 }
 
@@ -172,7 +173,7 @@
     if(osStatus != noErr) {
         if (error != NULL) {
             *error = [self errorForOSStatus:osStatus];
-            qlerror(@"%@", [self errorForOSStatus:osStatus]);
+            LogError(@"%@", [self errorForOSStatus:osStatus]);
         }
         return NO;
     }
@@ -187,7 +188,7 @@
         if ([[NSFileManager defaultManager] fileExistsAtPath:keyChainFile]) {
             if (![self keychainIsUnlocked]) {
                 if (![self unlockKeyChain:keyChainFile]) {
-                    qlerror(@"Keychain %@ is locked, error trying to unlock it.", keyChainFile);
+                    LogError(@"Keychain %@ is locked, error trying to unlock it.", keyChainFile);
                     return NO;
                 }
             }
@@ -199,7 +200,7 @@
 		NSError *err = nil;
 		SecAccessRef kAccess = [self createAccessRefWithLabel:ACCESS_LABEL error:&err];
 		if (err) {
-            qlerror(@"[savePassItemWithService][createAccessRefWithLabel] %@",err.localizedDescription);
+            LogError(@"[savePassItemWithService][createAccessRefWithLabel] %@",err.localizedDescription);
 			return false;
 		}
        
@@ -233,7 +234,7 @@
 		
 		return YES;
 	} @catch (NSException *exception) {
-        qlerror(@"[savePassItemWithService]: %@",exception);
+        LogError(@"[savePassItemWithService]: %@",exception);
 		return NO;
 	}
 }
@@ -287,9 +288,9 @@
 - (MPPassItem *)retrievePassItemForService:(NSString *)aService error:(NSError **)error
 {
     if (![self keychainIsUnlocked]) {
-        qldebug(@"[retrievePassItemForService]: keychain is locked");
+        LogDebug(@"[retrievePassItemForService]: keychain is locked");
         if (![self unlockKeyChain:keyChainFile]) {
-            qlerror(@"[retrievePassItemForService]: unable to unlock keychain %@",keyChainFile);
+            LogError(@"[retrievePassItemForService]: unable to unlock keychain %@",keyChainFile);
             return nil;
         }
     }
@@ -313,7 +314,7 @@
         if (status != noErr) {
             if (error != NULL) {
                 *error = [self errorForOSStatus:status];
-                qlerror(@"[retrievePassItemForService]: SecKeychainFindGenericPassword err = %@",[self errorForOSStatus:status]);
+                LogError(@"[retrievePassItemForService]: SecKeychainFindGenericPassword err = %@",[self errorForOSStatus:status]);
             }
             return nil;
         }
@@ -323,7 +324,7 @@
         MPPassItem *pi = [[MPPassItem alloc] initWithDictionary:storedDictionary];
         return pi;
     } @catch (NSException *exception) {
-        qlerror(@"[retrievePassItemForService]: %@",exception.description);
+        LogError(@"[retrievePassItemForService]: %@",exception.description);
         return nil;
     }
 }
@@ -472,8 +473,8 @@
     OSStatus err = SecKeychainGetStatus(xKeychain, &keychainStatus);
     
     if (err != errSecSuccess) {
-        qlerror(@"Error getting Keychain status.");
-        qlerror(@"OSStatus: %@",[self errorForOSStatus:err]);
+        LogError(@"Error getting Keychain status.");
+        LogError(@"OSStatus: %@",[self errorForOSStatus:err]);
         return NO;
     }
     
@@ -531,7 +532,7 @@
         return accessObj;
         
     } @catch (NSException *exception) {
-        qlerror(@"[createAccessRefWithLabel][accessObj]: %@",exception);
+        LogError(@"[createAccessRefWithLabel][accessObj]: %@",exception);
         return accessObj;
     }
 }

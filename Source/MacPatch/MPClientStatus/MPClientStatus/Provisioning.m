@@ -6,6 +6,7 @@
 //  Copyright © 2021 LLNL. All rights reserved.
 //
 
+#import "Logger.h"
 #import "Provisioning.h"
 #import "ProvisionHost.h"
 #import "EventToSend.h"
@@ -29,7 +30,7 @@
                 resultString = [NSString stringWithFormat:@"%@", result];
             }
         } else {
-            qlerror(@"evaluateJavaScript error : %@", error.localizedDescription);
+            LogError(@"evaluateJavaScript error : %@", error.localizedDescription);
         }
         finished = YES;
     }];
@@ -105,7 +106,7 @@
     // Defensive loading and parsing of provision UI JSON
     NSError *err = nil;
     if (![fm fileExistsAtPath:MP_PROVISION_UI_FILE]) {
-        qlerror(@"Provision UI file does not exist at path: %@", MP_PROVISION_UI_FILE);
+        LogError(@"Provision UI file does not exist at path: %@", MP_PROVISION_UI_FILE);
         _provisionUIData = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
             NSAlert *alert = [[NSAlert alloc] init];
@@ -123,7 +124,7 @@
 
     NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_UI_FILE];
     if (data.length == 0) {
-        qlerror(@"Provision UI file is empty at path: %@", MP_PROVISION_UI_FILE);
+        LogError(@"Provision UI file is empty at path: %@", MP_PROVISION_UI_FILE);
         _provisionUIData = nil;
         dispatch_async(dispatch_get_main_queue(), ^{
             NSAlert *alert = [[NSAlert alloc] init];
@@ -139,20 +140,20 @@
         return;
     }
 
-    qlinfo(@"Loaded %lu bytes from %@", (unsigned long)data.length, MP_PROVISION_UI_FILE);
+    LogInfo(@"Loaded %lu bytes from %@", (unsigned long)data.length, MP_PROVISION_UI_FILE);
 
     id jdata = nil;
     @try {
         jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     } @catch (NSException *exception) {
-        qlerror(@"Exception parsing JSON: %@ (%@)", exception.name, exception.reason);
+        LogError(@"Exception parsing JSON: %@ (%@)", exception.name, exception.reason);
     }
 
     if (err || ![jdata isKindOfClass:[NSDictionary class]]) {
         if (err) {
-            qlerror(@"MP_PROVISION_UI_FILE is not valid JSON: %@", err.localizedDescription);
+            LogError(@"MP_PROVISION_UI_FILE is not valid JSON: %@", err.localizedDescription);
         } else {
-            qlerror(@"MP_PROVISION_UI_FILE top-level object is not a dictionary as expected.");
+            LogError(@"MP_PROVISION_UI_FILE top-level object is not a dictionary as expected.");
         }
         _provisionUIData = nil;
         [self.window close];
@@ -177,7 +178,7 @@
     _swGroup = @"Default";
     if (_provisionUIData[@"softwareGroup"]) {
         _swGroup = _provisionUIData[@"softwareGroup"];
-        qlinfo(@"Setting optional install group to %@",_swGroup);
+        LogInfo(@"Setting optional install group to %@",_swGroup);
     }
     
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
@@ -214,8 +215,8 @@
     NSData *data = [NSData dataWithContentsOfFile:MP_PROVISION_UI_FILE];
     NSDictionary *jdata = [NSJSONSerialization JSONObjectWithData:data options:kNilOptions error:&err];
     if (err) {
-        qlerror(@"MP_PROVISION_UI_FILE contents are null. Unable to provision this system.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"MP_PROVISION_UI_FILE contents are null. Unable to provision this system.");
+        LogError(@"%@",err.localizedDescription);
         _provisionUIData = nil;
         [self.window close];
     } else {
@@ -232,7 +233,7 @@
     _swGroup = @"Default";
     if (_provisionUIData[@"softwareGroup"]) {
         _swGroup = _provisionUIData[@"softwareGroup"];
-        qlinfo(@"Setting optional install group to %@",_swGroup);
+        LogInfo(@"Setting optional install group to %@",_swGroup);
     }
     
     [self performSelectorInBackground:@selector(getSoftwareForGroup:) withObject:_swGroup];
@@ -244,14 +245,14 @@
     @autoreleasepool
     {
         BOOL beginProvision = NO;
-        //qlinfo(@"CEHD: provisionFileData: %@", _provisionFileData);
+        //LogInfo(@"CEHD: provisionFileData: %@", _provisionFileData);
         if (_provisionFileData[@"stage"])
         {
-            qlinfo(@"Provision Stage: %@",_provisionFileData[@"stage"]);
+            LogInfo(@"Provision Stage: %@",_provisionFileData[@"stage"]);
             if ([[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"begin"] || [[_provisionFileData[@"stage"] lowercaseString] isEqualToString:@"getData"])
             {
                 beginProvision = YES;
-                //qldebug(@"CEHD: beginProvision = YES");
+                //LogDebug(@"CEHD: beginProvision = YES");
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     //[self writeStatusToHTML:@""];
@@ -262,13 +263,13 @@
         } else {
             // File is empty 
             beginProvision = YES;
-            //qldebug(@"CEHD: beginProvision = YES, File is empty");
+            //LogDebug(@"CEHD: beginProvision = YES, File is empty");
         }
         
         // Host need initial required provisioning software installed.
         if (beginProvision)
         {
-            qlinfo(@"Begin Provisioning");
+            LogInfo(@"Begin Provisioning");
             
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self->_closeWindowButton setEnabled:NO]; // Diable Begin button ... initial required sw should be small
@@ -310,11 +311,11 @@
             int result = 99;
             result = [ph provisionHost];
             
-            qlinfo(@"provisionHost result = %d",(int)result);
+            LogInfo(@"provisionHost result = %d",(int)result);
             
             if (result == 0 ) {
-                qlinfo(@"Result was good, enable stepper button.");
-                qlinfo(@"Result was good, enable close window function.");
+                LogInfo(@"Result was good, enable stepper button.");
+                LogInfo(@"Result was good, enable close window function.");
                 dispatch_async(dispatch_get_main_queue(), ^{
                     //[self writeStatusToHTML:@""];
                     [self->textFieldStatus removeFromSuperview];
@@ -325,7 +326,7 @@
                     [self->_closeWindowButton setEnabled:YES];
                 });
             } else {
-                qlerror(@"result != 0");
+                LogError(@"result != 0");
                 NSAlert *alert = [NSAlert alertWithMessageText:@"Error running initial provisioning."
                     defaultButton:@"Exit"
                     alternateButton:@"Continue"
@@ -350,7 +351,7 @@
             }
         }
         else {
-            qlinfo(@"beginProvision == false");
+            LogInfo(@"beginProvision == false");
             dispatch_async(dispatch_get_main_queue(), ^{
                 //[self writeStatusToHTML:@""];
                 [self->textFieldStatus removeFromSuperview];
@@ -366,15 +367,15 @@
 
 - (NSDictionary *)readProvisioningFile
 {
-    qldebug(@"readProvisioningFile: %@",MP_PROVISION_FILE);
+    LogDebug(@"readProvisioningFile: %@",MP_PROVISION_FILE);
     NSMutableDictionary *_pFile;
     if ( [fm fileExistsAtPath:MP_PROVISION_FILE] ) {
-        qldebug(@"MP_PROVISION_FILE: %@",MP_PROVISION_FILE);
+        LogDebug(@"MP_PROVISION_FILE: %@",MP_PROVISION_FILE);
         _pFile = [NSMutableDictionary dictionaryWithContentsOfFile:MP_PROVISION_FILE];
     } else {
         _pFile = [NSMutableDictionary new];
     }
-    qldebug(@"_pFile: %@",_pFile);
+    LogDebug(@"_pFile: %@",_pFile);
     return [_pFile copy];
 }
 
@@ -385,13 +386,13 @@
      {
          if (connectError != nil)
          {
-             qlerror(@"connectError: %@",connectError.localizedDescription);
+             LogError(@"connectError: %@",connectError.localizedDescription);
          }
          else
          {
              NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:@{@"testKey":@"testVal",@"testKey2":@"testVal2"}];
              [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                 LogError(@"proxyError: %@",proxyError.localizedDescription);
              }] postProvisioningData:@"userInfoData" dataForKey:myData dataType:@"dict" withReply:^(NSError *err) {
                 dispatch_sync(dispatch_get_main_queue(), ^()
                    {
@@ -426,7 +427,7 @@
 {
     [self.backwindow orderOut:self];
     [self.window orderOut:self];
-    qlinfo(@"closeWindow was called");
+    LogInfo(@"closeWindow was called");
 }
 
 + (BOOL)isSelectorExcludedFromWebScript:(SEL)aSelector { return NO; }
@@ -440,8 +441,8 @@
 - (IBAction)changeTab:(NSButton *)sender
 {
     __block NSInteger _selectedIndex = [self.selectedTabViewItem integerValue];
-    //qlinfo(@"CEHD: changeTab");
-    //qlinfo(@"CEHD: sender.title = %@",sender.title);
+    //LogInfo(@"CEHD: changeTab");
+    //LogInfo(@"CEHD: sender.title = %@",sender.title);
     if ([sender.title isEqualToString:@"Install"]) {
         [_stepperButton setEnabled:NO];
         [_stepperButton setTitle:@"Continue"];
@@ -459,15 +460,15 @@
         dispatch_semaphore_t sem = dispatch_semaphore_create(0);
         [self connectAndExecuteCommandBlock:^(NSError * connectError) {
              if (connectError != nil) {
-                 qlerror(@"connectError: %@",connectError.localizedDescription);
+                 LogError(@"connectError: %@",connectError.localizedDescription);
                  dispatch_semaphore_signal(sem);
              } else {
                  [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                     qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                     LogError(@"proxyError: %@",proxyError.localizedDescription);
                      dispatch_semaphore_signal(sem);
                  }] touchFile:MP_PROVISION_DONE withReply:^(NSError *error) {
                      if (error) {
-                       qlerror(@"Error writing provisioning done file.");
+                       LogError(@"Error writing provisioning done file.");
                      }
                      dispatch_semaphore_signal(sem);
                  }];
@@ -487,7 +488,7 @@
             __block NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:vals];
             
             if (err) {
-                qlerror(@"%@",err.localizedDescription);
+                LogError(@"%@",err.localizedDescription);
                 NSAlert *alert = [NSAlert alertWithMessageText:@"Input Required"
                                                  defaultButton:@"OK" alternateButton:nil otherButton:nil
                                      informativeTextWithFormat:@"All fields must be answered to continue. Please verify your answers."];
@@ -498,14 +499,14 @@
                  {
                      if (connectError != nil)
                      {
-                         qlerror(@"connectError: %@",connectError.localizedDescription);
+                         LogError(@"connectError: %@",connectError.localizedDescription);
                      }
                      else
                      {
                          [self->_tabBar selectNextTabViewItem:NULL];
                          
                          [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                             qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                             LogError(@"proxyError: %@",proxyError.localizedDescription);
                          }] postProvisioningData:@"userInfoData" dataForKey:myData dataType:@"dict" withReply:^(NSError *error) {
                             dispatch_sync(dispatch_get_main_queue(), ^()
                                {
@@ -562,11 +563,11 @@
     int i = 0;
     for (NSDictionary *f in tabData[@"fields"])
     {
-        qlinfo(@"Field: %@",f);
+        LogInfo(@"Field: %@",f);
         __block NSString *field = f[@"field"];
         NSString *fieldJS = [NSString stringWithFormat:@"document.getElementById('%@').value;",f[@"field"]];
         NSString *res = [self.collectionWebView stringByEvaluatingJavaScriptFromString:fieldJS];
-        qlinfo(@"%@: %@",field,res);
+        LogInfo(@"%@: %@",field,res);
         if ([res length] >= [f[@"fieldLen"] intValue]) {
             [result setObject:res forKey:field];
         } else {
@@ -581,7 +582,7 @@
         NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.provision" code:1001 userInfo:@{@"Error reason": @"Invalid Input"}];
         *err = error;
     }
-    qlinfo(@"Form Values: %@",result);
+    LogInfo(@"Form Values: %@",result);
     return [result copy];
 }
 
@@ -590,11 +591,11 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         if ([status isEqual:@""]) {
             [self->_welcomeWebView evaluateJavaScript:@"clearStatus();" completionHandler:^(id Result, NSError * error) {
-                qlerror(@"Error[clearStatus()]: %@",error);
+                LogError(@"Error[clearStatus()]: %@",error);
             }];
         } else {
             [self->_welcomeWebView evaluateJavaScript:[NSString stringWithFormat:@"addStatus(\"%@\");",status] completionHandler:^(id Result, NSError * error) {
-                qlerror(@"Error[addStatus()]: %@",error);
+                LogError(@"Error[addStatus()]: %@",error);
             }];
         }
     });
@@ -624,15 +625,15 @@
              {
                  if (connectError != nil)
                  {
-                     qlerror(@"connectError: %@",connectError.localizedDescription);
+                     LogError(@"connectError: %@",connectError.localizedDescription);
                  }
                  else
                  {
                      [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                         qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                         LogError(@"proxyError: %@",proxyError.localizedDescription);
                      }] rebootHost:^(NSError *error) {
                          if (error) {
-                             qlerror(@"%@",error.localizedDescription);
+                             LogError(@"%@",error.localizedDescription);
                          };
                      }];
                  }
@@ -647,9 +648,9 @@
 
 - (void)tabView:(NSTabView *)tabView willSelectTabViewItem:(NSTabViewItem *)tabViewItem
 {
-    //qlinfo(@"CEHD: willSelectTabViewItem");
+    //LogInfo(@"CEHD: willSelectTabViewItem");
     self.selectedTabViewItem = tabViewItem.identifier;
-    //qlinfo(@"CEHD: willSelectTabViewItem self.selectedTabViewItem = %@",tabViewItem.identifier);
+    //LogInfo(@"CEHD: willSelectTabViewItem self.selectedTabViewItem = %@",tabViewItem.identifier);
     
     NSString *htmlString;
     if (_provisionUIData) {
@@ -686,7 +687,7 @@
 {
     NSString *htmlString;
     
-    //qlinfo(@"CEHD:[tabViewItem.identifier] %@",tabViewItem.identifier);
+    //LogInfo(@"CEHD:[tabViewItem.identifier] %@",tabViewItem.identifier);
     
     if (_provisionUIData) {
         htmlString = [self htmlForTab:[tabViewItem.identifier intValue] data:_provisionUIData[@"tabs"]];
@@ -741,12 +742,12 @@
         // Check to see if the process needs to run any final scripts.
         _provisionFileData = [self readProvisioningFile];
         NSDictionary *pData = _provisionFileData[@"data"];
-        qlinfo(@"provisionFileData[3]: %@",pData);
+        LogInfo(@"provisionFileData[3]: %@",pData);
         
         // Unarchive the data object and locate the scriptsFinish key, then see if the array
         // has anything in it.
         if (pData[@"scriptsFinish"]) {
-            qlinfo(@"Have Finish script(s) to run.");
+            LogInfo(@"Have Finish script(s) to run.");
             // Show quick message and wheel
             dispatch_async(dispatch_get_main_queue(), ^(void) {
                 [self->_finishProgressStatus setHidden:NO];
@@ -770,13 +771,13 @@
                     {
                         if ([script[@"active"] intValue] == 1) {
                             if ([self runScript:script[@"script"]] != 0) {
-                                qlerror(@"Error running script, sid is %@", script[@"sid"]);
-                                qlerror(@"Script Data: %@",script[@"script"]);
+                                LogError(@"Error running script, sid is %@", script[@"sid"]);
+                                LogError(@"Script Data: %@",script[@"script"]);
                             }
                         }
                     }
                 }
-                //qlinfo(@"CEHD[3]: after scripts");
+                //LogInfo(@"CEHD[3]: after scripts");
                 dispatch_async(dispatch_get_main_queue(), ^(void) {
                     [self->_finishProgressStatus setHidden:YES];
                     [self->_finishProgressWheel stopAnimation:nil];
@@ -787,7 +788,7 @@
         }
         else
         {
-            //qlinfo(@"CEHD[3]: else");
+            //LogInfo(@"CEHD[3]: else");
             dispatch_async(dispatch_get_main_queue(), ^(void) {
                 [self->_finishProgressStatus setHidden:YES];
                 [self->_finishProgressWheel setHidden:YES];
@@ -811,7 +812,7 @@
 
 - (void)finishDisplayingCompletionTab
 {
-    qlinfo(@"run finishDisplayingCompletionTab");
+    LogInfo(@"run finishDisplayingCompletionTab");
     _finishWebView.allowsBackForwardNavigationGestures = NO;
     [_stepperButton setHidden:NO];
     [_stepperButton setEnabled:YES];
@@ -826,31 +827,31 @@
 
 - (int)runScript:(NSString *)script
 {
-    qlinfo(@"Begin running script");
+    LogInfo(@"Begin running script");
     //dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             // dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 // dispatch_semaphore_signal(sem);
             }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
                 res = result;
                 if (error) {
-                    qlerror(@"Error running script.");
-                    qlerror(@"%@",error.localizedDescription);
+                    LogError(@"Error running script.");
+                    LogError(@"%@",error.localizedDescription);
                 }
-                qlinfo(@"End running script");
+                LogInfo(@"End running script");
                 // dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     // dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    qlinfo(@"Script result: %d",(int)res);
+    LogInfo(@"Script result: %d",(int)res);
     return (int)res;
 }
 
@@ -876,7 +877,7 @@
     }
     
     if (!tabData) {
-        qlwarning(@"No Data for tab");
+        LogWarning(@"No Data for tab");
         return @"";
     }
 
@@ -915,7 +916,7 @@
     }
     
     if (!tabData) {
-        qlwarning(@"No Data for tab");
+        LogWarning(@"No Data for tab");
         return @"";
     }
 
@@ -989,7 +990,7 @@
         NSError *err = nil;
         NSArray *swArr = [rest getSoftwareTasksForGroup:groupName error:&err];
         if (err) {
-            qlerror(@"%@",err.localizedDescription);
+            LogError(@"%@",err.localizedDescription);
         }
         _swForGroup = [swArr copy];
     }
@@ -1035,8 +1036,8 @@
 {
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 
-    qlinfo(@"Install Software Task: %@",swTask[@"name"]);
-    qldebug(@"Task Data: %@",swTask);
+    LogInfo(@"Install Software Task: %@",swTask[@"name"]);
+    LogDebug(@"Task Data: %@",swTask);
     
     [self appendToSoftwareView:@"Starting Install operation"];
     NSDictionary *softwareObj = swTask[@"Software"];
@@ -1048,7 +1049,7 @@
     NSScanner *scanner = [NSScanner scannerWithString:softwareObj[@"sw_size"]];
     long long stringToLong;
     if(![scanner scanLongLong:&stringToLong]) {
-        qlerror(@"Unable to convert size %@",softwareObj[@"sw_size"]);
+        LogError(@"Unable to convert size %@",softwareObj[@"sw_size"]);
         [self appendToSoftwareView:@"Unable to check disk size requirements"];
         [self postStopHasError:YES errorString:@"Unable to check disk size requirements"];
         return;
@@ -1057,7 +1058,7 @@
     MPDiskUtil *mpd = [[MPDiskUtil alloc] init];
     if ([mpd diskHasEnoughSpaceForPackage:stringToLong] == NO)
     {
-        qlerror(@"This system does not have enough free disk space to install the following software %@",softwareObj[@"name"]);
+        LogError(@"This system does not have enough free disk space to install the following software %@",softwareObj[@"name"]);
         [self appendToSoftwareView:@"System does not have enough free disk space"];
         [self postStopHasError:YES errorString:@"System does not have enough free disk space"];
         return;
@@ -1065,12 +1066,12 @@
     
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@",connectError.localizedDescription]];
             dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@",proxyError.localizedDescription]];
                 dispatch_semaphore_signal(sem);
                 
@@ -1080,9 +1081,9 @@
                     [self appendToSoftwareView:[NSString stringWithFormat:@"%@ was installed.",swTask[@"Software"][@"name"]]];
                 } else {
                     [self appendToSoftwareView:[NSString stringWithFormat:@"ERROR: %@ was not installed.",swTask[@"Software"][@"name"]]];
-                    qlerror(@"Error installing software task %@",swTask[@"Software"][@"name"]);
+                    LogError(@"Error installing software task %@",swTask[@"Software"][@"name"]);
                     if (error) {
-                        qlerror(@"Error: %@",error.localizedDescription);
+                        LogError(@"Error: %@",error.localizedDescription);
                     }
                     /*
                     else {
@@ -1124,8 +1125,8 @@
 // Ensures that we're connected to our helper tool.
 {
     if (self.workerConnection == nil) {
-        qlinfo(@"[Provisioning.m][connectToHelperTool] self.workerConnection == nil");
-        qlinfo(@"[Provisioning.m][connectToHelperTool] init with %@",kHelperServiceName);
+        LogInfo(@"[Provisioning.m][connectToHelperTool] self.workerConnection == nil");
+        LogInfo(@"[Provisioning.m][connectToHelperTool] init with %@",kHelperServiceName);
         self.workerConnection = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
         self.workerConnection.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
         
@@ -1191,7 +1192,7 @@
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
-    qlinfo(@"postStopHasError called %@",arg2);
+    LogInfo(@"postStopHasError called %@",arg2);
     //NSError *err = nil;
     if (arg1) {
         //err = [NSError errorWithDomain:@"gov.llnl.sw.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:arg2}];
@@ -1208,12 +1209,12 @@
     // Check to see if the process needs to run any final scripts.
     _provisionFileData = [self readProvisioningFile];
     NSDictionary *pData = _provisionFileData[@"data"];
-    qlinfo(@"provisionFileData[3]: %@",pData);
+    LogInfo(@"provisionFileData[3]: %@",pData);
     
     // Unarchive the data object and locate the scriptsFinish key, then see if the array
     // has anything in it.
     if (pData[@"scriptsFinish"]) {
-        qlinfo(@"[runFinishScript] Have Finish script(s) to run.");
+        LogInfo(@"[runFinishScript] Have Finish script(s) to run.");
         
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, (unsigned long)NULL), ^(void) {
@@ -1230,10 +1231,10 @@
                 for (NSDictionary *script in scripts)
                 {
                     if ([script[@"active"] intValue] == 1) {
-                        qlinfo(@"[SCRIPT] %@",script[@"script"]);
+                        LogInfo(@"[SCRIPT] %@",script[@"script"]);
                         if ([self runScript:script[@"script"]] != 0) {
-                            qlerror(@"Error running script, sid is %@", script[@"sid"]);
-                            qlerror(@"Script Data: %@",script[@"script"]);
+                            LogError(@"Error running script, sid is %@", script[@"sid"]);
+                            LogError(@"Script Data: %@",script[@"script"]);
                         }
                     }
                 }

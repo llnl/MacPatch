@@ -96,10 +96,10 @@
                 l_envItems = nil;
                 l_envItems = [item componentsSeparatedByString:@"="];
                 if ([l_envItems count] == 2) {
-                    logit(lcl_vDebug,@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
+                    LogDebug(@"Setting env variable(%@=%@).",[l_envItems objectAtIndex:0],[l_envItems objectAtIndex:1]);
                     [env setObject:[l_envItems objectAtIndex:1] forKey:[l_envItems objectAtIndex:0]];
                 } else {
-                    logit(lcl_vError,@"Unable to set env variable. Variable not well formed %@",item);
+                    LogError(@"Unable to set env variable. Variable not well formed %@",item);
                 }
             }
         }
@@ -109,7 +109,7 @@
     // Installer Args
     // ---------------------------------------------
     NSArray *appArgs = @[@"-verboseR", @"-allowUntrusted", @"-pkg", pkgPath, @"-target", aTarget];
-    logit(lcl_vInfo,@"Pkg Install Args: %@",appArgs);
+    LogInfo(@"Pkg Install Args: %@",appArgs);
     
     GCDTask *gTask = [[GCDTask alloc] init];
     [gTask setArguments:appArgs];
@@ -124,21 +124,21 @@
     __block int exitCode = 0;
     [gTask launchWithOutputBlock:^(NSData *stdOutData) {
         NSString *output = [[NSString alloc] initWithData:stdOutData encoding:NSUTF8StringEncoding];
-        logit(lcl_vInfo,@"%@",output);
+        LogInfo(@"%@",output);
         
     } andErrorBlock:^(NSData *stdErrData) {
         NSString *output = [[NSString alloc] initWithData:stdErrData encoding:NSUTF8StringEncoding];
-        logit(lcl_vError,@"[stdErr]: %@",output);
+        LogError(@"[stdErr]: %@",output);
         
     } onLaunch:^{
-        logit(lcl_vInfo,@"Installer task has started running.");
+        LogInfo(@"Installer task has started running.");
         [self startTaskTimeoutThread];
         
     } onExit:^(int exitStatus) {
         if (exitStatus == 0) {
-            logit(lcl_vInfo,@"Installer task has now exited. Exit status %d",exitStatus);
+            LogInfo(@"Installer task has now exited. Exit status %d",exitStatus);
         } else {
-            logit(lcl_vError,@"Installer task has now exited. Exit status %d",exitStatus);
+            LogError(@"Installer task has now exited. Exit status %d",exitStatus);
         }
         exitCode = exitStatus;
         dispatch_semaphore_signal(semaphore);
@@ -154,7 +154,7 @@
 
 - (void)startTaskTimeoutThread
 {
-    logit(lcl_vInfo,@"Start timeout thread");
+    LogInfo(@"Start timeout thread");
     timeoutThread = [[NSThread alloc] initWithTarget:self selector:@selector(taskTimeoutThread) object:nil];
     [timeoutThread start];
 }
@@ -175,7 +175,7 @@
 
 - (void)requestTaskTermination
 {
-    logit(lcl_vError,@"Task timedout, killing task.");
+    LogError(@"Task timedout, killing task.");
     [gcdTask RequestTermination];
 }
 

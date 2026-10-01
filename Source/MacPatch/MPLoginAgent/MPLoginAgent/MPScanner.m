@@ -30,7 +30,7 @@
 
 - (NSArray *)scanForAppleUpdates
 {
-    logit(lcl_vInfo,@"Scanning for Apple software updates.");
+    LogInfo(@"Scanning for Apple software updates.");
     
     NSArray *appleUpdates = nil;
     
@@ -45,24 +45,24 @@
     NSFileHandle *file = [pipe fileHandleForReading];
     
     [spTask launch];
-    logit(lcl_vInfo,@"Starting Apple software update scan.");
+    LogInfo(@"Starting Apple software update scan.");
     [spTask waitUntilExit];
     
     int status = [spTask terminationStatus];
     if (status != 0) {
-        logit(lcl_vError,@"Error: softwareupdate exit code = %d",status);
+        LogError(@"Error: softwareupdate exit code = %d",status);
         return appleUpdates;
     } else {
-        logit(lcl_vInfo,@"Apple software update scan was completed.");
+        LogInfo(@"Apple software update scan was completed.");
     }
     
     NSData *data = [file readDataToEndOfFile];
     NSString *string = [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding];
     
-    logit(lcl_vInfo,@"Apple software update full scan results\n%@",string);
+    LogInfo(@"Apple software update full scan results\n%@",string);
     
     if (!([string rangeOfString:@"No new"].location == NSNotFound)) {
-        logit(lcl_vInfo,@"No new updates.");
+        LogInfo(@"No new updates.");
         return appleUpdates;
     }
     
@@ -91,7 +91,7 @@
             // If the object/string starts with *,!,- then allow it
             if ([[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"*"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"!"] || [[tmpStr substringWithRange:NSMakeRange(0,1)] isEqual:@"-"]) {
                 tmpDict = [[NSMutableDictionary alloc] init];
-                logit(lcl_vInfo,@"Apple Update: %@",[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))]);
+                LogInfo(@"Apple Update: %@",[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))]);
                 [tmpDict setObject:[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] forKey:@"patch"];
                 [tmpDict setObject:@"Apple" forKey:@"type"];
                 [tmpDict setObject:[[[tmpStr substringWithRange:NSMakeRange(2,([tmpStr length]-2))] componentsSeparatedByString:@"-"] lastObject] forKey:@"version"];
@@ -111,13 +111,13 @@
     } // for loop
     appleUpdates = [NSArray arrayWithArray:tmpAppleUpdates];
     
-    logit(lcl_vDebug,@"Apple Updates Found, %@",appleUpdates);
+    LogDebug(@"Apple Updates Found, %@",appleUpdates);
     return appleUpdates;
 }
 
 - (NSArray *)scanForCustomUpdates
 {
-    logit(lcl_vInfo,@"Scanning for custom software updates.");
+    LogInfo(@"Scanning for custom software updates.");
     [[NSDistributedNotificationCenter defaultCenter] addObserver: self
                                                         selector: @selector(scanForNotification:)
                                                             name: @"ScanForNotification"
@@ -145,7 +145,7 @@
     
     if(notification)
     {
-        logit(lcl_vDebug,@"[scanForNotification]: %@",tmpDict);
+        LogDebug(@"[scanForNotification]: %@",tmpDict);
     }
 }
 

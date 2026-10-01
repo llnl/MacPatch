@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "Patching.h"
 #import "MacPatch.h"
 #import <SystemConfiguration/SystemConfiguration.h>
@@ -260,7 +261,7 @@
                 [@"patch" writeToFile:MP_PATCH_ON_LOGOUT_FILE atomically:NO encoding:NSUTF8StringEncoding error:&fileErr];
                 if (fileErr)
                 {
-                    qlerror( @"Error writing out %@ file. %@", MP_PATCH_ON_LOGOUT_FILE, fileErr.localizedDescription);
+                    LogError( @"Error writing out %@ file. %@", MP_PATCH_ON_LOGOUT_FILE, fileErr.localizedDescription);
                 }
                 else
                 {
@@ -418,8 +419,8 @@
                                         [fm removeItemAtPath:stagedFilePath error:&dlErr];
                                         if (dlErr)
                                         {
-                                            qlerror(@"Unable to remove bad staged patch file %@",stagedFilePath);
-                                            qlerror(@"Can not stage %@",patch[@"patch"]);
+                                            LogError(@"Unable to remove bad staged patch file %@",stagedFilePath);
+                                            LogError(@"Can not stage %@",patch[@"patch"]);
                                             continue;
                                         }
                                     }
@@ -432,8 +433,8 @@
                                 [fm removeItemAtPath:stageDir error:&dlErr];
                                 if (dlErr)
                                 {
-                                    qlerror(@"Unable to remove bad staged directory/file %@",stageDir);
-                                    qlerror(@"Can not stage %@",patch[@"patch"]);
+                                    LogError(@"Unable to remove bad staged directory/file %@",stageDir);
+                                    LogError(@"Can not stage %@",patch[@"patch"]);
                                     continue;
                                 }
                             }
@@ -445,8 +446,8 @@
                             [fm createDirectoryAtPath:stageDir withIntermediateDirectories:YES attributes:nil error:&dlErr];
                             if (dlErr)
                             {
-                                qlerror(@"%@",dlErr.localizedDescription);
-                                qlerror(@"Can not stage %@",patch[@"patch"]);
+                                LogError(@"%@",dlErr.localizedDescription);
+                                LogError(@"Can not stage %@",patch[@"patch"]);
                                 continue; // Error creating stage patch dir. Can not use it.
                             }
                         }
@@ -456,7 +457,7 @@
                         NSString *dlPatchLoc = [self downloadUpdate:downloadURL error:&dlErr];
                         if (dlErr)
                         {
-                            qlerror(@"%@",dlErr.localizedDescription);
+                            LogError(@"%@",dlErr.localizedDescription);
                         }
                         LogDebug(@"Downloaded patch to %@",dlPatchLoc);
                         
@@ -464,7 +465,7 @@
                         [fm moveItemAtPath:dlPatchLoc toPath:stagedFilePath error:&dlErr];
                         if (dlErr)
                         {
-                            qlerror(@"%@",dlErr.localizedDescription);
+                            LogError(@"%@",dlErr.localizedDescription);
                             continue; // Error creating stage patch dir. Can not use it.
                         }
                         LogInfo(@"%@ has been staged.",patch[@"patch"]);
@@ -472,8 +473,8 @@
                     }
                 }
             } @catch (NSException *exception) {
-                qlerror(@"Pre staging update %@ failed.",patch[@"patch"]);
-                qlerror(@"%@",exception);
+                LogError(@"Pre staging update %@ failed.",patch[@"patch"]);
+                LogError(@"%@",exception);
             }
         }
         

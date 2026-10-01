@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPSWTasks.h"
 #import "MPRESTfull.h"
 #import "MPSettings.h"
@@ -81,7 +82,7 @@
         if (err != NULL) {
             *err = error;
         } else {
-            qlerror(@"%@",error.localizedDescription);
+            LogError(@"%@",error.localizedDescription);
         }
     }
     return result;
@@ -104,11 +105,11 @@
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     result = [mprest postSoftwareInstallResults:(NSDictionary *)params error:&error];
     if (error) {
-        qlerror(@"%@",error.localizedDescription);
+        LogError(@"%@",error.localizedDescription);
         return 1;
     }
     
-    qldebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
+    LogDebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
     return (result ? 0:1);
 }
 
@@ -130,11 +131,11 @@
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     result = [mprest postSoftwareInstallResults:(NSDictionary *)params error:&error];
     if (error) {
-        qlerror(@"%@",error.localizedDescription);
+        LogError(@"%@",error.localizedDescription);
         return 1;
     }
     
-    qldebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
+    LogDebug(@"[MPSWTasks][postUnInstallResults]: %d",(result ? 0:1));
     return (result ? 0:1);
 }
 

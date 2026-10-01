@@ -28,6 +28,8 @@
 @property (nonatomic, assign) IBOutlet NSTextField *swDescription;
 @property (nonatomic, assign) IBOutlet NSTextField *swActionStatusText;
 
+@property (nonatomic, strong) NSArray *topLevelObjects;
+
 - (id)copyWithZone:(NSZone *)zone;
 - (void)setRepresentedObject:(id)object;
 - (void)awakeFromNib;

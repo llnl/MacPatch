@@ -35,7 +35,6 @@
 #import "TasksDaemon.h"
 #import "MPProvision.h"
 #import "MPAgentUpdater.h"
-//#import "MPFailedRequests.h"
 #import "Patching.h"
 #import "MPFileVault.h"
 #include <stdio.h>
@@ -43,7 +42,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.2.1.0"
+#define APPVERSION	@"4.3.3.0"
 #define APPNAME		@"MPAgent"
 // This Define will be modified durning MPClientBuild script
 #define APPBUILD	@"[BUILD]"

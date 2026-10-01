@@ -103,7 +103,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
 {
-    self = [super initWithNibName:@"SoftwareViewController" bundle:nil];
+	LogInfo(@"[SoftwareViewController] initWithNibName called");
+    self = [super initWithNibName:nil bundle:nil];
     if (self)
 	{
         // Initialization code here.
@@ -112,21 +113,40 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         filteredSwTasks = [[NSMutableArray alloc] init];
         defaults 		= [NSUserDefaults standardUserDefaults];
 		fm 				= [NSFileManager defaultManager];
-		
+
 		if (![defaults objectForKey:@"SWGroupSelected"])
 		{
 			[defaults setObject:@"Default" forKey:@"SWGroupSelected"];
 			[defaults synchronize];
 		}
-		
+
 		[self setupSWDataDir];
-		
+
 		// Initialize shared WKProcessPool and configuration
 		[self setupSharedWebViewConfiguration];
     }
-	
+
     [self setTitle:@"Software"];
     return self;
+}
+
+- (void)loadView
+{
+	LogInfo(@"[SoftwareViewController] loadView called");
+	// Manually load NIB to capture top-level objects (macOS 15 fix)
+	NSArray *topLevelObjects = nil;
+	BOOL nibLoaded = [[NSBundle mainBundle] loadNibNamed:@"SoftwareViewController" owner:self topLevelObjects:&topLevelObjects];
+	LogInfo(@"[SoftwareViewController] NIB loaded: %@, topLevelObjects count: %lu", nibLoaded ? @"YES" : @"NO", (unsigned long)topLevelObjects.count);
+
+	if (nibLoaded) {
+		// Retain top-level objects to prevent premature deallocation
+		self.topLevelObjects = topLevelObjects;
+		LogInfo(@"[SoftwareViewController] View set: %@", self.view);
+	} else {
+		LogError(@"[SoftwareViewController] Failed to load NIB!");
+		// Fallback to default behavior
+		[super loadView];
+	}
 }
 
 - (void)setupSharedWebViewConfiguration
@@ -141,16 +161,18 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	// Configure any other shared settings
 	_sharedWebViewConfiguration.suppressesIncrementalRendering = NO;
 	
-	qldebug(@"[SoftwareViewController] Created shared WKProcessPool for WebViews");
+	LogDebug(@"[SoftwareViewController] Created shared WKProcessPool for WebViews");
 }
 
 - (void)viewDidLoad
 {
+	LogInfo(@"[SoftwareViewController] viewDidLoad called");
 	[self.view setWantsLayer:YES];
-	
+
 	// Replace existing WebViews with new ones using shared process pool
 	[self replaceWebViewsWithSharedProcessPool];
-	
+
+	LogInfo(@"[SoftwareViewController] About to call loadBannerView");
 	[self loadBannerView:nil];
 	
 	[settings refresh];
@@ -195,7 +217,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			}
 		}
 		
-		qldebug(@"[SoftwareViewController] Replaced _wkWebView with shared process pool instance");
+		LogDebug(@"[SoftwareViewController] Replaced _wkWebView with shared process pool instance");
 	}
 	
 	// Replace webView (popup window) with a new instance using shared process pool
@@ -211,38 +233,56 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		
 		[superview addSubview:self.webView];
 		
-		qldebug(@"[SoftwareViewController] Replaced webView with shared process pool instance");
+		LogDebug(@"[SoftwareViewController] Replaced webView with shared process pool instance");
 	}
 }
 
 - (IBAction)loadBannerView:(id)sender
 {
+    LogInfo(@"[SoftwareViewController] loadBannerView called");
+	if (!_wkWebView) {
+		LogError(@"[SoftwareViewController] _wkWebView is nil! Cannot load banner.");
+		return;
+	}
+	LogDebug(@"[SoftwareViewController] _wkWebView exists: %@", _wkWebView);
 	[_wkWebView.enclosingScrollView setHasVerticalScroller:NO];
 	NSURL *baseURL;
 	NSString *htmlFilePath;
 	NSString *htmlStringBase;
 	NSString *onDiskBannerDir = [MP_ROOT_CLIENT stringByAppendingPathComponent:@"Data/MacPatch/banner"];
 	NSString *onDiskBanner = [onDiskBannerDir stringByAppendingPathComponent:@"default/html/banner.html"];
-	
+
 	NSString *clientGroupBanner = [NSString stringWithFormat:@"%@/clientgroup/%@/html/banner.html",onDiskBannerDir,settings.agent.groupId];
-	
+
+	LogInfo(@"Looking for banner files:");
+    LogInfo(@"  Client Group Banner: %@", clientGroupBanner);
+    LogInfo(@"  Default Banner: %@", onDiskBanner);
+
 	// Load Client Group Banner
 	if ([fm fileExistsAtPath:clientGroupBanner])
 	{
+		LogInfo(@"Loading client group banner from: %@", clientGroupBanner);
 		baseURL = [NSURL fileURLWithPath:[clientGroupBanner stringByDeletingLastPathComponent]];
 		[_wkWebView loadFileURL:[NSURL fileURLWithPath:clientGroupBanner] allowingReadAccessToURL:baseURL];
 		return;
 	}
-	
-	// Try
+	else
+	{
+		LogDebug(@"Client group banner not found at: %@", clientGroupBanner);
+	}
+
+	// Try default banner
 	if ([fm fileExistsAtPath:onDiskBanner])
 	{
+		LogInfo(@"Loading default banner from: %@", onDiskBanner);
 		baseURL = [NSURL fileURLWithPath:[onDiskBanner stringByDeletingLastPathComponent]];
 		[_wkWebView loadFileURL:[NSURL fileURLWithPath:onDiskBanner] allowingReadAccessToURL:baseURL];
 		return;
 	}
 	else
 	{
+		LogDebug(@"Default banner not found at: %@", onDiskBanner);
+		LogInfo(@"Loading bundled banner from application resources");
 		htmlFilePath = [[NSBundle mainBundle] pathForResource:@"banner" ofType:@"html" inDirectory:@"html"];
 		htmlStringBase = [NSString stringWithContentsOfFile:htmlFilePath encoding:NSUTF8StringEncoding error:NULL];
 		baseURL = [[NSBundle mainBundle] resourceURL];
@@ -314,11 +354,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[[self.workerConnection synchronousRemoteObjectProxyWithErrorHandler:^(NSError * proxyError)
 	  {
 		  //err msg
-		  qlerror(@"Failed to execute XPC service verification (error: %@)",  proxyError);
+		  LogError(@"Failed to execute XPC service verification (error: %@)",  proxyError);
 		  
 	  }] getVersionWithReply:^(NSString *verData) {
 		 //dbg msg
-		 qldebug(@"Got Version: %@",verData);
+		 LogDebug(@"Got Version: %@",verData);
 
 		 if ([verData isEqualToString:@"1"]) {
 			 hasConnection = YES;
@@ -370,7 +410,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		catalogs = [rest getSoftwareCatalogs:&error];
 		
 		if (error) {
-			qlerror(@"%@",error.localizedDescription);
+			LogError(@"%@",error.localizedDescription);
 			dispatch_async(dispatch_get_main_queue(), ^{
                 if (self->settings.agent.swDistGroup) {
                     [self->_swDistGroupsButton addItemWithTitle:self->settings.agent.swDistGroup];
@@ -459,7 +499,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		NSArray *tasks = [sw getSoftwareTasksForGroup:&err];
 		if (err) {
 			dispatch_async(dispatch_get_main_queue(), ^{
-				qlerror(@"%@",err.localizedDescription);
+				LogError(@"%@",err.localizedDescription);
 				self->_swNetworkStatusImage.hidden = NO;
 				[self->_swNetworkStatusText setStringValue:err.localizedDescription ?: @""];
 			});
@@ -485,11 +525,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"%@",connectError.localizedDescription);
+			LogError(@"%@",connectError.localizedDescription);
 			dispatch_semaphore_signal(sem);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"%@",proxyError.localizedDescription);
+				LogError(@"%@",proxyError.localizedDescription);
 				dispatch_semaphore_signal(sem);
 			}] retrieveInstalledSoftwareTasksWithReply:^(NSData *result) {
 				NSArray *tasks = [NSKeyedUnarchiver unarchiveObjectWithData:result];
@@ -519,7 +559,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		if (!dirExists) {
 			[fm createDirectoryAtPath:[SOFTWARE_DATA_DIR path] withIntermediateDirectories:YES attributes:nil error:&err];
 			if (err) {
-				qlerror(@"%@",[err localizedDescription]);
+				LogError(@"%@",[err localizedDescription]);
 				return [NSArray array];
 			}
 		}
@@ -527,32 +567,32 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		for (id item in swTasks)
 		{
 			d = [[NSMutableDictionary alloc] initWithDictionary:item];
-			qldebug(@"------------------------------------------------");
-			qldebug(@"Checking %@",[d objectForKey:@"name"]);
+			LogDebug(@"------------------------------------------------");
+			LogDebug(@"Checking %@",[d objectForKey:@"name"]);
 			c = 0;
 			MPOSCheck *mpos = [[MPOSCheck alloc] init];
 			_SoftwareCriteria = [item objectForKey:@"SoftwareCriteria"];
 			// OSArch
 			if ([mpos checkOSArch:[_SoftwareCriteria objectForKey:@"arch_type"]]) {
-				qldebug(@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+				LogDebug(@"OSArch=TRUE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 			} else {
-				qldebug(@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
+				LogDebug(@"OSArch=FALSE: %@",[_SoftwareCriteria objectForKey:@"arch_type"]);
 				c++;
 			}
 			// OSType
             /* CEH: Dsable for now, no longer needed.
 			if ([mpos checkOSType:[_SoftwareCriteria objectForKey:@"os_type"]]) {
-				qldebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+				LogDebug(@"OSType=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 			} else {
-				qldebug(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
+				LogDebug(@"OSType=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_type"]);
 				c++;
 			}
              */
 			// OSVersion
 			if ([mpos checkOSVer:[_SoftwareCriteria objectForKey:@"os_vers"]]) {
-				qldebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+				LogDebug(@"OSVersion=TRUE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 			} else {
-				qldebug(@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
+				LogDebug(@"OSVersion=FALSE: %@",[_SoftwareCriteria objectForKey:@"os_vers"]);
 				c++;
 			}
 			mpos = nil;
@@ -567,7 +607,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			
 			if ([now timeIntervalSince1970] < [startDate timeIntervalSince1970]) {
 				// Software is not ready for deployment
-				qlerror(@"Failed start date. Needs to be greater than %@",startDate);
+				LogError(@"Failed start date. Needs to be greater than %@",startDate);
 				continue;
 			}
 			// Check for Mandatory apps
@@ -593,7 +633,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			
 			// Has not been installed, and is mandatory
 			if (isMandatory == YES) {
-				qlinfo(@"Adding %@ to mandatory installs.",[d objectForKey:@"name"]);
+				LogInfo(@"Adding %@ to mandatory installs.",[d objectForKey:@"name"]);
 				[_MandatorySoftware addObject:d];
 			}
 			
@@ -643,10 +683,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		}
 	}
 
-	qldebug(@"Approved Software tasks:");
+	LogDebug(@"Approved Software tasks:");
 	for (NSDictionary *s in _SoftwareArray)
 	{
-		qldebug(@"- %@",s[@"name"]);
+		LogDebug(@"- %@",s[@"name"]);
 	}
 
 	dispatch_async(dispatch_get_main_queue(), ^{
@@ -664,7 +704,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	});
 	
 	if ([_MandatorySoftware count] >= 1) {
-		qlinfo(@"Need to install mandatory apps");
+		LogInfo(@"Need to install mandatory apps");
 	}
 	
 	return [_SoftwareArray copy];
@@ -706,7 +746,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     }
     @catch (NSException *exception)
     {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
         return NO;
     }
     return YES;
@@ -721,7 +761,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"%@",connectError);
+			LogError(@"%@",connectError);
 			[NSThread sleepForTimeInterval:3.0];
 			dispatch_async(dispatch_get_main_queue(), ^{
 				[hud removeFromSuperview];
@@ -967,7 +1007,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
 		[fm createDirectoryAtPath:[SOFTWARE_DATA_DIR path] withIntermediateDirectories:YES attributes:attributes error:&err];
 		if (err) {
-			qlerror(@"%@",[err description]);
+			LogError(@"%@",[err description]);
 		}
 	}
 	if ([fm fileExistsAtPath:[[SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] path]] == NO) {
@@ -975,7 +1015,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		NSDictionary *attributes = [NSDictionary dictionaryWithObject:[NSNumber numberWithShort:0777] forKey:NSFilePosixPermissions];
 		[fm createDirectoryAtPath:[[SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] path] withIntermediateDirectories:YES attributes:attributes error:&err];
 		if (err) {
-			qlerror(@"%@",[err description]);
+			LogError(@"%@",[err description]);
 		}
 		[[SOFTWARE_DATA_DIR URLByAppendingPathComponent:@"sw"] setResourceValue:[NSNumber numberWithBool:YES] forKey:NSURLIsHiddenKey error:NULL];
 	}
@@ -994,10 +1034,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (BOOL)isAppInstalledOnSystem:(NSString *)appPath
 {
 	if ([fm fileExistsAtPath:appPath]) {
-		qldebug(@"%@, was found.",appPath);
+		LogDebug(@"%@, was found.",appPath);
 		return YES;
 	} else {
-		qldebug(@"%@, was not found.",appPath);
+		LogDebug(@"%@, was not found.",appPath);
 	}
 	
 	return NO;
@@ -1032,7 +1072,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		NSRect frame = NSMakeRect(0, 0, 800, 600); // Default frame, will be resized
 		self.webView = [[WKWebView alloc] initWithFrame:frame configuration:_sharedWebViewConfiguration];
 		self.webView.navigationDelegate = self;
-		qldebug(@"[SoftwareViewController] Created webView on-demand with shared process pool");
+		LogDebug(@"[SoftwareViewController] Created webView on-demand with shared process pool");
 	}
 	
 	[_webSpinner startAnimation:nil];

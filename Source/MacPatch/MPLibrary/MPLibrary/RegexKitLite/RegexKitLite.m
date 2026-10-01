@@ -39,6 +39,7 @@
 #include <CoreFoundation/CFBase.h>
 #include <CoreFoundation/CFArray.h>
 #include <CoreFoundation/CFString.h>
+#import "Logger.h"
 #import <Foundation/NSArray.h>
 #import <Foundation/NSDictionary.h>
 #import <Foundation/NSError.h>
@@ -722,7 +723,7 @@ static void rkl_dtrace_getRegexUTF8(CFStringRef str, char *utf8Buffer) {
 #pragma mark RegexKitLite low-level internal functions
 #pragma mark -
 
-// The 4-way set associative LRU qlerror(c comes from Henry S. Warren Jr.'s Hacker's Delight, "revisions", 7-7 An LRU Algorithm:
+// The 4-way set associative LRU LogError(c comes from Henry S. Warren Jr.'s Hacker's Delight, "revisions", 7-7 An LRU Algorithm:
 // http://www.hackersdelight.org/revisions.pdf
 // The functions rkl_leastRecentlyUsedWayInSet() and rkl_accessCacheSetWay() implement the cache functionality and are used
 // from a number of different places that need to perform caching (i.e., cached regex, cached UTF16 conversions, etc)
@@ -742,7 +743,7 @@ RKL_STATIC_INLINE void rkl_accessCacheSetWay(NSUInteger cacheSetsCount, RKLLRUCa
   cacheSetsArray[cacheSet] = (RKLLRUCacheSet_t)(((cacheSetsArray[cacheSet] & (RKLLRUCacheSet_t)0xFFFFU) | (((RKLLRUCacheSet_t)0xFU) << (cacheWay * 4U))) & (~(((RKLLRUCacheSet_t)0x1111U) << (3U - cacheWay))));
 }
 
-#pragma mark Common, macro'ish compiled regular expression cache qlerror(c
+#pragma mark Common, macro'ish compiled regular expression cache LogError(c
 
 // These functions consolidate bits and pieces of code used to maintain, update, and access the 4-way set associative LRU cache and Regex Lookaside Cache.
 RKL_STATIC_INLINE NSUInteger      rkl_regexLookasideCacheIndexForPointerAndOptions  (const void           *ptr,       RKLRegexOptions options)                       { return(((((NSUInteger)(ptr)) >> 4) + options + (options >> 4)) & _RKL_REGEX_LOOKASIDE_CACHE_MASK); }
@@ -1940,7 +1941,7 @@ errorExit:
 //  and will automatically be released when that pool pops.  This ensures that we don't leak anything even when things go seriously sideways.  This also allows us to keep the total amount of memory in use
 //  down to a minimum, which can be substantial if the user is enumerating a large string, for example a regex of '\w+' on a 500K+ text file.
 //
-//  The only 'caveat' is that the user needs to -retain any strings that they want to use past the point at which their ^block returns.  qlerror(cally, it is as if the following takes place:
+//  The only 'caveat' is that the user needs to -retain any strings that they want to use past the point at which their ^block returns.  LogError(cally, it is as if the following takes place:
 //  
 //  for(eachMatchOfRegexInStringToSearch) {
 //    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];

@@ -269,7 +269,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     {
         free(tempDirectoryNameCString);
         // handle directory creation failure
-        qlerror(@"Error, trying to create tmp directory.");
+        LogError(@"Error, trying to create tmp directory.");
         return [@"/private/tmp" stringByAppendingPathComponent:appName];
     }
     
@@ -326,7 +326,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     }
     
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-    qldebug(@"[runASyncGET]URL: %@",url);
+    LogDebug(@"[runASyncGET]URL: %@",url);
     
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
     r.allowSelfSignedCert = allowSelfSigned;
@@ -407,7 +407,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     }
     
     NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-    qldebug(@"[runASyncPOST]URL: %@",url);
+    LogDebug(@"[runASyncPOST]URL: %@",url);
     
     __block STHTTPRequest *r = [STHTTPRequest requestWithURLString:url];
     r.allowSelfSignedCert = allowSelfSigned;
@@ -479,10 +479,10 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
         BOOL allowSelfSigned = (server.allowSelfSigned == 1);
 
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-        qlinfo(@"URL: %@",url);
+        LogInfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
 		if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            //qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //LogDebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -508,13 +508,13 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     {
         BOOL allowSelfSigned = (server.allowSelfSigned == 1);
         
-        qldebug(@"[runSyncPOST][server]: %@",server.toDictionary);
+        LogDebug(@"[runSyncPOST][server]: %@",server.toDictionary);
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-        qldebug(@"[runSyncPOST] URL: %@",url);
+        LogDebug(@"[runSyncPOST] URL: %@",url);
         wsResult = [self syncronusPOSTWithURL:url body:body];
-		qldebug(@"[runSyncPOST][result]: %d",(int)wsResult.statusCode);
+		LogDebug(@"[runSyncPOST][result]: %d",(int)wsResult.statusCode);
         if ((int)wsResult.statusCode >= 200 && (int)wsResult.statusCode <= 210) {
-            //qldebug(@"WSResult: %@",wsResult.toDictionary);
+            //LogDebug(@"WSResult: %@",wsResult.toDictionary);
             break;
         }
     }
@@ -537,8 +537,8 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 	NSString *res;
     
     if (fromCloud) {
-        qldebug(@"[runSyncFileDownload][fromCloud] dlFilePath: %@",dlFilePath);
-        qlinfo(@"[runSyncFileDownload][fromCloud] URL: %@",urlPath);
+        LogDebug(@"[runSyncFileDownload][fromCloud] dlFilePath: %@",dlFilePath);
+        LogInfo(@"[runSyncFileDownload][fromCloud] URL: %@",urlPath);
         dlerror = nil;
         // Set allowSelfSignedCert to NO for cloud downloads
         if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
@@ -549,9 +549,9 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
             });
         }
         res = [self runSyncFileDownloadFromServer:urlPath downloadDirectory:dlDir error:&dlerror];
-        qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
+        LogDebug(@"[runSyncFileDownloadFromServer] result: %@",res);
         if (dlerror) {
-            qlerror(@"%@",dlerror.localizedDescription);
+            LogError(@"%@",dlerror.localizedDescription);
             srvErrs++;
         }
     } else {
@@ -577,12 +577,12 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
             }
             
             url = [NSString stringWithFormat:@"%@://%@:%d%@",s.usessl ? @"https":@"http", s.host, (int)s.port, urlPath];
-            qlinfo(@"URL: %@",url);
+            LogInfo(@"URL: %@",url);
             dlerror = nil;
             res = [self runSyncFileDownloadFromServer:url downloadDirectory:dlDir error:&dlerror];
-            qldebug(@"[runSyncFileDownloadFromServer] result: %@",res);
+            LogDebug(@"[runSyncFileDownloadFromServer] result: %@",res);
             if (dlerror) {
-                qlerror(@"%@",dlerror.localizedDescription);
+                LogError(@"%@",dlerror.localizedDescription);
                 srvErrs++;
                 continue;
             } else {
@@ -641,7 +641,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 			NSString *progStr = [NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progressPercent];
 			if ((int)progressPercent % 5 == 0) {
 				if (![curPercent isEqualToString:[NSString stringWithFormat:@"%i",(int)progressPercent]]) {
-					qlinfo(@"%@",progStr);
+					LogInfo(@"%@",progStr);
 					curPercent = [NSString stringWithFormat:@"%i",(int)progressPercent];
 				}
 			}
@@ -652,13 +652,13 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 	{
 		if (downloadError)
 		{
-			qlerror(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
+			LogError(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
 			if (err != NULL) *err = downloadError;
 			dispatch_semaphore_signal(semaphore);
 		}
 		else
 		{
-			qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
+			LogInfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
 			if (httpStatusCode >= 200 && httpStatusCode <= 304) {
 				dlFile = [downloadedFile path];
 			} else {
@@ -677,7 +677,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 
 - (NSString *)runSyncFileDownloadAltOrig:(NSString *)urlPath downloadDirectory:(NSString *)dlDir error:(NSError * __autoreleasing *)err
 {
-	qlinfo(@"[runSyncFileDownloadAlt][urlPath], %@", urlPath);
+	LogInfo(@"[runSyncFileDownloadAlt][urlPath], %@", urlPath);
 	[self postStatusToDelegate:@"Configuring download for %@",urlPath.lastPathComponent];
 	// Create Download Directory if it does not exist
 	if (![fm fileExistsAtPath:dlDir]) {
@@ -729,7 +729,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 	BOOL allowSelfSigned = (server.allowSelfSigned == 1);
 
 	NSString *url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
-	qlinfo(@"URL: %@",url);
+	LogInfo(@"URL: %@",url);
 	
 	__block NSString *dlFile = @"ERR";
 	__block BOOL didFail = NO;
@@ -743,7 +743,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 	{
 		dispatch_async(dispatch_get_main_queue(), ^{
 			NSString *progStr = [NSString stringWithFormat:@"%i\uFF05 Downloaded",(int)progressPercent];
-			if ((int)progressPercent % 5 == 0) qlinfo(@"%@",progStr);
+			if ((int)progressPercent % 5 == 0) LogInfo(@"%@",progStr);
 			[self->delegate downloadProgress:progStr];
 		});
 	};
@@ -751,13 +751,13 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 	{
 		if (downloadError)
 		{
-			qlerror(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
+			LogError(@"Error %d. File download error %@", httpStatusCode, downloadError.localizedDescription);
 			didFail = YES;
 			dispatch_semaphore_signal(semaphore);
 		}
 		else
 		{
-			qlinfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
+			LogInfo(@"dm.completionHandler[httpStatusCode]: %d",httpStatusCode);
 			if (httpStatusCode >= 200 && httpStatusCode <= 304) {
 				didFail = NO;
 				dlFile = [downloadedFile path];
@@ -797,14 +797,14 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 		BOOL allowSelfSigned = (server.allowSelfSigned == 1);
 
 		url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, aURLPath];
-		qlinfo(@"URL: %@",url);
+		LogInfo(@"URL: %@",url);
 		//
 		NSError *dataErr = nil;
 		result = [NSData dataWithContentsOfURL:[NSURL URLWithString:url] options:NSDataReadingMappedIfSafe error:&dataErr];
 		if (!dataErr) {
 			break;
 		} else {
-			qlerror(@"[dataForURLPath] Err\n%@",dataErr.localizedDescription);
+			LogError(@"[dataForURLPath] Err\n%@",dataErr.localizedDescription);
 		}
 	}
 	
@@ -825,7 +825,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     if (body) {
         jsonData = [NSJSONSerialization dataWithJSONObject:body options:0 error:&_error];
         if (_error) {
-            qlerror(@"%@",_error.localizedDescription);
+            LogError(@"%@",_error.localizedDescription);
             error = _error;
             return res;
         }
@@ -881,7 +881,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 		}
 		else
 		{
-			qlerror(@"Error: %@", _error.localizedDescription);
+			LogError(@"Error: %@", _error.localizedDescription);
 			sesErr = _error;
 		}
 
@@ -914,7 +914,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     // Create URLRequest
     NSURL *url = [NSURL URLWithString:aURL];
-	qldebug(@"Post data to URL: %@",aURL);
+	LogDebug(@"Post data to URL: %@",aURL);
     NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url];
     request.HTTPMethod = @"POST";
     [request setValue:@"MacPatch" forHTTPHeaderField:@"X-Agent-ID"];
@@ -970,7 +970,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
         }
         else
         {
-            qlerror(@"Error: %@", err.localizedDescription);
+            LogError(@"Error: %@", err.localizedDescription);
         }
 
         dispatch_semaphore_signal(semaphore);
@@ -999,9 +999,9 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 
 - (NSString *)signWSRequest:(NSString *)aData timeStamp:(NSString *)aTimeStamp key:(NSString *)aKey
 {
-    qldebug(@"Key for Signature: (%@)",[aKey substringFromIndex:MAX((int)[aKey length]-4, 0)]);
-    qldebug(@"Data for Signature: (%@)",aData);
-    qldebug(@"Time Stamp for Signature: (%@)",aTimeStamp);
+    LogDebug(@"Key for Signature: (%@)",[aKey substringFromIndex:MAX((int)[aKey length]-4, 0)]);
+    LogDebug(@"Data for Signature: (%@)",aData);
+    LogDebug(@"Time Stamp for Signature: (%@)",aTimeStamp);
     
     NSString *aStrToSign = [NSString stringWithFormat:@"%@-%@",aData,aTimeStamp];
     
@@ -1011,7 +1011,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     const char *cData = [aStrToSign cStringUsingEncoding:NSUTF8StringEncoding];
     
     if (!cData || !cKey) {
-        qlerror(@"Data or key to sign is null.");
+        LogError(@"Data or key to sign is null.");
         return @"";
     }
     
@@ -1026,7 +1026,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     result = [result stringByReplacingOccurrencesOfString:@"<" withString:@""];
     result = [result stringByReplacingOccurrencesOfString:@">" withString:@""];
     
-    qldebug(@"Signature for request: %@",result);
+    LogDebug(@"Signature for request: %@",result);
     return result;
 }
 
@@ -1050,7 +1050,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     MPSimpleKeychain *skc = [[MPSimpleKeychain alloc] initWithKeychainFile:MP_KEYCHAIN_FILE];
     MPKeyItem *keyItem = [skc retrieveKeyItemForService:kMPClientService error:&err];
     if (err) {
-        logit(lcl_vWarning,@"getClientKey: %@",err.localizedDescription);
+        LogWarning(@"getClientKey: %@",err.localizedDescription);
         return @"NA";
     }
     return keyItem.secret;

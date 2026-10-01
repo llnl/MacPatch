@@ -25,6 +25,7 @@
  */
 
 
+#import "Logger.h"
 #import "MPPatching.h"
 #import "MPSettings.h"
 #import "MPAsus.h"
@@ -121,7 +122,7 @@ typedef enum {
 		{
 			if ([self isTaskRunning:kScanRunning])
 			{
-				qlinfo(@"Patch scan is already running. Now exiting.");
+				LogInfo(@"Patch scan is already running. Now exiting.");
 				[self patchScanCompleted];
 				return nil;
 			} else {
@@ -142,7 +143,7 @@ typedef enum {
 	// Get Patch Group Patches
 	NSError *wsErr = nil;
 	MPRESTfull *mprest = [[MPRESTfull alloc] init];
-	qlinfo(@"Get approved patches list.");
+	LogInfo(@"Get approved patches list.");
 	if (bundleID != NULL)
 	{
 		// Filter on BundleID
@@ -155,14 +156,14 @@ typedef enum {
 	if (wsErr)
 	{
 		// Error getting approved patch group patches
-		qlerror(@"%@",wsErr.localizedDescription);
+		LogError(@"%@",wsErr.localizedDescription);
 		[self patchScanCompleted];
 		return result;
 	}
 	
 	if (!patchGroupPatches)
 	{
-		qlerror(@"There was a issue getting the approved patches, scan will exit.");
+		LogError(@"There was a issue getting the approved patches, scan will exit.");
 		[self patchScanCompleted];
 		return result;
 	}
@@ -172,7 +173,7 @@ typedef enum {
 		approvedApplePatches = patchGroupPatches[@"Apple"];
 		if (approvedApplePatches.count <= 0)
 		{
-			qlinfo(@"Warning: no apple updates have been approved for install.");
+			LogInfo(@"Warning: no apple updates have been approved for install.");
 		}
 	}
 	if ((contentType == kCustomPatches) || (contentType == kAllPatches))
@@ -180,14 +181,14 @@ typedef enum {
 		approvedCustomPatches = patchGroupPatches[@"Custom"];
 		if (approvedCustomPatches.count <= 0)
 		{
-			qlinfo(@"Warning: no custom updates have been approved for install.");
+			LogInfo(@"Warning: no custom updates have been approved for install.");
 		}
 	}
 	
 	// Scan for Apple Patches
 	if ((contentType == kApplePatches) || (contentType == kAllPatches))
 	{
-		qlinfo(@"Scanning for Apple software updates.");
+		LogInfo(@"Scanning for Apple software updates.");
 		
 		// New way, using the helper daemon
 		MPAsus *asus = [MPAsus new];
@@ -200,25 +201,25 @@ typedef enum {
 		// If no items in array, lets bail...
 		if (applePatchesArray.count == 0)
 		{
-			qlinfo(@"No Apple updates found.");
+			LogInfo(@"No Apple updates found.");
 		}
 		else
 		{
-			qlinfo(@"%ld Apple updates found.",applePatchesArray.count);
+			LogInfo(@"%ld Apple updates found.",applePatchesArray.count);
 			for (NSDictionary *d in applePatchesArray) {
-				qlinfo(@"Apple Patch Needed: %@",d[@"patch"]);
+				LogInfo(@"Apple Patch Needed: %@",d[@"patch"]);
 			}
 			
 			// We have Apple patches, now add them to the array of approved patches
 			// If no items in array, lets bail...
 			if (approvedApplePatches.count == 0)
 			{
-				qlinfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
+				LogInfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
 			}
 			else
 			{
 				// Build Approved Patches
-				qlinfo(@"Building approved patch list...");
+				LogInfo(@"Building approved patch list...");
 				
 				for (int i=0; i<[applePatchesArray count]; i++)
 				{
@@ -235,14 +236,14 @@ typedef enum {
 							{
 								if ([_approvedPatch[@"user_install"] intValue] == 1)
 								{
-									qlinfo(@"Approved (User Install) update %@",_applePatch[@"patch"]);
-									qldebug(@"Approved: %@",_approvedPatch);
+									LogInfo(@"Approved (User Install) update %@",_applePatch[@"patch"]);
+									LogDebug(@"Approved: %@",_approvedPatch);
 									[userInstallApplePatches addObject:@{@"type":@"Apple",@"patch":_applePatch[@"patch"]}];
 									break;
 								}
 							}
 							
-							qlinfo(@"Approved update %@",_applePatch[@"patch"]);
+							LogInfo(@"Approved update %@",_applePatch[@"patch"]);
 							tmpDict = [[NSMutableDictionary alloc] init];
 							[tmpDict setObject:@"Apple" forKey:@"type"];
 							[tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
@@ -269,7 +270,7 @@ typedef enum {
 								}
 							}
 							
-							qldebug(@"Apple Patch Dictionary Added: %@",tmpDict);
+							LogDebug(@"Apple Patch Dictionary Added: %@",tmpDict);
 							[approvedUpdatesArray addObject:tmpDict];
 							break;
 						}
@@ -282,7 +283,7 @@ typedef enum {
 	// Scan for Custom Patches to see what is relevant for the system
 	if ((contentType == kCustomPatches) || (contentType == kAllPatches))
 	{
-		qlinfo(@"Scanning for custom patch vulnerabilities...");
+		LogInfo(@"Scanning for custom patch vulnerabilities...");
 		MPPatchScan *scanner = [MPPatchScan new];
 		scanner.delegate = self;
 		
@@ -292,22 +293,22 @@ typedef enum {
 		}
 		else
 		{
-			qlinfo(@"Start custom patch scan.");
+			LogInfo(@"Start custom patch scan.");
 			customPatchesArray = [NSMutableArray arrayWithArray:[scanner scanForPatches]];
-			qlinfo(@"Custom patch scan completed.");
-			qlinfo(@"%ld custom patches needed.",customPatchesArray.count);
+			LogInfo(@"Custom patch scan completed.");
+			LogInfo(@"%ld custom patches needed.",customPatchesArray.count);
 			// Only post found patches on full scan, bundle id is for targeting sw install
 			// auto-updates
 			[self wsPostPatchScanResults:customPatchesArray type:kCustomPatches];
 		}
 		
-		qlinfo(@"Custom Patches Needed: %ld",customPatchesArray.count);
-		qldebug(@"Custom Patches Needed: %@",customPatchesArray);
-		qlinfo(@"Approved Custom Patches: %ld",approvedCustomPatches.count);
-		qldebug(@"Approved Custom Patches: %@",approvedCustomPatches);
+		LogInfo(@"Custom Patches Needed: %ld",customPatchesArray.count);
+		LogDebug(@"Custom Patches Needed: %@",customPatchesArray);
+		LogInfo(@"Approved Custom Patches: %ld",approvedCustomPatches.count);
+		LogDebug(@"Approved Custom Patches: %@",approvedCustomPatches);
 		
 		// Filter List of Patches containing only the approved patches
-		qlinfo(@"Building approved patch list...");
+		LogInfo(@"Building approved patch list...");
 		for (int i=0; i < customPatchesArray.count; i++)
 		{
 			NSDictionary *_customPatch = customPatchesArray[i];
@@ -316,7 +317,7 @@ typedef enum {
 				NSDictionary *_approvedPatch = approvedCustomPatches[x];
 				if ( [ _customPatch[@"patch_id"] isEqualTo:_approvedPatch[@"puuid"] ] )
 				{
-					qlinfo(@"Patch %@ approved for update.",_customPatch[@"description"]);
+					LogInfo(@"Patch %@ approved for update.",_customPatch[@"description"]);
 					tmpDict = [[NSMutableDictionary alloc] init];
 					[tmpDict setObject:@"Third" forKey:@"type"];
 					[tmpDict setObject:_customPatch[@"patch"] forKey:@"patch"];
@@ -330,7 +331,7 @@ typedef enum {
 					[tmpDict setObject:_customPatch[@"bundleID"] forKey:@"bundleID"];
 					[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
 
-					qldebug(@"Custom Patch Dictionary Added: %@",tmpDict);
+					LogDebug(@"Custom Patch Dictionary Added: %@",tmpDict);
 					[approvedUpdatesArray addObject:[tmpDict copy]];
 					tmpDict = nil;
 					break;
@@ -342,7 +343,7 @@ typedef enum {
     if (approvedUpdatesArray.count >= 1)
     {
         [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
-        qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
+        LogDebug(@"Approved patches to install: %@",approvedUpdatesArray);
         result = [NSArray arrayWithArray:approvedUpdatesArray];
     }
 	
@@ -374,7 +375,7 @@ typedef enum {
 		{
 			if ([self isTaskRunning:kScanRunning])
 			{
-				qlinfo(@"Patch scan is already running. Now exiting.");
+				LogInfo(@"Patch scan is already running. Now exiting.");
 				[self patchScanCompleted];
 				return nil;
 			} else {
@@ -395,7 +396,7 @@ typedef enum {
 	// Get Patch Group Patches
 	NSError *wsErr = nil;
 	MPRESTfull *mprest = [[MPRESTfull alloc] init];
-	qlinfo(@"Get approved patches list.");
+	LogInfo(@"Get approved patches list.");
     [self iLoadStatus:@"Status: Getting patch group patches."];
 	if (patchAll)
 	{
@@ -415,7 +416,7 @@ typedef enum {
 	{
 		if (!patchAll) { // If patch all, we dont care about approved patches.
 			// Error getting approved patch group patches
-			qlerror(@"%@",wsErr.localizedDescription);
+			LogError(@"%@",wsErr.localizedDescription);
 			[self patchScanCompleted];
             [self iLoadStatus:@"Completed: Error getting patch group patches."];
 			return result;
@@ -424,7 +425,7 @@ typedef enum {
 	
 	if (!patchGroupPatches && !patchAll)
 	{
-		qlerror(@"");
+		LogError(@"");
         [self iLoadStatus:@"Completed: There was a issue getting the approved patches, scan will exit."];
 		[self patchScanCompleted];
 		return result;
@@ -437,7 +438,7 @@ typedef enum {
 			approvedApplePatches = patchGroupPatches[@"Apple"];
 			if (approvedApplePatches.count <= 0)
 			{
-				qlinfo(@"Warning: no apple updates have been approved for install.");
+				LogInfo(@"Warning: no apple updates have been approved for install.");
 			}
 		}
 		if ((contentType == kCustomPatches) || (contentType == kAllPatches))
@@ -445,7 +446,7 @@ typedef enum {
 			approvedCustomPatches = patchGroupPatches[@"Custom"];
 			if (approvedCustomPatches.count <= 0)
 			{
-				qlinfo(@"Warning: no custom updates have been approved for install.");
+				LogInfo(@"Warning: no custom updates have been approved for install.");
 			}
 		}
 	}
@@ -453,7 +454,7 @@ typedef enum {
 	// Scan for Apple Patches
 	if ((contentType == kApplePatches) || (contentType == kAllPatches))
 	{
-		qlinfo(@"Scanning for Apple software updates.");
+		LogInfo(@"Scanning for Apple software updates.");
 		
 		// New way, using the helper daemon
 		MPAsus *asus = [MPAsus new];
@@ -467,26 +468,26 @@ typedef enum {
 		// If no items in array, lets bail...
 		if (applePatchesArray.count == 0)
 		{
-			qlinfo(@"No Apple updates found.");
+			LogInfo(@"No Apple updates found.");
             [self iLoadStatus:@"Status: No Apple updates found."];
 		}
 		else
 		{
-			qlinfo(@"%ld Apple updates found.",applePatchesArray.count);
+			LogInfo(@"%ld Apple updates found.",applePatchesArray.count);
 			for (NSDictionary *d in applePatchesArray) {
-				qlinfo(@"Apple Patch Needed: %@",d[@"patch"]);
+				LogInfo(@"Apple Patch Needed: %@",d[@"patch"]);
 			}
 			
 			// We have Apple patches, now add them to the array of approved patches
 			// If no items in array, lets bail...
 			if (approvedApplePatches.count == 0 && !patchAll)
 			{
-				qlinfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
+				LogInfo(@"No apple updates found for \"%@\" patch group.",settings.agent.patchGroup);
 			}
 			else
 			{
 				// Build Approved Patches
-				qlinfo(@"Building approved patch list...");
+				LogInfo(@"Building approved patch list...");
 				
 				for (int i=0; i<[applePatchesArray count]; i++)
 				{
@@ -503,14 +504,14 @@ typedef enum {
 							{
 								if ([_approvedPatch[@"user_install"] intValue] == 1)
 								{
-									qlinfo(@"Approved (User Install) update %@",_applePatch[@"patch"]);
-									qldebug(@"Approved: %@",_approvedPatch);
+									LogInfo(@"Approved (User Install) update %@",_applePatch[@"patch"]);
+									LogDebug(@"Approved: %@",_approvedPatch);
 									[userInstallApplePatches addObject:@{@"type":@"Apple",@"patch":_applePatch[@"patch"]}];
 									break;
 								}
 							}
 							
-							qlinfo(@"Approved update %@",_applePatch[@"patch"]);
+							LogInfo(@"Approved update %@",_applePatch[@"patch"]);
 							tmpDict = [[NSMutableDictionary alloc] init];
 							[tmpDict setObject:@"Apple" forKey:@"type"];
 							[tmpDict setObject:_applePatch[@"patch"] forKey:@"patch"];
@@ -537,7 +538,7 @@ typedef enum {
 								}
 							}
 							
-							qldebug(@"Apple Patch Dictionary Added: %@",tmpDict);
+							LogDebug(@"Apple Patch Dictionary Added: %@",tmpDict);
 							[approvedUpdatesArray addObject:tmpDict];
 							break;
 						}
@@ -551,7 +552,7 @@ typedef enum {
 	if ((contentType == kCustomPatches) || (contentType == kAllPatches))
 	{
         [self iLoadStatus:@"Scanning for custom patch vulnerabilities..."];
-		qlinfo(@"Scanning for custom patch vulnerabilities...");
+		LogInfo(@"Scanning for custom patch vulnerabilities...");
 		MPPatchScan *scanner = [MPPatchScan new];
 		scanner.delegate = self;
 		
@@ -561,23 +562,23 @@ typedef enum {
 		}
 		else
 		{
-			qlinfo(@"Start custom patch scan.");
+			LogInfo(@"Start custom patch scan.");
 			customPatchesArray = [NSMutableArray arrayWithArray:[scanner scanForPatches]];
-			qlinfo(@"Custom patch scan completed.");
-			qlinfo(@"%ld custom patches needed.",customPatchesArray.count);
+			LogInfo(@"Custom patch scan completed.");
+			LogInfo(@"%ld custom patches needed.",customPatchesArray.count);
 			// Only post found patches on full scan, bundle id is for targeting sw install
 			// auto-updates
 			[self wsPostPatchScanResults:customPatchesArray type:kCustomPatches];
 		}
 		
-		qlinfo(@"Custom Patches Needed: %ld",customPatchesArray.count);
-		qldebug(@"Custom Patches Needed: %@",customPatchesArray);
-		qlinfo(@"Approved Custom Patches: %ld",approvedCustomPatches.count);
-		qldebug(@"Approved Custom Patches: %@",approvedCustomPatches);
+		LogInfo(@"Custom Patches Needed: %ld",customPatchesArray.count);
+		LogDebug(@"Custom Patches Needed: %@",customPatchesArray);
+		LogInfo(@"Approved Custom Patches: %ld",approvedCustomPatches.count);
+		LogDebug(@"Approved Custom Patches: %@",approvedCustomPatches);
 
 		
 		// Filter List of Patches containing only the approved patches
-		qlinfo(@"Building approved patch list...");
+		LogInfo(@"Building approved patch list...");
 		for (int i=0; i < customPatchesArray.count; i++)
 		{
 			NSDictionary *_customPatch = customPatchesArray[i];
@@ -586,7 +587,7 @@ typedef enum {
 				NSDictionary *_approvedPatch = approvedCustomPatches[x];
 				if ( [ _customPatch[@"patch_id"] isEqualTo:_approvedPatch[@"puuid"] ] )
 				{
-					qlinfo(@"Patch %@ approved for update.",_customPatch[@"description"]);
+					LogInfo(@"Patch %@ approved for update.",_customPatch[@"description"]);
 					tmpDict = [[NSMutableDictionary alloc] init];
 					[tmpDict setObject:@"Third" forKey:@"type"];
 					[tmpDict setObject:_customPatch[@"patch"] forKey:@"patch"];
@@ -600,7 +601,7 @@ typedef enum {
 					[tmpDict setObject:_customPatch[@"bundleID"] forKey:@"bundleID"];
 					[tmpDict setObject:_approvedPatch[@"patch_install_weight"] forKey:@"patch_install_weight"];
 
-					qldebug(@"Custom Patch Dictionary Added: %@",tmpDict);
+					LogDebug(@"Custom Patch Dictionary Added: %@",tmpDict);
 					[approvedUpdatesArray addObject:[tmpDict copy]];
 					tmpDict = nil;
 					break;
@@ -612,7 +613,7 @@ typedef enum {
     if (approvedUpdatesArray.count >= 1)
     {
         [self addPatchesToClientDatabase:[approvedUpdatesArray copy]];
-        qldebug(@"Approved patches to install: %@",approvedUpdatesArray);
+        LogDebug(@"Approved patches to install: %@",approvedUpdatesArray);
         result = [NSArray arrayWithArray:approvedUpdatesArray];
     } else {
         MPClientDB *cdb = [MPClientDB new];
@@ -631,7 +632,7 @@ typedef enum {
 	
 	// Post notification on update UI
 	[[NSDistributedNotificationCenter defaultCenter] postNotificationName:@"kRequiredPatchesChangeNotification" object:nil userInfo:nil options:NSNotificationPostToAllSessions];
-	qlinfo(@"Patch Scan Completed.");
+	LogInfo(@"Patch Scan Completed.");
 }
 
 - (NSDictionary *)installPatchUsingTypeFilter:(NSDictionary *)approvedPatch typeFilter:(MPPatchContentType)contentType
@@ -641,8 +642,8 @@ typedef enum {
 
 - (NSDictionary *)installPatchesUsingTypeFilter:(NSArray *)approvedPatches typeFilter:(MPPatchContentType)contentType
 {
-	qldebug(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
-    qldebug(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
+	LogDebug(@"installPatchesUsingTypeFilter[approvedPatches]: %@",approvedPatches);
+    LogDebug(@"installPatchesUsingTypeFilter[typeFilter]: %d",contentType);
     
     // If MacOS 11 or later than filter out Apple Update
     // We will open the apple sys prefs SU pane
@@ -679,20 +680,20 @@ typedef enum {
 	if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
     
 	MPClientDB *cdb = [MPClientDB new];
-	qlinfo(@"Begin installing patches.");
+	LogInfo(@"Begin installing patches.");
 	for (i = 0; i < approvedPatches.count; i++)
 	{
 		// Create/Get Dictionary of Patch to install
 		NSDictionary *_patch = approvedPatches[i];
-		qlinfo(@"Patching: %@",_patch[@"patch"]);
-		qldebug(@"Patch Data: %@",_patch);
+		LogInfo(@"Patching: %@",_patch[@"patch"]);
+		LogDebug(@"Patch Data: %@",_patch);
 		
 		BOOL _patchNeedsReboot = [_patch[@"restart"] stringToBoolValue];
 		if (_patchNeedsReboot)
 		{
 			if (!canInstallRebootPatches)
 			{
-				qlinfo(@"%@(%@) requires a reboot, this patch will be installed on logout.",_patch[@"patch"],_patch[@"version"]);
+				LogInfo(@"%@(%@) requires a reboot, this patch will be installed on logout.",_patch[@"patch"],_patch[@"version"]);
 				patchesNeedingReboot++;
 				continue;
 			}
@@ -707,17 +708,17 @@ typedef enum {
 		if ([[_patch[@"type"] lowercaseString] isEqualTo:@"third"] && (contentType == kAllPatches || contentType == kCustomPatches))
 		{
 			
-			qlinfo(@"Starting install for %@",_patch[@"patch"]);
+			LogInfo(@"Starting install for %@",_patch[@"patch"]);
 			[self iLoadStatus:@"Begin: %@", _patch[@"patch"]];
 			//[self postStatusToDelegate:@"Begin: %@", _patch[@"patch"]];
 			
-			qldebug(@"Patch Data: %@",_patch);
+			LogDebug(@"Patch Data: %@",_patch);
 			
 			// Get all of the patches, main and subs
 			// This is messed up, not sure why I have an array right within an array, needs to be fixed ...later :-)
 			NSArray *patchPatchesArray = [NSArray arrayWithArray:_patch[@"patches"]];
-			qlinfo(@"Current patch has total patches associated with it %ld", patchPatchesArray.count);
-			qldebug(@"patchPatchesArray: %@", patchPatchesArray);
+			LogInfo(@"Current patch has total patches associated with it %ld", patchPatchesArray.count);
+			LogDebug(@"patchPatchesArray: %@", patchPatchesArray);
 			
 			MPFileUtils *fu;
 			NSString *dlPatchLoc; //Download location Path
@@ -732,7 +733,7 @@ typedef enum {
 				}
 				else
 				{
-					qlinfo(@"Object found was not of dictionary type; could be a problem. %@",patchPatchesArray[patchIndex]);
+					LogInfo(@"Object found was not of dictionary type; could be a problem. %@",patchPatchesArray[patchIndex]);
 					continue;
 				}
 				
@@ -741,8 +742,8 @@ typedef enum {
 				BOOL validHash = NO;
 				
 				// We have a currPatchToInstallDict to work with
-				//qlinfo(@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]);
-                qlinfo(@"Start install for patch %@ from %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent],_patch[@"patch"]);
+				//LogInfo(@"Start install for patch %@ from %@",currPatchToInstallDict[@"pkg_url"],_patch[@"patch"]);
+                LogInfo(@"Start install for patch %@ from %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent],_patch[@"patch"]);
 				[self postStatusToDelegate:@"Start install for patch %@ from %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent],_patch[@"patch"]];
 				
 				// *****************************
@@ -756,7 +757,7 @@ typedef enum {
 					dlPatchLoc = [stageDir stringByAppendingPathComponent:[currPatchToInstallDict[@"pkg_url"] lastPathComponent]];
 					if ([fm fileExistsAtPath:dlPatchLoc])
 					{
-						qlinfo(@"File has been staged to %@",dlPatchLoc);
+						LogInfo(@"File has been staged to %@",dlPatchLoc);
 						usingStagedPatch = YES;
 					}
 					
@@ -779,7 +780,7 @@ typedef enum {
 					// -------------------------------------------
 					if (downloadPatch)
 					{
-						qlinfo(@"Start download for patch %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]);
+						LogInfo(@"Start download for patch %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]);
 						[self postStatusToDelegate:@"Downloading %@",[currPatchToInstallDict[@"pkg_url"] lastPathComponent]];
 						NSString *patchURL;
 						BOOL useS3 = NO;
@@ -791,7 +792,7 @@ typedef enum {
 								useS3 = YES;
 								patchURL = mpr_res[@"url"];
 							} else {
-								qlerror(@"Result from getting the S3 url was nil. No download can occure.");
+								LogError(@"Result from getting the S3 url was nil. No download can occure.");
 								patchInstallErrors++;
 								[failedPatches addObject:_patch];
 								[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to download patch"];
@@ -802,7 +803,7 @@ typedef enum {
 						}
 						
 						
-						qlinfo(@"Download patch from: %@",patchURL);
+						LogInfo(@"Download patch from: %@",patchURL);
 						err = nil;
 						if (useS3) {
 							dlPatchLoc = [self downloadUpdate:patchURL useFullURL:YES error:&err];
@@ -810,13 +811,13 @@ typedef enum {
 							dlPatchLoc = [self downloadUpdate:patchURL error:&err];
 						}
 						if (err) {
-							qlerror(@"Error downloading a patch, skipping %@. Err Message: %@",_patch[@"patch"],err.localizedDescription);
+							LogError(@"Error downloading a patch, skipping %@. Err Message: %@",_patch[@"patch"],err.localizedDescription);
 							patchInstallErrors++;
 							[failedPatches addObject:_patch];
 							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 							break;
 						}
-						qlinfo(@"File downloaded to %@",dlPatchLoc);
+						LogInfo(@"File downloaded to %@",dlPatchLoc);
 						
 						// -------------------------------------------
 						// Validate hash, before install
@@ -824,8 +825,8 @@ typedef enum {
 						[self postStatusToDelegate:@"Verifying file hash..."];
 						if (![self doesHashMatch:dlPatchLoc knownHash:currPatchToInstallDict[@"pkg_hash"]])
 						{
-							qlerror(@"The downloaded file did not pass the file hash validation. No install will occur.");
-							qlerror(@"Remove: %@",dlPatchLoc);
+							LogError(@"The downloaded file did not pass the file hash validation. No install will occur.");
+							LogError(@"Remove: %@",dlPatchLoc);
 							
 							patchInstallErrors++;
 							[failedPatches addObject:_patch];
@@ -838,7 +839,7 @@ typedef enum {
 				}
 				@catch (NSException *e)
 				{
-					qlerror(@"%@", e);
+					LogError(@"%@", e);
 					patchInstallErrors++;
 					[failedPatches addObject:_patch];
 					[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
@@ -847,18 +848,18 @@ typedef enum {
 				
 				// *****************************
 				// Now we need to unzip
-				qlinfo(@"Uncompressing patch, to begin install.");
-				qlinfo(@"Begin decompression of file, %@",dlPatchLoc);
+				LogInfo(@"Uncompressing patch, to begin install.");
+				LogInfo(@"Begin decompression of file, %@",dlPatchLoc);
 				[self postStatusToDelegate:@"Decompressing file, %@",[dlPatchLoc lastPathComponent]];
 				err = nil;
 				fu = [MPFileUtils new];
 				[fu unzip:dlPatchLoc error:&err];
 				if (err)
 				{
-					qlerror(@"Error decompressing a patch, skipping %@. Err Message:%@",_patch[@"patch"],err.localizedDescription);
+					LogError(@"Error decompressing a patch, skipping %@. Err Message:%@",_patch[@"patch"],err.localizedDescription);
 					break;
 				}
-				qlinfo(@"Patch has been decompressed.");
+				LogInfo(@"Patch has been decompressed.");
 				
 				// *****************************
 				// Run PreInstall Script
@@ -866,7 +867,7 @@ typedef enum {
 				{
 					if ([currPatchToInstallDict[@"pkg_preinstall"] length] > 0 && ([currPatchToInstallDict[@"pkg_preinstall"] isEqualTo:@"NA"] == NO))
 					{
-						qlinfo(@"Begin pre install script.");
+						LogInfo(@"Begin pre install script.");
 						[self postStatusToDelegate:@"Begin pre install script."];
 						NSString *preInstScript = @"";
 						if ([currPatchToInstallDict[@"pkg_preinstall"] isBase64String])
@@ -881,8 +882,8 @@ typedef enum {
 						mpScript = [[MPScript alloc] init];
 						if ([mpScript runScript:preInstScript] == NO)
 						{
-							qlerror(@"Error running pre-install script.");
-							qlerror(@"Pre Install Script: %@",preInstScript);
+							LogError(@"Error running pre-install script.");
+							LogError(@"Pre Install Script: %@",preInstScript);
 							mpScript = nil;
 							break;
 						}
@@ -906,21 +907,21 @@ typedef enum {
 					for (int ii = 0; ii < pkgList.count; ii++)
 					{
 						pkgPath = [NSString stringWithFormat:@"%@/%@",pkgBaseDir,pkgList[ii]];
-						qlinfo(@"Installing %@",pkgPath.lastPathComponent);
+						LogInfo(@"Installing %@",pkgPath.lastPathComponent);
 						[self postStatusToDelegate:@"Installing %@",pkgPath.lastPathComponent];
-						qlinfo(@"Start install of %@",pkgPath);
+						LogInfo(@"Start install of %@",pkgPath);
 						mpInstaller = [[MPInstaller alloc] init];
 						int instalRes = -1;
 						instalRes = [mpInstaller installPkgToRoot:pkgPath env:currPatchToInstallDict[@"pkg_env_var"]];
 						if (instalRes != 0)
 						{
-							qlerror(@"Error installing package, error code %d.",instalRes);
+							LogError(@"Error installing package, error code %d.",instalRes);
 							[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch_id"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 							hadErr = YES;
 							break;
 						} else {
 							[cdb recordPatchInstall:_patch];
-							qlinfo(@"%@ was installed successfully.",pkgPath);
+							LogInfo(@"%@ was installed successfully.",pkgPath);
 						}
 					} // End Loop
 					
@@ -943,8 +944,8 @@ typedef enum {
 				}
 				@catch (NSException *e)
 				{
-					qlerror(@"%@", e);
-					qlerror(@"Error attempting to install patch, skipping %@.",_patch[@"patch"]);
+					LogError(@"%@", e);
+					LogError(@"Error attempting to install patch, skipping %@.",_patch[@"patch"]);
 					break;
 				}
 				
@@ -956,7 +957,7 @@ typedef enum {
 				{
 					if ([currPatchToInstallDict[@"pkg_postinstall"] length] > 0 && [currPatchToInstallDict[@"pkg_postinstall"] isEqualTo:@"NA"] == NO)
 					{
-						qlinfo(@"Begin post install script.");
+						LogInfo(@"Begin post install script.");
 						NSString *postInstScript = @"";
 						if ([currPatchToInstallDict[@"pkg_postinstall"] isBase64String])
 						{
@@ -970,8 +971,8 @@ typedef enum {
 						mpScript = [[MPScript alloc] init];
 						if ([mpScript runScript:postInstScript] == NO)
 						{
-							qlerror(@"Error running post-install script.");
-							qlerror(@"Post Install Script: %@",postInstScript);
+							LogError(@"Error running post-install script.");
+							LogError(@"Post Install Script: %@",postInstScript);
 							mpScript = nil;
 							break;
 						}
@@ -982,12 +983,12 @@ typedef enum {
 				// Install is complete, post result to web service
 				@try
 				{
-					qlinfo(@"Posting patch (%@) install to web service.",_patch[@"patch_id"]);
+					LogInfo(@"Posting patch (%@) install to web service.",_patch[@"patch_id"]);
 					[self postPatchInstallData:_patch patchType:kCustomPatches];
 				}
 				@catch (NSException *e)
 				{
-					qlerror(@"%@", e);
+					LogError(@"%@", e);
 				}
 				
 				if (iLoadMode == YES) fprintf(stdout, "Completed: %s\n", [_patch[@"patch"] cString]);
@@ -998,17 +999,17 @@ typedef enum {
 				{
 					if ([fm fileExistsAtPath:stageDir])
 					{
-						qlinfo(@"Removing staged patch dir %@",stageDir);
+						LogInfo(@"Removing staged patch dir %@",stageDir);
 						err = nil;
 						[fm removeItemAtPath:stageDir error:&err];
 						if (err) {
-							qlerror(@"Removing staged patch dir %@ failed.",stageDir);
-							qlerror(@"%@",err.localizedDescription);
+							LogError(@"Removing staged patch dir %@ failed.",stageDir);
+							LogError(@"%@",err.localizedDescription);
 						}
 					}
 				}
 				
-				qlinfo(@"Patch install completed.");
+				LogInfo(@"Patch install completed.");
 			}
 			// End patchArray To install
 			// ***************************************************************************************
@@ -1018,8 +1019,8 @@ typedef enum {
 		// ***************************************************************************************
 		else if ([[_patch[@"type"] lowercaseString] isEqualTo:@"apple"] && (contentType == kAllPatches || contentType == kApplePatches))
 		{
-			qlinfo(@"Starting install for %@",_patch[@"patch"]);
-			qldebug(@"Apple Dict:%@",_patch);
+			LogInfo(@"Starting install for %@",_patch[@"patch"]);
+			LogDebug(@"Apple Dict:%@",_patch);
 			[self iLoadStatus:@"Begin: %s",_patch[@"patch"]];
 
 			mpAsus = [MPAsus new];
@@ -1027,17 +1028,17 @@ typedef enum {
             
 			if ([_patch[@"hasCriteria"] boolValue] == NO || !_patch[@"hasCriteria"])
 			{
-				qlinfo(@"hasCriteria=No");
+				LogInfo(@"hasCriteria=No");
                 if (_patch[@"forceAppleReboot"]) {
                     
                 } else {
                     installResult = [mpAsus installAppleSoftwareUpdate:_patch[@"patch"]];
                 }
-				qlinfo(@"installResult(1): %@",installResult ? @"Yes":@"No");
+				LogInfo(@"installResult(1): %@",installResult ? @"Yes":@"No");
 			}
 			else
 			{
-				qlinfo(@"%@ has install criteria assigned to it.",_patch[@"patch"]);
+				LogInfo(@"%@ has install criteria assigned to it.",_patch[@"patch"]);
 				NSDictionary *criteriaDictPre, *criteriaDictPost;
 				NSString *scriptText;
 				
@@ -1045,7 +1046,7 @@ typedef enum {
 				// PreInstall First
 				if (_patch[@"criteria_pre"])
 				{
-					qlinfo(@"Processing pre-install criteria.");
+					LogInfo(@"Processing pre-install criteria.");
 					for (i=0; i < [_patch[@"criteria_pre"] count]; i++)
 					{
 						criteriaDictPre = _patch[@"criteria_pre"][i];
@@ -1062,12 +1063,12 @@ typedef enum {
 						if (![mpScript runScript:scriptText])
 						{
 							installResult = NO;
-							qlerror(@"Pre-install script returned false for %@. No install will occur.",_patch[@"patch"]);
+							LogError(@"Pre-install script returned false for %@. No install will occur.",_patch[@"patch"]);
 							goto instResult;
 						}
 						else
 						{
-							qlinfo(@"Pre-install script returned true.");
+							LogInfo(@"Pre-install script returned true.");
 						}
 					}
 				}
@@ -1077,7 +1078,7 @@ typedef enum {
 				// If Install retuened anything but 0, the dont run post criteria
 				if (!installResult)
 				{
-					qlerror(@"The install for %@ returned an error.",_patch[@"patch"]);
+					LogError(@"The install for %@ returned an error.",_patch[@"patch"]);
 					goto instResult;
 				}
 				if (mpAsus.patchMustShutdown) {
@@ -1086,7 +1087,7 @@ typedef enum {
 				
 				if (_patch[@"criteria_post"])
 				{
-					qlinfo(@"Processing post-install criteria.");
+					LogInfo(@"Processing post-install criteria.");
 					for (i=0; i < [_patch[@"criteria_post"] count]; i++)
 					{
 						criteriaDictPost = _patch[@"criteria_post"][i];
@@ -1103,10 +1104,10 @@ typedef enum {
 						if (![mpScript runScript:scriptText])
 						{
 							installResult = NO;
-							qlerror(@"Post-install script returned false for %@. No install will occur.",_patch[@"patch"]);
+							LogError(@"Post-install script returned false for %@. No install will occur.",_patch[@"patch"]);
 							goto instResult;
 						} else {
-							qlinfo(@"Post-install script returned true.");
+							LogInfo(@"Post-install script returned true.");
 						}
 					}
 				}
@@ -1115,7 +1116,7 @@ typedef enum {
 		instResult:
 			if (!installResult)
 			{
-				qlerror(@"Error installing update, error code %@.",installResult ? @"Yes":@"No");
+				LogError(@"Error installing update, error code %@.",installResult ? @"Yes":@"No");
 				[cdb recordHistory:kMPPatchType name:_patch[@"patch"] uuid:_patch[@"patch"] action:kMPInstallAction result:1 errorMsg:@"Failed to install patch"];
 				[failedPatches addObject:_patch];
 				patchInstallErrors++;
@@ -1123,7 +1124,7 @@ typedef enum {
 			}
 			else
 			{
-				qlinfo(@"%@ was installed successfully.",_patch[@"patch"]);
+				LogInfo(@"%@ was installed successfully.",_patch[@"patch"]);
 				[cdb recordPatchInstall:_patch];
 				patchesInstalled++;
 				if (_patchNeedsReboot) patchesRequireReboot++;
@@ -1132,16 +1133,16 @@ typedef enum {
 			// Post the results to web service
 			@try
 			{
-				qlinfo(@"Posting patch (%@) install to web service.",_patch[@"patch"]);
+				LogInfo(@"Posting patch (%@) install to web service.",_patch[@"patch"]);
 				[self postPatchInstallData:_patch patchType:kApplePatches];
 			}
 			@catch (NSException *e)
 			{
-				qlerror(@"%@", e);
+				LogError(@"%@", e);
 			}
 			
 			if (iLoadMode == YES) fprintf(stdout, "Completed: %s\n", [_patch[@"patch"] cString]);
-			qlinfo(@"Patch install completed.");
+			LogInfo(@"Patch install completed.");
 		}
 		else
 		{
@@ -1162,8 +1163,8 @@ typedef enum {
 	}
 	
 	// If any patches that were installed needed a reboot
-	qldebug(@"Number of installed patches needing a reboot, %d.", patchesRequireReboot);
-	qldebug(@"Number of reboot patches needing to be installed, %d.", patchesNeedingReboot);
+	LogDebug(@"Number of installed patches needing a reboot, %d.", patchesRequireReboot);
+	LogDebug(@"Number of reboot patches needing to be installed, %d.", patchesNeedingReboot);
 	NSDictionary *result = @{@"patchesNeedingReboot": [NSNumber numberWithInt:patchesRequireReboot],
 							 @"rebootPatchesNeeded": [NSNumber numberWithInt:patchesNeedingReboot],
 							 @"totalPatchesToInstall": [NSNumber numberWithInt:patchesToInstall],
@@ -1188,7 +1189,7 @@ typedef enum {
     if (!hasUserLoggedIn) canInstallRebootPatches = YES; //If no user logged in
     if (self.installRebootPatchesWhileLoggedIn) canInstallRebootPatches = YES; // Class override to allow reboot patches
     
-    qlinfo(@"Starting install for all apple patches.");
+    LogInfo(@"Starting install for all apple patches.");
 
     mpAsus = [MPAsus new];
     mpAsus.delegate = self;
@@ -1199,7 +1200,7 @@ typedef enum {
     // If Install retuened anything but 0, the dont run post criteria
     if (!installResult)
     {
-        qlerror(@"The install(s) for the apple patches returned an error.");
+        LogError(@"The install(s) for the apple patches returned an error.");
     }
     
     
@@ -1218,7 +1219,7 @@ typedef enum {
 
 - (void)asusProgress:(NSString *)data
 {
-    qlinfo(@"asusProgress: %@",data);
+    LogInfo(@"asusProgress: %@",data);
 	[self.delegate patchingProgress:self progress:data];
     [self postStatusToDelegate:data];
 }
@@ -1316,7 +1317,7 @@ typedef enum {
 			NSError *err = nil;
 			[fm removeItemAtPath:taskFile error:&err];
 			if (err) {
-				qlerror(@"File remove %@\nError=%@",taskFile,err.localizedDescription);
+				LogError(@"File remove %@\nError=%@",taskFile,err.localizedDescription);
 			}
 		}
 	}
@@ -1329,7 +1330,7 @@ typedef enum {
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
     if (iLoadMode == YES) {
-        qlinfo(@"Send to iLoad: %@",string);
+        LogInfo(@"Send to iLoad: %@",string);
         fprintf(stdout,"%s\n", [string cStringUsingEncoding:NSUTF8StringEncoding]);
     }
 }
@@ -1341,13 +1342,13 @@ typedef enum {
 	
 	if ([[knownHash uppercaseString] isEqualToString:[fileHash uppercaseString]])
 	{
-		qlinfo(@"%@ passed file hash check.",filePath.lastPathComponent);
+		LogInfo(@"%@ passed file hash check.",filePath.lastPathComponent);
 		return YES;
 	}
 	else
 	{
-		qlerror(@"Error, %@ failed file hash check.",filePath.lastPathComponent);
-		qldebug(@"Known: %@ Found: %@",knownHash,fileHash);
+		LogError(@"Error, %@ failed file hash check.",filePath.lastPathComponent);
+		LogDebug(@"Known: %@ Found: %@",knownHash,fileHash);
 		return NO;
 	}
 }
@@ -1371,7 +1372,7 @@ typedef enum {
 {
     @try
     {
-        qlinfo(@"Adding required patches to client database.");
+        LogInfo(@"Adding required patches to client database.");
         MPClientDB *cdb = [MPClientDB new];
         [cdb clearRequiredPatches];
 
@@ -1379,12 +1380,12 @@ typedef enum {
         {
             if (p) {
                 [cdb addRequiredPatch:p];
-                qldebug(@"Added %@",p[@"patch"]);
+                LogDebug(@"Added %@",p[@"patch"]);
             }
         }
         return;
     } @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
         return;
     }
     return;
@@ -1439,13 +1440,13 @@ typedef enum {
 	} else {
 		res = [req runSyncFileDownload:url downloadDirectory:dlDir error:&error];
 	}
-	qlerror(@"[downloadUpdate][res]:%@",res);
+	LogError(@"[downloadUpdate][res]:%@",res);
 	if (error) {
-		qlerror(@"[downloadUpdate][error]:%@",error.localizedDescription);
+		LogError(@"[downloadUpdate][error]:%@",error.localizedDescription);
 		if (err != NULL) {
 			*err = error;
 		} else {
-			qlerror(@"%@",error.localizedDescription);
+			LogError(@"%@",error.localizedDescription);
 		}
 	}
 	
@@ -1471,7 +1472,7 @@ typedef enum {
 	}
 	
 	if (!pType) {
-		qlerror(@"Error, invalid patch type. Can not post patch install." );
+		LogError(@"Error, invalid patch type. Can not post patch install." );
 	}
 	
 	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patchID,pType,settings.ccuid];
@@ -1488,12 +1489,12 @@ typedef enum {
 	
 	if (result.statusCode >= 200 && result.statusCode <= 299)
 	{
-		qlinfo(@"Results posted to web service.");
-		qldebug(@"[MPMpatching][postDataToWebService]: Data post to web service (%@), returned true.", urlPath);
-		qldebug(@"Data Result: %@",result.result);
+		LogInfo(@"Results posted to web service.");
+		LogDebug(@"[MPMpatching][postDataToWebService]: Data post to web service (%@), returned true.", urlPath);
+		LogDebug(@"Data Result: %@",result.result);
 	} else {
-		qlerror(@"Data post to web service (%@), returned false.", urlPath);
-		qldebug(@"%@",result.toDictionary);
+		LogError(@"Data post to web service (%@), returned false.", urlPath);
+		LogDebug(@"%@",result.toDictionary);
 		return NO;
 	}
 	

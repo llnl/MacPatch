@@ -67,10 +67,10 @@
         {
             patchGroupDict = [_dict objectForKey:pGroup];
             if ([patchGroupDict objectForKey:@"rev"]) {
-                qldebug(@"Patch Group Rev ID is %@",[patchGroupDict objectForKey:@"rev"]);
+                LogDebug(@"Patch Group Rev ID is %@",[patchGroupDict objectForKey:@"rev"]);
                 return [patchGroupDict objectForKey:@"rev"];
             } else {
-                qlerror(@"Patch Group Patches file did not contain the rev key.");
+                LogError(@"Patch Group Patches file did not contain the rev key.");
             }
         }
     }
@@ -129,12 +129,12 @@
             [agentDict setObject:@"true" forKey:@"needsreboot"];
         }
         
-        logit(lcl_vDebug, @"Agent Data: %@",agentDict);
+        LogDebug( @"Agent Data: %@",agentDict);
         return (NSDictionary *)agentDict;
     }
     @catch (NSException * e) {
-        logit(lcl_vError,@"[NSException]: %@",e);
-        logit(lcl_vError,@"No client checkin data will be posted.");
+        LogError(@"[NSException]: %@",e);
+        LogError(@"No client checkin data will be posted.");
         return nil;
     }
 }

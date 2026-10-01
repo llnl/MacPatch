@@ -24,6 +24,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "AppDelegate.h"
 #import "SoftwareViewController.h"
 #import "UpdatesVC.h"
@@ -92,8 +93,8 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableDebugLogging"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"enableScanOnLaunch"];
 	[defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"preStageRebootPatches"];
-	// [defaultValues setObject:[NSNumber numberWithBool:NO] forKey:@"allowRebootPatchInstalls"];
     [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"allowRebootPatchInstalls"];
+    [defaultValues setObject:[NSNumber numberWithBool:YES] forKey:@"showSoftwareView"];
 	[[NSUserDefaults standardUserDefaults] registerDefaults:defaultValues];
 }
 
@@ -112,10 +113,16 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     [defaults synchronize];
 	
 	NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MacPatch.log"];
-	[MPLog setupLogging:_logFile level:lcl_vInfo];
-	[LCLLogFile setMirrorsToStdErr:YES];
-	
-	qlinfo(@"Logging up and running");
+
+	// Setup new Logger
+	Logger *logger = [Logger sharedLogger];
+	[logger setupWithLogPath:_logFile subsystem:@"gov.llnl.mp.MacPatch" category:@"app"];
+	logger.enableFileLogging = YES;
+	logger.enableConsoleLogging = NO;
+	logger.enableStderrLogging = YES;
+	logger.minimumLogLevel = LogLevelInfo;
+
+	LogInfo(@"Logging up and running");
     
     // instantiate the controllers array
     _availableControllers = [[NSMutableArray alloc] init];
@@ -165,8 +172,10 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     // This will be a nsdefault
     NSButton *button = [[NSButton alloc] init];
 	BOOL showSoftware = [[NSUserDefaults standardUserDefaults] boolForKey:MPUserDefaultsShowSoftwareView];
+	LogInfo(@"[AppDelegate] showSoftware preference: %@", showSoftware ? @"YES" : @"NO");
     button.tag = showSoftware ? 0 : 1; // Default to Software if shown, otherwise Updates
-    
+	LogInfo(@"[AppDelegate] Initial view tag: %ld (0=Software, 1=Updates)", (long)button.tag);
+
     [self changeView:button];
 	[self setDefaultPatchCount:0];
     
@@ -308,7 +317,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	int action = 0; // 0 = normal reboot, 1 = shutdown
 	NSFileManager *fm = [NSFileManager defaultManager];
 	if ([fm fileExistsAtPath:@"/private/tmp/.asusHalt"]) {
-        qlinfo(@"MacPatch issued a launchctl kAEShutDown.");
+        LogInfo(@"MacPatch issued a launchctl kAEShutDown.");
 		action = 1;
 	}
     
@@ -317,12 +326,12 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 		case 0:
             [self setAuthRestart];
 			error = SendAppleEventToSystemProcess(kAERestart);
-			qlinfo(@"MacPatch issued a launchctl kAERestart.");
+			LogInfo(@"MacPatch issued a launchctl kAERestart.");
 			break;
 		case 1:
             [self setAuthRestart];
 			error = SendAppleEventToSystemProcess(kAEShutDown);
-			qlinfo(@"MacPatch issued a kAEShutDown.");
+			LogInfo(@"MacPatch issued a kAEShutDown.");
 			break;
 		default:
 			// Code
@@ -337,15 +346,15 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     if ([d boolForKey:@"authRestartEnabled"]) {
         [self connectAndExecuteCommandBlock:^(NSError * connectError) {
             if (connectError != nil) {
-                qlerror(@"connectError: %@",connectError.localizedDescription);
+                LogError(@"connectError: %@",connectError.localizedDescription);
             } else {
                 [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                    qlerror(@"proxyError: %@",proxyError.localizedDescription);
+                    LogError(@"proxyError: %@",proxyError.localizedDescription);
                 }] enableAuthRestartWithReply:^(NSError *error, NSInteger result) {
                     if (error) {
-                        qlerror(@"Error, unable to enable FileVault auth restart");
+                        LogError(@"Error, unable to enable FileVault auth restart");
                     }
-                    qlinfo(@"MacPatch Database created and updated.");
+                    LogInfo(@"MacPatch Database created and updated.");
                 }];
             }
         }];
@@ -388,7 +397,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 	NSString *query = url.query;
 	if ([query isEqualToString:@"openAndScan"])
 	{
-		qlinfo(@"openAndScan");
+		LogInfo(@"openAndScan");
 		_eventAction = MPEventActionPatchScan;
 		[self changeView:self->_UpdatesToolbarButton];
 	}
@@ -413,18 +422,18 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
     
     [self connectAndExecuteCommandBlock:^(NSError *connectError) {
         if (connectError != nil) {
-            qlerror(@"Failed to connect to helper for database creation: %@", 
+            LogError(@"Failed to connect to helper for database creation: %@", 
                     connectError.localizedDescription);
             return;
         }
         
         [[self.worker remoteObjectProxyWithErrorHandler:^(NSError *proxyError) {
-            qlerror(@"Failed to create database proxy: %@", proxyError.localizedDescription);
+            LogError(@"Failed to create database proxy: %@", proxyError.localizedDescription);
         }] createAndUpdateDatabase:^(BOOL result) {
             if (result) {
-                qlinfo(@"MacPatch Database created and updated successfully.");
+                LogInfo(@"MacPatch Database created and updated successfully.");
             } else {
-                qlerror(@"MacPatch Database creation failed.");
+                LogError(@"MacPatch Database creation failed.");
             }
         }];
     }];
@@ -437,7 +446,9 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
  */
 - (void)displayViewController:(NSViewController *)controller
 {
+	LogInfo(@"[AppDelegate] displayViewController called for: %@", NSStringFromClass([controller class]));
     NSView *view = controller.view;
+	LogInfo(@"[AppDelegate] Got view: %@", view);
     
     // Calculate window size
     NSSize currentSize = viewHolder.contentView.frame.size;
@@ -503,10 +514,10 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 - (void)connectToHelperTool
 // Ensures that we're connected to our helper tool.
 {
-    qlinfo(@"connectToHelperTool");
+    LogInfo(@"connectToHelperTool");
 	assert([NSThread isMainThread]);
 	if (self.worker == nil) {
-        qlinfo(@"connectToHelperTool: self.worker == nil");
+        LogInfo(@"connectToHelperTool: self.worker == nil");
 		self.worker = [[NSXPCConnection alloc] initWithMachServiceName:kHelperServiceName options:NSXPCConnectionPrivileged];
 		self.worker.remoteObjectInterface = [NSXPCInterface interfaceWithProtocol:@protocol(MPHelperProtocol)];
 		
@@ -531,7 +542,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 		};
 #pragma clang diagnostic pop
 		[self.worker resume];
-        qlinfo(@"connectToHelperTool: [self.worker resume]");
+        LogInfo(@"connectToHelperTool: [self.worker resume]");
 	}
 }
 
@@ -539,7 +550,7 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 // Connects to the helper tool and then executes the supplied command block on the
 // main thread, passing it an error indicating if the connection was successful.
 {
-    qlinfo(@"connectAndExecuteCommandBlock");
+    LogInfo(@"connectAndExecuteCommandBlock");
 	NSParameterAssert(commandBlock != nil);
 	assert([NSThread isMainThread]);
 	
@@ -550,10 +561,10 @@ typedef NS_ENUM(NSInteger, MPViewControllerIndex) {
 		NSError *error = [NSError errorWithDomain:@"gov.llnl.mp.MacPatch" 
 											 code:-1 
 										 userInfo:@{NSLocalizedDescriptionKey: @"Failed to connect to helper tool"}];
-        qlerror(@"connectAndExecuteCommandBlock: %@", error);
+        LogError(@"connectAndExecuteCommandBlock: %@", error);
 		commandBlock(error);
 	} else {
-        qlerror(@"connectAndExecuteCommandBlock: done");
+        LogError(@"connectAndExecuteCommandBlock: done");
 		commandBlock(nil);
 	}
 }

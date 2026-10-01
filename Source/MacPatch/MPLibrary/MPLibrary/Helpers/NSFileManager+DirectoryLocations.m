@@ -19,6 +19,7 @@
 //     distribution.
 //
 
+#import "Logger.h"
 #import "NSFileManager+DirectoryLocations.h"
 
 #undef  ql_component
@@ -121,7 +122,7 @@ NSString * const DirectoryLocationDomain = @"DirectoryLocationDomain";
             {
                 [fm setAttributes:attributes ofItemAtPath:resolvedPath error:&fErr];
                 if (fErr) {
-                    qlerror(@"Error, %@",fErr.localizedDescription);
+                    LogError(@"Error, %@",fErr.localizedDescription);
                 }
 
                 NSArray *contents = [fm contentsOfDirectoryAtPath:resolvedPath error:NULL];
@@ -195,11 +196,11 @@ NSString * const DirectoryLocationDomain = @"DirectoryLocationDomain";
     NSString *result;
 	result = [self findOrCreateDirectory:NSApplicationSupportDirectory inDomain:aDomainMask appendPathComponent:executableName directoryAttributes:attributes error:&error];
     if (error) {
-        qlerror(@"%@", error);
+        LogError(@"%@", error);
     }
 	if (!result)
 	{
-		qlerror(@"Unable to find or create application support directory:\n%@", error);
+		LogError(@"Unable to find or create application support directory:\n%@", error);
 	}
 	return result;
 }

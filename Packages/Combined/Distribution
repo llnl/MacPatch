@@ -11,6 +11,7 @@
             my.result.type = 'Fatal';
             return false;
         } else {
+            /*
             if (system.files.fileExistsAtPath('/Library/MacPatch/Client/.mpVersion.plist')) {
                 mpData = system.files.plistAtPath('/Library/MacPatch/Client/.mpVersion.plist');
                 var versionString = mpData['version'];
@@ -25,6 +26,7 @@
                     return false;
                 }
             }
+            */
         }
         return true;
     }
