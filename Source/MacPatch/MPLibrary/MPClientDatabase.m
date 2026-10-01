@@ -25,6 +25,7 @@
  */
 
 
+#import "Logger.h"
 #import "MPClientDatabase.h"
 #import "FMDatabase.h"
 #import "FMXDatabaseManager.h"
@@ -94,7 +95,7 @@ Record the install of a software task.
 			NSError *error = nil;
 			NSData *jsonData = [NSJSONSerialization dataWithJSONObject:swTask options:0 error:&error];
 			if (!jsonData) {
-				qlerror(@"%s: error: %@", __func__, error.localizedDescription);
+				LogError(@"%s: error: %@", __func__, error.localizedDescription);
 				sw.json_data = @"[]";
 			} else {
 				sw.json_data = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
@@ -119,7 +120,7 @@ Record the install of a software task.
 			NSError *error = nil;
 			NSData *jsonData = [NSJSONSerialization dataWithJSONObject:swTask options:0 error:&error];
 			if (!jsonData) {
-				qlerror(@"%s: error: %@", __func__, error.localizedDescription);
+				LogError(@"%s: error: %@", __func__, error.localizedDescription);
 				sw.json_data = @"[]";
 			} else {
 				sw.json_data = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
@@ -134,7 +135,7 @@ Record the install of a software task.
 		return result;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 		return result;
 	}
 	return result;
@@ -171,7 +172,7 @@ Record the install of a software task.
 		
 		// Query all records
 		NSArray *records = [[DBInstalledSoftware query] allRecords];
-		qldebug(@"Installed Software tasks found %lu.",(unsigned long)records.count);
+		LogDebug(@"Installed Software tasks found %lu.",(unsigned long)records.count);
 		
 		for (DBInstalledSoftware *row in records) {
 			[swTasks addObject:row.tuuid];
@@ -181,7 +182,7 @@ Record the install of a software task.
 		return [swTasks copy];
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return [swTasks copy];
@@ -211,7 +212,7 @@ Record the install of a software task.
 		
 		return result;
 	} @catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 		return result;
 	}
 }
@@ -226,7 +227,7 @@ Record the install of a software task.
  */
 - (BOOL)recordPatchInstall:(NSDictionary *)patch
 {
-	qlinfo(@"[recordPatchInstall]: %@",patch[@"patch"]);
+	LogInfo(@"[recordPatchInstall]: %@",patch[@"patch"]);
 	
 	BOOL result = NO;
 	@try
@@ -244,11 +245,11 @@ Record the install of a software task.
 		
 		result = [self recordHistory:kMPPatchType name:_patch uuid:_patchID action:kMPInstallAction result:0 errorMsg:NULL];
 		[self removeRequiredPatch:_type patchID:_patchID patch:_patch];
-		qldebug(@"%@ patch install was added to local db.",_patch);
+		LogDebug(@"%@ patch install was added to local db.",_patch);
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return result;
@@ -261,7 +262,7 @@ Record the install of a software task.
 	BOOL result = NO;
 	@try
 	{
-		qldebug(@"[FMDB] addRequiredPatch: %@",patch);
+		LogDebug(@"[FMDB] addRequiredPatch: %@",patch);
 		
 		NSNumber *patchReboot = @(0);
 		NSString *patchVersion = @"0";
@@ -291,7 +292,7 @@ Record the install of a software task.
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	return result;
 }
@@ -303,7 +304,7 @@ Record the install of a software task.
 	BOOL result = NO;
 	@try
 	{
-		qlinfo(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
+		LogInfo(@"RemoveRequiredPatch: %@, %@, %@", type,patchID,patch);
 		FMXDatabaseManager *manager = [FMXDatabaseManager sharedManager];
 		[manager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
 		FMDatabase *db = [manager defaultDatabase];
@@ -311,8 +312,8 @@ Record the install of a software task.
 		
 		[db executeUpdate:@"DELETE FROM required_patches WHERE type = ? AND patch_id = ? AND patch = ?", type, patchID, patch];
 		if ([db lastErrorCode] != 0) {
-			qlerror(@"Error, unable to find patch id %@ to remove record.", patchID);
-			qlerror(@"Error %d: %@", [db lastErrorCode], [db lastErrorMessage]);
+			LogError(@"Error, unable to find patch id %@ to remove record.", patchID);
+			LogError(@"Error %d: %@", [db lastErrorCode], [db lastErrorMessage]);
 		} else {
 			result = YES;
 		}
@@ -321,7 +322,7 @@ Record the install of a software task.
 		return result;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return result;
@@ -339,7 +340,7 @@ Record the install of a software task.
 		
 		// Query all records
 		NSArray *records = [[DBRequiredPatches query] allRecords];
-		qldebug(@"Required patches found %lu.",(unsigned long)records.count);
+		LogDebug(@"Required patches found %lu.",(unsigned long)records.count);
 		
 		for (DBInstalledSoftware *row in records) {
 			[patches addObject:row.tuuid];
@@ -349,7 +350,7 @@ Record the install of a software task.
 		return [patches copy];
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return [patches copy];
@@ -366,7 +367,7 @@ Record the install of a software task.
 	BOOL result = NO;
 	@try
 	{
-		qlinfo(@"Clearing required patches.");
+		LogInfo(@"Clearing required patches.");
 		FMXDatabaseManager *manager = [FMXDatabaseManager sharedManager];
 		[manager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];
 		FMDatabase *db = [manager defaultDatabase];
@@ -380,7 +381,7 @@ Record the install of a software task.
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	return result;
 }
@@ -403,7 +404,7 @@ Record the install of a software task.
 - (BOOL)recordHistory:(DBHistoryType)hstType name:(NSString *)aName uuid:(NSString *)aUUID
 			   action:(DBHistoryAction)aAction result:(NSInteger)code errorMsg:(NSString * _Nullable)aErrMsg
 {
-	qlinfo(@"[recordHistory]: hstType=%ld\nname=%@\nuuid=%@\naction=%ld\nresult=%ld\nerrorMsg=%@",hstType,aName,aUUID,aAction,(long)code,aErrMsg);
+	LogInfo(@"[recordHistory]: hstType=%ld\nname=%@\nuuid=%@\naction=%ld\nresult=%ld\nerrorMsg=%@",hstType,aName,aUUID,aAction,(long)code,aErrMsg);
 	
 	
 	@try
@@ -433,7 +434,7 @@ Record the install of a software task.
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"[recordHistory]: %@",exception);
+		LogError(@"[recordHistory]: %@",exception);
 		return NO;
 	}
 }
@@ -470,14 +471,14 @@ Record the install of a software task.
 			[sw delete];
 			result = YES;
 		} else {
-			qlerror(@"Error, unable to find task id %@ to remove install record.", tuuid);
+			LogError(@"Error, unable to find task id %@ to remove install record.", tuuid);
 		}
 		
 		[db close];
 		return result;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 		return result;
 	}
 	

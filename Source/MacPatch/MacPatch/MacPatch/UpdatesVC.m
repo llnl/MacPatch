@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "UpdatesVC.h"
 #import "UpdatesCellView.h"
 #import "AppDelegate.h"
@@ -142,17 +143,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"%@",connectError);
+			LogError(@"%@",connectError);
 			[self stopScan];
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"%@",proxyError);
+				LogError(@"%@",proxyError);
 				[self stopScan];
 			}] scanForPatchesUsingFilter:patchContentType withReply:^(NSError *error, NSData *patches,
 																 NSData *patchGroupData) {
 				
 				if (error) {
-					qlerror(@"error: %@",error.localizedDescription);
+					LogError(@"error: %@",error.localizedDescription);
 				}
 				
 				NSDictionary *patchDict = [NSKeyedUnarchiver unarchiveObjectWithData:patches];
@@ -181,7 +182,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                         for (NSDictionary *ad in apple_patches) {
                             NSString *strSize = [ad[@"size"] stringByReplacingOccurrencesOfString:@"K" withString:@""];
                             size = size + [strSize intValue];
-                            qlinfo(@"CEH append == %@",ad[@"patch"]);
+                            LogInfo(@"CEH append == %@",ad[@"patch"]);
                             if (apple_patches.lastObject == ad) {
                                 [descriptionStr appendFormat:@"%@",ad[@"patch"]];
                             } else {
@@ -242,7 +243,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     
     for (int i = 0; i < _tableView.numberOfRows; i++) {
         UpdatesCellView *_cell = [_tableView viewAtColumn:0 row:i makeIfNecessary:FALSE];
-        qlinfo(@"_cell.rowData: %@",_cell.rowData);
+        LogInfo(@"_cell.rowData: %@",_cell.rowData);
         if ([_cell.rowData[@"restart"] isEqualToString:@"Yes"]) {
             rebootPatchCount++;
             if ([_cell.rowData[@"type"] isEqualToString:@"Apple"]) {
@@ -254,7 +255,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         }
     }
     
-    qlinfo(@"rebootPatchCount: %d",rebootPatchCount);
+    LogInfo(@"rebootPatchCount: %d",rebootPatchCount);
     if (rebootPatchCount >= 1)
     {
         NSAlert *alert = [[NSAlert alloc] init];
@@ -299,30 +300,30 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+			LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
 		} else {
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"%@",proxyError);
+				LogError(@"%@",proxyError);
 			}] installPatches:(NSArray *)allPatches userInstallRebootPatch:allowInstallInt withReply:^(NSError *error, NSInteger resultCode) {
 
 
                 [[NSNotificationCenter defaultCenter] removeObserver:self name:NSFileHandleDataAvailableNotification object:nil];
                 
 				if (error) {
-					qlerror(@"Result Code(%ld): %@",resultCode,error.localizedDescription);
+					LogError(@"Result Code(%ld): %@",resultCode,error.localizedDescription);
 				}
 				
 				if (resultCode == 0) {
-					qlinfo(@"Install was sucessful");
+					LogInfo(@"Install was sucessful");
 				} else {
-					qlerror(@"resultCode: %ld",resultCode);
+					LogError(@"resultCode: %ld",resultCode);
 					if (!error) {
 						// No error obj, need to create one
 						error = [NSError errorWithDomain:@"gov.llnl.patch.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:@"Error installing patch. See helper logs for more details."}];
 					}
 					
-					qlerror(@"Error[%ld] installing patches.", resultCode);
+					LogError(@"Error[%ld] installing patches.", resultCode);
 				}
                 
                 dispatch_async(dispatch_get_main_queue(), ^{
@@ -505,15 +506,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				{
 					if (connectError != nil)
 					{
-						qlerror(@"connectError: %@",connectError.localizedDescription);
+						LogError(@"connectError: %@",connectError.localizedDescription);
 					}
 					else
 					{
 						[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-							qlerror(@"proxyError: %@",proxyError.localizedDescription);
+							LogError(@"proxyError: %@",proxyError.localizedDescription);
 						}] fvAuthrestartAccountIsValid:^(NSError *err, BOOL result) {
 							if (err) {
-								qlerror(@"%@",err.localizedDescription);
+								LogError(@"%@",err.localizedDescription);
 							}
 							// User account is out of sync, post notification.
 							if (!result) {
@@ -655,7 +656,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
-    //qlinfo(@"postStatus[%d]: %@",type,status);
+    //LogInfo(@"postStatus[%d]: %@",type,status);
     
 	if (type == kMPPatchProcessStatus)
 	{
@@ -671,14 +672,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	}
 	else if (type == kMPPatchAllProcessProgress)
 	{
-        //qlinfo(@"postStatus[kMPPatchAllProcessProgress]: %@",status);
+        //LogInfo(@"postStatus[kMPPatchAllProcessProgress]: %@",status);
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_patchAllProgressBar setDoubleValue:[status doubleValue]];
 		});
 	}
 	else if (type == kMPPatchAllProcessStatus)
 	{
-        //qlinfo(@"postStatus[kMPPatchAllProcessStatus]: %@",status);
+        //LogInfo(@"postStatus[kMPPatchAllProcessStatus]: %@",status);
 		dispatch_async(dispatch_get_main_queue(), ^{
 			[self->_patchAllPatchStatusText setStringValue:status];
 		});
@@ -687,7 +688,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)postPatchInstallStatus:(NSString *)patchID type:(MPPostDataType)type
 {
-    //qlinfo(@"postPatchInstallStatus: %@",patchID);
+    //LogInfo(@"postPatchInstallStatus: %@",patchID);
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     __block NSInteger pCount = [defaults integerForKey:@"PatchCount"];
     __block NSString *cellPatchID = @"";
@@ -788,7 +789,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 #pragma mark - Post to Server
 - (void)postPatchesFound:(NSArray *)aPatches
 {
-	qldebug(@"Patches: %@",aPatches);
+	LogDebug(@"Patches: %@",aPatches);
 }
 
 - (void)postPatchInstall:(NSDictionary *)aPatch sucess:(BOOL)sucess
@@ -855,7 +856,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     if (row == -1 || row >= _content.count) { return; }
     NSMutableDictionary *patch = [self mutablePatchAtRow:row];
     if (!patch) {
-        qlerror(@"[updatesCellViewDidStartInstall] Could not get mutable patch at row %ld", (long)row);
+        LogError(@"[updatesCellViewDidStartInstall] Could not get mutable patch at row %ld", (long)row);
         return;
     }
     patch[@"isInstalling"] = @YES;
@@ -883,7 +884,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     if (row == -1 || row >= _content.count) { return; }
     NSMutableDictionary *patch = [self mutablePatchAtRow:row];
     if (!patch) {
-        qlerror(@"[updatesCellView:didUpdateProgress] Could not get mutable patch at row %ld", (long)row);
+        LogError(@"[updatesCellView:didUpdateProgress] Could not get mutable patch at row %ld", (long)row);
         return;
     }
     patch[@"isInstalling"] = @YES;
@@ -909,7 +910,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     if (row == -1 || row >= _content.count) { return; }
     NSMutableDictionary *patch = [self mutablePatchAtRow:row];
     if (!patch) {
-        qlerror(@"[updatesCellViewDidFinish] Could not get mutable patch at row %ld", (long)row);
+        LogError(@"[updatesCellViewDidFinish] Could not get mutable patch at row %ld", (long)row);
         return;
     }
     patch[@"isInstalling"] = @NO;

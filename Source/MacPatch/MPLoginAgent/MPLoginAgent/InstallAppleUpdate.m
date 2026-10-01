@@ -83,7 +83,7 @@ typedef NSUInteger MPPostDataType;
         appArgs = @[@"-i", aUpdate];
     }
     
-    logit(lcl_vInfo,@"softwareupdate Args: %@",appArgs);
+    LogInfo(@"softwareupdate Args: %@",appArgs);
     
     GCDTask *gTask = [[GCDTask alloc] init];
     
@@ -103,22 +103,22 @@ typedef NSUInteger MPPostDataType;
                     // Found the Done. string, should exit
                     //foundDone = YES;
                 }
-                logit(lcl_vDebug,@"%@",output);
+                LogDebug(@"%@",output);
 				[self->_delegate installData:self data:output type:kMPInstallStatus];
             } else {
-                logit(lcl_vDebug,@"%@",output);
+                LogDebug(@"%@",output);
             }
         }
         
     } andErrorBlock:^(NSData *stdErrData) {
         NSString *output = [[NSString alloc] initWithData:stdErrData encoding:NSUTF8StringEncoding];
-        logit(lcl_vError,@"[installAppleSoftwareUpdate][stdErr]: %@",output);
+        LogError(@"[installAppleSoftwareUpdate][stdErr]: %@",output);
         
     } onLaunch:^{
-        logit(lcl_vInfo,@"Task has started running.");
+        LogInfo(@"Task has started running.");
         [self startTaskTimeout];
     } onExit:^(int exitStatus){
-        logit(lcl_vInfo,@"Task has now quit. %d",exitStatus);
+        LogInfo(@"Task has now quit. %d",exitStatus);
         exitCode = exitStatus;
         dispatch_semaphore_signal(semaphore);
     }];
@@ -177,7 +177,7 @@ typedef NSUInteger MPPostDataType;
     }
     @catch (NSException *e)
     {
-        logit(lcl_vError,@"Install returned error. %@\n%@",[e reason],[e userInfo]);
+        LogError(@"Install returned error. %@\n%@",[e reason],[e userInfo]);
         taskResult = 1;
         if(timeoutTimer) {
             [timeoutTimer invalidate];
@@ -202,11 +202,11 @@ typedef NSUInteger MPPostDataType;
                 if ([tmpStr containsString:@"Done."] == YES) {
                     foundDone = YES;
                 }
-                logit(lcl_vDebug,@"%@",tmpStr);
+                LogDebug(@"%@",tmpStr);
                 [_delegate installData:self data:tmpStr type:kMPInstallStatus];
                 //[self postDataToClient:tmpStr type:kMPInstallStatus];
             } else {
-                logit(lcl_vDebug,@"%@",tmpStr);
+                LogDebug(@"%@",tmpStr);
             }
         }
         
@@ -217,7 +217,7 @@ typedef NSUInteger MPPostDataType;
     [[aPipe fileHandleForReading] closeFile];
 
     if (taskTimedOut == YES) {
-        logit(lcl_vError,@"Task was terminated due to timeout.");
+        LogError(@"Task was terminated due to timeout.");
         [NSThread sleepForTimeInterval:2.0];
         taskResult = 1;
         goto done;
@@ -236,7 +236,7 @@ typedef NSUInteger MPPostDataType;
                 taskResult = 1;
             }
         } else {
-            logit(lcl_vError,@"Install returned error. Code:[%d]",[task terminationStatus]);
+            LogError(@"Install returned error. Code:[%d]",[task terminationStatus]);
             taskResult = 1;
         }
     }
@@ -262,13 +262,13 @@ typedef NSUInteger MPPostDataType;
         } else if (dataType == kMPInstallStatus) {
             [_client installData:data];
         } else {
-            logit(lcl_vError,@"MPPostDataType not supported.");
+            LogError(@"MPPostDataType not supported.");
         }
     }
     @catch (NSException *exception) {
-        logit(lcl_vError,@"%@",exception);
+        LogError(@"%@",exception);
     }
-    logit(lcl_vInfo,@"%@",data);
+    LogInfo(@"%@",data);
      */
 }
 
@@ -276,7 +276,7 @@ typedef NSUInteger MPPostDataType;
 - (void)taskTimeoutThread
 {
     @autoreleasepool {
-        logit(lcl_vDebug,@"Timeout is set to %d",taskTimeoutValue);
+        LogDebug(@"Timeout is set to %d",taskTimeoutValue);
         NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
                                                           target:self
                                                         selector:@selector(taskTimeout:)
@@ -290,7 +290,7 @@ typedef NSUInteger MPPostDataType;
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-    logit(lcl_vInfo,@"Task timedout, killing task.");
+    LogInfo(@"Task timedout, killing task.");
     [timeoutTimer invalidate];
     [self setTaskTimedOut:YES];
     [task terminate];
@@ -301,7 +301,7 @@ typedef NSUInteger MPPostDataType;
 
 - (void)startTaskTimeout
 {
-    logit(lcl_vInfo,@"Start timeout thread");
+    LogInfo(@"Start timeout thread");
     timeoutThread = [[NSThread alloc] initWithTarget:self selector:@selector(taskTimeoutThread) object:nil];
     [timeoutThread start];
 }
@@ -321,7 +321,7 @@ typedef NSUInteger MPPostDataType;
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-    logit(lcl_vError,@"Task timedout, killing task.");
+    LogError(@"Task timedout, killing task.");
     [gcdTask RequestTermination];    
 }
 

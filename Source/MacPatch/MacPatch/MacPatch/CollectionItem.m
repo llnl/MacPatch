@@ -140,8 +140,9 @@
 -(id)copyWithZone:(NSZone *)zone
 {
 	id result = [super copyWithZone:zone];
-    [[NSBundle mainBundle] loadNibNamed:@"CollectionItem" owner:result topLevelObjects:nil];
-	//[NSBundle loadNibNamed:@"CollectionItem" owner:result];
+    NSArray *topLevelObjects = nil;
+    [[NSBundle mainBundle] loadNibNamed:@"CollectionItem" owner:result topLevelObjects:&topLevelObjects];
+    [result setTopLevelObjects:topLevelObjects];
 	return result;
 }
 

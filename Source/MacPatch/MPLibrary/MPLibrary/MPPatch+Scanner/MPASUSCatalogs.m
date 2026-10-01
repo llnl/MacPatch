@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPASUSCatalogs.h"
 #import "MPNetworkUtils.h"
 #import "MPSystemInfo.h"
@@ -62,7 +63,7 @@
     {
         NSDictionary *osVerInfo = [MPSystemInfo osVersionOctets];
         if ([[osVerInfo objectForKey:@"major"] intValue] >= 11) {
-            qlinfo(@"Apple Software Catalogs are no longer supported.");
+            LogInfo(@"Apple Software Catalogs are no longer supported.");
             return result;
         }
         
@@ -77,12 +78,12 @@
 		}
 		// Set the catalog now
 		// For Mac OS X 10.10 or higher
-		qlinfo(@"Setting catalog using softwareupdate, to %@",aCatalogURL);
+		LogInfo(@"Setting catalog using softwareupdate, to %@",aCatalogURL);
 		[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/softwareupdate" arguments:[NSArray arrayWithObjects:@"--set-catalog",aCatalogURL,nil]];
 	}
 	@catch ( NSException *e )
     {
-		qlerror(@"Error unable to set CatalogURL.");
+		LogError(@"Error unable to set CatalogURL.");
 		result = FALSE;
 	}
 	
@@ -104,7 +105,7 @@
         return YES;
     }
     
-	qlinfo(@"Reset CatalogURL to default.");
+	LogInfo(@"Reset CatalogURL to default.");
 	[NSTask launchedTaskWithLaunchPath:@"/usr/sbin/softwareupdate" arguments:@[@"--clear-catalog"]];
 	return YES;
 }
@@ -126,7 +127,7 @@
 {
     NSArray *suServers = settings.suservers;
     if (suServers.count <= 0) {
-        qlinfo(@"Software update server list is empty. Can not set CatalogURL");
+        LogInfo(@"Software update server list is empty. Can not set CatalogURL");
 		[self resetCatalogURL];
         return YES;
     }
@@ -138,11 +139,11 @@
         {
             if ([mpNetworkUtils isURLValid:server.catalogURL returnCode:200])
             {
-                qldebug(@"SU Catalog verified: %@",server.catalogURL);
+                LogDebug(@"SU Catalog verified: %@",server.catalogURL);
                 newCatalogURL = server.catalogURL;
                 break;
             } else {
-                qlerror(@"CatalogURL: %@ did not return 200.",server.catalogURL);
+                LogError(@"CatalogURL: %@ did not return 200.",server.catalogURL);
                 continue;
             }
         }

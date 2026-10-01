@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "UpdateInstallOperation.h"
 #import "GlobalQueueManager.h"
 #import "LongPatchWindow.h"
@@ -96,7 +97,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		cellStopNote = [NSString stringWithFormat:@"patchStop-%@",@"NA"];
 	}
 	
-	qldebug(@"Setup Set Patch");
+	LogDebug(@"Setup Set Patch");
 	qltrace(@"cellStartNote: %@",cellStartNote);
 	qltrace(@"cellProgressNote: %@",cellProgressNote);
 	qltrace(@"cellStopNote: %@",cellStopNote);
@@ -122,9 +123,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[self didChangeValueForKey:@"isFinished"];
 	qltrace(@"-(void)finish ... calling %@",cellStopNote);
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
-	//qlinfo(@"finish");
+	//LogInfo(@"finish");
 	//(@"showRebootWindow: %d",showRebootWindow);
-    //qlinfo(@"[FINISH][GlobalQueueManager sharedInstance].globalQueue.operationCount = %lu",(unsigned long)[GlobalQueueManager sharedInstance].globalQueue.operationCount);
+    //LogInfo(@"[FINISH][GlobalQueueManager sharedInstance].globalQueue.operationCount = %lu",(unsigned long)[GlobalQueueManager sharedInstance].globalQueue.operationCount);
     
     NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
     if ([GlobalQueueManager sharedInstance].globalQueue.operationCount == 0) {
@@ -156,7 +157,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     } else {
         [self setRebootActionDefault:showRebootWindow];
     }
-	//qlinfo(@"finish");
+	//LogInfo(@"finish");
 }
 
 - (void)setRebootActionDefault:(NSInteger)action
@@ -200,22 +201,22 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		[self runPatchInstall];
 	}
 	@catch (NSException * e) {
-		qlerror(@"[NSException]: %@",e);
+		LogError(@"[NSException]: %@",e);
 	}
 	[self finish];
 }
 
 - (void)runPatchInstall
 {
-    qlinfo(@"Start Patch Install");
-    qlinfo(@"Patch: %@",self->patch);
+    LogInfo(@"Start Patch Install");
+    LogInfo(@"Patch: %@",self->patch);
     
 	[self postPatchStatus:@"Start Patch Install"];
 	dispatch_semaphore_t sem = dispatch_semaphore_create(0);
 	
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+			LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
 			[self willChangeValueForKey:@"userInfo"];
 			self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
 			[self didChangeValueForKey:@"userInfo"];
@@ -227,21 +228,21 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             int allowRebPtch = 1;
 			
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"%@",proxyError);
+				LogError(@"%@",proxyError);
 				dispatch_semaphore_signal(sem);
 			}] installPatch:self->patch userInstallRebootPatch:allowRebPtch withReply:^(NSError *error, NSInteger resultCode) {
 				
-				qldebug(@"installPatch:self->patch withReply");
-				qldebug(@"resultCode: %ld",resultCode);
+				LogDebug(@"installPatch:self->patch withReply");
+				LogDebug(@"resultCode: %ld",resultCode);
 				
 				if (error) {
-					qlerror(@"%@",error.localizedDescription);
+					LogError(@"%@",error.localizedDescription);
 				}
 				NSString *_needsReboot = self->patch[@"restart"];
-                qlinfo(@"_needsReboot = %@", _needsReboot);
+                LogInfo(@"_needsReboot = %@", _needsReboot);
 				if (resultCode == 0 || resultCode == 1000) // 1000 is a signal for patch that needs a halt
 				{
-					qlinfo(@"Install was sucessful");
+					LogInfo(@"Install was sucessful");
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = nil;
 					[self didChangeValueForKey:@"userInfo"];
@@ -251,13 +252,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 						if ([_needsReboot.lowercaseString isEqualToString:@"yes"])
 						{
 							if (resultCode == 1000) {
-								//qlinfo(@"resultCode == 1000");
+								//LogInfo(@"resultCode == 1000");
 								self->showRebootWindow = 2;
-								//qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+								//LogInfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
 							} else {
-								//qlinfo(@"resultCode == 0");
+								//LogInfo(@"resultCode == 0");
 								self->showRebootWindow = 1;
-								//qlinfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
+								//LogInfo(@"runPatchInstall: showRebootWindow: %d",self->showRebootWindow);
 							}
 						}
 					}
@@ -267,12 +268,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 						error = [NSError errorWithDomain:@"gov.llnl.patch.oper" code:1001 userInfo:@{NSLocalizedDescriptionKey:@"Error installing patch. See helper logs for more details."}];
 					}
 					
-					qlerror(@"Error[%ld] installing %@", resultCode, self->patch[@"patch"]);
+					LogError(@"Error[%ld] installing %@", resultCode, self->patch[@"patch"]);
 					// Set Error info
 					[self willChangeValueForKey:@"userInfo"];
 					self->userInfo = @{@"status":@"", @"error":error};
 					[self didChangeValueForKey:@"userInfo"];
-					qlerror(@"Setting userInfo: %@",self->userInfo);
+					LogError(@"Setting userInfo: %@",self->userInfo);
 				}
 				
 				dispatch_semaphore_signal(sem);
@@ -324,7 +325,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				qlerror(@"connection invalidated");
+				LogError(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop
@@ -349,14 +350,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)patchProgress:(NSString *)progressStr
 {
-	//qlinfo(@"patchProgress: %@",progressStr);
+	//LogInfo(@"patchProgress: %@",progressStr);
 	[self postPatchStatus:progressStr];
 }
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
 	if (type == kMPProcessStatus) {
-		qlinfo(@"%@",status);
+		LogInfo(@"%@",status);
 		[self postPatchStatus:status];
 	}
 }

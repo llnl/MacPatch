@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPPython.h"
 #include "Python/Python.h"
 #include <stdlib.h>
@@ -138,7 +139,7 @@
                           NSLocalizedRecoverySuggestionErrorKey: NSLocalizedString(@"Have you tried turning it off and on again?", nil)};
             *error = [NSError errorWithDomain:@"gov.llnl.py.error" code:10002 userInfo:userInfo];
         }
-        qlinfo(@"Function (%@) does not exist.",@"xaudit");
+        LogInfo(@"Function (%@) does not exist.",@"xaudit");
         Py_Finalize();
         return result;
     }
@@ -170,7 +171,7 @@
     if (py_value != NULL) {
         if (PyDict_Check(py_value)) {
             result = [self dictionaryFromPyObject:py_value];
-            qlerror(@"%@",result);
+            LogError(@"%@",result);
         } else if (PyString_Check(py_value)) {
             result = [self stringFromPyObject:py_value];
         }
@@ -222,7 +223,7 @@
     // Convert PyObject to NSObject id type
     result = [self idFromPyObject:py_result];
     if (!result) {
-        qlerror(@"Failed converting PyObject to id object.");
+        LogError(@"Failed converting PyObject to id object.");
         if (error != NULL) {
             userInfo = @{ NSLocalizedDescriptionKey: NSLocalizedString(@"Operation was unsuccessful.", nil),
                           NSLocalizedFailureReasonErrorKey: NSLocalizedString(@"Failed converting PyObject to id object.", nil),
@@ -272,7 +273,7 @@
         result = [self arrayFromPyObject:pyObj];
     }
     else {
-        qlerror(@"Warning, idFromPyObject failed.");
+        LogError(@"Warning, idFromPyObject failed.");
         result = nil;
     }
     

@@ -5,6 +5,7 @@
 //  Copyright © 2018 Charles Heizer. All rights reserved.
 //
 
+#import "Logger.h"
 #import "MPDownloadManager.h"
 
 static const void *kMPDownloadManagerStateQueueKey = &kMPDownloadManagerStateQueueKey;
@@ -228,9 +229,9 @@ static id _sharedManager = nil;
 	NSURLSessionConfiguration *config 		= [NSURLSessionConfiguration backgroundSessionConfigurationWithIdentifier:bgSessionID];
 	config.requestCachePolicy 				= NSURLRequestReloadIgnoringLocalCacheData;
 	config.HTTPMaximumConnectionsPerHost	= kSessionMaxConnection;
-	qldebug(@"Setting timeoutIntervalForResource to %f",self.resourceTimeout);
+	LogDebug(@"Setting timeoutIntervalForResource to %f",self.resourceTimeout);
 	config.timeoutIntervalForResource 	 	= self.resourceTimeout;
-	qldebug(@"Setting timeoutIntervalForRequest to %f",self.requestTimeout);
+	LogDebug(@"Setting timeoutIntervalForRequest to %f",self.requestTimeout);
 	config.timeoutIntervalForRequest 		= self.requestTimeout;
 	
 	NSOperationQueue *sQueue 			= [[NSOperationQueue alloc] init];

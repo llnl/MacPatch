@@ -6,6 +6,7 @@
 //  Copyright © 2019 Charles Heizer. All rights reserved.
 //
 
+#import "Logger.h"
 #import "MPClientDB.h"
 
 // Models
@@ -120,7 +121,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		NSError *error = nil;
 		NSData *jsonData = [NSJSONSerialization dataWithJSONObject:swTask options:0 error:&error];
 		if (!jsonData) {
-			qlerror(@"%s: error: %@", __func__, error.localizedDescription);
+			LogError(@"%s: error: %@", __func__, error.localizedDescription);
 			sw.json_data = @"[]";
 		} else {
 			sw.json_data = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
@@ -142,7 +143,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		return result;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 		return result;
 	}
 	return result;
@@ -193,7 +194,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		return [swTasks copy];
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return [swTasks copy];
@@ -219,7 +220,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         return [swTasks copy];
     }
     @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
     }
     
     return [swTasks copy];
@@ -271,7 +272,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
  */
 - (BOOL)recordPatchInstall:(NSDictionary *)patch
 {
-	qldebug(@"[recordPatchInstall]: %@",patch[@"patch"]);
+	LogDebug(@"[recordPatchInstall]: %@",patch[@"patch"]);
 	BOOL result = NO;
 	@try
 	{
@@ -288,11 +289,11 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		
 		result = [self recordHistory:kMPPatchType name:_patch uuid:_patchID action:kMPInstallAction result:0 errorMsg:NULL];
 		[self removeRequiredPatch:_type patchID:_patchID patch:_patch];
-		qldebug(@"%@ patch install was added to local db.",_patch);
+		LogDebug(@"%@ patch install was added to local db.",_patch);
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return result;
@@ -309,13 +310,13 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	BOOL result = NO;
 	@try
 	{
-		qldebug(@"[addRequiredPatch]: %@",patch);
+		LogDebug(@"[addRequiredPatch]: %@",patch);
 		
 		NSNumber *patchReboot = @(0);
 		NSString *patchVersion = @"0";
 		NSString *patchID = [patch[@"type"] isEqualToString:@"Apple"] ? patch[@"patch"] : patch[@"patch_id"];
 		
-        //qlinfo(@"[addRequiredPatch]: patchID=%@",patchID);
+        //LogInfo(@"[addRequiredPatch]: patchID=%@",patchID);
     
 		if ([patch[@"restart"] isEqualToString:@"Yes"]) patchReboot = @(1);
 		if (![patch[@"version"] isKindOfClass:[NSNull class]]) patchVersion = patch[@"version"];
@@ -324,25 +325,25 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         if (patch[@"type"]) {
             rp.type = patch[@"type"];
         } else {
-            qlerror(@"Required patch is missing type.");
+            LogError(@"Required patch is missing type.");
             return result;
         }
         if (patchID) {
             rp.patch_id = patchID;
         } else {
-            qlerror(@"Required patch is missing patch ID.");
+            LogError(@"Required patch is missing patch ID.");
             return result;
         }
         if (patch[@"patch"]) {
             rp.patch = patch[@"patch"];
         } else {
-            qlerror(@"Required patch is missing patch.");
+            LogError(@"Required patch is missing patch.");
             return result;
         }
         if (patchVersion) {
             rp.patch_version = patchVersion;
         } else {
-            qlerror(@"Required patch is missing patchVersion.");
+            LogError(@"Required patch is missing patchVersion.");
             rp.patch_version = @"0";
         }
 
@@ -361,7 +362,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
     }
 	@catch (NSException *exception)
 	{
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 
 	return result;
@@ -400,7 +401,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		return YES;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return NO;
@@ -473,7 +474,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	}
 	@catch (NSException *exception)
 	{
-		qlerror(@"[recordHistory]: %@",exception);
+		LogError(@"[recordHistory]: %@",exception);
 		return NO;
 	}
 }
@@ -491,7 +492,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 		return hstArr;
 	}
 	@catch (NSException *exception) {
-		qlerror(@"%@",exception);
+		LogError(@"%@",exception);
 	}
 	
 	return [NSArray array];
@@ -515,7 +516,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	//dbDict = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:data error:&err];
 	
 	if (err) {
-		qlerror(@"Error %@.",err.localizedDescription);
+		LogError(@"Error %@.",err.localizedDescription);
 	}
 }
 
@@ -528,7 +529,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 	BOOL result = [NSKeyedArchiver archiveRootObject:d toFile:dbFile];
 	if (!result) {
-		qlerror(@"Error writing data to %@.",dbFile);
+		LogError(@"Error writing data to %@.",dbFile);
 	}
     
 	/* 10.13 and higher

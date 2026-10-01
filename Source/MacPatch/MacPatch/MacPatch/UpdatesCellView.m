@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "UpdatesCellView.h"
 #import "GlobalQueueManager.h"
 #import "UpdateInstallOperation.h"
@@ -78,7 +79,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
             
             // CRITICAL: Check if frame is valid
             if (NSIsEmptyRect(pbar) || pbar.size.width <= 0) {
-                qlwarning(@"[awakeFromNib] _patchProgressBar frame is invalid, using fallback positioning");
+                LogWarning(@"[awakeFromNib] _patchProgressBar frame is invalid, using fallback positioning");
                 // Use a fallback position relative to the cell view
                 pbar = NSMakeRect(20, 20, self.bounds.size.width - 40, 4);
             }
@@ -117,7 +118,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     
     BOOL isInstalling = [_rowData[@"isInstalling"] boolValue];
     
-    qldebug(@"[configureCellUI] self=%p delegate=%@ rowData=%@", self, self.delegate, self.rowData);
+    LogDebug(@"[configureCellUI] self=%p delegate=%@ rowData=%@", self, self.delegate, self.rowData);
     
     if (isInstalling) {
         NSNumber *progress = _rowData[@"progress"] ?: @0;
@@ -179,7 +180,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     [super prepareForReuse];
     
-    qldebug(@"[prepareForReuse] self=%p delegate=%@ rowData=%@", self, self.delegate, self.rowData);
+    LogDebug(@"[prepareForReuse] self=%p delegate=%@ rowData=%@", self, self.delegate, self.rowData);
     
     // CRITICAL: Remove notification observers to prevent cross-cell updates
     [self removeNotificationObserver];
@@ -228,7 +229,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 			self.worker.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.worker = nil;
-				qlerror(@"connection invalid ated");
+				LogError(@"connection invalid ated");
 			}];
 		};
 #pragma clang diagnostic pop
@@ -246,19 +247,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (BOOL)isRowDataValidForInstall
 {
     if (![self.rowData isKindOfClass:[NSDictionary class]] || self.rowData.count == 0) {
-        qlerror(@"[runInstall] rowData is nil or invalid");
+        LogError(@"[runInstall] rowData is nil or invalid");
         return NO;
     }
     
     NSString *patchType = self.rowData[@"type"];
     if (![patchType isKindOfClass:[NSString class]] || patchType.length == 0) {
-        qlerror(@"[runInstall] rowData missing or invalid type");
+        LogError(@"[runInstall] rowData missing or invalid type");
         return NO;
     }
     
     NSString *patchIdentifier = [self currentPatchIdentifier];
     if (patchIdentifier.length == 0) {
-        qlerror(@"[runInstall] rowData missing patch identifier");
+        LogError(@"[runInstall] rowData missing patch identifier");
         return NO;
     }
     
@@ -283,19 +284,19 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)notifyDelegateInstallStartedIfPossible
 {
-    qldebug(@"[notifyDelegateInstallStartedIfPossible] self=%p delegate=%@ delegateClass=%@ rowData=%@",
+    LogDebug(@"[notifyDelegateInstallStartedIfPossible] self=%p delegate=%@ delegateClass=%@ rowData=%@",
             self, self.delegate, NSStringFromClass([self.delegate class]), self.rowData);
     
     if (self.delegate == nil) {
-        qlerror(@"[notifyDelegateInstallStartedIfPossible] delegate is nil");
+        LogError(@"[notifyDelegateInstallStartedIfPossible] delegate is nil");
         return;
     }
     
     if ([self.delegate respondsToSelector:@selector(updatesCellViewDidStartInstall:rowData:)]) {
-        qlinfo(@"[notifyDelegateInstallStartedIfPossible] calling delegate updatesCellViewDidStartInstall:rowData:");
+        LogInfo(@"[notifyDelegateInstallStartedIfPossible] calling delegate updatesCellViewDidStartInstall:rowData:");
         [self.delegate updatesCellViewDidStartInstall:self rowData:self.rowData];
     } else {
-        qlerror(@"[notifyDelegateInstallStartedIfPossible] delegate %@ does not respond to updatesCellViewDidStartInstall:rowData:",
+        LogError(@"[notifyDelegateInstallStartedIfPossible] delegate %@ does not respond to updatesCellViewDidStartInstall:rowData:",
                 NSStringFromClass([self.delegate class]));
     }
 }
@@ -304,13 +305,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
     GlobalQueueManager *q = [GlobalQueueManager sharedInstance];
     if (q.globalQueue == nil) {
-        qlerror(@"[queueInstallOperation] globalQueue is nil");
+        LogError(@"[queueInstallOperation] globalQueue is nil");
         [self stopCellInstallWithError:YES errorString:@"Install queue is unavailable"];
         return;
     }
     
     dispatch_async(dispatch_get_main_queue(), ^(void) {
-        qldebug(@"[queueInstallOperation] Operation Queue Count: %lu", (unsigned long)q.globalQueue.operationCount);
+        LogDebug(@"[queueInstallOperation] Operation Queue Count: %lu", (unsigned long)q.globalQueue.operationCount);
         if (q.globalQueue.operationCount > 1) {
             [self.updateButton setTitle:@"Waiting..."];
             [self.updateButton setEnabled:NO];
@@ -322,27 +323,27 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     BOOL needsReboot = [self.rowData[@"restart"] stringToBoolValue];
     
     if (needsReboot && !allowInstall) {
-        qlinfo(@"[queueInstallOperation] patch requires reboot and allowInstall is NO");
+        LogInfo(@"[queueInstallOperation] patch requires reboot and allowInstall is NO");
         [self stopCellInstallIsRebootPatch];
         return;
     }
     
     UpdateInstallOperation *inst = [[UpdateInstallOperation alloc] init];
     if (!inst) {
-        qlerror(@"[queueInstallOperation] Failed to create UpdateInstallOperation");
+        LogError(@"[queueInstallOperation] Failed to create UpdateInstallOperation");
         [self stopCellInstallWithError:YES errorString:@"Failed to create install operation"];
         return;
     }
     
     inst.patch = [self.rowData copy];
     if (!inst.patch) {
-        qlerror(@"[queueInstallOperation] Failed to assign patch to UpdateInstallOperation");
+        LogError(@"[queueInstallOperation] Failed to assign patch to UpdateInstallOperation");
         [self stopCellInstallWithError:YES errorString:@"Patch data is invalid"];
         return;
     }
     
-    qlinfo(@"[queueInstallOperation] Queueing patch install operation for %@", [self currentPatchIdentifier]);
-    qldebug(@"[queueInstallOperation] queued patch: %@", inst.patch);
+    LogInfo(@"[queueInstallOperation] Queueing patch install operation for %@", [self currentPatchIdentifier]);
+    LogDebug(@"[queueInstallOperation] queued patch: %@", inst.patch);
     [q.globalQueue addOperation:inst];
 }
 
@@ -351,12 +352,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)runInstall:(NSButton *)sender
 {
     NSString *buttonTitle = sender.title ?: @"";
-    qlinfo(@"[runInstall] called");
-    qlinfo(@"[runInstall] self=%p delegate=%@ delegateClass=%@ buttonTitle=%@ rowData=%@",
+    LogInfo(@"[runInstall] called");
+    LogInfo(@"[runInstall] self=%p delegate=%@ delegateClass=%@ buttonTitle=%@ rowData=%@",
            self, self.delegate, NSStringFromClass([self.delegate class]), buttonTitle, self.rowData);
     
     if (![sender isKindOfClass:[NSButton class]]) {
-        qlerror(@"[runInstall] sender was not NSButton");
+        LogError(@"[runInstall] sender was not NSButton");
         return;
     }
     
@@ -365,7 +366,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     }
     
     if ([self isCellBusy]) {
-        qlwarning(@"[runInstall] ignoring request because cell is already busy");
+        LogWarning(@"[runInstall] ignoring request because cell is already busy");
         return;
     }
     
@@ -375,7 +376,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     
     // Apple patches are handled by System Settings / Software Update.
     if ([patchType isEqualToString:@"Apple"]) {
-        qlinfo(@"[runInstall] Apple patch selected, opening Software Update preference pane");
+        LogInfo(@"[runInstall] Apple patch selected, opening Software Update preference pane");
         
         [self notifyDelegateInstallStartedIfPossible];
         
@@ -388,7 +389,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
         
         BOOL opened = [NSWorkspace.sharedWorkspace openURL:[NSURL fileURLWithPath:ASUS_PREF_PANE]];
         if (!opened) {
-            qlerror(@"[runInstall] Failed to open Software Update preference pane: %@", ASUS_PREF_PANE);
+            LogError(@"[runInstall] Failed to open Software Update preference pane: %@", ASUS_PREF_PANE);
             dispatch_async(dispatch_get_main_queue(), ^{
                 self.patchStatus.stringValue = @"Failed to open Software Update";
                 [self.updateButton setTitle:@"Install"];
@@ -409,7 +410,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
                 [defaults setInteger:1 forKey:@"AlertOnRebootPatch"];
                 [defaults synchronize];
             } else {
-                qlinfo(@"[runInstall] User cancelled reboot patch alert");
+                LogInfo(@"[runInstall] User cancelled reboot patch alert");
                 [self.updateButton setEnabled:YES];
                 return;
             }
@@ -418,10 +419,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     
     [self notifyDelegateInstallStartedIfPossible];
     
-    qlinfo(@"[runInstall] setting up notifications");
+    LogInfo(@"[runInstall] setting up notifications");
     [self setupNotification];
     
-    qlinfo(@"[runInstall] setting up install UI");
+    LogInfo(@"[runInstall] setting up install UI");
     [self setupCellInstall];
     
     [self queueInstallOperation];
@@ -429,11 +430,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (IBAction)runInstallAlt:(NSButton *)sender
 {
-    qlinfo(@"[runInstallAlt] called self=%p delegate=%@ buttonTitle=%@ rowData=%@",
+    LogInfo(@"[runInstallAlt] called self=%p delegate=%@ buttonTitle=%@ rowData=%@",
            self, self.delegate, sender.title ?: @"", self.rowData);
     
     if (![sender isKindOfClass:[NSButton class]]) {
-        qlerror(@"[runInstallAlt] sender was not NSButton");
+        LogError(@"[runInstallAlt] sender was not NSButton");
         return;
     }
     
@@ -442,7 +443,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
     }
     
     if ([self isCellBusy]) {
-        qlwarning(@"[runInstallAlt] ignoring request because cell is already busy");
+        LogWarning(@"[runInstallAlt] ignoring request because cell is already busy");
         return;
     }
     
@@ -454,7 +455,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)workerStatusText:(NSString *)aStatus
 {
-	qlinfo(@"WST: %@",aStatus);
+	LogInfo(@"WST: %@",aStatus);
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self->_patchStatus.stringValue = aStatus ?: @"";
 	});
@@ -476,7 +477,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	_cellProgressNote = [NSString stringWithFormat:@"patchProg-%@",pID];
 	_cellStopNote = [NSString stringWithFormat:@"patchStop-%@",pID];
     
-    qldebug(@"[setupNotification] self=%p patchID=%@ start=%@ progress=%@ stop=%@",
+    LogDebug(@"[setupNotification] self=%p patchID=%@ start=%@ progress=%@ stop=%@",
             self, pID, _cellStartNote, _cellProgressNote, _cellStopNote);
 	
 	// Remove any existing observers first to prevent duplicates
@@ -570,7 +571,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)stopCellInstallWithError:(BOOL)hadError errorString:(NSString *)errStr
 {
-	qlinfo(@"stopCellInstallWithError");
+	LogInfo(@"stopCellInstallWithError");
 	
 	dispatch_async(dispatch_get_main_queue(), ^{
 		// Reset Progressbar and text
@@ -622,7 +623,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 - (void)stopCellInstallIsRebootPatch
 {
-	qlinfo(@"stopCellInstallIsRebootPatch");
+	LogInfo(@"stopCellInstallIsRebootPatch");
 	dispatch_async(dispatch_get_main_queue(), ^{
 		self->_patchStatus.stringValue = @" ";
 		[self->_patchProgressBar setIndeterminate:YES];
@@ -641,14 +642,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		 if (connectError != nil)
 		 {
-			 qlerror(@"connectError: %@",connectError.localizedDescription);
+			 LogError(@"connectError: %@",connectError.localizedDescription);
 		 }
 		 else
 		 {
 			 [[self.worker remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				 qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				 LogError(@"proxyError: %@",proxyError.localizedDescription);
 			 }] setPatchOnLogoutWithReply:^(BOOL result) {
-				 qldebug(@"setPatchOnLogoutWithReply: returned=%@",result ? @"YES":@"NO");
+				 LogDebug(@"setPatchOnLogoutWithReply: returned=%@",result ? @"YES":@"NO");
 			 }];
 		 }
 	 }];

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="24506" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="25098" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="24506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="25098"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -15,7 +15,7 @@
         <window title="MacPatch" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" animationBehavior="default" toolbarStyle="expanded" id="QvC-M9-y7g">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <rect key="contentRect" x="335" y="390" width="840" height="680"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <value key="minSize" type="size" width="840" height="680"/>
             <value key="maxSize" type="size" width="1000" height="1600"/>
             <view key="contentView" id="EiT-Mj-1SZ">
@@ -120,7 +120,7 @@
                         <nil key="toolTip"/>
                         <size key="minSize" width="120" height="22"/>
                         <size key="maxSize" width="120" height="22"/>
-                        <searchField key="view" wantsLayer="YES" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="4hk-vD-SDm">
+                        <searchField key="view" wantsLayer="YES" focusRingType="none" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" id="4hk-vD-SDm">
                             <rect key="frame" x="0.0" y="14" width="120" height="22"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                             <searchFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" borderStyle="bezel" usesSingleLineMode="YES" bezelStyle="round" id="eqx-mW-osc">
@@ -162,12 +162,12 @@
         <window title="Reboot System" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="HVp-h7-rzM">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <view key="contentView" id="LsG-PG-hCS">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Gph-lE-iR2">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Gph-lE-iR2">
                         <rect key="frame" x="117" y="176" width="418" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Reboot System" allowsEditingTextAttributes="YES" id="sbE-C3-paZ">
@@ -203,7 +203,7 @@
                             <action selector="performClose:" target="HVp-h7-rzM" id="hIQ-f7-UUG"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dnM-zg-4mZ">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dnM-zg-4mZ">
                         <rect key="frame" x="117" y="60" width="418" height="112"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="cnz-96-J4n">
@@ -220,7 +220,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="alertImage" id="tek-ea-M2j"/>
                     </imageView>
-                    <textField hidden="YES" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hLA-yG-mVT">
+                    <textField hidden="YES" focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="hLA-yG-mVT">
                         <rect key="frame" x="117" y="54" width="418" height="58"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="BhQ-sH-fgo">
@@ -256,12 +256,12 @@
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="283" y="843" width="495" height="197"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <view key="contentView" id="Bdb-Ky-3Ye">
                 <rect key="frame" x="0.0" y="0.0" width="495" height="197"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dfz-F0-xSN">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="dfz-F0-xSN">
                         <rect key="frame" x="128" y="143" width="349" height="34"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Restart Required" id="pFD-GI-mFy">
@@ -270,7 +270,7 @@
                             <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                         </textFieldCell>
                     </textField>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D49-Jc-7uF">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D49-Jc-7uF">
                         <rect key="frame" x="128" y="49" width="349" height="76"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" title="Software has been installed that requires a reboot. Please save all of your work and reboot this system as soon as possible." id="pL4-Hv-Ywa">
@@ -314,12 +314,12 @@
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="hWJ-We-6J9" userLabel="Reboot Required FileVault">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="383"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <view key="contentView" id="Cdu-ql-HYh">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="383"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="NbL-fI-PeS">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="NbL-fI-PeS">
                         <rect key="frame" x="116" y="341" width="439" height="22"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Install and Restart" allowsEditingTextAttributes="YES" id="KHT-yS-Fnd">
@@ -338,7 +338,7 @@
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <imageCell key="cell" refusesFirstResponder="YES" alignment="left" imageScaling="proportionallyDown" image="alertImage" id="gOJ-jI-sFC"/>
                     </imageView>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YQ3-e1-VZZ">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YQ3-e1-VZZ">
                         <rect key="frame" x="116" y="248" width="418" height="85"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="NfC-CN-D7Y">
@@ -357,7 +357,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                             <rect key="frame" x="0.0" y="0.0" width="518" height="171"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GX8-eg-nrJ">
+                                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="GX8-eg-nrJ">
                                     <rect key="frame" x="18" y="94" width="4" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" lineBreakMode="clipping" id="mq7-G8-gR1">
@@ -366,7 +366,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bgn-Zo-83d">
+                                <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bgn-Zo-83d">
                                     <rect key="frame" x="18" y="94" width="476" height="60"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" selectable="YES" id="WoI-4B-pzp">
@@ -376,7 +376,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C3m-rm-TOe">
+                                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="C3m-rm-TOe">
                                     <rect key="frame" x="18" y="70" width="76" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" lineBreakMode="clipping" title="User Name:" id="kPW-bG-B2z">
@@ -385,7 +385,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <secureTextField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R6a-n1-WaY">
+                                <secureTextField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R6a-n1-WaY">
                                     <rect key="frame" x="100" y="73" width="390" height="21"/>
                                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                     <secureTextFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" usesSingleLineMode="YES" id="Oi5-Pw-uoO">
@@ -397,7 +397,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         </allowedInputSourceLocales>
                                     </secureTextFieldCell>
                                 </secureTextField>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0zT-qh-wUw">
+                                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0zT-qh-wUw">
                                     <rect key="frame" x="18" y="44" width="72" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" lineBreakMode="clipping" title="Password:" id="lPW-wC-Yzt">
@@ -406,7 +406,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <textField verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tlK-SW-P1l">
+                                <textField focusRingType="none" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tlK-SW-P1l">
                                     <rect key="frame" x="100" y="41" width="390" height="21"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" borderStyle="bezel" drawsBackground="YES" id="L5b-EV-8J7">
@@ -415,7 +415,7 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
                                         <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     </textFieldCell>
                                 </textField>
-                                <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gPT-tu-VUY">
+                                <textField focusRingType="none" horizontalHuggingPriority="251" verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="gPT-tu-VUY">
                                     <rect key="frame" x="18" y="17" width="336" height="16"/>
                                     <autoresizingMask key="autoresizingMask"/>
                                     <textFieldCell key="cell" lineBreakMode="clipping" alignment="right" title="Label" id="zmQ-Cz-THG">
@@ -711,12 +711,12 @@ DQ
         <window title="Reboot Required" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="RL9-pv-Gy5">
             <windowStyleMask key="styleMask" titled="YES" closable="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="194"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <view key="contentView" id="oIZ-6f-v09">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="194"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="erI-kd-avi">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="erI-kd-avi">
                         <rect key="frame" x="116" y="152" width="439" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Install and Restart" allowsEditingTextAttributes="YES" id="joL-LX-gfe">
@@ -760,7 +760,7 @@ DQ
                             <action selector="performClose:" target="RL9-pv-Gy5" id="twE-fK-XkZ"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="19f-0n-iK0">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="19f-0n-iK0">
                         <rect key="frame" x="116" y="59" width="418" height="85"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="TOX-dD-6LD">
@@ -779,12 +779,12 @@ Click cancel to reboot at another time or click restart to reboot now.</string>
         <window title="Apply System Updates" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" releasedWhenClosed="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="czy-cF-asX" userLabel="Update Warning">
             <windowStyleMask key="styleMask" titled="YES"/>
             <rect key="contentRect" x="283" y="305" width="553" height="218"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1265"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="2304" height="1266"/>
             <view key="contentView" id="YA1-yW-mdE">
                 <rect key="frame" x="0.0" y="0.0" width="553" height="218"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cax-Ho-LmF">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cax-Ho-LmF">
                         <rect key="frame" x="117" y="176" width="418" height="22"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" sendsActionOnEndEditing="YES" alignment="justified" title="Update and Reboot System" allowsEditingTextAttributes="YES" id="zW5-5m-jpM">
@@ -812,7 +812,7 @@ DQ
                             <action selector="openAppleUpdates:" target="Voe-Tx-rLC" id="eg2-ky-pEn"/>
                         </connections>
                     </button>
-                    <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uwc-ie-5i8">
+                    <textField focusRingType="none" verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="uwc-ie-5i8">
                         <rect key="frame" x="117" y="60" width="418" height="112"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <textFieldCell key="cell" allowsUndo="NO" sendsActionOnEndEditing="YES" alignment="left" allowsEditingTextAttributes="YES" id="KlC-XW-dDz">

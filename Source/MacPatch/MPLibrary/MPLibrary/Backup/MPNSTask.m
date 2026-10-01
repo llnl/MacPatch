@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPNSTask.h"
 #import "MacPatch.h"
 
@@ -92,14 +93,14 @@
 	[task setStandardOutput:aPipe];
 	[task setStandardError:aPipe];
 	if (aEnv != NULL) {
-		qldebug(@"[task][environment]: %@",aEnv);
+		LogDebug(@"[task][environment]: %@",aEnv);
 		[task setEnvironment:aEnv];
 	}
 	
 	[task setLaunchPath:aBinPath];
-	qldebug(@"[task][setLaunchPath]: %@",aBinPath);
+	LogDebug(@"[task][setLaunchPath]: %@",aBinPath);
 	[task setArguments:aArgs];
-	qldebug(@"[task][setArguments]: %@",aArgs);
+	LogDebug(@"[task][setArguments]: %@",aArgs);
 	
 		
 	// Get a NSFileHandle from the pipe. This NSFileHandle will provide the stdout buffer
@@ -124,9 +125,9 @@
 	[task waitUntilExit];
 	taskResult = [task terminationStatus];
 	if (taskResult == 0) {
-		qlinfo(@"Task succeeded: %d",taskResult);
+		LogInfo(@"Task succeeded: %d",taskResult);
 	} else {
-		qlerror(@"Task failed: %d",taskResult);
+		LogError(@"Task failed: %d",taskResult);
 		NSDictionary *errorDetail = @{NSLocalizedDescriptionKey:@"Task failed."};
 		NSError *error = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:errorDetail];
 		if (err != NULL) *err = error;
@@ -150,7 +151,7 @@
 		{
 			[self postStatusToDelegate:tmpStr];
 			if (![_taskDataLastLine isEqualToString:tmpStr]){
-				qldebug(@"[mpTaskDataAvailable]: %@",[tmpStr trim]);
+				LogDebug(@"[mpTaskDataAvailable]: %@",[tmpStr trim]);
 				_taskDataLastLine = tmpStr.copy;
 			}
 			
@@ -177,7 +178,7 @@
 		
 		if (taskTimedOut)
 		{
-			qlinfo(@"Task timedout, killing task.");
+			LogInfo(@"Task timedout, killing task.");
 			[task terminate];
 		}
 	}
@@ -188,7 +189,7 @@
 {
 	@autoreleasepool
 	{
-		 qlinfo(@"[MPNSTask] Timeout is set to %d",taskTimeoutValue);
+		 LogInfo(@"[MPNSTask] Timeout is set to %d",taskTimeoutValue);
 		 NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:taskTimeoutValue
 														   target:self
 														selector:@selector(taskTimeout:)
@@ -202,7 +203,7 @@
 
 - (void)taskTimeout:(NSNotification *)aNotification
 {
-	qlinfo(@"Task timedout, killing task.");
+	LogInfo(@"Task timedout, killing task.");
 	//[taskTimeoutTimer invalidate];
 	[self setTaskTimedOut:YES];
 	[task terminate];

@@ -91,10 +91,37 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @implementation HistoryViewController
 
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nil bundle:nil];
+    if (self) {
+        // Init code here
+    }
+    return self;
+}
+
+- (void)loadView
+{
+    LogInfo(@"[HistoryViewController] loadView called");
+    // Manually load NIB to capture top-level objects (macOS 15 fix)
+    NSArray *topLevelObjects = nil;
+    BOOL nibLoaded = [[NSBundle mainBundle] loadNibNamed:@"HistoryViewController" owner:self topLevelObjects:&topLevelObjects];
+    LogInfo(@"[HistoryViewController] NIB loaded: %@, topLevelObjects count: %lu", nibLoaded ? @"YES" : @"NO", (unsigned long)topLevelObjects.count);
+
+    if (nibLoaded) {
+        // Retain top-level objects to prevent premature deallocation
+        self.topLevelObjects = topLevelObjects;
+        LogInfo(@"[HistoryViewController] View set: %@", self.view);
+    } else {
+        LogError(@"[HistoryViewController] Failed to load NIB!");
+        [super loadView];
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     historyArray = [[NSMutableArray alloc] init];
 	//dbManager = [FMXDatabaseManager sharedManager];
 	//[dbManager registerDefaultDatabaseWithPath:MP_AGENT_DB migration:nil];

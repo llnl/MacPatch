@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPDataMgr.h"
 
 #undef  ql_component
@@ -111,7 +112,7 @@
     NSString *jsonString = nil;
     
     if (!jsonData) {
-        qlerror(@"JSON Error: %@",error.localizedDescription);
+        LogError(@"JSON Error: %@",error.localizedDescription);
     } else {
         jsonString = [[NSString alloc] initWithBytes:[jsonData bytes] length:[jsonData length] encoding:NSUTF8StringEncoding];
     }

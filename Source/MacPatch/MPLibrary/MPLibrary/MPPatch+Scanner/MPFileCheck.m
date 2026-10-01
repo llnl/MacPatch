@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPFileCheck.h"
 #import "MPCrypto.h"
 #import "RegexKitLite.h"
@@ -144,7 +145,7 @@
 	}
 	else 
 	{
-		qlerror(@"Error: unable to process action type.");
+		LogError(@"Error: unable to process action type.");
 		result = FALSE;
 		goto done;
 	}
@@ -223,7 +224,7 @@ done:
 	}
 	else 
 	{
-		qlerror(@"Error operator not understood.");
+		LogError(@"Error operator not understood.");
 		return FALSE;
 	}
 }
@@ -257,7 +258,7 @@ done:
 	
 	// Need to stop using NSBundle content is cached and reports false postitives
 	// .framework use a slightly different path, it's "...Resources/Info.plist"
-	// .app, .menu, .plugin, .bundle, .kext, .prefPane, .qlerror(nPlugin uses "...Contents/Info.plist"
+	// .app, .menu, .plugin, .bundle, .kext, .prefPane, .LogError(nPlugin uses "...Contents/Info.plist"
 	if ([[localFilePath lastPathComponent] containsString:@"framework"]) {
 		l_localFilePath = [NSString pathWithComponents:[NSArray arrayWithObjects:localFilePath,@"Resources",@"Info.plist",nil]];
 	} else {
@@ -268,27 +269,27 @@ done:
 	if ([fm fileExistsAtPath:l_localFilePath]) {
 		localFileDict = [NSDictionary dictionaryWithContentsOfFile:l_localFilePath];
 	} else {
-		qldebug(@"Unable to get version. %@ does not exist.",localFilePath);
+		LogDebug(@"Unable to get version. %@ does not exist.",localFilePath);
 		return fileVerPass;
 	}
 	
 	NSString *localFileVer = NULL;
 	if (![localFileDict objectForKey:@"CFBundleShortVersionString"]) {
-		qlerror(@"CFBundleShortVersionString was not found.");
+		LogError(@"CFBundleShortVersionString was not found.");
 		fileVerPass = NO;
 		return fileVerPass;
 	}
 	
 	localFileVer = [NSString stringWithString:[localFileDict objectForKey:@"CFBundleShortVersionString"]];
     localFileVer = [localFileVer trim];
-	qldebug(@"Found file version: =%@",localFileVer);
+	LogDebug(@"Found file version: =%@",localFileVer);
 	
 	NSString *regexString	= @"^(\\d+)(.\\d+)?(.\\d+)?(.\\d+)?(.\\d+)?(.\\d+)?$";
     
     /* Old RegexKit Lite Code
 	NSString *matchedString = [localFileVer stringByMatching:regexString];
 	if ([matchedString isEqualToString:localFileVer] == NO) {
-		qlerror(@"CFBundleShortVersionString (%@) is not valid version string format.",localFileVer);
+		LogError(@"CFBundleShortVersionString (%@) is not valid version string format.",localFileVer);
         return fileVerPass;
 	}
 	*/
@@ -300,13 +301,13 @@ done:
     NSError *err = nil;
     NSRegularExpression *regex = [NSRegularExpression regularExpressionWithPattern:regexString options:0 error:&err];
     if (err) {
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"%@",err.localizedDescription);
         return fileVerPass;
     }
     
     NSTextCheckingResult *match = [regex firstMatchInString:localFileVer options:0 range:NSMakeRange(0, [localFileVer length])];
     if (match == NO) {
-        qlerror(@"CFBundleShortVersionString (%@) is not valid version string format.",localFileVer);
+        LogError(@"CFBundleShortVersionString (%@) is not valid version string format.",localFileVer);
         return fileVerPass;
     }
     
@@ -317,7 +318,7 @@ done:
 -(BOOL)compareVersion:(NSString *)leftVersion operator:(NSString *)aOp compareTo:(NSString *)rightVersion
 {
 	
-	qldebug(@"Comparing version strings: %@ %@ %@",leftVersion,aOp,rightVersion);
+	LogDebug(@"Comparing version strings: %@ %@ %@",leftVersion,aOp,rightVersion);
 	
 	BOOL fileVerPass = FALSE;
 	int i;
@@ -406,7 +407,7 @@ done:
 	
 	
 done:
-	qldebug(@"Comparing version strings result: %@",(fileVerPass ? @"YES" : @"NO"));
+	LogDebug(@"Comparing version strings result: %@",(fileVerPass ? @"YES" : @"NO"));
 	return fileVerPass;
 }
 
@@ -439,7 +440,7 @@ done:
 	MPCrypto *crypto;
 
 	if (![[NSFileManager defaultManager] fileExistsAtPath:localFilePath]) {
-		qlerror(@"Unable to get hash for file %@. File is missing.",localFilePath);	
+		LogError(@"Unable to get hash for file %@. File is missing.",localFilePath);	
 		return FALSE;
 	}
 
@@ -470,7 +471,7 @@ done:
 
     // Check if file exists
     if (![[NSFileManager defaultManager] fileExistsAtPath:localFilePath]) {
-		qlerror(@"Unable to get hash for file %@. File is missing.",localFilePath);
+		LogError(@"Unable to get hash for file %@. File is missing.",localFilePath);
 		return FALSE;
 	}
     // Read the plist
@@ -484,7 +485,7 @@ done:
                                                   errorDescription:&errorDesc];
     // If it did not read error
     if (!pDict) {
-        qlerror(@"Error reading property list %@.\n%@",localFilePath,errorDesc);
+        LogError(@"Error reading property list %@.\n%@",localFilePath,errorDesc);
 		return FALSE;
     }
 
@@ -543,7 +544,7 @@ done:
         }
 
     } else {
-        qlerror(@"Error, the key object type is not supported. Use only String, Number or Bool types.");
+        LogError(@"Error, the key object type is not supported. Use only String, Number or Bool types.");
 		return FALSE;
     }
 

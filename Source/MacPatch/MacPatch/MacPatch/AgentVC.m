@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "AgentVC.h"
 #import <WebKit/WebKit.h>
 
@@ -233,7 +234,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSError *err = nil;
 	NSString *res = [task runTask:@"/usr/bin/fdesetup" binArgs:@[@"status",@"--verbose"] error:&err];
 	if (err) {
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 	}
 	
 	BOOL status = NO;
@@ -280,7 +281,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSError *err = nil;
 	NSString *res = [task runTask:@"/usr/sbin/system_profiler" binArgs:@[@"SPNetworkDataType",@" -detailLevel", @"basic"] error:&err];
 	if (err) {
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 	}
 	
 	NSString *htmlData = [NSString stringWithFormat:@"<pre>%@</pre>",res];
@@ -296,10 +297,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"connectError: %@",connectError);
+			LogError(@"connectError: %@",connectError);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError);
+				LogError(@"proxyError: %@",proxyError);
 			}] getInstalledConfigProfilesWithReply:^(NSString * _Nullable aString, NSData * _Nullable aProfilesData) {
 				
 				if (!aProfilesData) {

@@ -25,6 +25,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPAppStore.h"
 #import "CKSoftwareProduct+ASProduct.h"
 #import <StoreFoundation/StoreFoundation.h>
@@ -49,7 +50,7 @@
                                                        options:0
                                                          error:&error];
     if (! jsonData) {
-        qlerror(@"Got an error: %@", error);
+        LogError(@"Got an error: %@", error);
     } else {
         jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     }
@@ -75,7 +76,7 @@
                                                        options:0
                                                          error:&error];
     if (! jsonData) {
-        qlerror(@"Got an error: %@", error);
+        LogError(@"Got an error: %@", error);
     } else {
         jsonString = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
     }

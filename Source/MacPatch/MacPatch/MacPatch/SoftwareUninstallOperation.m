@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "SoftwareUninstallOperation.h"
 
 @interface SoftwareUninstallOperation (Private)
@@ -125,7 +126,7 @@
 		[self runUninstall];
 	}
 	@catch (NSException * e) {
-		qlerror(@"[NSException]: %@",e);
+		LogError(@"[NSException]: %@",e);
 	}
 	[self finish];
 }
@@ -137,8 +138,8 @@
 	NSString *_tuuid = swTask[@"id"];
 	NSString *_name = swTask[@"Software"][@"name"];
 	
-	qlinfo(@"Starting uninstall of software task %@ (%@).",_name,_tuuid);
-	//qldebug(@"Install Software Task: %@",swTask);
+	LogInfo(@"Starting uninstall of software task %@ (%@).",_name,_tuuid);
+	//LogDebug(@"Install Software Task: %@",swTask);
 	[self postSWStatus:@"Starting Uninstall operation"];
 	
 	
@@ -146,7 +147,7 @@
 	{
 		if (connectError != nil)
 		{
-			qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+			LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
 			[self willChangeValueForKey:@"userInfo"];
 			self->userInfo = @{@"status":connectError.localizedDescription, @"error":connectError};
 			[self didChangeValueForKey:@"userInfo"];
@@ -155,7 +156,7 @@
 		else
 		{
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+				LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
 				[self willChangeValueForKey:@"userInfo"];
 				self->userInfo = @{@"status":proxyError.localizedDescription, @"error":proxyError};
 				[self didChangeValueForKey:@"userInfo"];
@@ -173,7 +174,7 @@
 				{
 					NSString *errStr = [NSString stringWithFormat:@"Error uninstalling %@",_name];
 					NSError *err = [NSError errorWithDomain:@"" code:1 userInfo:@{NSLocalizedDescriptionKey:errStr}];
-					qlerror(@"%@",errStr);
+					LogError(@"%@",errStr);
 					
 					// Set Error info
 					[self willChangeValueForKey:@"userInfo"];
@@ -216,7 +217,7 @@
 			self.workerConnection.invalidationHandler = nil;
 			[[NSOperationQueue mainQueue] addOperationWithBlock:^{
 				self.workerConnection = nil;
-				qlerror(@"connection invalidated");
+				LogError(@"connection invalidated");
 			}];
 		};
 #pragma clang diagnostic pop
