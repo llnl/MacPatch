@@ -94,10 +94,10 @@ echo "Package Configuration"
 echo "────────────────────────────────────────────────"
 echo
 
-MP_SERVER=$(prompt_with_default "MacPatch Server hostname/IP" "${SAVED_MP_SERVER:-mpprod.llnl.gov}")
+MP_SERVER=$(prompt_with_default "MacPatch Server hostname/IP" "${SAVED_MP_SERVER:-mp.example.com}")
 MP_SERVER=$(validate_server "$MP_SERVER")
 
-MIN_VERSION=$(prompt_with_default "Minimum Agent Version" "${SAVED_MIN_VERSION:-4.2.2.0}")
+MIN_VERSION=$(prompt_with_default "Minimum Agent Version" "${SAVED_MIN_VERSION:-4.4.0.0}")
 DAYS_RANGE=$(prompt_with_default "Check-in days range" "${SAVED_DAYS_RANGE:-15}")
 IGNORE_SSL=$(prompt_with_default "Ignore SSL validation (true/false)" "${SAVED_IGNORE_SSL:-false}")
 

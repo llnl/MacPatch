@@ -97,7 +97,7 @@ enum Constants {
 
     enum Defaults {
         /// Default minimum agent version
-        static let minAgentVersion = "4.2.2.0"
+        static let minAgentVersion = "4.4.0.0"
 
         /// Default days range for check-in validation
         static let daysRange = 15

@@ -65,11 +65,11 @@ read -p "Remove configuration file? (y/N): " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
     echo "5. Removing configuration..."
-    rm -f "/Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist"
+    rm -f "/Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist"
     echo "   ✓ Configuration removed"
 else
     echo "5. Keeping configuration..."
-    echo "   ℹ Configuration preserved at /Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist"
+    echo "   ℹ Configuration preserved at /Library/Application Support/.MacPatch/gov.llnl.mp.lazarus.plist"
 fi
 
 echo

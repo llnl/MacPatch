@@ -93,7 +93,7 @@ Create or edit `/Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist`
 - **mpserver**: MacPatch server hostname (default: "localhost")
   - Used for client check-in API: `https://{mpserver}/api/v1/client/checkin/info/{clientID}`
   - Used for package downloads: `https://{mpserver}/mp-content/lazarus/...`
-  - **Important**: Set this to your actual MacPatch server (e.g., "mpprod.llnl.gov")
+  - **Important**: Set this to your actual MacPatch server (e.g., "mp.example.com")
 - **ignoressl**: Ignore SSL certificate validation (default: false)
 - **mphash**: Expected SHA-256 hash of agent binary (default: "0" = disabled)
 
@@ -110,13 +110,13 @@ sudo mkdir -p "/Library/Application Support/MacPatch"
 
 For Lazarus to download and install packages, you need to host two files on your MacPatch server.
 
-**Important**: The server hostname is configured via the `mpserver` key in the configuration file. The examples below use `mpprod.llnl.gov` but you should replace this with your actual server.
+**Important**: The server hostname is configured via the `mpserver` key in the configuration file. The examples below use `mp.example.com` but you should replace this with your actual server.
 
 ### 1. Package Information Plist
 
 **Location:** `https://{mpserver}/mp-content/lazarus/gov.llnl.lazarus.plist`
 
-Where `{mpserver}` is the value from your configuration file (e.g., `mpprod.llnl.gov`).
+Where `{mpserver}` is the value from your configuration file (e.g., `mp.example.com`).
 
 This plist contains information about the latest package:
 
@@ -237,7 +237,7 @@ Failed checks:
   2. Agent hasn't checked in within 15 days
 
 Action: Installation WOULD be triggered
-        Package would be downloaded from: https://mpprod.llnl.gov/mp-content/lazarus/
+        Package would be downloaded from: https://mp.example.com/mp-content/lazarus/
 ```
 
 **Run checks once:**
