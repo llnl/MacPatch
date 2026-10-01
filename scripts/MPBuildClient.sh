@@ -63,7 +63,7 @@ DEFAULT_BANNERDIR="/tmp"
 
 # Script Input Args ----------------------------------------------------------
 
-usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-b Build Root Dir] [-l settings plist][-m Is MDM PKG]" 1>&2; exit 1; }
+usage() { echo "Usage: $0 [-s External Scripts Dir] [-p Post External Scripts Dir] [-b Build Root Dir] [-l settings plist][-m Is MDM PKG] [-B Path to App Banner]" 1>&2; exit 1; }
 
 while getopts "hs:p:b:l:mB:" opt; do
 	case $opt in

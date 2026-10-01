@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "AgentVC.h"
 #import <WebKit/WebKit.h>
 
@@ -65,13 +66,11 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	for (NSString *key in sortedKeys)
 	{
 		if ([agent[key] isEqualToString:@"0"] || [agent[key] isEqualToString:@"1"]) {
-			NSString *res = [agent[key] isEqualToString:@"0"] ? @"True" : @"False";
+			NSString *res = [agent[key] isEqualToString:@"1"] ? @"True" : @"False";
 			[htmlData appendFormat:@"<dt>%@:</dt><dd>%@</dd>",[[key stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString], res ];
 		} else {
 			[htmlData appendFormat:@"<dt>%@:</dt><dd>%@</dd>",[[key stringByReplacingOccurrencesOfString:@"_" withString:@" "] capitalizedString], agent[key] ];
 		}
-		
-		
 	}
 	
 	NSString *filePath = [[NSBundle mainBundle] pathForResource:@"agent" ofType:@"html" inDirectory:@"html"];
@@ -235,7 +234,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSError *err = nil;
 	NSString *res = [task runTask:@"/usr/bin/fdesetup" binArgs:@[@"status",@"--verbose"] error:&err];
 	if (err) {
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 	}
 	
 	BOOL status = NO;
@@ -282,7 +281,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	NSError *err = nil;
 	NSString *res = [task runTask:@"/usr/sbin/system_profiler" binArgs:@[@"SPNetworkDataType",@" -detailLevel", @"basic"] error:&err];
 	if (err) {
-		qlerror(@"%@",err.localizedDescription);
+		LogError(@"%@",err.localizedDescription);
 	}
 	
 	NSString *htmlData = [NSString stringWithFormat:@"<pre>%@</pre>",res];
@@ -298,10 +297,10 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 {
 	[self connectAndExecuteCommandBlock:^(NSError * connectError) {
 		if (connectError != nil) {
-			qlerror(@"connectError: %@",connectError);
+			LogError(@"connectError: %@",connectError);
 		} else {
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError);
+				LogError(@"proxyError: %@",proxyError);
 			}] getInstalledConfigProfilesWithReply:^(NSString * _Nullable aString, NSData * _Nullable aProfilesData) {
 				
 				if (!aProfilesData) {

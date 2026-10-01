@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPFileVaultInfo.h"
 #include <unistd.h>
 
@@ -143,14 +144,14 @@
         NSMutableArray *data = (NSMutableArray *)[aString componentsSeparatedByCharactersInSet:[NSCharacterSet newlineCharacterSet]];
         for (int i = 0; i < [data count]; i++)
         {
-            qldebug(@"Parsing %@",[data objectAtIndex:i]);
+            LogDebug(@"Parsing %@",[data objectAtIndex:i]);
             [newData addObject:[[[data objectAtIndex:i] componentsSeparatedByString: @","] objectAtIndex:0]];
         }
         
         [self setUsers:[newData componentsJoinedByString:@","]];
     }
     @catch (NSException *exception) {
-        qlerror(@"%@",exception);
+        LogError(@"%@",exception);
     }
 }
 

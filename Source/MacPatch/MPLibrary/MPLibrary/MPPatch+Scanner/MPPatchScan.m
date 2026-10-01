@@ -83,13 +83,13 @@
     BOOL rest_result = [mprest postDataToWS:urlPath data:@{@"rows":patchesNeeded} error:&wsErr];
     if (rest_result)
     {
-        logit(lcl_vInfo,@"[MPPatchScan][scanForPatches]: Data post to web service (%@), returned true.", urlPath);
-        logit(lcl_vDebug,@"Data post to web service (%@), returned true.", urlPath);
+        LogInfo(@"[MPPatchScan][scanForPatches]: Data post to web service (%@), returned true.", urlPath);
+        LogDebug(@"Data post to web service (%@), returned true.", urlPath);
         // notifyInfo = @{@"patchesNeeded":[NSNumber numberWithInt:(int)[patchesNeeded count]]};
     }
     else
     {
-        logit(lcl_vError,@"Data post to web service (%@), returned false.", urlPath);
+        LogError(@"Data post to web service (%@), returned false.", urlPath);
     }
 	
 	[self postProgressToDelegate:@"Custom patch scan completed."];
@@ -132,7 +132,7 @@
 	NSDictionary *patchGroupPatches = [mprest getApprovedPatchesForClient:&wsErr];
 	if (wsErr)
 	{
-		qlerror(@"Error: %@",wsErr.localizedDescription);
+		LogError(@"Error: %@",wsErr.localizedDescription);
 	}
 	
 	// 1. Get the list
@@ -147,7 +147,7 @@
 	
 	if ([customPatches count] == 0)
 	{
-		qlwarning(@"Custom patch scan list is empty, no custom patches will be scaned for.");
+		LogWarning(@"Custom patch scan list is empty, no custom patches will be scaned for.");
 		return resultArr;
 	}
 	// 2. Scan the host
@@ -165,8 +165,8 @@
 			}
 		}
 		
-		qlinfo(@"*******************");
-		qlinfo(@"Scanning for %@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]);
+		LogInfo(@"*******************");
+		LogInfo(@"Scanning for %@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]);
 		[self postProgressToDelegate:@"Scanning for %@(%@)", tmpDict[@"patch_name"], tmpDict[@"patch_ver"]];
 		
 		result = [self scanHostForPatch:tmpDict];
@@ -188,13 +188,13 @@
                 if (patchData) {
                     [patch setObject:patchData forKey:@"patchData"];
                 } else {
-                    qlinfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
+                    LogInfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
                 }
                 [patchesNeeded addObject:[patch copy]];
             }
             @catch (NSException *exception)
             {
-                qlerror(@"%@\n%@",exception,tmpDict);
+                LogError(@"%@\n%@",exception,tmpDict);
             }
             patch = nil;
         }
@@ -223,17 +223,17 @@
 				}
 				@catch (NSException *exception)
 				{
-					qlerror(@"%@\n%@",exception,tmpDict);
+					LogError(@"%@\n%@",exception,tmpDict);
 				}
 			} else {
-				qlinfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
+				LogInfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
 				
 			}
 			patch = nil;
 		}
          */
 	}
-    qlinfo(@"*******************");
+    LogInfo(@"*******************");
 	return [patchesNeeded copy];
 }
 
@@ -271,7 +271,7 @@
 	NSString *typeQueryString;
 	NSString *typeResult;
     
-	qldebug(@"scanHostForPatch: %@",aPatch);
+	LogDebug(@"scanHostForPatch: %@",aPatch);
 	
 	int i = 0;
 	for (i=0;i<[queryArray count];i++)
@@ -280,10 +280,10 @@
 		if ([@"OSArch" isEqualToString:[qryArr objectAtIndex:0]]) {
 			mpos = [[MPOSCheck alloc] init];
 			if ([mpos checkOSArch:[qryArr objectAtIndex:1]]) {
-				qlinfo(@"OSArch=TRUE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSArch=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
-				qlinfo(@"OSArch=FALSE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSArch=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
 		}
 		
@@ -293,10 +293,10 @@
             /*
 			mpos = [[MPOSCheck alloc] init];
 			if ([mpos checkOSType:[qryArr objectAtIndex:1]]) {
-				qlinfo(@"OSType=TRUE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSType=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
-				qlinfo(@"OSType=FALSE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSType=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
              */
 		}
@@ -304,17 +304,17 @@
 		if ([@"OSVersion" isEqualToString:[qryArr objectAtIndex:0]]) {
 			mpos = [[MPOSCheck alloc] init];
 			if ([mpos checkOSVer:[qryArr objectAtIndex:1]]) {
-				qlinfo(@"OSVersion=TRUE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSVersion=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
-				qlinfo(@"OSVersion=FALSE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"OSVersion=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
 		}
 		
 		if ([@"BundleID" isEqualToString:[qryArr objectAtIndex:0]]) {
 			mpbndl = [[MPBundle alloc] init];
 			if ([qryArr count] != 4) {
-				qlerror(@"Error, not enough args for patch query entry.");
+				LogError(@"Error, not enough args for patch query entry.");
 				goto done;
 			}
 			
@@ -325,17 +325,17 @@
 			 */
 			
 			if ([mpbndl queryBundleID:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] result:[qryArr objectAtIndex:3]]) {
-				qlinfo(@"BundleID=TRUE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"BundleID=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
-				qlinfo(@"BundleID=FALSE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"BundleID=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
 		}
 		
 		if ([@"File" isEqualToString:[qryArr objectAtIndex:0]]) {
 			mpfile = [[MPFileCheck alloc] init];
 			if ([qryArr count] != 4) {
-				qlerror(@"Error, not enough args for patch query entry.");
+				LogError(@"Error, not enough args for patch query entry.");
 				goto done;	
 			}
             
@@ -344,25 +344,25 @@
 			typeResult		= [qryArr objectAtIndex:3];
 			
 			if ([mpfile queryFile:typeQueryString action:typeQuery param:typeResult]) {
-				qlinfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
 				count++;
 			} else {
-				qlinfo(@"File=FALSE: %@",[qryArr objectAtIndex:1]);
+				LogInfo(@"File=FALSE: %@",[qryArr objectAtIndex:1]);
 			}
 		}
 		
 		if ([@"Script" isEqualToString:[qryArr objectAtIndex:0]]) {
 			mpscript = [[MPScript alloc] init];
 			if ([qryArr count] > 2) {
-				qlerror(@"Error, too many args. Sript will not be run.");
+				LogError(@"Error, too many args. Sript will not be run.");
 				goto done;
 			}
 			
 			if ([mpscript runScript:[qryArr objectAtIndex:1]]) {
-				qlinfo(@"SCRIPT=TRUE");
+				LogInfo(@"SCRIPT=TRUE");
 				count++;
 			} else {
-				qlinfo(@"SCRIPT=FALSE");
+				LogInfo(@"SCRIPT=FALSE");
 			}
 		}
 	}
@@ -371,10 +371,10 @@
 	
 done:
 	if (count == [queryArray count]) {
-		qlinfo(@"Patch needed.");
+		LogInfo(@"Patch needed.");
 		result = YES;
 	} else {
-		qlinfo(@"Patch not needed.");
+		LogInfo(@"Patch not needed.");
 	}
 	
 	return result;
@@ -382,7 +382,7 @@ done:
 
 - (NSDictionary *)patchDataForIDUsingArrayOLD:(NSString *)patchID patchArray:(NSArray *)approvedPatches
 {
-	qldebug(@"Searching for %@",patchID );
+	LogDebug(@"Searching for %@",patchID );
 	
 	NSDictionary *result = nil;
 	NSArray *filteredarray = [approvedPatches filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"(puuid == %@)", patchID]];
@@ -393,23 +393,23 @@ done:
 		}
 	}
 	if (!result){
-		qldebug(@"%@ was not found.",patchID );
+		LogDebug(@"%@ was not found.",patchID );
 	}
 	return result;
 }
 
 - (NSDictionary *)patchDataForIDUsingArray:(NSString *)patchID patchArray:(NSArray *)approvedPatches
 {
-    qldebug(@"Searching for %@", patchID);
+    LogDebug(@"Searching for %@", patchID);
 
     // Validate inputs
     if (![approvedPatches isKindOfClass:[NSArray class]]) {
-        qlerror(@"approvedPatches is not an NSArray: %@", approvedPatches);
+        LogError(@"approvedPatches is not an NSArray: %@", approvedPatches);
         return nil;
     }
 
     if (patchID.length == 0) {
-        qlwarning(@"patchID is nil or empty.");
+        LogWarning(@"patchID is nil or empty.");
         return nil;
     }
 
@@ -426,10 +426,10 @@ done:
     if (filteredArray.count == 1) {
         return filteredArray.firstObject;
     } else if (filteredArray.count > 1) {
-        qlwarning(@"Multiple entries found for puuid=%@; returning first.", patchID);
+        LogWarning(@"Multiple entries found for puuid=%@; returning first.", patchID);
         return filteredArray.firstObject;
     } else {
-        qldebug(@"%@ was not found.", patchID);
+        LogDebug(@"%@ was not found.", patchID);
         return nil;
     }
 }
@@ -442,7 +442,7 @@ done:
 	MPRESTfull *rest = [[MPRESTfull alloc] init];
 	scanListArray = [rest getCustomPatchScanListWithSeverity:nil error:&wsErr];
 	if (wsErr) {
-		qlerror(@"%@",[wsErr localizedDescription]);
+		LogError(@"%@",[wsErr localizedDescription]);
 		return [NSArray array];
 	}
 	return scanListArray;
@@ -452,10 +452,10 @@ done:
 -(void)sendNotificationTo:(NSString *)aName userInfo:(NSDictionary *)aUserInfo
 {
 	if (useDistributedNotification) {
-		qldebug(@"sendNotificationTo(G): %@ with %@",aName,aUserInfo);
+		LogDebug(@"sendNotificationTo(G): %@ with %@",aName,aUserInfo);
         [[NSDistributedNotificationCenter defaultCenter] postNotificationName:aName object:nil userInfo:aUserInfo options:NSNotificationPostToAllSessions];        
 	} else {
-        qldebug(@"sendNotificationTo: %@ with %@",aName,aUserInfo);
+        LogDebug(@"sendNotificationTo: %@ with %@",aName,aUserInfo);
 		[[NSNotificationCenter defaultCenter] postNotificationName:aName object:nil userInfo:aUserInfo];
 	}
 }

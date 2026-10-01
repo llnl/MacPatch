@@ -24,7 +24,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "lcl.h"
+#import "Logger.h"
 #import "XPCWorker.h"
 
 static void setUpLogging(void);
@@ -35,7 +35,7 @@ int main(int argc, const char * argv[])
     {
         if (argc >= 2) {
             if (strcmp(argv[1], "-v") == 0) {
-                printf("4.2.1\n");
+                printf("4.2.3\n");
                 return (0);
             }
         }
@@ -52,11 +52,10 @@ static void setUpLogging (void)
 {
     // Setup logging
     BOOL enableDebug = NO;
-    [MPLog setupLogging:@"/Library/Logs/gov.llnl.mp.helper.log" level:lcl_vInfo];
-    
+
     NSFileManager *fileManager = [NSFileManager defaultManager];
     NSString *appPrefsPath = @"/Library/Preferences/gov.llnl.mp.helper.plist";
-    
+
     if ([fileManager fileExistsAtPath:appPrefsPath] == YES) {
         NSDictionary *appPrefs = [NSDictionary dictionaryWithContentsOfFile:appPrefsPath];
         BOOL containsKey = ([appPrefs objectForKey:@"DeBug"] != nil);
@@ -64,16 +63,20 @@ static void setUpLogging (void)
             enableDebug = [[appPrefs objectForKey:@"DeBug"] boolValue];
         }
     }
-    
+
+    // Setup new Logger
+    Logger *logger = [Logger sharedLogger];
+    [logger setupWithLogPath:@"/Library/Logs/gov.llnl.mp.helper.log"
+                   subsystem:@"gov.llnl.mp.helper"
+                    category:@"helper"];
+    logger.enableFileLogging = YES;
+    logger.enableConsoleLogging = NO;
+    logger.enableStderrLogging = YES;
+    logger.minimumLogLevel = enableDebug ? LogLevelDebug : LogLevelInfo;
+
     if (enableDebug) {
-        // enable logging for all components up to level Debug
-        lcl_configure_by_name("*", lcl_vDebug);
-        [MPLog MirrorMessagesToStdErr:YES];
-        logit(lcl_vInfo,@"***** gov.llnl.mp.helper started -- Debug Enabled *****");
+        LogInfo(@"***** gov.llnl.mp.helper started -- Debug Enabled *****");
     } else {
-        // enable logging for all components up to level Info
-        lcl_configure_by_name("*", lcl_vInfo);
-        [MPLog MirrorMessagesToStdErr:YES];
-        logit(lcl_vInfo,@"***** gov.llnl.mp.helper started *****");
+        LogInfo(@"***** gov.llnl.mp.helper started *****");
     }
 }

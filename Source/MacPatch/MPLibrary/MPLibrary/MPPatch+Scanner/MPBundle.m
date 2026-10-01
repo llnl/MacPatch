@@ -25,6 +25,7 @@
 
 #import "MPBundle.h"
 #import <Foundation/Foundation.h>
+#import "Logger.h"
 
 #undef  ql_component
 #define ql_component lcl_cMPBundle
@@ -42,7 +43,7 @@
     if ( self ) {
         if ([self parseBundleIDString:aBundleID] != TRUE)
 		{
-			qlerror(@"Error: bundle id was not properly formatted.");	
+			LogError(@"Error: bundle id was not properly formatted.");	
 		}
     }
 	
@@ -87,7 +88,7 @@
 	
 	NSArray *bArray = [aBundleID componentsSeparatedByString: @";"];
 	if ([bArray count] == 0) {
-		qlerror(@"Error: Bundle id parsing is empty.");
+		LogError(@"Error: Bundle id parsing is empty.");
 		return FALSE;
 	} else if ([bArray count] == 1) {
 		[self setBundleID:[NSString stringWithString:[bArray objectAtIndex:0]]];
@@ -98,7 +99,7 @@
 		return TRUE;
 	}
 	
-	qlerror(@"Error: reached end without knowing why?");
+	LogError(@"Error: reached end without knowing why?");
 	return FALSE;
 }
 
@@ -127,7 +128,7 @@ done:
 	
 	// Make Sure Action is Either EXISTS or VERSION
 	if ([vAction isEqualToString:@"EXISTS"] == FALSE && [vAction isEqualToString:@"VERSION"] == FALSE) {
-		qlerror(@"BundleID param was not vaild.");
+		LogError(@"BundleID param was not vaild.");
 		result = FALSE;
 		return result;
 	}
@@ -147,7 +148,7 @@ done:
 		} else if ([[aResult uppercaseString] isEqualToString:@"FALSE"] || [[aResult uppercaseString] isEqualToString:@"NO"]) {
 			opr = NO;
 		} else {
-			qlerror(@"Operator was not defined properly, operator is set to True.");
+			LogError(@"Operator was not defined properly, operator is set to True.");
 			opr = YES;
 		}
 
@@ -165,7 +166,7 @@ done:
 	// Check for VERSION
 	if ([vAction isEqualToString:@"VERSION"] == TRUE) {
 		if ([[NSFileManager defaultManager] fileExistsAtPath:bIDFilePath] == FALSE) {
-			qlinfo(@"BundleID was not found.");
+			LogInfo(@"BundleID was not found.");
 			result = FALSE;
 			return result;
 		} else {
@@ -210,7 +211,7 @@ done:
 	error = LSFindApplicationForInfo(kLSUnknownCreator,(__bridge CFStringRef)aBundleID, nil, (FSRef *)nil, &appURL);
 	
 	if (error != 0) {
-		qlerror(@"Error trying to get bundle ID \"%@\". Error %d",aBundleID,(int)error);
+		LogError(@"Error trying to get bundle ID \"%@\". Error %d",aBundleID,(int)error);
 		result = NULL;
 		goto done;
 	} else {
@@ -225,7 +226,7 @@ done:
 			resultDictTmp = nil;
 			goto done;
 		} else {
-			qlerror(@"Error trying to get bundle ID info for \"%@\". Error %d",aBundleID,(int)error);
+			LogError(@"Error trying to get bundle ID info for \"%@\". Error %d",aBundleID,(int)error);
 			result = NULL;
 			goto done;
 		}

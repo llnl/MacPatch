@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "MPauthrestartVC.h"
 #import "MacPatch.h"
 
@@ -66,7 +67,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	isValidUser =  [self validFileVaultUser:self.userName.stringValue];
 	useKey = (int)[useRecoveryKeyCheckBox state] == 1 ? YES : NO;
-	qlinfo(@"useRecoveryKeyCheckBox: %@",useKey ? @"YES" : @"NO");
+	LogInfo(@"useRecoveryKeyCheckBox: %@",useKey ? @"YES" : @"NO");
 	// Check if account is in FV user array.
 	if (!isValidUser) {
 		dispatch_async(dispatch_get_main_queue(), ^{
@@ -92,13 +93,13 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	{
 		if (connectError != nil)
 		{
-			qlerror(@"connectError: %@",connectError.localizedDescription);
+			LogError(@"connectError: %@",connectError.localizedDescription);
 			dispatch_semaphore_signal(sem);
 		}
 		else
 		{
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				LogError(@"proxyError: %@",proxyError.localizedDescription);
 				dispatch_async(dispatch_get_main_queue(), ^{
 					self->_errImage.hidden = NO;
 					self->_errMsg.stringValue = [NSString stringWithFormat:@"Error Saving Credentials. %@",proxyError.localizedDescription];
@@ -107,14 +108,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 				
 			}] setAuthrestartDataForUser:self.userName.stringValue userPass:self.userPass.stringValue useRecoveryKey:useKey withReply:^(NSError *err, NSInteger result) {
 				if (err) {
-					qlerror(@"%@",err.localizedDescription);
+					LogError(@"%@",err.localizedDescription);
 					dispatch_async(dispatch_get_main_queue(), ^{
 						self.errImage.hidden = NO;
 						self.errMsg.stringValue = @"Error Saving Credentials.";
 					});
 				} else {
 					if (result != 0) {
-						qlerror(@"Unable to set user and password for authrestart.");
+						LogError(@"Unable to set user and password for authrestart.");
                     } else {
                         NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
                         [d setBool:YES forKey:@"authRestartEnabled"];
@@ -146,15 +147,15 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	{
 		if (connectError != nil)
 		{
-			qlerror(@"connectError: %@",connectError.localizedDescription);
+			LogError(@"connectError: %@",connectError.localizedDescription);
 		}
 		else
 		{
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				LogError(@"proxyError: %@",proxyError.localizedDescription);
 			}] clearAuthrestartData:^(NSError *err, BOOL result) {
 				if (err) {
-					qlerror(@"%@",err.localizedDescription);
+					LogError(@"%@",err.localizedDescription);
 				} else {
                     if (result) {
                         NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
@@ -183,12 +184,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	{
 		if (connectError != nil)
 		{
-			qlerror(@"connectError: %@",connectError.localizedDescription);
+			LogError(@"connectError: %@",connectError.localizedDescription);
 		}
 		else
 		{
 			[[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-				qlerror(@"proxyError: %@",proxyError.localizedDescription);
+				LogError(@"proxyError: %@",proxyError.localizedDescription);
 			}] getFileVaultUsers:^(NSArray *users) {
 				
 				if (users.count > 0) {

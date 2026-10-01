@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import <Cocoa/Cocoa.h>
 #import "MPOSCheck.h"
 #include "TargetConditionals.h"
@@ -99,21 +100,21 @@
   // Put CPU-independent macOS code here.
   #if TARGET_CPU_ARM64
     // Put 64-bit Apple silicon macOS code here.
-    qldebug(@"checkOSArch: TARGET_CPU_ARM64");
+    LogDebug(@"checkOSArch: TARGET_CPU_ARM64");
     NSString *procType = @"ARM";
   #elif TARGET_CPU_X86_64
-    qldebug(@"checkOSArch: TARGET_CPU_X86_64");
+    LogDebug(@"checkOSArch: TARGET_CPU_X86_64");
     NSString *procType = @"X86";
   #else
     NSString *procType = @"Unknown Architecture";
   #endif
 #elif TARGET_OS_MACCATALYST
    // Put Mac Catalyst-specific code here.
-    qldebug(@"checkOSArch: TARGET_OS_MACCATALYST");
+    LogDebug(@"checkOSArch: TARGET_OS_MACCATALYST");
     NSString *procType = @"Unknown Architecture";
 #elif TARGET_OS_IOS
   // Put iOS-specific code here.
-    qldebug(@"checkOSArch: TARGET_OS_IOS");
+    LogDebug(@"checkOSArch: TARGET_OS_IOS");
     NSString *procType = @"Unknown Architecture";
 #else
     NSString *procType = @"Unknown Architecture";
@@ -150,7 +151,7 @@ done:
     NSString *procType = @"Unknown Architecture";
 #endif
     
-    qlinfo(@"checkOSArch: %@",procType);
+    LogInfo(@"checkOSArch: %@",procType);
     
     NSArray *reqOSArchArray = [osArchString componentsSeparatedByString:@","];
     for (int i = 0;i < [reqOSArchArray count]; i++) {
@@ -199,7 +200,7 @@ done:
 {
 	BOOL osTypePass	= FALSE;
 	NSString *curOSVer = [curOSVerArray componentsJoinedByString:@"."];
-	qldebug(@"curOSVer: %@",curOSVer);
+	LogDebug(@"curOSVer: %@",curOSVer);
 	
 	// if it's just * then pass, it's a wildcard for all
 	if ([osVersString isEqualToString:@"*"] == TRUE)
@@ -211,7 +212,7 @@ done:
 	// else, lets create out array
 	NSArray *reqOSVerArray = [osVersString componentsSeparatedByString:@","];
 	if ([reqOSVerArray count] <= 0) {
-		qlerror(@"Error: Required OS Version String Check was malformed. Unable to parse.");
+		LogError(@"Error: Required OS Version String Check was malformed. Unable to parse.");
 		osTypePass = FALSE; 
 		return osTypePass;
 	}
@@ -219,7 +220,7 @@ done:
 	for(int i = 0; i<[reqOSVerArray count];i++)
 	{
 		NSString *_reqOSVer = [NSString stringWithString:[reqOSVerArray objectAtIndex:i]];
-		qldebug(@"_reqOSVer: %@",_reqOSVer);
+		LogDebug(@"_reqOSVer: %@",_reqOSVer);
 		
 		if ([_reqOSVer isEqualToString:curOSVer] == TRUE)
 		{	
@@ -259,10 +260,10 @@ done:
 		if ([_reqOSVer containsString:@"*"] == TRUE)
 		{
 			NSString *findStr = [_reqOSVer stringByReplacingOccurrencesOfString:@"*" withString:@""];
-			qldebug(@"If curOSVer(%@) containsString:(%@)",curOSVer,findStr);
+			LogDebug(@"If curOSVer(%@) containsString:(%@)",curOSVer,findStr);
 			if ([curOSVer containsString:findStr])
 			{
-				qldebug(@"Found");
+				LogDebug(@"Found");
 				osTypePass = TRUE;
 				break;
 			}

@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPScript.h"
 
 #undef  ql_component
@@ -71,7 +72,7 @@
 	
 	// Fix line endings
 	if ([self fixLineEndingsInFile:tmpFile] == NO)
-		qlerror(@"Warnning, did not get a return code of 0 when fixing line endings in %@. Script may not run.",tmpFile);
+		LogError(@"Warnning, did not get a return code of 0 when fixing line endings in %@. Script may not run.",tmpFile);
 	
 	NSTask *task = [[NSTask alloc] init];
 	NSPipe *pipe = [NSPipe pipe];
@@ -92,18 +93,18 @@
 	
 	int status = [task terminationStatus];
 	
-	qldebug(@"Script = %@ \n %@ \n Exit Code: %d",tmpFile,[NSString stringWithContentsOfFile:tmpFile encoding:NSUTF8StringEncoding error:NULL], status);
-	qldebug(@"Script Result = %@",string);
+	LogDebug(@"Script = %@ \n %@ \n Exit Code: %d",tmpFile,[NSString stringWithContentsOfFile:tmpFile encoding:NSUTF8StringEncoding error:NULL], status);
+	LogDebug(@"Script Result = %@",string);
 	
 	if (status == 0) {
 		result = TRUE;
         NSError *delErr = nil;
         [[NSFileManager defaultManager] removeItemAtPath:tmpFile error:&delErr];
         if (delErr) {
-            qlerror(@"Error removing file %@",tmpFile);
+            LogError(@"Error removing file %@",tmpFile);
         }
 	} else {
-		qldebug(@"Exit Code: %d.\nScript Result: %@\nScript: %@",status,string,tmpFile);
+		LogDebug(@"Exit Code: %d.\nScript Result: %@\nScript: %@",status,string,tmpFile);
 	}
 	
 	return result;
@@ -126,7 +127,7 @@
 	
 	// Fix line endings
 	if ([self fixLineEndingsInFile:tmpFile] == NO)
-		qlerror(@"Warnning, did not get a return code of 0 when fixing line endings in %@. Script may not run.",tmpFile);
+		LogError(@"Warnning, did not get a return code of 0 when fixing line endings in %@. Script may not run.",tmpFile);
 	
 	NSTask *task = [[NSTask alloc] init];
 	NSPipe *pipe = [NSPipe pipe];
@@ -147,18 +148,18 @@
 	
 	int status = [task terminationStatus];
 	
-	qldebug(@"Script = %@ \n %@ \n Exit Code: %d",tmpFile,[NSString stringWithContentsOfFile:tmpFile encoding:NSUTF8StringEncoding error:NULL], status);
-	qldebug(@"Script Result = %@",string);
+	LogDebug(@"Script = %@ \n %@ \n Exit Code: %d",tmpFile,[NSString stringWithContentsOfFile:tmpFile encoding:NSUTF8StringEncoding error:NULL], status);
+	LogDebug(@"Script Result = %@",string);
 	
 	if (status == 0) {
         NSError *delErr = nil;
         [[NSFileManager defaultManager] removeItemAtPath:tmpFile error:&delErr];
         if (delErr) {
-            qlerror(@"Error removing file %@",tmpFile);
+            LogError(@"Error removing file %@",tmpFile);
         }
 		return string;
 	} else {
-		qldebug(@"Exit Code: %d.\nScript Result: %@\nScript: %@",status,string,tmpFile);
+		LogDebug(@"Exit Code: %d.\nScript Result: %@\nScript: %@",status,string,tmpFile);
 		return @"ERROR";
 	}
 	
@@ -184,8 +185,8 @@
 		err = nil;
 		scriptText = [NSString stringWithContentsOfFile:[aDirectory stringByAppendingPathComponent:scpt] encoding:NSUTF8StringEncoding error:&err];
 		if (err) {
-			qlerror(@"Error reading script string: %@",[err description]);
-			qlerror(@"%@",[err description]);
+			LogError(@"Error reading script string: %@",[err description]);
+			LogError(@"%@",[err description]);
 			if (*error != NULL) *error = err;
 			res++;
 			break;
@@ -211,7 +212,7 @@
 	[strData writeToFile:aScriptPath atomically:NO encoding:NSASCIIStringEncoding error:NULL];
 	
 	if (err) {
-		qlerror(@"%@, error code %d (%@)",[err localizedDescription], (int)[err code], [err domain]);
+		LogError(@"%@, error code %d (%@)",[err localizedDescription], (int)[err code], [err domain]);
 		result=NO;
 	} else {
 		result=YES;

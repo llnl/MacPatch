@@ -25,13 +25,14 @@
  */
 
 #import <Foundation/Foundation.h>
+#import "Logger.h"
 #import "MPUpdaterController.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.2.1.0"
+#define APPVERSION	@"4.3.3.0"
 #define APPNAME		@"MPUpdater"
 
 void usage(void);
@@ -112,24 +113,26 @@ int main(int argc, char * argv[])
 		
 		// Setup Logging
 		NSString *_logFile = @"/Library/Logs/MPUpdater.log";
-		[MPLog setupLogging:_logFile level:lcl_vDebug];
+
+		// Setup new Logger
+		Logger *logger = [Logger sharedLogger];
+		[logger setupWithLogPath:_logFile subsystem:@"gov.llnl.mp.updater" category:@"updater"];
+		logger.enableFileLogging = YES;
+		logger.enableConsoleLogging = NO;
+		logger.enableStderrLogging = verboseLogging || echoToConsole;
+		logger.minimumLogLevel = verboseLogging ? LogLevelDebug : LogLevelInfo;
+
 		if (verboseLogging) {
-			lcl_configure_by_name("*", lcl_vDebug);
-			[LCLLogFile setMirrorsToStdErr:YES];
-			logit(lcl_vInfo,@"***** %@ v.%@ started -- Debug Enabled *****", APPNAME, APPVERSION);
+			LogInfo(@"***** %@ v.%@ started -- Debug Enabled *****", APPNAME, APPVERSION);
 		} else {
-			lcl_configure_by_name("*", lcl_vInfo);
-			if (echoToConsole) {
-				[LCLLogFile setMirrorsToStdErr:YES];
-			}
-			logit(lcl_vInfo,@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
+			LogInfo(@"***** %@ v.%@ started *****", APPNAME, APPVERSION);
 		}
         
         NSFileManager *fm = [NSFileManager defaultManager];
 
         if ([fm fileExistsAtPath:MP_PROVISION_BEGIN] && ![fm fileExistsAtPath:MP_PROVISION_DONE])
         {
-            qlinfo(@"MacPatch is in the provisioning process. No agent updates can occur during this.");
+            LogInfo(@"MacPatch is in the provisioning process. No agent updates can occur during this.");
             return 0;
         }
 
@@ -139,7 +142,7 @@ int main(int argc, char * argv[])
 		for(NSString *file in files) {
 			[fm removeItemAtPath:[@"/Users/Shared/.mpUpdate" stringByAppendingPathComponent:file] error:&error];
 			if(error) {
-				logit(lcl_vError,@"Error unable to delete %@",file);
+				LogError(@"Error unable to delete %@",file);
 			}
 		}
 		

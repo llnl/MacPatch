@@ -23,6 +23,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
 
+#import "Logger.h"
 #import "PrefsGeneralViewController.h"
 
 @interface PrefsGeneralViewController ()
@@ -71,13 +72,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	int state = (int)[enableDebugLogCheckBox state];
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"enableDebugLogging"];
-	
+
+	Logger *logger = [Logger sharedLogger];
 	if ([self debugLogging]) {
-		lcl_configure_by_name("*", lcl_vDebug);
-		qldebug(@"Log level set to debug.");
+		logger.minimumLogLevel = LogLevelDebug;
+		LogDebug(@"Log level set to debug.");
 	} else {
-		lcl_configure_by_name("*", lcl_vInfo);
-		qlinfo(@"Log level set to info.");
+		logger.minimumLogLevel = LogLevelInfo;
+		LogInfo(@"Log level set to info.");
 	}
 	[d synchronize];
 }

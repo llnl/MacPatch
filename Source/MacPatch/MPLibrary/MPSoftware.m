@@ -75,27 +75,27 @@
 	if ([pkgType isEqualToString:@"SCRIPTZIP"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {
-			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			LogInfo(@"Need to download software task %@",swTask[@"id"]);
 			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
 		}
 		
-		qlinfo(@"Verify %@ (%@)",swTask[@"name"],fileName);
+		LogInfo(@"Verify %@ (%@)",swTask[@"name"],fileName);
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
-		qlinfo(@"%@: %@",dlSoftwareFile,fHash);
-		qlinfo(@"== %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
+		LogInfo(@"%@: %@",dlSoftwareFile,fHash);
+		LogInfo(@"== %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
 			return 1;
 		}
 
 		[self postStatusToDelegate:@"Unzipping file %@.",[dlSoftwareFile lastPathComponent]];
-		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+		LogInfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
 		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err)
 		{
-			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
+			LogError(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
 			return 1;
 		}
 		
@@ -116,7 +116,7 @@
 		{
 			if ([self runInstallScript:swTask[@"Software"] type:1] == NO)
 			{
-				qlerror(@"Error running post install script. Just log it as the install was good.");
+				LogError(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		else
@@ -128,25 +128,25 @@
 	else if ([pkgType isEqualToString:@"PACKAGEZIP"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {
-			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			LogInfo(@"Need to download software task %@",swTask[@"id"]);
 			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
 		}
 		
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
-		qlinfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
-		qlinfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
+		LogInfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
+		LogInfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+			LogError(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
 			return 1;
 		}
 		
 		[self postStatusToDelegate:@"Unzipping file %@.",fileName];
-		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+		LogInfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
 		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err) {
-			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
+			LogError(@"Error unzipping file %@. %@",dlSoftwareFile,[err description]);
 			return 1;
 		}
 		// Run Pre Install Script
@@ -161,7 +161,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:[swTask objectForKey:@"Software"] type:1] == NO) {
-				qlerror(@"Error running post install script. Just log it as the install was good.");
+				LogError(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -169,16 +169,16 @@
     else if ([pkgType isEqualToString:@"PACKAGE"])
     {
         if (![fm fileExistsAtPath:dlSoftwareFile]) {
-            qlinfo(@"Need to download software task %@",swTask[@"id"]);
+            LogInfo(@"Need to download software task %@",swTask[@"id"]);
             [self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
         }
         
         fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
-        qlinfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
-        qlinfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
+        LogInfo(@"Check file: %@.",[dlSoftwareFile lastPathComponent]);
+        LogInfo(@"Check Hash: %@ = %@.",[fHash uppercaseString],[swTask valueForKeyPath:@"Software.sw_hash"]);
         if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
         {
-            qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+            LogError(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
             return 1;
         }
         
@@ -194,7 +194,7 @@
         if (result == 0)
         {
             if ([self runInstallScript:[swTask objectForKey:@"Software"] type:1] == NO) {
-                qlerror(@"Error running post install script. Just log it as the install was good.");
+                LogError(@"Error running post install script. Just log it as the install was good.");
             }
         }
         
@@ -202,24 +202,24 @@
 	else if ([pkgType isEqualToString:@"APPZIP"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {
-			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			LogInfo(@"Need to download software task %@",swTask[@"id"]);
 			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
 		}
 		
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",fileName);
+			LogError(@"Error unable to verify software hash for file %@.",fileName);
 			return 1;
 		}
 		
 		[self postStatusToDelegate:@"Unzipping file %@.",fileName];
-		qlinfo(@"Unzipping file %@.",dlSoftwareFile);
+		LogInfo(@"Unzipping file %@.",dlSoftwareFile);
 		fUtils = [MPFileUtils new];
 		[fUtils unzip:dlSoftwareFile error:&err];
 		if (err)
 		{
-			qlerror(@"Error unzipping file %@. %@",dlSoftwareFile, err.localizedDescription);
+			LogError(@"Error unzipping file %@. %@",dlSoftwareFile, err.localizedDescription);
 			return 1;
 		}
 		
@@ -242,7 +242,7 @@
 		{
 			if ([self runInstallScript:swTask[@"Software"] type:1] == NO)
 			{
-				qlwarning(@"Error running post install script. Just log it as the install was good.");
+				LogWarning(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -250,22 +250,22 @@
 	else if ([pkgType isEqualToString:@"PACKAGEDMG"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {
-			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			LogInfo(@"Need to download software task %@",swTask[@"id"]);
 			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
 		}
 		
 		fHash = [mpCrypto md5HashForFile:dlSoftwareFile];
-		qldebug(@"(DL File Hash)%@: %@",dlSoftwareFile,fHash);
-		qlinfo(@"(Known File Hash) %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
+		LogDebug(@"(DL File Hash)%@: %@",dlSoftwareFile,fHash);
+		LogInfo(@"(Known File Hash) %@",[swTask valueForKeyPath:@"Software.sw_hash"]);
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]]) {
-			qlerror(@"Error unable to verify software hash for file %@.",fileName);
+			LogError(@"Error unable to verify software hash for file %@.",fileName);
 			return 1;
 		}
 		
 		// Run Pre Install Script
 		if ([self runInstallScript:swTask[@"Software"] type:0] == NO)
 		{
-			qlerror(@"Error running pre install script.");
+			LogError(@"Error running pre install script.");
 			result = 1;
 			return result;
 		}
@@ -277,7 +277,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:swTask[@"Software"] type:1] == NO) {
-				qlwarning(@"Error running post install script. Just log it as the install was good.");
+				LogWarning(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -285,7 +285,7 @@
 	else if ([pkgType isEqualToString:@"APPDMG"])
 	{
 		if (![fm fileExistsAtPath:dlSoftwareFile]) {
-			qlinfo(@"Need to download software task %@",swTask[@"id"]);
+			LogInfo(@"Need to download software task %@",swTask[@"id"]);
 			[self downloadSoftware:[swTask copy] toDestination:[dlSoftwareFile stringByDeletingLastPathComponent]];
 		}
 		
@@ -293,15 +293,15 @@
 		
 		if (![[fHash uppercaseString] isEqualToString:[swTask valueForKeyPath:@"Software.sw_hash"]])
 		{
-			qlerror(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
-			qlerror(@"%@: %@ (%@)",dlSoftwareFile,fHash,[swTask valueForKeyPath:@"Software.sw_hash"]);
+			LogError(@"Error unable to verify software hash for file %@.",[dlSoftwareFile lastPathComponent]);
+			LogError(@"%@: %@ (%@)",dlSoftwareFile,fHash,[swTask valueForKeyPath:@"Software.sw_hash"]);
 			return 1;
 		}
 		
 		// Run Pre Install Script
 		if ([self runInstallScript:swTask[@"Software"] type:0] == NO)
 		{
-			qlerror(@"Error running pre install script.");
+			LogError(@"Error running pre install script.");
 			result = 1;
 			return result;
 		}
@@ -313,7 +313,7 @@
 		if (result == 0)
 		{
 			if ([self runInstallScript:swTask[@"Software"] type:1] == NO) {
-				qlwarning(@"Error running post install script. Just log it as the install was good.");
+				LogWarning(@"Error running post install script. Just log it as the install was good.");
 			}
 		}
 		
@@ -321,7 +321,7 @@
 	else
 	{
 		// Install Type Not Supported
-		qlerror(@"Install type (%@) is not supported",pkgType);
+		LogError(@"Install type (%@) is not supported",pkgType);
 		result = 2;
 	}
 	
@@ -349,8 +349,8 @@
     err = nil;
     [mpr postSoftwareInstallResults:wsRes error:&err];
     if (err) {
-        qlerror(@"Error posting software install results.");
-        qlerror(@"%@",err.localizedDescription);
+        LogError(@"Error posting software install results.");
+        LogError(@"%@",err.localizedDescription);
     }
     
 	return result;
@@ -365,13 +365,13 @@
         NSDictionary *customPatch = [res objectAtIndex:0];
         if ([customPatch[@"bundleID"] isEqualTo:aBundleID])
         {
-            logit(lcl_vInfo,@"Patch %@ approved for update.",customPatch[@"patch"]);
+            LogInfo(@"Patch %@ approved for update.",customPatch[@"patch"]);
             patchDict = [customPatch copy];
         }
     }
     
     NSDictionary *patchRes = [mpp installPatchUsingTypeFilter:patchDict typeFilter:kCustomPatches];
-    qldebug(@"Patch Result; %@",patchRes);
+    LogDebug(@"Patch Result; %@",patchRes);
 }
 
 #pragma mark - Private
@@ -382,7 +382,7 @@
 	NSError *dlErr = nil;
 	MPHTTPRequest *req = [[MPHTTPRequest alloc] init];
 	NSString *dlPath = [req runSyncFileDownload:_url downloadDirectory:toPath error:&dlErr];
-	qldebug(@"Downloaded software to %@",dlPath);
+	LogDebug(@"Downloaded software to %@",dlPath);
 	return YES;
 }
 
@@ -413,7 +413,7 @@
 		// Create dir if it does not exist
 		[fm createDirectoryAtPath:SW_DATA_DIR_PATH withIntermediateDirectories:YES attributes:attributes error:&err];
 		if (err) {
-			qlinfo(@"%@",[err description]);
+			LogInfo(@"%@",[err description]);
 		}
 	}
 	else
@@ -421,7 +421,7 @@
 		// Set directory attributes, permissions etc.
 		[fm setAttributes:attributes ofItemAtPath:SW_DATA_DIR_PATH error:&err];
 		if (err) {
-			qlerror(@"%@",err.localizedDescription);
+			LogError(@"%@",err.localizedDescription);
 		}
 		
 		// Set attributes for file in directory
@@ -432,7 +432,7 @@
 			err = nil;
 			[fm setAttributes:attributes ofItemAtPath:[SW_DATA_DIR_PATH stringByAppendingPathComponent:file] error:&err];
 			if (err) {
-				qlerror(@"%@",err.localizedDescription);
+				LogError(@"%@",err.localizedDescription);
 			}
 		}
 	}
@@ -465,7 +465,7 @@
 					}
 					if (![mps runScript:_script])
 					{
-						qlerror(@"Error running pre install script. No install will occure.");
+						LogError(@"Error running pre install script. No install will occure.");
 						return NO;
 					}
 					else
@@ -475,8 +475,8 @@
 				}
 				@catch (NSException *exception)
 				{
-					qlerror(@"Exception Error running pre install script. No install will occure.");
-					qlerror(@"%@",exception);
+					LogError(@"Exception Error running pre install script. No install will occure.");
+					LogError(@"%@",exception);
 					return NO;
 				}
 			}
@@ -505,7 +505,7 @@
 					}
 					if (![mps runScript:_script])
 					{
-						qlerror(@"Error running post install script.");
+						LogError(@"Error running post install script.");
 						return NO;
 					} else {
 						return YES;
@@ -513,8 +513,8 @@
 				}
 				@catch (NSException *exception)
 				{
-					qlerror(@"Exception Error running post install script.");
-					qlerror(@"%@",exception);
+					LogError(@"Exception Error running post install script.");
+					LogError(@"%@",exception);
 					return NO;
 				}
 			}

@@ -6,6 +6,7 @@
 //  Copyright © 2021 LLNL. All rights reserved.
 //
 
+#import "Logger.h"
 #import "ProvisionHost.h"
 #import "MacPatch.h"
 #import "MPStatusProtocol.h"
@@ -42,15 +43,15 @@
         
         [self connectAndExecuteCommandBlock:^(NSError * connectError) {
             if (connectError != nil) {
-                qlerror(@"workerConnection[connectError][ProvisionHost][init]: %@",connectError.localizedDescription);
+                LogError(@"workerConnection[connectError][ProvisionHost][init]: %@",connectError.localizedDescription);
             } else {
                 [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                    qlerror(@"workerConnection[proxyError][ProvisionHost][init]: %@",proxyError.localizedDescription);
+                    LogError(@"workerConnection[proxyError][ProvisionHost][init]: %@",proxyError.localizedDescription);
                 }] createDirectory:MP_PROVISION_DIR withReply:^(NSError *error) {
                     if (error) {
-                        qlerror(@"%@",error.localizedDescription);
+                        LogError(@"%@",error.localizedDescription);
                     } else {
-                        qldebug(@"MP_PROVISION_DIR created");
+                        LogDebug(@"MP_PROVISION_DIR created");
                     }
                 }];
             }
@@ -70,7 +71,7 @@
     // Get Data
     NSDictionary *provisionData = [self getProvisionData];
     if (!provisionData) {
-        qlerror(@"Provisioning data from web service is nil. Now exiting.");
+        LogError(@"Provisioning data from web service is nil. Now exiting.");
         res = 1;
         [self writeToKeyInProvisionFile:@"endDT" data:[MPDate dateTimeStamp]];
         [self writeToKeyInProvisionFile:@"completed" data:@{@"completed":[NSNumber numberWithBool:YES]} type:@"bool"];
@@ -117,18 +118,18 @@
         if (_pre.count >= 1) {
             for (NSDictionary *s in _pre)
             {
-                qlinfo(@"Pre Script: %@",s[@"name"]);
+                LogInfo(@"Pre Script: %@",s[@"name"]);
                 @try {
                     [_delegate provisionProgress:@"Running Pre-install Script(s)..."];
                     [self runScript:s[@"script"]];
-                    qlinfo(@"Pre Script: %@",s[@"name"]);
+                    LogInfo(@"Pre Script: %@",s[@"name"]);
                 } @catch (NSException *exception) {
-                    qlerror(@"[PreScript]: %@",exception);
+                    LogError(@"[PreScript]: %@",exception);
                 }
                 
             }
         } else {
-            qlinfo(@"No, pre scripts to run.");
+            LogInfo(@"No, pre scripts to run.");
         }
     }
     
@@ -139,7 +140,7 @@
         if (_sw.count >= 1) {
             for (NSDictionary *s in _sw)
             {
-                qlinfo(@"Install Software Task: %@",s[@"name"]);
+                LogInfo(@"Install Software Task: %@",s[@"name"]);
                 [_delegate provisionProgress:[NSString stringWithFormat:@"Install %@",s[@"name"]]];
                 @try {
                     int res = [self installSoftwareProvisonTask:s];
@@ -147,12 +148,12 @@
                         [self writeToKeyInProvisionFile:@"status" data:[NSString stringWithFormat:@"Software: Failed to install %@ (%@)",s[@"name"],s[@"tuuid"]]];
                     }
                 } @catch (NSException *exception) {
-                    qlerror(@"[Software]: %@",exception);
+                    LogError(@"[Software]: %@",exception);
                 }
                 
             }
         } else {
-            qlinfo(@"No, software tasks to run.");
+            LogInfo(@"No, software tasks to run.");
         }
     }
     
@@ -163,17 +164,17 @@
         if (_post.count >= 1) {
             for (NSDictionary *s in _post)
             {
-                qldebug(@"Post Script: %@",s[@"name"]);
+                LogDebug(@"Post Script: %@",s[@"name"]);
                 @try {
                     [_delegate provisionProgress:[NSString stringWithFormat:@"Running Post-install Script: %@",s[@"name"]]];
                     [self runScript:s[@"script"]];
                 } @catch (NSException *exception) {
-                    qlerror(@"[PostScript]: %@",exception);
+                    LogError(@"[PostScript]: %@",exception);
                 }
                 
             }
         } else {
-            qlinfo(@"No, post scripts to run.");
+            LogInfo(@"No, post scripts to run.");
         }
     }
     
@@ -191,10 +192,10 @@
     MPRESTfull *mprest = [[MPRESTfull alloc] init];
     NSDictionary *data = [mprest getProvisioningDataForHost:settings.ccuid error:&err];
     if (err) {
-        qlerror(@"%@",err);
+        LogError(@"%@",err);
         return result;
     } else {
-        qlinfo(@"%@",data);
+        LogInfo(@"%@",data);
         result = [data copy];
     }
     
@@ -209,7 +210,7 @@
 
 - (void)writeToKeyInProvisionFile:(NSString *)key data:(id)data type:(NSString *)type
 {
-    qlinfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
+    LogInfo(@"[writeToKeyInProvisionFile]: %@ = %@",key,data);
     NSString *_type;
     NSData *myData = [NSKeyedArchiver archivedDataWithRootObject:data];
     
@@ -228,21 +229,21 @@
             _type = @"bool";
             myData = [NSKeyedArchiver archivedDataWithRootObject:data];
         } else {
-            qlerror(@"Type (%@) not known for key (%@), data will not be written.",[data class],key);
+            LogError(@"Type (%@) not known for key (%@), data will not be written.",[data class],key);
             return;
         }
     }
     
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);;
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);;
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
             }] postProvisioningData:key dataForKey:myData dataType:_type withReply:^(NSError *error) {
                 if (error) {
-                    qlerror(@"Error posting data to key %@",key);
-                    qlerror(@"Data %@",data);
+                    LogError(@"Error posting data to key %@",key);
+                    LogError(@"Data %@",data);
                 }
             }];
         }
@@ -252,63 +253,63 @@
 // Helper
 - (int)runScript:(NSString *)script
 {
-    qlinfo(@"Begin running script");
+    LogInfo(@"Begin running script");
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 dispatch_semaphore_signal(sem);
             }] runScriptFromString:script withReply:^(NSError *error, NSInteger result) {
                 res = result;  
                 if (error) {
-                    qlerror(@"Error running script.");
-                    qlerror(@"%@",error.localizedDescription);
+                    LogError(@"Error running script.");
+                    LogError(@"%@",error.localizedDescription);
                 }
-                qlinfo(@"End running script");
+                LogInfo(@"End running script");
                 dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    qlinfo(@"Script result: %d",(int)res);
+    LogInfo(@"Script result: %d",(int)res);
     return (int)res;
 }
 
 // Helper
 - (int)installSoftwareProvisonTask:(NSDictionary *)swTask
 {
-    qlinfo(@"Begin running required software install.");
+    LogInfo(@"Begin running required software install.");
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     NSDictionary *swDict = [self getSoftwareTaskForID:swTask[@"tuuid"]];
     __block NSInteger res = 99;
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
-            qlerror(@"workerConnection[connectError]: %@",connectError.localizedDescription);
+            LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
             dispatch_semaphore_signal(sem);
         } else {
             [[self.workerConnection remoteObjectProxyWithErrorHandler:^(NSError * proxyError) {
-                qlerror(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
+                LogError(@"workerConnection[proxyError]: %@",proxyError.localizedDescription);
                 dispatch_semaphore_signal(sem);
             }] installSoftware:swDict timeOut:900 withReply:^(NSError *error, NSInteger resultCode, NSData *installData ) {
                 res = resultCode;
                 if (error) {
-                    qlerror(@"Error installing %@.",swTask[@"name"]);
-                    qlerror(@"%@",error);
+                    LogError(@"Error installing %@.",swTask[@"name"]);
+                    LogError(@"%@",error);
                 }
-                qlinfo(@"End running required software install.");
+                LogInfo(@"End running required software install.");
                 dispatch_semaphore_signal(sem);
             }];
         }
     }];
     
     dispatch_semaphore_wait(sem, DISPATCH_TIME_FOREVER);
-    qlinfo(@"Required software result: %d",(int)res);
+    LogInfo(@"Required software result: %d",(int)res);
     return (int)res;
 }
 
@@ -392,7 +393,7 @@
 
 - (void)postStatus:(NSString *)status type:(MPPostDataType)type
 {
-    qldebug(@"[ProvisionHost][postStatus]: %@",status);
+    LogDebug(@"[ProvisionHost][postStatus]: %@",status);
     if (type == kMPProcessStatus) {
         dispatch_async(dispatch_get_main_queue(), ^{
             //self->_progressStatus.stringValue = status;
@@ -405,8 +406,8 @@
 
 - (void)postStopHasError:(BOOL)arg1 errorString:(NSString *)arg2
 {
-    qldebug(@"[ProvisionHost][postStopHasError]: %@",arg2);
-    qldebug(@"postStopHasError called %@",arg2);
+    LogDebug(@"[ProvisionHost][postStopHasError]: %@",arg2);
+    LogDebug(@"postStopHasError called %@",arg2);
     /*
     NSError *err = nil;
     if (arg1) {
@@ -445,12 +446,12 @@
     wsresult = [req runSyncGET:urlPath];
     
     if (wsresult.statusCode >= 200 && wsresult.statusCode <= 299) {
-        qldebug(@"Get Data from web service (%@) returned true.",urlPath);
-        qldebug(@"Data Result: %@",wsresult.result);
+        LogDebug(@"Get Data from web service (%@) returned true.",urlPath);
+        LogDebug(@"Data Result: %@",wsresult.result);
         result = wsresult.result;
     } else {
-        qlerror(@"Get Data from web service (%@), returned false.", urlPath);
-        qldebug(@"%@",wsresult.toDictionary);
+        LogError(@"Get Data from web service (%@), returned false.", urlPath);
+        LogDebug(@"%@",wsresult.toDictionary);
     }
     
     return result;

@@ -2,7 +2,7 @@
 
 # ***************************************************************************************
 # PostFlight Script for MacPatch Client Installer
-# ver 3.11
+# ver 3.10
 # Created By Charles Heizer @ LLNL
 #
 # Improvements in v3.8:
@@ -25,19 +25,6 @@
 #
 # Improvements in v3.10:
 # - Added skip whats new popup to script
-#
-# Improvements in v3.11:
-# - Strip com.apple.quarantine from installed plists and helper binaries.
-#   macOS 27 refuses to bootstrap a quarantined LaunchDaemon and reports only
-#   "Bootstrap failed: 5: Input/output error". Earlier releases tolerated it,
-#   so payloads built before 27 can carry the attribute for months unnoticed.
-# - Replaced deprecated "launchctl load -w" with bootout/bootstrap, including
-#   a wait for the label to be released (bootout is asynchronous; bootstrapping
-#   during cleanup returns error 37, surfaced as the same opaque error 5).
-# - Clear any stale disabled-database entry before bootstrapping. That database
-#   survives uninstalls and silently blocks a reinstall.
-# - Verify each daemon is registered after loading instead of assuming success.
-# - Cover all five daemon plists for ownership/permissions, not just two.
 # ***************************************************************************************
 
 MP_ROOT="/Library/MacPatch"
@@ -56,22 +43,9 @@ isIload ()
 	echo "$pid"
 }
 
-# Remove the quarantine attribute that blocks launchd from loading a job.
-# Only com.apple.quarantine is removed; com.apple.provenance is left intact
-# so the system can still attribute the file to its installer package.
-stripQuarantine() {
-	if [ -e "$1" ]; then
-		/usr/bin/xattr -d com.apple.quarantine "$1" 2>/dev/null
-		if /usr/bin/xattr -p com.apple.quarantine "$1" >/dev/null 2>&1; then
-			echo "Warning: could not clear com.apple.quarantine on $1"
-		fi
-	fi
-}
-
 setOwner() {
 	if [ -f "$1" ]; then
 		/usr/sbin/chown -R root:wheel "$1"
-		stripQuarantine "$1"
 	fi
 }
 
@@ -79,19 +53,6 @@ setOwnerAndPerms() {
 	if [ -f "$1" ]; then
 		/usr/sbin/chown root:wheel "$1"
 		/bin/chmod 0644 "$1"
-		stripQuarantine "$1"
-	fi
-}
-
-# Privileged helper binaries need the exec bit; a plist must not have it.
-setHelperOwnerAndPerms() {
-	if [ -f "$1" ]; then
-		/usr/sbin/chown root:wheel "$1"
-		/bin/chmod 0755 "$1"
-		stripQuarantine "$1"
-		if ! /usr/bin/codesign --verify --strict "$1" 2>/dev/null; then
-			echo "Warning: code signature invalid on $1"
-		fi
 	fi
 }
 
@@ -136,71 +97,6 @@ validateBoolean() {
 		echo "0"
 	fi
 }
-
-# ******************************************************************
-# LaunchDaemon loading
-#
-# "launchctl load -w" is deprecated and reports success even when the job
-# was rejected. bootstrap reports failure properly, but needs the label to
-# be free first: bootout schedules cleanup several seconds after SIGTERM,
-# and bootstrapping into that window returns error 37, which launchctl
-# surfaces as "Bootstrap failed: 5: Input/output error".
-
-waitForLabelGone() {
-	local label="$1"
-	local i=0
-	while [ "$i" -lt 20 ]; do
-		if ! /bin/launchctl print "system/${label}" >/dev/null 2>&1; then
-			return 0
-		fi
-		sleep 0.5
-		i=$((i + 1))
-	done
-	return 1
-}
-
-loadDaemon() {
-	local label="$1"
-	local plist="/Library/LaunchDaemons/${label}.plist"
-
-	if [ ! -f "$plist" ]; then
-		echo "Skipping ${label}: ${plist} not present"
-		return 0
-	fi
-
-	# Guard against a payload that arrived with the attribute still set.
-	stripQuarantine "$plist"
-
-	if /bin/launchctl print "system/${label}" >/dev/null 2>&1; then
-		echo "Unloading existing ${label}"
-		/bin/launchctl bootout "system/${label}" >/dev/null 2>&1
-		if ! waitForLabelGone "$label"; then
-			echo "Warning: ${label} still registered after bootout"
-		fi
-	fi
-
-	# A stale disabled-database entry from a previous install would otherwise
-	# block this silently. The database persists across uninstalls.
-	/bin/launchctl enable "system/${label}" 2>/dev/null
-
-	if /bin/launchctl bootstrap system "$plist" 2>/dev/null; then
-		echo "Loaded ${label}"
-	else
-		echo "Error: bootstrap failed for ${label}"
-		LOAD_FAILED=1
-		return 1
-	fi
-
-	if ! /bin/launchctl print "system/${label}" >/dev/null 2>&1; then
-		echo "Error: ${label} not registered after bootstrap"
-		LOAD_FAILED=1
-		return 1
-	fi
-
-	return 0
-}
-
-LOAD_FAILED=0
 
 # ******************************************************************
 # Set Up Python Virtual Environment
@@ -349,19 +245,11 @@ function setupPyVirtEnv
 
 # ******************************************************************
 # Set owner & permissions
-setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.agent.plist
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
-setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.updater.plist
-setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.planb.plist
 setOwnerAndPerms /Library/LaunchAgents/gov.llnl.mp.status.plist
-setHelperOwnerAndPerms /Library/PrivilegedHelperTools/gov.llnl.mp.helper
-setHelperOwnerAndPerms /Library/PrivilegedHelperTools/gov.llnl.mp.status.ui
-
-# Catch anything else the payload dropped in with the attribute still set.
-for f in /Library/LaunchDaemons/gov.llnl.mp.*.plist /Library/LaunchAgents/gov.llnl.mp.*.plist; do
-	[ -f "$f" ] && stripQuarantine "$f"
-done
+setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.helper
+setOwner /Library/PrivilegedHelperTools/gov.llnl.mp.status.ui
 
 if [ ! -d "/Library/Application Support/MPClientStatus" ]; then
 	mkdir -p "/Library/Application Support/MPClientStatus"
@@ -514,15 +402,25 @@ fi
 # Launch the Helper service  ***************************************
 #
 
-loadDaemon gov.llnl.mp.helper
-loadDaemon gov.llnl.mp.status.ui
+if [ -f /Library/LaunchDaemons/gov.llnl.mp.helper.plist ]; then
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.helper.plist 2>/dev/null || true
+	/bin/sleep 2
+fi
+
+if [ -f /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist ]; then
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist 2>/dev/null || true
+	/bin/sleep 2
+fi
 
 # ******************************************************************
 # Launch the MPAgent service ***************************************
 #
 if [ -z "$(isIload)" ]; then
 	# No iLoadAssistant
-	loadDaemon gov.llnl.mp.agent
+	if [ -f /Library/LaunchDaemons/gov.llnl.mp.agent.plist ]; then
+		/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.agent.plist 2>/dev/null || true
+		/bin/sleep 2
+	fi
 else
 	echo "Running iLoad, apps will launch on reboot."
 fi
@@ -530,7 +428,10 @@ fi
 # ******************************************************************
 # Launch PlanB		    ********************************************
 #
-loadDaemon gov.llnl.mp.planb
+if [ -f "/Library/LaunchDaemons/gov.llnl.mp.planb.plist" ]; then
+	/bin/launchctl load -w /Library/LaunchDaemons/gov.llnl.mp.planb.plist 2>/dev/null || true
+	sleep 2
+fi
 
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************
@@ -547,13 +448,13 @@ if [ "$consoleUserID" != "0" ] && [ -f /Library/LaunchAgents/gov.llnl.mp.status.
 
 	# Load the service if not already loaded
 	if [ "$serviceLoaded" = false ]; then
-		# bootstrap first: it reports failure honestly, where load does not.
-		if /bin/launchctl bootstrap "gui/$consoleUserID" /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
-			echo "LaunchAgent loaded successfully using bootstrap"
+		# Try using launchctl asuser for proper user context (works on 10.12+)
+		if /bin/launchctl asuser "$consoleUserID" /bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
+			echo "LaunchAgent loaded successfully using asuser"
 		else
-			# Fall back to asuser for older releases
-			if /bin/launchctl asuser "$consoleUserID" /bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
-				echo "LaunchAgent loaded successfully using asuser"
+			# Try bootstrap method as fallback
+			if /bin/launchctl bootstrap "gui/$consoleUserID" /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null; then
+				echo "LaunchAgent loaded successfully using bootstrap"
 			else
 				# Last resort: direct load (will load on next login if this fails)
 				/bin/launchctl load /Library/LaunchAgents/gov.llnl.mp.status.plist 2>/dev/null || true
@@ -620,18 +521,6 @@ if [ -f "/private/tmp/clientStatusPID" ]; then
 	else
 		rm -f /private/tmp/clientStatusPID
 	fi
-fi
-
-# ******************************************************************
-# Summary
-#
-if [ "$LOAD_FAILED" -ne 0 ]; then
-	echo "Warning: one or more MacPatch daemons failed to load. See messages above."
-	echo "         Check: sudo launchctl print system/gov.llnl.mp.helper"
-	# To make a failed daemon load fail the package install, change the
-	# exit below to: exit "$LOAD_FAILED"
-else
-	echo "All MacPatch daemons loaded."
 fi
 
 exit 0;

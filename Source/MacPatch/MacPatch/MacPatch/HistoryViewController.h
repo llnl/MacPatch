@@ -32,5 +32,6 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @property (nonatomic, retain) IBOutlet NSImageView *statusImage;
 @property (nonatomic, retain) IBOutlet NSTextField *statusText;
+@property (nonatomic, strong) NSArray *topLevelObjects;
 
 @end

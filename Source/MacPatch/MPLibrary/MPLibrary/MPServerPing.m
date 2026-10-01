@@ -24,6 +24,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPServerPing.h"
 #include <stdio.h>
 #include <curl/curl.h>
@@ -39,7 +40,7 @@ static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
 {
     BOOL res = NO;
     NSString *hostURL = [NSString stringWithFormat:@"https://%@:%ld%@",hostName,(long)port,ServerTestURI];
-    //qlinfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
+    //LogInfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
     const char *hostURLStr = [hostURL cStringUsingEncoding:NSASCIIStringEncoding];
     
     CURL *curl;
@@ -84,7 +85,7 @@ static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
 {
     BOOL res = NO;
     NSString *hostURL = [NSString stringWithFormat:@"https://%@:%ld%@",hostName,(long)port,ServerTestURI];
-    //qlinfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
+    //LogInfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
     const char *hostURLStr = [hostURL cStringUsingEncoding:NSASCIIStringEncoding];
     
     CURL *curl;
@@ -102,7 +103,7 @@ static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
         curl_easy_cleanup(curl);
     }
     curl_global_cleanup();
-    //qldebug(@"Testing %@",hostURL);
+    //LogDebug(@"Testing %@",hostURL);
     if (curlRes == 0) {
         if (http_code == 200 && curlRes != CURLE_ABORTED_BY_CALLBACK) {
             res = YES;

@@ -23,6 +23,7 @@
  59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  */
 
+#import "Logger.h"
 #import "MPNSTask.h"
 #import "MacPatch.h"
 
@@ -98,7 +99,7 @@
             err = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:@{NSLocalizedDescriptionKey:@"Task failed, bin path was not found."}];
             *error = err;
         } else {
-            qlerror(@"Task failed, bin path was not found.");
+            LogError(@"Task failed, bin path was not found.");
         }
         return @"ERR";
     }
@@ -143,7 +144,7 @@
                         if ([lineT containsString:@"PackageKit: Missing bundle path"] == NO) {
                             [self postStatusToDelegate:lineT];
                             [tmpResults addObject:lineT];
-                            qlinfo(@"task stdout: %@", lineT);
+                            LogInfo(@"task stdout: %@", lineT);
                         }
                     }
                     lineT = nil;
@@ -168,12 +169,12 @@
     [self setTaskTerminationStatus:taskResult];
     
     if (taskResult == 0) {
-        qlinfo(@"Task succeeded: %d",taskResult);
+        LogInfo(@"Task succeeded: %d",taskResult);
     } else {
         // Post Failure data to web service
         [self postFailurToWebService:binPath args:args statusCode:taskResult stdOut:[tmpResults componentsJoinedByString:@"\n"]];
         
-        qlerror(@"Task failed: %d",taskResult);
+        LogError(@"Task failed: %d",taskResult);
         err = [NSError errorWithDomain:@"gov.llnl.mptask" code:taskResult userInfo:@{NSLocalizedDescriptionKey:@"Task failed."}];
         if (error != NULL) *error = err;
     }
@@ -210,7 +211,7 @@
 
 - (void)taskTimerExceeded
 {
-    qlinfo(@"taskTimerExceeded");
+    LogInfo(@"taskTimerExceeded");
     taskTimedOut = YES;
     [task terminate];
 }
@@ -219,8 +220,8 @@
 {
     MPSettings *s = [MPSettings sharedInstance];
     NSDictionary *d = @{@"cuuid":s.ccuid, @"binPath":binPath, @"binArgs":args, @"statusCode":@(status), @"stdOut":stdOut};
-    qlinfo(@"postFailurToWebService ---");
-    qlinfo(@"%@",d);
+    LogInfo(@"postFailurToWebService ---");
+    LogInfo(@"%@",d);
 }
 
 #pragma mark - Delegate Helper

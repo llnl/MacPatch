@@ -22,6 +22,7 @@ You should have received a copy of the GNU General Public License along
 with MacPatch; if not, write to the Free Software Foundation, Inc.,
 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 */
+#import "Logger.h"
 #import "PrefsAdvancedVC.h"
 
 @interface PrefsAdvancedVC ()
@@ -65,7 +66,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (IBAction)changePausePatching:(id)sender
 {
 	int state = (int)[pausePatchingCheckBox state];
-	qlinfo(@"Pause patching state changed %d",state);
+	LogInfo(@"Pause patching state changed %d",state);
 	NSUserDefaults *d = [NSUserDefaults standardUserDefaults];
 	[d setBool:state forKey:@"pausePatching"];
 	[d synchronize];
