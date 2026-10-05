@@ -112,21 +112,6 @@ typedef enum {
 
 extern NSString * const MPPatchContentType_toString[];
 
-// Client Database
-enum
-{
-	kMPSoftwareType = 0,
-	kMPPatchType = 1
-};
-typedef NSUInteger DBHistoryType;
-
-enum
-{
-	kMPInstallAction = 0,
-	kMPUnInstallAction = 1
-};
-typedef NSUInteger DBHistoryAction;
-
 @interface Constants : NSObject {
 
 }
