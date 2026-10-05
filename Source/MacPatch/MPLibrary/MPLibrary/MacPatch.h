@@ -26,16 +26,12 @@
 #import <Cocoa/Cocoa.h>
 #import "Constants.h"
 // Logging
-#import "lcl.h"
-#import "MPLog.h"
-#import "MPLogger.h"
 #import "Logger.h"
 
 // Settings
 #import "MPSettings.h"
 
 // Uitlities & Networking
-#import "MPNetworkUtils.h"
 #import "MPDiskUtil.h"
 #import "MPSystemInfo.h"
 #import "MPDate.h"
@@ -95,7 +91,6 @@
 
 // SQLite
 #import "FMDB.h"
-#import "FMDBx.h"
 
 // Helpers - Extensions
 #import "NSString+Helper.h"

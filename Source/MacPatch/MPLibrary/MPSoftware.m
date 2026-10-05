@@ -30,8 +30,6 @@
 #import "MPScript.h"
 #import "MPFileUtils.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPSoftware
 
 @interface MPSoftware ()
 {

@@ -331,9 +331,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 // main thread, passing it an error indicating if the connection was successful.
 {
     //assert([NSThread isMainThread]);
-    
+
     // Ensure that there's a helper tool connection in place.
-    self.workerConnection = nil;
     [self connectToHelperTool];
 
 	if (![self verifyServiceVersion]) {
@@ -343,6 +342,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 														NSLocalizedFailureReasonErrorKey: @"Could not reach the MacPatch helper application.",
 														NSLocalizedRecoverySuggestionErrorKey: @"Verify if gov.llnl.mp.helper is running."}];
 		commandBlock(workerErr);
+		return;
 	}
     commandBlock(nil);
 }
@@ -368,14 +368,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	if (!hasConnection)
 	{
-		NSAlert *alert = [[NSAlert alloc] init];
-		[alert setMessageText:@"MacPatch Helper Verification"];
-		[alert setInformativeText:@"This application requires a helper application to perform certain actions. The helper applciation can not be verified. MacPatch may not work as expected."];
-		[alert addButtonWithTitle:@"OK"];
-		[alert setAlertStyle:NSAlertStyleCritical];
-		[alert runModal];
+		// Defer alert to avoid "runModal inside transaction" error
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSAlert *alert = [[NSAlert alloc] init];
+			[alert setMessageText:@"MacPatch Helper Verification"];
+			[alert setInformativeText:@"This application requires a helper application to perform certain actions. The helper applciation can not be verified. MacPatch may not work as expected."];
+			[alert addButtonWithTitle:@"OK"];
+			[alert setAlertStyle:NSAlertStyleCritical];
+			[alert runModal];
+		});
 	}
-	
+
 	return hasConnection;
 }
 

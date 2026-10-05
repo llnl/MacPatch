@@ -38,8 +38,6 @@ static const void *kMPSettingsMutationQueueKey = &kMPSettingsMutationQueueKey;
 #define SCHEMA_REV  340
 
 
-#undef  ql_component
-#define ql_component lcl_cMPSettings
 
 static MPSettings *_instance = nil; 
 static dispatch_once_t _onceToken;
@@ -510,7 +508,7 @@ static dispatch_queue_t _settingsQueue = NULL;
     NSMutableArray *_srvs = [NSMutableArray new];
     if (@available(macOS 11.0, *)) {
         // macOS 10.13 or later code path
-        qltrace(@"suServersFromDictionary is no longer supported by Apple.");
+        LogDebug(@"suServersFromDictionary is no longer supported by Apple.");
     } else {
         // code for earlier than 10.14
         

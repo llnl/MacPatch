@@ -272,21 +272,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
     //Setup Defaults
     NSUserDefaults *prefs = [NSUserDefaults standardUserDefaults];
     [prefs registerDefaults:[NSDictionary dictionaryWithContentsOfFile:APP_PREFS_PLIST]];
-    /*
-    NSString *_logFile = [NSHomeDirectory() stringByAppendingPathComponent:@"Library/Logs/MPClientStatus.log"];
-    [MPLog setupLogging:_logFile level:lcl_vInfo];
-    
-    if ([prefs boolForKey:@"DeBug"] == YES)
-    {
-        // enable logging for all components up to level Debug
-        lcl_configure_by_name("*", lcl_vDebug);
-        LogInfo(@"***** MPStatus started -- Debug Enabled *****");
-    } else {
-        // enable logging for all components up to level Info
-        lcl_configure_by_name("*", lcl_vInfo);
-        LogInfo(@"***** MPStatus started *****");
-    }
-    */
+    // Logging is now handled by Logger.h
     // Watch for SoftwareUpdate Launches
     NSNotificationCenter *dc = [[NSWorkspace sharedWorkspace] notificationCenter];
     

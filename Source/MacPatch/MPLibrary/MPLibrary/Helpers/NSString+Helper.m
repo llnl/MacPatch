@@ -107,12 +107,10 @@
 
 - (NSString *)urlEncodeUsingEncoding:(NSStringEncoding)encoding
 {
-    //(CFStringRef)@"!*'\"();:@&=+$,/?%#[]% ",
-	return (NSString *)CFBridgingRelease(CFURLCreateStringByAddingPercentEscapes(NULL,
-                                                               (CFStringRef)self,
-                                                               NULL,
-                                                               (CFStringRef)@"!*'\"();:@&=+$,?%#[]% ",
-                                                               CFStringConvertNSStringEncodingToEncoding(encoding)));
+	// Use modern API - create a character set that excludes the special characters
+	NSMutableCharacterSet *allowedCharacters = [[NSCharacterSet URLQueryAllowedCharacterSet] mutableCopy];
+	[allowedCharacters removeCharactersInString:@"!*'\"();:@&=+$,?%#[]% "];
+	return [self stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
 }
 
 - (NSString *)urlEncodeCustom

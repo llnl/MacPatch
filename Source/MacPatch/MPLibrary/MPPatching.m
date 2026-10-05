@@ -32,8 +32,6 @@
 #import "MPASUSCatalogs.h"
 #import "MPPatchScan.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPPatching
 
 typedef enum {
 	kScanRunning = 1,
@@ -1535,7 +1533,7 @@ typedef enum {
 	va_start(va, str);
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
-	qltrace(@"postStatusToDelegate: %@",string);
+	LogDebug(@"postStatusToDelegate: %@",string);
 	if ([self.delegate respondsToSelector:@selector(patchProgress:)]) {
 		[self.delegate patchProgress:string];
 	}

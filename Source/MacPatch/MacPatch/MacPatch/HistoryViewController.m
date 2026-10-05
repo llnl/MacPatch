@@ -148,13 +148,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if (records) {
 		[arrayController removeObjects:[arrayController arrangedObjects]];
 		for (History *hst in records) {
-			NSDictionary *d = @{@"install_date":[hst valueForKey:@"cdate"],
-								@"type":[hst valueForKey:@"type"],
-								@"uuid":[hst valueForKey:@"uuid"],
-								@"action":[hst valueForKey:@"action"],
-								@"error_code":[hst valueForKey:@"result_code"],
-								@"name":[hst valueForKey:@"name"],
-								@"error_msg":[hst valueForKey:@"error_msg"] ?:@""
+			// Use nil-coalescing for all values to prevent nil insertion
+			NSDictionary *d = @{@"install_date":[hst valueForKey:@"cdate"] ?: @"",
+								@"type":[hst valueForKey:@"type"] ?: @0,
+								@"uuid":[hst valueForKey:@"uuid"] ?: @"",
+								@"action":[hst valueForKey:@"action"] ?: @0,
+								@"error_code":[hst valueForKey:@"result_code"] ?: @0,
+								@"name":[hst valueForKey:@"name"] ?: @"",
+								@"error_msg":[hst valueForKey:@"error_msg"] ?: @""
 								};
 			//[array addObject:d];
             [_set addObject:d];

@@ -33,8 +33,6 @@
 #import "DBMigration.h"
 #import "MPClientDB.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPHelper
 
 NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 
@@ -333,7 +331,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qltrace(@"result = %ld",(long)result);
+	LogDebug(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -351,7 +349,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[patching setInstallRebootPatchesWhileLoggedIn:YES];
 	}
 	NSDictionary *patchResult = [patching installPatchUsingTypeFilter:patch typeFilter:kAllPatches];
-	qltrace(@"patchResult: %@",patchResult);
+	LogDebug(@"patchResult: %@",patchResult);
 	if (patchResult[@"patchInstallErrors"]) {
 		if ([patchResult[@"patchInstallErrors"] integerValue] >= 1)
 		{
@@ -370,7 +368,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		result = 9999;
 	}
 	
-	qltrace(@"result = %ld",(long)result);
+	LogDebug(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%@ install complete", patch[@"patch"]];
 	reply(nil,result);
 }
@@ -442,7 +440,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[self postPatchAllProgress:patchCount];
 	}
 
-	qltrace(@"result = %ld",(long)result);
+	LogDebug(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%d install(s) completed.", patchCount];
 	reply(nil,result);
 }
@@ -493,7 +491,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		[self postPatchAllProgress:patchCount];
 	}
 
-	qltrace(@"result = %ld",(long)result);
+	LogDebug(@"result = %ld",(long)result);
 	[self postPatchStatus:@"%d install(s) completed.", patchCount];
 	reply(nil,result);
 }
@@ -534,7 +532,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 	if (wsErr) {
 		LogError(@"Error: %@",wsErr.localizedDescription);
 	}
-	qltrace(@"patchGroupPatches: %@",patchGroupPatches);
+	LogDebug(@"patchGroupPatches: %@",patchGroupPatches);
 	
 	
 	MPASUSCatalogs *m = [[MPASUSCatalogs alloc] init];
@@ -1545,7 +1543,7 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
 		va_end(args);
 		
-		qltrace(@"postStatus[XPCWorker]: %@",statusStr);
+		LogDebug(@"postStatus[XPCWorker]: %@",statusStr);
 		[[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPProcessStatus];
 	}
 	@catch (NSException *exception) {

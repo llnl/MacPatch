@@ -548,7 +548,7 @@
 
     NSString *string;
     string = [[NSString alloc] initWithData:data encoding: NSUTF8StringEncoding];
-    qltrace(@"Completed running sysinfocachegen, %@",string);
+    LogDebug(@"Completed running sysinfocachegen, %@",string);
     
 	LogInfo(@"Writing result to %@",spFileName);
     NSDictionary *_data = [NSDictionary dictionaryWithContentsOfFile:spFileName];

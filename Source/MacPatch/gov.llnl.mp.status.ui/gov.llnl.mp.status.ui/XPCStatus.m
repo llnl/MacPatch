@@ -32,8 +32,6 @@
 #import "MPPatching.h"
 #import "AHCodesignVerifier.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPStatusUI
 
 @interface XPCStatus () <NSXPCListenerDelegate, MPStatusProtocol, MPHTTPRequestDelegate, MPPatchingDelegate>
 {
@@ -1353,7 +1351,7 @@
         NSString *statusStr = [[NSString alloc] initWithFormat:status arguments:args];
         va_end(args);
         
-        qltrace(@"postStatus[XPCWorker]: %@",statusStr);
+        LogDebug(@"postStatus[XPCWorker]: %@",statusStr);
         [[self.xpcConnection remoteObjectProxy] postStatus:statusStr type:kMPProcessStatus];
     }
     @catch (NSException *exception) {

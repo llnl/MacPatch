@@ -22,8 +22,6 @@
 #import "Logger.h"
 #import "NSFileManager+DirectoryLocations.h"
 
-#undef  ql_component
-#define ql_component lcl_cMain
 
 enum
 {

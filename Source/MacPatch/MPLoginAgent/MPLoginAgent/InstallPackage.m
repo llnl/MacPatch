@@ -27,8 +27,6 @@
 #import "InstallPackage.h"
 #import "MacPatch.h"
 
-#undef  ql_component
-#define ql_component lcl_cMain
 
 @interface InstallPackage ()
 

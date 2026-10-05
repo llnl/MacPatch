@@ -34,8 +34,6 @@
 
 typedef struct kinfo_proc kinfo_proc;
 
-#undef  ql_component
-#define ql_component lcl_cMPSystemInfo
 
 @implementation MPSystemInfo
 

@@ -27,8 +27,6 @@
 #import <Foundation/Foundation.h>
 #import "Logger.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPBundle
 
 @implementation MPBundle
 

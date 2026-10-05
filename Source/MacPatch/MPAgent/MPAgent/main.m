@@ -396,7 +396,6 @@ int main (int argc, char * argv[])
                     printf("%d\n", pid);
                     fflush(stdout);
                 }
-                MPLOG_INFO(@"Daemon PID: %d", pid);
                 LogInfo( @"Daemon PID: %d", pid);
                 TasksDaemon *td = [[TasksDaemon alloc] init];
                 [td runAsDaemon];

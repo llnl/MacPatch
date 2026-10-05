@@ -347,7 +347,7 @@
 	MPCrypto *mpc = [[MPCrypto alloc] init];
 	NSString *encodedKey = [mpc encryptStringUsingKey:clientKeyItem.secret key:[mpc getKeyRef:srvPubKey] error:&error];
 	NSString *hashOfKey = [mpc getHashFromStringForType:clientKeyItem.secret type:@"SHA1"];
-    qltrace(@"hashOfKey: (%@)",hashOfKey);
+    LogDebug(@"hashOfKey: (%@)",hashOfKey);
     
 	if (error) {
 		if (err != NULL) *err = error;

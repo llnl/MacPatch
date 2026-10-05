@@ -28,8 +28,6 @@
 #import <SystemConfiguration/SystemConfiguration.h>
 
 
-#undef  ql_component
-#define ql_component lcl_cMPInstaller
 
 @interface MPInstaller ()
 {
@@ -99,11 +97,7 @@
 	if([aEnv isKindOfClass:[NSNull class]]) {
 		aEnv = nil;
 	}
-	/*
-	[self runInstallPkgTask:pkgPath target:aTarget env:aEnv];
 	
-	while (taskIsRunning && [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]]);
-	 */
 	NSError *taskErr = nil;
 	NSString *result = [self runInstallPkgTask:pkgPath target:aTarget env:aEnv error:&taskErr];
 	LogDebug(@"Task Result: %@",result);

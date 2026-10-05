@@ -27,8 +27,6 @@
 #import "MPDefaults.h"
 #import "Constants.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPDefaults
 
 @implementation MPDefaults
 

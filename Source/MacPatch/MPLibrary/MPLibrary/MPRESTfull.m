@@ -204,10 +204,10 @@
     NSString *urlPath;
     
     if (!aSeverity) {
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/all/%@",self.clientID];
+        urlPath = [NSString stringWithFormat:@"/api/v4/client/patch/scan/list/all/%@",self.clientID];
     } else {
         // Set OS Level *, any OS
-        urlPath = [NSString stringWithFormat:@"/api/v2/client/patch/scan/list/%@/%@",aSeverity, self.clientID];
+        urlPath = [NSString stringWithFormat:@"/api/v4/client/patch/scan/list/%@/%@",aSeverity, self.clientID];
     }
     
     ws_result = [self getDataFromWS:urlPath error:&ws_err];

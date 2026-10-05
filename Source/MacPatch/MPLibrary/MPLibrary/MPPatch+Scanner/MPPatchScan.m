@@ -31,8 +31,6 @@
 #import "MPScript.h"
 #include <unistd.h>
 
-#undef  ql_component
-#define ql_component lcl_cMPPatchScan
 
 @interface MPPatchScan ()
 {
@@ -46,7 +44,6 @@
 - (NSArray *)retrieveCustomPatchScanList;
 // Delegate
 - (void)postProgressToDelegate:(NSString *)str, ...;
-// -(void)sendNotificationTo:(NSString *)aName userInfo:(NSDictionary *)aUserInfo;
 @end
 
 @implementation MPPatchScan
@@ -60,7 +57,6 @@
     self = [super init];
 	if (self)
     {
-        //[self setUseDistributedNotification:NO];
         settings = [MPSettings sharedInstance];
     }
 	return self;
@@ -164,10 +160,24 @@
 				if ([tmpDict[@"bundleID"] isEqualToString:aBundleID] == NO) continue;
 			}
 		}
-		
+
 		LogInfo(@"*******************");
-		LogInfo(@"Scanning for %@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]);
-		[self postProgressToDelegate:@"Scanning for %@(%@)", tmpDict[@"patch_name"], tmpDict[@"patch_ver"]];
+		//LogInfo(@"[scanForCustomUpdatesUsingBundleID] Processing patch %d of %d", i+1, (int)customPatches.count);
+        LogInfo(@"Processing patch %d of %d", i+1, (int)customPatches.count);
+		//LogDebug(@"[scanForCustomUpdatesUsingBundleID] Full patch data: %@", tmpDict);
+
+		// Try multiple possible key names for patch name and version
+		NSString *patchName = tmpDict[@"patch_name"] ?: tmpDict[@"name"] ?: tmpDict[@"description"] ?: tmpDict[@"bundle_id"] ?: @"Unknown";
+		NSString *patchVer = tmpDict[@"patch_ver"] ?: tmpDict[@"version"] ?: tmpDict[@"patch_version"] ?: @"";
+
+		// Debug: log which fields were found
+		//LogInfo(@"[scanForCustomUpdatesUsingBundleID] Extracted: name='%@', version='%@'", patchName, patchVer);
+		if (!tmpDict[@"patch_name"]) {
+			LogInfo(@"[scanForCustomUpdatesUsingBundleID] Note: 'patch_name' field not found. Available keys: %@", [tmpDict allKeys]);
+		}
+
+		LogInfo(@"Scanning for %@(%@)", patchName, patchVer);
+		[self postProgressToDelegate:@"Scanning for %@(%@)", patchName, patchVer];
 		
 		result = [self scanHostForPatch:tmpDict];
         if (result == YES)
@@ -198,40 +208,6 @@
             }
             patch = nil;
         }
-        /* Orig
-		if (result == YES)
-		{
-			NSMutableDictionary *patch = [[NSMutableDictionary alloc] init];
-			NSDictionary *patchData = [self patchDataForIDUsingArray:tmpDict[@"puuid"] patchArray:patchGroupPatches[@"Custom"]];
-			if (patchData)
-			{
-				@try
-				{
-					[patch setObject:@"Third" forKey:@"type"];
-					[patch setObject:tmpDict[@"patch_name"] forKey:@"patch"];
-					[patch setObject:tmpDict[@"patch_ver"] forKey:@"version"];
-					[patch setObject:[NSString stringWithFormat:@"%@(%@)",tmpDict[@"patch_name"],tmpDict[@"patch_ver"]] forKey:@"description"];
-					[patch setObject:@"0" forKey:@"size"];
-					[patch setObject:@"Y" forKey:@"recommended"];
-					[patch setObject:tmpDict[@"patch_reboot"] forKey:@"restart"];
-					[patch setObject:tmpDict[@"puuid"] forKey:@"patch_id"];
-					[patch setObject:tmpDict[@"bundle_id"] forKey:@"bundleID"];
-					if (patchData) {
-						[patch setObject:patchData forKey:@"patchData"];
-					}
-					[patchesNeeded addObject:[patch copy]];
-				}
-				@catch (NSException *exception)
-				{
-					LogError(@"%@\n%@",exception,tmpDict);
-				}
-			} else {
-				LogInfo(@"%@ (%@) was detected but not approved for install yet.",tmpDict[@"patch_name"],tmpDict[@"puuid"]);
-				
-			}
-			patch = nil;
-		}
-         */
 	}
     LogInfo(@"*******************");
 	return [patchesNeeded copy];
@@ -253,150 +229,187 @@
 
 - (BOOL)scanHostForPatch:(NSDictionary *)aPatch
 {
-	MPOSCheck	*mpos;
-	MPBundle	*mpbndl;
-	MPFileCheck	*mpfile;
-	MPScript	*mpscript;
-	
-	
-	BOOL result = NO;
-	int count = 0;
-	
-	NSArray *queryArray;
-	queryArray = [aPatch objectForKey:@"query"];
-	
-	// Loop vars
-	NSArray *qryArr;
-	NSString *typeQuery;
-	NSString *typeQueryString;
-	NSString *typeResult;
-    
-	LogDebug(@"scanHostForPatch: %@",aPatch);
-	
-	int i = 0;
-	for (i=0;i<[queryArray count];i++)
-	{	
-		qryArr = [[[queryArray objectAtIndex:i] objectForKey:@"qStr"] componentsSeparatedByString:@"@" escapeString:@"@@"];
-		if ([@"OSArch" isEqualToString:[qryArr objectAtIndex:0]]) {
-			mpos = [[MPOSCheck alloc] init];
-			if ([mpos checkOSArch:[qryArr objectAtIndex:1]]) {
-				LogInfo(@"OSArch=TRUE: %@",[qryArr objectAtIndex:1]);
-				count++;
-			} else {
-				LogInfo(@"OSArch=FALSE: %@",[qryArr objectAtIndex:1]);
-			}
+	LogDebug(@"scanHostForPatch: %@", aPatch);
+
+	NSArray *queryArray = aPatch[@"query"];
+	if (!queryArray || queryArray.count == 0) {
+		LogInfo(@"No queries to evaluate, patch not needed.");
+		return NO;
+	}
+
+	NSUInteger matchedQueries = 0;
+
+	for (NSDictionary *queryItem in queryArray) {
+		NSArray *queryComponents = [self parseQueryItem:queryItem];
+		if (!queryComponents || queryComponents.count == 0) {
+			LogError(@"Failed to parse query item: %@", queryItem);
+			continue;
 		}
-		
-        /* CEH: Dsable for now, no longer needed. */
-		if ([@"OSType" isEqualToString:[qryArr objectAtIndex:0]]) {
-            count++;
-            /*
-			mpos = [[MPOSCheck alloc] init];
-			if ([mpos checkOSType:[qryArr objectAtIndex:1]]) {
-				LogInfo(@"OSType=TRUE: %@",[qryArr objectAtIndex:1]);
-				count++;
-			} else {
-				LogInfo(@"OSType=FALSE: %@",[qryArr objectAtIndex:1]);
-			}
-             */
-		}
-		
-		if ([@"OSVersion" isEqualToString:[qryArr objectAtIndex:0]]) {
-			mpos = [[MPOSCheck alloc] init];
-			if ([mpos checkOSVer:[qryArr objectAtIndex:1]]) {
-				LogInfo(@"OSVersion=TRUE: %@",[qryArr objectAtIndex:1]);
-				count++;
-			} else {
-				LogInfo(@"OSVersion=FALSE: %@",[qryArr objectAtIndex:1]);
-			}
-		}
-		
-		if ([@"BundleID" isEqualToString:[qryArr objectAtIndex:0]]) {
-			mpbndl = [[MPBundle alloc] init];
-			if ([qryArr count] != 4) {
-				LogError(@"Error, not enough args for patch query entry.");
-				goto done;
-			}
-			
-			/*
-			 typeQuery		= [qryArr objectAtIndex:1];
-			 typeQueryString = [qryArr objectAtIndex:2];
-			 typeResult		= [qryArr objectAtIndex:3];
-			 */
-			
-			if ([mpbndl queryBundleID:[qryArr objectAtIndex:2] action:[qryArr objectAtIndex:1] result:[qryArr objectAtIndex:3]]) {
-				LogInfo(@"BundleID=TRUE: %@",[qryArr objectAtIndex:1]);
-				count++;
-			} else {
-				LogInfo(@"BundleID=FALSE: %@",[qryArr objectAtIndex:1]);
-			}
-		}
-		
-		if ([@"File" isEqualToString:[qryArr objectAtIndex:0]]) {
-			mpfile = [[MPFileCheck alloc] init];
-			if ([qryArr count] != 4) {
-				LogError(@"Error, not enough args for patch query entry.");
-				goto done;	
-			}
-            
-			typeQuery		= [qryArr objectAtIndex:1];
-			typeQueryString = [qryArr objectAtIndex:2];
-			typeResult		= [qryArr objectAtIndex:3];
-			
-			if ([mpfile queryFile:typeQueryString action:typeQuery param:typeResult]) {
-				LogInfo(@"File=TRUE: %@",[qryArr objectAtIndex:1]);
-				count++;
-			} else {
-				LogInfo(@"File=FALSE: %@",[qryArr objectAtIndex:1]);
-			}
-		}
-		
-		if ([@"Script" isEqualToString:[qryArr objectAtIndex:0]]) {
-			mpscript = [[MPScript alloc] init];
-			if ([qryArr count] > 2) {
-				LogError(@"Error, too many args. Sript will not be run.");
-				goto done;
-			}
-			
-			if ([mpscript runScript:[qryArr objectAtIndex:1]]) {
-				LogInfo(@"SCRIPT=TRUE");
-				count++;
-			} else {
-				LogInfo(@"SCRIPT=FALSE");
-			}
+
+		NSString *queryType = queryComponents[0];
+		BOOL queryResult = [self evaluateQuery:queryComponents ofType:queryType];
+
+		if (queryResult) {
+			matchedQueries++;
 		}
 	}
-	
-	goto done;
-	
-done:
-	if (count == [queryArray count]) {
-		LogInfo(@"Patch needed.");
-		result = YES;
-	} else {
-		LogInfo(@"Patch not needed.");
+
+	BOOL patchNeeded = (matchedQueries == queryArray.count);
+	LogInfo(@"Patch %@: %lu of %lu queries matched",
+			patchNeeded ? @"needed" : @"not needed",
+			(unsigned long)matchedQueries,
+			(unsigned long)queryArray.count);
+
+	return patchNeeded;
+}
+
+#pragma mark - Query Parsing Helper
+
+- (NSArray *)parseQueryItem:(NSDictionary *)queryItem
+{
+	// New format: { type: "File", type_data: "Exists@/path@True" }
+	if (queryItem[@"type"]) {
+		NSString *type = queryItem[@"type"];
+		NSString *typeData = queryItem[@"type_data"] ?: @"";
+
+		NSArray *dataComponents = [typeData componentsSeparatedByString:@"@" escapeString:@"@@"];
+		NSMutableArray *result = [NSMutableArray arrayWithObject:type];
+		[result addObjectsFromArray:dataComponents];
+		return result;
 	}
-	
+
+	// Old format: { qStr: "File@Exists@/path@True" }
+	if (queryItem[@"qStr"]) {
+		return [queryItem[@"qStr"] componentsSeparatedByString:@"@" escapeString:@"@@"];
+	}
+
+	return nil;
+}
+
+#pragma mark - Query Evaluation
+
+- (BOOL)evaluateQuery:(NSArray *)components ofType:(NSString *)type
+{
+	if ([type isEqualToString:@"OSArch"]) {
+		return [self checkOSArch:components];
+	}
+
+	if ([type isEqualToString:@"OSType"]) {
+		return [self checkOSType:components];
+	}
+
+	if ([type isEqualToString:@"OSVersion"]) {
+		return [self checkOSVersion:components];
+	}
+
+	if ([type isEqualToString:@"BundleID"]) {
+		return [self checkBundleID:components];
+	}
+
+	if ([type isEqualToString:@"File"]) {
+		return [self checkFile:components];
+	}
+
+	if ([type isEqualToString:@"Script"]) {
+		return [self checkScript:components];
+	}
+
+	LogError(@"Unknown query type: %@", type);
+	return NO;
+}
+
+- (BOOL)checkOSArch:(NSArray *)components
+{
+	if (components.count < 2) {
+		LogError(@"OSArch query requires at least 2 components");
+		return NO;
+	}
+
+	MPOSCheck *osCheck = [[MPOSCheck alloc] init];
+	BOOL result = [osCheck checkOSArch:components[1]];
+	LogInfo(@"OSArch=%@: %@", result ? @"TRUE" : @"FALSE", components[1]);
 	return result;
 }
 
-- (NSDictionary *)patchDataForIDUsingArrayOLD:(NSString *)patchID patchArray:(NSArray *)approvedPatches
+- (BOOL)checkOSType:(NSArray *)components
 {
-	LogDebug(@"Searching for %@",patchID );
-	
-	NSDictionary *result = nil;
-	NSArray *filteredarray = [approvedPatches filteredArrayUsingPredicate:[NSPredicate predicateWithFormat:@"(puuid == %@)", patchID]];
-	if (filteredarray)
-	{
-		if (filteredarray.count == 1) {
-			result = [filteredarray objectAtIndex:0];
-		}
+	// OSType check disabled, always returns true
+	//LogInfo(@"OSType=TRUE (check disabled)");
+    LogInfo(@"OSType=TRUE");
+	return YES;
+}
+
+- (BOOL)checkOSVersion:(NSArray *)components
+{
+	if (components.count < 2) {
+		LogError(@"OSVersion query requires at least 2 components");
+		return NO;
 	}
-	if (!result){
-		LogDebug(@"%@ was not found.",patchID );
-	}
+
+	MPOSCheck *osCheck = [[MPOSCheck alloc] init];
+	BOOL result = [osCheck checkOSVer:components[1]];
+	LogInfo(@"OSVersion=%@: %@", result ? @"TRUE" : @"FALSE", components[1]);
 	return result;
 }
+
+- (BOOL)checkBundleID:(NSArray *)components
+{
+	if (components.count != 4) {
+		LogError(@"BundleID query requires exactly 4 components (type, action, bundleID, result), got %lu",
+				 (unsigned long)components.count);
+		return NO;
+	}
+
+	MPBundle *bundle = [[MPBundle alloc] init];
+	NSString *action = components[1];
+	NSString *bundleID = components[2];
+	NSString *expectedResult = components[3];
+
+	BOOL result = [bundle queryBundleID:bundleID action:action result:expectedResult];
+	LogInfo(@"BundleID=%@: %@ (action: %@, expected: %@)",
+			result ? @"TRUE" : @"FALSE", bundleID, action, expectedResult);
+	return result;
+}
+
+- (BOOL)checkFile:(NSArray *)components
+{
+	if (components.count != 4) {
+		LogError(@"File query requires exactly 4 components (type, action, path, param), got %lu",
+				 (unsigned long)components.count);
+		return NO;
+	}
+
+	MPFileCheck *fileCheck = [[MPFileCheck alloc] init];
+	NSString *action = components[1];
+	NSString *path = components[2];
+	NSString *param = components[3];
+    //LogInfo(@"Components(%@)", components);
+
+	BOOL result = [fileCheck queryFile:path action:action param:param];
+	//LogInfo(@"File[]=%@: %@ (action: %@)", result ? @"TRUE" : @"FALSE", action, path);
+    LogInfo(@"File[%@]=%@ (%@ - %@)", action, result ? @"TRUE" : @"FALSE", [path lastPathComponent], param);
+	return result;
+}
+
+- (BOOL)checkScript:(NSArray *)components
+{
+	if (components.count > 2) {
+		LogError(@"Script query has too many arguments (%lu), script will not run",
+				 (unsigned long)components.count);
+		return NO;
+	}
+
+	if (components.count < 2) {
+		LogError(@"Script query requires script content");
+		return NO;
+	}
+
+	MPScript *script = [[MPScript alloc] init];
+	BOOL result = [script runScript:components[1]];
+	LogInfo(@"Script=%@", result ? @"TRUE" : @"FALSE");
+	return result;
+}
+
 
 - (NSDictionary *)patchDataForIDUsingArray:(NSString *)patchID patchArray:(NSArray *)approvedPatches
 {
@@ -445,21 +458,20 @@ done:
 		LogError(@"%@",[wsErr localizedDescription]);
 		return [NSArray array];
 	}
+
+	// Debug: Log the web service response
+	LogInfo(@"[retrieveCustomPatchScanList] Retrieved %lu patches from web service", (unsigned long)[scanListArray count]);
+	//if ([scanListArray count] > 0) {
+		//LogInfo(@"[retrieveCustomPatchScanList] Sample patch data (first item):");
+		//LogInfo(@"%@", scanListArray[0]);
+		//if ([scanListArray count] > 1) {
+		//	LogInfo(@"[retrieveCustomPatchScanList] All patch keys from first item: %@", [scanListArray[0] allKeys]);
+		//}
+	//}
+
 	return scanListArray;
 }
 
-/*
--(void)sendNotificationTo:(NSString *)aName userInfo:(NSDictionary *)aUserInfo
-{
-	if (useDistributedNotification) {
-		LogDebug(@"sendNotificationTo(G): %@ with %@",aName,aUserInfo);
-        [[NSDistributedNotificationCenter defaultCenter] postNotificationName:aName object:nil userInfo:aUserInfo options:NSNotificationPostToAllSessions];        
-	} else {
-        LogDebug(@"sendNotificationTo: %@ with %@",aName,aUserInfo);
-		[[NSNotificationCenter defaultCenter] postNotificationName:aName object:nil userInfo:aUserInfo];
-	}
-}
-*/
 
 #pragma mark - Delegate Helper
 
@@ -470,7 +482,7 @@ done:
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
 	
-	qltrace(@"%@",string);
+	LogDebug(@"%@",string);
 	[self.delegate scanProgress:string];
 }
 @end
