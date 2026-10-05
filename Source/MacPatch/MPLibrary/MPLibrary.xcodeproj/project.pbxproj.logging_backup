@@ -25,6 +25,8 @@
 		8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FAEF641145F1774006284B2 /* MPScript.m */; };
 		8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F051CF4146847B100510AF7 /* MPInstaller.m */; };
 		8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FAEF650145F187C006284B2 /* MPDataMgr.m */; };
+		8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCB7755140C2F0700D86586 /* lcl.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
+		8F4B1E1516DD1D6400E15A9E /* LCLLogFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCB775D140C2F0700D86586 /* LCLLogFile.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF636145F1774006284B2 /* MPAsus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FED886F146462DB00709F8E /* MPASUSCatalogs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2616DD1D8C00E15A9E /* MPBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF638145F1774006284B2 /* MPBundle.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -33,7 +35,14 @@
 		8F4B1E2916DD1D8C00E15A9E /* MPScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF640145F1774006284B2 /* MPScript.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2A16DD1D8C00E15A9E /* MPInstaller.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F051CF3146847B100510AF7 /* MPInstaller.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2C16DD1D8C00E15A9E /* MPDataMgr.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF64F145F187C006284B2 /* MPDataMgr.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4116DD1D8C00E15A9E /* lcl_config_logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7751140C2F0700D86586 /* lcl_config_logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4316DD1D8C00E15A9E /* lcl_config_extensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4416DD1D8C00E15A9E /* lcl_config_components.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB774F140C2F0700D86586 /* lcl_config_components.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4516DD1D8C00E15A9E /* LCLLogFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB775C140C2F0700D86586 /* LCLLogFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7761140C2F0700D86586 /* qlog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF65E145F1922006284B2 /* RegexKitLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7754140C2F0700D86586 /* lcl.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB92406EC57008CA5E6 /* MPPassItem.m */; };
 		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -52,6 +61,8 @@
 		8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139EF21B7857D00124016 /* ConfigProfile.m */; };
 		8FA139F421B7857D00124016 /* MPConfigProfiles.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139F021B7857D00124016 /* MPConfigProfiles.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA139F521B7857D00124016 /* MPConfigProfiles.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139F121B7857D00124016 /* MPConfigProfiles.m */; };
+		8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21F892F16EE690016379E /* MPLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21F8B2F16EE6C0016379E /* MPLogger.m */; };
 		8FA21FBB2F2180CA0016379E /* Logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21FB92F2180CA0016379E /* Logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA21FBC2F2180CA0016379E /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21FBA2F2180CA0016379E /* Logger.m */; };
 		8FA21FBE2F218DF30016379E /* OSLog.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA21FBD2F218DF30016379E /* OSLog.framework */; };
@@ -104,6 +115,7 @@
 		8FF3D6612170113900059ACD /* MPDiskUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6532170113800059ACD /* MPDiskUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6622170113900059ACD /* MPDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6542170113800059ACD /* MPDate.m */; };
 		8FF3D6632170113900059ACD /* MPNSTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6552170113800059ACD /* MPNSTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8FF3D6662170113900059ACD /* MPLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6582170113800059ACD /* MPLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6672170113900059ACD /* MPSystemInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6592170113800059ACD /* MPSystemInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6682170113900059ACD /* MPClientInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D65A2170113800059ACD /* MPClientInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6692170113900059ACD /* MPNSTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D65B2170113800059ACD /* MPNSTask.m */; };
@@ -146,6 +158,7 @@
 		8FF3D6B7217012D600059ACD /* MPCodeSign.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6AB217012D600059ACD /* MPCodeSign.m */; };
 		8FF3D6C02170131700059ACD /* MPSWTasks.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6BA2170131700059ACD /* MPSWTasks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6C42170131700059ACD /* MPSWTasks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6BE2170131700059ACD /* MPSWTasks.m */; };
+		8FF3D7222170196800059ACD /* MPLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D7212170196800059ACD /* MPLog.m */; };
 		8FF3D73121701AB600059ACD /* NSDate+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72321701AB500059ACD /* NSDate+Helper.m */; };
 		8FF3D73221701AB600059ACD /* NSFileManager+DirectoryLocations.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D72421701AB500059ACD /* NSFileManager+DirectoryLocations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72521701AB500059ACD /* NSString+Hash.m */; };
@@ -201,6 +214,8 @@
 		8FA139F021B7857D00124016 /* MPConfigProfiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPConfigProfiles.h; sourceTree = "<group>"; };
 		8FA139F121B7857D00124016 /* MPConfigProfiles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPConfigProfiles.m; sourceTree = "<group>"; };
 		8FA13A1121B874A900124016 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = ../../../../../../../usr/lib/libz.1.dylib; sourceTree = "<group>"; };
+		8FA21F892F16EE690016379E /* MPLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLogger.h; sourceTree = "<group>"; };
+		8FA21F8B2F16EE6C0016379E /* MPLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPLogger.m; sourceTree = "<group>"; };
 		8FA21FB92F2180CA0016379E /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		8FA21FBA2F2180CA0016379E /* Logger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Logger.m; sourceTree = "<group>"; };
 		8FA21FBD2F218DF30016379E /* OSLog.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OSLog.framework; path = System/Library/Frameworks/OSLog.framework; sourceTree = SDKROOT; };
@@ -243,6 +258,18 @@
 		8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDownloadManager.m; sourceTree = "<group>"; };
 		8FC444151D00921900EF328C /* NSString+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Base64.h"; sourceTree = "<group>"; };
 		8FC444161D00921900EF328C /* NSString+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Base64.m"; sourceTree = "<group>"; };
+		8FCB774F140C2F0700D86586 /* lcl_config_components.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_components.h; sourceTree = "<group>"; };
+		8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_extensions.h; sourceTree = "<group>"; };
+		8FCB7751140C2F0700D86586 /* lcl_config_logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_logger.h; sourceTree = "<group>"; };
+		8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LCLLogFileConfig.h; sourceTree = "<group>"; };
+		8FCB7754140C2F0700D86586 /* lcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl.h; sourceTree = "<group>"; };
+		8FCB7755140C2F0700D86586 /* lcl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = lcl.m; sourceTree = "<group>"; };
+		8FCB7759140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		8FCB775C140C2F0700D86586 /* LCLLogFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LCLLogFile.h; sourceTree = "<group>"; };
+		8FCB775D140C2F0700D86586 /* LCLLogFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LCLLogFile.m; sourceTree = "<group>"; };
+		8FCB775F140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
+		8FCB7761140C2F0700D86586 /* qlog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = qlog.h; sourceTree = "<group>"; };
+		8FCB7762140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		8FE5608316DE6CB700BB7600 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		8FE5608516DE6CBE00BB7600 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		8FE5608716DE6CC600BB7600 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
@@ -271,6 +298,7 @@
 		8FF3D6532170113800059ACD /* MPDiskUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPDiskUtil.h; path = MPLibrary/MPDiskUtil.h; sourceTree = "<group>"; };
 		8FF3D6542170113800059ACD /* MPDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPDate.m; path = MPLibrary/MPDate.m; sourceTree = "<group>"; };
 		8FF3D6552170113800059ACD /* MPNSTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPNSTask.h; path = MPLibrary/MPNSTask.h; sourceTree = "<group>"; };
+		8FF3D6582170113800059ACD /* MPLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPLog.h; path = MPLibrary/MPLog.h; sourceTree = "<group>"; };
 		8FF3D6592170113800059ACD /* MPSystemInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSystemInfo.h; path = MPLibrary/MPSystemInfo.h; sourceTree = "<group>"; };
 		8FF3D65A2170113800059ACD /* MPClientInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPClientInfo.h; path = MPLibrary/MPClientInfo.h; sourceTree = "<group>"; };
 		8FF3D65B2170113800059ACD /* MPNSTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPNSTask.m; path = MPLibrary/MPNSTask.m; sourceTree = "<group>"; };
@@ -313,6 +341,7 @@
 		8FF3D6AB217012D600059ACD /* MPCodeSign.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPCodeSign.m; path = MPLibrary/MPCodeSign.m; sourceTree = "<group>"; };
 		8FF3D6BA2170131700059ACD /* MPSWTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSWTasks.h; path = MPLibrary/MPSWTasks.h; sourceTree = "<group>"; };
 		8FF3D6BE2170131700059ACD /* MPSWTasks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPSWTasks.m; path = MPLibrary/MPSWTasks.m; sourceTree = "<group>"; };
+		8FF3D7212170196800059ACD /* MPLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPLog.m; path = MPLibrary/MPLog.m; sourceTree = "<group>"; };
 		8FF3D72321701AB500059ACD /* NSDate+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+Helper.m"; sourceTree = "<group>"; };
 		8FF3D72421701AB500059ACD /* NSFileManager+DirectoryLocations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSFileManager+DirectoryLocations.h"; sourceTree = "<group>"; };
 		8FF3D72521701AB500059ACD /* NSString+Hash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Hash.m"; sourceTree = "<group>"; };
@@ -384,6 +413,10 @@
 				8FF3D6542170113800059ACD /* MPDate.m */,
 				8FF3D6552170113800059ACD /* MPNSTask.h */,
 				8FF3D65B2170113800059ACD /* MPNSTask.m */,
+				8FF3D6582170113800059ACD /* MPLog.h */,
+				8FF3D7212170196800059ACD /* MPLog.m */,
+				8FA21F892F16EE690016379E /* MPLogger.h */,
+				8FA21F8B2F16EE6C0016379E /* MPLogger.m */,
 				8FF3D65A2170113800059ACD /* MPClientInfo.h */,
 				8FF3D65D2170113900059ACD /* MPClientInfo.m */,
 				8FF3D6532170113800059ACD /* MPDiskUtil.h */,
@@ -591,6 +624,50 @@
 			path = MPLibrary/Base64;
 			sourceTree = "<group>";
 		};
+		8FCB774E140C2F0700D86586 /* Logging */ = {
+			isa = PBXGroup;
+			children = (
+				8FCB7751140C2F0700D86586 /* lcl_config_logger.h */,
+				8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */,
+				8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */,
+				8FCB774F140C2F0700D86586 /* lcl_config_components.h */,
+				8FCB7753140C2F0700D86586 /* LibComponentLogging-Core */,
+				8FCB775A140C2F0700D86586 /* LibComponentLogging-LogFile */,
+				8FCB7760140C2F0700D86586 /* LibComponentLogging-qlog */,
+			);
+			name = Logging;
+			path = MPLibrary/Logging;
+			sourceTree = "<group>";
+		};
+		8FCB7753140C2F0700D86586 /* LibComponentLogging-Core */ = {
+			isa = PBXGroup;
+			children = (
+				8FCB7754140C2F0700D86586 /* lcl.h */,
+				8FCB7755140C2F0700D86586 /* lcl.m */,
+				8FCB7759140C2F0700D86586 /* README.md */,
+			);
+			path = "LibComponentLogging-Core";
+			sourceTree = "<group>";
+		};
+		8FCB775A140C2F0700D86586 /* LibComponentLogging-LogFile */ = {
+			isa = PBXGroup;
+			children = (
+				8FCB775C140C2F0700D86586 /* LCLLogFile.h */,
+				8FCB775D140C2F0700D86586 /* LCLLogFile.m */,
+				8FCB775F140C2F0700D86586 /* README.md */,
+			);
+			path = "LibComponentLogging-LogFile";
+			sourceTree = "<group>";
+		};
+		8FCB7760140C2F0700D86586 /* LibComponentLogging-qlog */ = {
+			isa = PBXGroup;
+			children = (
+				8FCB7761140C2F0700D86586 /* qlog.h */,
+				8FCB7762140C2F0700D86586 /* README.md */,
+			);
+			path = "LibComponentLogging-qlog";
+			sourceTree = "<group>";
+		};
 		8FCB77A3140C314C00D86586 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -701,6 +778,7 @@
 				8F83530E217E8B230034FEFB /* NSDate-Category */,
 				8FF3D6E32170147200059ACD /* FMDB */,
 				8FAEF668145F19AC006284B2 /* Base64 */,
+				8FCB774E140C2F0700D86586 /* Logging */,
 				8FAEF65D145F1922006284B2 /* RegexKitLite */,
 			);
 			name = "Third Party Classes";
@@ -786,12 +864,14 @@
 				8FF3D6672170113900059ACD /* MPSystemInfo.h in Headers */,
 				8FF3D6C02170131700059ACD /* MPSWTasks.h in Headers */,
 				8FF3D6972170127D00059ACD /* Agent.h in Headers */,
+				8FF3D6662170113900059ACD /* MPLog.h in Headers */,
 				8F1B07FF223184E0004D2ACF /* MPPatchScan.h in Headers */,
 				8FF3D6842170123900059ACD /* STHTTPRequest.h in Headers */,
 				8FF3D6892170125900059ACD /* MPSettings.h in Headers */,
 				8FF3D6612170113900059ACD /* MPDiskUtil.h in Headers */,
 				8FF3D6702170119200059ACD /* InventoryPlugin.h in Headers */,
 				8F4B1E2C16DD1D8C00E15A9E /* MPDataMgr.h in Headers */,
+				8F4B1E4116DD1D8C00E15A9E /* lcl_config_logger.h in Headers */,
 				8FF3D73621701AB600059ACD /* NSMutableDictionary+Helper.h in Headers */,
 				8FA139F421B7857D00124016 /* MPConfigProfiles.h in Headers */,
 				8FA139F221B7857D00124016 /* ConfigProfile.h in Headers */,
@@ -818,11 +898,18 @@
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
 				8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */,
 				8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */,
+				8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */,
 				8FF3D73921701AB600059ACD /* NSString+Hash.h in Headers */,
 				8FA21FBB2F2180CA0016379E /* Logger.h in Headers */,
 				8F7816AA3070294F00A5FCBB /* MPModel.h in Headers */,
+				8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */,
 				8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */,
+				8F4B1E4316DD1D8C00E15A9E /* lcl_config_extensions.h in Headers */,
+				8F4B1E4416DD1D8C00E15A9E /* lcl_config_components.h in Headers */,
+				8F4B1E4516DD1D8C00E15A9E /* LCLLogFile.h in Headers */,
+				8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */,
 				8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */,
+				8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */,
 				8FEC938717CBFEFB00AA9C1C /* MPApplePatch.h in Headers */,
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
@@ -915,6 +1002,7 @@
 				8FF3D6AE217012D600059ACD /* MPSimpleKeychain.m in Sources */,
 				8FF3D6962170127D00059ACD /* Server.m in Sources */,
 				8FE66402222887BB00F12AC8 /* MPFileUtils.m in Sources */,
+				8FF3D7222170196800059ACD /* MPLog.m in Sources */,
 				8FF3D651217010E700059ACD /* Constants.m in Sources */,
 				8FF3D73521701AB600059ACD /* NSFileManager+DirectoryLocations.m in Sources */,
 				8F4B1DFA16DD1D6400E15A9E /* MPAsus.m in Sources */,
@@ -926,6 +1014,7 @@
 				8F4B1DFC16DD1D6400E15A9E /* MPASUSCatalogs.m in Sources */,
 				8FC1CF542526920900DAD699 /* NSData+Base64.m in Sources */,
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
+				8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
@@ -935,6 +1024,8 @@
 				8FB1AB6E27A453DA003DC95C /* MPServerPing.m in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
+				8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */,
+				8F4B1E1516DD1D6400E15A9E /* LCLLogFile.m in Sources */,
 				8FF3D66A2170113900059ACD /* MPSystemInfo.m in Sources */,
 				8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */,
 				8FC1CF52252690B600DAD699 /* NSString+Base64.m in Sources */,
