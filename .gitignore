@@ -57,6 +57,9 @@ celerybeat-schedule
 .mpapi_dev
 .mpconsole_dev
 
+# All files ending with _dev
+*_dev
+
 # virtualenv
 venv/
 ENV/
