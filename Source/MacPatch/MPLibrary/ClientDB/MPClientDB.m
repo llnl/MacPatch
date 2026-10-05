@@ -2,9 +2,28 @@
 //  MPDB.m
 //  FMDBme
 //
-//  Created by Charles Heizer on 10/23/19.
-//  Copyright © 2019 Charles Heizer. All rights reserved.
-//
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+ 
+ This file is part of MacPatch, a program for installing and patching
+ software.
+ 
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+ 
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+ 
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "Logger.h"
 #import "MPClientDB.h"
@@ -15,6 +34,7 @@
 #import "RequiredPatch.h"
 
 NSString *const dbFile = @"/private/var/db/MPData.plist";
+NSString *const migrationFlagFile = @"/private/var/db/.MPData_migrated";
 
 /* DB File
  
@@ -40,6 +60,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 - (void)setupFile;
 - (void)save;
+- (void)migratePlistToDatabase;
 
 @end
 
@@ -58,17 +79,27 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 
 - (void)setupFile
 {
-	if (![fm fileExistsAtPath:dbFile]) // Does not exist
-	{
-        self.installedPatches = [NSMutableArray new];
-        self.installedSoftware = [NSMutableArray new];
-        self.requiredPatches = [NSMutableArray new];
-        self.history = [NSMutableArray new];
-        
-		[self save];
-	} else {
-		// Maybe add check for each section
+	// Check if migration from plist to database has been done
+	BOOL migrationCompleted = [fm fileExistsAtPath:migrationFlagFile];
+
+	if (!migrationCompleted && [fm fileExistsAtPath:dbFile]) {
+		// Plist exists but hasn't been migrated to database yet
+		LogInfo(@"[MPClientDB] Starting one-time migration from plist to SQLite database...");
+		[self open]; // Load data from plist
+		[self migratePlistToDatabase]; // Migrate to database
+		// Create migration flag file
+		[@"migrated" writeToFile:migrationFlagFile atomically:YES encoding:NSUTF8StringEncoding error:nil];
+		LogInfo(@"[MPClientDB] Migration completed. Plist preserved at: %@", dbFile);
+	} else if ([fm fileExistsAtPath:dbFile]) {
+		// Migration already done, just load from plist for now (backwards compatibility)
 		[self open];
+	} else {
+		// No existing data - initialize empty
+		self.installedPatches = [NSMutableArray new];
+		self.installedSoftware = [NSMutableArray new];
+		self.requiredPatches = [NSMutableArray new];
+		self.history = [NSMutableArray new];
+		[self save];
 	}
 
 	return;
@@ -93,10 +124,10 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 			index = [self.installedSoftware indexOfObject:sw];
 			// Found, need to update
 			if (swTask[@"Software"][@"sw_uninstall"]) {
-				sw.has_uninstall = 1;
+				sw.has_uninstall = @1;
 				sw.uninstall = swTask[@"Software"][@"sw_uninstall"];
 			} else {
-				sw.has_uninstall = 0;
+				sw.has_uninstall = @0;
 				sw.uninstall = @"";
 			}
 			
@@ -104,15 +135,14 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 			add = YES;
 			// Add Record
 			sw = [InstalledSoftware new];
-			sw.id = [[NSUUID UUID] UUIDString];
 			sw.name = swTask[@"name"];
 			sw.tuuid = swTask[@"id"];
 			sw.suuid = swTask[@"Software"][@"sid"];
 			if (swTask[@"Software"][@"sw_uninstall"]) {
-				sw.has_uninstall = 1;
+				sw.has_uninstall = @1;
 				sw.uninstall = swTask[@"Software"][@"sw_uninstall"];
 			} else {
-				sw.has_uninstall = 0;
+				sw.has_uninstall = @0;
 				sw.uninstall = @"";
 			}
 		}
@@ -214,7 +244,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         NSMutableArray *installedSoftwareArray = [self.installedSoftware mutableCopy];
         
         for (InstalledSoftware *sw in installedSoftwareArray) {
-            [swTasks addObject:@{@"name":sw.name, @"tuuid":sw.tuuid, @"suuid":sw.suuid, @"hasUninstall":@(sw.has_uninstall)}];
+            [swTasks addObject:@{@"name":sw.name, @"tuuid":sw.tuuid, @"suuid":sw.suuid, @"hasUninstall":sw.has_uninstall}];
         }
 
         return [swTasks copy];
@@ -319,7 +349,14 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         //LogInfo(@"[addRequiredPatch]: patchID=%@",patchID);
     
 		if ([patch[@"restart"] isEqualToString:@"Yes"]) patchReboot = @(1);
-		if (![patch[@"version"] isKindOfClass:[NSNull class]]) patchVersion = patch[@"version"];
+		if ([patch[@"patch_reboot"] isEqualToString:@"Yes"]) patchReboot = @(1);
+
+		// Try both version fields (Apple patches use "version", third-party use "patch_version")
+		if (patch[@"version"] && ![patch[@"version"] isKindOfClass:[NSNull class]]) {
+			patchVersion = patch[@"version"];
+		} else if (patch[@"patch_version"] && ![patch[@"patch_version"] isKindOfClass:[NSNull class]]) {
+			patchVersion = patch[@"patch_version"];
+		}
 		
 		RequiredPatch *rp = [RequiredPatch new];
         if (patch[@"type"]) {
@@ -336,9 +373,15 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         }
         if (patch[@"patch"]) {
             rp.patch = patch[@"patch"];
+        } else if (patch[@"name"]) {
+            // Use name field for third-party patches
+            rp.patch = patch[@"name"];
+        } else if (patch[@"bundle_id"]) {
+            // Use bundle_id as fallback for third-party patches
+            rp.patch = patch[@"bundle_id"];
         } else {
-            LogError(@"Required patch is missing patch.");
-            return result;
+            // Last resort: use patch_id
+            rp.patch = patchID;
         }
         if (patchVersion) {
             rp.patch_version = patchVersion;
@@ -347,7 +390,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
             rp.patch_version = @"0";
         }
 
-		rp.patch_reboot = [patchReboot integerValue];
+		rp.patch_reboot = @([patchReboot integerValue]);
 		rp.patch_data = [NSKeyedArchiver archivedDataWithRootObject:patch];
 		rp.patch_scandate = [NSDate date];
 	
@@ -395,7 +438,7 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
         [rpArray removeObjectsInArray:toDelete];
         self.requiredPatches = [rpArray mutableCopy];
 		
-        qltrace(@"Save");
+        LogDebug(@"Save");
 		[self save];
 		
 		return YES;
@@ -453,13 +496,11 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	@try
 	{
 		History *hst = [History new];
-		hst.id = [[NSUUID UUID] UUIDString];
-		hst.type = (NSInteger)hstType;
+		hst.type = @((NSInteger)hstType);
 		hst.name = aName;
 		hst.uuid = aUUID;
-		NSString *_action = (aAction == kMPInstallAction) ? @"Install" : @"Uninstall";
-		hst.action = _action;
-		hst.result_code = (NSInteger)code;
+		hst.action = @(aAction);
+		hst.result_code = @(code);
 		if (aErrMsg != NULL) {
 			hst.error_msg = aErrMsg;
 		} else {
@@ -504,19 +545,31 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 - (void)open
 {
 	NSError *err = nil;
-	NSMutableDictionary *dbDict = [[NSKeyedUnarchiver unarchiveObjectWithFile:dbFile] mutableCopy];
-    
-    self.requiredPatches = [[dbDict objectForKey:@"required_patches"] mutableCopy];
-    self.installedPatches = [[dbDict objectForKey:@"installed_patches"] mutableCopy];
-    self.installedSoftware = [[dbDict objectForKey:@"installed_software"] mutableCopy];
-    self.history = [[dbDict objectForKey:@"history"] mutableCopy];
-	
-	// 10.13 and higher
-	//NSData *data = [NSData dataWithContentsOfFile:dbFile];
-	//dbDict = [NSKeyedUnarchiver unarchivedObjectOfClass:[NSDictionary class] fromData:data error:&err];
-	
-	if (err) {
-		LogError(@"Error %@.",err.localizedDescription);
+	NSMutableDictionary *dbDict = nil;
+
+	// Check if file exists
+	if ([[NSFileManager defaultManager] fileExistsAtPath:dbFile]) {
+		@try {
+			dbDict = [[NSKeyedUnarchiver unarchiveObjectWithFile:dbFile] mutableCopy];
+		}
+		@catch (NSException *exception) {
+			LogError(@"Failed to unarchive database file: %@", exception);
+			dbDict = nil;
+		}
+	}
+
+	// Initialize with loaded data or empty arrays
+	if (dbDict) {
+		self.requiredPatches = [[dbDict objectForKey:@"required_patches"] mutableCopy] ?: [NSMutableArray array];
+		self.installedPatches = [[dbDict objectForKey:@"installed_patches"] mutableCopy] ?: [NSMutableArray array];
+		self.installedSoftware = [[dbDict objectForKey:@"installed_software"] mutableCopy] ?: [NSMutableArray array];
+		self.history = [[dbDict objectForKey:@"history"] mutableCopy] ?: [NSMutableArray array];
+	} else {
+		// No existing data or corrupted - start fresh
+		self.requiredPatches = [NSMutableArray array];
+		self.installedPatches = [NSMutableArray array];
+		self.installedSoftware = [NSMutableArray array];
+		self.history = [NSMutableArray array];
 	}
 }
 
@@ -560,5 +613,99 @@ NSString *const dbFile = @"/private/var/db/MPData.plist";
 	}
 	return nil;
 }
+
+#pragma mark - Migration
+
+- (void)migratePlistToDatabase
+{
+	LogInfo(@"[MPClientDB] Migrating data to MPModel database...");
+
+	NSInteger migratedCount = 0;
+	NSInteger errorCount = 0;
+
+	@autoreleasepool {
+		// Create tables if they don't exist
+		[History createTable];
+		[InstalledSoftware createTable];
+		[RequiredPatch createTable];
+
+		// Migrate History
+		LogInfo(@"[MPClientDB] Migrating %lu history records...", (unsigned long)self.history.count);
+		for (History *item in self.history) {
+			@try {
+				// Ensure required fields have values
+				if (!item.type) item.type = @0; // Default to patch type
+				if (!item.action) item.action = @0; // Default to install action
+				if (!item.result_code) item.result_code = @0;
+				if (!item.cdate) item.cdate = [NSDate date];
+				if (!item.name) item.name = @"";
+				if (!item.uuid) item.uuid = @"";
+
+				if ([item save]) {
+					migratedCount++;
+				} else {
+					errorCount++;
+					LogError(@"[MPClientDB] Failed to save history record: %@", item.name);
+				}
+			}
+			@catch (NSException *exception) {
+				errorCount++;
+				LogError(@"[MPClientDB] Exception migrating history: %@", exception);
+			}
+		}
+
+		// Migrate InstalledSoftware
+		LogInfo(@"[MPClientDB] Migrating %lu installed software records...", (unsigned long)self.installedSoftware.count);
+		for (InstalledSoftware *item in self.installedSoftware) {
+			@try {
+				// Ensure required fields have values
+				if (!item.name) item.name = @"";
+				if (!item.suuid) item.suuid = @"";
+				if (!item.tuuid) item.tuuid = @"";
+				if (!item.has_uninstall) item.has_uninstall = @0;
+				if (!item.install_date) item.install_date = [NSDate date];
+
+				if ([item save]) {
+					migratedCount++;
+				} else {
+					errorCount++;
+					LogError(@"[MPClientDB] Failed to save installed software: %@", item.name);
+				}
+			}
+			@catch (NSException *exception) {
+				errorCount++;
+				LogError(@"[MPClientDB] Exception migrating installed software: %@", exception);
+			}
+		}
+
+		// Migrate RequiredPatches
+		LogInfo(@"[MPClientDB] Migrating %lu required patch records...", (unsigned long)self.requiredPatches.count);
+		for (RequiredPatch *item in self.requiredPatches) {
+			@try {
+				// Ensure required fields have values
+				if (!item.type) item.type = @"";
+				if (!item.patch_id) item.patch_id = @"";
+				if (!item.patch) item.patch = @"";
+				if (!item.patch_reboot) item.patch_reboot = @0;
+				if (!item.patch_scandate) item.patch_scandate = [NSDate date];
+
+				if ([item save]) {
+					migratedCount++;
+				} else {
+					errorCount++;
+					LogError(@"[MPClientDB] Failed to save required patch: %@", item.patch);
+				}
+			}
+			@catch (NSException *exception) {
+				errorCount++;
+				LogError(@"[MPClientDB] Exception migrating required patch: %@", exception);
+			}
+		}
+	}
+
+	LogInfo(@"[MPClientDB] Migration complete: %ld records migrated, %ld errors",
+		  (long)migratedCount, (long)errorCount);
+}
+
 @end
 
