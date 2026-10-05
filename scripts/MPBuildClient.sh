@@ -35,13 +35,13 @@ DATETIME=`date "+%Y%m%d-%H%M%S"`
 BUILDROOT="/private/var/tmp/MP/Client40/$DATETIME"
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
-AGENT_VERS="4.0.0"
-AGENTVER="4.0.0.1"
-UPDATEVER="4.0.0.1"
+AGENT_VERS="4.4.0"
+AGENTVER="4.4.0.0"
+UPDATEVER="4.4.0.0"
 
 PKG_STATE=""
 CODESIGNIDENTITY="*"
-MIN_OS="11.15"
+MIN_OS="14.6"
 BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
 
 # Extenral scripts run pre xcode compile
