@@ -53,6 +53,9 @@ celerybeat-schedule
 
 # dotenv
 .env
+.mpglobal_dev
+.mpapi_dev
+.mpconsole_dev
 
 # virtualenv
 venv/
