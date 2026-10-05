@@ -96,7 +96,8 @@ def read_siteconfig_server_data(app):
 def register_extensions(app):
 	db.init_app(app)
 	migrate.init_app(app, db)
-	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+	# Flask-Caching 2.5+ uses 'SimpleCache' instead of 'simple'
+	cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
 	aws.init_app(app)
 
 def register_blueprints(app):

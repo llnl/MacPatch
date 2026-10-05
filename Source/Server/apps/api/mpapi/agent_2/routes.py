@@ -682,7 +682,7 @@ class AgentUpdates():
 			log_Debug("[AgentUpdates][agentUpdates]: Client (%s) Update Data: %s" % (cuuid, update))
 			return update
 		else:
-			log_Info(f"[AgentUpdates][agentUpdates]: Client ({cuuid}}), filter excluded this agent.")
+			log_Info(f"[AgentUpdates][agentUpdates]: Client ({cuuid}), filter excluded this agent.")
 			return {}
 
 	''' Get the RID of the latest updater agent update '''

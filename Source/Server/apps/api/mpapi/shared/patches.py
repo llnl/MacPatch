@@ -263,10 +263,14 @@ class PatchScanV3():
 		patches_by_bundle = {}
 		for row in _all:
 			patch = {
+				'puuid': row.puuid,
+				'patch_name': row.patch_name,
+				'patch_ver': row.patch_ver,
 				'bundle_id': row.bundle_id,
-				'patch_id': row.puuid,
 				'patch_reboot': row.patch_reboot,
-				'patch_version': row.patch_ver,
+				'patch_state': row.patch_state,
+				'active': row.active,
+				'severity': row.patch_severity,
 				'query': []
 			}
 			if row.bundle_id not in patches_by_bundle:
@@ -276,7 +280,7 @@ class PatchScanV3():
 		# Sort patches within each bundle by version
 		for bundle_id in patches_by_bundle:
 			patches_by_bundle[bundle_id].sort(
-				key=lambda p: tuple(int(v) for v in p['patch_version'].split('.')),
+				key=lambda p: tuple(int(v) for v in p['patch_ver'].split('.')),
 				reverse=True
 			)
 
@@ -359,11 +363,11 @@ class PatchScanV3():
 
 			# Check OS compatibility if needed
 			if os and os != "*":
-				if not self.osCheckForPatch(os_criteria_by_patch, patch["patch_id"], os):
+				if not self.osCheckForPatch(os_criteria_by_patch, patch["puuid"], os):
 					continue
 
 			# Add criteria
-			patch['query'] = self.criteriaForPatch(criteria_by_patch, patch["patch_id"])
+			patch['query'] = self.criteriaForPatch(criteria_by_patch, patch["puuid"])
 			results.append(patch)
 
 		return results

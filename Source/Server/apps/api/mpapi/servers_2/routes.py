@@ -326,7 +326,7 @@ class logline(object):  # no instance of this class should be created
 		try:
 			_date = line.split(",")
 			self.date = _date[0]
-			x = re.search('\[(.*?)\]\[(.*?)\]', line)
+			x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
 			self.app = x.group(1)
 			self.level = x.group(2)
 			self.text = line.split("---")[1]

@@ -1,6 +1,10 @@
 # Deprecated no longer using Intune
 # Might come back to it, but will need to update to MSAL module
-import adal
+try:
+	import adal
+except ImportError:
+	adal = None  # adal is optional, only needed if ENABLE_INTUNE is True
+
 import uuid
 import requests
 import json
@@ -24,6 +28,8 @@ class MPTaskJobs():
 				self.user = user
 
 	def getAccessToken(self):
+		if adal is None:
+			raise ImportError("adal module is required for Intune integration. Install with: pip install adal")
 
 		AUTHORITY_URL = self.app.config.get('INTUNE_AUTHORITY_HOST_URL') + '/' + self.app.config.get('INTUNE_TENANT')
 		auth_context = adal.AuthenticationContext(AUTHORITY_URL)
