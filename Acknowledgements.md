@@ -1,107 +1,114 @@
-# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 3.2
+# ![MPLogo](./images/MPLogo_3_64x64.png) MacPatch 4.x
 
 ## Acknowledgements
 
-MacPatch uses a number of open source components. Without all of the hard work of the authors of these great projects MacPatch would'nt be a reality. Thank You!
+MacPatch uses a number of open source components. Without all of the hard work of the authors of these great projects MacPatch wouldn't be a reality. Thank You!
 
-MacPatch 3.2.x makes use of the following open source components:
+MacPatch 4.x makes use of the following open source components:
+
+### Server
 
 |Project|License|URL|
 |---|---|---|
-| Python | [Python Software Foundation License](https://www.python.org/download/releases/2.7/license/) | [https://www.python.org]() |
-| Ace | [BSD](https://github.com/ajaxorg/ace/blob/master/LICENSE) | [https://ace.c9.io/]() |
-| Bootstrap Table | [MIT](https://github.com/wenzhixin/bootstrap-table/blob/develop/LICENSE) | [http://bootstrap-table.wenzhixin.net.cn]() |
-| Reposado | [BSD](https://github.com/wdas/reposado/blob/master/LICENSE.txt) | [https://github.com/wdas/reposado]() |
-| NGINX | [applicable 2-clause BSD license](http://nginx.org/LICENSE) | [http://nginx.org]() |
-| OpenSSL | [BSD](https://www.openssl.org/source/license.html) | [https://www.openssl.org]() |
+| Python 3 | [Python Software Foundation License](https://docs.python.org/3/license.html) | [https://www.python.org]() |
+| NGINX | [2-clause BSD](https://nginx.org/LICENSE) | [https://nginx.org]() |
+| MySQL | [GPL-2.0](https://www.mysql.com/about/legal/licensing/oem/) | [https://www.mysql.com]() |
+| Redis | [BSD-3-Clause (Redis 6)](https://redis.io/legal/licenses/) | [https://redis.io]() |
+| OpenSSL | [Apache-2.0](https://www.openssl.org/source/license.html) | [https://www.openssl.org]() |
 | PCRE | [BSD](https://www.pcre.org/licence.txt) | [https://www.pcre.org]() |
 | SWIG | [GPL](http://www.swig.org/Release/LICENSE) | [http://www.swig.org]() |
-| FMDB | [MIT](https://github.com/ccgus/fmdb/blob/master/LICENSE.txt) | [https://github.com/ccgus/fmdb]() | 
-| GCDTask | [MIT](https://github.com/reliablehosting/GCDTask/blob/master/LICENSE)| [https://github.com/reliablehosting/GCDTask]() | 
-| NSData+Base64 | As-Is | [https://www.cocoawithlove.com/2009/06/base64-encoding-options-on-mac-and.html]() |
-| LibComponentLogging | [MIT](https://github.com/aharren/LibComponentLogging-Core) | [http://0xc0.de/LibComponentLogging]() |
-| RegexKit Lite | [BSD](http://regexkit.sourceforge.net/Documentation/RegexKitProgrammingGuide.html#LicenseInformation) | [http://regexkit.sourceforge.net]() |
-| Bower | [MIT](https://github.com/bower/bower/blob/master/LICENSE) | [https://github.com/bower/bower]() |
+| Yarn | [BSD-2-Clause](https://github.com/yarnpkg/yarn/blob/master/LICENSE) | [https://yarnpkg.com]() |
+| Node.js | [MIT](https://github.com/nodejs/node/blob/main/LICENSE) | [https://nodejs.org]() |
 
-#### Bower Installed Libraries
+PCRE, OpenSSL, SWIG, Yarn and Node.js are used to build and install the server.
+
+### macOS Client
+
+|Project|License|URL|
+|---|---|---|
+| FMDB | [MIT](https://github.com/ccgus/fmdb/blob/master/LICENSE.txt) | [https://github.com/ccgus/fmdb]() |
+| STHTTPRequest | [BSD](https://github.com/nst/STHTTPRequest/blob/master/LICENSE) | [https://github.com/nst/STHTTPRequest]() |
+| CocoaSecurity | [MIT](https://github.com/kelp404/CocoaSecurity/blob/master/LICENSE) | [https://github.com/kelp404/CocoaSecurity]() |
+| UAObfuscatedString | [BSD](https://github.com/UrbanApps/UAObfuscatedString) | [https://github.com/UrbanApps/UAObfuscatedString]() |
+| RegexKit Lite | [BSD](http://regexkit.sourceforge.net/Documentation/RegexKitProgrammingGuide.html#LicenseInformation) | [http://regexkit.sourceforge.net]() |
+| NSData+Base64 | As-Is | [https://www.cocoawithlove.com/2009/06/base64-encoding-options-on-mac-and.html]() |
+| MBProgressHUD | [MIT](https://github.com/jdg/MBProgressHUD/blob/master/LICENSE) | [https://github.com/jdg/MBProgressHUD]() |
+| RHPreferences | [BSD](https://github.com/heardrwt/RHPreferences/blob/master/LICENSE) | [https://github.com/heardrwt/RHPreferences]() |
+| MPOProgressBar | See source header | |
+
+### Admin Console
+
+JavaScript libraries installed with Yarn (`package.json`), replacing the Bower packages used by 3.x.
+
+Each library remains under its own license, see the project sites.
 
 | Library | Version |
 |---|---|
-| jQuery | ^3.2.1 |
-| bootstrap | ^3.3.7 |
-| jQuery-QueryBuilder | ^2.4.4 |
-| morris.js | ^0.5.1 |
-| bootstrap-table | ^1.11.1 |
-| metisMenu | ^2.7.1 |
-| moment | ^2.19.2 |
-| raphael | ^2.2.7 |
-| selectize | ^0.12.4 |
-| jquery.steps | 1.1.0 |
-| chart.js | ^2.7.1 |
+| ace-editor-builds | ^1.2.4 |
+| bootstrap | 3.4.1 |
+| bootstrap-chosen | ^1.4.2 |
+| bootstrap-editable | ^1.0.1 |
+| bootstrap-table | ^1.22.6 |
+| brace | ^0.11.1 |
+| chart.js | ^2.9.4 |
+| chosen-js | ^1.8.7 |
+| dompurify | ^3.4.0 |
 | font-awesome | ^4.7.0 |
-| smalot-bootstrap-datetimepicker | ^2.4.4 |
-| col-resizable | ^1.6.0 |
-| chosen | ^1.8.2 |
-| interactjs | ^1.2.9 |
-| sql-parser | ^1.1.0 |
-| tableExport.jquery.plugin | ^1.9.8 |
+| interactjs | ^1.10.27 |
+| jquery | ^3.7.1 |
+| jQuery-QueryBuilder | ^3.0.0 |
+| jquery-resizable-columns | ^0.2.3 |
+| jquery-steps-tc | ^1.1.0 |
+| metismenu | 3.0.7 |
+| modernizr | ^3.13.0 |
+| moment | ^2.30.1 |
+| morris.js | ^0.5.0 |
+| popper.js | ^1.16.1 |
+| raphael | ^2.3.0 |
+| sb-admin-2 | ^3.3.8 |
+| selectize | ^0.12.6 |
+| sql-parser-mistic | ^1.2.3 |
+| tableexport.jquery.plugin | ^1.30.0 |
 
-#### Python - PIP Modules Installed
-| Module | Version |
-|---|---|
-| aniso8601 | 3.0.0 |
-| APScheduler | 3.5.1 |
-| Babel | 2.5.3 |
-| blinker | 1.4 |
-| certifi | 2018.4.16 |
-| chardet | 3.0.4 |
-| click | 6.7 |
-| enum34 | 1.1.6 |
-| Flask | 1.0.1 |
-| Flask-APScheduler | 1.8.0 |
-| Flask-BabelEx | 0.9.3 |
-| Flask-Caching | 1.4.0 |
-| Flask-Cors | 3.0.4 |
-| Flask-DebugToolbar | 0.10.1 |
-| flask-ldap3-login | 0.9.13 |
-| Flask-Login | 0.4.1 |
-| Flask-Mail | 0.9.1 |
-| Flask-Migrate | 2.1.1 |
-| Flask-Principal | 0.4.0 |
-| Flask-RESTful | 0.3.6 |
-| flask-restful-swagger | 0.19 |
-| Flask-Script | 2.0.6 |
-| Flask-Security | 3.0.0 |
-| Flask-SQLAlchemy | 2.3.2 |
-| Flask-WTF | 0.14.2 |
-| funcsigs | 1.0.2 |
-| futures | 3.2.0 |
-| gevent | 1.3b1 |
-| greenlet | 0.4.13 |
-| gunicorn | 19.8.1 |
-| healthcheck | 1.3.2 |
-| idna | 2.6 |
-| itsdangerous | 0.24 |
-| Jinja2 | 2.10 |
-| ldap3 | 2.5 |
-| Mako | 1.0.7 |
-| MarkupSafe | 1.0 |
-| passlib | 1.7.1 |
-| protobuf | 3.5.2.post1 |
-| pyasn1 | 0.4.2 |
-| cryptography | 2.2.2 |
-| python-dateutil | 2.7.2 |
-| python-editor | 1.0.3 |
-| pytz | 2018.4 |
-| requests | 2.18.4 |
-| six | 1.11.0 |
-| speaklater | 1.3 |
-| SQLAlchemy | 1.2.7 |
-| typing | 3.6.4 |
-| tzlocal | 1.5.1 |
-| urllib3 | 1.22 |
-| uWSGI | 2.0.17 |
-| Werkzeug | 0.14.1 |
-| WTForms | 2.1 |
-| yattag | 1.10.0 |
-| pymysql | ^0.9.0 |
+### Python Modules
+
+Installed with pip. The version listed is the one pinned for each component, a dash means the component does not use the module. Versions can differ between components because each has its own requirements file in `Source/Server/apps`.
+
+| Module | API | Console | Server Tools |
+|---|---|---|---|
+| boto3 | 1.43.107 | 1.42.73 | - |
+| cryptography | 50.0.2 | 46.0.5 | - |
+| distro | 1.9.0 | 1.9.0 | 1.9.0 |
+| email-validator | 2.3.0 | 2.3.0 | - |
+| Flask | 3.1.3 | 3.1.3 | - |
+| Flask-APScheduler | - | unpinned | - |
+| Flask-Caching | 2.5.1 | 2.3.1 | - |
+| Flask-Cors | - | 6.0.2 | - |
+| Flask-Login | 0.6.3 | 0.6.3 | - |
+| Flask-Mail | 0.10.0 | 0.10.0 | - |
+| Flask-Migrate | 4.1.0 | 4.1.0 | - |
+| Flask-RESTful | 0.3.10 | 0.3.10 | - |
+| Flask-Session | - | 0.8.0 | - |
+| Flask-SQLAlchemy | 3.1.1 | 3.1.1 | - |
+| Flask-WTF | - | 1.2.2 | - |
+| gevent | 26.9.0 | 25.9.1 | - |
+| gunicorn | 26.2.0 | 25.1.0 | - |
+| humanize | - | 4.15.0 | - |
+| ldap3 | 2.9.1 | 2.9.1 | - |
+| M2Crypto | - | - | 0.47.0 |
+| msal | - | 1.35.1 | - |
+| packaging | 24.2 | - | 26.0 |
+| psutil | - | - | 7.2.2 |
+| pycryptodome | - | - | 3.23.0 |
+| PyJWT | 2.15.1 | - | - |
+| pymysql | 1.2.3 | 1.1.2 | 1.1.2 |
+| python-crontab | - | - | 3.3.0 |
+| python-dateutil | - | 2.9.0.post0 | - |
+| python-dotenv | 1.2.4 | 1.2.2 | 1.2.2 |
+| redis | - | 7.3.0 | - |
+| requests | 2.32.3 | 2.32.5 | 2.33.1 |
+| simplejson | - | - | 3.20.2 |
+| SQLAlchemy | 2.1.1 | 2.0.48 | - |
+| urllib3 | - | 2.6.3 | - |
+| Werkzeug | 3.1.9 | 3.1.6 | - |
+| yattag | - | 1.16.1 | - |
