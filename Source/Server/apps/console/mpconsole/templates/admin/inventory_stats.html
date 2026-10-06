@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<style>
+		.stat-tile { text-align: center; padding: 6px 0; }
+		.stat-tile .stat-value { font-size: 26px; font-weight: 600; line-height: 1.2; }
+		.stat-tile .stat-label { color: #777; text-transform: uppercase; font-size: 11px; letter-spacing: .5px; }
+		.stat-tile .stat-sub { color: #999; font-size: 12px; }
+		.cause-help { color: #555; }
+		td .msg { display: inline-block; max-width: 420px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: bottom; }
+	</style>
+{% endblock %}
+
+{% block pageHeader %}
+	Inventory Statistics
+{% endblock %}
+
+{% block bodyPanel %}
+
+	<div class="row" style="margin-bottom: 15px;">
+		<div class="col-lg-12">
+			<span class="text-muted">Inventory files processed by MPInventoryD over the last</span>
+			<div class="btn-group" id="periods" role="group">
+				{% for p in periods %}
+				<button type="button" class="btn btn-default btn-sm" data-days="{{ p }}">{{ p }} {{ 'day' if p == 1 else 'days' }}</button>
+				{% endfor %}
+			</div>
+			<button type="button" id="refresh" class="btn btn-default btn-sm" title="Refresh"><i class="fa fa-refresh"></i></button>
+			<span id="loadError" class="text-danger" style="margin-left: 10px; display: none;"></span>
+		</div>
+	</div>
+
+	<div id="empty" class="alert alert-info" style="display: none;">
+		No inventory statistics for this period. They are recorded by MPInventoryD as it processes inventory files,
+		and require the 100016 database migration to have been applied.
+	</div>
+
+	<div id="content" style="display: none;">
+
+		<div class="panel panel-default">
+			<div class="panel-body">
+				<div class="row">
+					<div class="col-sm-2 stat-tile"><div class="stat-value" id="tLoads">-</div><div class="stat-label">Files loaded</div></div>
+					<div class="col-sm-2 stat-tile"><div class="stat-value" id="tRate">-</div><div class="stat-label">Success rate</div><div class="stat-sub" id="tFailed"></div></div>
+					<div class="col-sm-2 stat-tile"><div class="stat-value" id="tRows">-</div><div class="stat-label">Rows inserted</div><div class="stat-sub" id="tBytes"></div></div>
+					<div class="col-sm-3 stat-tile"><div class="stat-value" id="tQueued">-</div><div class="stat-label">Avg wait for the daemon</div><div class="stat-sub" id="tQueuedMax"></div></div>
+					<div class="col-sm-3 stat-tile"><div class="stat-value" id="tLoad">-</div><div class="stat-label">Avg load time</div><div class="stat-sub" id="tLoadMax"></div></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-heading">Files loaded per day</div>
+			<div class="panel-body"><canvas id="dailyChart" height="70"></canvas></div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-heading"><i class="fa fa-exclamation-triangle fa-fw"></i> Why loads failed</div>
+			<div class="panel-body">
+				<p id="noFailures" class="text-success" style="display: none;"><i class="fa fa-check fa-fw"></i> No failures in this period.</p>
+				<table id="causesTable" class="table table-condensed table-striped"></table>
+			</div>
+		</div>
+
+		<div class="panel panel-default">
+			<div class="panel-heading">By inventory table</div>
+			<div class="panel-body"><table id="tablesTable" class="table table-condensed table-striped"></table></div>
+		</div>
+
+		<div class="panel panel-default" id="recentPanel">
+			<div class="panel-heading">Recent failures (latest 100)</div>
+			<div class="panel-body"><table id="recentTable" class="table table-condensed table-striped"></table></div>
+		</div>
+
+	</div>
+
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/Chart.bundle.min.js') }}"></script>
+	<script>
+	var dataUrl = "{{ url_for('console.inventoryStatsData') }}";
+	var days = 7;
+	var dailyChart = null;
+
+	// Why loads fail and what to look at, by cause
+	var CAUSES = {
+		data_error: ['A value does not fit its column', 'Usually "Data too long for column": the agent creates varchar(255) columns. See the column named in the message; widen it or shorten what is collected.'],
+		unknown_client: ['Client is not registered', 'The client ID is not in mp_clients (foreign key). Often a client that was removed, or has not registered yet.'],
+		schema_limit: ['Table too large for MySQL', 'Too many columns or rows wider than MySQL allows. The plugin or table collects too many fields.'],
+		db_contention: ['Database busy', 'Deadlock or lock wait timeout. Check for long running queries or lower the number of daemon processes.'],
+		db_connection: ['Database not reachable', 'The database connection was refused or lost while loading.'],
+		db_permission: ['Database permission', 'The database user needs CREATE, ALTER, INSERT and DELETE on the inventory (mpi_) tables.'],
+		db_error: ['Other database error', 'Another MySQL error, see the error number and message.'],
+		invalid_payload: ['Invalid inventory file', 'Table name, fields or rows were not acceptable. Often a plugin sending a bad table or column name.'],
+		bad_file: ['Unreadable file', 'The file is not valid JSON, it may be truncated or corrupt.'],
+		file_error: ['File problem', 'The daemon could not read the file (permissions or disk).'],
+		lock_timeout: ['Table change timed out', 'Waited 60 seconds for another process that is changing the same table.'],
+		unknown: ['Unexpected error', 'See the message and the MPInventory log on the server.']
+	};
+
+	function esc(v) { return $('<div>').text(v == null ? '' : String(v)).html(); }
+	function num(v) { return Number(v || 0).toLocaleString(); }
+	function ms(v) {
+		v = Number(v || 0);
+		if (v < 1000) return v + ' ms';
+		if (v < 60000) return (v / 1000).toFixed(1) + ' s';
+		return (v / 60000).toFixed(1) + ' min';
+	}
+	function bytes(v) {
+		v = Number(v || 0);
+		var units = ['B', 'KB', 'MB', 'GB', 'TB'], i = 0;
+		while (v >= 1024 && i < units.length - 1) { v /= 1024; i++; }
+		return (i === 0 ? v : v.toFixed(1)) + ' ' + units[i];
+	}
+	function textF(v) { return esc(v); }
+	function numF(v) { return num(v); }
+	function msF(v) { return ms(v); }
+	function bytesF(v) { return bytes(v); }
+	function causeF(v) {
+		var c = CAUSES[v] || [v, ''];
+		return '<span class="label label-danger" title="' + esc(c[1]) + '">' + esc(v) + '</span> <span class="text-muted">' + esc(c[0]) + '</span>';
+	}
+	function msgF(v) { return v ? '<span class="msg" title="' + esc(v) + '">' + esc(v) + '</span>' : ''; }
+	function helpF(v, row) { return '<span class="cause-help">' + esc((CAUSES[row.result] || ['', ''])[1]) + '</span>'; }
+	function failedF(v) { return v > 0 ? '<span class="text-danger"><b>' + num(v) + '</b></span>' : '0'; }
+
+	function initTable(selector, columns, sortName, sortOrder) {
+		$(selector).bootstrapTable({
+			pagination: true,
+			sidePagination: 'client',
+			pageSize: 10,
+			pageList: [10, 25, 50, 100],
+			search: true,
+			sortable: true,
+			sortName: sortName,
+			sortOrder: sortOrder || 'desc',
+			columns: columns,
+			data: []
+		});
+	}
+
+	function col(field, title, formatter, extra) {
+		return $.extend({field: field, title: title, sortable: true, formatter: formatter || textF}, extra || {});
+	}
+
+	function renderTotals(t) {
+		$('#tLoads').text(num(t.loads));
+		$('#tRate').text(t.success_rate == null ? '-' : t.success_rate + '%')
+			.toggleClass('text-danger', t.success_rate != null && t.success_rate < 95)
+			.toggleClass('text-success', t.success_rate != null && t.success_rate >= 95);
+		$('#tFailed').text(num(t.failed) + ' failed');
+		$('#tRows').text(num(t.rows_inserted));
+		$('#tBytes').text(bytes(t.file_bytes) + ' of files, ' + num(t.rows_purged) + ' rows replaced');
+		$('#tQueued').text(ms(t.avg_queued_ms));
+		$('#tQueuedMax').text('longest ' + ms(t.max_queued_ms));
+		$('#tLoad').text(ms(t.avg_load_ms));
+		$('#tLoadMax').text('longest ' + ms(t.max_load_ms));
+	}
+
+	function renderChart(daily) {
+		if (dailyChart) { dailyChart.destroy(); }
+		dailyChart = new Chart(document.getElementById('dailyChart'), {
+			type: 'bar',
+			data: {
+				labels: daily.map(function (d) { return d.day; }),
+				datasets: [
+					{label: 'Loaded', backgroundColor: '#5cb85c', data: daily.map(function (d) { return d.ok; })},
+					{label: 'Failed', backgroundColor: '#d9534f', data: daily.map(function (d) { return d.failed; })}
+				]
+			},
+			options: {
+				legend: {position: 'bottom'},
+				scales: {xAxes: [{stacked: true}], yAxes: [{stacked: true, ticks: {beginAtZero: true, precision: 0}}]}
+			}
+		});
+	}
+
+	function load() {
+		$('#periods button').removeClass('active').filter('[data-days="' + days + '"]').addClass('active');
+		$('#loadError').hide();
+
+		$.getJSON(dataUrl, {days: days}).done(function (r) {
+			if (!r.totals.loads) {
+				$('#content').hide();
+				$('#empty').show();
+				return;
+			}
+			$('#empty').hide();
+			$('#content').show();
+
+			renderTotals(r.totals);
+			renderChart(r.daily);
+			$('#noFailures').toggle(r.causes.length === 0);
+			$('#causesTable').bootstrapTable('load', r.causes).closest('.bootstrap-table').toggle(r.causes.length > 0);
+			$('#recentPanel').toggle(r.recent.length > 0);
+			$('#recentTable').bootstrapTable('load', r.recent);
+			$('#tablesTable').bootstrapTable('load', r.tables);
+		}).fail(function (xhr) {
+			$('#loadError').text(xhr.status === 403 ? 'Administrator rights are required.' : 'Unable to load the statistics.').show();
+		});
+	}
+
+	$(document).ready(function () {
+		initTable('#causesTable', [
+			col('result', 'Cause', causeF),
+			col('inv_table', 'Table'),
+			col('failures', 'Failures', numF, {align: 'right'}),
+			col('clients', 'Clients', numF, {align: 'right'}),
+			col('last', 'Last seen'),
+			col('error_stage', 'Stage'),
+			col('error_no', 'MySQL error'),
+			col('example', 'Example message', msgF),
+			col('result', 'What to check', helpF, {sortable: false, field: 'help'})
+		], 'failures');
+
+		initTable('#tablesTable', [
+			col('inv_table', 'Table'),
+			col('loads', 'Files', numF, {align: 'right'}),
+			col('failed', 'Failed', failedF, {align: 'right'}),
+			col('rows_inserted', 'Rows inserted', numF, {align: 'right'}),
+			col('rows_updated', 'Rows updated', numF, {align: 'right'}),
+			col('rows_purged', 'Rows replaced', numF, {align: 'right'}),
+			col('file_bytes', 'Data', bytesF, {align: 'right'}),
+			col('avg_queued_ms', 'Avg wait', msF, {align: 'right'}),
+			col('max_queued_ms', 'Max wait', msF, {align: 'right'}),
+			col('avg_load_ms', 'Avg load', msF, {align: 'right'}),
+			col('max_load_ms', 'Max load', msF, {align: 'right'})
+		], 'failed');
+
+		initTable('#recentTable', [
+			col('started', 'When'),
+			col('cuuid', 'Client'),
+			col('inv_table', 'Table'),
+			col('result', 'Cause', causeF),
+			col('error_stage', 'Stage'),
+			col('error_no', 'MySQL error'),
+			col('error_msg', 'Message', msgF),
+			col('rows_received', 'Rows', numF, {align: 'right'}),
+			col('file_name', 'File')
+		], 'started');
+
+		$('#periods button').click(function () { days = parseInt($(this).data('days'), 10); load(); });
+		$('#refresh').click(load);
+		load();
+	});
+	</script>
+{% endblock %}

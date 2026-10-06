@@ -1,12 +1,12 @@
 from flask import render_template, request, session
-from sqlalchemy import desc
+from sqlalchemy import desc, func, case
 from werkzeug.security import generate_password_hash
 import json
 import re
 import uuid
 import requests
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from hashlib import sha1, sha256
 
 from .  import console
@@ -790,3 +790,94 @@ def json_serial(obj):
 		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
 		return serial
 	raise TypeError("Type not serializable")
+
+'''
+----------------------------------------------------------------
+	Inventory Statistics
+	What MPInventoryD did with the inventory files clients sent
+----------------------------------------------------------------
+'''
+INV_STATS_PERIODS = (1, 7, 30, 120)
+
+@console.route('/inventory/stats')
+@login_required
+def inventoryStats():
+	if not adminRole():
+		return render_template('403.html'), 403
+
+	return render_template('admin/inventory_stats.html', periods=INV_STATS_PERIODS)
+
+''' AJAX Method '''
+@console.route('/inventory/stats/data')
+@login_required
+def inventoryStatsData():
+	if not adminRole():
+		return json.dumps({'errorno': 403}), 403
+
+	try:
+		days = min(max(int(request.args.get('days', 7)), 1), 3650)
+	except ValueError:
+		days = 7
+
+	since = datetime.now() - timedelta(days=days)
+	since_day = (datetime.now() - timedelta(days=days - 1)).date()
+
+	def n(value):
+		return int(value or 0)
+
+	D, S = MpInvStatsDaily, MpInvStats
+	ok = D.result == 'ok'
+
+	# Loads per day, from the daily roll-up
+	daily = {}
+	for day, result, loads in (db.session.query(D.day, D.result, func.sum(D.loads))
+							   .filter(D.day >= since_day).group_by(D.day, D.result).all()):
+		d = daily.setdefault(str(day), {'day': str(day), 'ok': 0, 'failed': 0})
+		d['ok' if result == 'ok' else 'failed'] += n(loads)
+
+	# Totals per inventory table
+	tables = []
+	for r in (db.session.query(D.inv_table, func.sum(D.loads), func.sum(case((ok, D.loads), else_=0)),
+							   func.sum(D.rows_inserted), func.sum(D.rows_updated), func.sum(D.rows_purged),
+							   func.sum(D.file_bytes), func.sum(D.queued_ms_total), func.max(D.queued_ms_max),
+							   func.sum(case((ok, D.load_ms_total), else_=0)), func.max(D.load_ms_max))
+			  .filter(D.day >= since_day).group_by(D.inv_table).all()):
+		loads, loaded = n(r[1]), n(r[2])
+		tables.append({'inv_table': r[0] or '(unknown)', 'loads': loads, 'failed': loads - loaded,
+					   'rows_inserted': n(r[3]), 'rows_updated': n(r[4]), 'rows_purged': n(r[5]),
+					   'file_bytes': n(r[6]),
+					   'avg_queued_ms': n(r[7]) // loads if loads else 0, 'max_queued_ms': n(r[8]),
+					   'avg_load_ms': n(r[9]) // loaded if loaded else 0, 'max_load_ms': n(r[10])})
+	tables.sort(key=lambda t: (-t['failed'], -t['loads']))
+
+	loads = sum(t['loads'] for t in tables)
+	failed = sum(t['failed'] for t in tables)
+	loaded = loads - failed
+	totals = {'loads': loads, 'failed': failed,
+			  'success_rate': round(100.0 * loaded / loads, 1) if loads else None,
+			  'rows_inserted': sum(t['rows_inserted'] for t in tables),
+			  'rows_purged': sum(t['rows_purged'] for t in tables),
+			  'file_bytes': sum(t['file_bytes'] for t in tables),
+			  'avg_queued_ms': sum(t['avg_queued_ms'] * t['loads'] for t in tables) // loads if loads else 0,
+			  'max_queued_ms': max([t['max_queued_ms'] for t in tables] or [0]),
+			  'avg_load_ms': sum(t['avg_load_ms'] * (t['loads'] - t['failed']) for t in tables) // loaded if loaded else 0,
+			  'max_load_ms': max([t['max_load_ms'] for t in tables] or [0])}
+
+	# Why loads failed, grouped by cause and table (needs the per file rows, kept for a shorter time)
+	causes = []
+	for r in (db.session.query(S.result, S.inv_table, func.count(S.rid), func.count(func.distinct(S.cuuid)),
+							   func.max(S.started), func.max(S.error_no), func.max(S.error_stage), func.max(S.error_msg))
+			  .filter(S.started >= since, S.result != 'ok').group_by(S.result, S.inv_table)
+			  .order_by(func.count(S.rid).desc()).all()):
+		causes.append({'result': r[0], 'inv_table': r[1] or '(unknown)', 'failures': n(r[2]), 'clients': n(r[3]),
+					   'last': r[4], 'error_no': r[5], 'error_stage': r[6], 'example': r[7]})
+
+	recent = []
+	for r in (S.query.filter(S.started >= since, S.result != 'ok').order_by(S.started.desc()).limit(100).all()):
+		recent.append({'started': r.started, 'cuuid': r.cuuid, 'inv_table': r.inv_table, 'result': r.result,
+					   'error_no': r.error_no, 'error_stage': r.error_stage, 'error_msg': r.error_msg,
+					   'file_name': r.file_name, 'rows_received': n(r.rows_received), 'file_bytes': n(r.file_bytes)})
+
+	return json.dumps({'days': days, 'since': since, 'totals': totals,
+					   'daily': [daily[k] for k in sorted(daily)], 'tables': tables,
+					   'causes': causes, 'recent': recent}, default=json_serial), 200

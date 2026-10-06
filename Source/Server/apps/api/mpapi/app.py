@@ -198,6 +198,27 @@ def register_blueprints(app):
 	from .support import support as bp_support
 	app.register_blueprint(bp_support, url_prefix=app.config['URL_PREFIX'])
 
+	# /api/v5: single API baseline for MacPatch 4.4.0+ clients. The versioned blueprints above
+	# can be removed once their support window ends.
+	from .agent_5 import agent_5 as bp_agent_5
+	app.register_blueprint(bp_agent_5, url_prefix='/api/v5')
+	from .aws_5 import aws_5 as bp_aws_5
+	app.register_blueprint(bp_aws_5, url_prefix='/api/v5')
+	from .checkin_5 import checkin_5 as bp_checkin_5
+	app.register_blueprint(bp_checkin_5, url_prefix='/api/v5')
+	from .inventory_5 import inventory_5 as bp_inventory_5
+	app.register_blueprint(bp_inventory_5, url_prefix='/api/v5')
+	from .patches_5 import patches_5 as bp_patches_5
+	app.register_blueprint(bp_patches_5, url_prefix='/api/v5')
+	from .provisioning_5 import provisioning_5 as bp_provisioning_5
+	app.register_blueprint(bp_provisioning_5, url_prefix='/api/v5')
+	from .register_5 import register_5 as bp_register_5
+	app.register_blueprint(bp_register_5, url_prefix='/api/v5')
+	from .software_5 import software_5 as bp_software_5
+	app.register_blueprint(bp_software_5, url_prefix='/api/v5')
+	from .status_5 import status_5 as bp_status_5
+	app.register_blueprint(bp_status_5, url_prefix='/api/v5')
+
 def setup_logging(app):
 	# Configure logging
 	handler = logging.handlers.RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10485760, backupCount=30)

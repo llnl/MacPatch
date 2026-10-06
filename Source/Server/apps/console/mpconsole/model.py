@@ -4,7 +4,7 @@ from mpconsole import db
 #
 
 from datetime import *
-from sqlalchemy import BigInteger, Column, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean
+from sqlalchemy import BigInteger, Column, Date, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, TEXT, INTEGER
 
 from flask_login import UserMixin
@@ -689,6 +689,53 @@ class MpInvLog(CommonBase):
 	error_msg = Column(TEXT(), nullable=True)
 	json_data = Column(LONGTEXT(), nullable=False)
 	mdate 	= Column(DateTime, server_default='1970-01-01 00:00:00')
+
+# rev 100016
+# mp_inv_stats: one row per inventory file the MPInventoryD processed (kept INVENTORY_STATS_RETENTION_DAYS)
+# result is 'ok' or why the load failed (invalid_payload, bad_file, file_error, lock_timeout, unknown_client,
+# data_error, schema_limit, db_contention, db_connection, db_permission, db_error, unknown).
+# cuuid has no foreign key on purpose: stats of clients that were removed, or are not registered, are kept.
+class MpInvStats(CommonBase):
+	__tablename__ = 'mp_inv_stats'
+	rid 		  = Column(BigInteger, primary_key=True, autoincrement=True)
+	started 	  = Column(DateTime, nullable=False, index=True)
+	cuuid 		  = Column(String(50), nullable=False, server_default='', index=True)
+	inv_table 	  = Column(String(255), nullable=False, server_default='', index=True)
+	result 		  = Column(String(30), nullable=False, index=True)
+	error_no 	  = Column(Integer, nullable=True)
+	error_stage   = Column(String(20), nullable=True)
+	error_msg 	  = Column(TEXT(), nullable=True)
+	file_name 	  = Column(String(255), nullable=True)
+	file_bytes 	  = Column(BigInteger, server_default='0')
+	rows_received = Column(BigInteger, server_default='0')
+	rows_inserted = Column(BigInteger, server_default='0')
+	rows_updated  = Column(BigInteger, server_default='0')
+	rows_purged   = Column(BigInteger, server_default='0')
+	table_created = Column(Integer, server_default='0')
+	queued_ms 	  = Column(BigInteger, server_default='0')
+	schema_ms 	  = Column(BigInteger, server_default='0')
+	load_ms 	  = Column(BigInteger, server_default='0')
+	total_ms 	  = Column(BigInteger, server_default='0')
+	mp_server 	  = Column(String(255), nullable=True)
+
+# rev 100016
+# mp_inv_stats_daily: roll-up of mp_inv_stats, one row per day, table and result
+class MpInvStatsDaily(CommonBase):
+	__tablename__ = 'mp_inv_stats_daily'
+	__table_args__ = (UniqueConstraint('day', 'inv_table', 'result', name='uq_mp_inv_stats_daily'),)
+	rid 		  = Column(BigInteger, primary_key=True, autoincrement=True)
+	day 		  = Column(Date, nullable=False, index=True)
+	inv_table 	  = Column(String(255), nullable=False)
+	result 		  = Column(String(30), nullable=False)
+	loads 		  = Column(BigInteger, server_default='0')
+	rows_inserted = Column(BigInteger, server_default='0')
+	rows_updated  = Column(BigInteger, server_default='0')
+	rows_purged   = Column(BigInteger, server_default='0')
+	file_bytes 	  = Column(BigInteger, server_default='0')
+	queued_ms_total = Column(BigInteger, server_default='0')
+	queued_ms_max = Column(BigInteger, server_default='0')
+	load_ms_total = Column(BigInteger, server_default='0')
+	load_ms_max   = Column(BigInteger, server_default='0')
 
 # ------------------------------------------
 ## Servers

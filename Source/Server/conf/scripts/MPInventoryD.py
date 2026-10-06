@@ -44,12 +44,13 @@ import os
 import time
 import glob
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 import shutil
 import json
 import os.path
 import traceback
+import socket
 
 from dotenv import load_dotenv
 from multiprocessing import Pool
@@ -170,735 +171,247 @@ class DBConfig:
 # Define Classes
 # --------------------------------------------
 
-class DBField:
+# The validation and database work is shared with the API, see inventory_core.py. It's a
+# plain module (standard library only), so it is loaded from its folder, not as part of
+# the mpapi package.
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'apps', 'api', 'mpapi', 'shared'))
+import inventory_core as core
 
-	name = ''
-	dataType = 'varchar'
-	length = 255
-	dataTypeExt = ''
-	defaultValue = ''
-	autoIncrement = False
-	primaryKey = False
-	allowNull = True
 
-	def __init__(self):
-		return
+class DBSession:
+	"""inventory_core.Session on a pymysql connection. One connection per inventory file."""
 
-	def fieldDescription(self):
-		_field = {
-			'name': DBField.name,
-			'dataType': DBField.dataType,
-			'length': DBField.length,
-			'dataTypeExt': DBField.dataTypeExt,
-			'defaultValue': DBField.defaultValue,
-			'autoIncrement': DBField.autoIncrement,
-			'primaryKey': DBField.primaryKey,
-			'allowNull': DBField.allowNull
-		}
-		return _field
-
-	def getFieldForName(self,name,field):
-		if name == "rid":
-			return self.getDefaultRID()
-
-		if name == "cuuid":
-			return self.getDefaultCUUID()
-
-		if name == "mdate":
-			return self.getDefaultMDATE()
-		else:
-			return field
-
-	def getDefaultRID(self):
-		_field = self.fieldDescription()
-		_field['name'] = "rid"
-		_field['dataType'] = "bigint"
-		_field['length'] = 20
-		_field['primaryKey'] = True
-		_field['autoIncrement'] = True
-		_field['allowNull'] = False
-		return _field
-
-	def getDefaultCUUID(self):
-		_field = self.fieldDescription()
-		_field['name'] = "cuuid"
-		_field['dataType'] = "varchar"
-		_field['length'] = 50
-		_field['allowNull'] = False
-		return _field
-
-	def getDefaultMDATE(self):
-		_field = self.fieldDescription()
-		_field['name'] = "mdate"
-		_field['dataType'] = "datetime"
-		_field['length'] = 0
-		return _field
-
-class DB(object):
-	
 	def __init__(self, databaseConfig: DBConfig):
-		self.dbConfig = databaseConfig
-		self.connection = None
+		self.connection = pymysql.connect(
+			host=databaseConfig.host,
+			user=databaseConfig.user,
+			passwd=databaseConfig.password,
+			db=databaseConfig.database,
+			port=int(databaseConfig.port),
+			charset=databaseConfig.charset,
+			cursorclass=pymysql.cursors.Cursor,
+			autocommit=False,
+			connect_timeout=5
+		)
 
-	def open_connection(self):
-		"""Connect to MySQL."""
-		try:
-			if self.connection is None:
-				self.connection = pymysql.connect(
-					host=self.dbConfig.host, 
-					user=self.dbConfig.user, 
-					passwd=self.dbConfig.password, 
-					db=self.dbConfig.database,
-					port=int(self.dbConfig.port), 
-					charset=self.dbConfig.charset,
-					cursorclass=self.dbConfig.cursorclass,
-					connect_timeout=5
-				)
-		except pymysql.MySQLError as e:
-			print(f"ERROR: {e}")
-			return {}
-		#finally:
-			#print('Connection opened successfully.')
+	def execute(self, sql, params=None):
+		with self.connection.cursor() as cur:
+			return cur.execute(sql, params)
 
-	def query(self, query, data=None, insertMany=False):
-		"""Run the SQL query."""
-		_rollbackOnError = False
-		if any(x in query for x in ['INSERT', 'CREATE', 'DELETE', 'TRUNCATE', 'UPDATE']):
-			_rollbackOnError = True
+	def executemany(self, sql, rows):
+		with self.connection.cursor() as cur:
+			cur.executemany(sql, rows)
 
-		try:
-			self.open_connection()
-			with self.connection.cursor() as cur:
-				if any(x in query for x in ['SELECT', 'SHOW']):
-					records = []
-					cur.execute(query)
-					result = cur.fetchall()
-					for row in result:
-						records.append(row)
-					
-					cur.close()
-					return records
-				
-				elif "INSERT INTO" in query:
-					if data is not None:
-						cur.execute(query, data)
-					else:
-						cur.execute(query)
-					
-					self.connection.commit()
-					if insertMany == False:
-						result = cur.lastrowid
-					else:
-						result = {}
+	def fetchall(self, sql, params=None):
+		with self.connection.cursor() as cur:
+			cur.execute(sql, params)
+			return list(cur.fetchall())
 
-					cur.close()
-					return result
+	def commit(self):
+		self.connection.commit()
 
-				else:
-					result = cur.execute(query)
-					self.connection.commit()
-					affected = f"{cur.rowcount} rows affected."
-					cur.close()
-					return affected
+	def rollback(self):
+		self.connection.rollback()
 
-		except pymysql.MySQLError as e:
-			print(f"ERROR: {e}")
-			if _rollbackOnError == True:
-				self.connection.rollback()
-				self.connection.close()
-				self.connection = None
-			return None
+	def close(self):
+		self.connection.close()
 
-		finally:
-			if self.connection:
-				self.connection.close()
-				self.connection = None
-		
-	def insert(self, query, data):
-		return self.query(query=query,data=data)
 
-	# New Function
-	def insertMany(self, query, values):
-		"""Run the SQL query."""
-		_rollbackOnError = True
-
-		try:
-			self.open_connection()
-			with self.connection.cursor() as cur:
-				cur.executemany(query, values)
-				self.connection.commit()
-				cur.close()
-				return True
-
-		except pymysql.MySQLError as e:
-			print(f"ERROR: {e}")
-			if _rollbackOnError == True:
-				self.connection.rollback()
-				self.connection.close()
-				self.connection = None
-
-			return False
-
-		finally:
-			if self.connection:
-				self.connection.close()
-				self.connection = None
-
-	def insertManyOld(self, table, fields, values):
-		_sql = f"INSERT INTO {table} (" + ", ".join(fields) + ") VALUES"
-		for v in values:
-			_values = []
-			for f in fields:
-				if isinstance(v[f], str):
-					_values.append("\'" + sqlescape(v[f]) +"\'")
-				elif isinstance(v[f], bool):
-					_values.append(f"{int(v[f])}")
-				elif isinstance(v[f], int):
-					_values.append(f"{v[f]}")
-				else:
-					_values.append(v[f])
-			_sql = _sql +" (" + ", ".join(_values) + "),"
-
-		_sql = _sql[:-1] + ';'
-		print(f"[insertMany][sql]: {_sql}")
-
-		return self.query(query=_sql,data=None,insertMany=True)
-
-class MPDB:
+class StatsConfig:
 	"""
-		MPDB is a Helper Class to get MacPatch database info.
-		
-		Requires DB Class Object on init
-
-		Updated for PyMySQL, scrpiut ver 1.8 and higher
+	Inventory statistics settings, from the environment (the .mpglobal file):
+		INVENTORY_STATS_ENABLED                 yes (default) or no
+		INVENTORY_STATS_RETENTION_DAYS          days to keep a row per file loaded, default 120, 0 = forever
+		INVENTORY_STATS_ROLLUP_RETENTION_DAYS   days to keep the daily roll-up, default 120, 0 = forever
 	"""
 
-	def __init__(self, dbObj: DB):
-		# dbConnection is required
-		self.db = dbObj
+	def __init__(self, enabled=True, days=120, rollupDays=120):
+		self.enabled = enabled
+		self.days = days
+		self.rollupDays = rollupDays
 
-	def tablesFromDataBase(self):
-		tables = []
-		_qry = "SHOW TABLES;"
-		_res = self.db.query(_qry)
-		if _res is not None:
-			if len(_res) >= 1:
-				tables = [list(table.values())[0] for table in _res]
+	@classmethod
+	def fromEnv(cls):
+		def number(name, default):
+			try:
+				return max(0, int(os.environ.get(name, default)))
+			except ValueError:
+				logger.error(f"{name} is not a number, using {default}.")
+				return default
 
-		return tables
+		enabled = os.environ.get('INVENTORY_STATS_ENABLED', 'yes').strip().lower() not in ('no', 'false', '0', 'off')
+		return cls(enabled,
+				   number('INVENTORY_STATS_RETENTION_DAYS', 120),
+				   number('INVENTORY_STATS_ROLLUP_RETENTION_DAYS', 120))
 
-	def getInventoryTables(self):
-		tables = []
-		_qry = "SELECT TABLE_NAME FROM information_schema.tables WHERE table_name like 'mpi_%';"
-		_res = self.db.query(_qry)
-		if _res is not None:
-			if len(_res) >= 1:
-				tables = [list(table.values())[0] for table in _res]
 
-		return list(set(tables))
-	
-	def columnsForTable(self,tableName):
-		result = []
-		_sql = "SELECT COLUMN_NAME, DATA_TYPE,CHARACTER_MAXIMUM_LENGTH,NUMERIC_PRECISION FROM information_schema.columns WHERE table_schema='" + self.db.dbConfig.database +"' AND table_name = '" + tableName + "'"
-		_res = self.db.query(_sql)
-		for row in _res:
-			tmp = { 'name': '', 'dataType': '', 'length': 0 }
-			if 'COLUMN_NAME' in row:
-				tmp['name'] = row['COLUMN_NAME']
-			else:
-				continue
-			
-			if 'DATA_TYPE' in row:
-				tmp['dataType'] = row['DATA_TYPE']
-			else:
-				continue
+class InvStats:
+	"""
+	Stores what happened to each inventory file: a row in mp_inv_stats and the day's counters
+	in mp_inv_stats_daily. Statistics never get in the way of loading inventory, a problem
+	storing them is logged and nothing more.
+	"""
 
-			if 'NUMERIC_PRECISION' in row:
-				if row['NUMERIC_PRECISION'] is not None:
-					tmp['length'] = int(row['NUMERIC_PRECISION'])
+	PRUNE_CHUNK = 10000
 
-			if 'CHARACTER_MAXIMUM_LENGTH' in row:
-				if row['CHARACTER_MAXIMUM_LENGTH'] is not None:
-					tmp['length'] = int(row['CHARACTER_MAXIMUM_LENGTH'])
+	def __init__(self, dbConfig: DBConfig, statsConfig: StatsConfig):
+		self.dbConfig = dbConfig
+		self.config = statsConfig
+		self.server = socket.gethostname()
 
-			result.append(tmp)
+	def _connect(self):
+		return pymysql.connect(
+			host=self.dbConfig.host, user=self.dbConfig.user, passwd=self.dbConfig.password,
+			db=self.dbConfig.database, port=int(self.dbConfig.port), charset=self.dbConfig.charset,
+			cursorclass=pymysql.cursors.Cursor, autocommit=False, connect_timeout=5)
 
-		return result
-	
-	def tableExists(self,table):
-		_tables = self.tablesFromDataBase()
-		if table.upper() in list(map(str.upper, self.tables)):
-			return True
-		else:
-			return False
+	def record(self, st):
+		if not self.config.enabled:
+			return
 
-	def columnExists(self, column, table):
-		columns = self.columnsForTable(self,table)
-		if column.upper() in list(map(str.upper, columns)):
-			return True
-		else:
-			return False
+		connection = None
+		try:
+			connection = self._connect()
+			with connection.cursor() as cur:
+				cur.execute(
+					"INSERT INTO mp_inv_stats (started, cuuid, inv_table, result, error_no, error_stage, error_msg, "
+					"file_name, file_bytes, rows_received, rows_inserted, rows_updated, rows_purged, table_created, "
+					"queued_ms, schema_ms, load_ms, total_ms, mp_server) "
+					"VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+					(st['started'], st['cuuid'], st['inv_table'], st['result'], st['error_no'], st['error_stage'],
+					 st['error_msg'], st['file_name'], st['file_bytes'], st['rows_received'], st['rows_inserted'],
+					 st['rows_updated'], st['rows_purged'], st['table_created'], st['queued_ms'], st['schema_ms'],
+					 st['load_ms'], st['total_ms'], self.server))
+				cur.execute(
+					"INSERT INTO mp_inv_stats_daily (day, inv_table, result, loads, rows_inserted, rows_updated, "
+					"rows_purged, file_bytes, queued_ms_total, queued_ms_max, load_ms_total, load_ms_max) "
+					"VALUES (%s, %s, %s, 1, %s, %s, %s, %s, %s, %s, %s, %s) "
+					"ON DUPLICATE KEY UPDATE loads = loads + 1, "
+					"rows_inserted = rows_inserted + VALUES(rows_inserted), rows_updated = rows_updated + VALUES(rows_updated), "
+					"rows_purged = rows_purged + VALUES(rows_purged), file_bytes = file_bytes + VALUES(file_bytes), "
+					"queued_ms_total = queued_ms_total + VALUES(queued_ms_total), "
+					"queued_ms_max = GREATEST(queued_ms_max, VALUES(queued_ms_max)), "
+					"load_ms_total = load_ms_total + VALUES(load_ms_total), "
+					"load_ms_max = GREATEST(load_ms_max, VALUES(load_ms_max))",
+					(st['started'].date(), st['inv_table'], st['result'], st['rows_inserted'], st['rows_updated'],
+					 st['rows_purged'], st['file_bytes'], st['queued_ms'], st['queued_ms'], st['load_ms'], st['load_ms']))
+			connection.commit()
 
-	def colsToAlterOrAdd(self,tableName,cols,fields):
-		logger.info("Number of fields to verify: %d" % len(fields))
+		except Exception as e:
+			logger.error(f"[InvStats][record] Unable to store statistics for {st.get('file_name')}: {e}")
+		finally:
+			if connection:
+				connection.close()
 
-		for field in fields:
-			logger.debug("Verify field %s" % field['name'])
-			if self.searchForColNameInFields(field['name'],cols) is False:
-				logger.info("Add Field: %s" % field['name'])
-				x = self.createColumn(tableName,field)
-			else:
-				if self.colMatchesDataInField(field['name'],cols,field) is False:
-					logger.info("Alter Field: %s" % field['name'])
-					x = self.alterColumn(tableName,field)
-				else:
-					logger.debug("Field Passed: %s" % field['name'])
+	def prune(self):
+		"""Delete statistics older than the retention settings, in chunks so tables are never locked for long."""
+		if not self.config.enabled:
+			return
 
-	def searchForColNameInFields(self, name, fields):
-		res = False
-		for element in fields:
-			if element['name'].lower() == name.lower():
-				return True
+		connection = None
+		try:
+			connection = self._connect()
+			for table, column, days, cutoff in (
+					('mp_inv_stats', 'started', self.config.days, datetime.now() - timedelta(days=self.config.days)),
+					('mp_inv_stats_daily', 'day', self.config.rollupDays,
+					 (datetime.now() - timedelta(days=self.config.rollupDays)).date())):
+				if days <= 0:
+					continue
+				removed = 0
+				while True:
+					with connection.cursor() as cur:
+						count = cur.execute(f"DELETE FROM {table} WHERE {column} < %s LIMIT {self.PRUNE_CHUNK}", (cutoff,))
+					connection.commit()
+					removed += count
+					if count < self.PRUNE_CHUNK:
+						break
+				if removed:
+					logger.info(f"[InvStats][prune] Removed {removed} row(s) older than {days} days from {table}.")
 
-		return res
+		except Exception as e:
+			logger.error(f"[InvStats][prune] {e}")
+		finally:
+			if connection:
+				connection.close()
 
-	def colMatchesDataInField(self, name, cols, field):
-		res = True
-		colRes = {}
-
-		for col in cols:
-			if col['name'].lower() == name.lower():
-				colRes = col
-				break
-
-		# Match DataType (Column Type)
-		# If db column is text type dont change to varchar
-		if colRes['dataType'] != field['dataType']:
-			logger.debug("Datatypes do not match for {}. db({}) == inv({})".format(name, colRes['dataType'], field['dataType']))
-			if str(colRes['dataType']).lower() == "text" and str(field['dataType']).lower() == "varchar":
-				logger.debug("Database is of text which is greater than varchar. This is OK.")
-				return True
-			else:
-				return False
-		else:
-			logger.debug("Datatypes match for {}. db({}) == inv({})".format(name, colRes['dataType'], field['dataType']))
-	
-		if int(colRes['length']) >= int(field['length']):
-			logger.debug("Length for {} is greater or equal. db({}) >= inv({})".format(name, colRes['length'], field['length']))
-		else:
-			logger.warning("Column ({}) length {} >= {} did not match.".format(name, colRes['length'], field['length']))
-			return False
-
-		return res
-
-	def returnFieldObjectFromField(self,field):
-		dfObj = DBField() # Creeat New DBField Obj
-		dbField = dfObj.fieldDescription() # Get Default DBField Values
-		for key, value in dbField.items():
-			if key in field:
-				dbField[key] = field[key]
-
-		return dbField
-
-	def createTable(self, tableName, fields):
-		_result = False
-		_sqlArr = []
-		_sqlStrBegin = "CREATE TABLE %s (" % tableName
-		_sqlPkeyStr = ""
-		for field in fields:
-			_field = self.returnFieldObjectFromField(field)
-			_sqlStr = ''
-			# is RID field
-			if field['name'] == 'rid':
-				_sqlStr = _sqlStr + "`" + _field['name'] + "`" + " bigint(" + str(_field['length']) + ") UNSIGNED"
-			else:
-				_sqlStr = _sqlStr + "`" + _field['name'] + "` " + _field['dataType']
-
-			# if it's not date or time field
-			if "date" not in field['name'] and "time" not in _field['name']:
-				if _field['name'] != 'rid':
-					if _field['dataType'] == "text":
-						_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-					else:
-						_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-			else:
-				if _field['dataType'] == "text":
-					if "time" in _field['name'] and _field['dataType'] == "text":
-						_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-					if "date" in _field['name'] and _field['dataType'] == "text":
-						_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-				else:
-					if "time" in _field['name'] and _field['dataType'] == "varchar":
-						_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-					if "date" in _field['name'] and _field['dataType'] == "varchar":
-						_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-
-			if _field['allowNull'] is False:
-				_sqlStr = _sqlStr + " NOT NULL"
-
-			if len(_field['defaultValue']) > 0:
-				if _field['name'] != 'rid' and "date" not in field['name']:
-					_sqlStr = _sqlStr + " DEFAULT '" + _field['defaultValue'] + "'"
-
-			if _field['autoIncrement']:
-				_sqlStr = _sqlStr + " NOT NULL AUTO_INCREMENT"
-
-			if _field['primaryKey']:
-				_sqlPkeyStr = " PRIMARY KEY (`"+_field['name']+"`)"
-
-			_sqlArr.append(_sqlStr)
-
-		_sqlArr.append(_sqlPkeyStr)
-		_sqlStrExec = _sqlStrBegin + " " + ','.join(_sqlArr) + ");"
-
-		if gDebug:
-			logger.debug(_sqlStrExec)
-			return True
-
-		#_res = self.db.query(_sqlStrExec.encode('ascii',errors='ignore'))
-		_res = self.db.query(_sqlStrExec)
-		if _res is not None:
-			_result = True
-
-		return _result
-
-	def alterColumn(self,tableName,field):
-
-		_field = self.returnFieldObjectFromField(field)
-		_sqlStr = "ALTER TABLE %s" % tableName
-
-		# is RID field
-		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			return False
-		else:
-			_sqlStr = _sqlStr + " CHANGE COLUMN `" + _field['name'] + "` `" + _field['name'] + "` " + _field['dataType']
-
-		# if it's not date or time field
-		if "date" not in _field['name'] and "time" not in _field['name']:
-			if _field['dataType'] == "text":
-				_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-			else:
-				_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-		else:
-			if _field['dataType'] == "text":
-				if "time" in _field['name'] and _field['dataType'] == "text":
-					_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-				if "date" in _field['name'] and _field['dataType'] == "text":
-					_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-			else:
-				if "time" in _field['name'] and _field['dataType'] == "varchar":
-					_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-				if "date" in _field['name'] and _field['dataType'] == "varchar":
-					_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-
-		if _field['allowNull'] is False:
-			_sqlStr = _sqlStr + " NOT NULL"
-
-		if len(_field['defaultValue']) > 0:
-			if _field['name'] != 'rid' and "date" not in _field['name']:
-				_sqlStr = _sqlStr + " DEFAULT '" + _field['defaultValue'] + "'"
-
-		_sqlStr = _sqlStr + ";"
-
-		if gDebug:
-			logger.debug(_sqlStr)
-			return True
-
-		#_res = self.db.query(_sqlStr.encode('ascii',errors='ignore'))
-		_res = self.db.query(_sqlStr)
-		if _res is not None:
-			logger.info("%s was altered sucessfully." % _field['name'])
-			return True
-		else:
-			return False
-		
-	def createColumn(self, tableName, field):
-
-		_field = self.returnFieldObjectFromField(field)
-		_sqlStr = "ALTER TABLE %s" % tableName
-
-		# is RID field
-		if _field['name'] == 'rid' or _field['name'] == 'mdate' or _field['name'] == 'cuuid':
-			return False
-		else:
-			_sqlStr = _sqlStr + " ADD COLUMN `" + _field['name'] + "` " + _field['dataType']
-
-		# if it's not date or time field
-		if "date" not in _field['name'] and "time" not in _field['name']:
-			if _field['dataType'] == "text":
-				_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-			else:
-				_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-		else:
-			if _field['dataType'] == "text":
-				if "time" in _field['name'] and _field['dataType'] == "text":
-					_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-				if "date" in _field['name'] and _field['dataType'] == "text":
-					_sqlStr = _sqlStr + " " + _field['dataTypeExt']
-			else:
-				if "time" in _field['name'] and _field['dataType'] == "varchar":
-					_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-				if "date" in _field['name'] and _field['dataType'] == "varchar":
-					_sqlStr = _sqlStr + "(" + str(_field['length']) + ") " + _field['dataTypeExt']
-
-		if _field['allowNull'] is False:
-			_sqlStr = _sqlStr + " NOT NULL"
-
-		if len(_field['defaultValue']) > 0:
-			if _field['name'] != 'rid' and "date" not in _field['name']:
-				_sqlStr = _sqlStr + " DEFAULT '" + _field['defaultValue'] + "'"
-
-		_sqlStr = _sqlStr + ";"
-
-		if gDebug:
-			logger.debug(_sqlStr)
-			return True
-		
-		#_res = self.db.query(_sqlStr.encode('ascii',errors='ignore'))
-		_res = self.db.query(_sqlStr)
-		if _res is not None:
-			logger.info("%s was created sucessfully." % _field['name'])
-			return True
-		else:
-			return False
-
-	def removeKeyData(self, tableName, keyVal):
-		
-		_sqlStr = "Delete from %s where cuuid = '%s'" % (str(tableName), str(keyVal))
-		if gDebug:
-			logger.debug(_sqlStr)
-			return True
-		
-		logger.info(f"[MPDB][removeKeyData]: Delete cuuid ({keyVal}) from {tableName}")
-		_res = self.db.query(_sqlStr)
-
-	def updateRowData(self,tableName,keyVal,mdate,row):
-		_sqlArr = []
-		_sqlStrPre = "UPDATE %s SET" % tableName
-		_sqlStrPst = "WHERE cuuid='%s'" % keyVal
-		_sqlStr = ''
-
-		# Add mdate first
-		_str = "mdate='%s'" % mdate
-		_sqlArr.append(_str)
-
-		# Loop through and add the rest
-		for key, value in row.items():
-			if key == "rid" or key == "cuuid":
-				continue
-			else:
-				_str = "%s='%s'" % (key, value)
-				_sqlArr.append(_str)
-
-		# Build the SQL string
-		_sqlStr = "%s %s %s;" %(_sqlStrPre,','.join(_sqlArr),_sqlStrPst)
-		if gDebug == True:
-			logger.debug(_sqlStr)
-			return True
-		
-		#_res = self.db.query(_sqlStr.encode('ascii',errors='ignore'))
-		_res = self.db.query(_sqlStr)
-		if _res is not None:
-			logger.info(f"[MPDB][updateRowData] row updated in {tableName} for cuuid ({keyVal})")
-			return True
-		else:
-			return False
-		
-	def insertRowData(self,tableName,keyVal,mdate,row):
-		_result = False
-		_sqlArrCol = []
-		_sqlArrVal = []
-		_sqlStrPre = "INSERT INTO %s" % tableName
-		_sqlStr = ''
-
-		# Add the client id, mdate to the row
-		_row = row
-		_row['cuuid'] = keyVal
-		_row['mdate'] = mdate
-
-		# Loop through and add the rest
-		for key, value in row.items():
-			if key == 'rid':
-				continue
-			else:
-				_colStr = "`%s`" % (key)
-				_sqlArrCol.append(_colStr)
-				_valStr = "'%s'" % (value.replace("'", "\\'"))
-				_sqlArrVal.append(_valStr)
-
-		# Build the SQL string
-		_sqlStr = "%s (%s) Values (%s);" % (_sqlStrPre, ','.join(_sqlArrCol),','.join(_sqlArrVal))
-		if gDebug == True:
-			logger.debug(_sqlStr)
-			return True
-		
-		#_res = self.db.query(_sqlStr.encode('ascii',errors='ignore'))
-		_res = self.db.query(_sqlStr)
-		if _res is not None:
-			logger.info(f"Sucessfully inserted rows for client {keyVal} in {tableName}")
-			return True
-		else:
-			return False
-		
-	# New
-	# Replaces insertRowData ( eliminates many small queries to one large one using executemany function)
-	def insertRows(self, tableName, fields, rows):
-		_clientID = None
-		_sqlColumns = []
-		_sqlPlaceHolders = []
-		_sqlStr = ''
-
-		# Get all of the table column names and make list
-		for field in fields:
-			# rid is the primary key and is auto incremented, do not include it
-			if field['name'].lower() == 'rid':
-				continue
-
-			_sqlColumns.append(field['name'])
-			_sqlPlaceHolders.append('%s')
-
-		# Create a list of tuples containing the values to be inserted
-		_rowDataTupleList = []
-		_clientID = rows[0]['cuuid']
-		for row in rows:
-			# Make sure the data keys and columns match up. else skip the row
-			if len(row.keys()) == len(_sqlColumns):
-				_rowData = []
-				for col in _sqlColumns:
-					_rowData.append(row[col])
-				
-				_rowDataTupleList.append(tuple(_rowData))
-			else:
-				logger.debug(f"skipping row with data: {row}")
-
-		# Build the SQL String
-		logger.info(f"[insertRows]: Inserting {len(_rowDataTupleList)} row(s) in {tableName} for cuuid {_clientID}")
-		_sqlStr = f"INSERT INTO {tableName} ({','.join(_sqlColumns)}) VALUES ({','.join(_sqlPlaceHolders)})"
-		_res = self.db.insertMany(query=_sqlStr, values=_rowDataTupleList)
-		return _res
 
 class DataMgr:
+	"""
+	Loads one .mpd inventory file (see inventory_core.py for the format and rules). After
+	parseInvData(), `stats` describes what happened, why it failed if it did.
+	"""
 
 	def __init__(self, dbConfig: DBConfig, aFile):
 		self.dbConfig = dbConfig
 		self.file = aFile
-		try:
-			json_data=open(self.file)
-			self.invData = json.load(json_data)
-			json_data.close()
-		except Exception as e:
-			logger.error(f"[DataMgr][init]: {e}")
-			raise e
+		self.invData = None
+		self.loadError = None
+		self.stats = {'started': datetime.now(), 'cuuid': '', 'inv_table': '', 'result': 'unknown',
+					  'error_no': None, 'error_stage': None, 'error_msg': None,
+					  'file_name': os.path.basename(aFile)[:255], 'file_bytes': 0, 'rows_received': 0,
+					  'rows_inserted': 0, 'rows_updated': 0, 'rows_purged': 0, 'table_created': 0,
+					  'queued_ms': 0, 'schema_ms': 0, 'load_ms': 0, 'total_ms': 0}
 
-		logger.info("Processing data for client id %s." % self.invData['key'])
+		try:
+			self.stats['file_bytes'] = os.path.getsize(aFile)
+			# The API renames the finished file into place, so its age is the time spent waiting
+			self.stats['queued_ms'] = int(max(0, time.time() - os.path.getmtime(aFile)) * 1000)
+			with open(self.file) as json_data:
+				self.invData = json.load(json_data)
+		except Exception as e:
+			# Reported by parseInvData, so it gets recorded and the file moved to the errors folder
+			self.loadError = e
+			logger.error(f"[DataMgr][init]: {e}")
+			return
+
+		key = self.invData.get('key') if isinstance(self.invData, dict) else None
+		self.stats['cuuid'] = key[:50] if isinstance(key, str) else ''
+		logger.info("Processing data for client id %s." % key)
 		logger.info("Processing file %s." % self.file)
 
-	def valid_uuid(self, uuid_string):
-
+	def parseInvData(self):
+		"""Store the file's data. Returns True on success; either way `stats` is filled in."""
+		st = self.stats
+		started = time.monotonic()
+		stage = 'read'
 		try:
-			val = UUID(uuid_string, version=4)
+			if self.loadError is not None:
+				raise self.loadError
+
+			stage = 'validate'
+			plan = core.parse(self.invData)
+			st['inv_table'] = plan.table
+			st['rows_received'] = len(plan.rows)
+
+			stage = 'connect'
+			session = DBSession(self.dbConfig)
+			try:
+				# The client ID is the file's key, written by the API from the authenticated request
+				result = core.process(plan, self.invData.get('key'), session, logger)
+			finally:
+				session.close()
+
+			st.update(result='ok', rows_inserted=result['inserted'], rows_updated=result['updated'],
+					  rows_purged=result['purged'], table_created=int(result['created']),
+					  schema_ms=result['schema_ms'], load_ms=result['load_ms'])
 			return True
-		except ValueError:
-			# If it's a value error, then the string
-			# is not a valid hex code for a UUID.
+
+		except Exception as e:
+			category, errno = core.classify_error(e)
+			st.update(result=category, error_no=errno, error_stage=getattr(e, 'inv_stage', stage),
+					  error_msg=str(e)[:2000])
+			# Best effort details when the payload was readable but not valid
+			if isinstance(self.invData, dict):
+				table = self.invData.get('table')
+				st['inv_table'] = table[:255] if isinstance(table, str) else ''
+				rows = self.invData.get('rows')
+				st['rows_received'] = len(rows) if isinstance(rows, list) else 0
+			logger.error(f"[DataMgr][parseInvData] {self.file}: {category} at {st['error_stage']}"
+						 f"{' (MySQL error %d)' % errno if errno else ''}: {e}")
 			return False
 
-		return False
-
-	def dictContainsKeyValue(self, dict, key, value):
-		for x in dict:
-			if x[key] == value:
-				return True
-
-		return False
-
-	def parseInvData(self):
-		logger.info('parseInvData')
-		_result = False
-		# Get DB Instance
-		_db = DB(databaseConfig=self.dbConfig)
-		db = MPDB(_db)
-
-		tableExists = False
-		updateData = False
-		_table = self.invData['table']
-		_fields = self.invData['fields']
-		_rows = self.invData['rows']
-		_keyVal = self.invData['key']
-		_dtObj = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-		# Get AutoField Structure
-		if self.invData['autoFields']:
-			dfObj = DBField()
-			_autoFields = self.invData['autoFields'].split(',')
-
-			for aField in _autoFields:
-				if self.dictContainsKeyValue(self.invData['fields'],'name',aField) is False:
-					_fields.append(dfObj.getFieldForName(aField,aField))
-
-		# Create Table if needed
-		_tables = db.tablesFromDataBase()
-		if _table not in _tables:
-			logger.info("Create new table %s" % _table)
-			if db.createTable(_table,_fields) is False:
-				return _result
-		else:
-			logger.info("Table %s exists." % _table)
-			tableExists = True
-
-		# Get columns, verify and alter as nessasary
-		cols = db.columnsForTable(_table)
-		db.colsToAlterOrAdd(_table,cols,_fields)
-
-		# Purge Data if needed, auto commit if off.
-		if tableExists:
-			if self.invData['permanentRows'] is False:
-				# Remove Client Data Before Insert
-				# key = cuuid
-				if self.valid_uuid(_keyVal):
-					# key is valid
-					logger.info("Purging data in %s for %s." % (_table, _keyVal))
-					db.removeKeyData(_table,_keyVal)
-					if len(_rows) == 0:
-						_result = True
-						return _result
-			else:
-				updateData = True
-
-		if updateData:
-			# Add or Update Data
-			_updates = 0
-			_inserts = 0
-			logger.info("Adding data to %s for %s." % (_table, _keyVal))
-			for row in _rows:
-				_row = self.removeUnknownFields(row,_fields)
-				if updateData:
-					logger.info("Update record")
-					if db.updateRowData(_table,_keyVal,_dtObj,_row):
-						_updates = _updates + 1
-						_result = True
-				else:
-					#logger.debug("Insert new record")
-					_inserts = _inserts + 1
-					if db.insertRowData(_table,_keyVal,_dtObj,_row):
-						_result = True
-
-			if _updates >= 1:
-				logger.info("{} record(s) have been updated.".format(_updates))
-
-			if _inserts >= 1:
-				logger.info("{} record(s) have been inserted.".format(_inserts))
-		else:
-			_result = db.insertRows(tableName=_table, fields=_fields, rows=_rows)
-
-		return _result
-	
-	# Remove any extra columns/fields that are not in the fields section of the 
-	# .mpd inventory file.
-	def removeUnknownFields(self, row, fields):
-		fieldNames = [d['name'] for d in fields]
-		newdict = {k: row[k] for k in fieldNames if k in row}
-		return newdict
+		finally:
+			st['total_ms'] = int((time.monotonic() - started) * 1000)
 
 # --------------------------------------------
 # Main Class
@@ -906,8 +419,10 @@ class DataMgr:
 
 class MPInventory:
 
-	def __init__(self, dbConfig: DBConfig, filesBaseDir, keepProcessedFiles=False, poolCount=2):
+	def __init__(self, dbConfig: DBConfig, filesBaseDir, keepProcessedFiles=False, poolCount=2, statsConfig=None):
 		self.dbConfig = dbConfig
+		self.statsConfig = statsConfig or StatsConfig(enabled=False)
+		self.lastPrune = 0
 		self.poolCount = poolCount
 		self.filesBaseDir = filesBaseDir
 		self.files = ''
@@ -991,7 +506,9 @@ class MPInventory:
 			if os.path.exists(file):
 				# Process the inv File
 				dMgr = DataMgr(self.dbConfig, file)
-				if dMgr.parseInvData() is True:
+				success = dMgr.parseInvData()
+				InvStats(self.dbConfig, self.statsConfig).record(dMgr.stats)
+				if success:
 					if gKeepFiles is True:
 						self.moveInvFile(file)
 					else:
@@ -1002,6 +519,12 @@ class MPInventory:
 			logging.error(f"[processFile]: {file}")
 			logging.error(f"[processFile]: {e}")
 			self.moveErrorFile(file)
+
+	def pruneStats(self):
+		"""Remove statistics past their retention, at most once an hour."""
+		if time.time() - self.lastPrune >= 3600:
+			self.lastPrune = time.time()
+			InvStats(self.dbConfig, self.statsConfig).prune()
 
 	def processFilesOld(self):
 		self.getFiles()
@@ -1129,9 +652,16 @@ def main():
 		print("%s does not exist." % args.files)
 		sys.exit(1)
 
-	mpi = MPInventory(dbConfig=dbConf, filesBaseDir=args.files)
+	statsConf = StatsConfig.fromEnv()
+	if statsConf.enabled:
+		logger.info(f"Statistics are enabled, keeping {statsConf.days or 'all'} day(s) of loads and {statsConf.rollupDays or 'all'} day(s) of daily totals.")
+	else:
+		logger.info('Statistics are disabled.')
+
+	mpi = MPInventory(dbConfig=dbConf, filesBaseDir=args.files, statsConfig=statsConf)
 	while True:
 		mpi.processFiles()
+		mpi.pruneStats()
 		time.sleep(3.0)
 
 
