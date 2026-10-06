@@ -24,6 +24,7 @@
  */
 
 #import "MPPatchScan.h"
+#import "Constants.h"
 #import "MPSettings.h"
 #import "MPOSCheck.h"
 #import "MPBundle.h"
@@ -75,7 +76,7 @@
     // Post patches needed to web service
 	MPRESTfull *mprest = [MPRESTfull new];
     NSError *wsErr = nil;
-    NSString *urlPath = [@"/api/v1/client/patch/scan/2" stringByAppendingPathComponent:settings.ccuid];
+    NSString *urlPath = [MP_API_PREFIX @"/client/patch/scan/2" stringByAppendingPathComponent:settings.ccuid];
     BOOL rest_result = [mprest postDataToWS:urlPath data:@{@"rows":patchesNeeded} error:&wsErr];
     if (rest_result)
     {

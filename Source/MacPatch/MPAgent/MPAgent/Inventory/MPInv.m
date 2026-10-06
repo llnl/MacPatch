@@ -25,6 +25,7 @@
 
 #import "Logger.h"
 #import "MPInv.h"
+#import "Constants.h"
 #import "MPSettings.h"
 #import "NSDirectoryServices.h"
 #import "FMDatabase.h"
@@ -422,7 +423,7 @@
 {
     MPHTTPRequest *req;
     MPWSResult *result;
-	NSString *apiPath = @"/api/v3/client/inventory";
+	NSString *apiPath = MP_API_PREFIX @"/client/inventory";
 	
     req = [[MPHTTPRequest alloc] init];
 	

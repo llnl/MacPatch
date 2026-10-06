@@ -25,6 +25,11 @@
 
 #import <Cocoa/Cocoa.h>
 
+// Base path of the MacPatch server API the client talks to. Every request path is MP_API_PREFIX
+// followed by the endpoint, e.g. MP_API_PREFIX @"/client/checkin". A macro (not an extern) so it can
+// be used in static initializers and as a format string.
+#define MP_API_PREFIX @"/api/v5"
+
 extern NSString * const MP_ROOT;
 extern NSString * const MP_ROOT_CLIENT;
 extern NSString * const MP_ROOT_SERVER;

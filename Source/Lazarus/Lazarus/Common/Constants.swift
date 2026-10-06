@@ -87,9 +87,12 @@ enum Constants {
             return "\(lazarusBase(server: server))\(packagePath)/\(packageName)"
         }
 
+        /// Base path of the MacPatch server API
+        static let apiPrefix = "/api/v5"
+
         /// Constructs API URL for client check-in info
         static func checkinURL(server: String, clientID: String) -> String {
-            return "https://\(server)/api/v1/client/checkin/info/\(clientID)"
+            return "https://\(server)\(apiPrefix)/client/checkin/info/\(clientID)"
         }
     }
 

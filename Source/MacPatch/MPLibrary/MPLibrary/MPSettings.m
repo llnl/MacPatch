@@ -25,6 +25,7 @@
  */
 
 #import "MPSettings.h"
+#import "Constants.h"
 static const void *kMPSettingsMutationQueueKey = &kMPSettingsMutationQueueKey;
 
 #import <IOKit/IOKitLib.h>
@@ -186,7 +187,7 @@ static dispatch_queue_t _settingsQueue = NULL;
         req = [[MPHTTPRequest alloc] init];
     }
     
-    NSString *urlPath = [@"/api/v1/agent/config/info" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [MP_API_PREFIX @"/agent/config/info" stringByAppendingPathComponent:self.ccuid];
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
@@ -214,7 +215,7 @@ static dispatch_queue_t _settingsQueue = NULL;
         req = [[MPHTTPRequest alloc] init];
     }
     
-    NSString *urlPath = [@"/api/v2/agent/config/data" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [MP_API_PREFIX @"/agent/config/data" stringByAppendingPathComponent:self.ccuid];
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {

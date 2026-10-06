@@ -241,7 +241,7 @@
 
     req = [[MPHTTPRequest alloc] init];
 
-    NSString *urlPath = [@"/api/v2/agent/updater" stringByAppendingFormat:@"/%@/%@",settings.ccuid, version];
+    NSString *urlPath = [MP_API_PREFIX @"/agent/updater" stringByAppendingFormat:@"/%@/%@",settings.ccuid, version];
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {

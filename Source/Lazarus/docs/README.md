@@ -91,7 +91,7 @@ Create or edit `/Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist`
 - **minversion**: Minimum required agent version (default: "4.2.2.0")
 - **daysrange**: Number of days for check-in validation (default: 15)
 - **mpserver**: MacPatch server hostname (default: "localhost")
-  - Used for client check-in API: `https://{mpserver}/api/v1/client/checkin/info/{clientID}`
+  - Used for client check-in API: `https://{mpserver}/api/v5/client/checkin/info/{clientID}`
   - Used for package downloads: `https://{mpserver}/mp-content/lazarus/...`
   - **Important**: Set this to your actual MacPatch server (e.g., "mp.example.com")
 - **ignoressl**: Ignore SSL certificate validation (default: false)

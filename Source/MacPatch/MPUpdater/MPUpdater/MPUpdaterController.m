@@ -638,7 +638,7 @@ done:
 	NSDictionary *result = nil;
 	MPRESTfull *rest = [[MPRESTfull alloc] init];
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/agent/update/%@/%@/%@",[MPSystemInfo clientUUID], curAppVersion, curBuildVersion];
+	NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/agent/update/%@/%@/%@",[MPSystemInfo clientUUID], curAppVersion, curBuildVersion];
 	result = [rest getDataFromWS:urlPath error:&error];
 	if (error)
 	{

@@ -426,7 +426,7 @@
     NSDictionary *task = nil;
     NSDictionary *data = nil;
     
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v4/sw/provision/task/%@/%@", swTaskID, settings.ccuid];
+    NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/sw/provision/task/%@/%@", swTaskID, settings.ccuid];
     data = [self getDataFromWS:urlPath];
     if (data[@"data"])
     {

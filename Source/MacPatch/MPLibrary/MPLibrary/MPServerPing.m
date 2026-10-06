@@ -26,10 +26,11 @@
 
 #import "Logger.h"
 #import "MPServerPing.h"
+#import "Constants.h"
 #include <stdio.h>
 #include <curl/curl.h>
 
-static NSString *ServerTestURI = @"/api/v1/server/status/nodb";
+static NSString *ServerTestURI = MP_API_PREFIX @"/server/status/nodb";
 
 @implementation MPServerPing
 

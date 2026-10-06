@@ -1281,7 +1281,7 @@ done:
 		//
 		@try
 		{
-			NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patch[@"patch_id"],@"third",settings.ccuid];
+			NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/client/patch/install/%@/%@/%@",patch[@"patch_id"],@"third",settings.ccuid];
 			LogInfo(@"Posting patch (%@) install to web service.",patch[@"patch_id"]);
 			[self postDataToWS:urlPath data:nil];
 		}
