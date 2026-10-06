@@ -16,11 +16,10 @@ MacPatch 4.x makes use of the following open source components:
 | Redis | [BSD-3-Clause (Redis 6)](https://redis.io/legal/licenses/) | [https://redis.io]() |
 | OpenSSL | [Apache-2.0](https://www.openssl.org/source/license.html) | [https://www.openssl.org]() |
 | PCRE | [BSD](https://www.pcre.org/licence.txt) | [https://www.pcre.org]() |
-| SWIG | [GPL](http://www.swig.org/Release/LICENSE) | [http://www.swig.org]() |
 | Yarn | [BSD-2-Clause](https://github.com/yarnpkg/yarn/blob/master/LICENSE) | [https://yarnpkg.com]() |
 | Node.js | [MIT](https://github.com/nodejs/node/blob/main/LICENSE) | [https://nodejs.org]() |
 
-PCRE, OpenSSL, SWIG, Yarn and Node.js are used to build and install the server.
+PCRE, OpenSSL, Yarn and Node.js are used to build and install the server.
 
 ### macOS Client
 
@@ -76,39 +75,38 @@ Installed with pip. The version listed is the one pinned for each component, a d
 
 | Module | API | Console | Server Tools |
 |---|---|---|---|
-| boto3 | 1.43.107 | 1.42.73 | - |
-| cryptography | 50.0.2 | 46.0.5 | - |
+| boto3 | 1.43.107 | 1.43.108 | - |
+| cryptography | 50.0.2 | 50.0.2 | - |
 | distro | 1.9.0 | 1.9.0 | 1.9.0 |
 | email-validator | 2.3.0 | 2.3.0 | - |
 | Flask | 3.1.3 | 3.1.3 | - |
-| Flask-APScheduler | - | unpinned | - |
-| Flask-Caching | 2.5.1 | 2.3.1 | - |
-| Flask-Cors | - | 6.0.2 | - |
+| Flask-APScheduler | - | 1.13.1 | - |
+| Flask-Caching | 2.5.1 | 2.5.1 | - |
+| Flask-Cors | - | 6.0.5 | - |
 | Flask-Login | 0.6.3 | 0.6.3 | - |
 | Flask-Mail | 0.10.0 | 0.10.0 | - |
 | Flask-Migrate | 4.1.0 | 4.1.0 | - |
 | Flask-RESTful | 0.3.10 | 0.3.10 | - |
 | Flask-Session | - | 0.8.0 | - |
 | Flask-SQLAlchemy | 3.1.1 | 3.1.1 | - |
-| Flask-WTF | - | 1.2.2 | - |
-| gevent | 26.9.0 | 25.9.1 | - |
-| gunicorn | 26.2.0 | 25.1.0 | - |
-| humanize | - | 4.15.0 | - |
+| Flask-WTF | - | 1.3.0 | - |
+| gevent | 26.9.0 | 26.9.0 | - |
+| gunicorn | 26.2.0 | 26.2.0 | - |
+| humanize | - | 4.16.0 | - |
 | ldap3 | 2.9.1 | 2.9.1 | - |
-| M2Crypto | - | - | 0.47.0 |
-| msal | - | 1.35.1 | - |
+| msal | - | 1.39.0 | - |
 | packaging | 24.2 | - | 26.0 |
 | psutil | - | - | 7.2.2 |
 | pycryptodome | - | - | 3.23.0 |
 | PyJWT | 2.15.1 | - | - |
-| pymysql | 1.2.3 | 1.1.2 | 1.1.2 |
+| pymysql | 1.2.3 | 1.2.3 | 1.1.2 |
 | python-crontab | - | - | 3.3.0 |
 | python-dateutil | - | 2.9.0.post0 | - |
-| python-dotenv | 1.2.4 | 1.2.2 | 1.2.2 |
-| redis | - | 7.3.0 | - |
-| requests | 2.32.3 | 2.32.5 | 2.33.1 |
+| python-dotenv | 1.2.4 | 1.2.4 | 1.2.2 |
+| redis | - | 8.1.0 | - |
+| requests | 2.32.3 | 2.34.2 | 2.33.1 |
 | simplejson | - | - | 3.20.2 |
-| SQLAlchemy | 2.1.1 | 2.0.48 | - |
-| urllib3 | - | 2.6.3 | - |
-| Werkzeug | 3.1.9 | 3.1.6 | - |
+| SQLAlchemy | 2.1.1 | 2.1.3 | - |
+| urllib3 | - | 2.8.0 | - |
+| Werkzeug | 3.1.9 | 3.1.9 | - |
 | yattag | - | 1.16.1 | - |

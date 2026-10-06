@@ -44,6 +44,9 @@
 # 3.6.2     Updated, now using npm to install yarn
 #           Add redis to server install, updated to python3.11 or python3.12
 # 3.7.0     Updated logic for CentOS
+# 3.8.0     Python 3.12 is the minimum supported version, 3.14 is recommended (MP_PYTHON
+#           selects the interpreter). RHEL 8 now uses python3.12. M2Crypto is no longer
+#           installed, nothing uses it, so SWIG is no longer a prerequisite.
 #
 # ----------------------------------------------------------------------------
 
@@ -122,7 +125,7 @@ if [[ $platform == 'linux' ]]; then
             ;;
         8|8.*)
             RHEL_MAJOR="8"
-            py3="python3.11"
+            py3="python3.12"
             ;;
         9|9.*)
             RHEL_MAJOR="9"
@@ -223,11 +226,11 @@ if $USEMACOS; then
         echo "To install brew go to https://brew.sh and follow the install"
         echo "directions."
         echo
-        echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" to be installed"
+        echo "This install requires \"Yarn\", \"OpenSSL\" and \"GPM\" to be installed"
         echo "using brew. It's recommended that you install these two"
         echo "applications before continuing."
         echo
-        echo "Exapmple: brew install yarn openssl swig gpm"
+        echo "Exapmple: brew install yarn openssl gpm"
         echo
         read -p "Would you like to continue (Y/N)? [Y]: " BREWOK
         BREWOK=${BREWOK:-Y}
@@ -379,14 +382,6 @@ if $USEMACOS; then
         XOPENSSL=true
     fi
 
-    XSWIG=false
-    sudo -u _appserver bash -c "brew list | grep swig > /dev/null 2>&1"
-    if [ $? != 0 ] ; then
-        # echo "SWIG is not installed using brew. Please install swig."
-        needsInstall=1
-        XSWIG=true
-    fi
-
     if [ "$needsInstall" -gt 0 ]; then
         echo
         echo
@@ -394,9 +389,6 @@ if $USEMACOS; then
         echo "--------------------------------------------"
         if $XOPENSSL; then
             echo "Please install OpenSSL: brew install openssl"
-        fi
-        if $XSWIG; then
-            echo "Please install SWIG: brew install swig"
         fi
         echo
         echo "Please open a new terminal and install the missing packages"
@@ -424,9 +416,9 @@ if $USELINUX; then
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
         if [ $RHEL_MAJOR == "8" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.11" "python3.11-devel" "python3.11-setuptools" "python3.11-pip" "swig" "yarn" "redis6")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "yarn" "redis6")
         elif [ $RHEL_MAJOR == "9" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "swig" "yarn" "redis")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "yarn" "redis")
         fi
 
         for i in "${pkgs[@]}"
@@ -466,7 +458,7 @@ if $USELINUX; then
         curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         #statements
-        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
+        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "yarn")
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
@@ -650,11 +642,22 @@ if [ "$CA_CERT" != "NA" ]; then
     CA_STR="--cert \"$CA_CERT\""
 fi
 
+# Python 3.12 is the minimum supported version and 3.14 is recommended.
+# Set MP_PYTHON to use a specific interpreter, e.g. MP_PYTHON=python3.14
+py3="${MP_PYTHON:-$py3}"
+if ! command -v "$py3" > /dev/null 2>&1 || ! "$py3" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)'; then
+    echo "MacPatch Server requires Python 3.12 or higher (3.14 is recommended)."
+    echo "\"$py3\" was not found or is older than 3.12. Install a newer Python, or set"
+    echo "MP_PYTHON to the interpreter to use, e.g. MP_PYTHON=python3.14"
+    exit 1
+fi
+echo "Using Python: $($py3 --version 2>&1) ($(command -v "$py3"))"
+
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
-    python3 -m venv env/server --copies --clear
-    python3 -m venv env/api --copies --clear
-    python3 -m venv env/console --copies --clear
+    $py3 -m venv env/server --copies --clear
+    $py3 -m venv env/api --copies --clear
+    $py3 -m venv env/console --copies --clear
     OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
 
     # Server venv
@@ -685,12 +688,6 @@ if $USEMACOS; then
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    # Install M2Crypto first
-    env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    CFLAGS="-I${OPENSSLPWD}/include" \
-    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
     deactivate
@@ -709,7 +706,6 @@ else
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
     deactivate
 
     echo "Creating api virtual env..."

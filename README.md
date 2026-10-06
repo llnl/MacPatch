@@ -24,7 +24,7 @@ MacPatch offers features and functionality that provide Mac OS X administrators 
 ##### Server Requirements: 
 * Linux: RHEL 9, CentOS 9, Ubuntu 24.x
 * 4 GB of RAM, 8 GB is recommended
-* Python 3.12 or higher
+* Python 3.12 or higher (Python 3.14 is recommended)
 * Nodejs version 8 or higher **(Note: CentOS/RHEL 7 install a older version of node)**
 * MySQL 8 
 

@@ -1,4 +1,5 @@
 # MacPatch v4.1.0.0
+# Python 3.12 or higher is required, Python 3.14 is recommended.
 # ------------------
 # Updated from 3.20.0 
 pycryptodome==3.23.0
@@ -12,8 +13,6 @@ pymysql==1.1.2
 psutil==7.2.2
 # Updated from 3.0.0
 python-crontab==3.3.0
-# Updated from 0.41.0
-M2Crypto==0.47.0
 # Updated from 24.0
 packaging==26.0
 # Updated from 1.0.1
