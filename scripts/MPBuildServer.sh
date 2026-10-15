@@ -225,12 +225,12 @@ done
 # ----------------------------------------------------------------------------
 # Requirements
 # ----------------------------------------------------------------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 
 if $USEMACOS; then
 
     if $MACPROMPTFORXCODE; then
-        clear
+        [ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
         echo
         echo "* Xcode requirements"
         echo "-----------------------------------------------------------------------"
@@ -321,7 +321,7 @@ fi
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo
 echo "* Begin MacPatch Server build."
 echo "-----------------------------------------------------------------------"
@@ -563,7 +563,7 @@ if $USELINUX; then
     minNodeVer="18.0.0"
     nodeVer=`node -v | sed s/v//g`
     if [ $(version $nodeVer) -le $(version $minNodeVer) ]; then
-        clear
+        [ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
         echo "***** ERROR *****"
         echo "Node version failed. Expected version \">=18\". Got $nodeVer"
         echo "Please install a newer version of node and re-run this script."
@@ -885,7 +885,7 @@ fi
 # ------------------------------------------------------------
 # Generate self signed certificates
 # ------------------------------------------------------------
-#clear
+#[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo
 echo "* Creating self signed SSL certificate"
 echo "-----------------------------------------------------------------------"
@@ -1067,7 +1067,7 @@ rm -rf ${BUILDROOT}
 # ------------------
 # Set Permissions
 # ------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo "Setting Permissions..."
 chmod -R 0775 "${MPBASE}/Content"
 chown -R $OWNERGRP "${MPBASE}/Content"

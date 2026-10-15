@@ -2,12 +2,17 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPServerUpgrader.sh
-# Version: 3.4.3
+# Version: 3.4.4
 #
 # Description:
 # Upgrade script will upgrade a current install of the MacPatch server
 #
 # History:
+# 3.4.4 - Fixed terminal handling and added auto-confirm:
+#       - Made clear command conditional (only runs if terminal present)
+#       - Prevents "unknown terminal type" errors in non-interactive mode
+#       - Added -y flag to skip interactive confirmation prompt
+#       - Enables fully automated upgrade runs via cron/CI
 # 3.4.3 - Extended Python script permission handling:
 #       - All .py files in conf/scripts now get 755 (admin/utility scripts)
 #       - Python scripts with shebangs in both apps and conf/scripts get 755
@@ -174,6 +179,7 @@ MASTERSERVER=false
 CONTENT_DIR="/opt/MPContent"  # Default content directory location
 SKIP_CONTENT_MIGRATION=false  # If true, keep content in /opt/MacPatch/Content (no symlink)
 USE_GIT_CLONE=false  # If true, clone from GitHub; if false, use local source directory
+AUTO_CONFIRM=false  # If true, skip interactive confirmation prompt
 MAX_BACKUPS=5  # Keep last 5 backups
 SERVICE_SHUTDOWN_TIMEOUT=60  # Seconds to wait for services to stop
 SERVICE_STARTUP_TIMEOUT=60   # Seconds to wait for services to start
@@ -207,7 +213,7 @@ RUNNING_SERVICES=()
 # Script Input Args ----------------------------------------------------------
 
 usage() {
-	echo "Usage: $0 [-b GitHub Branch] [-c Content Directory] [-g] [-n] [-m]" 1>&2
+	echo "Usage: $0 [-b GitHub Branch] [-c Content Directory] [-g] [-n] [-m] [-y]" 1>&2
 	echo "" 1>&2
 	echo "Options:" 1>&2
 	echo "  -b <branch>    GitHub branch to clone (default: master, requires -g)" 1>&2
@@ -215,6 +221,7 @@ usage() {
 	echo "  -g             Clone from GitHub (default: use local source directory)" 1>&2
 	echo "  -n             No migration - keep content in /opt/MacPatch/Content (no symlink)" 1>&2
 	echo "  -m             Master/Distribution server (includes database migration)" 1>&2
+	echo "  -y             Auto-confirm - skip interactive confirmation prompt" 1>&2
 	echo "  -h             Show this help message" 1>&2
 	echo "" 1>&2
 	echo "Examples:" 1>&2
@@ -232,7 +239,7 @@ usage() {
 	exit 1
 }
 
-while getopts "hb:c:gnm" opt; do
+while getopts "hb:c:gnmy" opt; do
 	case $opt in
 		b)
 			GITBRANCH=${OPTARG}
@@ -247,6 +254,9 @@ while getopts "hb:c:gnm" opt; do
 			;;
 		n)
 			SKIP_CONTENT_MIGRATION=true
+			;;
+		y)
+			AUTO_CONFIRM=true
 			;;
 		h)
 			echo
@@ -439,6 +449,20 @@ preflight_checks() {
         # Local source mode - validate source directory
         echo "Using local source directory: ${SOURCE_DIR}"
 
+        # Prevent SOURCE_DIR from being the same as MPBASE
+        if [ "$(normalize_path "$SOURCE_DIR")" = "$(normalize_path "$MPBASE")" ]; then
+            echo "ERROR: Cannot upgrade from /opt/MacPatch to itself"
+            echo "The source directory ($SOURCE_DIR) cannot be the same as the installation directory ($MPBASE)"
+            echo ""
+            echo "Solution: Clone MacPatch to a temporary location first:"
+            echo "  cd /tmp"
+            echo "  git clone https://github.com/LLNL/MacPatch.git"
+            echo "  sudo /tmp/MacPatch/scripts/MPServerUpgrader.sh -n -y"
+            echo ""
+            echo "Or use -g flag to clone from GitHub automatically"
+            ((error_count++))
+        fi
+
         if ! validate_path "$SOURCE_DIR" "dir"; then
             echo "ERROR: Source directory not found at ${SOURCE_DIR}"
             ((error_count++))
@@ -478,7 +502,10 @@ preflight_checks() {
 
 # Notice text -----------------------------------------------------------
 
-clear
+# Only clear screen if we have a proper terminal
+if [ -t 1 ] && command -v clear >/dev/null 2>&1; then
+    clear 2>/dev/null || true
+fi
 echo
 echo "NOTICE..."
 echo "This script is EXPERIMENTAL, please proceed with caution."
@@ -499,8 +526,14 @@ if ! preflight_checks; then
 fi
 
 echo
-read -p "Would you like to continue (Y/N)? [N]: " UPOK
-UPOK=${UPOK:-N}
+if [ "$AUTO_CONFIRM" = true ]; then
+	echo "Auto-confirm enabled, proceeding with upgrade..."
+	UPOK="Y"
+else
+	read -p "Would you like to continue (Y/N)? [N]: " UPOK
+	UPOK=${UPOK:-N}
+fi
+
 if [ "$UPOK" == "Y" ] || [ "$UPOK" == "y" ] ; then
 	echo
 else
@@ -1607,7 +1640,7 @@ if [[ "$platform" == "linux" ]]; then
     fi
 
     # Virtual environment binaries - all files in venv/bin should be 755
-    for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin"; do
         if [ -d "$venv_bin" ]; then
             log_message "Setting venv binaries to 755: $venv_bin"
             find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
@@ -1650,7 +1683,7 @@ else
     fi
 
     # Virtual environment binaries - all files in venv/bin should be 755
-    for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin"; do
         if [ -d "$venv_bin" ]; then
             log_message "Setting venv binaries to 755: $venv_bin"
             find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
