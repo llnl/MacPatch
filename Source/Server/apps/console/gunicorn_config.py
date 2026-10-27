@@ -141,8 +141,8 @@ tmp_upload_dir = None
 
 #ccesslog = '-'
 #errorlog = '-'
-#accesslog = 'logs/gMPConsole_access.log'
-#errorlog = 'logs/gMPConsole_error.log'
+accesslog = '/opt/MacPatch/Server/logs/gMPConsole_access.log'
+errorlog = '/opt/MacPatch/Server/logs/gMPConsole_error.log'
 loglevel = 'info'
 
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
@@ -190,6 +190,29 @@ def pre_exec(server):
     server.log.info("Forked child, re-executing.")
 
 def when_ready(server):
+    # Configure custom log format for gunicorn error log
+    import logging.handlers
+
+    # Remove existing handlers
+    for handler in server.log.error_log.handlers[:]:
+        server.log.error_log.removeHandler(handler)
+
+    # Add our custom formatted handler
+    handler = logging.handlers.RotatingFileHandler(
+        '/opt/MacPatch/Server/logs/gMPConsole_error.log',
+        maxBytes=10485760,
+        backupCount=10
+    )
+
+    class MacPatchFormatter(logging.Formatter):
+        def format(self, record):
+            formatted_time = self.formatTime(record, '%Y-%m-%d %H:%M:%S')
+            level_map = {'DEBUG': 'DBG', 'INFO': 'INF', 'WARNING': 'WRN', 'ERROR': 'ERR', 'CRITICAL': 'CRT'}
+            level_short = level_map.get(record.levelname, 'INF')
+            return f"{formatted_time},{int(record.msecs):03d} [gunicorn][{level_short}] --- {record.getMessage()}"
+
+    handler.setFormatter(MacPatchFormatter())
+    server.log.error_log.addHandler(handler)
     server.log.info("Server is ready. Spawning workers")
 
 def worker_int(worker):
