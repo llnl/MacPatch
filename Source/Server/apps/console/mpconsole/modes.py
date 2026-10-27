@@ -11,6 +11,16 @@ def localAdmin():
 
 def groupAdminRights(groupid):
 
+	# Check if user is a local admin (user_type == 0)
+	# Local admins should have access to all client groups
+	if localAdmin():
+		return True
+
+	# Check if user has admin role (covers LDAP admins)
+	# Admin role (session['role'][0] == 1) should have access to all client groups
+	if adminRole():
+		return True
+
 	qUsrOwnwer = MpClientGroups.query.filter(MpClientGroups.group_id == groupid, MpClientGroups.group_owner == session['user']).first()
 	if qUsrOwnwer is not None:
 		return True

@@ -57,7 +57,7 @@ MacPatch Servers
 			queryParamsType: "limit",
 			sidePagination: "server",
 			showRefresh: true,
-			resizable: true,
+			resizable: false,
 			columns: [
 				{
 					field: 'rowState',
@@ -70,6 +70,8 @@ MacPatch Servers
 					field: 'operate',
 					title: '',
 					align: 'center',
+					width: 260,
+					widthUnit: 'px',
 					events: operateEvents,
 					formatter: operateFormatter
 				},
@@ -138,8 +140,9 @@ MacPatch Servers
 		},
         'click .dbConf': function (e, value, row, index)
 		{
-			$.get( "/console/servers/db/" + row['server'] + "/" + row['port'] ).done(function(data)
+			$.get( "/console/servers/db/" + row['rid'] ).done(function(data)
 			{
+				console.log(data);
 			    resetModalWindow();
 				$('#modalTitle').html('MacPatch Server DB Config - ' + row['server']);
 				$('#modalBody').html(data);
@@ -152,7 +155,7 @@ MacPatch Servers
 		},
 		'click .logA': function (e, value, row, index)
 		{
-			$.get( "/console/server/log/"+row['server']+"/mpwsapi").done(function(data)
+			$.get( "/console/server/log/"+row['rid']+"/mpwsapi").done(function(data)
 			{
 			    resetModalWindow();
 				$('#modalTitle').html(row['server'] + ' - API Log');
@@ -166,7 +169,7 @@ MacPatch Servers
 		},
 		'click .logC': function (e, value, row, index)
 		{
-			$.get( "/console/server/log/"+row['server']+"/mpconsole").done(function(data)
+			$.get( "/console/server/log/"+row['rid']+"/mpconsole").done(function(data)
 			{
 			    resetModalWindow();
 				$('#modalTitle').html(row['server'] + ' - Console Log');

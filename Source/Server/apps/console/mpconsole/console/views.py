@@ -14,6 +14,7 @@ from mpconsole.app import db
 from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
+from mpconsole.mputil import decryptData, generate_jwt_token
 from mpconsole.app_decorators import login_required
 
 ''' Global '''
@@ -110,7 +111,7 @@ def accountAdd():
 				if key != 'user_type':
 					if key in usrAttrs:
 						if key == 'user_pass':
-							hash_pass = generate_password_hash(value)
+							hash_pass = generate_password_hash(value, method='pbkdf2:sha256')
 							setattr(usr, key, hash_pass)
 						else:
 							setattr(usr, key, value)
@@ -581,26 +582,53 @@ def updateServerRev():
 
 	db.session.commit()
 
-@console.route('/servers/db/<server>/<port>', methods=['GET'])
+@console.route('/servers/db/<id>', methods=['GET'])
 @login_required
-def mpServerDBConfig(server,port):
+def mpServerDBConfig(id):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
 
 	_uuid = str(uuid.uuid4())
 	dt  = datetime.now()
 	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
-	srvHashStr = "{}{}{}".format(_uuid,dt,type).encode('utf-8')
+	srvHashStr = "{}{}".format(_uuid,dt).encode('utf-8')
 	srvHash = sha1(srvHashStr).hexdigest()
 
 	_data = []
-	_url = "https://{}:{}/api/v1/db/config".format(server,port)
-	#_url = "http://0.0.0.0:5000/api/v1/db/config".format(server,port) # For Testing
-	headers = {'x-agent-id': '1', 'x-agent-ver': '99'}
+	_url = "https://{}:{}/api/v1/server/db/config".format(_server.server,_server.port)
+	log_Info(_url)
+
+	# Generate JWT token for authentication
+	jwt_token = generate_jwt_token()
+	if not jwt_token:
+		log_Error("Failed to generate JWT token")
+		return render_template('admin/mp_server_db_config.html', server=_server.server, data={'error': 'Authentication failed'})
+
+	headers = {
+		'x-agent-id': '1',
+		'x-agent-ver': '99',
+		'Authorization': 'Bearer {}'.format(jwt_token)
+	}
 	r = requests.get(_url, headers=headers, verify=False)
 	if r.status_code == 200:
 		rawData = json.loads(r.text)
-		_data = rawData['result']
+		log_Info("Encrypted response received")
 
-	return render_template('admin/mp_server_db_config.html', server=server, data=_data)
+		# Check if response is encrypted
+		if rawData.get('encrypted', False):
+			encrypted_result = rawData['result']
+			# Decrypt the data
+			decrypted_data = decryptData(encrypted_result)
+			if decrypted_data:
+				_data = decrypted_data
+				log_Info("DB Config decrypted successfully")
+			else:
+				log_Error("Failed to decrypt DB Config")
+				_data = {'error': 'Failed to decrypt configuration'}
+		else:
+			# Fallback for unencrypted response
+			_data = rawData['result']
+
+	return render_template('admin/mp_server_db_config.html', server=_server.server, data=_data)
 
 class logline(object):  # no instance of this class should be created
 
@@ -611,12 +639,61 @@ class logline(object):  # no instance of this class should be created
 		self.text = ''
 
 	def parseLine(self,line):
-		_date = line.split(",")
-		self.date = _date[0]
-		x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
-		self.app = x.group(1)
-		self.level = x.group(2)
-		self.text = line.split("---")[1]
+		try:
+			# Try to parse MacPatch format: "2026-10-22 15:27:32,495 [mpconsole.app][INF] --- message"
+			if ',' in line and '[' in line and ']' in line and '---' in line:
+				_date = line.split(",")
+				self.date = _date[0] if len(_date) > 0 else ''
+
+				x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
+				if x:
+					self.app = x.group(1)
+					self.level = x.group(2)
+				else:
+					self.app = 'unknown'
+					self.level = 'INFO'
+
+				parts = line.split("---")
+				self.text = parts[1].strip() if len(parts) > 1 else line
+
+			# Try to parse gunicorn format: "[2026-10-22 16:02:22 -0700] [3033945] [INFO] Worker spawned (pid: 3033945)"
+			elif line.startswith('[') and line.count('[') >= 3:
+				# Extract date from first brackets
+				date_match = re.match(r'\[([^\]]+)\]', line)
+				if date_match:
+					self.date = date_match.group(1)
+
+				# Extract level from third set of brackets
+				level_match = re.search(r'\]\s*\[(\w+)\]', line)
+				if level_match:
+					self.level = level_match.group(1)
+				else:
+					self.level = 'INFO'
+
+				self.app = 'gunicorn'
+
+				# Extract message after the third bracket
+				text_match = re.search(r'\]\s*\[\w+\]\s*(.+)$', line)
+				if text_match:
+					self.text = text_match.group(1).strip()
+				else:
+					self.text = line
+
+			# Fallback for unknown formats
+			else:
+				self.date = ''
+				self.app = 'system'
+				self.level = 'INFO'
+				self.text = line
+		except Exception as e:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			message = str(e.args[0]) if e.args else str(e)
+			log_Error('[logline][Exception][Line: %d] %s' % (exc_tb.tb_lineno, message))
+			# Fallback on error
+			self.date = ''
+			self.app = 'error'
+			self.level = 'ERR'
+			self.text = line
 
 	def printLine(self):
 		row = {}
@@ -626,9 +703,17 @@ class logline(object):  # no instance of this class should be created
 		row['text'] = self.text
 		return row
 
-@console.route('/server/log/<server>/<type>', methods=['GET'])
+@console.route('/server/log/<id>/<type>', methods=['GET'])
 @login_required
-def serversLog(server,type):
+def serversLog(id,type):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
+	columns = [('date', 'Date', '1'), ('app', 'App', '1'), ('level', 'Level', '1'), ('text', 'Message', '1')]
+	return render_template('logs.html', columns=columns, server=_server.server, server_id=id, log_type=type)
+
+@console.route('/server/log/data/<id>/<type>', methods=['GET'])
+@login_required
+def serversLogData(id,type):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
 	_uuid = str(uuid.uuid4())
 	dt  = datetime.now()
 	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
@@ -643,14 +728,21 @@ def serversLog(server,type):
 	db.session.commit()
 
 	_data = []
-	_url = "https://{}:3600/api/v2/server/log/{}/{}/{}".format(server, _uuid, type, srvHash)
-	r = requests.get(_url, verify=False)
+	_url = "https://{}:{}/api/v2/server/log/{}/{}/{}".format(_server.server, _server.port, _uuid, type, srvHash)
+
+	# Generate JWT token for authentication
+	jwt_token = generate_jwt_token()
+	if not jwt_token:
+		log_Error("Failed to generate JWT token for log request")
+		return json.dumps([])
+
+	headers = {'Authorization': 'Bearer {}'.format(jwt_token)}
+	r = requests.get(_url, headers=headers, verify=False)
 	if r.status_code == 200:
 		rawData = json.loads(r.text)
 		_data = rawData['data']
 
-	columns = [('date', 'Date', '1'), ('app', 'App', '1'), ('level', 'Level', '1'), ('text', 'Message', '1')]
-	return render_template('logs.html', columns=columns, server=server, data=_data)
+	return json.dumps(_data)
 
 '''
 ----------------------------------------------------------------

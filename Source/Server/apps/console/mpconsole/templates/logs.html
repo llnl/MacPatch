@@ -1,88 +1,167 @@
 <!DOCTYPE html>
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
-
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-	<style>
-		#patchesTable > tbody > tr > td {
-			height:28px;
-			padding:4px;
-			border-top: 2px;
-		}
-	</style>
-{%  endblock %}
-
-{% block body %}
-	<div>
-		<table id="logsTable" class="table table-condensed table-striped" data-toolbar="#logsToolbar" data-show-export="true">
-			<div id="logsToolbar">
-				<button id="saveGroupDataButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-floppy-save"></i></button>
-			</div>
-		</table>
-	</div>
-	<div id="overlay">
-		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
-		<h1 style="text-align: center; color: white; ">Saving...</h1>
-	</div>
+<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+<style>
+    .log-line {
+        font-family: 'Courier New', Courier, monospace;
+        line-height: 1.1;
+        margin: 0;
+        padding: 2px 0;
+    }
+    .log-line.filtered-out {
+        display: none;
+    }
+    #logContent {
+        max-height: 700px;
+        overflow-y: auto;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        font-size: 1.05rem;
+        padding: 15px;
+        border-radius: 4px;
+    }
+</style>
 {% endblock %}
 
+{% block body %}
+<div class="container-fluid">
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="mb-2" style="overflow: hidden;">
+                <div style="float: right;">
+                    <input type="text" id="logFilter" class="form-control form-control-sm"
+                           style="width: 250px; display: inline-block; margin-right: 8px;" placeholder="Filter logs...">
+                    <button type="button" class="btn btn-sm btn-primary" id="refreshLogs" style="display: inline-block;">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                <div>
+                    <i class="fas fa-file-alt"></i>
+                    {% if log_type == 'mpwsapi' %}
+                    API Service Logs
+                    {% else %}
+                    Console Service Logs
+                    {% endif %}
+                </div>
+            </div>
+            <div style="clear: both;" class="text-muted">
+                <small>Showing last <span id="displayedLines">500</span> lines | Last updated: <span id="logTimestamp">--</span></small>
+            </div>
+        </div>
+        <div class="card-body p-0">
+            <div id="logLoading" class="text-center p-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Loading logs...</p>
+            </div>
+            <div id="logError" class="alert alert-danger m-3" style="display: none;">
+                <i class="fas fa-exclamation-triangle"></i>
+                <span id="logErrorMessage"></span>
+            </div>
+            <pre id="logContent" class="m-0" style="display: none;"></pre>
+        </div>
+    </div>
+</div>
+{% endblock %}
 
 {% block javascript %}
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+<!-- jQuery -->
+<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+<!-- Bootstrap Core JavaScript -->
+<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
 
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
+<script>
+(function() {
+let allLogLines = [];
 
-	<script>
-	$( document ).ready(function()
-	{
-		$('#logsTable').bootstrapTable(
-		{
-            pageSize: 20,
-			pageList: [20, 30, 40, 50, 100, 200],
-			pagination: true,
-			sidePagination: "client",
-            sortable: true,
-            search: true,
-			resizable: true,
-            columns: [
-			{% for col in columns %}
-            {
-                field: '{{col[0]}}',
-                title: '{{col[1]}}',
-                {% if col[0] == 'date' %}
-                width: 160,
-                {% elif col[0] == 'app' or col[0]== 'level' %}
-                width: 80,
-                {% endif %}
+async function fetchLogs() {
+    const logContent = document.getElementById('logContent');
+    const logLoading = document.getElementById('logLoading');
+    const logError = document.getElementById('logError');
+    const logTimestamp = document.getElementById('logTimestamp');
 
-                {% if col[0] == 'text' %}
-                sortable: false,
-                {% else %}
-                sortable: true,
-                {% endif %}
-            },
-            {% endfor %}
-			],
-			data: [
-			    {% for d in data %}
-			    {
-			        {% for col in columns %}
-							{{col[0]}} : `{{ d[col[0]] }}`,
-					{% endfor %}
-				},
-			    {% endfor %}
-			]
-        });
+    try {
+        logLoading.style.display = 'block';
+        logContent.style.display = 'none';
+        logError.style.display = 'none';
 
-	});
-	</script>
+        const response = await fetch('/console/server/log/data/{{ server_id }}/{{ log_type }}');
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 100)}`);
+        }
+
+        const data = await response.json();
+
+        if (Array.isArray(data)) {
+            allLogLines = data;
+            renderLogs();
+            logContent.style.display = 'block';
+            logTimestamp.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+
+            // Update displayed lines count
+            document.getElementById('displayedLines').textContent = allLogLines.length;
+
+            // Auto-scroll to top (newest entries are at the top)
+            logContent.scrollTop = 0;
+        } else {
+            throw new Error('Invalid response format: expected array, got ' + typeof data);
+        }
+    } catch (error) {
+        console.error('Error fetching logs:', error);
+        document.getElementById('logErrorMessage').textContent = error.message;
+        logError.style.display = 'block';
+    } finally {
+        logLoading.style.display = 'none';
+    }
+}
+
+function renderLogs() {
+    const logContent = document.getElementById('logContent');
+    const filterText = document.getElementById('logFilter').value.toLowerCase();
+
+    // Clear existing content
+    logContent.innerHTML = '';
+
+    // Filter and render log lines
+    let visibleCount = 0;
+    allLogLines.forEach(logLine => {
+        const lineText = `${logLine.date} [${logLine.app}][${logLine.level}] --- ${logLine.text}`;
+
+        // Check if line matches filter
+        const matchesFilter = !filterText || lineText.toLowerCase().includes(filterText);
+
+        if (matchesFilter) {
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.textContent = lineText;
+            logContent.appendChild(div);
+            visibleCount++;
+        }
+    });
+
+    // Show message if no results
+    if (visibleCount === 0 && filterText) {
+        const div = document.createElement('div');
+        div.className = 'text-muted text-center py-3';
+        div.textContent = 'No log lines match your filter';
+        logContent.appendChild(div);
+    }
+}
+
+function applyFilter() {
+    renderLogs();
+}
+
+document.getElementById('refreshLogs').addEventListener('click', fetchLogs);
+document.getElementById('logFilter').addEventListener('input', applyFilter);
+
+// Initial load
+fetchLogs();
+})();
+</script>
 {% endblock %}

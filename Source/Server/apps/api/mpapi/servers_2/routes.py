@@ -168,6 +168,7 @@ class ServerLog(MPResource):
 		self.reqparse = reqparse.RequestParser()
 		super(ServerLog, self).__init__()
 
+	@require_jwt_token
 	def get(self, reqid, type, serverkey):
 		try:
 			_results = []
@@ -183,13 +184,6 @@ class ServerLog(MPResource):
 			if (dts - float(qry.dts)) > 600:
 				return {'data': _results, 'total': len(_results)}, 401
 
-			#srvHashStr = "{}{}{}".format(qry.uuid, qry.dts, qry.type)
-			#srvHash = sha256(srvHashStr).hexdigest()
-
-			# Verify Hash
-			#if srvHash != serverkey:
-			#	return {'data': _results, 'total': len(_results)}, 403
-
 			_results = self.parseLogFile(type)
 			return {'data': _results, 'total': len(_results)}, 200
 
@@ -203,16 +197,29 @@ class ServerLog(MPResource):
 		try:
 			logFile = '/tmp/fool'
 			if type == 'mpwsapi':
-				logFile = '/opt/MacPatch/Server/apps/logs/mpwsapi.log'
+				#logFile = '/opt/MacPatch/Server/apps/logs/mpwsapi.log'
+				logFile = '/opt/MacPatch/Server/logs/gMPAPI_error.log'
 			elif type == 'mpconsole':
-				logFile = '/opt/MacPatch/Server/apps/logs/mpconsole.log'
+				#logFile = '/opt/MacPatch/Server/apps/logs/mpconsole.log'
+				logFile = '/opt/MacPatch/Server/logs/gMPConsole_error.log'
 
-			l = logline()
 			lines = []
+			all_lines = []
+
+			# Read all lines first
 			with open(logFile, "r") as ins:
 				for line in ins:
-					l.parseLine(line.rstrip('\n'))
-					lines.insert(0, l.printLine())
+					all_lines.append(line.rstrip('\n'))
+
+			# Only process the last 500 lines
+			last_lines = all_lines[-500:] if len(all_lines) > 500 else all_lines
+
+			# Parse and reverse order (newest first)
+			# Create a new logline object for each line to avoid stale data
+			for line in last_lines:
+				l = logline()
+				l.parseLine(line)
+				lines.insert(0, l.printLine())
 
 			return lines
 
@@ -324,16 +331,60 @@ class logline(object):  # no instance of this class should be created
 
 	def parseLine(self,line):
 		try:
-			_date = line.split(",")
-			self.date = _date[0]
-			x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
-			self.app = x.group(1)
-			self.level = x.group(2)
-			self.text = line.split("---")[1]
+			# Try to parse MacPatch format: "2026-10-22 15:27:32,495 [mpconsole.app][INF] --- message"
+			if ',' in line and '[' in line and ']' in line and '---' in line:
+				_date = line.split(",")
+				self.date = _date[0] if len(_date) > 0 else ''
+
+				x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
+				if x:
+					self.app = x.group(1)
+					self.level = x.group(2)
+				else:
+					self.app = 'unknown'
+					self.level = 'INFO'
+
+				parts = line.split("---")
+				self.text = parts[1].strip() if len(parts) > 1 else line
+
+			# Try to parse gunicorn format: "[2026-10-22 16:02:22 -0700] [3033945] [INFO] Worker spawned (pid: 3033945)"
+			elif line.startswith('[') and line.count('[') >= 3:
+				# Extract date from first brackets
+				date_match = re.match(r'\[([^\]]+)\]', line)
+				if date_match:
+					self.date = date_match.group(1)
+
+				# Extract level from third set of brackets
+				level_match = re.search(r'\]\s*\[(\w+)\]', line)
+				if level_match:
+					self.level = level_match.group(1)
+				else:
+					self.level = 'INFO'
+
+				self.app = 'gunicorn'
+
+				# Extract message after the third bracket
+				text_match = re.search(r'\]\s*\[\w+\]\s*(.+)$', line)
+				if text_match:
+					self.text = text_match.group(1).strip()
+				else:
+					self.text = line
+
+			# Fallback for unknown formats
+			else:
+				self.date = ''
+				self.app = 'system'
+				self.level = 'INFO'
+				self.text = line
 		except Exception as e:
 			exc_type, exc_obj, exc_tb = sys.exc_info()
 			message=str(e.args[0]).encode("utf-8")
 			log_Error('[logline][Exception][Line: %d] %s' % (exc_tb.tb_lineno, message))
+			# Fallback on error
+			self.date = ''
+			self.app = 'error'
+			self.level = 'ERR'
+			self.text = line
 
 	def printLine(self):
 		row = {}

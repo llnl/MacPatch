@@ -30,8 +30,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet
 
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode, urlsafe_b64encode
 
 from mpapi.app import db
 from mpapi.model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
@@ -592,6 +594,128 @@ def verifySignedData(signature, data):
 
 	log_Error("[verifySignedData] Error, unable to get RSA keys from database.")
 	return False
+
+# ----------------------------------------------------------------------------
+'''
+	Symmetric Encryption/Decryption using Fernet
+'''
+def _get_encryption_key():
+	"""Derive a Fernet key from the SECRET_KEY"""
+	secret_key = current_app.config['SECRET_KEY'].encode('utf-8')
+	# Use a fixed salt for key derivation (since we want consistent keys across requests)
+	salt = b'MacPatch_DB_Config_Salt_v1'
+	kdf = PBKDF2HMAC(
+		algorithm=hashes.SHA256(),
+		length=32,
+		salt=salt,
+		iterations=100000,
+		backend=default_backend()
+	)
+	key = urlsafe_b64encode(kdf.derive(secret_key))
+	return key
+
+def encryptData(data):
+	"""Encrypt data using Fernet symmetric encryption"""
+	try:
+		if isinstance(data, dict):
+			data = json.dumps(data)
+		if isinstance(data, str):
+			data = data.encode('utf-8')
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		encrypted = f.encrypt(data)
+		return b64encode(encrypted).decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e.args[0]) if e.args else str(e)
+		log_Error('[encryptData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+		return None
+
+def decryptData(encrypted_data):
+	"""Decrypt data using Fernet symmetric encryption"""
+	import traceback
+	try:
+		if isinstance(encrypted_data, str):
+			encrypted_data = b64decode(encrypted_data.encode('utf-8'))
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		decrypted = f.decrypt(encrypted_data)
+
+		# Try to parse as JSON, otherwise return as string
+		try:
+			return json.loads(decrypted.decode('utf-8'))
+		except:
+			return decrypted.decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e) if str(e) else repr(e)
+		log_Error('[decryptData][Exception][Line: {}] Type: {} Message: {}'.format(
+			exc_tb.tb_lineno, exc_type.__name__, message))
+		log_Error('[decryptData] Traceback: {}'.format(traceback.format_exc()))
+		return None
+
+# ----------------------------------------------------------------------------
+'''
+	JWT Token Validation for Console-to-API Authentication
+'''
+from functools import wraps
+
+def require_jwt_token(f):
+	"""Decorator to validate JWT token for Console-to-API endpoints"""
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		token = None
+		auth_header = request.headers.get('Authorization')
+
+		if auth_header:
+			try:
+				# Expected format: "Bearer <token>"
+				token = auth_header.split(" ")[1]
+			except IndexError:
+				log_Error('[JWT] Invalid Authorization header format')
+				return {'errorno': 401, 'errormsg': 'Invalid authorization header format'}, 401
+
+		if not token:
+			log_Error('[JWT] No token provided')
+			return {'errorno': 401, 'errormsg': 'Authentication token required'}, 401
+
+		try:
+			secret_key = current_app.config.get('SECRET_KEY')
+			if not secret_key:
+				log_Error('[JWT] SECRET_KEY not configured')
+				return {'errorno': 500, 'errormsg': 'Server authentication not configured'}, 500
+
+			# Decode and validate token
+			payload = jwt.decode(
+				token,
+				secret_key,
+				algorithms=['HS256'],
+				audience='mpapi',
+				options={'require': ['exp', 'iat', 'iss', 'aud']}
+			)
+
+			# Verify issuer
+			if payload.get('iss') != 'mpconsole':
+				log_Error('[JWT] Invalid token issuer: {}'.format(payload.get('iss')))
+				return {'errorno': 401, 'errormsg': 'Invalid token issuer'}, 401
+
+			log_Debug('[JWT] Token validated successfully')
+
+		except jwt.ExpiredSignatureError:
+			log_Error('[JWT] Token has expired')
+			return {'errorno': 401, 'errormsg': 'Token has expired'}, 401
+		except jwt.InvalidTokenError as e:
+			log_Error('[JWT] Invalid token: {}'.format(str(e)))
+			return {'errorno': 401, 'errormsg': 'Invalid authentication token'}, 401
+		except Exception as e:
+			log_Error('[JWT] Token validation error: {}'.format(str(e)))
+			return {'errorno': 401, 'errormsg': 'Token validation failed'}, 401
+
+		return f(*args, **kwargs)
+
+	return decorated_function
 
 # ----------------------------------------------------------------------------
 '''

@@ -282,7 +282,8 @@ def clientGroupAdd():
 @login_required
 def clientGroupModify(group_id):
 	''' Returns an empty set of data to add a new record '''
-	if not isOwnerOfGroup(group_id):
+	from mpconsole.modes import groupAdminRights
+	if not groupAdminRights(group_id):
 		return '', 400
 
 	clientGroup = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).first()
@@ -392,12 +393,15 @@ def clientGroup(name,tab=1):
 				log("{} could not delete client group {}. Does not have permission.".format(session['user'], name))
 				return json.dumps({}), 403
 	else:
-		canEditGroup = False
-		if not isOwnerOfGroup(name) and not isAdminForGroup(name):
-			if q_defaultGroup:
-				canEditGroup = True
-			else:
-				return clientGroups()
+		from mpconsole.modes import groupAdminRights
+		# Check if user has rights to edit this group
+		# If they have rights, readOnly = False (can edit)
+		# If they don't have rights, readOnly = True (read-only)
+		canEditGroup = not groupAdminRights(name)
+
+		# If user doesn't have rights and it's not the default group, redirect
+		if canEditGroup and not q_defaultGroup:
+			return clientGroups()
 
 		groupResult = {}
 

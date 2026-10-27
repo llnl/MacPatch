@@ -389,7 +389,7 @@ class ConfigData(MPResource):
 					log_Error('[MP_ConfigData][GET]: Failed to verify token')
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
+				if not isValidAgentUploadUser(_user):
 					log_Error('[MP_ConfigData][GET]: Failed to verify user (%s) rights' % (_user))
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 
@@ -433,7 +433,7 @@ class UploadAgentPackage(MPResource):
 					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify token')
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
+				if not isValidAgentUploadUser(_user):
 					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify user (%s) rights' % (_user))
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 

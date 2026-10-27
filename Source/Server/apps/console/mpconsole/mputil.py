@@ -9,14 +9,18 @@
 from flask import current_app
 import json
 import os.path
+import jwt
+from datetime import datetime, timedelta
 
 from cryptography.exceptions import *
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet
 
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode, urlsafe_b64encode
 
 from . import db
 from . model import MpSiteKeys
@@ -47,6 +51,92 @@ def mpConfig():
 	cnfFile = current_app.config['SITECONFIG_FILE']
 	_config = read_config_file(cnfFile)
 	return _config
+
+# ----------------------------------------------------------------------------
+'''
+	Symmetric Encryption/Decryption using Fernet
+'''
+def _get_encryption_key():
+	"""Derive a Fernet key from the SECRET_KEY"""
+	import sys
+	secret_key = current_app.config['SECRET_KEY'].encode('utf-8')
+	# Use a fixed salt for key derivation (same as API)
+	salt = b'MacPatch_DB_Config_Salt_v1'
+	kdf = PBKDF2HMAC(
+		algorithm=hashes.SHA256(),
+		length=32,
+		salt=salt,
+		iterations=100000,
+		backend=default_backend()
+	)
+	key = urlsafe_b64encode(kdf.derive(secret_key))
+	return key
+
+def encryptData(data):
+	"""Encrypt data using Fernet symmetric encryption"""
+	import sys
+	try:
+		if isinstance(data, dict):
+			data = json.dumps(data)
+		if isinstance(data, str):
+			data = data.encode('utf-8')
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		encrypted = f.encrypt(data)
+		return b64encode(encrypted).decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e.args[0]) if e.args else str(e)
+		log_Error('[encryptData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+		return None
+
+def decryptData(encrypted_data):
+	"""Decrypt data using Fernet symmetric encryption"""
+	import sys
+	import traceback
+	try:
+		if isinstance(encrypted_data, str):
+			encrypted_data = b64decode(encrypted_data.encode('utf-8'))
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		decrypted = f.decrypt(encrypted_data)
+
+		# Try to parse as JSON, otherwise return as string
+		try:
+			return json.loads(decrypted.decode('utf-8'))
+		except:
+			return decrypted.decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e) if str(e) else repr(e)
+		log_Error('[decryptData][Exception][Line: {}] Type: {} Message: {}'.format(
+			exc_tb.tb_lineno, exc_type.__name__, message))
+		log_Error('[decryptData] Traceback: {}'.format(traceback.format_exc()))
+		return None
+
+def generate_jwt_token(expiration_minutes=5):
+	"""Generate JWT token for Console-to-API authentication"""
+	try:
+		secret_key = current_app.config.get('SECRET_KEY')
+		if not secret_key:
+			log_Error('[generate_jwt_token] SECRET_KEY not found in config')
+			return None
+
+		payload = {
+			'exp': datetime.utcnow() + timedelta(minutes=expiration_minutes),
+			'iat': datetime.utcnow(),
+			'iss': 'mpconsole',
+			'aud': 'mpapi'
+		}
+
+		token = jwt.encode(payload, secret_key, algorithm='HS256')
+		log_Debug('[generate_jwt_token] JWT token generated successfully')
+		return token
+	except Exception as e:
+		log_Error('[generate_jwt_token] Failed to generate token: {}'.format(str(e)))
+		return None
 
 def return_data_for_root_key(key):
 	_config = mpConfig()
