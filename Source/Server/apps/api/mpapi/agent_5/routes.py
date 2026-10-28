@@ -1,6 +1,7 @@
 from mpapi.mputil import MPResource
-from mpapi.model import (MpClient, MpClientGroups, MpClientTasks,
-						 MpAsusCatalogList, MpServerList, MPPluginHash)
+from mpapi.model import (MpClient, MpClientGroups, MpClientTasks, MpClientSettings,
+						 MpAsusCatalogList, MpServerList, MPPluginHash,
+						 MpPatchGroup, MpSoftwareGroup)
 from mpapi.mplogger import log_Info, log_Error, log_Debug
 from mpapi.shared.rest import client_endpoint, ok, fail, signed
 from mpapi.shared.groups import groupIDForClient, groupConfig
@@ -10,6 +11,23 @@ from mpapi.shared.agent_updates import check_update, UPDATE_APP, UPDATE_UPDATER
 from . import agent_5_api
 
 AGENT_CONFIG_SCHEMA = 330
+
+
+def _groupSettings(group_id):
+	"""Agent settings stored for a client group; group references are resolved to names (ids kept as *_id)."""
+	data = {}
+	for row in MpClientSettings.query.filter(MpClientSettings.group_id == group_id).all():
+		if row.key == 'patch_group':
+			patch_group = MpPatchGroup.query.filter(MpPatchGroup.id == row.value).first()
+			data['patch_group_id'] = row.value
+			data[row.key] = patch_group.name if patch_group is not None else 'NA'
+		elif row.key in ('software_group', 'inherited_software_group'):
+			sw_group = MpSoftwareGroup.query.filter(MpSoftwareGroup.gid == row.value).first()
+			data[row.key + '_id'] = row.value
+			data[row.key] = sw_group.gName if sw_group is not None else 'NA'
+		else:
+			data[row.key] = row.value
+	return data
 
 
 class AgentConfigInfo(MPResource):
@@ -47,9 +65,10 @@ class AgentConfig(MPResource):
 		client = MpClient.query.filter(MpClient.cuuid == client_id).first()
 		group = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).first()
 
-		agent_data = {}
+		agent_data = _groupSettings(group_id)
 		if group is not None:
-			agent_data = {'client_group': group.group_name, 'client_group_id': group_id}
+			agent_data['client_group'] = group.group_name
+			agent_data['client_group_id'] = group_id
 
 		servers = serverListForID(1)
 		suservers = {'version': 0, 'data': []}
