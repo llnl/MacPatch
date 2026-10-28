@@ -477,7 +477,16 @@ class UploadAgentPackage(MPResource):
 			upload_dir = os.path.join(current_app.config['AGENT_CONTENT_DIR'], agent_id)
 			_files = [fBase, fUpdate, fAgent]
 			if not os.path.isdir(upload_dir):
-				os.makedirs(upload_dir)
+				os.makedirs(upload_dir, mode=0o775)
+				# Change ownership to www-data:www-data
+				try:
+					import pwd
+					import grp
+					uid = pwd.getpwnam('www-data').pw_uid
+					gid = grp.getgrnam('www-data').gr_gid
+					os.chown(upload_dir, uid, gid)
+				except Exception as e:
+					log_Error('[MP_UploadAgentPackage][Post]: Failed to chown directory: %s' % str(e))
 
 			for f in _files:
 				log_Debug('Saving: %s' % (f.filename))
@@ -489,6 +498,16 @@ class UploadAgentPackage(MPResource):
 					os.remove(_pkg_file_path)
 
 				f.save(_pkg_file_path)
+				# Change file ownership to www-data:www-data
+				try:
+					import pwd
+					import grp
+					uid = pwd.getpwnam('www-data').pw_uid
+					gid = grp.getgrnam('www-data').gr_gid
+					os.chown(_pkg_file_path, uid, gid)
+					os.chmod(_pkg_file_path, 0o664)
+				except Exception as e:
+					log_Error('[MP_UploadAgentPackage][Post]: Failed to chown file %s: %s' % (filename, str(e)))
 				if "Base.pkg" in f.filename:
 					fBaseHash = fileHashSHA1(_pkg_file_path)
 				elif "Updater.pkg" in f.filename:

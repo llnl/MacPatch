@@ -123,7 +123,7 @@ class Config(object):
 	SECRET_KEYS         = get_secret_keys()  # For graceful key rotation (primary + old keys)
 
 	# Before Request
-	BEFORE_REQUEST		= ['/v1/auth/', '/v1/token/', '/agent/config/', '/agent/update/', '/agent/upload/']
+	BEFORE_REQUEST		= ['/v1/auth/', '/v1/token/', '/agent/config/', '/agent/update/', '/agent/upload/', '/mp-content/']
 
 	# Logging
 	LOGGING_FORMAT      = '%(asctime)s [%(name)s][%(levelname).3s] --- %(message)s'

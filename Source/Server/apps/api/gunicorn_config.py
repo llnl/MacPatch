@@ -124,8 +124,8 @@ raw_env = [
 ]
 pidfile = None
 umask = 0
-user = None
-group = None
+user = 'www-data'
+group = 'www-data'
 tmp_upload_dir = None
 
 #

@@ -32,7 +32,7 @@ def clientsList():
 					{'name':'client_version','label':'Client Ver'}, {'name':'hasPausedPatching','label':'Paused Patching'}, 
      				{'name':'mdate','label':'Mod Date'}]
 
-	return render_template('clients.html', cData=[], columns=[], colNames=cListColNames)
+	return render_template('clients/clients.html', cData=[], columns=[], colNames=cListColNames)
 
 # JSON Routes
 # This method is called by clients.html for a list of clients
@@ -92,7 +92,7 @@ def clientsInfo(client_id):
 	qGet = MpClient.query.filter(MpClient.cuuid == client_id).first()
 	rCols = [('patch', 'Patch'),('description', 'Description'),('restart', 'Reboot'),('mdate',' Days Needed')]
 
-	return render_template('client_dashboard.html', cData=qGet, columns={'rPatchCols': rCols}, client_id=client_id, invTypes=inventoryTypes())
+	return render_template('clients/client_dashboard.html', cData=qGet, columns={'rPatchCols': rCols}, client_id=client_id, invTypes=inventoryTypes())
 
 # JSON Routes
 @clients.route('/dashboard/required/<client_id>')
@@ -261,7 +261,7 @@ def clientGroups():
 	_rights = list(accessToGroups())
 
 	# Return Data
-	return render_template('client_groups.html', data=_data, columns=cols, counts=_results, rights=_rights)
+	return render_template('clients/client_groups.html', data=_data, columns=cols, counts=_results, rights=_rights)
 
 @clients.route('/group/add')
 @login_required
@@ -276,7 +276,7 @@ def clientGroupAdd():
 	setattr(clientGroup, 'group_owner', _owner)
 
 	log("{} adding new group {}.".format(_owner, _group_id))
-	return render_template('update_client_group.html', data=clientGroup, type="add")
+	return render_template('clients/update_client_group.html', data=clientGroup, type="add")
 
 @clients.route('/group/modify/<group_id>')
 @login_required
@@ -290,12 +290,12 @@ def clientGroupModify(group_id):
 	if clientGroup is None:
 		return '', 400
 
-	return render_template('update_client_group.html', data=clientGroup)
+	return render_template('clients/update_client_group.html', data=clientGroup)
 
 @clients.route('/group/<id>/user/add',methods=['GET'])
 @login_required
 def clientGroupUserAdd(id):
-	return render_template('client_group_user_mod.html', data={'group_id':id}, type="add")
+	return render_template('clients/client_group_user_mod.html', data={'group_id':id}, type="add")
 
 @clients.route('/group/<id>/<user_id>/remove')
 def clientGroupUserRemove(id, user_id):
@@ -454,7 +454,7 @@ def clientGroup(name,tab=1):
 		swResCols = [('appID', 'App ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'), ('enabled', 'Enabled', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
-		return render_template('client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
+		return render_template('clients/client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
 							profileCols=profileCols, swCols=swCols, swResCols=swResCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
@@ -553,7 +553,7 @@ def clientMove():
 @login_required
 def showClientMove(id):
 	cGroups = MpClientGroups().query.all()
-	return render_template('move_client_to_group.html', groups=cGroups, curGroup=0, cuuid=0)
+	return render_template('clients/move_client_to_group.html', groups=cGroups, curGroup=0, cuuid=0)
 
 '''
 ********************************
@@ -789,17 +789,25 @@ def groupSoftware(group_id):
 	sw = MpSoftwareTask.query.all()
 	swIDs = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == group_id).all()
 
+	log_Info('[groupSoftware] Found %d software tasks and %d group associations for group %s' % (len(sw), len(swIDs), group_id))
+
 	_results = []
 	if swIDs is not None and len(swIDs) >= 1:
 		for sid in swIDs:
+			log_Debug('[groupSoftware] Looking for tuuid=%s in MpSoftwareTask' % sid.tuuid)
+			found = False
 			for s in sw:
 				if sid.tuuid == s.tuuid:
 					_row = s.__dict__.copy()
 					del _row['_sa_instance_state']
 					_row['rid'] = sid.rid
 					_results.append(_row)
+					found = True
 					break
+			if not found:
+				log_Error('[groupSoftware] Software tuuid=%s exists in MpClientGroupSoftware but NOT found in MpSoftwareTask' % sid.tuuid)
 
+	log_Info('[groupSoftware] Returning %d results' % len(_results))
 	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
 @clients.route('/group/<id>/sw/add',methods=['GET','POST'])
@@ -807,20 +815,30 @@ def groupSoftware(group_id):
 def clientGroupSWAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareTask.query.filter(MpSoftwareTask.active == 1).all()
-		return render_template('client_group_sw_add.html', data={'group_id':id}, swData=sw, type="add")
+		return render_template('clients/client_group_sw_add.html', data={'group_id':id}, swData=sw, type="add")
 
 	elif request.method == 'POST':
 		_form = request.form
 		_groupID = request.form.get('group_id')
 		_tuuid = request.form.get('tuuid')
 
+		log_Info('[clientGroupSWAdd] Adding software tuuid=%s to group_id=%s by user %s' % (_tuuid, _groupID, session.get('user')))
+
 		hasSW = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == _groupID, MpClientGroupSoftware.tuuid == _tuuid).first()
 		if hasSW is None:
+			log_Info('[clientGroupSWAdd] Software not found in group, adding new record')
 			clientSW = MpClientGroupSoftware()
 			setattr(clientSW , 'group_id', _groupID)
 			setattr(clientSW , 'tuuid', _tuuid)
 			db.session.add(clientSW)
-			db.session.commit()
+			try:
+				db.session.commit()
+				log_Info('[clientGroupSWAdd] Successfully added software to group')
+			except Exception as e:
+				log_Error('[clientGroupSWAdd] Failed to commit: %s' % str(e))
+				db.session.rollback()
+		else:
+			log_Info('[clientGroupSWAdd] Software already exists in group, skipping')
 
 		return redirect(url_for('.clientGroup',name=id,tab=5))
 		# return clientGroup(id, 5)
@@ -846,7 +864,7 @@ def clientGroupSWResAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
 		print(sw)
-		return render_template('client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
+		return render_template('clients/client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
 
 	elif request.method == 'POST':
 		_form = request.form
