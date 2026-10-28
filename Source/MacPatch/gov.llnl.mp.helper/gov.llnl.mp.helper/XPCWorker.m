@@ -767,6 +767,13 @@ NSString *const MPXPCErrorDomain = @"gov.llnl.mp.helper";
 		SW_DATA_DIR = [self swDataDirURL];
 	}
 	NSString *dlSoftwareFileName = [[swItem valueForKeyPath:@"Software.sw_url"] lastPathComponent];
+	if (dlSoftwareFileName.length == 0 || ![swItem[@"id"] isKindOfClass:[NSString class]]) {
+		errStr = @"Error invalid software item, missing Software.sw_url or id.";
+		LogError(@"%@", errStr);
+		err = [NSError errorWithDomain:MPXPCErrorDomain code:MPGeneralError userInfo:@{NSLocalizedDescriptionKey:errStr}];
+		reply(err,1,installResultData);
+		return;
+	}
 	NSString *dlSoftwareFile = [NSString pathWithComponents:@[[SW_DATA_DIR path],@"sw",swItem[@"id"],dlSoftwareFileName]];
 	
 	// -----------------------------------------
