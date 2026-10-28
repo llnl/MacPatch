@@ -441,15 +441,31 @@ def taskRemove():
 		for t in _form['tasks'].split(","):
 			_task = MpSoftwareTask.query.filter(MpSoftwareTask.tuuid == t).first()
 			if _task is not None:
-				log_Info("Delete sw task %s" % (_task.name))
+				log_Info("[taskRemove] User %s deleting software task: %s (tuuid=%s)" % (session.get('user'), _task.name, t))
+
+				# Remove from software groups
 				_tasks = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_task_id == t).all()
 				if _tasks is not None:
 					for x in _tasks:
-						log_Info("Delete %s from sw group %s" % (x.sw_task_id, x.sw_group_id))
+						log_Info("[taskRemove] Removing task %s from software group %s" % (x.sw_task_id, x.sw_group_id))
 						MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.rid == x.rid).delete()
+
+				# Remove from client groups
+				_clientGroups = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.tuuid == t).all()
+				if _clientGroups is not None and len(_clientGroups) > 0:
+					log_Info("[taskRemove] Task is assigned to %d client group(s), removing..." % len(_clientGroups))
+					for cg in _clientGroups:
+						# Get group name for logging
+						group = MpClientGroups.query.filter(MpClientGroups.group_id == cg.group_id).first()
+						group_name = group.group_name if group else cg.group_id
+						log_Info("[taskRemove] Removing task from client group: %s (group_id=%s)" % (group_name, cg.group_id))
+						MpClientGroupSoftware.query.filter(MpClientGroupSoftware.rid == cg.rid).delete()
+				else:
+					log_Info("[taskRemove] Task not assigned to any client groups")
 
 				db.session.delete(_task)
 				db.session.commit()
+				log_Info("[taskRemove] Successfully deleted task: %s" % _task.name)
 
 	return json.dumps({'error':0}), 201
 

@@ -140,7 +140,7 @@ def admin():
 @console.route('/tasks')
 @login_required
 def tasks():
-	return render_template('console_tasks.html')
+	return render_template('admin/console_tasks.html')
 
 @console.route('/tasks/assignClientsToGroups',methods=['POST'])
 @login_required
@@ -228,7 +228,7 @@ def agentDeploy(tab=1):
 	groupResult['Filters'] = {'data': _filters, 'columns': sortedFilterCols}
 	groupResult['Admin'] = True
 
-	return render_template('adm_agent_deploy.html', gResults=groupResult, agentCols=columns1, filterCols=columns2, selectedTab=tab, curAgentID=_curAgentID)
+	return render_template('admin/agent/adm_agent_deploy.html', gResults=groupResult, agentCols=columns1, filterCols=columns2, selectedTab=tab, curAgentID=_curAgentID)
 
 @console.route('/agents', methods=['GET'])
 @login_required
@@ -307,7 +307,7 @@ def agentFilter(id):
 	if id != 0:
 		_filter = MpClientAgentsFilter.query.filter(MpClientAgentsFilter.rid == id).first()
 
-	return render_template('agent_filter.html', data=_filter)
+	return render_template('clients/agent_filter.html', data=_filter)
 
 @console.route('/agent/filter/<id>', methods=['POST'])
 @login_required
@@ -345,7 +345,208 @@ def agentFilterPost(id):
 @console.route('/agent/configure')
 @login_required
 def agentConfig():
-	return render_template('console_tasks.html')
+	return render_template('admin/console_tasks.html')
+
+'''
+----------------------------------------------------------------
+	Agent Config
+----------------------------------------------------------------
+'''
+
+@console.route('/agent/config')
+@login_required
+def agentConfigView():
+	if not (adminRole() or localAdmin()):
+		return redirect(url_for('dashboard.index'))
+	cols = [('name', 'Config Name'), ('aid', 'Config ID'), ('isDefault', 'Default'), ('revision', 'Revision')]
+	return render_template('admin/agent/agent_config.html', columns=cols)
+
+@console.route('/agent/config/list', methods=['GET'])
+@login_required
+def agentConfigList():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'data': [], 'total': 0}), 403
+
+	configs = AgentConfig.query.all()
+	_results = []
+	for config in configs:
+		row = {
+			'aid': config.aid,
+			'name': config.name,
+			'isDefault': config.isDefault,
+			'revision': config.revision
+		}
+		_results.append(row)
+
+	log_Debug('[agentConfigList] Returning %d configs' % len(_results))
+	response = {'data': _results, 'total': len(_results)}
+	return json.dumps(response, default=json_serial), 200, {'Content-Type': 'application/json'}
+
+@console.route('/agent/config/add', methods=['GET'])
+@login_required
+def agentConfigAdd():
+	if not (adminRole() or localAdmin()):
+		return '', 403
+
+	# Default agent configuration values
+	default_config_data = [
+		{'akey': 'AllowClient', 'akeyValue': '1', 'enforced': 1},
+		{'akey': 'AllowServer', 'akeyValue': '0', 'enforced': 1},
+		{'akey': 'CheckSignatures', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'Description', 'akeyValue': 'Default Agent Config', 'enforced': 0},
+		{'akey': 'Domain', 'akeyValue': 'Default', 'enforced': 0},
+		{'akey': 'MPProxyEnabled', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'MPProxyServerAddress', 'akeyValue': 'AUTOFILL', 'enforced': 0},
+		{'akey': 'MPProxyServerPort', 'akeyValue': '3600', 'enforced': 0},
+		{'akey': 'MPServerAddress', 'akeyValue': 'AUTOFILL', 'enforced': 0},
+		{'akey': 'MPServerAllowSelfSigned', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'MPServerPort', 'akeyValue': '3600', 'enforced': 0},
+		{'akey': 'MPServerSSL', 'akeyValue': '1', 'enforced': 0},
+		{'akey': 'PatchGroup', 'akeyValue': 'Default', 'enforced': 0},
+		{'akey': 'Reboot', 'akeyValue': '1', 'enforced': 0},
+		{'akey': 'SWDistGroup', 'akeyValue': 'Default', 'enforced': 0}
+	]
+
+	return render_template('admin/agent/agent_config_edit.html', config=None, config_data=default_config_data)
+
+@console.route('/agent/config/edit/<aid>', methods=['GET'])
+@login_required
+def agentConfigEdit(aid):
+	if not (adminRole() or localAdmin()):
+		return '', 403
+
+	config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+	if not config:
+		return 'Configuration not found', 404
+
+	config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).all()
+	return render_template('admin/agent/agent_config_edit.html', config=config, config_data=config_data)
+
+@console.route('/agent/config/save', methods=['POST'])
+@login_required
+def agentConfigSave():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'error': 1, 'errormsg': 'Unauthorized'}), 403
+
+	try:
+		_form = request.form
+		log_Info(f"{_form}")
+		aid = _form.get('aid', '')
+		name = _form.get('name', '')
+		is_default = _form.get('isDefault', '0')
+
+		log_Info('[agentConfigSave] User %s saving agent config: name=%s, aid=%s, isDefault=%s' % (session.get('user'), name, aid, is_default))
+
+		# If setting as default, unset other defaults
+		if is_default == '1':
+			log_Info('[agentConfigSave] Unsetting other default configs')
+			AgentConfig.query.update({'isDefault': 0})
+
+		# Create or update config
+		if aid:
+			# Update existing
+			config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+			if not config:
+				return json.dumps({'error': 1, 'errormsg': 'Configuration not found'}), 404
+
+			config.name = name
+			config.isDefault = is_default
+			log_Info('[agentConfigSave] Updating existing config: %s' % aid)
+		else:
+			# Create new
+			aid = str(uuid.uuid4())
+			config = AgentConfig(aid=aid, name=name, isDefault=is_default, revision='0')
+			db.session.add(config)
+			log_Info('[agentConfigSave] Creating new config with aid: %s' % aid)
+
+		# Save config data (key-value pairs)
+		# Delete existing data
+		AgentConfigData.query.filter(AgentConfigData.aid == aid).delete()
+
+		# Add new data from form
+		config_keys = [k for k in _form.keys() if k.startswith('config_')]
+		log_Info('[agentConfigSave] Saving %d config key-value pairs' % len(config_keys))
+		log_Debug('[agentConfigSave] Form keys: %s' % list(_form.keys()))
+
+		if len(config_keys) == 0:
+			log_Error('[agentConfigSave] No configuration keys provided')
+			return json.dumps({'error': 1, 'errormsg': 'At least one configuration setting is required'}), 400
+
+		for key in config_keys:
+			akey = key.replace('config_', '')
+			akeyValue = _form.get(key, '')
+			enforced = _form.get('enforced_' + akey, '0')
+
+			log_Debug('[agentConfigSave] Adding config: %s=%s (enforced=%s)' % (akey, akeyValue, enforced))
+			data = AgentConfigData(aid=aid, akey=akey, akeyValue=akeyValue, enforced=enforced)
+			db.session.add(data)
+
+		# Update revision hash
+		db.session.commit()
+
+		# Calculate revision hash
+		config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).all()
+		reslst = []
+		for i in config_data:
+			reslst.append(i.akeyValue.lower())
+
+		reslststr = "".join(reslst)
+		import hashlib
+		try:
+			configHash = hashlib.md5(reslststr.encode('utf-8'), usedforsecurity=False).hexdigest()
+		except TypeError:
+			# Older Python versions don't support usedforsecurity parameter
+			configHash = hashlib.md5(reslststr.encode('utf-8')).hexdigest()
+
+		config.revision = configHash
+		db.session.commit()
+
+		log_Info('[agentConfigSave] Successfully saved config %s with revision %s' % (name, configHash))
+
+		return json.dumps({'error': 0, 'aid': aid}), 200
+
+	except Exception as e:
+		log_Error('[agentConfigSave] Error saving config: %s' % str(e))
+		db.session.rollback()
+		return json.dumps({'error': 1, 'errormsg': str(e)}), 500
+
+@console.route('/agent/config/remove', methods=['DELETE'])
+@login_required
+def agentConfigRemove():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'error': 1, 'errormsg': 'Unauthorized'}), 403
+
+	try:
+		aids = request.form.get('aids', '').split(',')
+		log_Info('[agentConfigRemove] User %s deleting agent configs: %s' % (session.get('user'), aids))
+
+		for aid in aids:
+			if not aid:
+				continue
+
+			config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+			if config:
+				if config.isDefault == 1:
+					log_Error('[agentConfigRemove] Cannot delete default config: %s' % aid)
+					return json.dumps({'error': 1, 'errormsg': 'Cannot delete default configuration'}), 400
+
+				log_Info('[agentConfigRemove] Deleting config: %s (%s)' % (config.name, aid))
+
+				# Delete config data first
+				AgentConfigData.query.filter(AgentConfigData.aid == aid).delete()
+
+				# Delete config
+				db.session.delete(config)
+
+		db.session.commit()
+		log_Info('[agentConfigRemove] Successfully deleted configs')
+
+		return json.dumps({'error': 0}), 200
+
+	except Exception as e:
+		log_Error('[agentConfigRemove] Error deleting config: %s' % str(e))
+		db.session.rollback()
+		return json.dumps({'error': 1, 'errormsg': str(e)}), 500
 
 @console.route('/agent/deploy', methods=['DELETE'])
 @login_required
@@ -393,7 +594,7 @@ def agentPluginsView():
 	columns = [('rid', 'rid', '0'), ('pluginName', 'Name', '1'), ('pluginBundleID', 'Bundle ID', '1'),
 				('pluginVersion', 'Version', '1'), ('hash', 'Hash', '1'), ('active', 'Enabled', '1')]
 
-	return render_template('agent_plugins.html', data={}, columns=columns)
+	return render_template('admin/agent/agent_plugins.html', data={}, columns=columns)
 
 @console.route('/agent/plugins/list', methods=['GET'])
 @login_required
@@ -424,7 +625,7 @@ def agentPluginsEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('agent_plugins_update.html', data=_filter)
+	return render_template('admin/agent/agent_plugins_update.html', data=_filter)
 
 @console.route('/agent/plugins/update', methods=['POST'])
 @login_required
@@ -481,7 +682,7 @@ def mpServerView():
 				('allowSelfSignedCert', 'Allow Self-Signed Cert', '1'),('isMaster', 'Master', '1'), ('isProxy', 'Proxy', '1'),
 				('active', 'Enabled', '1')]
 
-	return render_template('mp_servers.html', columns=columns)
+	return render_template('admin/servers/mp_servers.html', columns=columns)
 
 @console.route('/servers/mp/list', methods=['GET'])
 @login_required
@@ -522,7 +723,7 @@ def mpServerEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('mp_server_update.html', data=_filter)
+	return render_template('admin/servers/mp_server_update.html', data=_filter)
 
 @console.route('/servers/mp/update', methods=['POST', 'DELETE'])
 @login_required
@@ -756,7 +957,7 @@ def asusServersView():
 	columns = [('rid', 'rid', '0'), ('catalog_url', 'Catalog URL', '1'), ('os_major', 'OS Major', '1'),
 	('os_minor', 'OS Minor', '1'),('proxy', 'Proxy', '1'), ('active', 'Enabled', '1')]
 
-	return render_template('asus_servers.html', columns=columns)
+	return render_template('admin/servers/asus_servers.html', columns=columns)
 
 @console.route('/servers/asus/list', methods=['GET'])
 @login_required
@@ -796,7 +997,7 @@ def asusServerEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('asus_server_update.html', data=_filter)
+	return render_template('admin/servers/asus_server_update.html', data=_filter)
 
 @console.route('/servers/asus/update', methods=['POST', 'DELETE'])
 @login_required
@@ -866,7 +1067,7 @@ def updateASUSRev():
 @console.route('/server/datasources')
 @login_required
 def dataSourcesView():
-	return render_template('datasources.html')
+	return render_template('admin/datasources.html')
 
 ''' Global '''
 def getDoc(col_obj):

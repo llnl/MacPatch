@@ -38,7 +38,7 @@ def index():
 
 	qGetSettings = MpClientsRegistrationSettings.query.first()
 
-	return render_template('registration.html', data={}, columns={}, group_name='name', group_id='name',
+	return render_template('admin/registration/registration.html', data={}, columns={}, group_name='name', group_id='name',
 						selectedTab=1,
 						settings=qGetSettings,
 						keyCols=_keyCols, regCols=_regClientCols, prkClientCols=_prkClientCols)
@@ -157,7 +157,7 @@ def parked():
 @login_required
 def addKey():
 	if request.method == 'GET':
-		return render_template('registration_key.html', data={})
+		return render_template('admin/registration/registration_key.html', data={})
 	else:
 		data = request.form.to_dict()
 		if data['rid'] == '0':
@@ -182,7 +182,7 @@ def addKey():
 def editKey(rid):
 	if request.method == 'GET':
 		qKey = MpRegKeys.query.filter(MpRegKeys.rid == rid).first()
-		return render_template('registration_key.html', data=qKey)
+		return render_template('admin/registration/registration_key.html', data=qKey)
 
 	elif request.method == 'DELETE':
 		qKey = MpRegKeys.query.filter(MpRegKeys.rid == rid).first()

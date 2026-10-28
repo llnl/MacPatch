@@ -192,7 +192,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if (_wkWebView) {
 		NSRect frame = _wkWebView.frame;
 		NSView *superview = _wkWebView.superview;
-		NSArray *constraints = _wkWebView.constraints.copy;
+		WKWebView *oldWebView = _wkWebView;
+		// Pinning constraints (leading/trailing/top) live on the superview, sizing ones on the view itself
+		NSMutableArray<NSLayoutConstraint *> *constraints = [NSMutableArray arrayWithArray:oldWebView.constraints];
+		for (NSLayoutConstraint *c in superview.constraints) {
+			if (c.firstItem == oldWebView || c.secondItem == oldWebView) [constraints addObject:c];
+		}
 		BOOL usesAutoLayout = !_wkWebView.translatesAutoresizingMaskIntoConstraints;
 		
 		[_wkWebView removeFromSuperview];
@@ -206,13 +211,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		if (usesAutoLayout && constraints.count > 0) {
 			for (NSLayoutConstraint *constraint in constraints) {
 				NSLayoutConstraint *newConstraint = [NSLayoutConstraint
-					constraintWithItem:(constraint.firstItem == _wkWebView ? _wkWebView : constraint.firstItem)
+					constraintWithItem:(constraint.firstItem == oldWebView ? _wkWebView : constraint.firstItem)
 					attribute:constraint.firstAttribute
 					relatedBy:constraint.relation
-					toItem:(constraint.secondItem == _wkWebView ? _wkWebView : constraint.secondItem)
+					toItem:(constraint.secondItem == oldWebView ? _wkWebView : constraint.secondItem)
 					attribute:constraint.secondAttribute
 					multiplier:constraint.multiplier
 					constant:constraint.constant];
+				newConstraint.priority = constraint.priority;
 				[newConstraint setActive:YES];
 			}
 		}

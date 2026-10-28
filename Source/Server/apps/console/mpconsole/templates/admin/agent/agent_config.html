@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{%  endblock %}
+
+{% block pageHeader %}
+	Agent Configurations
+{%  endblock %}
+
+{% block bodyPanel %}
+	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar">
+		<div id="toolbar">
+			<button id="addButton" type="button" class="btn btn-default" title="New Agent Config"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="deleteButton" type="button" class="btn btn-default" title="Delete Agent Config"><i class="glyphicon glyphicon-trash"></i></button>
+		</div>
+	</table>
+{% endblock %}
+
+
+{% block javascript %}
+	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+	<script>
+
+	function operateFormatter(value, row, index)
+	{
+		return [
+			'<a class="edit" href="javascript:void(0)" title="Edit">',
+			'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
+			'</a>&nbsp;'
+		].join('');
+	}
+
+	window.operateEvents =
+	{
+		'click .edit': function (e, value, row, index)
+		{
+			var _url = "/console/agent/config/edit/" + row['aid'];
+			$.get(_url).done(function(data)
+			{
+				resetModalWindow();
+				$('#modalTitle').html('Edit Agent Configuration');
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$('#table').bootstrapTable('refresh');
+				});
+			});
+		}
+	};
+
+	var _cols = [{
+					field: 'state',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle',
+					width: 60
+				},
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: operateEvents,
+					formatter: operateFormatter,
+					width: 60
+				},
+				{
+					field: 'name',
+					title: 'Name',
+					sortable: true
+				},
+				{
+					field: 'isDefault',
+					title: 'Default',
+					sortable: true,
+					formatter: function(value) {
+						return value == 1 ? '<i class="fa fa-check text-success"></i>' : '';
+					},
+					width: 100
+				},
+				{
+					field: 'revision',
+					title: 'Revision',
+					sortable: true,
+					width: 300
+				}];
+
+	$( document ).ready(function()
+	{
+		$('#table').bootstrapTable(
+		{
+			//columns: _cols,
+			//url: '/console/agent/config/list',
+			striped: true,
+			ajax: function loadMyRows(params)
+			{
+				if (params.data.search == '') {
+					params.data.search = undefined;
+				}
+				var _url = "/console/agent/config/list";
+				$.ajax({
+					type: 'GET',
+					url: _url,
+					cache: false,
+					dataType: 'json',
+					success: function(res)
+					{
+						params.success({
+							total: res.total,
+							rows: res.data
+						});
+					}
+				});
+			},
+			method: 'GET',
+			pagination: false,
+			sidePagination: 'client',
+			search: true,
+			showRefresh: true,
+			showToggle: false,
+			showColumns: true,
+			clickToSelect: true,
+			columns: [
+				{
+					field: 'rowState',
+					checkbox: true,
+					rowspan: 1,
+					align: 'center',
+					valign: 'middle'
+				},
+				{
+					field: 'operate',
+					title: '',
+					align: 'center',
+					events: operateEvents,
+					formatter: operateFormatter,
+					visible: true,
+					width: '40px'
+				},
+				{% for col in columns %}
+					{
+						sortable: true,
+						field: '{{col[0]}}',
+						title: '{{col[1]}}'
+					},
+				{% endfor %}
+			]
+		});
+
+		$('#addButton').on('click', function(e) {
+			var _url = "/console/agent/config/add";
+			$.get(_url).done(function(data)
+			{
+				resetModalWindow();
+				$('#modalTitle').html('New Agent Configuration');
+				$('#modalBody').html(data);
+				$('#modalDialog').addClass("modal-wide");
+				$('#modalDialog').modal('show');
+
+				$("#modalDialog").on("hidden.bs.modal", function () {
+					$('#table').bootstrapTable('refresh');
+				});
+			});
+		});
+
+		$('#deleteButton').on('click', function(e) {
+			var selections = $('#table').bootstrapTable('getSelections');
+			if (selections.length == 0)
+			{
+				alert("Please select at least one configuration to delete.");
+				return;
+			}
+
+			var hasDefault = false;
+			for (var i = 0; i < selections.length; i++)
+			{
+				if (selections[i].isDefault == 1)
+				{
+					hasDefault = true;
+					break;
+				}
+			}
+
+			if (hasDefault)
+			{
+				alert("Cannot delete the default configuration. Please set another configuration as default first.");
+				return;
+			}
+
+			if (!confirm("Are you sure you want to delete the selected configuration(s)?"))
+			{
+				return;
+			}
+
+			var aids = [];
+			for (var i = 0; i < selections.length; i++)
+			{
+				aids.push(selections[i].aid);
+			}
+
+			$.ajax({
+				url: '/console/agent/config/remove',
+				type: 'DELETE',
+				data: {'aids': aids.join(",")},
+				success: function(data)
+				{
+					$('#table').bootstrapTable('refresh');
+				},
+				error: function(e)
+				{
+					alert("Error deleting configuration: " + e.responseText);
+				}
+			});
+		});
+	});
+	</script>
+{% endblock %}

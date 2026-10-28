@@ -435,6 +435,16 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     for (Server *server in servers)
     {
+        // Set allowSelfSignedCert based on server configuration
+        BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.allowSelfSignedCert = allowSelfSigned;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.allowSelfSignedCert = allowSelfSigned;
+            });
+        }
+
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         LogInfo(@"URL: %@",url);
         wsResult = [self syncronusGETWithURL:url body:body];
@@ -463,6 +473,16 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     for (Server *server in servers)
     {
+        // Set allowSelfSignedCert based on server configuration
+        BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.allowSelfSignedCert = allowSelfSigned;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.allowSelfSignedCert = allowSelfSigned;
+            });
+        }
+
         LogDebug(@"[runSyncPOST][server]: %@",server.toDictionary);
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         LogDebug(@"[runSyncPOST] URL: %@",url);
