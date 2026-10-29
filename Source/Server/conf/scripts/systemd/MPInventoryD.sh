@@ -32,12 +32,13 @@ RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
 MP_SCRIPT="${MP_HOME}/conf/scripts"
 MP_INVDIR="${MP_HOME}/InvData/files"
+MP_PYTHON="${MP_HOME}/env/server/bin/python3"
 
 case "$1" in
  start)
 	if [ -f $MP_SCRIPT/MPInventoryD.py ]; then
 	    echo $"Starting MacPatch Inventory"
-		python3 $MP_SCRIPT/MPInventoryD.py --config $MP_HOME/etc/siteconfig.json --files $MP_INVDIR &
+		$MP_PYTHON $MP_SCRIPT/MPInventoryD.py --config $MP_HOME/etc/siteconfig.json --files $MP_INVDIR &
     fi
 	;;
  stop)

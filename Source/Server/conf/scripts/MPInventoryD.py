@@ -51,6 +51,7 @@ import json
 import os.path
 import traceback
 import socket
+import signal
 
 from dotenv import load_dotenv
 from multiprocessing import Pool
@@ -414,6 +415,70 @@ class DataMgr:
 			st['total_ms'] = int((time.monotonic() - started) * 1000)
 
 # --------------------------------------------
+# Worker function for multiprocessing
+# --------------------------------------------
+def processFile_worker(work_item):
+	"""
+	Module-level function for processing inventory files in parallel.
+	This must be at module level to be pickle-able for multiprocessing.
+	"""
+	file, dbConfig, statsConfig, filesBaseDir = work_item
+	logger = MPLogger(level=shared_logLevel, echo=shared_logEchoStdOut)
+
+	try:
+		if os.path.exists(file):
+			# Process the inv File
+			dMgr = DataMgr(dbConfig, file)
+			success = dMgr.parseInvData()
+			InvStats(dbConfig, statsConfig).record(dMgr.stats)
+
+			# Move or remove the file based on success
+			parDir = os.path.abspath(os.path.join(filesBaseDir, os.pardir))
+			head, tail = os.path.split(file)
+			invFile = filesBaseDir + "/" + tail
+
+			if success:
+				if gKeepFiles:
+					# Move to Processed
+					proDir = parDir + "/Processed"
+					if not os.path.exists(proDir):
+						os.makedirs(proDir)
+					proFile = proDir + "/" + tail
+					try:
+						shutil.move(invFile, proFile)
+					except Exception as e:
+						logger.error("Error moving file. %s" % str(e))
+						os.remove(invFile)
+				else:
+					os.remove(invFile)
+			else:
+				# Move to Errors
+				errDir = parDir + "/Errors"
+				if not os.path.exists(errDir):
+					os.makedirs(errDir)
+				errFile = errDir + "/" + tail
+				try:
+					shutil.move(invFile, errFile)
+				except Exception as e:
+					logger.error("Error moving file. %s" % str(e))
+					os.remove(invFile)
+	except Exception as e:
+		logging.error(f"[processFile_worker]: {file}")
+		logging.error(f"[processFile_worker]: {e}")
+		# Try to move to errors
+		try:
+			parDir = os.path.abspath(os.path.join(filesBaseDir, os.pardir))
+			errDir = parDir + "/Errors"
+			head, tail = os.path.split(file)
+			invFile = filesBaseDir + "/" + tail
+			errFile = errDir + "/" + tail
+			if not os.path.exists(errDir):
+				os.makedirs(errDir)
+			shutil.move(invFile, errFile)
+		except:
+			pass
+
+# --------------------------------------------
 # Main Class
 # --------------------------------------------
 
@@ -427,6 +492,7 @@ class MPInventory:
 		self.filesBaseDir = filesBaseDir
 		self.files = ''
 		self.keepProcessedFiles = keepProcessedFiles
+		self.pool = None
 
 	def getFiles(self):
 		if os.path.exists(self.filesBaseDir) and os.path.isdir(self.filesBaseDir):
@@ -476,9 +542,15 @@ class MPInventory:
 		logger.info("***************** START (processFiles) ***************** ")
 		logger.info("%d file(s) found to process."% len(self.files))
 
-		p = Pool(processes=self.poolCount,initializer=init_worker, initargs=(logLevel,logEchoStdOut,))
-		p.map(self.processFile, self.files)
-		p.close()
+		# Create pool if it doesn't exist
+		if self.pool is None:
+			self.pool = Pool(processes=self.poolCount, initializer=init_worker, initargs=(logLevel, logEchoStdOut,))
+
+		# Use the reusable pool instead of creating a new one each time
+		if len(self.files) > 0:
+			# Pass a tuple of (file, dbConfig, statsConfig, filesBaseDir) to a module-level function
+			work_items = [(f, self.dbConfig, self.statsConfig, self.filesBaseDir) for f in self.files]
+			self.pool.map(processFile_worker, work_items)
 		logger.info("***************** DONE (processFiles)  ***************** ")
 
 	def processFileReal(self, file):
@@ -525,6 +597,12 @@ class MPInventory:
 		if time.time() - self.lastPrune >= 3600:
 			self.lastPrune = time.time()
 			InvStats(self.dbConfig, self.statsConfig).prune()
+
+	def cleanup(self):
+		"""Clean up resources on shutdown."""
+		if hasattr(self, 'pool'):
+			self.pool.close()
+			self.pool.join()
 
 	def processFilesOld(self):
 		self.getFiles()
@@ -583,6 +661,20 @@ def main():
 	parser.add_argument('--save', help='Saves JSON files', action='store_true')
 	parser.add_argument('--echo', help='Saves JSON files', required=False, action='store_true')
 	args = parser.parse_args()
+
+	# Global reference to MPInventory instance for signal handler
+	mpi_instance = None
+
+	def signal_handler(signum, frame):
+		"""Handle shutdown signals gracefully."""
+		logger.info(f"Received signal {signum}, shutting down gracefully...")
+		if mpi_instance:
+			mpi_instance.cleanup()
+		sys.exit(0)
+
+	# Register signal handlers for graceful shutdown
+	signal.signal(signal.SIGTERM, signal_handler)
+	signal.signal(signal.SIGINT, signal_handler)
 
 	if args.echo:
 		logEchoStdOut = True
@@ -659,10 +751,21 @@ def main():
 		logger.info('Statistics are disabled.')
 
 	mpi = MPInventory(dbConfig=dbConf, filesBaseDir=args.files, statsConfig=statsConf)
-	while True:
-		mpi.processFiles()
-		mpi.pruneStats()
-		time.sleep(3.0)
+	# Make mpi accessible to signal handler
+	mpi_instance = mpi
+
+	try:
+		while True:
+			mpi.processFiles()
+			mpi.pruneStats()
+			time.sleep(3.0)
+	except KeyboardInterrupt:
+		logger.info("Interrupted by user, shutting down...")
+		mpi.cleanup()
+	except Exception as e:
+		logger.error(f"Unexpected error: {e}")
+		mpi.cleanup()
+		raise
 
 
 if __name__ == '__main__':
