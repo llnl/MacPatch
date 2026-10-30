@@ -92,7 +92,9 @@
 	MPSettings *set = [MPSettings sharedInstance];
 	[set compareAndUpdateSettings:settingRevisions];
     
-    if (newTasksRev > currTasksRev) {
+    // Compare the revision values, not the NSNumber pointers
+    BOOL tasksChanged = (newTasksRev != nil) && ([newTasksRev integerValue] != [currTasksRev integerValue]);
+    if (tasksChanged) {
         LogInfo(@"[updateGroupSettings]: Reloading scheduled tasks with updated values.");
         [[TaskScheduler sharedScheduler] listAllTasks];
         [[TaskScheduler sharedScheduler] reloadTasksFromConfig];

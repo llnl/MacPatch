@@ -288,6 +288,10 @@
     dispatch_semaphore_t sem = dispatch_semaphore_create(0);
     NSDictionary *swDict = [self getSoftwareTaskForID:swTask[@"tuuid"]];
     __block NSInteger res = 99;
+    if (swDict == nil) {
+        LogError(@"No software task data returned for %@, skipping install.",swTask[@"name"]);
+        return (int)res;
+    }
     [self connectAndExecuteCommandBlock:^(NSError * connectError) {
         if (connectError != nil) {
             LogError(@"workerConnection[connectError]: %@",connectError.localizedDescription);
@@ -365,12 +369,16 @@
         // actually runs, and b) the retain taken by the block passed to -addOperationWithBlock:
         // will be released when that operation completes and the operation itself is deallocated
         // (notably self does not have a reference to the NSBlockOperation).
+        // Capture the connection weakly so a stale handler only clears its own connection,
+        // never a newer one that replaced it.
+        __weak NSXPCConnection *weakConn = self.workerConnection;
         self.workerConnection.invalidationHandler = ^{
-            // If the connection gets invalidated then, on the main thread, nil out our
-            // reference to it.  This ensures that we attempt to rebuild it the next time around.
-            self.workerConnection.invalidationHandler = nil;
+            NSXPCConnection *conn = weakConn;
+            conn.invalidationHandler = nil;
             [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-                self.workerConnection = nil;
+                if (self.workerConnection == conn) {
+                    self.workerConnection = nil;
+                }
             }];
         };
 #pragma clang diagnostic pop
@@ -383,7 +391,7 @@
 // main thread, passing it an error indicating if the connection was successful.
 {
     // Ensure that there's a helper tool connection in place.
-    self.workerConnection = nil;
+    // Reuse the existing connection; the invalidation handler resets it if it drops.
     [self connectToHelperTool];
     
     commandBlock(nil);

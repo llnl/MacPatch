@@ -292,14 +292,14 @@ static dispatch_queue_t _settingsQueue = NULL;
                 LogInfo(@"Update Agent tasks, tasks did not match.");
                 [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
             }
-            if ([[remoteRevs objectForKey:@"swrestrictions"] isEqualTo:[self readSoftwareRestrictionRevisionFromFile]]) {
-                // Usdate Tasks
+            if ([[remoteRevs objectForKey:@"swrestrictions"] intValue] != [[localRevs objectForKey:@"swrestrictions"] intValue]) {
+                // Update Software Restrictions
                 LogInfo(@"Update Software restrictions, restrictions did not match.");
-                [self writeNewSoftwareRestritionsFile];
-                
-                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-                [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
-                [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+                if ([self writeNewSoftwareRestritionsFile]) {
+                    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+                    [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
+                    [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+                }
             }
             LogInfo(@"Setting have been updated.");
             ok = YES;
@@ -443,23 +443,26 @@ static dispatch_queue_t _settingsQueue = NULL;
         }
     }
     
-    if (_srvsRaw.count >= 1) {
-        if (_master) {
-            if ([ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]]) {
-                // Since we have reachable servers in the array, only add master if reachable
-                [_srvsRaw addObject:_master]; // Add the master
-            }
+    BOOL masterReachable = NO;
+    if (_master) {
+        masterReachable = [ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]];
+        if (masterReachable) {
+            // Master is a valid server even when it is the only one defined
+            [_srvsRaw addObject:_master];
         }
-        if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
-        for (NSDictionary *s in _srvsRaw)
-        {
-            [_srvs addObject:[[Server alloc] initWithDictionary:s]];
-        }
-    } else {
+    }
+    
+    if (_srvsRaw.count == 0 && _master) {
         // No servers which are reachable, add the master server so there
         // is at least 1 server in the array and it can timeout.
-        [_srvs addObject:[[Server alloc] initWithDictionary:_master]];
+        [_srvsRaw addObject:_master];
         LogError(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
+    }
+    
+    if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
+    for (NSDictionary *s in _srvsRaw)
+    {
+        [_srvs addObject:[[Server alloc] initWithDictionary:s]];
     }
     
     // Now we just read the plist, it's server list is randomized on version rev
