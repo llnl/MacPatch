@@ -142,6 +142,7 @@ yarn.lock
 working/
 *.rdb
 yarn_components
+*.bak
 
 # MacPatch, ignore root dir items
 /Server
