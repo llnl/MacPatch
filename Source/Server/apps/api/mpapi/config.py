@@ -128,7 +128,7 @@ class Config(object):
 	# Logging
 	LOGGING_FORMAT      = '%(asctime)s [%(name)s][%(levelname).3s] --- %(message)s'
 	LOGGING_LEVEL       = os.environ.get('LOGGING_LEVEL') or 'info'
-	LOGGING_LOCATION    = os.environ.get('LOGGING_LOCATION'') or MP_SRV_DIR+'/apps/logs'
+	LOGGING_LOCATION    = os.environ.get('LOGGING_LOCATION') or MP_SRV_DIR+'/apps/logs'
 	LOG_FILE_NAME		= os.environ.get('LOG_FILE_NAME') or 'mpapi.log'
 	LOG_FILE 			= LOGGING_LOCATION + '/' + LOG_FILE_NAME
 
