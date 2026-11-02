@@ -143,6 +143,7 @@ working/
 *.rdb
 yarn_components
 *.bak
+*.back
 
 # MacPatch, ignore root dir items
 /Server
