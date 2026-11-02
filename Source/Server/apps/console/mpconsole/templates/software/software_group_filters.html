@@ -1,4 +1,8 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 {% block styles %}
 	<!-- Bootstrap Core CSS -->
@@ -7,9 +11,17 @@
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<!-- Custom Fonts -->
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
+	<style>
+		#modalDialogAlt .modal-title { font-size: 18px; line-height: 24px; font-weight: 600; }
+	</style>
 {%  endblock %}
+</head>
+<body class="mp-console">
 
 {% block pageHeader %}
 	{{title}}
@@ -34,11 +46,10 @@
 		</div><!-- /.modal-dialog -->
 	</div><!-- /.modal -->
 
-	<table id="table" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
-		<div id="toolbar">
-			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-		</div>
-	</table>
+	<div id="toolbar">
+		<button id="addButton" type="button" class="btn btn-default" title="Add Filter" aria-label="Add Filter"><i class="fa fa-plus" aria-hidden="true"></i></button>
+	</div>
+	<table id="table" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbar"></table>
 
 {% endblock %}
 
@@ -46,15 +57,17 @@
 {% block javascript %}
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 	<!-- Bootstrap Table -->
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<script>
 
@@ -244,3 +257,5 @@
 		}
 	</script>
 {% endblock %}
+</body>
+</html>

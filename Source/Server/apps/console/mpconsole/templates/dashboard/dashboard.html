@@ -29,11 +29,11 @@
                             <div class="tab-content">
 								<div class="tab-pane active" id="mBreakDown">
 									<br>
-									<canvas id="model-bar-chart" />
+									<canvas id="model-bar-chart"></canvas>
 								</div>
                                 <div class="tab-pane" id="mTypes">
 									<br>
-                                    <canvas id="model-pie-chart" />
+                                    <canvas id="model-pie-chart"></canvas>
 								</div>
                             </div>
 
@@ -57,11 +57,11 @@
                             <div class="tab-content">
 								<div class="tab-pane active" id="pRequired">
 									<br>
-									<canvas id="patch-bar-chart" />
+									<canvas id="patch-bar-chart"></canvas>
 								</div>
 								<div class="tab-pane" id="pReleased">
 									<br>
-									<table id="table" class="table table-condensed table-striped" data-toggle="table">
+									<table id="table" class="table table-bordered table-sm table-striped" data-toggle="table">
 										<thead>
 											<tr>
 												<th>Patch</th>
@@ -80,7 +80,7 @@
 								</div>
 								<div class="tab-pane" id="pInstalled">
 									<br>
-									<canvas id="patch-installed-bar-chart" />
+									<canvas id="patch-installed-bar-chart"></canvas>
 								</div>
                             </div>
                         </div>
@@ -104,11 +104,11 @@
                             <div class="tab-content">
 								<div class="tab-pane active" id="osMinor">
 									<br>
-									<canvas id="osminor-bar-chart" />
+									<canvas id="osminor-bar-chart"></canvas>
 								</div>
                                 <div class="tab-pane" id="osAll">
 									<br>
-                                    <canvas id="osver-bar-chart" />
+                                    <canvas id="osver-bar-chart"></canvas>
 								</div>
                             </div>
 
@@ -125,7 +125,7 @@
 						</div>
 						<!-- /.panel-heading -->
 						<div class="panel-body">
-							<canvas id="reboot-pie-chart" />
+							<canvas id="reboot-pie-chart"></canvas>
 						</div>
 						<!-- /.panel-body -->
 					</div>
@@ -141,7 +141,7 @@
 						</div>
 						<!-- /.panel-heading -->
 						<div class="panel-body">
-							<canvas id="clientstatus-bar-chart" />
+							<canvas id="clientstatus-bar-chart"></canvas>
 						</div>
 						<!-- /.panel-body -->
 					</div>
@@ -155,7 +155,7 @@
 						</div>
 						<!-- /.panel-heading -->
 						<div class="panel-body">
-							<canvas id="agents-pie-chart" />
+							<canvas id="agents-pie-chart"></canvas>
 						</div>
 						<!-- /.panel-body -->
 					</div>
@@ -174,14 +174,17 @@
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
 	<script src="{{ url_for('static', filename='yarn_components/raphael/raphael.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/morris.js/morris.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/Chart.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/chart.umd.min.js') }}"></script>
 
 	<script>
+	Chart.defaults.font.family = '"Helvetica Neue", Helvetica, Arial, sans-serif';
+	Chart.defaults.color = '#666';
 	$( document ).ready(function()
 	{
         $('#modelTab li:last-child a').tab('show');
@@ -214,7 +217,8 @@
 			}]
 		},
 		options: {
-			responsive: true
+			responsive: true,
+			aspectRatio: 2
 		}
 	});
 
@@ -244,16 +248,16 @@
 		},
 		options: {
 			responsive: true,
-			title: {
-				display: false,
-				text: 'Custom Chart Title'
+			plugins: {
+				title: {
+					display: false,
+					text: 'Custom Chart Title'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
@@ -283,7 +287,8 @@
 			}]
 		},
 		options: {
-			responsive: true
+			responsive: true,
+			aspectRatio: 2
 		}
 	});
 
@@ -313,19 +318,19 @@
 		},
 		options: {
 			responsive: true,
-			legend: {
-				display: false,
-			},
-			title: {
-				display: true,
-				text: 'Top 10 Required Patches'
+			plugins: {
+				legend: {
+					display: false,
+				},
+				title: {
+					display: true,
+					text: 'Top 10 Required Patches'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
@@ -356,16 +361,16 @@
 		},
 		options: {
 			responsive: true,
-			title: {
-				display: false,
-				text: 'Custom Chart Title'
+			plugins: {
+				title: {
+					display: false,
+					text: 'Custom Chart Title'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
@@ -396,16 +401,16 @@
 		},
 		options: {
 			responsive: true,
-			title: {
-				display: false,
-				text: 'Custom Chart Title'
+			plugins: {
+				title: {
+					display: false,
+					text: 'Custom Chart Title'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
@@ -436,28 +441,29 @@
 		},
 		options: {
 			responsive: true,
-			legend: {
-				display: false,
-			},
-			title: {
-				display: true,
-				text: 'Top 10 Installed Patches'
+			plugins: {
+				legend: {
+					display: false,
+				},
+				title: {
+					display: true,
+					text: 'Top 10 Installed Patches'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
 
 	ctxOSVer.onclick = function (evt)
 	{
-		var activePoints = myChartOsVer.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = myChartOsVer.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = myChartOsVer.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -466,9 +472,10 @@
 
 	ctxOSVerMinor.onclick = function (evt)
 	{
-		var activePoints = myChartOsVerMinor.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = myChartOsVerMinor.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = myChartOsVerMinor.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -477,9 +484,10 @@
 
 	ctxRebootStatus.onclick = function (evt)
 	{
-		var activePoints = myChartRebootStatus.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = myChartRebootStatus.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = myChartRebootStatus.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -488,9 +496,10 @@
 
 	ctxModelType.onclick = function (evt)
 	{
-		var activePoints = modelTypeChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = modelTypeChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = modelTypeChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -499,9 +508,10 @@
 
 	ctxModelTypes.onclick = function (evt)
 	{
-		var activePoints = modelTypesChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = modelTypesChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = modelTypesChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -510,9 +520,10 @@
 
 	ctxRequiredPatches.onclick = function (evt)
 	{
-		var activePoints = requiredPatchesChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = requiredPatchesChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = requiredPatchesChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -521,27 +532,16 @@
 
 	ctxPatchInstall.onclick = function (evt)
 	{
-		var activePoints = patchInstallChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = patchInstallChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = patchInstallChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
 		showDrillDownWindow('installedPatch','Installed Patch',label,value);
 	};
 
-	function graphClickEventOSVer(event)
-	{
-		var activePoints = myNewChart.getElementsAtEvent(event);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
-
-		var label = chartData.labels[idx];
-		var value = chartData.datasets[0].data[idx];
-
-		var url = "http://example.com/?label=" + label + "&value=" + value;
-		alert(url);
-	};
 
 	var ctxClientStatus = document.getElementById("clientstatus-bar-chart");
 	var clientStatusChart = new Chart(ctxClientStatus, {
@@ -557,25 +557,26 @@
 		},
 		options: {
 			responsive: true,
-			title: {
-				display: false,
-				text: 'Custom Chart Title'
+			plugins: {
+				title: {
+					display: false,
+					text: 'Custom Chart Title'
+				},
 			},
 			scales: {
-				yAxes: [{
-					ticks: {
-						beginAtZero: true
-					}
-				}]
+				y: {
+					beginAtZero: true
+				}
 			}
 		}
 	});
 
 	ctxClientStatus.onclick = function (evt)
 	{
-		var activePoints = clientStatusChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = clientStatusChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = clientStatusChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];
@@ -608,15 +609,17 @@
 			}]
 		},
 		options: {
-			responsive: true
+			responsive: true,
+			aspectRatio: 2
 		}
 	});
 
 	ctxAgentVersion.onclick = function (evt)
 	{
-		var activePoints = agentVersionChart.getElementsAtEvent(evt);
-		var chartData = activePoints[0]['_chart'].config.data;
-		var idx = activePoints[0]['_index'];
+		var activePoints = agentVersionChart.getElementsAtEventForMode(evt, 'nearest', {intersect: true}, true);
+		if (!activePoints.length) { return; }
+		var chartData = agentVersionChart.data;
+		var idx = activePoints[0].index;
 
 		var label = chartData.labels[idx];
 		var value = chartData.datasets[0].data[idx];

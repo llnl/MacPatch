@@ -1,0 +1,37 @@
+body.client-dashboard {
+  margin: 0;
+  background: #f7f7f7;
+  color: #333;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+}
+.client-dashboard-content { padding: 15px; }
+.client-dashboard .row > [class*="col-"] { min-width: 0; }
+.client-dashboard .client-summary { overflow-wrap: anywhere; }
+.client-dashboard .client-summary-primary { margin-bottom: 18px; }
+.client-dashboard .client-panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.client-dashboard .client-inventory-heading { display: flex; align-items: center; justify-content: space-between; gap: 15px; }
+.client-dashboard .client-inventory .panel-body { min-height: 50px; }
+.client-dashboard .client-inventory .dropdown-menu { max-height: 320px; overflow-y: auto; font-size: 14px; }
+.client-dashboard .client-inventory .dropdown-item { color: #333; padding: 4px 18px; }
+.client-dashboard .bootstrap-table .table { width: 100%; }
+.client-dashboard .bootstrap-table .table td { overflow-wrap: anywhere; }
+.client-dashboard .fixed-table-container { border-color: #ddd; }
+.client-dashboard .panel-body[hidden] { display: none; }
+@media (max-width: 767.98px) {
+  .client-dashboard .client-summary .col-md-4 + .col-md-4 { margin-top: 15px; }
+  .client-dashboard .client-summary-primary { margin-bottom: 8px; }
+}

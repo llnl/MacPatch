@@ -34,11 +34,10 @@
 	</div>
 
 	<div id="empty" class="alert alert-info" style="display: none;">
-		No inventory statistics for this period. They are recorded by MPInventoryD as it processes inventory files,
-		and require the 100016 database migration to have been applied.
+		No inventory statistics for this period. They are recorded by MPInventoryD, please make sure the MPInventoryD service is running. 
 	</div>
 
-	<div id="content" style="display: none;">
+	<div id="inventory-stats-content" style="display: none;">
 
 		<div class="panel panel-default">
 			<div class="panel-body">
@@ -61,18 +60,18 @@
 			<div class="panel-heading"><i class="fa fa-exclamation-triangle fa-fw"></i> Why loads failed</div>
 			<div class="panel-body">
 				<p id="noFailures" class="text-success" style="display: none;"><i class="fa fa-check fa-fw"></i> No failures in this period.</p>
-				<table id="causesTable" class="table table-condensed table-striped"></table>
+				<table id="causesTable" class="table table-bordered table-sm table-striped"></table>
 			</div>
 		</div>
 
 		<div class="panel panel-default">
 			<div class="panel-heading">By inventory table</div>
-			<div class="panel-body"><table id="tablesTable" class="table table-condensed table-striped"></table></div>
+			<div class="panel-body"><table id="tablesTable" class="table table-bordered table-sm table-striped"></table></div>
 		</div>
 
 		<div class="panel panel-default" id="recentPanel">
 			<div class="panel-heading">Recent failures (latest 100)</div>
-			<div class="panel-body"><table id="recentTable" class="table table-condensed table-striped"></table></div>
+			<div class="panel-body"><table id="recentTable" class="table table-bordered table-sm table-striped"></table></div>
 		</div>
 
 	</div>
@@ -83,7 +82,7 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/Chart.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/chart.js/dist/chart.umd.min.js') }}"></script>
 	<script>
 	var dataUrl = "{{ url_for('console.inventoryStatsData') }}";
 	var days = 7;
@@ -176,8 +175,11 @@
 				]
 			},
 			options: {
-				legend: {position: 'bottom'},
-				scales: {xAxes: [{stacked: true}], yAxes: [{stacked: true, ticks: {beginAtZero: true, precision: 0}}]}
+				plugins: {legend: {position: 'bottom'}},
+				scales: {
+					x: {stacked: true},
+					y: {stacked: true, beginAtZero: true, ticks: {precision: 0}}
+				}
 			}
 		});
 	}
@@ -188,12 +190,12 @@
 
 		$.getJSON(dataUrl, {days: days}).done(function (r) {
 			if (!r.totals.loads) {
-				$('#content').hide();
+				$('#inventory-stats-content').hide();
 				$('#empty').show();
 				return;
 			}
 			$('#empty').hide();
-			$('#content').show();
+			$('#inventory-stats-content').show();
 
 			renderTotals(r.totals);
 			renderChart(r.daily);

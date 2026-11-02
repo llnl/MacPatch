@@ -4,6 +4,11 @@
 	{{ super() }}
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/upload.css') }}" rel="stylesheet">
+	<style>
+    .row {
+        flex-wrap: nowrap;
+    }
+	</style>
 {%  endblock %}
 
 {% block pageHeader %}
@@ -13,57 +18,35 @@
 {% block bodyPanel %}
 
 	<form role="form" id="settingsForm">
-		<div class="form-group">
-			<div class="well">
-				<div class="row">
-				<div class="col-md-10">
-					<div class="row row-grid top10">
-						<div class="col-md-2">
-							<label>Upload Provisioning UI Config</label>
-						</div>
-						<div class="col-md-8">
-      						<div class="input-group">
-        						<input type="file" id="configFile" name="configFile" style="display: none">
-        						<input type="text" class="form-control" id="configFakeFile1" readonly>
-        						<span class="input-group-btn">
-                    				<button class="btn btn-default" type="button" id="configFakeBrowseFile1">Browse...</button>
-                				</span>
-      						</div>
-						</div>
-						<div class="col-md-2">(UI Config JSON File)</div>
-					</div>
+    <div class="well">
+        <div class="row row-grid top10">
+            <div class="col-md-2">
+                <label>Provisioning UI Config</label>
+            </div>
+            <div class="col-md-7">
+                <div class="input-group">
+                    <input type="file" id="configFile" name="configFile" style="display: none">
+                    <input type="text" class="form-control" id="configFakeFile1" readonly>
+                    <span class="input-group-btn">
+                        <button class="btn btn-default" type="button" id="configFakeBrowseFile1">Browse...</button>
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-3">(UI Config JSON File)</div>
+        </div>
 
-					<div class="row row-grid top10">
-						<div class="col-md-2"></div>
-						<div class="col-md-8" align="right">
-							<button type="button" class="btn btn-primary" id="settingsSaveButton">Upload Config</button>
-						</div>
-						<div class="col-md-2"></div>
-					</div>
-				</div>
-				</div>
-			</div>
-		</div>
-		<div class="well">
-			<div class="row">
-				<div class="col-md-10">
-					<label>Provisioning UI Config Text</label>
-				</div>
-				<!--
-				<div class="col-md-2" align="right">
-					<button id="confButton" class="btn btn-default">
-						<span class="glyphicon glyphicon-save"></span> Download Config
-					</button>
-				</div>
-				-->
-			</div>
-			<div class="row">
-				<div class="col-md-10">
-					<textarea id="uiConfigData" cols="120" rows="25">{{data.script or ''}}</textarea>
-				</div>
-			</div>
-		</div>
-	</form>
+        <div class="row row-grid top10">
+            <div class="col-md-9">
+                <button type="button" class="btn btn-primary pull-right" id="settingsSaveButton">Upload Config</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="well">
+        <label>Provisioning UI Config Text</label>
+        <textarea id="uiConfigData" class="form-control" rows="25">{{data.script or ''}}</textarea>
+    </div>
+</form>
 
 {% endblock %}
 

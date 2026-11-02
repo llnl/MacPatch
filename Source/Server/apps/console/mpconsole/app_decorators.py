@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 
 from mpconsole.config import Config
+from mpconsole.session_auth import session_expired_response
 
 def login_required(f):
 	"""
@@ -20,23 +21,12 @@ def login_required(f):
 
 	@wraps(f)
 	def decorated_function(*args, **kwargs):
-		#if not config.REQUIRE_AUTHENTICATION:
-			# Disable authentication, for use in dev/test only!
-			#if config.HTTPS_SCHEME == 'https':
-			#    raise ValueError('Not supported: Cant turn off authentication for https endpoints')
-
-		#    current_app.logger.error('Authentication is disabled! For dev/test only!')
-		#    flask.session['user'] = {'name': 'auth disabled'}
-		#    return f(*args, **kwargs)
-		#if flask.current_app.config['LOCAL_AUTH_ALLOWED']:
 		if conf.LOCAL_AUTH_ALLOWED:
 			if not flask.session.get("user"):
-				flask.session.clear()
-				return flask.redirect(flask.url_for('main.index'))
+				return session_expired_response()
 		else:    
 			if not flask.session.get("oid_user"):
-				flask.session.clear()
-				return flask.redirect(flask.url_for('main.index'))
+				return session_expired_response()
 		
 		return f(*args, **kwargs)
 	return decorated_function

@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 {% block styles %}
 <link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 <link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 <style>
     .log-line {
@@ -70,8 +71,9 @@
 {% block javascript %}
 <!-- jQuery -->
 <script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 <!-- Bootstrap Core JavaScript -->
-<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 <script>
 (function() {

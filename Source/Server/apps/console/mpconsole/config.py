@@ -9,9 +9,13 @@ consoledir = os.path.dirname(basedir)
 appsdir = os.path.dirname(consoledir)
 
 dotFileGlobal=os.path.join(appsdir, '.mpglobal')
+dotFileGlobalDev=os.path.join(appsdir, '.mpglobal_dev')
 dotFileConsole=os.path.join(appsdir, '.mpconsole')
+dotFileConsoleDev=os.path.join(appsdir, '.mpconsole_dev')
 load_dotenv(dotFileGlobal, override=True)
+load_dotenv(dotFileGlobalDev, override=True)
 load_dotenv(dotFileConsole, override=True)
+load_dotenv(dotFileConsoleDev, override=True)
 
 MP_ROOT_DIR	= os.environ.get('MP_ROOT_DIR') or '/opt/MacPatch'
 MP_SRV_DIR	= MP_ROOT_DIR+'/Server'
@@ -121,7 +125,7 @@ class Config(object):
 	# Logging
 	LOGGING_FORMAT      = '%(asctime)s [%(name)s][%(levelname).3s] --- %(message)s'
 	LOGGING_LEVEL       = os.environ.get('LOGGING_LEVEL') or 'info'
-	LOGGING_LOCATION    = MP_SRV_DIR+'/apps/logs'
+	LOGGING_LOCATION    = os.environ.get('LOGGING_LOCATION') or MP_SRV_DIR+'/apps/logs'
 	LOG_FILE_NAME		= os.environ.get('LOG_FILE_NAME') or 'mpconsole.log'
 	LOG_FILE 			= LOGGING_LOCATION + '/' + LOG_FILE_NAME
 

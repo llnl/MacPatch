@@ -1,4 +1,4 @@
-from flask import render_template, request, session
+from flask import render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm.session import make_transient
 from sqlalchemy.sql import text
@@ -761,7 +761,8 @@ def addSWPackage():
 
 	_data['BUNDLEIDS'] = _patchBundleIDs
 
-	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True')
+	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True',
+						   wizard_title='New Software Package', wizard_return_url=url_for('software.packages'))
 
 @software.route('/package/edit/<id>')
 @login_required
@@ -824,7 +825,8 @@ def editSWPackage(id):
 
 	_data['BUNDLEIDS'] = _patchBundleIDs
 
-	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True')
+	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True',
+						   wizard_title='Edit Software Package', wizard_return_url=url_for('software.packages'))
 
 ''' AJAX Method '''
 @software.route('/package/save', methods=['POST'])

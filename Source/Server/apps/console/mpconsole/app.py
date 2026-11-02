@@ -1,8 +1,7 @@
 # ----------------------------------------------------------
 # MacPatch Admin Console
-# - 3.9.4
-# - Implemented Azure AD Auth using Microsoft msal library
-# - Session is now managed using Redis
+# - 4.4.0
+# - Migrated to Bootstrap 4.6
 #
 # ----------------------------------------------------------
 import os
@@ -23,6 +22,7 @@ import logging.handlers
 from mpconsole.config import Config
 from mpconsole.extensions import db, migrate
 from mpconsole.mplogger import *
+from mpconsole.session_auth import session_expired_response
 
 db = SQLAlchemy()
 cors = CORS()
@@ -33,6 +33,7 @@ _session = Session()
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
 login_manager.login_view = "auth.login"
+login_manager.unauthorized_handler(session_expired_response)
 
 def create_app(config_object=Config):
 	app = Flask(__name__)
@@ -56,7 +57,7 @@ def create_app(config_object=Config):
 
 	@app.before_request
 	def before_request():
-		if request.endpoint != 'static' or request.endpoint != 'auth.logout' or request.endpoint != 'local_auth.logout':
+		if request.endpoint not in ('static', 'auth.logout', 'local_auth.logout'):
 			_last_activity = session.get('last_activity')
 			if isinstance(_last_activity, str):
 				# Session filesystem will store the date as dateObj
@@ -64,10 +65,9 @@ def create_app(config_object=Config):
 				_last_activity = dateParse(_last_activity)
 
 			if _last_activity is not None:
-				if (datetime.now() - _last_activity) > timedelta(minutes=app.config['SESSION_TIMEOUT_MINUTES']):
+				if (datetime.now(tz=_last_activity.tzinfo) - _last_activity) > timedelta(minutes=app.config['SESSION_TIMEOUT_MINUTES']):
 					log_Debug(f"[before_request][{request.endpoint}]: _last_activity is greater than the session timeout.")
-					session.clear()
-					return redirect(url_for('main.index'))
+					return session_expired_response()
 				
 			session['last_activity'] = datetime.now()
 			g.user = current_user
@@ -98,8 +98,7 @@ def create_app(config_object=Config):
 		# Using Error 412 as session data not found.
 		# Re-Direct to login
 		log_Error(f"{e}")
-		flash("Your session has expired.")
-		return redirect(url_for('main.index'))
+		return session_expired_response()
 
 	@app.teardown_request
 	def shutdown_session(exception):

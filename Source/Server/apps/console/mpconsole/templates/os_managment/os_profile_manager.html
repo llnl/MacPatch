@@ -1,31 +1,19 @@
-{% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<!-- Custom CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
-	<!-- Custom Fonts -->
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+{% extends "wizard_base.html" %}
 
-	<link href="{{ url_for('static', filename='yarn_components/jquery-steps-tc/demo/css/jquery.steps.css') }}" rel="stylesheet">
+{% block styles %}
+	{{ super() }}
+
+	<link href="{{ url_for('static', filename='static_components/js-steps/dist/css/js-steps.css') }}" rel="stylesheet">
 
 	<link href="{{ url_for('static', filename='css/range.css') }}" rel="stylesheet">
 
-	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/css/selectize.css') }}" rel="stylesheet">
 
 	<style type="text/css" media="screen">
 		#spanLink {
 			cursor:pointer;
 			color:#337ab7;
 			text-decoration:underline;
-		}
-		.wizard .content {
-			min-height: 600px;
-		}
-		.wizard .content > .body {
-			width: 100%;
-			height: auto;
-			padding: 15px;
-			position: relative;
 		}
 		.top-buffer { margin-top:8px; }
 		#profileDataTXT { font-size: 12px; }
@@ -34,7 +22,7 @@
 
 {% block bodyPanel %}
 <div class="content">
-	<form id="osProfileForm" action="#">
+	<form class="mp-wizard-form" id="osProfileForm" action="#">
 		<input name="gPolicyID" type="hidden" value="{{profileData.gPolicyID or groupPolicyID }}">
 		<input name="groupID" type="hidden" value="{{groupID or '' }}">
 		<div id="wizard">
@@ -226,22 +214,16 @@
 
 {%  endblock %}
 
-
 {% block javascript %}
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	{{ super() }}
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-
-	<!-- jQuery Step Wizard -->
 	<script src="{{ url_for('static', filename='static_components/modernizr/modernizr.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-steps-tc/build/jquery.steps.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/js-steps/dist/js/js-steps.js') }}"></script>
 
 	<!-- ACE Editor -->
-	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
 
-	<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/js/selectize.min.js') }}"></script>
 
 	<script>
 
@@ -259,16 +241,19 @@
 
 		$(document).ready(function()
 		{
-			// jQuery Wizard
-			$("#osProfileForm").children("div").steps(
+			// JS Steps wizard
+			Steps("#wizard",
 			{
 				headerTag: "h1",
 				bodyTag: "section",
+				transitionEffect: Steps.TransitionEffect.NONE,
+				enableCancelButton: true,
+				labels: { finish: "Save" },
+				onCanceled: function () {
+					WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
+				},
 				{% if session.role[0] != 1 %}
 				enableFinishButton: false,
-				{% endif %}
-				{% if session.role[0] == 1 %}
-				labels: { finish: "Save" },
 				{% endif %}
 				onFinishing: function (event, currentIndex)
 				{
@@ -301,18 +286,14 @@
 						contentType: false,
 						success: function(){
 							alert("OS Profile Updated Successfully");
-							$('#modalDialog').modal('hide');
+							WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
 						},
 						error: function(jqXHR, textStatus, errorThrown){
 							alert("OS Profile Failed to Update");
-							$('#modalDialog').modal('hide');
+
 						}
 					});
-					return true;
-				},
-				onFinished: function (event, currentIndex)
-				{
-					// window.parent.refreshProfilesTable();
+					return false;
 				}
 			});
 

@@ -7,9 +7,11 @@ from mpapi.app import db
 from mpapi.mputil import MPResource, b64EncodeAsString
 from mpapi.model import (MpClientGroupMembers, MpClientGroupSoftwareRestrictions, MpProvisionTask, MpSoftware,
 						 MpSoftwareCriteria, MpSoftwareGroup, MpSoftwareGroupTasks, MpSoftwareInstall,
-						 MpSoftwareRestrictions, MpSoftwareTask, MPGroupConfig)
+						 MpSoftwareRestrictions, MpSoftwareTask, MPGroupConfig, MpSoftwareGroupFilters,
+						 MpClient, MpClientPlist, MpClientGroups)
 from mpapi.mplogger import log_Info, log_Error, log_Debug
 from mpapi.shared.rest import client_endpoint, ok, fail, signed
+from mpapi.shared.software_filters import should_apply_group_to_client
 
 from . import software_5_api
 
@@ -123,6 +125,11 @@ class SoftwareTasksForGroup(MPResource):
 		if group is None or group.gid is None:
 			log_Error('[SoftwareTasksForGroup][GET][%s] Group (%s) Not Found' % (client_id, groupName))
 			return fail(404, 'Group Not Found', result={'type': 'SoftwareTask', 'data': {}})
+
+		# Check if client matches group filters
+		if not should_apply_group_to_client(client_id, group.gid):
+			log_Info('[SoftwareTasksForGroup][GET][%s] Client filtered out from group (%s)' % (client_id, groupName))
+			return ok({'type': 'SoftwareTask', 'data': []}, code=202)
 
 		return ok({'type': 'SoftwareTask', 'data': tasksForGroup(group.gid, osver)}, code=202)
 

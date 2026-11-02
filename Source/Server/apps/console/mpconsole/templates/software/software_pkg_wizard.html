@@ -1,40 +1,22 @@
-<!DOCTYPE html>
+{% extends "wizard_base.html" %}
 
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<!-- Custom CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
-	<!-- Custom Fonts -->
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	{{ super() }}
 
-	<link href="{{ url_for('static', filename='yarn_components/jquery-steps-tc/demo/css/jquery.steps.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='static_components/js-steps/dist/css/js-steps.css') }}" rel="stylesheet">
 
-	<link href="{{ url_for('static', filename='css/range.css') }}" rel="stylesheet">
-
-	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/css/selectize.css') }}" rel="stylesheet">
 
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
 	<style type="text/css" media="screen">
+		#softwarePKGForm label { font-weight: 700; }
+		#softwarePKGForm small { font-size: 11px; }
+		#softwarePKGForm textarea[name="sDescription"] { width: 100%; max-width: 520px; }
 		#spanLink {
 			cursor:pointer;
 			color:#337ab7;
 			text-decoration:underline;
-		}
-
-		.wizard .content {
-			min-height: 600px;
-		}
-		.wizard .content > .body {
-			width: 100%;
-			height: auto;
-			padding: 15px;
-			position: relative;
-		}
-
-		.wizard > .steps > ul > li {
-			width: 20%;
 		}
 
 		.top-buffer { margin-top:8px; }
@@ -66,12 +48,12 @@
 
 {% block bodyPanel %}
 <div class="content">
-	<form id="softwarePKGForm" action="#" method="post" enctype="multipart/form-data">
+	<form class="mp-wizard-form" id="softwarePKGForm" action="#" method="post" enctype="multipart/form-data">
 		<div id="wizard">
 			<!-- Section 1 -->
 			<h1>Software Package Information</h1>
 			<section>
-				<h4>Software Package Information</h4>
+				<h1>Software Package Information</h1>
 				<div class="container-fluid">
 					<div class="form-group">
 						<div class="row top-buffer">
@@ -159,7 +141,8 @@
 							<div class="col-md-7">
 								<input type="file" name="sw_img_path" id="sw_img_path">
 								<br>
-								<div style="font-size:12px;padding-bottom:10px;">
+								<!--padding-bottom:10px;-->
+								<div style="font-size:12px;">
 									{% if data['PKG'].sw_img_path %}
 									{{ data['PKG'].sw_img_path }}
 									{% endif %}
@@ -213,7 +196,6 @@
 										</a>
 										{% endif %}
 									{% endif %}
-
 
 								</div>
 							</div>
@@ -476,24 +458,17 @@
 </div>
 {%  endblock %}
 
-
 {% block javascript %}
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	{{ super() }}
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-
-	<!-- jQuery Step Wizard -->
 	<script src="{{ url_for('static', filename='static_components/modernizr/modernizr.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-steps-tc/build/jquery.steps.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/js-steps/dist/js/js-steps.js') }}"></script>
 
-	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
 
-	<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/js/selectize.min.js') }}"></script>
 
 	<script>
-
 
 		$(document).ready(function()
 		{
@@ -549,11 +524,17 @@
 				});
 			});
 
-			// jQuery Wizard
-			$("#softwarePKGForm").children("div").steps(
+			// JS Steps wizard
+			Steps("#wizard",
 			{
 				headerTag: "h1",
 				bodyTag: "section",
+				transitionEffect: Steps.TransitionEffect.NONE,
+				enableCancelButton: true,
+				labels: { finish: "Save" },
+				onCanceled: function () {
+					WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
+				},
 				{% if session.role[0] != 1 %}
 				enableFinishButton: false,
 				{% endif %}
@@ -584,7 +565,6 @@
 					formDataNew.append('sw_post_install_script', postinstall.getValue());
 					formDataNew.append('sw_uninstall_script', uninstall.getValue());
 
-					var res = true;
 					$('#overlay').show();
 
 					$.ajax({
@@ -614,28 +594,17 @@
 						contentType: false,
 						success: function(){
 							alert("Software Package Saved Successfully");
-							$('#modalDialog').modal('hide');
-							res = true;
 
 							$('#overlay').hide();
-							parent.closeModal();
+							WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							alert("Software Package Failed to Save");
-							res = false;
 							$('#overlay').hide();
 						},
 						timeout: 0
 					});
-					return res;
-				},
-				onFinished: function (event, currentIndex)
-				{
-					//alert("Submitted!");
-					/*
-					$('#modalDialog').modal('hide');
-					parent.closeModal();
-					*/
+					return false;
 				}
 			});
 

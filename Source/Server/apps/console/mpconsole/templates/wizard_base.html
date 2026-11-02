@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}{{ wizard_title }}{% endblock %}
+{% block pageHeader %}{{ wizard_title }}{% endblock %}
+
+{% block extraStyles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='css/js-steps-theme.css') }}" rel="stylesheet">
+{% endblock %}

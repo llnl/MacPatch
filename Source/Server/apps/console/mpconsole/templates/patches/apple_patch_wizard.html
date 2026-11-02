@@ -1,12 +1,9 @@
-{% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<!-- Custom CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.min.css') }}" rel="stylesheet">
-	<!-- Custom Fonts -->
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+{% extends "wizard_base.html" %}
 
-	<link href="{{ url_for('static', filename='yarn_components/jquery-steps-tc/demo/css/jquery.steps.css') }}" rel="stylesheet">
+{% block styles %}
+	{{ super() }}
+
+	<link href="{{ url_for('static', filename='static_components/js-steps/dist/css/js-steps.css') }}" rel="stylesheet">
 
 	<link href="{{ url_for('static', filename='css/range.css') }}" rel="stylesheet">
 
@@ -17,16 +14,6 @@
 			text-decoration:underline;
 		}
 
-		.wizard .content {
-			min-height: 600px;
-		}
-		.wizard .content > .body {
-			width: 100%;
-			height: auto;
-			padding: 15px;
-			position: relative;
-		}
-
 		.top-buffer { margin-top:8px; }
 	</style>
 
@@ -34,7 +21,7 @@
 
 {% block bodyPanel %}
 <div class="content">
-	<form id="applePatchForm" action="#">
+	<form class="mp-wizard-form" id="applePatchForm" action="#">
 		<input name="supatchnameOrig" type="hidden" value="{{data.supatchname}}">
 		<input name="akey" type="hidden" value="{{data.akey}}">
 		<div id="wizard">
@@ -179,21 +166,15 @@
 
 {%  endblock %}
 
-
 {% block javascript %}
+	{{ super() }}
 
-<!-- jQuery Step Wizard -->
-<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-
-<!-- Bootstrap Core JavaScript -->
-<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-
-<!-- jquery.steps -->
+<!-- JS Steps -->
 <script src="{{ url_for('static', filename='static_components/modernizr/modernizr.js') }}"></script>
-<script src="{{ url_for('static', filename='yarn_components/jquery-steps-tc/build/jquery.steps.js') }}"></script>
+<script src="{{ url_for('static', filename='static_components/js-steps/dist/js/js-steps.js') }}"></script>
 
 <!-- ACE Editor -->
-<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
+<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
 
 <script>
 	function createCSS(name,rules)
@@ -210,20 +191,25 @@
 
 	$(document).ready(function()
 	{
-		// jQuery Wizard
+		// JS Steps wizard
 		var _table =
-		$("#applePatchForm").children("div").steps({
+		Steps("#wizard", {
 			headerTag: "h1",
 			bodyTag: "section",
+			transitionEffect: Steps.TransitionEffect.NONE,
+				enableCancelButton: true,
+				labels: { finish: "Save" },
+				onCanceled: function () {
+					WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
+				},
 			{% if canEdit == 0 %}
             enableFinishButton: false,
-            enableCancelButton: true,
             {% endif %}
 			onFinishing: function (event, currentIndex)
 			{
 				// Add ACE Editor Data to form to post
 				var formData = new FormData($('#applePatchForm')[0]);
-				for (i = 0; i < xeditors.length; i++) {
+				for (var i = 0; i < xeditors.length; i++) {
 					var fName = "reqCri_type_data_" + xeditors[i]['id']
 					formData.append(fName, xeditors[i]['instance'].getValue());
 				}
@@ -237,21 +223,17 @@
 					contentType: false,
 					success: function(){
 						alert("Patch Updated Successfully");
-						$('#modalDialog').modal('hide');
+						WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
 					},
 					error: function(jqXHR, textStatus, errorThrown){
 						alert("Patch Failed to Update");
-						$('#modalDialog').modal('hide');
+
 					}
 				});
 
-				return true;
-			},
-			onFinished: function (event, currentIndex)
-			{
-				//alert("Submitted!");
+				return false;
 			}
-		});
+			});
 
 		// Create Global vars
 		var vars = {}; // used for global variables on dynamic names
@@ -260,22 +242,18 @@
 		// Function to popluate the UI with ACE editors
 		function populateData() {
 			{% for cri in dataCrit %}
-				x = {}
-				x['order'] = {{cri.type_order}};
-				x['action'] = {{cri.type_action}};
-				x['data'] = `{{cri.type_data}}`;
-				var _instance = addRow(x['order'], x['action'], x['data']);
-				xeditors.push({ id: x['order'], instance: _instance });
-
-				document.getElementById('reqid').value = x['order'];
+				var sid = {{ loop.index }};
+				var instance = addRow(sid, {{ cri.type_action | tojson }}, {{ (cri.type_data or '') | tojson }}, {{ cri.type_order | tojson }});
+				xeditors.push({ id: sid, instance: instance });
+				document.getElementById('reqid').value = sid;
 			{% endfor %}
 		}
 
 		// Call funtion to load any criteria data
-		window.onload = populateData();
+		populateData();
 
 		// Add Row Ace Editor
-		function addRow(sid, action, data)
+		function addRow(sid, action, data, order)
 		{
 			createCSS('#editor_' + sid,"height: 240px; width: 720px;white-space: pre;");
 
@@ -299,13 +277,13 @@
 			}
 			_htm = _htm + "<br><br>";
 			// Criteria Order
-			_htm = _htm + "<input type='text' name='reqCri_Order_"+sid+"' value='"+sid+"' size='4' style='vertical-align:top\;'>";
+			_htm = _htm + "<input type='text' name='reqCri_Order_"+sid+"' value='"+(order === undefined ? sid : order)+"' size='4' style='vertical-align:top\;'>";
 			_htm = _htm + "<span style='vertical-align:top\;'>&nbsp;(Order)</span>";
 			_htm = _htm + "</div>";
 			// Right Column
 			//_htm = _htm + '<div class="column-right">';
 			_htm = _htm + '<div class="col-md-8">';
-			_htm = _htm + '<div id="editor_' + sid +'">'+data+'</div>';
+			_htm = _htm + '<div id="editor_' + sid +'"></div>';
 			_htm = _htm + "</div>";
 
 			_htm = _htm + "</div></div>";
@@ -313,8 +291,9 @@
 			$('.block:last').after(_htm);
 
 			try {
-				_name = 'editor_' + sid
+				var _name = 'editor_' + sid
 				vars[_name] = ace.edit("editor_" + sid);
+				vars[_name].setValue(data, -1);
 				vars[_name].setTheme("ace/theme/eclipse");
 				vars[_name].getSession().setMode("ace/mode/sh");
 				vars[_name].setFontSize('10px');
@@ -338,7 +317,7 @@
 		{
 			var row = $(this).parent().parent().parent();
 			var res = row.attr('id').split("_");
-			for (i = 0; i < xeditors.length; i++) {
+			for (var i = 0; i < xeditors.length; i++) {
 				if (xeditors[i]['id'] == Number(res[1])) {
 					xeditors.splice(i, 1);
 				}

@@ -16,24 +16,29 @@
 		<!-- Bootstrap Core CSS -->
 		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 		<!-- Custom CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 
 		<!-- Custom Fonts -->
-		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-
-
+		<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
+		<style>
+			.software-group-filter-form h4 { font-size: 18px; line-height: 24px; font-weight: 600; margin-bottom: 12px; }
+			.software-group-filter-form label { font-size: 14px; font-weight: 700; }
+		</style>
 	{% endblock %}
 </head>
-<body>
+<body class="mp-console">
 	{% block bodyPanel %}
-		<form role="form" id="myForm">
+		<form role="form" id="myForm" class="software-group-filter-form">
 			<input class="form-control" type="hidden" name="rid" value="{{data['rid'] or ''}}" readonly>
 			<div class="form-group">
 				<div class="well well-sm">
-					<label><h3>Group Filter</h3></label>
+					<h4>Group Filter</h4>
 
 					<div class="row">
 					<div class="col-md-12">
@@ -107,10 +112,11 @@
 
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 	{% block javascript %}
 		<script type="text/javascript">

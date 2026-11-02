@@ -11,7 +11,7 @@ MacPatch Servers
 {%  endblock %}
 
 {% block bodyPanel %}
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true">
 		<div id="toolbar">
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
@@ -106,13 +106,13 @@ MacPatch Servers
         htmlData.push('</div>');
 		htmlData.push('<i class="buttonSeperator"></i>');
 		htmlData.push('<div class="buttonItem">');
-        htmlData.push('<a class="logA" href="javascript:void(0)" title="API Log">');
-        htmlData.push('<i class="fa fa-file-text-o fa-lg" aria-hidden="true"> API</i></a>');
+        htmlData.push('<a class="logA server-log-action" href="javascript:void(0)" title="API Log">');
+        htmlData.push('<i class="fa fa-file-text-o fa-lg" aria-hidden="true"></i><span>API</span></a>');
         htmlData.push('</div>');
 		htmlData.push('<i class="buttonSeperator"></i>');
 		htmlData.push('<div class="buttonItem">');
-        htmlData.push('<a class="logC" href="javascript:void(0)" title="Console Log">');
-        htmlData.push('<i class="fa fa-file-text-o fa-lg" aria-hidden="true"> Console</i></a>');
+        htmlData.push('<a class="logC server-log-action" href="javascript:void(0)" title="Console Log">');
+        htmlData.push('<i class="fa fa-file-text-o fa-lg" aria-hidden="true"></i><span>Console</span></a>');
         htmlData.push('</div>');
 		htmlData.push('</div>');
 		return htmlData.join('');
@@ -129,7 +129,7 @@ MacPatch Servers
 				$('#modalTitle').html('Edit MacPatch Server');
 				$('#modalBody').html(data);
 				$('#modalDialog').addClass("modal-mid");
-				$('#modalBody').css({'height':'420px'});
+				$('#modalBody').css({'height':'440px'});
 				$('#modalDialog').modal('show');
 				$('#modalSaveButton').show();
 
@@ -147,7 +147,7 @@ MacPatch Servers
 				$('#modalTitle').html('MacPatch Server DB Config - ' + row['server']);
 				$('#modalBody').html(data);
 				$('#modalDialog').addClass("modal-mid");
-				$('#modalBody').css({'height':'420px'});
+				$('#modalBody').css({'height':'440px'});
 				$('#modalFooter').hide();
 				$('#modalDialog').modal('show');
 				$('#modalSaveButton').hide();

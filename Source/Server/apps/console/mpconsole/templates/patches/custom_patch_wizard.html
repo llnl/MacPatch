@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+{% extends "wizard_base.html" %}
 
 {% block styles %}
+	{{ super() }}
     <!-- Set MetaData -->
     {% if hasOSArch == True %}
         {% set orderTypeSize = 4 %}
@@ -14,67 +15,18 @@
         {% endif %}
     {% endfor %}
 
+	<link href="{{ url_for('static', filename='static_components/js-steps/dist/css/js-steps.css') }}" rel="stylesheet">
 
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<!-- Custom CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.min.css') }}" rel="stylesheet">
-	<!-- Custom Fonts -->
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
-
-	<link href="{{ url_for('static', filename='yarn_components/jquery-steps-tc/demo/css/jquery.steps.css') }}" rel="stylesheet">
-
-	<link href="{{ url_for('static', filename='css/range.css') }}" rel="stylesheet">
-
-	<link href="{{ url_for('static', filename='yarn_components/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/css/selectize.css') }}" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-
-	<style type="text/css" media="screen">
-		#spanLink {
-			cursor:pointer;
-			color:#337ab7;
-			text-decoration:underline;
-		}
-
-		.wizard .content {
-			min-height: 600px;
-		}
-		.wizard .content > .body {
-			width: 100%;
-			height: auto;
-			padding: 15px;
-			position: relative;
-		}
-
-		.top-buffer { margin-top:8px; }
-
-		#pkg_preinstall {
-			height: 120px;
-			width: 520px;
-		}
-
-		#pkg_postinstall {
-			height: 120px;
-			width: 520px;
-		}
-		.range {
-			width: 600px;
-		}
-
-		.searchable-select  {
-			max-width: 400px;
-			min-width: 400px;
-			width: 400px !important;
-		}
-	</style>
 
 {%  endblock %}
 
 {% block bodyPanel %}
 {% set ns = namespace() %}
 <div class="content">
-	<form id="customPatchForm" action="#" method="post" enctype="multipart/form-data">
+	<form class="mp-wizard-form" id="customPatchForm" action="#" method="post" enctype="multipart/form-data">
 		<div id="wizard">
 			<h1>Patch Information</h1>
 			<section>
@@ -458,36 +410,6 @@
 					</div>
 				</div>
 			</section>
-            <!--
-			<h1>Additional Patches &amp; Save</h1>
-			<section>
-				<h4>Additional Patches &amp; Save</h4>
-				<hr>
-				<div class="container-fluid">
-					<div class="form-group">
-
-						<div class="optionBoxPre">
-							<input type="hidden" id="preid" value="0">
-							<div class="blockPre">
-								<label>Pre-Requisite Package(s)</label>
-								<span class="addPre" id='spanLink'><p><h5><img src="/static/img/pkg_add.png"/> Add Criteria</h5></span><p>
-							</div>
-						</div>
-
-						<div class="row top-buffer">&nbsp;</div>
-
-						<div class="optionBoxPost">
-							<input type="hidden" id="postid" value="0">
-							<div class="blockPost">
-								<label>Post-Requisite Package(s)</label>
-								<span class="addPost" id='spanLink'><p><h5><img src="/static/img/pkg_add.png"/> Add Criteria</h5></span><p>
-							</div>
-						</div>
-
-					</div>
-				</div>
-			</section>
-			-->
 		</div>
 		<input type="hidden" name="puuid" value="{{data.puuid}}">
 	</form>
@@ -512,22 +434,16 @@
 </div>
 {%  endblock %}
 
-
 {% block javascript %}
+	{{ super() }}
 
-	<!-- jQuery Step Wizard -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
-
-	<!-- jquery.steps -->
+	<!-- JS Steps -->
 	<script src="{{ url_for('static', filename='static_components/modernizr/modernizr.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-steps-tc/build/jquery.steps.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/js-steps/dist/js/js-steps.js') }}"></script>
 
 	<!-- ACE Editor -->
-	<script src="{{ url_for('static', filename='yarn_components/ace-editor-builds/src/ace.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/selectize/dist/js/standalone/selectize.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/js/selectize.min.js') }}"></script>
 
 	<script>
 		$(document).ready(function()
@@ -553,11 +469,17 @@
 			if ( '{{session.role[0]}}' != '1' ) {
 				_enableFinishButton = false;
 			}
-			// jQuery Wizard
-			$("#customPatchForm").children("div").steps(
+			// JS Steps wizard
+			Steps("#wizard",
 			{
 				headerTag: "h1",
 				bodyTag: "section",
+				transitionEffect: Steps.TransitionEffect.NONE,
+				enableCancelButton: true,
+				labels: { finish: "Save" },
+				onCanceled: function () {
+					WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
+				},
 				enableFinishButton: _enableFinishButton,
 				onFinishing: function (event, currentIndex)
 				{
@@ -589,7 +511,6 @@
 					var pstValue = ace.edit("pkg_postinstall").getValue();
 					formDataNew.append('pkg_postinstall', pstValue );
 
-					var res = true;
                     $('#overlay').show();
 					$.ajax({
                         xhr: function() {
@@ -618,29 +539,19 @@
 						contentType: false,
 						success: function(){
 							alert("Patch Updated Successfully");
-							$('#modalDialog').modal('hide');
-							res = true;
-
-							$('#overlay').hide();
-							parent.closeIFrame();
+							WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							alert("Patch Failed to Update");
-							res = false;
 							$('#overlay').hide();
 						}
 					});
 
-					return res;
-				},
-				onFinished: function (event, currentIndex)
-				{
-					// alert("Submitted!");
+					return false;
 				}
 			});
 
-			function populateCriteria()
-			{
+			function populateCriteria() {
 				{% set xi = 1 %}
 				{% if hasOSArch == True %}
 					{% set orderTypeSize = 4 %}
@@ -663,8 +574,7 @@
 
 			}
 
-			function getSelectData()
-			{
+			function getSelectData() {
 				$('#ch_user1').empty();
 				$.ajax({
 					type: "GET",
@@ -681,8 +591,7 @@
 				});
 			}
 
-			function populateData()
-			{
+			function populateData() {
 				populateCriteria();
 				getSelectData();
 			}
@@ -691,8 +600,7 @@
 			window.onload = populateData();
 
 			// Add Row Ace Editor
-			function addRow(sid, action, data)
-			{
+			function addRow(sid, action, data) {
 				if (action != 'Script') {
 					createCSS('#editor_' + sid,"height: 40px; width: 600px;white-space: pre;");
 				} else {
@@ -742,7 +650,7 @@
 					vars[_name].$blockScrolling = Infinity;
 					vars[_name].session.setValue( $(_meta).data("value") );
 					vars[_name].setFontSize('10px');
-					
+
 				} catch (err) {
 					console.log("console catch:" + err);
 				}

@@ -14,7 +14,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped">
+	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
@@ -129,18 +129,7 @@
 
 		$addButton.click(function ()
 		{
-			$.get( "/osmanage/profiles/add").done(function(data) {
-				$('#modalTitle').html("New OS Profile");
-				$('#modalBody').html(data);
-				$('#modalFooter').hide();
-				$('#modalDialog').addClass("modal-wide");
-				$('#modalBody').css({'height':'72vh'});
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$table.bootstrapTable('refresh');
-				});
-			});
+			WizardNavigation.open("/osmanage/profiles/add");
 		});
 	});
 
@@ -169,18 +158,8 @@
 	window.operateEvents = {
 		'click .edit': function (e, value, row, index)
 		{
-			$.get( "/osmanage/profiles/update/" + row['profileID']).done(function(data) {
-				$('#modalTitle').html("Edit OS Profile");
-				$('#modalBody').html(data);
-				$('#modalFooter').hide();
-				$('#modalDialog').addClass("modal-wide");
-				$('#modalBody').css({'height':'72vh'});
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$table.bootstrapTable('refresh');
-				});
-			});
+			e.preventDefault();
+			WizardNavigation.open("/osmanage/profiles/update/" + encodeURIComponent(row['profileID']));
 		},
 		'click .description': function (e, value, row, index) {
 			alert('You click description action, row: ' + JSON.stringify(row));

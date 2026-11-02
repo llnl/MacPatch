@@ -19,19 +19,19 @@ Agent Registration
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs">
 		{% if session.role[0] == 1 %}
-		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#settings" data-toggle="tab">Settings</a></li>
-		<li {% if selectedTab == 2 %}class="active"{% endif %}><a href="#keys" data-toggle="tab">Keys</a></li>
-		<li {% if selectedTab == 3 %}class="active"{% endif %}><a href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#settings" data-toggle="tab">Settings</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#keys" data-toggle="tab">Keys</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 3 %}active{% endif %}" href="#regClients" data-toggle="tab">Registered Clients</a></li>
 		{% else %}
-		<li {% if selectedTab == 1 %}class="active"{% endif %}><a href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#regClients" data-toggle="tab">Registered Clients</a></li>
 		{% endif %}
 		{% if session.role[0] == 1 %}
-		<li {% if selectedTab == 4 %}class="active"{% endif %}><a href="#parkedClients" data-toggle="tab">Parked Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 4 %}active{% endif %}" href="#parkedClients" data-toggle="tab">Parked Clients</a></li>
 		{% endif %}
 	</ul>
 	<div class="tab-content">
 		{% if session.role[0] == 1 %}
-		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="settings">
+		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="settings">
 			<h4>Registration Settings</h4>
 			<form role="form" id="settingsForm">
 				<div class="form-group">
@@ -78,33 +78,33 @@ Agent Registration
 				</div>
 			</form>
 		</div>
-		<div class="tab-pane fade {% if selectedTab == 2 %}in active{% endif %}" id="keys">
+		<div class="tab-pane fade {% if selectedTab == 2 %}show active{% endif %}" id="keys">
 			<h4>Registration Keys</h4>
-			<table id="tableKeys" class="table table-condensedX table-striped" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableKeys" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarKeys">
 					<button id="addKeyButton" type="button" class="btn btn-default" title="Add Registration Key"><i class="glyphicon glyphicon-plus"></i></button>
 				</div>
 			</table>
 		</div>
-		<div class="tab-pane fade {% if selectedTab == 3 %}in active{% endif %}" id="regClients">
+		<div class="tab-pane fade {% if selectedTab == 3 %}show active{% endif %}" id="regClients">
 			<h4>Registred Clients</h4>
-			<table id="tableClients" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarClients">
 				</div>
 			</table>
 		</div>
 		{% else %}
-		<div class="tab-pane fade {% if selectedTab == 1 %}in active{% endif %}" id="regClients">
-			<table id="tableClients" class="table table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
+		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="regClients">
+			<table id="tableClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
 				<div id="toolbarClients">
 				</div>
 			</table>
 		</div>
 		{% endif %}
 		{% if session.role[0] == 1 %}
-		<div class="tab-pane fade {% if selectedTab == 4 %}in active{% endif %}" id="parkedClients">
+		<div class="tab-pane fade {% if selectedTab == 4 %}show active{% endif %}" id="parkedClients">
 			<h4>Parked Clients</h4>
-			<table id="tableParkedClients" class="table table-striped" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
+			<table id="tableParkedClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
 			</table>
 		</div>
 		{% endif %}
@@ -125,6 +125,7 @@ Agent Registration
 
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
 	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">

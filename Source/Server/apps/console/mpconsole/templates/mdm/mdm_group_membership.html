@@ -14,7 +14,7 @@ MDM Group Members - {{ groupname }}
     {% for col in columns %}
 
     {% endfor %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
+	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-bordered table-sm table-striped">
 		<div id="toolbar">
             {% if session.role[0] == 1 %}
 			    <button id="addButton" type="button" class="btn btn-default" title="Add MDM Group"><i class="glyphicon glyphicon-plus"></i></button>

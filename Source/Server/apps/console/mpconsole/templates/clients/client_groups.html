@@ -4,6 +4,8 @@
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/css/selectize.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/client-group-modals.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
@@ -12,19 +14,23 @@ Client Groups
 {%  endblock %}
 
 {% block bodyPanel %}
-	<table id="table" data-toolbar="#toolbar" class="table table-responsive table-condensed table-striped" data-show-export="true">
+	<div id="client-groups-table-container">
 		<div id="toolbar">
 			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 		</div>
-	</table>
+		<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
+	</div>
 {% endblock %}
 
 
 {% block javascript %}
 	{{ super() }}
+	<script src="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/js/selectize.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/client-group-modals.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
 
 	var gRights = [];
@@ -150,16 +156,7 @@ Client Groups
 		},
 		'click .modify': function (e, value, row, index)
 		{
-			var _url = '/clients/group/modify/'+ row.group_id
-			$.get( _url )
-			.fail(function(jqXHR, textStatus, errorThrown) {
-				alert("Error: Group could not be modified. You dont have rights to do this.");
-			})
-			.done(function(data) {
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'200px'});
-				$('#modalDialog').modal('show');
-			});
+            ClientGroupModals.load('/clients/group/modify/' + encodeURIComponent(row.group_id), {title: 'Edit Client Group'});
 		},
 		'click .remove': function (e, value, row, index)
 		{
@@ -180,16 +177,16 @@ Client Groups
 					},
 					error: function (xhr, textStatus, errorThrown)
 					{
-						var err = eval("(" + xhr.responseText + ")");
-						resetModalWindow();
-						$('#modalSaveButton').hide();
-						$('#modalCancelButton').html('Close');
-						$('#modalTitle').html('Error, Removing Client Group');
-						$('#modalBody').html(err.errormsg);
-						$('#modalBody').css({'height':'160px'});
-						$('#modalHeader').addClass('panel-heading');
-						$('#modalContent').addClass('panel-danger');
-						$('#modalDialog').modal('show');
+	                    var err = xhr.responseJSON || {};
+                    if (!err.errormsg) {
+                        try { err = JSON.parse(xhr.responseText); } catch (error) { err = {}; }
+                    }
+                    ClientGroupModals.open({
+                        title: 'Error, Removing Client Group',
+                        content: $('<p>').text(err.errormsg || 'Unable to remove this client group.'),
+                        footer: true,
+                        danger: true
+                    });
 					}
 				});
 			}
@@ -212,11 +209,7 @@ Client Groups
 
 		$addButton.click(function ()
 		{
-			$.get( "/clients/group/add").done(function(data) {
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'200px'});
-				$('#modalDialog').modal('show');
-			});
+            ClientGroupModals.load('/clients/group/add', {title: 'Add Client Group'});
 		});
 	});
 	</script>

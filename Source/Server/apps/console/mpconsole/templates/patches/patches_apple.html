@@ -13,7 +13,7 @@ Apple Patches
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
+	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="qaButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-cog"></i> Create -> QA</button>
@@ -30,6 +30,7 @@ Apple Patches
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
 
 	$( document ).ready(function()
@@ -159,18 +160,8 @@ Apple Patches
 	window.operateEvents = {
 		'click .edit': function (e, value, row, index)
 		{
-			$.get( "/patches/applePatchWizard/" + row['akey']).done(function(data) {
-				$('#modalBody').html(data);
-				$('#modalSaveButton').hide();
-				$('#modalCancelButton').hide();
-				$('#modalDialog').addClass("modal-wide");
-				$('#modalBody').css({'height':'80vh'});
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$_table.bootstrapTable('refresh');
-				});
-			});
+			e.preventDefault();
+			WizardNavigation.open("/patches/applePatchWizard/" + encodeURIComponent(row['akey']));
 		},
 		'click .description': function (e, value, row, index)
 		{
@@ -178,51 +169,41 @@ Apple Patches
 		}
 	};
 
-	var $table = $('#table');
-	$(function ()
-	{
-		$('#qaButton').click(function ()
-		{
-			if (confirm("Are you sure you want to change the state on all \"Create\" to \"QA\"?") == true)
-			{
-				var _url = "/patches/apple/bulk/toQA";
-				$.ajax({
-					url: _url,
-					type: 'GET',
-					cache: false,
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
-					},
-					success: function () {
-						$table.bootstrapTable('refresh');
+	(function ($) {
+		var pending = false;
+		function migratePatches(source, target, url) {
+			if (pending || !confirm('Are you sure you want to change all Apple patches in "' + source + '" to "' + target + '"?')) return;
+			pending = true;
+			var $buttons = $('#qaButton, #prodButton');
+			$buttons.prop('disabled', true);
+			$.ajax({url: url, type: 'GET', cache: false, dataType: 'json'})
+				.done(function (response) {
+					if (!Number.isInteger(response.updated) || response.updated < 0) {
+						alert('The server did not confirm the patch state change. Refresh the page and try again.');
+						return;
 					}
-				});
-			}
-		});
-
-		$('#prodButton').click(function ()
-		{
-			if (confirm("Are you sure you want to change the state on all \"QA\" to \"Production\"?") == true)
-			{
-				var _url = "/patches/apple/bulk/toProd";
-				$.ajax({
-					url: _url,
-					type: 'GET',
-					cache: false,
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
-					},
-					success: function () {
-						$table.bootstrapTable('refresh');
+					$('#table').bootstrapTable('refresh');
+					if (response.updated === 0) {
+						alert('No Apple patches are currently in the "' + source + '" state.');
+					} else {
+						alert('Moved ' + response.updated + ' Apple patches from ' + source + ' to ' + target + '.');
 					}
+				})
+				.fail(function (xhr) {
+					if (xhr.status === 401 && xhr.getResponseHeader('X-MacPatch-Login')) return;
+					var response = xhr.responseJSON;
+					alert(response && response.errormsg || 'The Apple patch states could not be saved. Please try again.');
+				})
+				.always(function () {
+					pending = false;
+					$buttons.prop('disabled', false);
 				});
-			}
+		}
+		$(function () {
+			$('#qaButton').click(function () { migratePatches('Create', 'QA', '/patches/apple/bulk/toQA'); });
+			$('#prodButton').click(function () { migratePatches('QA', 'Production', '/patches/apple/bulk/toProd'); });
 		});
-	});
+	}(jQuery));
 
 	</script>
 {% endblock %}

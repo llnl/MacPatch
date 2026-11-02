@@ -5,11 +5,12 @@
 	<!-- Bootstrap Core CSS -->
 		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 		<!-- Custom CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 		<!-- Custom Fonts -->
-		<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 
 
 
@@ -26,26 +27,23 @@
 		#preview, #alert, #save, #btn-preview-filter {
 			display: none;
 		}
-		#iTable {
-			width: "800px";
-			border-collapse: separate;
-			border-spacing: 20px;
+		#report-builder-page { width: 100%; min-width: 0; }
+		#report-builder-page .panel { width: 100%; }
+		#report-builder-page .panel-heading .chevron:after { content: "\f078"; }
+		#report-builder-page .panel-heading.collapsed .chevron:after { content: "\f054"; }
+		#report-builder-page .report-selectors { max-width: 700px; }
+		#report-builder-page .report-selectors select {
+			width: 100%; min-width: 0; border: 1px solid #aaa;
+			color: #333; background: #fff; font-size: 14px;
 		}
-		.panel-heading .chevron:after {
-			content: "\f078";
+		#report-builder-page .report-actions {
+			display: flex; justify-content: flex-end; gap: 8px;
+			padding-top: 6px; margin-bottom: 8px;
 		}
-		.panel-heading.collapsed .chevron:after {
-			content: "\f054";
-		}
-		* {
-			margin: 0;
-			padding: 0;
-		}
-		.full-width {
-			width: 98%;
-			min-width: 98%;
-			max-width: 98%;
-		}
+		#builder, #preview, #alert { width: 100%; min-width: 0; }
+		#preview .table { width: 100%; }
+		#preview .table td,
+		#preview .table th .th-inner { overflow-wrap: anywhere; white-space: normal; }
 	</style>
 {%  endblock %}
 
@@ -54,71 +52,55 @@
 {%  endblock %}
 
 {% block bodyPanel %}
-<div class="container full-width">
-	<div class="row">
-		<div class="panel panel-default">
-			<div class="panel-heading collapsed" data-toggle="collapse" data-target="#collapseOrderItems1">
-				<strong>Tables & Columns</strong> <i class="chevron fa fa-fw" ></i></div>
-			<div class="collapse" id="collapseOrderItems1">
-				<table id="iTable">
-					<tr>
-						<td>
-							<strong>Table</strong>
-						</td>
-						<td>
-							<strong>Columns</strong>
-						</td>
-					</tr>
-					<tr>
-						<td>
-							<select name="tables" size="14" multiple="no" style="min-width:320px;" id='tables'>
-								{% for table in tables %}
-									<option {% if table[1] == 1 %}selected{% endif %}>{{table[0]}}</option>
-								{% endfor %}
-							</select>
-						</td>
-						<td>
-							<select name="tables" size="14" multiple="yes" style="min-width:320px;" id='columns'></select>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td align="right">
-							<div id="queryButtons">
-								<button type="button" id='btn-rules' class="btn btn-primary set-sql btn-xs">
-									<i class="fa fa-search" aria-hidden="true"></i> Filter Query
-								</button>
-								<button type="button" id='btn-runquery' class="btn btn-primary btn-xs">
-									<i class="fa fa-search" aria-hidden="true"></i> Preview Query
-								</button>
-							</div>
-						</td>
-					</tr>
-				</table>
+<div id="report-builder-page">
+	<div class="panel panel-default">
+		<div class="panel-heading{% if not selTables %} collapsed{% endif %}" data-toggle="collapse" data-target="#collapseOrderItems1" role="button" aria-controls="collapseOrderItems1" aria-expanded="{{ 'true' if selTables else 'false' }}">
+			<strong>Tables &amp; Columns</strong> <i class="chevron fa fa-fw" aria-hidden="true"></i>
+		</div>
+		<div class="collapse{% if selTables %} show{% endif %}" id="collapseOrderItems1">
+			<div class="panel-body">
+				<div class="row report-selectors">
+					<div class="col-md-6 mb-3">
+						<label for="tables" class="font-weight-bold mb-3">Table</label>
+						<select name="tables" size="14" id="tables">
+							{% for table in tables %}
+							<option {% if table[1] == 1 %}selected{% endif %}>{{table[0]}}</option>
+							{% endfor %}
+						</select>
+					</div>
+					<div class="col-md-6 mb-3">
+						<label for="columns" class="font-weight-bold mb-3">Columns</label>
+						<select name="columns" size="14" multiple id="columns"></select>
+					</div>
+					<div class="col-12 text-right" id="queryButtons">
+						<button type="button" id="btn-rules" class="btn btn-primary set-sql btn-xs">
+							<i class="fa fa-search" aria-hidden="true"></i> Filter Query
+						</button>
+						<button type="button" id="btn-runquery" class="btn btn-primary btn-xs">
+							<i class="fa fa-search" aria-hidden="true"></i> Preview Query
+						</button>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>
 
-	<div class="row">
-		<div id="builder"></div>
-	</div>
+	<div id="builder"></div>
 
-	<div class="row" style="padding-top: 6px; padding-bottom: 8px;">
-		<button id='btn-preview-filter' type="button" class="btn btn-primary btn-xs pull-right">
+	<div class="report-actions">
+		<button id="btn-preview-filter" type="button" class="btn btn-primary btn-xs">
 			<i class="fa fa-search" aria-hidden="true"></i> Preview Filter
-		</button> &nbsp;
-		<button id='save' type="button" id='btn-preview' class="btn btn-primary btn-xs pull-right">
+		</button>
+		<button id="save" type="button" class="btn btn-primary btn-xs">
 			<i class="fa fa-floppy-o" aria-hidden="true"></i> Save Report
 		</button>
 	</div>
 
-	<div class="row">
-		<div id="alert" class="alert alert-info" style="margin: 0 auto;">
-			<strong>NOTE:</strong> Queries limited to only 10 records.
-		</div>
-		<div id="preview">
-			<table id="table" data-toolbar="#toolbar" class="table table-condensed" style="width:auto;"></table>
-		</div>
+	<div id="alert" class="alert alert-info">
+		<strong>NOTE:</strong> Queries limited to only 10 records.
+	</div>
+	<div id="preview">
+		<table id="table" class="table table-bordered table-sm"></table>
 	</div>
 </div>
 {% endblock %}
@@ -140,6 +122,7 @@
 	function hideAll() {
 		$('#save').hide();
 		$('#alert').hide();
+		$('#preview').hide();
 		$('#btn-preview-filter').hide();
 		$('#builderButtons').hide();
 		$('#builder').queryBuilder('destroy');
@@ -156,7 +139,7 @@
 	{
 		$('#reports').addClass("active");
 
-		$('.collapse').collapse()
+		$('#collapseOrderItems1').collapse({toggle: false});
 		var $table = $('#table');
 		var selected_table = "";
 		var selected_colums = "";
@@ -327,7 +310,7 @@
 						var jData = msg;
 						alert("Report Updated Successfully");
 						$('#modalDialog').modal('hide');
-						$("#reports ul").append('<li><a href="/reports/show/'+jData.id+'"><i class="fa fa-cube fa-fw"></i> DATA </a></li>');
+						$("#reports ul").append('<li class="nav-item"><a class="nav-link" href="/reports/show/'+jData.id+'"><i class="fa fa-cube fa-fw"></i> DATA </a></li>');
 						window.location.replace('/reports/show/'+jData.id);
 					},
 					error: function(jqXHR, textStatus, errorThrown){

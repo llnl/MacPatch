@@ -3,30 +3,25 @@
 	<!-- Bootstrap Core CSS -->
 	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet"> 
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-	<style>
-		#patchesTable > tbody > tr > td {
-			height:28px;
-			padding:4px;
-			border-top: 2px;
-		}
-	</style>
+	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block body %}
 	<div>
-		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true" class="table table-condensed table-striped">
-			<div id="patchesToolbar">
-                {% if isOwner == true or session.role[0] == 1 %}
-				<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-All</i></button>
-				<button id="selectAppleButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Apple</i></button>
-				<button id="selectThirdButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok"> Select-Custom</i></button>
-                {% endif %}
-			</div>
-		</table>
+		<div id="patchesToolbar">
+            {% if isOwner == true or session.role[0] == 1 %}
+			<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-All</button>
+			<button id="selectAppleButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-Apple</button>
+			<button id="selectThirdButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-Custom</button>
+            {% endif %}
+		</div>
+		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true" class="table table-bordered table-sm table-striped"></table>
 	</div>
 {% endblock %}
 
@@ -34,8 +29,9 @@
 {% block javascript %}
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
@@ -86,23 +82,8 @@
 				},
 				{% endfor %}
 			],
-			onCheck: function(row, $element) {
-				//console.log(row);
-			},
-			onLoadSuccess: function(data) {
+			onPostBody: function () {
 				removeSelected();
-			},
-			onPageChange: function(number, size) {
-				removeSelected();
-				$('#patchesTable').bootstrapTable('refresh');
-			},
-			onColumnSwitch: function(field, checked) {
-				removeSelected();
-				$('#patchesTable').bootstrapTable('refresh');
-			},
-			onSort: function(name, order) {
-				removeSelected();
-				$('#patchesTable').bootstrapTable('refresh');
 			},
 		});
 	});
@@ -143,97 +124,47 @@
 		});
 	});
 
-	$("#selectAllButton").click(function ()
-	{
-		var ids = [];
-		var data = $('#patchesTable').bootstrapTable('getData');
-		$.each( data, function( i, row, element ) {
-			ids.push(row.id);
-			$.each( $('input[name="btSelectItem"]:checkbox'),function() {
-				if ($(this).attr('value') == row.id) {
-					$(this).prop("checked", true);
-				}
-			});
-		});
+	var bulkSavePending = false;
+	function selectPatches(type) {
+		if (bulkSavePending) return;
+		var $table = $('#patchesTable');
+		// getData includes all pages of the current search, not just visible rows.
+		var ids = $table.bootstrapTable('getData').filter(function (row) {
+			var selected = row.state === true || row.state === 1 || row.state === '1';
+			return !selected && (!type || row.type === type);
+		}).map(function (row) { return row.id; });
+		if (!ids.length) return;
 
-		var _url = "/patches/group/add/bulk/{{groupID}}";
+		bulkSavePending = true;
+		var $buttons = $('#selectAllButton, #selectAppleButton, #selectThirdButton');
+		$buttons.prop('disabled', true);
 		$.ajax({
-			url: _url,
+			url: "/patches/group/add/bulk/{{groupID}}",
 			type: 'POST',
 			cache: false,
 			data: JSON.stringify(ids),
-			dataType: "json",
-			contentType: "application/json",
-			error: function (request, status, error)
-			{
-				jsonValue = jQuery.parseJSON( request.responseText );
+			dataType: 'json',
+			contentType: 'application/json'
+		}).done(function (response) {
+			if (response.errorno !== 0) {
+				alert('The patches could not be added to this group. Please try again.');
+				return;
 			}
-		 });
-
-		 $('#patchesTable').bootstrapTable('refresh');
-	});
-
-	$("#selectAppleButton").click(function ()
-	{
-		var ids = [];
-		var data = $('#patchesTable').bootstrapTable('getData');
-		$.each( data, function( i, row, element ) {
-			if (row.type == "Apple") {
-				ids.push(row.id);
-				$.each( $('input[name="btSelectItem"]:checkbox'),function() {
-					if ($(this).attr('value') == row.id) {
-						$(this).prop("checked", true);
-					}
-				});
-			}
+			// Reload only after the server has committed the new assignments.
+			$table.bootstrapTable('refresh');
+		}).fail(function (xhr) {
+			if (xhr.status === 401 && xhr.getResponseHeader('X-MacPatch-Login')) return;
+			var response = xhr.responseJSON;
+			alert(response && response.errormsg || 'The patches could not be added to this group. Please try again.');
+		}).always(function () {
+			bulkSavePending = false;
+			$buttons.prop('disabled', false);
 		});
+	}
 
-		var _url = "/patches/group/add/bulk/{{groupID}}";
-		$.ajax({
-			url: _url,
-			type: 'POST',
-			cache: false,
-			data: JSON.stringify(ids),
-			dataType: "json",
-			contentType: "application/json",
-			error: function (request, status, error)
-			{
-				jsonValue = jQuery.parseJSON( request.responseText );
-			}
-		 });
-
-	});
-
-	$("#selectThirdButton").click(function ()
-	{
-		var ids = [];
-		var data = $('#patchesTable').bootstrapTable('getData');
-		$.each( data, function( i, row, element ) {
-			if (row.type == "Third") {
-				ids.push(row.id);
-				$.each( $('input[name="btSelectItem"]:checkbox'),function() {
-					if ($(this).attr('value') == row.id) {
-						$(this).prop("checked", true);
-					}
-				});
-			}
-		});
-
-		var _url = "/patches/group/add/bulk/{{groupID}}";
-		$.ajax({
-			url: _url,
-			type: 'POST',
-			cache: false,
-			data: JSON.stringify(ids),
-			dataType: "json",
-			contentType: "application/json",
-			error: function (request, status, error)
-			{
-				jsonValue = jQuery.parseJSON( request.responseText );
-			}
-		 });
-
-	});
+	$('#selectAllButton').click(function () { selectPatches(); });
+	$('#selectAppleButton').click(function () { selectPatches('Apple'); });
+	$('#selectThirdButton').click(function () { selectPatches('Third'); });
 
 	$('#patchesTable').on('check.bs.table', function (e, row, $element)
 	{

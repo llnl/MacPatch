@@ -1,4 +1,4 @@
-from flask import render_template, request, send_file
+from flask import render_template, request, send_file, url_for
 from datetime import *
 import json
 from datetime import datetime
@@ -13,7 +13,7 @@ from mpconsole.app import db, login_manager
 from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
-from mpconsole.clients.views import revGroupSWRes
+from mpconsole.clients.views import revGroupSWRes, revAllGroupsSWRes
 from mpconsole.app_decorators import login_required
 
 '''
@@ -65,7 +65,8 @@ def profilesListJSON():
 def profileAdd():
 
 	profile_id = str(uuid.uuid4())
-	return render_template('os_managment/os_profile_manager.html', profileData={}, profileCriteriaAlt={}, profileDataAlt={}, profileDataRE={}, profileID=profile_id)
+	return render_template('os_managment/os_profile_manager.html', profileData={}, profileCriteriaAlt={}, profileDataAlt={}, profileDataRE={}, profileID=profile_id,
+						   wizard_title='New OS Profile', wizard_return_url=url_for('osmanage.profiles'))
 
 '''
 	This method renders the os_profile_manager.html File
@@ -119,7 +120,8 @@ def profileEdit(profile_id):
 		pretty_string = indent(pData2,indentation='    ')
 
 	return render_template('os_managment/os_profile_manager.html', profileData=profile, profileDataAlt=pData, profileCriteriaAlt=cri,
-						   profileDataRE=pretty_string, profileID=profile_id, groupPolicyID=groupPolicyID)
+						   profileDataRE=pretty_string, profileID=profile_id, groupPolicyID=groupPolicyID,
+						   wizard_title='Edit OS Profile', wizard_return_url=url_for('osmanage.profiles'))
 
 ''' Private '''
 '''
@@ -333,7 +335,8 @@ def addProfileToGroup(group_id):
 		row['title'] = p.profileName + " (" + p.profileIdentifier +")"
 		profilesRes.append(row)
 
-	return render_template('os_managment/os_profile_wizard.html', profileData={}, profileCriteria={}, profileCriteriaAlt={}, profileArray=profilesRes, groupID=group_id)
+	return render_template('os_managment/os_profile_wizard.html', profileData={}, profileCriteria={}, profileCriteriaAlt={}, profileArray=profilesRes, groupID=group_id,
+						   wizard_title='Assign OS Profile', wizard_return_url=url_for('clients.clientGroup', name=group_id))
 
 @osmanage.route('/profile/group/<group_id>/edit/<policy_id>',methods=['GET'])
 @login_required
@@ -368,7 +371,8 @@ def editProfileInGroup(group_id, policy_id):
 	if accessToGroup(group_id):
 		userHasRights = 1
 
-	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri, isAdmin=userHasRights)
+	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri, isAdmin=userHasRights,
+						   wizard_title='Edit OS Profile Assignment', wizard_return_url=url_for('clients.clientGroup', name=group_id))
 
 
 def accessToGroup(groupID):
@@ -597,6 +601,9 @@ def appFilterSave():
 			swRes = MpSoftwareRestrictions()
 			isNew = True
 
+		# Global state before the edit, a rule moving to/from global affects every group
+		wasGlobal = (not isNew) and bool(swRes.isglobal)
+
 		# Save Profile Data
 		setattr(swRes, 'bundleID', formDict['bundleID'])
 		setattr(swRes, 'displayName', formDict['displayName'])
@@ -613,6 +620,13 @@ def appFilterSave():
 			log("{} added new software restriction ({}).".format(session.get('user'), appID))
 
 		db.session.commit()
+
+		# Clients only re-fetch restrictions when the group's restrictions version changes
+		if wasGlobal or bool(swRes.isglobal):
+			revAllGroupsSWRes()
+		else:
+			for swResG in MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.appID == swRes.appID).all():
+				revGroupSWRes(swResG.group_id)
 		return json.dumps({'error': 0}), 200
 	else:
 		return json.dumps({'error': 401}), 401
@@ -625,8 +639,11 @@ def appFilterDelete():
 		if request.method == 'DELETE':
 			formDict = request.form.to_dict()
 			app_ids = formDict['appID'].split(",")
+			globalDeleted = False
 			for aid in app_ids:
 				delSWRes = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.appID == aid).first()
+				if delSWRes is not None and delSWRes.isglobal:
+					globalDeleted = True
 				delSWResForGroup = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.appID == aid).all()
 				if delSWRes is not None:
 					log_Info("{} deleted software restriction {}.".format(session.get('user'), delSWRes.displayName))
@@ -639,6 +656,8 @@ def appFilterDelete():
 						db.session.delete(swResG)
 
 			db.session.commit()
+			if globalDeleted:
+				revAllGroupsSWRes()
 
 		return json.dumps({'error': 0}), 200
 	else:

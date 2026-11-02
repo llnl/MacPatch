@@ -9,29 +9,24 @@
 {%  endblock %}
 
 {% block pageHeader %}
-<div class="container-fluid">
-	<div class="pull-left">Provisioning - Detection Criteria</div>
-	<div class="pull-right">
-
-		<button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
+<span class="d-flex align-items-center justify-content-between">
+	<span class="mr-3">Provisioning - Detection Criteria</span>
+		<button type="button" class="btn btn-primary flex-shrink-0" aria-label="About detection criteria" data-container="body" data-toggle="popover"
 				data-placement="left"
 				data-content="Detection criteria is used to create the .MPProvisionBegin file. All active criteria must return true for the provision file to be created.">
-		  <i class="fa fa-question"></i>
+		  <i class="fa fa-question" aria-hidden="true"></i>
 		</button>
-
-	</div>
-</div>
+</span>
 {%  endblock %}
 
 {% block bodyPanel %}
-    <table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
-			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
-			<button id="delButton" type="button" class="btn btn-default" title="Delete Patch"><i class="glyphicon glyphicon-trash"></i></button>
+			<button id="addButton" type="button" class="btn btn-default" title="Add Detection Criterion"><i class="glyphicon glyphicon-plus"></i></button>
+			<button id="delButton" type="button" class="btn btn-default" title="Delete Detection Criteria"><i class="glyphicon glyphicon-trash"></i></button>
 			{% endif %}
 		</div>
-	</table>
+	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
 {% endblock %}
 
 
@@ -39,11 +34,11 @@
 	{{ super() }}
 
 
-	<script src="{{ url_for('static', filename='yarn_components/popper.js/dist/umd/popper.min.js') }}"></script>
     <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 
 	<script>
@@ -87,6 +82,8 @@
                     field: 'operate',
                     title: '',
                     align: 'center',
+                    valign: 'middle',
+                    class: 'text-nowrap',
                     events: operateEvents,
                     formatter: operateFormatter
                 },
@@ -170,16 +167,11 @@
 		function operateFormatter(value, row, index)
         {
             var htmlData = [];
-            htmlData.push('<table><tr><td>')
             {% if session.role[0] == 1 %}
-            htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch">');
+            htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Detection Criterion">');
             htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
-            {% endif %}
-
             htmlData.push('</a>');
-
-
-            htmlData.push('</td></tr></table>');
+            {% endif %}
             return htmlData.join('');
         }
 

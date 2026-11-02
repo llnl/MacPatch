@@ -165,96 +165,105 @@ def applePatchWizard(akey):
 	else:
 		canEdit=0
 
-	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit)
+	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit,
+						   wizard_title='Edit Apple Patch', wizard_return_url=url_for('patches.apple'))
 
 @patches.route('/applePatchWizard/update',methods=['POST'])
 @login_required
 def applePatchWizardUpdate():
 
-	if localAdmin() or adminRole():
-		critDict = dict(request.form)
-		suname = request.form['supatchnameOrig']
-		akey = request.form['akey']
-
-		# Set / Update Values in ApplePatch table
-		_applePatch = ApplePatch.query.filter(ApplePatch.akey == akey).first()
-		setattr(_applePatch, 'supatchname', request.form['supatchname'])
-		db.session.commit()
-
-		# Set / Update Values in MP Apple Patch Additions table
-		patchAdds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == suname).first()
-		setattr(patchAdds, 'supatchname', request.form['supatchname'])
-		setattr(patchAdds, 'patch_reboot', request.form['patch_reboot'])
-		setattr(patchAdds, 'patch_install_weight', request.form['patchInstallWeight'])
-		setattr(patchAdds, 'severity', request.form['patch_severity'])
-		setattr(patchAdds, 'user_install', request.form['user_install'])
-		db.session.commit()
-
-		# Remove Criteria before adding new / updating
-		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == suname).delete()
-		db.session.commit()
-
-		for key in critDict:
-			if "reqCri_Order_" in key:
-				nid = str(str(critDict[key][0]).split("_")[-1])
-				order = critDict[key][0]
-
-				patchCrit = ApplePatchCriteria()
-				setattr(patchCrit, 'puuid', akey)
-				setattr(patchCrit, 'supatchname', request.form['supatchname'])
-				setattr(patchCrit, 'type', critDict["reqCri_type_" + nid][0])
-				setattr(patchCrit, 'type_action', critDict["reqCri_type_action_" + nid][0])
-				setattr(patchCrit, 'type_data', critDict["reqCri_type_data_" + nid][0])
-				setattr(patchCrit, 'type_order', order)
-				setattr(patchCrit, 'cdate', datetime.now())
-				setattr(patchCrit, 'mdate', datetime.now())
-
-				db.session.add(patchCrit)
-				db.session.commit()
-
-		log("{} updated apple patch {}({}).".format(session.get('user'), request.form['supatchname'], akey))
-
-	else:
+	if not localAdmin() and not adminRole():
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))
-		return json.dumps({'error': 'Does not have permission to update apple patch.'}, default=json_serial), 401
+		return json.dumps({'error': 'Does not have permission to update apple patch.'}), 403
 
-	return json.dumps({}, default=json_serial), 200
+	form = request.form
+	suname = form['supatchnameOrig']
+	akey = form['akey']
+	new_name = form['supatchname']
+	# Form values are strings; row IDs come from field names, independently of order.
+	criteria = []
+	try:
+		for key in form:
+			if not key.startswith('reqCri_Order_'):
+				continue
+			nid = key.removeprefix('reqCri_Order_')
+			order = int(form[key])
+			action = int(form['reqCri_type_action_' + nid])
+			if order < 0 or action not in (0, 1):
+				raise ValueError('Invalid criteria order or action')
+			criteria.append({
+				'type': form['reqCri_type_' + nid],
+				'type_action': action,
+				'type_data': form['reqCri_type_data_' + nid],
+				'type_order': order
+			})
+	except (KeyError, ValueError):
+		return json.dumps({'error': 'Each script requires valid order, action, and script fields.'}), 400
+
+	apple_patch = ApplePatch.query.filter(ApplePatch.akey == akey).first()
+	patch_adds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == suname).first()
+	if apple_patch is None or patch_adds is None:
+		return json.dumps({'error': 'Apple patch was not found. Refresh and try again.'}), 404
+
+	try:
+		apple_patch.supatchname = new_name
+		patch_adds.supatchname = new_name
+		patch_adds.patch_reboot = form['patch_reboot']
+		patch_adds.patch_install_weight = form['patchInstallWeight']
+		patch_adds.severity = form['patch_severity']
+		patch_adds.user_install = form['user_install']
+		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == suname).delete()
+		for values in criteria:
+			patch_criteria = ApplePatchCriteria()
+			patch_criteria.puuid = akey
+			patch_criteria.supatchname = new_name
+			for key, value in values.items():
+				setattr(patch_criteria, key, value)
+			patch_criteria.cdate = datetime.now()
+			patch_criteria.mdate = datetime.now()
+			db.session.add(patch_criteria)
+		db.session.commit()
+	except Exception as error:
+		db.session.rollback()
+		log_Error('Apple patch update failed: {}'.format(error))
+		return json.dumps({'error': 'The Apple patch could not be saved.'}), 500
+
+	log("{} updated apple patch {}({}).".format(session.get('user'), new_name, akey))
+	return json.dumps({}), 200
+
+def migrateApplePatchState(source, target):
+	if not localAdmin() and not adminRole():
+		message = 'You do not have permission to change Apple patch states.'
+		log_Error("{}: {}".format(session.get('user'), message))
+		return json.dumps({'errormsg': message}), 403
+
+	try:
+		updated = ApplePatchAdditions.query.filter(
+			ApplePatchAdditions.patch_state == source
+		).update({'patch_state': target}, synchronize_session=False)
+		db.session.commit()
+	except Exception as error:
+		db.session.rollback()
+		log_Error('Apple patch state migration failed: {}'.format(error))
+		return json.dumps({'errormsg': 'The Apple patch states could not be saved.'}), 500
+
+	log("{} moved {} Apple patches from {} to {}.".format(session.get('user'), updated, source, target))
+	return json.dumps({'updated': updated, 'source': source, 'target': target}), 200
+
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toQA',methods=['GET'])
 @login_required
 @cross_origin()
 def migrateApplePatchesToQA():
-	if localAdmin() or adminRole():
-		query = ApplePatchAdditions.query.filter(ApplePatchAdditions.patch_state == 'Create').all()
-		if query is not None:
-			for row in query:  # all() is extra
-				row.patch_state = 'QA'
-
-		db.session.commit()
-		return json.dumps({}, default=json_serial), 200
-
-	else:
-		log_Error("{} does not have permission to migrate apple patch(s) to QA state.".format(session.get('user')))
-		return json.dumps({}, default=json_serial), 403
+	return migrateApplePatchState('Create', 'QA')
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toProd',methods=['GET'])
 @login_required
 @cross_origin()
 def migrateApplePatchesToProd():
-	if localAdmin() or adminRole():
-		query = ApplePatchAdditions.query.filter(ApplePatchAdditions.patch_state == 'QA').all()
-		if query is not None:
-			for row in query:  # all() is extra
-				row.patch_state = 'Production'
-
-		db.session.commit()
-		return json.dumps({}, default=json_serial), 200
-
-	else:
-		log_Error("{} does not have permission to migrate apple patch(s) to Production state.".format(session.get('user')))
-		return json.dumps({}, default=json_serial), 403
+	return migrateApplePatchState('QA', 'Production')
 
 '''
 ----------------------------------------------------------------
@@ -313,7 +322,7 @@ def customPatchWizardAdd():
 
 	return render_template('patches/custom_patch_wizard.html',data=cList, columns=cListCols,
 							dataCrit={}, dataCritLen=0,
-							hasOSArch=False, dataReq={})
+							hasOSArch=False, dataReq={}, wizard_title='New Custom Patch', wizard_return_url=url_for('patches.custom'))
 
 @patches.route('/customPatchWizard/<puuid>')
 @login_required
@@ -357,7 +366,8 @@ def customPatchWizard(puuid):
 
 	return render_template('patches/custom_patch_wizard.html', data=patch, columns=patchCols, dataAlt=patchDict,
 							dataCrit=patchCrit, dataCritLen=patchCritLen, dataCritAlt=pathCritLst,
-							hasOSArch=_hasOSArch, dataReq=patchReq, baseurl=base_url)
+							hasOSArch=_hasOSArch, dataReq=patchReq, baseurl=base_url,
+							wizard_title='Edit Custom Patch - ' + (patch.patch_name or ''), wizard_return_url=url_for('patches.custom'))
 
 ''' AJAX Request '''
 @patches.route('/customPatchWizard/update',methods=['POST'])

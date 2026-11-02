@@ -1,0 +1,342 @@
+/* Match the classic MacPatch console while retaining Bootstrap 4 components. */
+body.mp-console {
+  color: #333;
+  background: #fff;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.42857143;
+}
+
+.mp-console a { color: #337ab7; }
+.mp-console a:hover, .mp-console a:focus { color: #23527c; }
+
+.mp-console .mp-topbar {
+  min-height: 51px;
+  height: auto;
+  margin: 0;
+  padding: 0 15px;
+  background: #f8f8f8;
+  border-bottom: 1px solid #e7e7e7;
+  box-shadow: none;
+}
+
+.mp-console .mp-topbar .navbar-brand {
+  margin: 0;
+  padding: 5px 0;
+  color: #777;
+  font-size: 18px;
+  font-weight: 400;
+}
+
+.mp-console .mp-topbar .navbar-brand img { margin-right: 10px; }
+.mp-console .mp-topbar.navbar-light .navbar-nav .nav-item .nav-link { height: 50px; color: #337ab7; font-size: 14px; }
+.mp-console .mp-topbar .dropdown-menu { font-size: 14px; }
+.mp-console .mp-topbar .dropdown-item { color: #333; }
+
+/* Navigation opens and changes state without animation. */
+.mp-console .mp-topbar,
+.mp-console .mp-topbar *,
+.mp-console .mp-topbar *::before,
+.mp-console .mp-topbar *::after,
+.mp-console .sidebar,
+.mp-console .sidebar *,
+.mp-console .sidebar *::before,
+.mp-console .sidebar *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+.mp-console #wrapper { min-height: calc(100vh - 51px); }
+.mp-console #wrapper #content-wrapper { background: #fff; }
+
+.mp-console .sidebar {
+  width: 250px !important;
+  min-height: calc(100vh - 51px);
+  flex-shrink: 0;
+  background: #f8f8f8;
+  border-right: 1px solid #e7e7e7;
+}
+
+.mp-console .sidebar .nav-item,
+.mp-console .sidebar .nav-item:last-child {
+  margin: 0;
+  padding: 0;
+}
+
+.mp-console .sidebar .nav-item .nav-link {
+  width: 100%;
+  padding: 10px 15px;
+  border-bottom: 1px solid #e7e7e7;
+  border-radius: 0;
+  color: #337ab7;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.mp-console .sidebar .nav-item .nav-link i {
+  color: #337ab7;
+  font-size: 14px;
+}
+
+.mp-console .sidebar .nav-item .nav-link:hover,
+.mp-console .sidebar .nav-item.active > .nav-link,
+.mp-console .sidebar .nav-item.mm-active > .nav-link,
+.mp-console .sidebar .nav-item .nav-link.active {
+  color: #337ab7;
+  background: #eee;
+  font-weight: 400;
+}
+
+.mp-console .sidebar .nav-item .nav-link .arrow { float: right; }
+.mp-console .sidebar .nav-item .nav-link .arrow::before { color: #337ab7; }
+.mp-console .sidebar .nav-second-level,
+.mp-console .sidebar .nav-third-level {
+  margin: 0;
+  padding: 0;
+  border-radius: 0;
+  background: #f8f8f8;
+}
+
+.mp-console .sidebar .nav-second-level:not(.mm-show),
+.mp-console .sidebar .nav-third-level:not(.mm-show) {
+  display: none;
+}
+
+.mp-console .sidebar .nav-second-level .nav-link { padding-left: 32px; }
+.mp-console .sidebar .nav-third-level .nav-link { padding-left: 48px; }
+.mp-console #page-wrapper { padding: 0 15px 20px; }
+.mp-console .row { margin-right: -15px; margin-left: -15px; }
+.mp-console [class^="col-"], .mp-console [class*=" col-"] { padding-right: 15px; padding-left: 15px; }
+
+.mp-console .mp-page-heading {
+  margin: 40px 15px 20px;
+  padding-bottom: 9px;
+  border-bottom: 1px solid #eee;
+  color: #333;
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.mp-console .panel {
+  margin-bottom: 20px;
+  border-color: #ddd;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, .05);
+}
+
+.mp-console .panel-heading {
+  padding: 10px 15px;
+  border-bottom-color: #ddd;
+  border-radius: 3px 3px 0 0;
+  color: #333;
+  background: #f5f5f5;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.mp-console .panel-body { padding: 15px; }
+.mp-console .panel-footer { padding: 10px 15px; background: #f5f5f5; border-top-color: #ddd; }
+.mp-console .panel-primary > .panel-heading { color: #fff; background: #337ab7; }
+.mp-console .panel-success > .panel-heading { color: #3c763d; background: #dff0d8; }
+.mp-console .panel-info > .panel-heading { color: #31708f; background: #d9edf7; }
+.mp-console .panel-warning > .panel-heading { color: #8a6d3b; background: #fcf8e3; }
+.mp-console .panel-danger > .panel-heading { color: #a94442; background: #f2dede; }
+.mp-console .panel-danger { border-color: #ebccd1; }
+
+.mp-console .nav-tabs { border-bottom-color: #ddd; }
+.mp-console .nav-tabs > li > a { padding: 10px 15px; border-radius: 4px 4px 0 0; }
+.mp-console .nav-tabs > li.active > a,
+.mp-console .nav-tabs > li > a.active { color: #555; border-color: #ddd #ddd #fff; }
+.mp-console .btn, .mp-console .form-control { font-size: 14px; }
+.mp-console .btn-primary { background: #337ab7; border-color: #2e6da4; }
+.mp-console .btn-primary:hover { background: #286090; border-color: #204d74; }
+.mp-console .btn-default { color: #333; border-color: #ccc; }
+.mp-console .btn-xs { font-size: 12px; }
+
+@media (max-width: 767.98px) {
+  .mp-console .mp-topbar .navbar-brand { font-size: 15px; }
+  .mp-console .mp-topbar .navbar-brand img { width: 32px; height: 32px; }
+  .mp-console .mp-topbar .nav-item .nav-link { font-size: 12px; }
+  .mp-console .sidebar { width: 180px !important; }
+  .mp-console .sidebar.toggled { display: none; }
+  .mp-console .sidebar .nav-item .nav-link { font-size: 13px; }
+  .mp-console .mp-page-heading { margin-top: 25px; }
+}
+
+@media (max-width: 479.98px) {
+  .mp-console .mp-topbar { padding: 0 8px; }
+  .mp-console .mp-topbar .navbar-brand span { max-width: 135px; white-space: normal; }
+  .mp-console #page-wrapper { padding-right: 10px; padding-left: 10px; }
+}
+
+#content-wrapper { min-width: 0; }
+
+.mp-console .sidebar .nav-second-level,
+.mp-console .sidebar .nav-third-level {
+  flex-direction: column;
+  list-style: none;
+}
+
+/* Classic data tables: gray grid, white headings, striped rows, and blue actions. */
+.table {
+  border-color: #ddd !important;
+  background-color: #fff;
+  color: #333;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.table > thead > tr > th,
+.table > tbody > tr > th,
+.table > tbody > tr > td,
+.table > tfoot > tr > th,
+.table > tfoot > tr > td {
+  border-color: #ddd !important;
+  color: #333;
+  vertical-align: middle;
+}
+
+.table > thead > tr > th {
+  background: #fff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.table > tbody > tr > th,
+.table > tbody > tr > td,
+.table > tfoot > tr > td {
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > td,
+.table-striped > tbody > tr:nth-of-type(odd) > th {
+  background-color: #f2f2f2;
+}
+
+.table td a,
+.table th a {
+  color: #337ab7;
+}
+
+.table td a:hover,
+.table th a:hover {
+  color: #23527c;
+}
+
+.table td a .fa,
+.table td a .glyphicon {
+  color: inherit;
+}
+
+.bootstrap-table {
+  --bt-table-border-color: #ddd;
+  color: #333;
+  font-size: 14px;
+}
+
+.bootstrap-table .fixed-table-container,
+.bootstrap-table .fixed-table-header,
+.bootstrap-table .fixed-table-footer {
+  border-color: #ddd !important;
+  border-radius: 0;
+}
+
+.bootstrap-table .fixed-table-container .table thead th {
+  padding: 0 !important;
+}
+
+.bootstrap-table .fixed-table-container .table thead th .th-inner {
+  color: #333;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 20px;
+}
+
+/* Denser rows for tables that opt into table-sm. */
+.table.table-sm,
+.table.table-sm th,
+.table.table-sm td {
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.table.table-sm th,
+.table.table-sm td {
+  padding: 2px 4px;
+}
+
+.bootstrap-table .fixed-table-container .table.table-sm tfoot th {
+  padding: 0;
+}
+
+.bootstrap-table .fixed-table-container .table.table-sm .th-inner {
+  padding: 2px 4px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.bootstrap-table .fixed-table-toolbar .btn,
+.bootstrap-table .fixed-table-pagination .pagination-detail .btn {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  color: #333;
+  background: #fff;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.bootstrap-table .fixed-table-toolbar .btn:hover,
+.bootstrap-table .fixed-table-pagination .pagination-detail .btn:hover {
+  background: #e6e6e6;
+  border-color: #adadad;
+}
+
+.bootstrap-table .fixed-table-toolbar .search .form-control {
+  height: 34px;
+  border-color: #ccc;
+  border-radius: 0;
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, .075);
+  color: #333;
+  font-size: 14px;
+}
+
+.bootstrap-table .fixed-table-toolbar .search .form-control::placeholder {
+  color: #999;
+}
+
+.bootstrap-table .fixed-table-pagination {
+  color: #333;
+  font-size: 14px;
+}
+
+.bootstrap-table .fixed-table-pagination .page-link {
+  padding: 6px 12px;
+  border-color: #ddd;
+  color: #337ab7;
+  background: #fff;
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.bootstrap-table .fixed-table-pagination .page-link:hover {
+  color: #23527c;
+  background: #eee;
+}
+
+.bootstrap-table .fixed-table-pagination .page-item.active .page-link {
+  border-color: #337ab7;
+  color: #fff;
+  background: #337ab7;
+}
+
+.bootstrap-table .fixed-table-pagination .page-item.disabled .page-link {
+  color: #777;
+  background: #fff;
+}
+

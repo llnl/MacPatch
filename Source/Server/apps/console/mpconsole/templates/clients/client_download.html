@@ -18,10 +18,11 @@
     <link href="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.css') }}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{{ url_for('static', filename='yarn_components/sb-admin-2/dist/css/sb-admin-2.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
 
     <!-- Custom Fonts -->
-    <link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+    <link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
@@ -33,6 +34,8 @@
         }
 	</script>
 
+	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 </head>
 
 <body>
@@ -47,7 +50,7 @@
                     </div>
                     <div class="panel-body">
                         <div class="table-responsive">
-                            <table class="table">
+                            <table class="table table-bordered">
                                 <thead>
                                     <tr>
                                         <th>Agent</th>
@@ -101,15 +104,17 @@
 
     <!-- jQuery -->
     <script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
     <!-- Metis Menu Plugin JavaScript -->
     <script src="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.js') }}"></script>
 
     <!-- Custom Theme JavaScript -->
-    <script src="{{ url_for('static', filename='yarn_components/sb-admin-2/js/sb-admin-2.js') }}"></script>
+    <script src="{{ url_for('static', filename='yarn_components/jquery.easing/jquery.easing.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/js/sb-admin-2.js') }}"></script>
 
 </body>
 

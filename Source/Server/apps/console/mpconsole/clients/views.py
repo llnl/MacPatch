@@ -1,4 +1,4 @@
-from flask import render_template, session, request, current_app, redirect, url_for
+from flask import render_template, session, request, current_app, redirect, url_for, jsonify
 from sqlalchemy import text
 from datetime import datetime
 import json
@@ -334,7 +334,7 @@ def clientGroupUserModify():
 	except:
 		log_Error("Error {}".format(sys.exc_info()[0]))
 
-	return clientGroup(id,5)
+	return redirect(url_for('.clientGroup', name=id, tab=7))
 
 @clients.route('/group/update/<group_id>',methods=['POST'])
 @login_required
@@ -751,32 +751,38 @@ def revGroupTasks(group_id):
 @clients.route('/group/<id>/task/active',methods=['POST'])
 @login_required
 def taskState(id):
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
-		key = request.form.get('pk')
-		value = request.form.get('value')
-		log("{} set task {} active state to {} ".format(session.get('user'), key, value))
-		task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == key).first()
-		if task is not None:
-			setattr(task, 'active', value)
-			db.session.commit()
-			revGroupTasks(id)
-
-	return clientGroup(id)
+	if not groupAdminRights(id):
+		return 'You do not have permission to edit tasks in this group.', 403
+	key = request.form.get('pk')
+	value = request.form.get('value')
+	if not key or value not in ('0', '1'):
+		return 'A task command and an active value of 0 or 1 are required.', 400
+	task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == key).first()
+	if task is None:
+		return 'The task was not found in this group. Refresh the table and try again.', 404
+	task.active = value
+	db.session.commit()
+	revGroupTasks(id)
+	log("{} set task {} active state to {} ".format(session.get('user'), key, value))
+	return jsonify(success=True)
 
 @clients.route('/group/<id>/task/interval',methods=['POST'])
 @login_required
 def taskInterval(id):
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
-		cmd = request.form.get('pk')
-		interval = request.form.get('value')
-		log("{} set task {} active state to {} ".format(session.get('user'), cmd, interval))
-		task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == cmd).first()
-		if task is not None:
-			setattr(task, 'interval', interval)
-			db.session.commit()
-			revGroupTasks(id)
-
-	return clientGroup(id)
+	if not groupAdminRights(id):
+		return 'You do not have permission to edit tasks in this group.', 403
+	cmd = request.form.get('pk')
+	interval = request.form.get('value')
+	if not cmd or interval is None or not interval.strip():
+		return 'A task command and interval are required.', 400
+	task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == cmd).first()
+	if task is None:
+		return 'The task was not found in this group. Refresh the table and try again.', 404
+	task.interval = interval
+	db.session.commit()
+	revGroupTasks(id)
+	log("{} set task {} interval to {} ".format(session.get('user'), cmd, interval))
+	return jsonify(success=True)
 
 '''
 ********************************
@@ -909,6 +915,12 @@ def revGroupSWRes(group_id):
 		rev_swres = grp_conf.restrictions_version + 1
 		setattr(grp_conf, "restrictions_version", rev_swres)
 		db.session.commit()
+
+def revAllGroupsSWRes():
+	"""Bump the restrictions version for every client group (used when a global restriction changes)."""
+	MPGroupConfig.query.update({MPGroupConfig.restrictions_version: MPGroupConfig.restrictions_version + 1},
+							   synchronize_session=False)
+	db.session.commit()
 
 @clients.route('/group/<id>/sw/res/remove',methods=['DELETE'])
 @login_required

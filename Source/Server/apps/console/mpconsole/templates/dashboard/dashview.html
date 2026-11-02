@@ -3,24 +3,18 @@
 	<!-- Bootstrap Core CSS -->
 	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/font-awesome/css/font-awesome.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
+	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
 
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-	<style>
-		#chartDataTable > tbody > tr > td {
-			height:28px;
-			padding:4px;
-			border-top: 2px;
-		}
-	</style>
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block body %}
 	<div>
-		<table id="chartDataTable" data-toolbar="#chartDataToolbar" data-show-export="true" class="table table-condensed table-striped">
-			<div id="chartDataToolbar"></div>
-		</table>
+		<div id="chartDataToolbar"></div>
+		<table id="chartDataTable" data-toolbar="#chartDataToolbar" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 	</div>
 	<div id="overlay">
 		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
@@ -32,8 +26,9 @@
 {% block javascript %}
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>

@@ -1,0 +1,152 @@
+/* Bootstrap 3 components still used by templates running on Bootstrap 4. */
+.panel {
+  margin-bottom: 1.5rem;
+  background: #fff;
+  border: 1px solid #e3e6f0;
+  border-radius: .35rem;
+  box-shadow: 0 .15rem 1.75rem 0 rgba(58, 59, 69, .08);
+}
+
+.panel-heading {
+  padding: .75rem 1.25rem;
+  background: #f8f9fc;
+  border-bottom: 1px solid #e3e6f0;
+  border-radius: .35rem .35rem 0 0;
+  font-weight: 600;
+}
+
+.panel-body {
+  padding: 1.25rem;
+}
+
+.panel-footer {
+  padding: .75rem 1.25rem;
+  background: #f8f9fc;
+  border-top: 1px solid #e3e6f0;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.panel-primary > .panel-heading { color: #fff; background: #4e73df; }
+.panel-success > .panel-heading { color: #155724; background: #d4edda; }
+.panel-info > .panel-heading { color: #0c5460; background: #d1ecf1; }
+.panel-warning > .panel-heading { color: #856404; background: #fff3cd; }
+.panel-danger > .panel-heading { color: #721c24; background: #f8d7da; }
+.panel-danger { border-color: #f5c6cb; }
+
+.btn-default {
+  color: #5a5c69;
+  background: #fff;
+  border-color: #d1d3e2;
+}
+
+.btn-default:hover,
+.btn-default:focus,
+.btn-default.active {
+  color: #3a3b45;
+  background: #eaecf4;
+  border-color: #b7b9cc;
+}
+
+.btn-xs { padding: .15rem .4rem; font-size: .75rem; }
+.pull-left { float: left !important; }
+.pull-right { float: right !important; }
+.center-block { display: block; margin-right: auto; margin-left: auto; }
+.img-responsive { display: block; max-width: 100%; height: auto; }
+.help-block { display: block; margin: .25rem 0 .5rem; color: #858796; }
+.form-control-static { min-height: 2.375rem; padding-top: .375rem; }
+.input-sm { height: calc(1.5em + .5rem + 2px); padding: .25rem .5rem; font-size: .875rem; }
+.control-label { padding-top: .375rem; }
+.form-horizontal .form-group { display: flex; flex-wrap: wrap; margin-right: -.75rem; margin-left: -.75rem; }
+.well { padding: 1.25rem; margin-bottom: 1.25rem; background: #f8f9fc; border: 1px solid #e3e6f0; border-radius: .35rem; }
+
+.input-group-addon {
+  display: flex;
+  align-items: center;
+  padding: .375rem .75rem;
+  color: #6e707e;
+  background: #eaecf4;
+  border: 1px solid #d1d3e2;
+  border-radius: .35rem;
+}
+
+.label { display: inline-block; padding: .25em .5em; color: #fff; font-size: 75%; font-weight: 700; border-radius: .25rem; }
+.label-default { background: #858796; }
+.label-primary { background: #4e73df; }
+.label-success { background: #1cc88a; }
+.label-info { background: #36b9cc; }
+.label-warning { background: #f6c23e; color: #3a3b45; }
+.label-danger { background: #e74a3b; }
+
+.nav-tabs > li > a {
+  display: block;
+  padding: .5rem 1rem;
+  border: 1px solid transparent;
+  border-radius: .35rem .35rem 0 0;
+}
+
+.nav-tabs > li.active > a,
+.nav-tabs > li > a.active {
+  color: #6e707e;
+  background: #fff;
+  border-color: #dddfeb #dddfeb #fff;
+  margin-bottom: -1px;
+}
+
+.modal-header .close { order: 2; }
+.modal-header .modal-title { order: 1; }
+.modal.modal-wide .modal-dialog { max-width: none; }
+.modal.modal-mid .modal-dialog,
+.modal.modal-mid-wide .modal-dialog,
+.modal.modal-mid-60 .modal-dialog,
+.modal.modal-mid-70 .modal-dialog,
+.modal.modal-mid-80 .modal-dialog { max-width: calc(100vw - 2rem); }
+
+/* Bootstrap no longer ships Glyphicons; use the installed Font Awesome font. */
+.glyphicon {
+  display: inline-block;
+  font-family: "Font Awesome 7 Free";
+  font-weight: 900;
+  font-style: normal;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+}
+
+.glyphicon-calendar::before { content: "\f073"; }
+.glyphicon-chevron-down::before { content: "\f078"; }
+.glyphicon-chevron-up::before { content: "\f077"; }
+.glyphicon-cloud-download::before { content: "\f0ed"; }
+.glyphicon-cog::before { content: "\f013"; }
+.glyphicon-duplicate::before { content: "\f0c5"; }
+.glyphicon-export::before { content: "\f56e"; }
+.glyphicon-import::before { content: "\f56f"; }
+.glyphicon-info-sign::before { content: "\f05a"; }
+.glyphicon-minus-sign::before { content: "\f056"; }
+.glyphicon-ok::before { content: "\f00c"; }
+.glyphicon-pencil::before { content: "\f303"; }
+.glyphicon-plus::before { content: "\f067"; }
+.glyphicon-save::before { content: "\f019"; }
+.glyphicon-search::before { content: "\f002"; }
+.glyphicon-share::before { content: "\f064"; }
+.glyphicon-th-list::before { content: "\f00b"; }
+.glyphicon-transfer::before { content: "\f0ec"; }
+.glyphicon-trash::before { content: "\f1f8"; }
+
+@media (min-width: 576px) {
+  .col-sm-offset-2 { margin-left: 16.666667%; }
+  .col-sm-offset-3 { margin-left: 25%; }
+  .col-sm-offset-4 { margin-left: 33.333333%; }
+}
+
+@media (min-width: 768px) {
+  .col-md-offset-2 { margin-left: 16.666667%; }
+  .col-md-offset-3 { margin-left: 25%; }
+  .col-md-offset-4 { margin-left: 33.333333%; }
+}
+
+@media (max-width: 767.98px) {
+  .form-horizontal .control-label { padding-bottom: .25rem; }
+}
