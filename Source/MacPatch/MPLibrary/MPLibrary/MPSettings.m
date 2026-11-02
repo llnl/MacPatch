@@ -414,6 +414,16 @@ static dispatch_queue_t _settingsQueue = NULL;
     return result;
 }
 
+/// Test a server dictionary, honoring its useHTTPS and allowSelfSigned settings.
+- (BOOL)serverIsReachable:(NSDictionary *)srv usingPing:(MPServerPing *)ping
+{
+    BOOL useSSL = srv[@"useHTTPS"] ? ([srv[@"useHTTPS"] integerValue] != 0) : YES;
+    return [ping serverHostIsReachable:srv[@"host"]
+                                  port:[srv[@"port"] integerValue]
+                                useSSL:useSSL
+                       allowSelfSigned:([srv[@"allowSelfSigned"] integerValue] == 1)];
+}
+
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
 {
     MPServerPing *ping = [MPServerPing new];
@@ -432,20 +442,20 @@ static dispatch_queue_t _settingsQueue = NULL;
         }
         
         if ([_srv[@"serverType"] integerValue] == 2) {
-            if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+            if ([self serverIsReachable:_srv usingPing:ping]) {
                 _proxy = [_srv copy];
             }
             continue;
         }
         
-        if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+        if ([self serverIsReachable:_srv usingPing:ping]) {
             [_srvsRaw addObject:[_srv copy]];
         }
     }
     
     BOOL masterReachable = NO;
     if (_master) {
-        masterReachable = [ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]];
+        masterReachable = [self serverIsReachable:_master usingPing:ping];
         if (masterReachable) {
             // Master is a valid server even when it is the only one defined
             [_srvsRaw addObject:_master];

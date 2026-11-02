@@ -39,8 +39,13 @@ static NSString *ServerTestURI = MP_API_PREFIX @"/server/status/nodb";
  */
 - (BOOL)serverHostIsReachable:(NSString *)hostName port:(NSInteger)port
 {
+    return [self serverHostIsReachable:hostName port:port useSSL:YES allowSelfSigned:NO];
+}
+
+- (BOOL)serverHostIsReachable:(NSString *)hostName port:(NSInteger)port useSSL:(BOOL)useSSL allowSelfSigned:(BOOL)allowSelfSigned
+{
     BOOL res = NO;
-    NSString *hostURL = [NSString stringWithFormat:@"https://%@:%ld%@",hostName,(long)port,ServerTestURI];
+    NSString *hostURL = [NSString stringWithFormat:@"%@://%@:%ld%@",(useSSL ? @"https" : @"http"),hostName,(long)port,ServerTestURI];
     //LogInfo(@"[serverHostIsReachable]: hostURL = %@",hostURL);
     const char *hostURLStr = [hostURL cStringUsingEncoding:NSASCIIStringEncoding];
     
@@ -57,9 +62,11 @@ static NSString *ServerTestURI = MP_API_PREFIX @"/server/status/nodb";
         curl_easy_setopt(curl, CURLOPT_NOBODY, 1L);
         curl_easy_setopt(curl, CURLOPT_USERAGENT, "MacPatch/1.0");
 
-        // TLS verification (prefer to keep these ON in production)
-        // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-        // curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+        // TLS verification stays on unless the server is configured to allow self signed certs
+        if (allowSelfSigned) {
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+            curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+        }
 
         // Optional: fail on HTTP errors >= 400
         curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
@@ -70,6 +77,9 @@ static NSString *ServerTestURI = MP_API_PREFIX @"/server/status/nodb";
     }
     curl_global_cleanup();
     
+    if (curlRes != CURLE_OK || http_code != 200) {
+        LogWarning(@"[serverHostIsReachable]: %@ failed, curl result %d (%s), http code %ld.",hostURL,(int)curlRes,curl_easy_strerror(curlRes),http_code);
+    }
     if (curlRes == CURLE_OK && http_code == 200) {
         res = YES;
     }
