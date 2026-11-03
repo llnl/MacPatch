@@ -216,6 +216,7 @@ def drilldown(chart,value):
 
 # Modal Data, for refresh etc
 @dashboard.route('/data/<chart>/<value>')
+@login_required
 def drilldowndata(chart,value):
 	result = drillDownDataFilter(chart, value)
 	if result is not None:

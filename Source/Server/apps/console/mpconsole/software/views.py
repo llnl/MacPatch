@@ -838,6 +838,10 @@ def saveSWPackage():
 	_suuid = request.form.get('suuid')
 	if _suuid is None:
 		_suuid = str(uuid.uuid4())
+	elif not isValidUUID(_suuid):
+		# suuid is used to build file system paths, it must be a UUID
+		log_Error("{} invalid software id {}.".format(session.get('user'), _suuid))
+		return json.dumps({'errorno': 400, 'errormsg': 'Invalid software id.'}), 400
 
 	''' Process Requisists '''
 	_reqsPre = []
@@ -981,7 +985,7 @@ def saveSWPackage():
 			print(_fileData['filePath'])
 			print(_fileData['fileURL'])
 			aws.uploadFileToS3(_fileData['filePath'], _fileData['fileURL'])
-			shutil.rmtree(os.path.join('/tmp/sw', request.form['suuid']))
+			shutil.rmtree(os.path.join('/tmp/sw', _suuid))
 		else:
 			_fileData = saveSoftwareFile(_suuid, mainFile)
 			log_Info('_fileData')

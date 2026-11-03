@@ -1,4 +1,5 @@
 <form method="post" action="/clients/group/{{data.group_id}}/sw/add" id="client-group-software-form" class="client-group-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="group_id" value="{{ data.group_id or '' }}">
     <div class="form-group">
         <label for="swIDLst">Software Task</label>

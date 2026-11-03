@@ -1,4 +1,5 @@
 <form method="post" action="/clients/group/update/NA" id="client-group-edit-form" class="client-group-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="group_id" value="{{ data.group_id or '' }}">
     <div class="form-group">
         <label for="client-group-name">Client Group Name</label>

@@ -1,4 +1,5 @@
 <form method="post" action="/clients/move/client" id="client-group-move-form" class="client-group-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="cuuid" value="{{ cuuid or '' }}">
     <input type="hidden" name="orig_group_id" value="" id="orig_group_id">
     <input type="hidden" name="cuuids" value="" id="cuuids">

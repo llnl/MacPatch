@@ -29,6 +29,7 @@
 	<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 
 	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
 <body>

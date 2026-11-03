@@ -668,7 +668,7 @@ swafcg_columns = [('appID', 'App ID', '0'),('displayName', 'Display Name', '1'),
 
 ''' AJAX Method '''
 @osmanage.route('/app_filter/list/<client_group>', methods=['GET'])
-
+@login_required
 def appFilterClientGroupList(client_group):
 
 	cgList = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == client_group).all()

@@ -7,12 +7,13 @@
 import os
 import json
 import sys
-from flask import Flask, session, g, request, url_for, redirect, abort, flash
+from flask import Flask, session, g, request, url_for, redirect, abort, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_session import Session
 from flask_caching import Cache
 from flask_cors import CORS
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from pymysql import OperationalError as PyOperationalError
 from datetime import timedelta, datetime
 from dateutil.parser import parse as dateParse
@@ -28,6 +29,7 @@ db = SQLAlchemy()
 cors = CORS()
 cache = Cache()
 _session = Session()
+csrf = CSRFProtect()
 
 # Configure authentication
 login_manager = LoginManager()
@@ -100,6 +102,16 @@ def create_app(config_object=Config):
 		log_Error(f"{e}")
 		return session_expired_response()
 
+	@app.errorhandler(CSRFError)
+	def csrf_error(e):
+		# Missing or invalid CSRF token, usually a stale page after the session expired
+		log_Error(f"[csrf_error][{request.endpoint}]: {e.description}")
+		if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json':
+			return jsonify(error='csrf_failed', errormsg='Your request could not be verified. Please reload the page and try again.'), 400
+
+		flash('Your request could not be verified. Please try again.')
+		return redirect(request.referrer or url_for('main.index'))
+
 	@app.teardown_request
 	def shutdown_session(exception):
 		db.session.rollback()
@@ -143,12 +155,17 @@ def create_app(config_object=Config):
 		ChangeLog.__table__.create(db.engine, checkfirst=True)
 		print('change_log table is ready.')
 
+	# Setup commands (populate-db, add-admin, ...) used by ServerSetup.py
+	from mpconsole.cli import register_cli
+	register_cli(app)
+
 	return app
 
 def initialize_extensions(app):
 	db.init_app(app)
 	login_manager.init_app(app)
 	migrate.init_app(app, db)
+	csrf.init_app(app)
 
 def register_blueprints(app):
 	from .errors import errors as errors_blueprint
@@ -210,27 +227,43 @@ def register_blueprints(app):
 
 	return app
 
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+	'''
+	WatchedFileHandler re-opens the log file once it has been rotated (renamed) by
+	logrotate (Linux) or newsyslog (macOS), it is safe to use from every gunicorn worker.
+	The log is not rotated in-process, every worker process would rotate the same file.
+
+	When running as root (gunicorn master with preload_app), a file it creates is given
+	to the owner of the log directory, so the workers can still open it after a rotation.
+	'''
+	def _open(self):
+		stream = super()._open()
+		if os.geteuid() == 0:
+			try:
+				_dir = os.stat(os.path.dirname(self.baseFilename))
+				os.chown(self.baseFilename, _dir.st_uid, _dir.st_gid)
+			except OSError:
+				pass
+		return stream
+
 def setup_logging(app):
-	# Configure logging
-	handler = logging.handlers.TimedRotatingFileHandler(app.config['LOG_FILE'], when='midnight', interval=1, backupCount=30)
+	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
+	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
 
-	if app.config['LOGGING_LEVEL'].lower() == 'info':
-		app.logger.setLevel(logging.INFO)
-	elif app.config['LOGGING_LEVEL'].lower() == 'debug':
-		app.logger.setLevel(logging.DEBUG)
-	elif app.config['LOGGING_LEVEL'].lower() == 'warning':
-		app.logger.setLevel(logging.WARNING)
-	elif app.config['LOGGING_LEVEL'].lower() == 'error':
-		app.logger.setLevel(logging.ERROR)
-	elif app.config['LOGGING_LEVEL'].lower() == 'critical':
-		app.logger.setLevel(logging.CRITICAL)
-	else:
-		app.logger.setLevel(logging.INFO)
+	# create_app can be called more than once in a process, do not add duplicate handlers
+	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:
+		app.logger.removeHandler(_handler)
+		_handler.close()
 
-	handler = logging.StreamHandler(sys.stdout)
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
-	handler.setFormatter(formatter)
-	app.logger.addHandler(handler)
+	handlers = [OwnedWatchedFileHandler(app.config['LOG_FILE'])]
+	if app.debug:
+		handlers.append(logging.StreamHandler(sys.stdout))
+
+	for _handler in handlers:
+		_handler._macpatch = True
+		_handler.setFormatter(formatter)
+		app.logger.addHandler(_handler)
 
 '''
 ----------------------------------------------------------------

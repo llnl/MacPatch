@@ -23,6 +23,7 @@
 {% block bodyPanel %}
 <div class="container">
 	<form method='post' action='/console/account/{{data.user_id or 'add'}}' id="myForm">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 		<div class="well">
 			<div class="form-group row">
 				<label class="col-sm-3 col-form-label">User ID</label>

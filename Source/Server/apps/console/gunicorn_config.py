@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import gevent.monkey
 gevent.monkey.patch_all()
 
@@ -148,6 +149,57 @@ loglevel = 'info'
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
 
 #
+# Logger
+#
+#   Gunicorn runs a master and several worker processes that all write to the
+#   same access/error log files. The files must not be rotated in-process (every
+#   process would rotate the same file). They are rotated by logrotate (Linux,
+#   /etc/logrotate.d/macpatch) or newsyslog (macOS, /etc/newsyslog.d/macpatch.conf),
+#   WatchedFileHandler re-opens a file once it has been rotated.
+#
+
+import logging
+import logging.handlers
+from gunicorn.glogging import Logger
+
+class MacPatchFormatter(logging.Formatter):
+    def format(self, record):
+        formatted_time = self.formatTime(record, '%Y-%m-%d %H:%M:%S')
+        level_map = {'DEBUG': 'DBG', 'INFO': 'INF', 'WARNING': 'WRN', 'ERROR': 'ERR', 'CRITICAL': 'CRT'}
+        level_short = level_map.get(record.levelname, 'INF')
+        return f"{formatted_time},{int(record.msecs):03d} [gunicorn][{level_short}] --- {record.getMessage()}"
+
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+    # A file (re)created by the master (root) is given to the worker user/group
+    def __init__(self, filename, uid, gid):
+        self._owner = (uid, gid)
+        super().__init__(filename)
+
+    def _open(self):
+        stream = super()._open()
+        if os.geteuid() == 0:
+            try:
+                os.chown(self.baseFilename, *self._owner)
+            except OSError:
+                pass
+        return stream
+
+class MacPatchLogger(Logger):
+    # Called on start and on every config reload (HUP), so the handlers are always replaced
+    def _set_handler(self, log, output, fmt, stream=None):
+        super()._set_handler(log, output, fmt, stream)
+        h = self._get_gunicorn_handler(log)
+        if type(h) is logging.FileHandler:
+            log.removeHandler(h)
+            h.close()
+            wh = OwnedWatchedFileHandler(h.baseFilename, self.cfg.user, self.cfg.group)
+            wh.setFormatter(MacPatchFormatter() if log is self.error_log else fmt)
+            wh._gunicorn = True
+            log.addHandler(wh)
+
+logger_class = MacPatchLogger
+
+#
 # Process naming
 #
 #   proc_name - A base to use with setproctitle to change the way
@@ -190,29 +242,6 @@ def pre_exec(server):
     server.log.info("Forked child, re-executing.")
 
 def when_ready(server):
-    # Configure custom log format for gunicorn error log
-    import logging.handlers
-
-    # Remove existing handlers
-    for handler in server.log.error_log.handlers[:]:
-        server.log.error_log.removeHandler(handler)
-
-    # Add our custom formatted handler
-    handler = logging.handlers.RotatingFileHandler(
-        '/opt/MacPatch/Server/logs/gMPConsole_error.log',
-        maxBytes=10485760,
-        backupCount=10
-    )
-
-    class MacPatchFormatter(logging.Formatter):
-        def format(self, record):
-            formatted_time = self.formatTime(record, '%Y-%m-%d %H:%M:%S')
-            level_map = {'DEBUG': 'DBG', 'INFO': 'INF', 'WARNING': 'WRN', 'ERROR': 'ERR', 'CRITICAL': 'CRT'}
-            level_short = level_map.get(record.levelname, 'INF')
-            return f"{formatted_time},{int(record.msecs):03d} [gunicorn][{level_short}] --- {record.getMessage()}"
-
-    handler.setFormatter(MacPatchFormatter())
-    server.log.error_log.addHandler(handler)
     server.log.info("Server is ready. Spawning workers")
 
 def worker_int(worker):

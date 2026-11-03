@@ -100,6 +100,7 @@ def taskSave(id):
 
 ''' AJAX Method '''
 @provision.route('/task/generate/<id>', methods=['POST'])
+@login_required
 def generateTask(id):
 
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
@@ -300,6 +301,7 @@ def uiConfig():
 
 ''' AJAX Request '''
 @provision.route('/ui/config/upload',methods=['POST'])
+@login_required
 def uiConfigUpload():
 	# Get Patch ID
 	try:

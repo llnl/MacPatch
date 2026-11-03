@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<meta name="csrf-token" content="{{ csrf_token() }}">
 {% block styles %}
 	<!-- Bootstrap Core CSS -->
 	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">

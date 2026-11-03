@@ -767,6 +767,24 @@ if $USEMACOS; then
     chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
 fi
 
+# Log rotation, the API & Console logs are written by several gunicorn worker
+# processes and are rotated by the OS (the apps re-open the files after rotation)
+echo
+echo "* Configuring log rotation"
+echo "-----------------------------------------------------------------------"
+if $USELINUX; then
+    mkdir -p /etc/logrotate.d
+    cp ${MPSERVERBASE}/conf/logrotate/macpatch /etc/logrotate.d/macpatch
+    chown root:root /etc/logrotate.d/macpatch
+    chmod 0644 /etc/logrotate.d/macpatch
+fi
+if $USEMACOS; then
+    mkdir -p /etc/newsyslog.d
+    cp ${MPSERVERBASE}/conf/newsyslog/macpatch.conf /etc/newsyslog.d/macpatch.conf
+    chown root:wheel /etc/newsyslog.d/macpatch.conf
+    chmod 0644 /etc/newsyslog.d/macpatch.conf
+fi
+
 echo
 echo "* Installing Javascript modules"
 echo

@@ -1,4 +1,4 @@
-from flask import render_template, request
+from flask import render_template, request, session, current_app
 from sqlalchemy import text
 
 import json
@@ -52,6 +52,7 @@ def index_patches():
 
 ''' AJAX Request '''
 @maint.route('/patches/list',methods=['GET'])
+@login_required
 def maitPatchesList():
 	result = []
 	qSW = MpPatch.query.all()
@@ -74,6 +75,7 @@ def maitPatchesList():
 
 ''' AJAX Request '''
 @maint.route('/patches/delete',methods=['DELETE'])
+@login_required
 def maitPatchesDelete():
 	form = request.form
 	ids = request.form['patches']
@@ -84,14 +86,15 @@ def maitPatchesDelete():
 		return json.dumps({'data': {}}), 403
 
 	for file in files:
-		if os.path.exists(file):
+		# Only allow removing files inside the patch content directory
+		if not isPathWithin(file, current_app.config['PATCH_CONTENT_DIR']):
+			log_Error("{} unacceptable file path {}".format(session.get('user'), file))
+			return json.dumps({'data': {}}), 417
+
+		if os.path.isfile(file):
 			try:
-				if '/opt/MacPatch/Content/Web/patches' in file:
-					log_Info("Removing file {}".format(file))
-					os.remove(file)
-				else:
-					log_Error("Unacceptable file path {}".fomat(file))
-					return json.dumps({'data': {}}), 417
+				log_Info("{} removing file {}".format(session.get('user'), file))
+				os.remove(file)
 
 			except OSError as error:
 				log_Error("Error removing file {}".format(file))

@@ -5,6 +5,7 @@
 {% block bodyPanel %}
 <div class="container">
 	<form method='post' action='/patches/patchGroups/update' id="myForm">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 		<table class="table-sm">
 			<tbody>
 			<tr>

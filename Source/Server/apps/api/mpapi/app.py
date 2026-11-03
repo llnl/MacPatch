@@ -219,27 +219,43 @@ def register_blueprints(app):
 	from .status_5 import status_5 as bp_status_5
 	app.register_blueprint(bp_status_5, url_prefix='/api/v5')
 
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+	'''
+	WatchedFileHandler re-opens the log file once it has been rotated (renamed) by
+	logrotate (Linux) or newsyslog (macOS), it is safe to use from every gunicorn worker.
+	The log is not rotated in-process, every worker process would rotate the same file.
+
+	When running as root (gunicorn master with preload_app), a file it creates is given
+	to the owner of the log directory, so the workers can still open it after a rotation.
+	'''
+	def _open(self):
+		stream = super()._open()
+		if os.geteuid() == 0:
+			try:
+				_dir = os.stat(os.path.dirname(self.baseFilename))
+				os.chown(self.baseFilename, _dir.st_uid, _dir.st_gid)
+			except OSError:
+				pass
+		return stream
+
 def setup_logging(app):
-	# Configure logging
-	handler = logging.handlers.RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10485760, backupCount=30)
+	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
+	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
 
-	if app.config['LOGGING_LEVEL'].lower() == 'info':
-		app.logger.setLevel(logging.INFO)
-	elif app.config['LOGGING_LEVEL'].lower() == 'debug':
-		app.logger.setLevel(logging.DEBUG)
-	elif app.config['LOGGING_LEVEL'].lower() == 'warning':
-		app.logger.setLevel(logging.WARNING)
-	elif app.config['LOGGING_LEVEL'].lower() == 'error':
-		app.logger.setLevel(logging.ERROR)
-	elif app.config['LOGGING_LEVEL'].lower() == 'critical':
-		app.logger.setLevel(logging.CRITICAL)
-	else:
-		app.logger.setLevel(logging.INFO)
+	# create_app can be called more than once in a process, do not add duplicate handlers
+	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:
+		app.logger.removeHandler(_handler)
+		_handler.close()
 
-	handler = logging.StreamHandler(sys.stdout)
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
-	handler.setFormatter(formatter)
-	app.logger.addHandler(handler)
+	handlers = [OwnedWatchedFileHandler(app.config['LOG_FILE'])]
+	if app.debug:
+		handlers.append(logging.StreamHandler(sys.stdout))
+
+	for _handler in handlers:
+		_handler._macpatch = True
+		_handler.setFormatter(formatter)
+		app.logger.addHandler(_handler)
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""

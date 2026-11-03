@@ -282,6 +282,7 @@ def custom():
 
 ''' AJAX Request '''
 @patches.route('/custom/list',methods=['GET'])
+@login_required
 @cross_origin()
 def customList():
 
@@ -371,6 +372,7 @@ def customPatchWizard(puuid):
 
 ''' AJAX Request '''
 @patches.route('/customPatchWizard/update',methods=['POST'])
+@login_required
 def customPatchWizardUpdate():
 	# Get Patch ID
 	try:
@@ -382,6 +384,11 @@ def customPatchWizardUpdate():
 			log_Error("{} does not have permission to change custom patch {}.".format(session.get('user'), puuid))
 			return {}, 403
 
+		# puuid is used to build file system paths, it must be a UUID
+		if not isValidUUID(puuid):
+			log_Error("{} invalid custom patch id {}.".format(session.get('user'), puuid))
+			return {}, 400
+
 		# Save File, returns path to file
 		_file = None
 		_fileData = None
@@ -391,7 +398,7 @@ def customPatchWizardUpdate():
 				aws = MPaws()
 				_fileData = savePatchFileToTMP(puuid, _file)
 				aws.uploadFileToS3(_fileData['filePath'],_fileData['fileURL'])
-				shutil.rmtree(os.path.join('/tmp', request.form['puuid']))
+				shutil.rmtree(os.path.join('/tmp', puuid))
 			else:
 				_fileData = savePatchFile(puuid, _file)
 
@@ -678,6 +685,7 @@ def removePatchFromPatchGroupsAlt(patch_id):
 
 ''' AJAX Request '''
 @patches.route('/custom/picker',methods=['GET'])
+@login_required
 @cross_origin()
 def customPatchPicker():
 
@@ -892,6 +900,7 @@ def patchGroupAdmins(id):
 	group. Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/members/<id>')
+@login_required
 def patchGroupMembers(id):
 	rowCounter = 0
 	patchGroupMembers = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id).all()
@@ -915,6 +924,7 @@ def patchGroupMembers(id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/member/add/<id>', methods=['POST'])
+@login_required
 def patchGroupMemberAdd(id):
 	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
 		log_Error("{} does not have permission to add patch group member.".format(session.get('user')))
@@ -947,6 +957,7 @@ def patchGroupMemberAdd(id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/member/delete/<id>', methods=['POST'])
+@login_required
 def patchGroupMemberDelete(id):
 	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
 		log_Error("{} does not have permission to delete patch group member.".format(session.get('user')))
@@ -1028,6 +1039,7 @@ def patchGroupContentEdit(id):
 	return render_template('patches/patch_group_patches.html', name=patchGroup.name, pid=id, data=_results, columns=columns, isOwner=_type, groupID=id)
 
 @patches.route('/group/list/<group_id>')
+@login_required
 def patchGroupContent(group_id):
 
 	args = request.args
@@ -1130,6 +1142,7 @@ def patchGroupContentAddBulk(group_id):
 	return json.dumps({'errorno': 0}), 200
 
 @patches.route('/group/remove/<group_id>/<patch_id>')
+@login_required
 def patchGroupContentDel(group_id, patch_id):
 	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
 		log_Error("{} does not have permission to remove content from patch group {}.".format(session.get('user'), group_id))
@@ -1151,6 +1164,7 @@ def patchGroupContentDel(group_id, patch_id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/group/save/<group_id>')
+@login_required
 def patchGroupPatchesSave(group_id):
 	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
 		log_Error("{} does not have permission to save content for patch group {}.".format(session.get('user'), group_id))
@@ -1283,6 +1297,7 @@ def requiredList():
 
 ''' AJAX Route '''
 @patches.route('/required/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def requiredListPaged(limit,offset,search,sort,order):
 	# This has to be cleaned up
 	total = 0
@@ -1423,6 +1438,7 @@ def installedList():
 
 ''' AJAX Route '''
 @patches.route('/installed/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def installedListPaged(limit,offset,search,sort,order):
 	total = 0
 	getNewTotal = True

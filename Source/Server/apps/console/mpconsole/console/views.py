@@ -95,6 +95,7 @@ def deleteAdminAccount(user_id):
 
 	elif request.method == 'POST':
 		data = request.form.to_dict()
+		data.pop('csrf_token', None)
 		if adminRole():
 			log("{} update account {} options.".format(session.get('user'), user_id))
 			qAdm = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == user_id).first()

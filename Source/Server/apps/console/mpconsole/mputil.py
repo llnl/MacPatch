@@ -228,6 +228,21 @@ def verifySignedData(signature, data):
 import os
 import shutil
 import stat
+import uuid
+
+def isValidUUID(value):
+	"""True if value is a UUID string, safe to use as a path component"""
+	try:
+		uuid.UUID(str(value))
+		return True
+	except (ValueError, TypeError, AttributeError):
+		return False
+
+def isPathWithin(path, baseDir):
+	"""True if path resolves (following symlinks and ../) to a location inside baseDir"""
+	_base = os.path.realpath(baseDir)
+	_path = os.path.realpath(path)
+	return _path != _base and os.path.commonpath([_base, _path]) == _base
 
 def copytree(src, dst, symlinks = False, ignore = None):
 	if not os.path.exists(dst):

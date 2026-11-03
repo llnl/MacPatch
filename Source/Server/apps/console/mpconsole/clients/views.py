@@ -298,6 +298,7 @@ def clientGroupUserAdd(id):
 	return render_template('clients/client_group_user_mod.html', data={'group_id':id}, type="add")
 
 @clients.route('/group/<id>/<user_id>/remove')
+@login_required
 def clientGroupUserRemove(id, user_id):
 	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 	if usr.user_id == user_id or isOwnerOfGroup(id):
@@ -372,14 +373,14 @@ def clientGroup(name,tab=1):
 
 	if request.method == 'DELETE':
 		if q_defaultGroup:
-			return json.dumps({{'errormsg':'Can not delete default group.'}}), 403
+			return json.dumps({'errormsg':'Can not delete default group.'}), 403
 
 		qMembers = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).all()
 		if qMembers is not None and len(qMembers) >= 1:
 			return json.dumps({'errormsg':'Group still contains agents. Can not delete group while agents are assigned.'}), 401
 		else:
-			usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-			if usr is not None or isOwnerOfGroup(name):
+			# Only the group owner or a console admin may delete a group
+			if isOwnerOfGroup(name) or adminRole():
 				MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).delete()
 				MpClientTasks.query.filter(MpClientTasks.group_id == name).delete()
 				MpClientSettings.query.filter(MpClientSettings.group_id == name).delete()
@@ -466,6 +467,7 @@ def clientGroup(name,tab=1):
 '''
 
 @clients.route('/group/<group_id>/clients')
+@login_required
 def clientGroupClients(group_id):
 	# Get All Client IDs in with in our group
 	_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).with_entities(MpClientGroups.group_name).first()
@@ -509,25 +511,36 @@ def clientGroupClients(group_id):
 
 # Remove/Delete Client
 @clients.route('/group/<id>/remove/clients',methods=['POST'])
+@login_required
 def clientGroupClientsRemove(id):
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	if usr is not None or isOwnerOfGroup(id):
-		for x in request.form['clients'].split(","):
-			client = MpClient.query.filter(MpClient.cuuid == x).first()
-			clientGroupMember = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == x, MpClientGroupMembers.group_id == id).first()
-			if clientGroupMember:
-				log("{} delete client group member {} from group {}".format(session.get('user'), x, id))
-				db.session.delete(clientGroupMember)
-				db.session.commit()
+	if not groupAdminRights(id):
+		log_Error("{} does not have permission to remove clients from group {}.".format(session.get('user'), id))
+		return json.dumps({'error': 403, 'errormsg': 'You do not have permission to remove clients from this group.'}), 403
 
-			if client:
-				log("{} delete client {} from group {}".format(session.get('user'), x, id))
-				db.session.delete(client)
-				db.session.commit()
+	notFound = []
+	for x in request.form.get('clients', '').split(","):
+		if not x:
+			continue
 
-			else:
-				return json.dumps({'error': 404, 'errormsg': 'User could not be removed.'}), 404
+		# Only remove clients that are members of this group
+		clientGroupMember = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == x, MpClientGroupMembers.group_id == id).first()
+		if clientGroupMember is None:
+			notFound.append(x)
+			continue
+
+		log("{} delete client group member {} from group {}".format(session.get('user'), x, id))
+		db.session.delete(clientGroupMember)
+
+		client = MpClient.query.filter(MpClient.cuuid == x).first()
+		if client:
+			log("{} delete client {} from group {}".format(session.get('user'), x, id))
+			db.session.delete(client)
+
+	db.session.commit()
+
+	if notFound:
+		return json.dumps({'error': 404, 'errormsg': 'Client(s) not found in group: {}'.format(', '.join(notFound))}), 404
 
 	return json.dumps({}), 200
 
