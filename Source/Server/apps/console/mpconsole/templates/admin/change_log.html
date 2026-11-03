@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block pageHeader %}Change Log{% endblock %}
+{% block styles %}
+    {{ super() }}
+    <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+    <style>
+        #change-log-filters { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; }
+        #change-log-filters label { display: block; margin-bottom: 4px; }
+        #change-log-filters .form-control { width: auto; max-width: 240px; }
+        .change-log-values { margin: 8px 0; table-layout: fixed; width: 100%; }
+        .change-log-values th:first-child { width: 20%; }
+        .change-log-values pre { margin: 0; font-size: 12px; line-height: 18px; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 280px; overflow-y: auto; }
+    </style>
+{% endblock %}
+{% block bodyPanel %}
+    {% if not config.get('CHANGE_LOG_ENABLED', True) %}
+    <div class="alert alert-info" role="status">Change logging is disabled. Existing entries remain available; new changes are not recorded.</div>
+    {% endif %}
+    <p>Expand a change to see its before and after values. Times are shown in your local time zone.</p>
+    <form id="change-log-filters">
+        <div><label for="change-log-actor">User</label><select id="change-log-actor" name="actor" class="form-control"><option value="">All users</option></select></div>
+        <div><label for="change-log-table">Record type</label><select id="change-log-table" name="record_table" class="form-control"><option value="">All types</option></select></div>
+        <div><label for="change-log-action">Action</label><select id="change-log-action" name="action" class="form-control"><option value="">All actions</option><option value="create">Created</option><option value="update">Updated</option><option value="delete">Deleted</option></select></div>
+        <div><label for="change-log-from">From (UTC date)</label><input id="change-log-from" name="from_date" type="date" class="form-control"></div>
+        <div><label for="change-log-to">Through (UTC date)</label><input id="change-log-to" name="to_date" type="date" class="form-control"></div>
+        <button type="submit" class="btn btn-default">Apply</button>
+        <button type="reset" class="btn btn-default">Reset</button>
+    </form>
+    <div id="change-log-error" class="alert alert-danger" role="alert" hidden></div>
+    <table id="change-log-table-view" class="table table-bordered table-sm table-striped"></table>
+{% endblock %}
+{% block javascript %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='static_components/macpatch/change-log.js') }}"></script>
+{% endblock %}

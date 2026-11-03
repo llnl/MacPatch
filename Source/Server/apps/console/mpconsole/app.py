@@ -132,6 +132,16 @@ def create_app(config_object=Config):
 
 	initialize_extensions(app)
 	register_blueprints(app)
+	from mpconsole.model import ChangeLog
+	from mpconsole.change_log import install_change_log
+	with app.app_context():
+		install_change_log(db.engine, ChangeLog.__table__)
+
+	@app.cli.command('init-change-log')
+	def init_change_log():
+		"""Create only the additive change_log table on an existing installation."""
+		ChangeLog.__table__.create(db.engine, checkfirst=True)
+		print('change_log table is ready.')
 
 	return app
 

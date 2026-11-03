@@ -1,5 +1,5 @@
-from flask import render_template, request, session
-from sqlalchemy import desc, func, case
+from flask import render_template, request, session, jsonify
+from sqlalchemy import desc, func, case, or_
 from werkzeug.security import generate_password_hash
 import json
 import re
@@ -18,6 +18,54 @@ from mpconsole.mputil import decryptData, generate_jwt_token
 from mpconsole.app_decorators import login_required
 
 ''' Global '''
+
+@console.route('/change_log')
+@login_required
+def changeLogView():
+	if not localAdmin() and not adminRole():
+		return 'Administrator access is required.', 403
+	return render_template('admin/change_log.html')
+
+
+@console.route('/change_log/data')
+@login_required
+def changeLogData():
+	if not localAdmin() and not adminRole():
+		return jsonify(errormsg='Administrator access is required.'), 403
+	try:
+		limit = min(max(int(request.args.get('limit', 25)), 1), 100)
+		offset = max(int(request.args.get('offset', 0)), 0)
+		query = ChangeLog.query
+		for field in ('actor', 'record_table', 'action'):
+			value = request.args.get(field, '').strip()
+			if value:
+				query = query.filter(getattr(ChangeLog, field) == value)
+		for field, inclusive in (('from_date', True), ('to_date', False)):
+			value = request.args.get(field, '')
+			if value:
+				date_value = datetime.strptime(value, '%Y-%m-%d')
+				query = query.filter(ChangeLog.created_at >= date_value) if inclusive else query.filter(ChangeLog.created_at < date_value + timedelta(days=1))
+		search = request.args.get('search', '').strip()
+		if search:
+			query = query.filter(or_(*(field.contains(search, autoescape=True) for field in
+				(ChangeLog.actor, ChangeLog.record_table, ChangeLog.record_label, ChangeLog.endpoint, ChangeLog.request_id))))
+	except ValueError:
+		return jsonify(errormsg='Enter valid pagination values and dates.'), 400
+	total = query.count()
+	entries = query.order_by(ChangeLog.created_at.desc(), ChangeLog.rid.desc()).offset(offset).limit(limit).all()
+	return jsonify(total=total, rows=[dict(rid=row.rid, created_at=row.created_at.isoformat() + 'Z',
+		actor=row.actor, action=row.action, record_table=row.record_table, record_key=row.record_key,
+		record_label=row.record_label, changes=row.changes, request_id=row.request_id,
+		endpoint=row.endpoint, method=row.method) for row in entries])
+
+
+@console.route('/change_log/filters')
+@login_required
+def changeLogFilters():
+	if not localAdmin() and not adminRole():
+		return jsonify(errormsg='Administrator access is required.'), 403
+	return jsonify(actors=[v for v, in db.session.query(ChangeLog.actor).distinct().order_by(ChangeLog.actor)],
+		tables=[v for v, in db.session.query(ChangeLog.record_table).distinct().order_by(ChangeLog.record_table)])
 
 '''
 	User/Admin Roles

@@ -4,7 +4,7 @@ from mpconsole import db
 #
 
 from datetime import *
-from sqlalchemy import BigInteger, Column, Date, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import BigInteger, Column, Date, DateTime, Integer, LargeBinary, String, Text, ForeignKey, Boolean, UniqueConstraint, JSON, Index
 from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT, TEXT, INTEGER
 
 from flask_login import UserMixin
@@ -80,6 +80,24 @@ class CommonBase(db.Model):
 				break
 
 		return result
+
+
+class ChangeLog(CommonBase):
+	__tablename__ = 'change_log'
+	__table_args__ = (Index('ix_change_log_created_id', 'created_at', 'rid'),
+		Index('ix_change_log_actor_created', 'actor', 'created_at'),
+		Index('ix_change_log_table_created', 'record_table', 'created_at'))
+	rid = Column(BigInteger().with_variant(Integer, 'sqlite'), primary_key=True, autoincrement=True)
+	created_at = Column(DateTime, nullable=False)
+	actor = Column(String(255), nullable=False)
+	action = Column(String(10), nullable=False)
+	record_table = Column(String(255), nullable=False)
+	record_key = Column(JSON, nullable=False)
+	record_label = Column(String(255), nullable=False)
+	changes = Column(JSON, nullable=False)
+	request_id = Column(String(36), nullable=False, index=True)
+	endpoint = Column(String(255), nullable=False)
+	method = Column(String(10), nullable=False)
 
 
 def get_class_by_tablename(tablename):

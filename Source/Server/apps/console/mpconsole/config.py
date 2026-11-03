@@ -123,6 +123,8 @@ class Config(object):
 	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=10)
 
 	# Logging
+	# Set False to stop recording console database changes; existing logs remain.
+	CHANGE_LOG_ENABLED  = as_bool(os.environ.get('CHANGE_LOG_ENABLED', 'yes'))
 	LOGGING_FORMAT      = '%(asctime)s [%(name)s][%(levelname).3s] --- %(message)s'
 	LOGGING_LEVEL       = os.environ.get('LOGGING_LEVEL') or 'info'
 	LOGGING_LOCATION    = os.environ.get('LOGGING_LOCATION') or MP_SRV_DIR+'/apps/logs'

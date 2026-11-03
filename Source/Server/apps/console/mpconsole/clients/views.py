@@ -584,9 +584,7 @@ def groupSettings(id):
 		for row in mpc:
 			log_Debug("Current Group Settings[{}]: {} = {}".format(id, row.key, row.value))
 
-		sql = "DELETE FROM mp_client_settings WHERE group_id='" + id + "'"
-		with db.engine.connect() as conn:
-			conn.execute(text(sql))
+		MpClientSettings.query.filter(MpClientSettings.group_id == id).delete()
 
 	for f in _form:
 		log_Debug("Updated Group Settings[{}]: {} = {}".format(id, f, str(_form[f])))
