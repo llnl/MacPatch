@@ -8,6 +8,10 @@
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
+{% block extraStyles %}
+    <link href="{{ url_for('static', filename='css/provision-criteria-modal.css') }}" rel="stylesheet">
+{% endblock %}
+
 {% block pageHeader %}
 <span class="d-flex align-items-center justify-content-between">
 	<span class="mr-3">Provisioning - Detection Criteria</span>
@@ -40,6 +44,7 @@
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
 
 	<script>
 
@@ -145,19 +150,7 @@
         window.operateEvents = {
             'click .edit': function (e, value, row, index)
             {
-                $('#myContent').remove();
-                var _url = "/provision/criteria/edit/" + row['rid'];
-                $.get( _url ).done(function(data) {
-					$('#modalTitle').html("Edit Provision Detection Script");
-					$('#modalBody').html(data);
-					$('#modalBody').css({'height':'72vh'});
-					$('#modalDialog').addClass("modal-mid-60");
-					$('#modalDialog').modal('show');
-
-					$("#modalDialog").on("hidden.bs.modal", function () {
-						$table.bootstrapTable('refresh');
-					});
-				});
+                openCriteriaModal("/provision/criteria/edit/" + row['rid'], "Edit Provision Detection Script");
             },
             'click .description': function (e, value, row, index) {
                 alert('You click description action, row: ' + JSON.stringify(row));
@@ -176,6 +169,68 @@
         }
 
         var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+        var criteriaEditor;
+
+        function resizeCriteriaEditor() {
+            if (criteriaEditor) criteriaEditor.resize();
+        }
+
+        function openCriteriaModal(url, title) {
+            $.get(url).done(function(data) {
+                $('#modalDialog')
+                    .removeClass('modal-wide modal-mid modal-mid-wide modal-mid-60 modal-mid-70 modal-mid-80')
+                    .addClass('provision-criteria-modal');
+                $('#modalTitle').text(title);
+                $('#modalBody').css('height', '').html(data);
+                criteriaEditor = ace.edit('provisionCriteriaEditor');
+                criteriaEditor.setTheme('ace/theme/eclipse');
+                criteriaEditor.setFontSize('12px');
+                criteriaEditor.getSession().setMode('ace/mode/sh');
+                criteriaEditor.getSession().setUseWrapMode(true);
+                criteriaEditor.textInput.getElement().setAttribute('aria-labelledby', 'provisionCriteriaQueryLabel');
+                $('#modalSaveButton').off('click.provisionCriteria').on('click.provisionCriteria', function() {
+                    $('#provisionCriteriaForm').trigger('submit');
+                });
+                $('#provisionCriteriaForm').on('submit', function(event) {
+                    event.preventDefault();
+                    if (!this.reportValidity()) return;
+                    var formData = new FormData(this);
+                    formData.append('type_data', criteriaEditor.getValue());
+                    var $saveButton = $('#modalSaveButton').prop('disabled', true);
+                    $.ajax({
+                        url: '/provision/criteria/save',
+                        type: 'POST',
+                        cache: false,
+                        processData: false,
+                        contentType: false,
+                        data: formData,
+                        error: function(request) {
+                            var response = request.responseJSON;
+                            alert(response && response.error || 'Unable to save the provisioning script.');
+                        },
+                        success: function() {
+                            alert('Provisioning script saved successfully.');
+                            $('#modalDialog').modal('hide');
+                        },
+                        complete: function() { $saveButton.prop('disabled', false); }
+                    });
+                });
+                $('#modalDialog').modal('show');
+            });
+        }
+
+        $('#modalDialog').on('shown.bs.modal.provisionCriteria', resizeCriteriaEditor)
+            .on('hidden.bs.modal.provisionCriteria', function() {
+                if (!$(this).hasClass('provision-criteria-modal')) return;
+                if (criteriaEditor) criteriaEditor.destroy();
+                criteriaEditor = null;
+                $('#modalSaveButton').off('click.provisionCriteria');
+                $('#modalBody').empty();
+                $(this).removeClass('provision-criteria-modal');
+                $table.bootstrapTable('refresh');
+            });
+        $(window).on('resize.provisionCriteria', resizeCriteriaEditor);
+
 		$(function ()
 		{
 			$delButton.click(function ()
@@ -213,17 +268,7 @@
 
 			$addButton.click(function ()
 			{
-				$.get( "/provision/criteria/add").done(function(data) {
-					$('#modalTitle').html("Add Provisioning Detection Criteria");
-					$('#modalBody').html(data);
-					$('#modalDialog').addClass("modal-wide");
-					$('#modalBody').css({'height':'72vh'});
-					$('#modalDialog').modal('show');
-
-					$("#modalDialog").on("hidden.bs.modal", function () {
-						$table.bootstrapTable('refresh');
-					});
-				});
+                openCriteriaModal('/provision/criteria/add', 'Add Provisioning Detection Criteria');
 			});
 		});
 	</script>

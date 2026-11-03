@@ -103,9 +103,9 @@ def clients():
 	return json.dumps(_results, default=json_serial), 200
 	#return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
-def searchForGroup(group, list):
-	res = next((item for item in list if item["group_id"] == group))
-	return res['group_name']
+def searchForGroup(group, groups):
+	res = next((item for item in groups if item["group_id"] == group), None)
+	return res['group_name'] if res is not None else 'Unknown Group'
 
 # JSON
 @registration.route('/registered/client/<client_id>',methods=['DELETE'])

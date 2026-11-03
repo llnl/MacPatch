@@ -4,11 +4,12 @@
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
-	<style type="text/css">
-
-
-	</style>
+	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
 {%  endblock %}
+
+{% block extraStyles %}
+    <link href="{{ url_for('static', filename='css/registration-key-modal.css') }}" rel="stylesheet">
+{% endblock %}
 
 {% block pageHeader %}
 Agent Registration
@@ -128,7 +129,6 @@ Agent Registration
 	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
 
 	<script>
 	var $ttRbutton = $('#ttRefreshbutton');
@@ -269,20 +269,7 @@ Agent Registration
 	{
 		'click .editKey': function (e, value, row, index)
 		{
-			$.get("/registration/key/edit/" + row['rid']).done(function(data)
-			{
-				$('#myContent').remove();
-				$('#modalTitle').html('Add New Registration Key');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'400px'});
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$('#tableKeys').bootstrapTable('refresh');
-				});
-			});
-
-
+			openRegistrationKeyModal('/registration/key/edit/' + row['rid'], 'Edit Registration Key');
 		},
 		'click .removeKey': function (e, value, row, index)
 		{
@@ -413,19 +400,70 @@ Agent Registration
 		});
 	});
 
+	function openRegistrationKeyModal(url, title) {
+		$.get(url).done(function(data) {
+			$('#modalDialog')
+				.removeClass('modal-wide modal-mid modal-mid-wide modal-mid-60 modal-mid-70 modal-mid-80')
+				.addClass('registration-key-modal');
+			$('#modalTitle').text(title);
+			$('#modalBody').css('height', '').html(data);
+			$('#registrationKeyForm .form_datetime').datetimepicker({
+				format: 'yyyy-mm-dd hh:ii:ss',
+				weekStart: 1,
+				todayBtn: 1,
+				autoclose: 1,
+				todayHighlight: 1,
+				startView: 2,
+				forceParse: 0,
+				fontAwesome: true
+			}).each(function() {
+				$(this).data('datetimepicker').picker.addClass('registration-key-datepicker');
+			});
+			$('#modalSaveButton').off('click.registrationKey').on('click.registrationKey', function() {
+				$('#registrationKeyForm').trigger('submit');
+			});
+			$('#registrationKeyForm').on('submit', function(event) {
+				event.preventDefault();
+				var $saveButton = $('#modalSaveButton');
+				if ($saveButton.prop('disabled')) return;
+				$saveButton.prop('disabled', true);
+				$.ajax({
+					type: 'POST',
+					url: '/registration/key/add',
+					data: new FormData(this),
+					cache: false,
+					processData: false,
+					contentType: false,
+					success: function() {
+						alert('Key updated successfully');
+						$('#modalDialog').modal('hide');
+					},
+					error: function() { alert('Failed to save registration key.'); },
+					complete: function() { $saveButton.prop('disabled', false); }
+				});
+			});
+			$('#modalDialog').modal('show');
+		});
+	}
+
+	$('#modalDialog').on('hidden.bs.modal.registrationKey', function() {
+		if (!$(this).hasClass('registration-key-modal')) return;
+		$('#registrationKeyForm .form_datetime').each(function() {
+			var picker = $(this).data('datetimepicker');
+			picker.hide();
+			$(document).off('mousedown touchend', picker.clickedOutside);
+			picker.remove();
+		});
+		$('#modalSaveButton').off('click.registrationKey');
+		$('#modalBody').empty();
+		$(this).removeClass('registration-key-modal');
+		$('#tableKeys').bootstrapTable('refresh');
+	});
+
 	$(function () {
 		$('#addKeyButton').click(function ()
 		{
-			$.get( "/registration/key/add").done(function(data)
-			{
-				$('#myContent').remove();
-				$('#modalTitle').html('Add New Registration Key');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'400px'});
-				//$('#modalSaveButton').remove();
-				//$('#modalCancelButton').remove();
-				$('#modalDialog').modal('show');
-			});
+			openRegistrationKeyModal('/registration/key/add', 'Add New Registration Key');
 		});
 	});
 
