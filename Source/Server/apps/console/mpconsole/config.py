@@ -163,6 +163,11 @@ class Config(object):
 	# Authentication
 	LOCAL_AUTH_ALLOWED			= as_bool(os.environ.get('LOCAL_AUTH_ALLOWED') or 'yes')
 
+	# Welcome page warning; quoted .mpconsole values can span multiple lines.
+	AUTH_BANNER_TITLE = os.environ.get('AUTH_BANNER_TITLE', 'UNAUTHORIZED ACCESS PROHIBITED')
+	AUTH_BANNER_TEXT = os.environ.get('AUTH_BANNER_TEXT', (
+		'This system is restricted to authorized users only. Activity is monitored and logged. Disconnect immediately if you are not authorized.'
+	))
 
 	SCHEDULER_API_ENABLED 	= as_bool(os.environ.get('SCHEDULER_API_ENABLED') or 'yes')
 	ALLOW_CONTENT_DOWNLOAD 	= as_bool(os.environ.get('ALLOW_CONTENT_DOWNLOAD') or 'no')

@@ -81,9 +81,12 @@
 
 <script type="text/javascript">
 	$(document).ready(function() {
-	   $("#modalSaveButton").click(function()
+	   $("#modalSaveButton").off('click.asusServer').on('click.asusServer', function()
 	   {
+			var $saveButton = $('#modalSaveButton');
+			if ($saveButton.prop('disabled')) return;
 			var formData = new FormData($('#myForm')[0]);
+			$saveButton.prop('disabled', true);
 
 			$.ajax({
 				type:'POST',
@@ -92,17 +95,14 @@
 				cache: false,
 				processData: false,
 				contentType: false,
-				async:true,
 				error: function(jqXHR, textStatus, errorThrown){
 					alert("Server Failed to Update");
 				},
-				success : function(data) {
-                    // optional: do something when server-side processing is done
-                }
+				success: function() {
+					$('#modalDialog').modal('hide');
+				},
+				complete: function() { $saveButton.prop('disabled', false); }
 			});
-
-			$('#modalDialog').modal('hide');
-			$("#myForm") = '';
 	   });
 	});
 </script>

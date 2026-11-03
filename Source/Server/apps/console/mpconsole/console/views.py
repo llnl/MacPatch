@@ -1031,7 +1031,7 @@ def asusServersList():
 
 		_results.append(row)
 
-	return json.dumps({'data': _results, 'total': 0}, default=json_serial), 200
+	return jsonify(data=_results, total=len(_results))
 
 @console.route('/servers/asus/<id>', methods=['GET'])
 @login_required
