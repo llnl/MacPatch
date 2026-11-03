@@ -109,7 +109,6 @@ def getFilesInDirToRemove(sw_path):
 		if os.path.exists(sw_path):
 			_files = []
 			path = os.path.dirname(sw_path)
-			print(path)
 			files = os.listdir(path)
 			for f in files:
 				fullFileName = os.path.join(path, f)

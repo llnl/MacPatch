@@ -1,5 +1,6 @@
 import os
 import logging, logging.handlers
+from flask.logging import default_handler
 import json
 import subprocess
 import sys
@@ -241,6 +242,10 @@ class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
 def setup_logging(app):
 	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
 	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
+
+	# Flask adds a stderr handler by default, under gunicorn that duplicates every
+	# line into stderr (journald / launchd stderr file, which is not rotated)
+	app.logger.removeHandler(default_handler)
 
 	# create_app can be called more than once in a process, do not add duplicate handlers
 	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:

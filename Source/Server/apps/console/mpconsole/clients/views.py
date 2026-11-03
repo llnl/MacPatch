@@ -1,5 +1,6 @@
 from flask import render_template, session, request, current_app, redirect, url_for, jsonify
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 import json
 import uuid
@@ -14,6 +15,7 @@ from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso, daysFromDate
 
 
 '''
@@ -70,7 +72,7 @@ def clientsListJSON():
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
 
-	return json.dumps(_results, default=json_serial), 200
+	return json.dumps(_results, default=json_serial_iso), 200
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):
@@ -109,16 +111,16 @@ def clientRequiredPatches(client_id):
 	for p in qApple:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
+			y = c
 			if c == 'mdate':
-				row[c] = daysFromDate(now, eval(y))
+				row[c] = daysFromDate(now, getattr(p, y))
 			elif c == 'restart':
-				if eval(y)[0] == 'Y':
+				if getattr(p, y)[0] == 'Y':
 					row[c] = 'Yes'
 				else:
 					row[c] = 'No'
 			else:
-				row[c] = eval(y)
+				row[c] = getattr(p, y)
 
 		row['type'] = 'Apple'
 		_results.append(row)
@@ -126,16 +128,16 @@ def clientRequiredPatches(client_id):
 	for p in qThird:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
+			y = c
 			if c == 'mdate':
-				row[c] = daysFromDate(now, eval(y))
+				row[c] = daysFromDate(now, getattr(p, y))
 			elif c == 'restart':
-				if eval(y)[0] == 'Y':
+				if getattr(p, y)[0] == 'Y':
 					row[c] = 'Yes'
 				else:
 					row[c] = 'No'
 			else:
-				row[c] = eval(y)
+				row[c] = getattr(p, y)
 
 		row['type'] = 'Third'
 		_results.append(row)
@@ -162,8 +164,8 @@ def clientInstalledPatches(client_id):
 	for p in query:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
-			row[c] = eval(y)
+			y = c
+			row[c] = getattr(p, y)
 		_results.append(row)
 
 	_columns = []
@@ -174,7 +176,7 @@ def clientInstalledPatches(client_id):
 		row['sortable'] = 'true'
 		_columns.append(row)
 
-	return json.dumps({'data':_results, 'columns': _columns}, default=json_serial), 200
+	return json.dumps({'data':_results, 'columns': _columns}, default=json_serial_iso), 200
 
 # JSON Routes
 @clients.route('/dashboard/inventory/<client_id>/<inv_id>')
@@ -218,10 +220,6 @@ def clientInventoryReport(client_id, inv_id):
 
 	return json.dumps({'data':_results, 'columns':_columns}), 200
 
-
-def daysFromDate(now, date):
-	x = now - date
-	return x.days
 
 '''
 ********************************
@@ -301,7 +299,7 @@ def clientGroupUserAdd(id):
 @login_required
 def clientGroupUserRemove(id, user_id):
 	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	if usr.user_id == user_id or isOwnerOfGroup(id):
+	if usr.user_id == user_id or isClientGroupOwner(id):
 		uadm = MpClientGroupAdmins().query.filter(MpClientGroupAdmins.group_id == id, MpClientGroupAdmins.group_admin == user_id).first()
 		if uadm:
 			db.session.delete(uadm)
@@ -332,8 +330,9 @@ def clientGroupUserModify():
 
 		db.session.commit()
 
-	except:
-		log_Error("Error {}".format(sys.exc_info()[0]))
+	except SQLAlchemyError:
+		db.session.rollback()
+		log_Exception("Unable to save client group admin {} for group {}".format(uid, id))
 
 	return redirect(url_for('.clientGroup', name=id, tab=7))
 
@@ -380,7 +379,7 @@ def clientGroup(name,tab=1):
 			return json.dumps({'errormsg':'Group still contains agents. Can not delete group while agents are assigned.'}), 401
 		else:
 			# Only the group owner or a console admin may delete a group
-			if isOwnerOfGroup(name) or adminRole():
+			if isClientGroupOwner(name) or adminRole():
 				MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).delete()
 				MpClientTasks.query.filter(MpClientTasks.group_id == name).delete()
 				MpClientSettings.query.filter(MpClientSettings.group_id == name).delete()
@@ -444,7 +443,7 @@ def clientGroup(name,tab=1):
 		groupResult['Patches'] = {'groups': patchGroups()}  # Used to populate UI for setting
 		groupResult['Users'] = {'users': _admins, 'columns': [('user_id','User ID'),('owner','Owner')]}
 		groupResult['Admin'] = isAdminForGroup(name)
-		groupResult['Owner'] = isOwnerOfGroup(name)
+		groupResult['Owner'] = isClientGroupOwner(name)
 
 		# Group Settings
 		_settings = getGroupSettings(name)
@@ -825,7 +824,7 @@ def groupSoftware(group_id):
 				log_Error('[groupSoftware] Software tuuid=%s exists in MpClientGroupSoftware but NOT found in MpSoftwareTask' % sid.tuuid)
 
 	log_Info('[groupSoftware] Returning %d results' % len(_results))
-	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
+	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial_iso), 200
 
 @clients.route('/group/<id>/sw/add',methods=['GET','POST'])
 @login_required
@@ -880,7 +879,6 @@ def clientGroupSWDel(id):
 def clientGroupSWResAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
-		print(sw)
 		return render_template('clients/client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
 
 	elif request.method == 'POST':
@@ -905,7 +903,7 @@ def clientGroupSWResAdd(id):
 @login_required
 def clientGroupSWResEnable(id):
 
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
+	if isClientGroupOwner(id) or isAdminForGroup(id):
 		_form = request.form
 		key = _form.get('pk')
 		value = _form.get('value')
@@ -941,7 +939,7 @@ def clientGroupSWResDel(id):
 	_sw_ids = request.form.get('rids').split(",")
 	if _sw_ids is not None and len(_sw_ids) > 0:
 		for i in _sw_ids:
-			print("Delete rid {}".format(i))
+			log_Debug("Delete rid {}".format(i))
 			MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == _group_id,
 											   MpClientGroupSoftwareRestrictions.appID == i).delete()
 			db.session.commit()
@@ -955,25 +953,6 @@ def clientGroupSWResDel(id):
 '''
 def getDoc(col_obj):
 	return col_obj.doc
-
-def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	usrInf = accountInfo() # Check if console admin account
-
-	if usr:
-		if usrInf:
-			# User_type 0 is the main console admin, has access to everything
-			if usrInf.user_type == 0:
-				return True
-
-		pgroup = MpClientGroups.query.filter(MpClientGroups.group_id == id).first()
-		if pgroup:
-			if pgroup.group_owner == usr.user_id:
-				return True
-			else:
-				return False
-
-	return False
 
 def isAdminForGroup(id):
 	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
@@ -1085,11 +1064,3 @@ def defaultTasks():
 			_jData = json.load(data_file)
 
 	return _jData
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

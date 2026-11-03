@@ -14,7 +14,7 @@ from mpconsole.app import db
 from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
-from mpconsole.mputil import decryptData, generate_jwt_token
+from mpconsole.mputil import decryptData, generate_jwt_token, json_serial
 from mpconsole.app_decorators import login_required
 
 ''' Global '''
@@ -293,8 +293,8 @@ def agentsList():
 	for p in agents:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -342,8 +342,8 @@ def agentsFiltersList():
 	for p in agents:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -658,8 +658,8 @@ def agentPluginsList():
 	for p in plugins:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -747,8 +747,8 @@ def mpServersList():
 	for p in _servers:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			res = eval(y)
+			y = c[0]
+			res = getattr(p, y)
 			if c[0] != 'rid':
 				if res == 1:
 					row[c[0]] = 'Yes'
@@ -936,9 +936,7 @@ class logline(object):  # no instance of this class should be created
 				self.level = 'INFO'
 				self.text = line
 		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			message = str(e.args[0]) if e.args else str(e)
-			log_Error('[logline][Exception][Line: %d] %s' % (exc_tb.tb_lineno, message))
+			log_Error('[logline] Unable to parse log line: %s' % (e,))
 			# Fallback on error
 			self.date = ''
 			self.app = 'error'
@@ -1021,8 +1019,8 @@ def asusServersList():
 	for p in _servers:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			res = eval(y)
+			y = c[0]
+			res = getattr(p, y)
 			if c[0] == 'proxy' or c[0] == 'active':
 				if res == 1:
 					row[c[0]] = 'Yes'
@@ -1124,14 +1122,6 @@ def getDoc(col_obj):
 		return 0
 	else:
 		return col_obj.doc
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")
 
 '''
 ----------------------------------------------------------------

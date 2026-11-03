@@ -1,5 +1,5 @@
 from flask import session
-from . model import AdmUsersInfo, MpClientGroupAdmins, MpClientGroups
+from . model import AdmUsers, AdmUsersInfo, MpClientGroupAdmins, MpClientGroups, PatchGroupMembers
 
 def localAdmin():
 	qUsr = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == session['user']).first()
@@ -58,3 +58,28 @@ def apiRole():
 		return True
 
 	return False
+
+def _currentUser():
+	return AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
+
+def isClientGroupOwner(group_id):
+	"""True if the user owns the client group, or is the main console admin (user_type 0)"""
+	usr = _currentUser()
+	if usr is None:
+		return False
+
+	usrInf = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == session.get('user')).first()
+	if usrInf is not None and usrInf.user_type == 0:
+		return True
+
+	group = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).first()
+	return group is not None and group.group_owner == usr.user_id
+
+def isPatchGroupOwner(group_id):
+	"""True if the user is the owner of the patch group"""
+	usr = _currentUser()
+	if usr is None:
+		return False
+
+	owner = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == group_id, PatchGroupMembers.is_owner == 1).first()
+	return owner is not None and owner.user_id == usr.user_id

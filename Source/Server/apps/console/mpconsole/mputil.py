@@ -10,7 +10,7 @@ from flask import current_app
 import json
 import os.path
 import jwt
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 
 from cryptography.exceptions import *
@@ -25,7 +25,7 @@ from base64 import b64encode, b64decode, urlsafe_b64encode
 
 from . import db
 from . model import MpSiteKeys
-from . mplogger import log_Debug, log_Info, log_Error
+from . mplogger import log_Debug, log_Info, log_Error, log_Exception
 
 # ----------------------------------------------------------------------------
 '''
@@ -40,11 +40,11 @@ def read_config_file(configFile):
 			with open(configFile.strip()) as data_file:
 				data = json.load(data_file)
 
-		except OSError:
-			print('Well darn.')
+		except (OSError, ValueError) as e:
+			log_Error(f"Unable to read config file {configFile.strip()}: {e}")
 
 	else:
-		print(("Error, could not open file " + configFile.strip()))
+		log_Error(f"Config file {configFile.strip()} does not exist")
 
 	return data
 
@@ -74,7 +74,6 @@ def _derive_encryption_key(secret_key):
 
 def encryptData(data):
 	"""Encrypt data using Fernet symmetric encryption"""
-	import sys
 	try:
 		if isinstance(data, dict):
 			data = json.dumps(data)
@@ -85,16 +84,12 @@ def encryptData(data):
 		f = Fernet(key)
 		encrypted = f.encrypt(data)
 		return b64encode(encrypted).decode('utf-8')
-	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		message = str(e.args[0]) if e.args else str(e)
-		log_Error('[encryptData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+	except Exception:
+		log_Exception('[encryptData] Unable to encrypt data')
 		return None
 
 def decryptData(encrypted_data):
 	"""Decrypt data using Fernet symmetric encryption"""
-	import sys
-	import traceback
 	try:
 		if isinstance(encrypted_data, str):
 			encrypted_data = b64decode(encrypted_data.encode('utf-8'))
@@ -106,14 +101,10 @@ def decryptData(encrypted_data):
 		# Try to parse as JSON, otherwise return as string
 		try:
 			return json.loads(decrypted.decode('utf-8'))
-		except:
+		except ValueError:
 			return decrypted.decode('utf-8')
-	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		message = str(e) if str(e) else repr(e)
-		log_Error('[decryptData][Exception][Line: {}] Type: {} Message: {}'.format(
-			exc_tb.tb_lineno, exc_type.__name__, message))
-		log_Error('[decryptData] Traceback: {}'.format(traceback.format_exc()))
+	except Exception:
+		log_Exception('[decryptData] Unable to decrypt data')
 		return None
 
 def generate_jwt_token(expiration_minutes=5):
@@ -125,8 +116,8 @@ def generate_jwt_token(expiration_minutes=5):
 			return None
 
 		payload = {
-			'exp': datetime.utcnow() + timedelta(minutes=expiration_minutes),
-			'iat': datetime.utcnow(),
+			'exp': datetime.now(timezone.utc) + timedelta(minutes=expiration_minutes),
+			'iat': datetime.now(timezone.utc),
 			'iss': 'mpconsole',
 			'aud': 'mpapi'
 		}
@@ -178,8 +169,8 @@ def signData(data):
 		except InvalidKey:
 			log_Error("InvalidKey, Unable to sign data.")
 			return None
-		except:
-			log_Error("Error, Unable to sign data.")
+		except (ValueError, TypeError, UnsupportedAlgorithm):
+			log_Exception("Error, Unable to sign data.")
 			return None
 	else:
 		return None
@@ -202,8 +193,8 @@ def verifySignedData(signature, data):
 		except InvalidKey:
 			log_Error("InvalidKey, Unable to verify signature.")
 			return False
-		except:
-			log_Error("Error, Unable to verify signature.")
+		except (ValueError, TypeError, UnsupportedAlgorithm):
+			log_Exception("Error, Unable to verify signature.")
 			return False
 
 	log_Error("[verifySignedData] Error, unable to get RSA keys from database.")
@@ -252,20 +243,43 @@ def copytree(src, dst, symlinks = False, ignore = None):
 				st = os.lstat(s)
 				mode = stat.S_IMODE(st.st_mode)
 				os.lchmod(d, mode)
-			except:
+			except (AttributeError, NotImplementedError, OSError):
 				pass # lchmod not available
 		elif os.path.isdir(s):
 			copytree(s, d, symlinks, ignore)
 		else:
 			shutil.copy2(s, d)
 
-from datetime import datetime
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
+from datetime import datetime, date
+from decimal import Decimal
 
+def json_serial(obj):
+	"""JSON serializer (json.dumps default=) for values json can not serialize, datetime as 'YYYY-MM-DD HH:MM:SS'"""
 	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
+		return obj.strftime('%Y-%m-%d %H:%M:%S')
+	return _json_serial_other(obj)
+
+def json_serial_iso(obj):
+	"""JSON serializer (json.dumps default=) for values json can not serialize, datetime as ISO 8601"""
+	if isinstance(obj, datetime):
+		return obj.isoformat()
+	return _json_serial_other(obj)
+
+def _json_serial_other(obj):
+	if isinstance(obj, date):
+		return obj.isoformat()
+	if isinstance(obj, Decimal):
+		return float(obj)
+	if isinstance(obj, bytes):
+		return obj.decode('utf-8', errors='replace')
+	raise TypeError(f"Type {type(obj).__name__} not serializable")
+
+def daysFromDate(now, date):
+	return (now - date).days
+
+def allowed_file(filename, extensions):
+	"""True if the file name has one of the extensions (no dot, case insensitive)"""
+	return '.' in filename and filename.rsplit('.', 1)[1].lower() in extensions
 
 # ----------------------------------------------------------------------------
 '''

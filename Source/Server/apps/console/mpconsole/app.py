@@ -12,7 +12,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_session import Session
 from flask_caching import Cache
-from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from pymysql import OperationalError as PyOperationalError
 from sqlalchemy import func
@@ -21,13 +20,13 @@ from dateutil.parser import parse as dateParse
 
 import logging
 import logging.handlers
+from flask.logging import default_handler
 from mpconsole.config import Config
-from mpconsole.extensions import db, migrate
+from mpconsole.extensions import migrate
 from mpconsole.mplogger import *
 from mpconsole.session_auth import session_expired_response
 
 db = SQLAlchemy()
-cors = CORS()
 cache = Cache()
 _session = Session()
 csrf = CSRFProtect()
@@ -74,34 +73,21 @@ def create_app(config_object=Config):
 				
 			session['last_activity'] = datetime.now()
 			g.user = current_user
-			
-	@app.context_processor
-	def checkForSession():
-		# Flask Template context_processor
-		# If session user is not found pass to error handler
-		allowEndpoint = ['main.index', 'auth.login', 'agent.clientDownload']
+
+		# Every endpoint requires a logged in session, except the public ones. Routes also
+		# use @login_required, this catches a route that is missing it.
+		# request.endpoint is None for 404/405, let those through to the error handlers.
+		if request.endpoint is None or request.endpoint in publicEndpoints(app):
+			return
+
 		if app.config['LOCAL_AUTH_ALLOWED']:
-			allowEndpoint.append('local_auth.login')
-		
-		if request.endpoint not in allowEndpoint:
-			if app.config['LOCAL_AUTH_ALLOWED']:
-				if session.get('oid_user') is None and session.get('user') is None:
-					log_Error(f"session.get('oid_user') and session.get('user') is None")
-					abort(412)
-			else:
-				if session.get('oid_user') is None:
-					log_Error(f"session.get('oid_user') is None")
-					abort(412)
+			hasSession = session.get('user') is not None or session.get('oid_user') is not None
+		else:
+			hasSession = session.get('oid_user') is not None
 
-		# Have to pass something otherwise it errors with None type
-		return {"_foo_": "bar"}
-
-	@app.errorhandler(412)
-	def session_not_found(e):
-		# Using Error 412 as session data not found.
-		# Re-Direct to login
-		log_Error(f"{e}")
-		return session_expired_response()
+		if not hasSession:
+			log_Debug(f"[before_request][{request.endpoint}]: No user session.")
+			return session_expired_response()
 
 	@app.errorhandler(CSRFError)
 	def csrf_error(e):
@@ -140,9 +126,8 @@ def create_app(config_object=Config):
 					schema_data = json.load(data_file)
 
 				app.config["MDM_SCHEMA"] = schema_data
-			except OSError:
-				print('Well darn.')
-				return
+			except (OSError, ValueError) as e:
+				app.logger.error(f"Unable to read MDM schema file {mdm_schema_file.strip()}: {e}")
 
 	initialize_extensions(app)
 	register_blueprints(app)
@@ -162,6 +147,15 @@ def create_app(config_object=Config):
 	register_cli(app)
 
 	return app
+
+def publicEndpoints(app):
+	# Endpoints that do not require a logged in session
+	endpoints = {'static', 'main.index', 'agent.clientDownload', 'content.content',
+				 'auth.login', 'auth.signin_oidc', 'auth.logout', 'auth.logout_complete', 'auth.ping',
+				 'local_auth.logout'}
+	if app.config['LOCAL_AUTH_ALLOWED']:
+		endpoints.add('local_auth.login')
+	return endpoints
 
 def initialize_extensions(app):
 	db.init_app(app)
@@ -252,6 +246,10 @@ class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
 def setup_logging(app):
 	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
 	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
+
+	# Flask adds a stderr handler by default, under gunicorn that duplicates every
+	# line into stderr (journald / launchd stderr file, which is not rotated)
+	app.logger.removeHandler(default_handler)
 
 	# create_app can be called more than once in a process, do not add duplicate handlers
 	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:

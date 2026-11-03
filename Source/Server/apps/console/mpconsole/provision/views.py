@@ -199,17 +199,17 @@ def scriptsList():
 		for c in colsForQuery:
 
 			if c in ('sw_start_datetime','sw_end_datetime','mdate'):
-				dt_obj = eval("d."+c)
+				dt_obj = getattr(d, c)
 				if dt_obj:
-					row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
+					row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
 			elif c == 'active':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Yes" if _a == 1 else "No"
 			elif c == 'scope':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Production" if _a == 1 else "QA"
 			elif c == 'type':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				if _a == 0:
 					row[c] = "Post Software Task Install"
 				elif _a == 1:
@@ -217,10 +217,10 @@ def scriptsList():
 				elif _a == 2:
 					row[c] = "Finish"
 			elif c == 'script':
-				_a = eval("d." + c)
+				_a = getattr(d, c)
 				row[c] = (_a[:10] + '...') if len(_a) > 10 else _a
 			else:
-				row[c] = eval("d."+c)
+				row[c] = getattr(d, c)
 
 		_data.append(row)
 
@@ -324,7 +324,7 @@ def uiConfigUpload():
 			_fileName = _file.filename
 			if _fileName == '':
 				return {'errorno': 403, 'errormsg': 'Error, upload file is blank.', 'result': {}}, 403
-			if allowed_file(_fileName):
+			if allowed_file(_fileName, ['json']):
 				_fileData = _file.read()
 
 				qGet = MpProvisionConfig.query.filter(MpProvisionConfig.active == 1).first()
@@ -342,15 +342,11 @@ def uiConfigUpload():
 
 
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('Message: %s' % (e))
-		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
+		db.session.rollback()
+		log_Exception('Message: %s' % (e))
+		return {'errorno': 500, 'errormsg': str(e), 'result': {}}, 500
 
 	return {'data': {}}, 200
-
-def allowed_file(filename):
-	extensions = ['json']
-	return '.' in filename and filename.rsplit('.', 1)[1].lower() in extensions
 
 @provision.route('/test')
 @login_required
@@ -373,11 +369,8 @@ def testTask():
 
 			results.append({'patch': x, 'name': name, 'count': count})
 
-	print("{}".format(results))
 
-	print(len(_patches))
 	t = ApplePatch.query.filter(ApplePatch.supatchname == 'macOS Big Sur 11.2.3-20D91').first()
-	print(t)
 
 	_data = {}
 	mps = MpSoftware.query.filter(MpSoftware.sState == 2).all()

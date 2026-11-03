@@ -30,7 +30,8 @@ def enrolledDevices():
 			_lastSyncAt = _lastSync.lastSyncDateTime
 
 		listCols = MDMIntuneDevices.__table__.columns
-	except:
+	except Exception:
+		log_Exception("Unable to load MDM data")
 		_lastSyncAt = "Error"
 
 	return render_template('mdm/enrolled_devices.html', data=[], columns=listCols, lastSync=_lastSyncAt)
@@ -86,7 +87,8 @@ def corporateDevices():
 		joinCols = [{ "column": "cuuid", "displayName": "MP-ClientID", "order": 99,"visible": 0},{ "column": "hostname", "displayName": "MP-Hostname", "order": 99,"visible": 1}]
 		columns = columns + joinCols
 
-	except:
+	except Exception:
+		log_Exception("Unable to load MDM data")
 		_lastSyncAt = "Error"
 
 	return render_template('mdm/corporate_devices.html', data=[], columns=columns, lastSync=_lastSyncAt)
@@ -186,7 +188,8 @@ def configProfiles():
 		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_devices_config_profiles"]["columns"]
 		columns = sorted(schemaColumns, key = lambda i: i['order'])
 
-	except:
+	except Exception:
+		log_Exception("Unable to load MDM data")
 		_lastSyncAt = "Error"
 
 	return render_template('mdm/device_config_profiles.html', data=[], columns=columns, lastSync=_lastSyncAt)
@@ -256,9 +259,7 @@ def runIntuneDataSync(id):
 
 		return json.dumps({'lastSync': _lastSyncAt}, default=json_serial), 200
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		message=str(e.args[0]).encode("utf-8")
-		log_Error('[runIntuneDataSync][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+		log_Exception('[runIntuneDataSync] {}'.format(e))
 		return json.dumps({'lastSync': _lastSyncAt}, default=json_serial), 401
 
 @mdm.route('/groups',methods=['GET'])
@@ -270,7 +271,8 @@ def getMDMGroups():
 		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_groups"]["columns"]
 		columns = sorted(schemaColumns, key=lambda i: i['order'])
 
-	except:
+	except Exception:
+		log_Exception("Unable to load MDM data")
 		_lastSyncAt = "Error"
 
 	return render_template('mdm/mdm_groups.html', data=[], columns=columns)
@@ -314,7 +316,8 @@ def getMDMGroupsMembers(id):
 		schemaColumns = current_app.config["MDM_SCHEMA"]["tables"]["mdm_intune_group_membership"]["columns"]
 		columns = sorted(schemaColumns, key=lambda i: i['order'])
 
-	except:
+	except Exception:
+		log_Exception("Unable to load MDM data")
 		_lastSyncAt = "Error"
 
 	return render_template('mdm/mdm_group_membership.html', data=[], groupid=id, groupname=groupName, columns=columns)
@@ -340,14 +343,12 @@ def getMDMGroupsMembersList(id):
 
 		_results.append(_row)
 
-	print(_results)
 	return json.dumps({'data': _results}, default=json_serial), 200
 
 @mdm.route('/groups/members/<string:groupid>/<string:deviceid>',methods=['DELETE'])
 @login_required
 @cross_origin()
 def deleteMDMGroupsMember(groupid, deviceid):
-	print("deleteMDMGroupsMember")
 	mpi = MPIntune()
 	mpi.init_app(current_app)
 	groups = mpi.DeleteMemberFromGroup(groupid,deviceid)

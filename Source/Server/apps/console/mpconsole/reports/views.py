@@ -8,6 +8,7 @@ from datetime import datetime
 
 from .  import reports
 from mpconsole.app import db, login_manager
+from mpconsole.mputil import json_serial
 from mpconsole.model import *
 from mpconsole.mplogger import *
 from mpconsole.app_decorators import login_required
@@ -266,13 +267,13 @@ def showReportPaged(id, limit, offset, search, sort, order):
     for p in query:
         row = {}
         for x in colsForQuery:
-            y = "p." + x.replace('mp_clients.', '').strip()
+            y = x.replace('mp_clients.', '').strip()
             if x == 'mdate':
-                row[x] = eval(y)
+                row[x] = getattr(p, y)
             elif x == 'type':
-                row[x] = eval(y).title()
+                row[x] = getattr(p, y).title()
             else:
-                row[x] = eval(y)
+                row[x] = getattr(p, y)
         _results.append(row)
 
     return json.dumps({'data': _results, 'total': qResult[1]}, default=json_serial), 200
@@ -340,7 +341,7 @@ def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='m
     else:
         sql_rows = text(f"SELECT 1 FROM {table_name} {sql_where}")
 
-    print(f"sql_rows: {sql_rows}")
+    log_Debug(f"sql_rows: {sql_rows}")
 
     with db.engine.connect() as conn:
         raw_result = conn.execute(sql_rows, params)
@@ -369,7 +370,7 @@ def requiredQuery(queryInfo, filterStr='undefined', page=0, page_size=0, sort='m
             f" LIMIT {_start},{_end}"
         )
 
-    print(f"sql: {sql}")
+    log_Debug(f"sql: {sql}")
 
     with db.engine.connect() as conn:
         raw_result = conn.execute(sql, params)
@@ -450,9 +451,9 @@ def saveReport():
         # Validation error
         return json.dumps({'errorno': 400, 'errormsg': str(ve), 'data': {}}), 400
     except Exception as e:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        message = str(e.args[0]).encode("utf-8")
-        return json.dumps({'errorno': 500, 'errormsg': message, 'data': {}}), 500
+        db.session.rollback()
+        log_Exception('Unable to save report: {}'.format(e))
+        return json.dumps({'errorno': 500, 'errormsg': str(e), 'data': {}}), 500
 
     return json.dumps({'errorno': 0}, default=json_serial), 304
 
@@ -632,10 +633,3 @@ def typeForColumn(type):
     else:
         return 'string'
 
-
-def json_serial(obj):
-    """JSON serializer for objects not serializable by default json code"""
-    if isinstance(obj, datetime):
-        serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-        return serial
-    raise TypeError("Type not serializable")

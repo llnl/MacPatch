@@ -9,6 +9,7 @@ from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial
 
 '''
 ----------------------------------------------------------------
@@ -208,11 +209,3 @@ def editKey(rid):
 
 		db.session.commit()
 		return json.dumps({}), 200
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")

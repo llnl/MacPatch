@@ -53,8 +53,8 @@ def groups():
 	for r in qGet:
 		_drow = {}
 		for c in _cols:
-			_obj = "r." + c['field']
-			_objVal = eval(_obj)
+			_obj = c['field']
+			_objVal = getattr(r, _obj)
 			try:
 				if c['field'] == 'mdate':
 					_drow[c['field']] = _objVal.strftime("%Y-%m-%d %H:%M:%S")
@@ -63,9 +63,7 @@ def groups():
 				else:
 					_drow[c['field']] = _objVal
 			except Exception as e:
-				exc_type, exc_obj, exc_tb = sys.exc_info()
-				message=str(e.args[0]).encode("utf-8")
-				log_Error(message)
+				log_Exception('Unable to read field {}: {}'.format(c['field'], e))
 
 		_rows.append(_drow)
 
@@ -206,13 +204,13 @@ def filtersForGroup(id,limit,offset,search,sort,order):
 	for p in query:
 		row = {}
 		for x in colsForQuery:
-			y = "p."+x
+			y = x
 			if x == 'mdate':
-				row[x] = eval(y)
+				row[x] = getattr(p, y)
 			elif x == 'type':
-				row[x] = eval(y).title()
+				row[x] = getattr(p, y).title()
 			else:
-				row[x] = eval(y)
+				row[x] = getattr(p, y)
 
 		_results.append(row)
 
@@ -328,14 +326,14 @@ def tasks():
 		for c in colsForQuery:
 
 			if c in ('sw_start_datetime','sw_end_datetime','mdate'):
-				dt_obj = eval("d."+c)
+				dt_obj = getattr(d, c)
 				if dt_obj:
-					row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
+					row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
 			elif c == 'active':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Yes" if _a == 1 else "No"
 			else:
-				row[c] = eval("d."+c)
+				row[c] = getattr(d, c)
 
 		_data.append(row)
 
@@ -497,7 +495,7 @@ def swGroupTasks(id):
 			if c == 'sw_task_id':
 				row2[c] = d.tuuid
 			else:
-				row2[c] = eval("d."+c)
+				row2[c] = getattr(d, c)
 
 		_data.append(row2)
 
@@ -701,18 +699,18 @@ def packages():
 		row = {}
 		for c in colsForQuery:
 			if c in ('mdate'):
-				row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
+				row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
 			elif c == 'sReboot':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Yes" if _a == 1 else "No"
 			elif c == 'sState':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = options[_a]
 			elif c == 'sw_size':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = humansize(_a * 1024)
 			else:
-				row[c] = eval("d."+c)
+				row[c] = getattr(d, c)
 
 		_data.append(row)
 
@@ -982,8 +980,6 @@ def saveSWPackage():
 		if request.form['sw_useS3'] == '1':
 			aws = MPaws()
 			_fileData = saveSoftwareFileToTMP(_suuid, mainFile)
-			print(_fileData['filePath'])
-			print(_fileData['fileURL'])
 			aws.uploadFileToS3(_fileData['filePath'], _fileData['fileURL'])
 			shutil.rmtree(os.path.join('/tmp/sw', _suuid))
 		else:

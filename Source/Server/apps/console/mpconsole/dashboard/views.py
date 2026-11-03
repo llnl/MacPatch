@@ -7,6 +7,7 @@ from datetime import datetime
 from . import dashboard
 from mpconsole.app import db, login_manager
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso
 from mpconsole.model import *
 
 @dashboard.route('/dashboard')
@@ -220,9 +221,9 @@ def drilldown(chart,value):
 def drilldowndata(chart,value):
 	result = drillDownDataFilter(chart, value)
 	if result is not None:
-		return json.dumps(result[0], default=json_serial), 200
+		return json.dumps(result[0], default=json_serial_iso), 200
 	else:
-		return json.dumps([], default=json_serial), 404
+		return json.dumps([], default=json_serial_iso), 404
 
 # Private/local
 def drillDownDataFilter(chart, filterValue):
@@ -677,11 +678,3 @@ def agentVersionCollection(version):
 		_results.append(_dict)
 
 	return _results, colNames
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

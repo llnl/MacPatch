@@ -120,7 +120,6 @@ class Config(object):
 	# The hardcoded key has been removed for security. Set SECRET_KEY in .mpglobal or environment.
 	SECRET_KEY          		= get_secret_key()
 	SECRET_KEYS                 = get_secret_keys()  # For graceful key rotation (primary + old keys)
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=10)
 
 	# Flask-Caching, in-memory per gunicorn worker. Used for the page header counts.
 	CACHE_TYPE					= 'SimpleCache'
@@ -139,11 +138,14 @@ class Config(object):
 	LOG_FILE_NAME		= os.environ.get('LOG_FILE_NAME') or 'mpconsole.log'
 	LOG_FILE 			= LOGGING_LOCATION + '/' + LOG_FILE_NAME
 
-	# Session
-	SESSION_TYPE 				= 'redis' #'filesystem'
-	SESSION_REDIS				= Redis(host='localhost', port=6379)
+	# Session, stored in Redis
+	REDIS_HOST					= os.environ.get('REDIS_HOST') or 'localhost'
+	REDIS_PORT					= int(os.environ.get('REDIS_PORT') or '6379')
+	REDIS_PASSWORD				= os.environ.get('REDIS_PASSWORD') or None
+	SESSION_TYPE 				= 'redis'
+	SESSION_REDIS				= Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
 	SESSION_TIMEOUT_MINUTES		= 60
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=60)
+	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=SESSION_TIMEOUT_MINUTES)
 
 	# MacPatch App Options
 	SITECONFIG_FILE     = MP_SRV_DIR+'/etc/siteconfig.json'
@@ -161,11 +163,6 @@ class Config(object):
 	# Authentication
 	LOCAL_AUTH_ALLOWED			= as_bool(os.environ.get('LOCAL_AUTH_ALLOWED') or 'yes')
 
-	# Session
-	SESSION_TYPE 				= 'redis' #'filesystem'
-	SESSION_REDIS				= Redis(host='localhost', port=6379)
-	SESSION_TIMEOUT_MINUTES		= 60
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=60)
 
 	SCHEDULER_API_ENABLED 	= as_bool(os.environ.get('SCHEDULER_API_ENABLED') or 'yes')
 	ALLOW_CONTENT_DOWNLOAD 	= as_bool(os.environ.get('ALLOW_CONTENT_DOWNLOAD') or 'no')

@@ -173,7 +173,6 @@ class MPTaskJobs():
 	def GetEnrolledDevices(self):
 		table_columns = MDMIntuneDevices.__table__.columns.keys()
 		table_columns.remove('rid')
-		print(table_columns)
 		return
 	
 		self.getAccessToken()
@@ -208,43 +207,11 @@ class MPTaskJobs():
 
 		isFirst = True
 		idList = []
-		#table_columns = MDMIntuneDevices.__table__.columns.keys()
-		'''
-		sqlInsertStr = ""
-		
-		for i, device in enumerate(devices):
-			print(i)
-
-			idList.append(device['id'])
-			if isFirst:
-				i = i + 1
-				sqlInsertStr = self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device)
-				isFirst = False
-			else:
-				sqlInsertStr = sqlInsertStr + "," + self.genSQLInsertAlt(MDMIntuneDevices().__table__, table_columns, device, onlyData=True)
-
-			if i % 1000 == 0:
-				sqlInsertStr = sqlInsertStr + ";"
-				print(sqlInsertStr)
-				with db.engine.connect() as conn:
-					conn.execute(text(sqlInsertStr))
-				isFirst = True
-		print("Run it")
-		sqlInsertStr = sqlInsertStr + ";"
-		print(sqlInsertStr)
-		with db.engine.connect() as conn:
-			conn.execute(sqlInsertStr)
-		# Build the uuid quey str now
-		print("commit")
-		db.session.commit()
-		print("commited")
- 		'''
+		table_columns = MDMIntuneDevices.__table__.columns.keys()
 		
 		# MDMIntuneDevices
-		print(table_columns)
 		for i, device in enumerate(devices):
 			_dev = {tc: device[tc] for tc in table_columns}
-			print(_dev)
 			break
 
 
@@ -326,7 +293,6 @@ class MPTaskJobs():
 
 		devices = []
 		endpoint = self.app.config.get('INTUNE_RESOURCE') + "/v1.0/deviceManagement/deviceConfigurations?$filter=isof('microsoft.graph.macOSCustomConfiguration')"
-		print(endpoint)
 		self.app.logger.info("[GetDeviceConfigProfiles]: Start Get Records")
 		graph_data = requests.get(endpoint, headers=self.getHTTPHeader(), stream=False)
 		if graph_data.ok != True:
@@ -353,7 +319,6 @@ class MPTaskJobs():
 		sqlInsertStr = ""
 		isFirst = True
 
-		import pprint
 		_records = []
 		for i, profile in enumerate(profiles):
 			del profile['@odata.type']

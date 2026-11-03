@@ -15,6 +15,7 @@ from mpconsole.modes import *
 from mpconsole.mplogger import *
 from mpconsole.clients.views import revGroupSWRes, revAllGroupsSWRes
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso, allowed_file
 
 '''
 	This method queries the DB for all uploaded profiles
@@ -46,15 +47,15 @@ def profilesListJSON():
 	for p in profileQuery:
 		row = {}
 		for c in columns:
-			y = "p." + c[0]
+			y = c[0]
 			if c[0] == 'enabled' or c[0] == 'uninstallOnRemove' or c[0] == 'isglobal':
-				row[c[0]] = "Yes" if eval(y) == 1 else "No"
+				row[c[0]] = "Yes" if getattr(p, y) == 1 else "No"
 			else:
-				row[c[0]] = eval(y)
+				row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
-	return json.dumps(_results, default=json_serial), 200
+	return json.dumps(_results, default=json_serial_iso), 200
 
 '''
 	This method renders the os_profile_manager.html File
@@ -128,9 +129,6 @@ def profileEdit(profile_id):
 	Method to verify file extension
 '''
 ALLOWED_EXTENSIONS = set(['plist', 'mobileprovision', 'mobileconfig'])
-def allowed_file(filename):
-	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
 ''' AJAX Request '''
 @osmanage.route('/profile/save/<profile_id>', methods=['POST'])
 @login_required
@@ -149,7 +147,7 @@ def profileSave(profile_id):
 			_file = request.files['profileFile']
 			_file_data = _file.read()
 
-			if _file_data and allowed_file(_file.filename):
+			if _file_data and allowed_file(_file.filename, ALLOWED_EXTENSIONS):
 				# Gen Hash
 				profile__hash = hashlib.md5(_file_data).hexdigest()
 				#setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
@@ -435,8 +433,8 @@ def groupProfiles(group_id):
 				if c[0] == 'pName':
 					row[c[0]] = p.profileName
 				else:
-					y = "p[0]."+c[0]
-					row[c[0]] = eval(y)
+					y = c[0]
+					row[c[0]] = getattr(p[0], y)
 
 			_results.append(row)
 
@@ -559,13 +557,11 @@ def appFilterList():
 	_results = []
 	if srList is not None:
 		for sr in srList:
-			print(sr)
 			row = {}
 			for c in swaf_columns:
-				y = "sr."+c[0]
-				row[c[0]] = eval(y)
+				y = c[0]
+				row[c[0]] = getattr(sr, y)
 			_results.append(row)
-	print(_results)	
 	return json.dumps(_results), 200
 
 @osmanage.route('/app_filter/add')
@@ -712,11 +708,11 @@ def osConfig():
 	for p in profileQuery:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
+			y = c[0]
 			if c[0] == 'enabled' or c[0] == 'uninstallOnRemove':
-				row[c[0]] = "Yes" if eval(y) == 1 else "No"
+				row[c[0]] = "Yes" if getattr(p, y) == 1 else "No"
 			else:
-				row[c[0]] = eval(y)
+				row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -735,11 +731,3 @@ def escapeStringForACEEditor(data_string):
 	result = result.replace('${', r'\${')
 	result = result.replace('}', r'\}')
 	return result
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

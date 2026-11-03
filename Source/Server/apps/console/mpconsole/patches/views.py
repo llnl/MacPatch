@@ -304,7 +304,6 @@ def customList():
 				if _res != "None":
 					_row['pkg_url'] = _res
 				else:
-					print(_dict)
 					_row['pkg_url'] = ""
 			else:
 				_row['pkg_url'] = ""
@@ -483,9 +482,9 @@ def customPatchWizardUpdate():
 		log("{} updated custom patch {}.".format(session.get('user'), puuid))
 
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('Message: %s' % (e))
-		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
+		db.session.rollback()
+		log_Exception('Message: %s' % (e))
+		return {'errorno': 500, 'errormsg': str(e), 'result': {}}, 500
 
 	return {}, 200
 
@@ -620,9 +619,8 @@ def customDuplicate(patch_id):
 	try:
 		db.session.commit()
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		message=str(e.args[0]).encode("utf-8")
-		log_Error('Message: %s' % (message))
+		db.session.rollback()
+		log_Exception('Message: %s' % (e))
 
 	return json.dumps({}, default=json_serial), 200
 
@@ -659,9 +657,8 @@ def customDelete():
 		try:
 			db.session.commit()
 		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			message=str(e.args[0]).encode("utf-8")
-			log_Error('Message: %s' % (message))
+			db.session.rollback()
+			log_Exception('Message: %s' % (e))
 	
 	# Update Patch Groups
 	_update_groups = set(update_groups)
@@ -779,14 +776,6 @@ def patchGroups():
 
 	return render_template('patches/patch_groups.html', data=rows, columns=cListColsLimited)
 
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")
-
 # TODO Change to use AJAX
 @patches.route('/patchGroups/add')
 @login_required
@@ -864,7 +853,7 @@ def patchGroupUpdate():
 def patchGroupDelete(id):
 	qGroup = MpPatchGroup.query.filter(MpPatchGroup.id == id).first()
 	groupName = qGroup.name
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to delete patch group {}.".format(session.get('user'), groupName))
 		return json.dumps({}), 403
 
@@ -911,8 +900,8 @@ def patchGroupMembers(id):
 		rowCounter += rowCounter
 		row = {}
 		for x in colsForQuery:
-			y = "p."+x
-			row[x] = eval(y)
+			y = x
+			row[x] = getattr(p, y)
 
 		_results.append(row)
 
@@ -926,7 +915,7 @@ def patchGroupMembers(id):
 @patches.route('/patchGroup/member/add/<id>', methods=['POST'])
 @login_required
 def patchGroupMemberAdd(id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to add patch group member.".format(session.get('user')))
 		return json.dumps({}), 403
 
@@ -959,7 +948,7 @@ def patchGroupMemberAdd(id):
 @patches.route('/patchGroup/member/delete/<id>', methods=['POST'])
 @login_required
 def patchGroupMemberDelete(id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to delete patch group member.".format(session.get('user')))
 		return json.dumps({}), 403
 
@@ -1033,7 +1022,7 @@ def patchGroupContentEdit(id):
 		_results.append(_row)
 
 	_type = "false"
-	if isOwnerOfGroup(id):
+	if isPatchGroupOwner(id):
 		_type = "true"
 
 	return render_template('patches/patch_group_patches.html', name=patchGroup.name, pid=id, data=_results, columns=columns, isOwner=_type, groupID=id)
@@ -1102,7 +1091,7 @@ def patchGroupContent(group_id):
 @patches.route('/group/add/<group_id>/<patch_id>')
 @login_required
 def patchGroupContentAdd(group_id, patch_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to add content to patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1121,7 +1110,7 @@ def patchGroupContentAdd(group_id, patch_id):
 @patches.route('/group/add/bulk/<group_id>', methods=['POST'])
 @login_required
 def patchGroupContentAddBulk(group_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to add bulk content to patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1144,7 +1133,7 @@ def patchGroupContentAddBulk(group_id):
 @patches.route('/group/remove/<group_id>/<patch_id>')
 @login_required
 def patchGroupContentDel(group_id, patch_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to remove content from patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1166,7 +1155,7 @@ def patchGroupContentDel(group_id, patch_id):
 @patches.route('/group/save/<group_id>')
 @login_required
 def patchGroupPatchesSave(group_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to save content for patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1458,13 +1447,13 @@ def installedListPaged(limit,offset,search,sort,order):
 	for p in query:
 		row = {}
 		for x in colsForQuery:
-			y = "p[0]."+x
+			y = x
 			if x == 'mdate':
-				row[x] = eval(y)
+				row[x] = getattr(p[0], y)
 			elif x == 'type':
-				row[x] = eval(y).title()
+				row[x] = getattr(p[0], y).title()
 			else:
-				row[x] = eval(y)
+				row[x] = getattr(p[0], y)
 
 		row['hostname'] = p.hostname
 		row['ipaddr'] = p.ipaddr
@@ -1513,34 +1502,8 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 
 ''' Global '''
-def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-
-	if usr:
-		pgroup = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id,
-												PatchGroupMembers.is_owner == 1).first()
-		if pgroup:
-			if pgroup.user_id == usr.user_id:
-				return True
-			else:
-				return False
-
-	return False
-
 def getDoc(col_obj):
 	return col_obj.doc
-
-def daysFromDate(now,date):
-	x = now - date
-	return x.days
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	
 
 def escapeStringForACEEditor(data_string):
 	#result = ""
