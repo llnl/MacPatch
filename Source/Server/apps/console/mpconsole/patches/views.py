@@ -1318,8 +1318,6 @@ def requiredListPaged(limit,offset,search,sort,order):
 	
 	# Result is a tuple, records = 0, rowCount = 1
 	_result = qResult[0]
-	import pprint
-	pprint.pprint(_result[0])
 	
 	# Parse results, and create list for json result
 	_results = []
@@ -1355,7 +1353,6 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 	sql0 = None
 	sql1 = None
-	res1 = None
 
 	filterStr = str(filterStr)
 	#offset = page * page_size
@@ -1363,7 +1360,7 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 	if filterStr == 'undefined' or len(filterStr) <= 0:
 		# Query for All Records, sql0 is used for count, sql1 is the query for paging
-		sql0 = text("""SELECT date FROM mp_client_patches_full_view""")
+		sql0 = "SELECT COUNT(*) FROM mp_client_patches_full_view"
 		sql1 =	f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
 				f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
 				f"ORDER BY {order_by_str} LIMIT {str(offset)}, {str(page_size)}"
@@ -1386,10 +1383,9 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 				else:
 					whereStr = whereStr + " OR " + col[0] + " like '%" + filterStr + "%'"
 
-		sql0 = f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
+		sql0 = f"SELECT COUNT(*) FROM mp_client_patches_full_view v " \
 			   f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
 			   f"{whereStr}"
-		sql0 = text(sql0)
 
 		sql1 =  f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v "\
 					f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
@@ -1397,24 +1393,15 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 					f"ORDER BY {order_by_str}  LIMIT {str(offset)} , {str(page_size)}"
 
 
-	recCounter1 = 0
-	recCounter2 = 0
-	# Execute the SQL statement(s)
-	if sql0 is not None:
-		with db.engine.connect() as conn:
-			raw_result1 = conn.execute(sql0)
-			res1 = raw_result1.mappings().all()
-		recCounter1 = len(res1)
+	# Execute the SQL statement(s), the total count is only needed when the search changed
+	total = 0
+	with db.engine.connect() as conn:
+		if getCount:
+			total = conn.execute(text(sql0)).scalar()
+		result = conn.execute(text(sql1)).mappings().all()
 
-	if sql1 is not None:
-		with db.engine.connect() as conn:
-			print(sql1)
-			raw_result = conn.execute(text(sql1))
-			result = raw_result.mappings().all()
-		recCounter2 = len(result)
-
-	# Return tuple, query results and a record count
-	return (result, recCounter1, recCounter2)
+	# Return tuple, query results, total record count and page record count
+	return (result, total, len(result))
 
 def isDateString(string, fuzzy=False):
 	"""

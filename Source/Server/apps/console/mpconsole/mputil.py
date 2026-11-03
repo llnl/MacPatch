@@ -11,6 +11,7 @@ import json
 import os.path
 import jwt
 from datetime import datetime, timedelta
+from functools import lru_cache
 
 from cryptography.exceptions import *
 from cryptography.hazmat.backends import default_backend
@@ -47,19 +48,18 @@ def read_config_file(configFile):
 
 	return data
 
-def mpConfig():
-	cnfFile = current_app.config['SITECONFIG_FILE']
-	_config = read_config_file(cnfFile)
-	return _config
-
 # ----------------------------------------------------------------------------
 '''
 	Symmetric Encryption/Decryption using Fernet
 '''
 def _get_encryption_key():
 	"""Derive a Fernet key from the SECRET_KEY"""
-	import sys
-	secret_key = current_app.config['SECRET_KEY'].encode('utf-8')
+	return _derive_encryption_key(current_app.config['SECRET_KEY'])
+
+@lru_cache(maxsize=4)
+def _derive_encryption_key(secret_key):
+	# PBKDF2 (100k iterations) is slow by design, the result only changes with the
+	# SECRET_KEY so it is cached, keyed by the secret so a new key is derived if it changes
 	# Use a fixed salt for key derivation (same as API)
 	salt = b'MacPatch_DB_Config_Salt_v1'
 	kdf = PBKDF2HMAC(
@@ -69,7 +69,7 @@ def _get_encryption_key():
 		iterations=100000,
 		backend=default_backend()
 	)
-	key = urlsafe_b64encode(kdf.derive(secret_key))
+	key = urlsafe_b64encode(kdf.derive(secret_key.encode('utf-8')))
 	return key
 
 def encryptData(data):
@@ -139,26 +139,15 @@ def generate_jwt_token(expiration_minutes=5):
 		return None
 
 def return_data_for_root_key(key):
-	_config = mpConfig()
-	if _config is None:
-		return None
-
-	_config = _config['settings']
-	if key in _config:
-		return _config[key]
-	else:
-		return None
+	# Returns settings[key] from siteconfig.json, or None if it is missing.
+	# siteconfig.json is read once at startup (app.read_siteconfig_server_data),
+	# restart the console after changing it.
+	return current_app.config.get('MP_SETTINGS', {}).get(key)
 
 def return_data_for_server_key(key):
-	_config = mpConfig()
-	if _config is None:
-		return None
-
-	_config = _config['settings']['server']
-	if key in _config:
-		return _config[key]
-	else:
-		return _config
+	# Returns settings.server[key] from siteconfig.json, or None if it is missing
+	_server = return_data_for_root_key('server') or {}
+	return _server.get(key)
 
 # ----------------------------------------------------------------------------
 '''
@@ -283,20 +272,14 @@ def json_serial(obj):
 		Base64 With Default
 '''
 def b64EncodeAsString(data, defaultValue=None):
-	result = ''
-	if defaultValue is not None:
-			result = defaultValue
+	# Base64 encode a str or bytes value, returns defaultValue ('' if None) when data is empty
+	if not data:
+		return defaultValue if defaultValue is not None else ''
 
-	if data is not None:
-			if data.__class__ != 'bytes':
-					if len(data) > 0:
-							data = data.encode('utf-8')
-							result = b64encode(data).decode('utf-8')
-			else:
-					if len(data) > 0:
-							result = b64encode(data).decode('utf-8')
+	if isinstance(data, str):
+		data = data.encode('utf-8')
 
-	return result
+	return b64encode(data).decode('utf-8')
 
 
 

@@ -1,5 +1,6 @@
 from flask import render_template, request, session, current_app
-from sqlalchemy import text
+from sqlalchemy import select, Table, MetaData
+from sqlalchemy.exc import NoSuchTableError
 
 import json
 import os
@@ -152,53 +153,61 @@ def getFilesInDirToRemoveAsDict(sw_path):
 	return files
 
 
+'''
+	Orphaned client data, rows for clients that no longer exist in mp_clients
+'''
+ORPHAN_TABLES = ('mpi_SPExtensions', 'av_info')
+
+def orphanTable(name):
+	# Inventory (mpi_) tables are created by the API, they have no model. Returns None if the table does not exist.
+	try:
+		return Table(name, MetaData(), autoload_with=db.engine)
+	except NoSuchTableError:
+		return None
+
+def orphanedClientIDs(table):
+	clients = MpClient.__table__
+	query = select(table.c.cuuid).distinct() \
+		.select_from(table.outerjoin(clients, clients.c.cuuid == table.c.cuuid)) \
+		.where(clients.c.cuuid.is_(None))
+	return sorted(r[0] for r in db.session.execute(query))
+
+def orphans():
+	# Returns {table name: [cuuid, ...]} for each orphan table that exists
+	result = {}
+	for name in ORPHAN_TABLES:
+		table = orphanTable(name)
+		if table is not None:
+			result[name] = orphanedClientIDs(table)
+	return result
+
 @maint.route('/mpi/extensions')
 @login_required
 def extensions():
-	result = []
-	_clients = []
-	_ext_clients = []
-	clients = MpClient.query.all()
-	for x in clients:
-		_clients.append(x.cuuid)
+	if not adminRole():
+		return render_template('error.html', error=403, message='You do not have permission to view this page.'), 403
 
-	sql = text("SELECT Distinct cuuid from mpi_SPExtensions")
-	with db.engine.connect() as conn:
-		_sql_result = conn.execute(sql)
+	data = orphans()
+	return render_template('maint/maint.html', data=data, count=sum(len(v) for v in data.values()))
 
-	for r in _sql_result:
-		_row = dict(r)
-		_ext_clients.append(_row['cuuid'])
-
-	result = set(_ext_clients).difference(_clients)
-
-	return render_template('maint/maint.html', data=result, count=len(result))
-
-@maint.route('/mpi/extensions/purge')
+@maint.route('/mpi/extensions/purge', methods=['POST'])
 @login_required
 def extensions_p():
-	result = []
-	_clients = []
-	_ext_clients = []
-	clients = MpClient.query.all()
-	for x in clients:
-		_clients.append(x.cuuid)
+	if not adminRole():
+		log_Error("{} does not have permission to purge orphaned client data.".format(session.get('user')))
+		return render_template('error.html', error=403, message='You do not have permission to purge orphaned client data.'), 403
 
-	sql = text("SELECT Distinct cuuid from av_info")
-	with db.engine.connect() as conn:
-		_sql_result = conn.execute(sql)
+	data = {}
+	for name in ORPHAN_TABLES:
+		table = orphanTable(name)
+		if table is None:
+			continue
 
-	for r in _sql_result:
-		_row = dict(r)
-		_ext_clients.append(_row['cuuid'])
+		ids = orphanedClientIDs(table)
+		if ids:
+			db.session.execute(table.delete().where(table.c.cuuid.in_(ids)))
+			log_Info("{} purged orphaned rows for {} client(s) from {}".format(session.get('user'), len(ids), name))
+		data[name] = ids
 
-	result = set(_ext_clients).difference(_clients)
-	x = 0
-	for c in result:
-		x = x + 1
-		sql = text("Delete from av_info Where cuuid = '" + c +"'")
-		with db.engine.connect() as conn:
-			_sql_result = conn.execute(sql)
-
-
-	return render_template('maint/maint.html', data=result, count=len(result))
+	db.session.commit()
+	return render_template('maint/maint.html', data=data, count=sum(len(v) for v in data.values()), purged=True)

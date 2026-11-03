@@ -15,6 +15,7 @@ from flask_caching import Cache
 from flask_cors import CORS
 from flask_wtf.csrf import CSRFProtect, CSRFError
 from pymysql import OperationalError as PyOperationalError
+from sqlalchemy import func
 from datetime import timedelta, datetime
 from dateutil.parser import parse as dateParse
 
@@ -123,7 +124,8 @@ def create_app(config_object=Config):
 		if app.config['ENABLE_INTUNE']:
 			enableIntune = 1
 
-		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount(), intune=enableIntune)
+		patchGroupCount, clientCount = baseCounts()
+		return dict(patchGroupCount=patchGroupCount, clientCount=clientCount, intune=enableIntune)
 
 	read_siteconfig_server_data(app)
 
@@ -166,6 +168,7 @@ def initialize_extensions(app):
 	login_manager.init_app(app)
 	migrate.init_app(app, db)
 	csrf.init_app(app)
+	cache.init_app(app)
 
 def register_blueprints(app):
 	from .errors import errors as errors_blueprint
@@ -271,33 +274,24 @@ Global
 ----------------------------------------------------------------
 '''
 def read_siteconfig_server_data(app):
-
-	data = {}
-	if os.path.exists(app.config['SITECONFIG_FILE'].strip()):
-		try:
-			with open(app.config['SITECONFIG_FILE'].strip()) as data_file:
-				data = json.load(data_file)
-
-		except OSError:
-			print('Well darn.')
-			return
-
-	else:
-		print("Error, could not open file " + app.config['SITECONFIG_FILE'].strip())
+	# siteconfig.json is read once at startup, mputil.return_data_for_root_key reads
+	# from MP_SETTINGS. Restart the console after changing siteconfig.json.
+	app.config['MP_SETTINGS'] = {}
+	_file = app.config['SITECONFIG_FILE'].strip()
+	try:
+		with open(_file) as data_file:
+			data = json.load(data_file)
+	except (OSError, ValueError) as e:
+		app.logger.error(f"Unable to read site config file {_file}: {e}")
 		return
 
-	if "settings" in data:
-		app.config['MP_SETTINGS'] = data['settings']
-		return
+	app.config['MP_SETTINGS'] = data.get('settings', {})
 
-def patchGroupCount():
-	from .model import MpPatchGroup
-	qGet = MpPatchGroup.query.all()
-	count = len(qGet)
-	return count
-
-def clientCount():
-	from .model import MpClient
-	qGet = MpClient.query.with_entities(MpClient.cuuid).all()
-	count = len(qGet)
-	return count
+@cache.cached(timeout=60, key_prefix='mp_base_counts')
+def baseCounts():
+	# Patch group & client counts shown on every page, cached so each page render
+	# does not query the database
+	from .model import MpPatchGroup, MpClient
+	patchGroups = db.session.query(func.count()).select_from(MpPatchGroup).scalar()
+	clients = db.session.query(func.count()).select_from(MpClient).scalar()
+	return patchGroups, clients

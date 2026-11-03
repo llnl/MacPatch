@@ -122,6 +122,10 @@ class Config(object):
 	SECRET_KEYS                 = get_secret_keys()  # For graceful key rotation (primary + old keys)
 	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=10)
 
+	# Flask-Caching, in-memory per gunicorn worker. Used for the page header counts.
+	CACHE_TYPE					= 'SimpleCache'
+	CACHE_DEFAULT_TIMEOUT		= 60
+
 	# CSRF (Flask-WTF), token is stored in the session and is valid for the life
 	# of the session, the session timeout already limits how long it can be used
 	WTF_CSRF_TIME_LIMIT			= None
