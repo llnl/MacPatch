@@ -26,8 +26,6 @@
 #import "Logger.h"
 #import "MPDataMgr.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPDataMgr
 
 @implementation MPDataMgr
 

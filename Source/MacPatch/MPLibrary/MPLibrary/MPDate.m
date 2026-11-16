@@ -25,8 +25,6 @@
 
 #import "MPDate.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPDate
 
 @implementation MPDate
 

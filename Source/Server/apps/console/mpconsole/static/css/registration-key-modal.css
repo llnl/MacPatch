@@ -1,0 +1,66 @@
+#modalDialog.registration-key-modal .modal-dialog {
+    width: 680px;
+    max-width: calc(100vw - 32px);
+}
+
+#modalDialog.registration-key-modal .modal-content {
+    max-height: calc(100vh - 32px);
+}
+
+#modalDialog.registration-key-modal .modal-header,
+#modalDialog.registration-key-modal .modal-footer {
+    flex-shrink: 0;
+}
+
+#modalDialog.registration-key-modal .modal-title {
+    font-size: 20px;
+    overflow-wrap: anywhere;
+}
+
+#modalDialog.registration-key-modal .modal-body {
+    height: auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.registration-key-form {
+    width: 100%;
+    margin: 0;
+}
+
+.registration-key-field {
+    display: grid;
+    grid-template-columns: 120px minmax(0, 1fr);
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.registration-key-field:last-of-type {
+    margin-bottom: 0;
+}
+
+.registration-key-field label {
+    margin: 0;
+}
+
+.registration-key-value,
+.registration-key-value .form-control {
+    min-width: 0;
+    width: 100%;
+}
+
+.registration-key-value .input-group > .form-control {
+    width: 1%;
+}
+
+.registration-key-datepicker {
+    font-size: 14px;
+}
+
+@media (max-width: 575.98px) {
+    .registration-key-field {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
+    }
+}

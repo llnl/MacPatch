@@ -1,4 +1,5 @@
 import os
+import secrets
 from dotenv import load_dotenv
 from datetime import timedelta
 from redis import Redis
@@ -8,12 +9,67 @@ consoledir = os.path.dirname(basedir)
 appsdir = os.path.dirname(consoledir)
 
 dotFileGlobal=os.path.join(appsdir, '.mpglobal')
+dotFileGlobalDev=os.path.join(appsdir, '.mpglobal_dev')
 dotFileConsole=os.path.join(appsdir, '.mpconsole')
+dotFileConsoleDev=os.path.join(appsdir, '.mpconsole_dev')
 load_dotenv(dotFileGlobal, override=True)
+load_dotenv(dotFileGlobalDev, override=True)
 load_dotenv(dotFileConsole, override=True)
+load_dotenv(dotFileConsoleDev, override=True)
 
 MP_ROOT_DIR	= os.environ.get('MP_ROOT_DIR') or '/opt/MacPatch'
 MP_SRV_DIR	= MP_ROOT_DIR+'/Server'
+
+def get_secret_key():
+	"""
+	Get SECRET_KEY from environment variable.
+	CRITICAL SECURITY: SECRET_KEY must be set in environment or .mpglobal file.
+	If not set, application will fail to start (no insecure fallback).
+	"""
+	secret_key = os.environ.get('SECRET_KEY')
+	if not secret_key:
+		raise RuntimeError(
+			"CRITICAL SECURITY ERROR: SECRET_KEY environment variable is not set!\n"
+			"Generate a secure key with: python -c 'import secrets; print(secrets.token_hex(32))'\n"
+			"Set it in .mpglobal file or environment variable before starting the application."
+		)
+	if len(secret_key) < 32:
+		raise RuntimeError(
+			"CRITICAL SECURITY ERROR: SECRET_KEY must be at least 32 characters long.\n"
+			f"Current length: {len(secret_key)}. Generate a new key with:\n"
+			"python -c 'import secrets; print(secrets.token_hex(32))'"
+		)
+	return secret_key
+
+def get_secret_keys():
+	"""
+	Get list of SECRET_KEYs for graceful key rotation.
+
+	Returns a list with:
+	- Primary key (used for signing new tokens) - SECRET_KEY
+	- Old keys (accepted for verification only) - SECRET_KEY_OLD, SECRET_KEY_OLD_2, etc.
+
+	This allows graceful key rotation without immediately invalidating all tokens.
+
+	Example rotation workflow:
+	1. Set SECRET_KEY_OLD to current SECRET_KEY
+	2. Set SECRET_KEY to new key
+	3. Restart services
+	4. Wait for old tokens to expire (e.g., 24 hours)
+	5. Remove SECRET_KEY_OLD
+	"""
+	keys = [get_secret_key()]  # Primary key always first
+
+	# Add old keys for validation during transition
+	old_key = os.environ.get('SECRET_KEY_OLD')
+	if old_key and len(old_key) >= 32:
+		keys.append(old_key)
+
+	old_key_2 = os.environ.get('SECRET_KEY_OLD_2')
+	if old_key_2 and len(old_key_2) >= 32:
+		keys.append(old_key_2)
+
+	return keys
 
 def as_bool(value):
 	if value:
@@ -60,21 +116,36 @@ class Config(object):
                                   'pool_pre_ping': True }
 
 	# App Options
-	SECRET_KEY          		= '~t\x86\xc9\x1ew\x8bOcX\x85O\xb6\xa2\x11kL\xd1\xce\x7f\x14<y\x9e'
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=10)
+	# CRITICAL SECURITY: SECRET_KEY must be set via environment variable
+	# The hardcoded key has been removed for security. Set SECRET_KEY in .mpglobal or environment.
+	SECRET_KEY          		= get_secret_key()
+	SECRET_KEYS                 = get_secret_keys()  # For graceful key rotation (primary + old keys)
+
+	# Flask-Caching, in-memory per gunicorn worker. Used for the page header counts.
+	CACHE_TYPE					= 'SimpleCache'
+	CACHE_DEFAULT_TIMEOUT		= 60
+
+	# CSRF (Flask-WTF), token is stored in the session and is valid for the life
+	# of the session, the session timeout already limits how long it can be used
+	WTF_CSRF_TIME_LIMIT			= None
 
 	# Logging
+	# Set False to stop recording console database changes; existing logs remain.
+	CHANGE_LOG_ENABLED  = as_bool(os.environ.get('CHANGE_LOG_ENABLED', 'yes'))
 	LOGGING_FORMAT      = '%(asctime)s [%(name)s][%(levelname).3s] --- %(message)s'
 	LOGGING_LEVEL       = os.environ.get('LOGGING_LEVEL') or 'info'
-	LOGGING_LOCATION    = MP_SRV_DIR+'/apps/logs'
+	LOGGING_LOCATION    = os.environ.get('LOGGING_LOCATION') or MP_SRV_DIR+'/apps/logs'
 	LOG_FILE_NAME		= os.environ.get('LOG_FILE_NAME') or 'mpconsole.log'
 	LOG_FILE 			= LOGGING_LOCATION + '/' + LOG_FILE_NAME
 
-	# Session
-	SESSION_TYPE 				= 'redis' #'filesystem'
-	SESSION_REDIS				= Redis(host='localhost', port=6379)
+	# Session, stored in Redis
+	REDIS_HOST					= os.environ.get('REDIS_HOST') or 'localhost'
+	REDIS_PORT					= int(os.environ.get('REDIS_PORT') or '6379')
+	REDIS_PASSWORD				= os.environ.get('REDIS_PASSWORD') or None
+	SESSION_TYPE 				= 'redis'
+	SESSION_REDIS				= Redis(host=REDIS_HOST, port=REDIS_PORT, password=REDIS_PASSWORD)
 	SESSION_TIMEOUT_MINUTES		= 60
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=60)
+	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=SESSION_TIMEOUT_MINUTES)
 
 	# MacPatch App Options
 	SITECONFIG_FILE     = MP_SRV_DIR+'/etc/siteconfig.json'
@@ -92,11 +163,11 @@ class Config(object):
 	# Authentication
 	LOCAL_AUTH_ALLOWED			= as_bool(os.environ.get('LOCAL_AUTH_ALLOWED') or 'yes')
 
-	# Session
-	SESSION_TYPE 				= 'redis' #'filesystem'
-	SESSION_REDIS				= Redis(host='localhost', port=6379)
-	SESSION_TIMEOUT_MINUTES		= 60
-	PERMANENT_SESSION_LIFETIME	= timedelta(minutes=60)
+	# Welcome page warning; quoted .mpconsole values can span multiple lines.
+	AUTH_BANNER_TITLE = os.environ.get('AUTH_BANNER_TITLE', 'UNAUTHORIZED ACCESS PROHIBITED')
+	AUTH_BANNER_TEXT = os.environ.get('AUTH_BANNER_TEXT', (
+		'This system is restricted to authorized users only. Activity is monitored and logged. Disconnect immediately if you are not authorized.'
+	))
 
 	SCHEDULER_API_ENABLED 	= as_bool(os.environ.get('SCHEDULER_API_ENABLED') or 'yes')
 	ALLOW_CONTENT_DOWNLOAD 	= as_bool(os.environ.get('ALLOW_CONTENT_DOWNLOAD') or 'no')

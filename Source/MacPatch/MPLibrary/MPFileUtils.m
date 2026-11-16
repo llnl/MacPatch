@@ -73,7 +73,7 @@
 	NSArray *binArgs = [NSArray arrayWithObjects:@"-x", @"-k", aZipFilePath, aTargetPath, nil];
 	NSString *result;
 	result = [self runTask:binFile binArgs:binArgs error:&aErr];
-	qltrace(@"%@",result);
+	LogDebug(@"%@",result);
 	if (err != NULL) *err = aErr;
 	return 0;
 }

@@ -1,0 +1,17 @@
+#modalDialog.client-group-modal .modal-dialog { width: 560px; max-width: calc(100vw - 32px); }
+#modalDialog.client-group-modal.modal-wide .modal-dialog { width: 90%; max-width: calc(100vw - 32px); }
+#modalDialog.client-group-modal .modal-title { font-size: 18px; line-height: 24px; overflow-wrap: anywhere; }
+#modalDialog.client-group-modal .modal-body { height: auto; max-height: calc(100vh - 160px); overflow-y: auto; }
+#modalDialog.client-group-modal .modal-body.client-group-dashboard { height: 75vh; }
+.client-group-modal-form { width: 100%; margin: 0; }
+.client-group-modal-form .form-group { margin-bottom: 16px; }
+.client-group-modal-form .form-control,
+.client-group-modal-form .selectize-control,
+.client-group-modal-form .selectize-input { width: 100%; min-width: 0; max-width: 100%; }
+.client-group-modal-form .selectize-input { font-size: 14px; line-height: 20px; }
+.client-group-modal-form .selectize-input input { font-size: inherit; }
+.client-group-modal-form .selectize-input .item { white-space: normal; overflow-wrap: anywhere; }
+.client-group-modal-actions { display: flex; justify-content: space-between; gap: 16px; padding-top: 8px; }
+.client-group-picker-dropdown { z-index: 1060; height: auto; background: #fff; font-size: 14px; line-height: 20px; }
+.client-group-picker-dropdown .selectize-dropdown-content { max-height: 200px; overflow-y: auto; overflow-x: hidden; }
+.client-group-picker-dropdown .option { white-space: normal; overflow-wrap: anywhere; }

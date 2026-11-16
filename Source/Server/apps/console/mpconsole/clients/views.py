@@ -1,5 +1,6 @@
-from flask import render_template, session, request, current_app, redirect, url_for
+from flask import render_template, session, request, current_app, redirect, url_for, jsonify
 from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 from datetime import datetime
 import json
 import uuid
@@ -14,6 +15,7 @@ from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso, daysFromDate
 
 
 '''
@@ -32,7 +34,7 @@ def clientsList():
 					{'name':'client_version','label':'Client Ver'}, {'name':'hasPausedPatching','label':'Paused Patching'}, 
      				{'name':'mdate','label':'Mod Date'}]
 
-	return render_template('clients.html', cData=[], columns=[], colNames=cListColNames)
+	return render_template('clients/clients.html', cData=[], columns=[], colNames=cListColNames)
 
 # JSON Routes
 # This method is called by clients.html for a list of clients
@@ -70,7 +72,7 @@ def clientsListJSON():
 		_dict['addn'] = c.mpa_distinguishedName
 		_results.append(_dict)
 
-	return json.dumps(_results, default=json_serial), 200
+	return json.dumps(_results, default=json_serial_iso), 200
 
 # Helper method to find a group in a list
 def searchForGroup(group, list):
@@ -92,7 +94,7 @@ def clientsInfo(client_id):
 	qGet = MpClient.query.filter(MpClient.cuuid == client_id).first()
 	rCols = [('patch', 'Patch'),('description', 'Description'),('restart', 'Reboot'),('mdate',' Days Needed')]
 
-	return render_template('client_dashboard.html', cData=qGet, columns={'rPatchCols': rCols}, client_id=client_id, invTypes=inventoryTypes())
+	return render_template('clients/client_dashboard.html', cData=qGet, columns={'rPatchCols': rCols}, client_id=client_id, invTypes=inventoryTypes())
 
 # JSON Routes
 @clients.route('/dashboard/required/<client_id>')
@@ -109,16 +111,16 @@ def clientRequiredPatches(client_id):
 	for p in qApple:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
+			y = c
 			if c == 'mdate':
-				row[c] = daysFromDate(now, eval(y))
+				row[c] = daysFromDate(now, getattr(p, y))
 			elif c == 'restart':
-				if eval(y)[0] == 'Y':
+				if getattr(p, y)[0] == 'Y':
 					row[c] = 'Yes'
 				else:
 					row[c] = 'No'
 			else:
-				row[c] = eval(y)
+				row[c] = getattr(p, y)
 
 		row['type'] = 'Apple'
 		_results.append(row)
@@ -126,16 +128,16 @@ def clientRequiredPatches(client_id):
 	for p in qThird:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
+			y = c
 			if c == 'mdate':
-				row[c] = daysFromDate(now, eval(y))
+				row[c] = daysFromDate(now, getattr(p, y))
 			elif c == 'restart':
-				if eval(y)[0] == 'Y':
+				if getattr(p, y)[0] == 'Y':
 					row[c] = 'Yes'
 				else:
 					row[c] = 'No'
 			else:
-				row[c] = eval(y)
+				row[c] = getattr(p, y)
 
 		row['type'] = 'Third'
 		_results.append(row)
@@ -162,8 +164,8 @@ def clientInstalledPatches(client_id):
 	for p in query:
 		row = {}
 		for c, t in columns:
-			y = "p."+c
-			row[c] = eval(y)
+			y = c
+			row[c] = getattr(p, y)
 		_results.append(row)
 
 	_columns = []
@@ -174,7 +176,7 @@ def clientInstalledPatches(client_id):
 		row['sortable'] = 'true'
 		_columns.append(row)
 
-	return json.dumps({'data':_results, 'columns': _columns}, default=json_serial), 200
+	return json.dumps({'data':_results, 'columns': _columns}, default=json_serial_iso), 200
 
 # JSON Routes
 @clients.route('/dashboard/inventory/<client_id>/<inv_id>')
@@ -219,10 +221,6 @@ def clientInventoryReport(client_id, inv_id):
 	return json.dumps({'data':_results, 'columns':_columns}), 200
 
 
-def daysFromDate(now, date):
-	x = now - date
-	return x.days
-
 '''
 ********************************
 	Groups
@@ -261,7 +259,7 @@ def clientGroups():
 	_rights = list(accessToGroups())
 
 	# Return Data
-	return render_template('client_groups.html', data=_data, columns=cols, counts=_results, rights=_rights)
+	return render_template('clients/client_groups.html', data=_data, columns=cols, counts=_results, rights=_rights)
 
 @clients.route('/group/add')
 @login_required
@@ -276,30 +274,32 @@ def clientGroupAdd():
 	setattr(clientGroup, 'group_owner', _owner)
 
 	log("{} adding new group {}.".format(_owner, _group_id))
-	return render_template('update_client_group.html', data=clientGroup, type="add")
+	return render_template('clients/update_client_group.html', data=clientGroup, type="add")
 
 @clients.route('/group/modify/<group_id>')
 @login_required
 def clientGroupModify(group_id):
 	''' Returns an empty set of data to add a new record '''
-	if not isOwnerOfGroup(group_id):
+	from mpconsole.modes import groupAdminRights
+	if not groupAdminRights(group_id):
 		return '', 400
 
 	clientGroup = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).first()
 	if clientGroup is None:
 		return '', 400
 
-	return render_template('update_client_group.html', data=clientGroup)
+	return render_template('clients/update_client_group.html', data=clientGroup)
 
 @clients.route('/group/<id>/user/add',methods=['GET'])
 @login_required
 def clientGroupUserAdd(id):
-	return render_template('client_group_user_mod.html', data={'group_id':id}, type="add")
+	return render_template('clients/client_group_user_mod.html', data={'group_id':id}, type="add")
 
 @clients.route('/group/<id>/<user_id>/remove')
+@login_required
 def clientGroupUserRemove(id, user_id):
 	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	if usr.user_id == user_id or isOwnerOfGroup(id):
+	if usr.user_id == user_id or isClientGroupOwner(id):
 		uadm = MpClientGroupAdmins().query.filter(MpClientGroupAdmins.group_id == id, MpClientGroupAdmins.group_admin == user_id).first()
 		if uadm:
 			db.session.delete(uadm)
@@ -330,10 +330,11 @@ def clientGroupUserModify():
 
 		db.session.commit()
 
-	except:
-		log_Error("Error {}".format(sys.exc_info()[0]))
+	except SQLAlchemyError:
+		db.session.rollback()
+		log_Exception("Unable to save client group admin {} for group {}".format(uid, id))
 
-	return clientGroup(id,5)
+	return redirect(url_for('.clientGroup', name=id, tab=7))
 
 @clients.route('/group/update/<group_id>',methods=['POST'])
 @login_required
@@ -371,14 +372,14 @@ def clientGroup(name,tab=1):
 
 	if request.method == 'DELETE':
 		if q_defaultGroup:
-			return json.dumps({{'errormsg':'Can not delete default group.'}}), 403
+			return json.dumps({'errormsg':'Can not delete default group.'}), 403
 
 		qMembers = MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).all()
 		if qMembers is not None and len(qMembers) >= 1:
 			return json.dumps({'errormsg':'Group still contains agents. Can not delete group while agents are assigned.'}), 401
 		else:
-			usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-			if usr is not None or isOwnerOfGroup(name):
+			# Only the group owner or a console admin may delete a group
+			if isClientGroupOwner(name) or adminRole():
 				MpClientGroupMembers.query.filter(MpClientGroupMembers.group_id == name).delete()
 				MpClientTasks.query.filter(MpClientTasks.group_id == name).delete()
 				MpClientSettings.query.filter(MpClientSettings.group_id == name).delete()
@@ -392,12 +393,15 @@ def clientGroup(name,tab=1):
 				log("{} could not delete client group {}. Does not have permission.".format(session['user'], name))
 				return json.dumps({}), 403
 	else:
-		canEditGroup = False
-		if not isOwnerOfGroup(name) and not isAdminForGroup(name):
-			if q_defaultGroup:
-				canEditGroup = True
-			else:
-				return clientGroups()
+		from mpconsole.modes import groupAdminRights
+		# Check if user has rights to edit this group
+		# If they have rights, readOnly = False (can edit)
+		# If they don't have rights, readOnly = True (read-only)
+		canEditGroup = not groupAdminRights(name)
+
+		# If user doesn't have rights and it's not the default group, redirect
+		if canEditGroup and not q_defaultGroup:
+			return clientGroups()
 
 		groupResult = {}
 
@@ -439,7 +443,7 @@ def clientGroup(name,tab=1):
 		groupResult['Patches'] = {'groups': patchGroups()}  # Used to populate UI for setting
 		groupResult['Users'] = {'users': _admins, 'columns': [('user_id','User ID'),('owner','Owner')]}
 		groupResult['Admin'] = isAdminForGroup(name)
-		groupResult['Owner'] = isOwnerOfGroup(name)
+		groupResult['Owner'] = isClientGroupOwner(name)
 
 		# Group Settings
 		_settings = getGroupSettings(name)
@@ -450,7 +454,7 @@ def clientGroup(name,tab=1):
 		swResCols = [('appID', 'App ID', '0'), ('displayName', 'Display Name', '1'), ('processName', 'Process Name', '1'), ('enabled', 'Enabled', '1')]
 		provCols = [('id', 'ID', '0'), ('name', 'Name Identifier', '1')]
 
-		return render_template('client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
+		return render_template('clients/client_group.html', data=[], columns=_sortedCols, group_name=_qcg.group_name, group_id=name,
 							tasksCols=_qTasksCols, gResults=groupResult, selectedTab=tab,
 							profileCols=profileCols, swCols=swCols, swResCols=swResCols, swData=[], provCols=provCols, provData=[],
 							readOnly=canEditGroup, settings=_settings)
@@ -462,6 +466,7 @@ def clientGroup(name,tab=1):
 '''
 
 @clients.route('/group/<group_id>/clients')
+@login_required
 def clientGroupClients(group_id):
 	# Get All Client IDs in with in our group
 	_qcg = MpClientGroups.query.filter(MpClientGroups.group_id == group_id).with_entities(MpClientGroups.group_name).first()
@@ -505,25 +510,36 @@ def clientGroupClients(group_id):
 
 # Remove/Delete Client
 @clients.route('/group/<id>/remove/clients',methods=['POST'])
+@login_required
 def clientGroupClientsRemove(id):
 
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	if usr is not None or isOwnerOfGroup(id):
-		for x in request.form['clients'].split(","):
-			client = MpClient.query.filter(MpClient.cuuid == x).first()
-			clientGroupMember = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == x, MpClientGroupMembers.group_id == id).first()
-			if clientGroupMember:
-				log("{} delete client group member {} from group {}".format(session.get('user'), x, id))
-				db.session.delete(clientGroupMember)
-				db.session.commit()
+	if not groupAdminRights(id):
+		log_Error("{} does not have permission to remove clients from group {}.".format(session.get('user'), id))
+		return json.dumps({'error': 403, 'errormsg': 'You do not have permission to remove clients from this group.'}), 403
 
-			if client:
-				log("{} delete client {} from group {}".format(session.get('user'), x, id))
-				db.session.delete(client)
-				db.session.commit()
+	notFound = []
+	for x in request.form.get('clients', '').split(","):
+		if not x:
+			continue
 
-			else:
-				return json.dumps({'error': 404, 'errormsg': 'User could not be removed.'}), 404
+		# Only remove clients that are members of this group
+		clientGroupMember = MpClientGroupMembers.query.filter(MpClientGroupMembers.cuuid == x, MpClientGroupMembers.group_id == id).first()
+		if clientGroupMember is None:
+			notFound.append(x)
+			continue
+
+		log("{} delete client group member {} from group {}".format(session.get('user'), x, id))
+		db.session.delete(clientGroupMember)
+
+		client = MpClient.query.filter(MpClient.cuuid == x).first()
+		if client:
+			log("{} delete client {} from group {}".format(session.get('user'), x, id))
+			db.session.delete(client)
+
+	db.session.commit()
+
+	if notFound:
+		return json.dumps({'error': 404, 'errormsg': 'Client(s) not found in group: {}'.format(', '.join(notFound))}), 404
 
 	return json.dumps({}), 200
 
@@ -549,7 +565,7 @@ def clientMove():
 @login_required
 def showClientMove(id):
 	cGroups = MpClientGroups().query.all()
-	return render_template('move_client_to_group.html', groups=cGroups, curGroup=0, cuuid=0)
+	return render_template('clients/move_client_to_group.html', groups=cGroups, curGroup=0, cuuid=0)
 
 '''
 ********************************
@@ -580,9 +596,7 @@ def groupSettings(id):
 		for row in mpc:
 			log_Debug("Current Group Settings[{}]: {} = {}".format(id, row.key, row.value))
 
-		sql = "DELETE FROM mp_client_settings WHERE group_id='" + id + "'"
-		with db.engine.connect() as conn:
-			conn.execute(text(sql))
+		MpClientSettings.query.filter(MpClientSettings.group_id == id).delete()
 
 	for f in _form:
 		log_Debug("Updated Group Settings[{}]: {} = {}".format(id, f, str(_form[f])))
@@ -747,32 +761,38 @@ def revGroupTasks(group_id):
 @clients.route('/group/<id>/task/active',methods=['POST'])
 @login_required
 def taskState(id):
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
-		key = request.form.get('pk')
-		value = request.form.get('value')
-		log("{} set task {} active state to {} ".format(session.get('user'), key, value))
-		task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == key).first()
-		if task is not None:
-			setattr(task, 'active', value)
-			db.session.commit()
-			revGroupTasks(id)
-
-	return clientGroup(id)
+	if not groupAdminRights(id):
+		return 'You do not have permission to edit tasks in this group.', 403
+	key = request.form.get('pk')
+	value = request.form.get('value')
+	if not key or value not in ('0', '1'):
+		return 'A task command and an active value of 0 or 1 are required.', 400
+	task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == key).first()
+	if task is None:
+		return 'The task was not found in this group. Refresh the table and try again.', 404
+	task.active = value
+	db.session.commit()
+	revGroupTasks(id)
+	log("{} set task {} active state to {} ".format(session.get('user'), key, value))
+	return jsonify(success=True)
 
 @clients.route('/group/<id>/task/interval',methods=['POST'])
 @login_required
 def taskInterval(id):
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
-		cmd = request.form.get('pk')
-		interval = request.form.get('value')
-		log("{} set task {} active state to {} ".format(session.get('user'), cmd, interval))
-		task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == cmd).first()
-		if task is not None:
-			setattr(task, 'interval', interval)
-			db.session.commit()
-			revGroupTasks(id)
-
-	return clientGroup(id)
+	if not groupAdminRights(id):
+		return 'You do not have permission to edit tasks in this group.', 403
+	cmd = request.form.get('pk')
+	interval = request.form.get('value')
+	if not cmd or interval is None or not interval.strip():
+		return 'A task command and interval are required.', 400
+	task = MpClientTasks.query.filter(MpClientTasks.group_id == id, MpClientTasks.cmd == cmd).first()
+	if task is None:
+		return 'The task was not found in this group. Refresh the table and try again.', 404
+	task.interval = interval
+	db.session.commit()
+	revGroupTasks(id)
+	log("{} set task {} interval to {} ".format(session.get('user'), cmd, interval))
+	return jsonify(success=True)
 
 '''
 ********************************
@@ -785,38 +805,56 @@ def groupSoftware(group_id):
 	sw = MpSoftwareTask.query.all()
 	swIDs = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == group_id).all()
 
+	log_Info('[groupSoftware] Found %d software tasks and %d group associations for group %s' % (len(sw), len(swIDs), group_id))
+
 	_results = []
 	if swIDs is not None and len(swIDs) >= 1:
 		for sid in swIDs:
+			log_Debug('[groupSoftware] Looking for tuuid=%s in MpSoftwareTask' % sid.tuuid)
+			found = False
 			for s in sw:
 				if sid.tuuid == s.tuuid:
 					_row = s.__dict__.copy()
 					del _row['_sa_instance_state']
 					_row['rid'] = sid.rid
 					_results.append(_row)
+					found = True
 					break
+			if not found:
+				log_Error('[groupSoftware] Software tuuid=%s exists in MpClientGroupSoftware but NOT found in MpSoftwareTask' % sid.tuuid)
 
-	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
+	log_Info('[groupSoftware] Returning %d results' % len(_results))
+	return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial_iso), 200
 
 @clients.route('/group/<id>/sw/add',methods=['GET','POST'])
 @login_required
 def clientGroupSWAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareTask.query.filter(MpSoftwareTask.active == 1).all()
-		return render_template('client_group_sw_add.html', data={'group_id':id}, swData=sw, type="add")
+		return render_template('clients/client_group_sw_add.html', data={'group_id':id}, swData=sw, type="add")
 
 	elif request.method == 'POST':
 		_form = request.form
 		_groupID = request.form.get('group_id')
 		_tuuid = request.form.get('tuuid')
 
+		log_Info('[clientGroupSWAdd] Adding software tuuid=%s to group_id=%s by user %s' % (_tuuid, _groupID, session.get('user')))
+
 		hasSW = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.group_id == _groupID, MpClientGroupSoftware.tuuid == _tuuid).first()
 		if hasSW is None:
+			log_Info('[clientGroupSWAdd] Software not found in group, adding new record')
 			clientSW = MpClientGroupSoftware()
 			setattr(clientSW , 'group_id', _groupID)
 			setattr(clientSW , 'tuuid', _tuuid)
 			db.session.add(clientSW)
-			db.session.commit()
+			try:
+				db.session.commit()
+				log_Info('[clientGroupSWAdd] Successfully added software to group')
+			except Exception as e:
+				log_Error('[clientGroupSWAdd] Failed to commit: %s' % str(e))
+				db.session.rollback()
+		else:
+			log_Info('[clientGroupSWAdd] Software already exists in group, skipping')
 
 		return redirect(url_for('.clientGroup',name=id,tab=5))
 		# return clientGroup(id, 5)
@@ -841,8 +879,7 @@ def clientGroupSWDel(id):
 def clientGroupSWResAdd(id):
 	if request.method == 'GET':
 		sw = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.enabled == 1, MpSoftwareRestrictions.isglobal == 0).all()
-		print(sw)
-		return render_template('client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
+		return render_template('clients/client_group_sw_res_add.html', data={'group_id':id}, swResData=sw, type="add")
 
 	elif request.method == 'POST':
 		_form = request.form
@@ -866,7 +903,7 @@ def clientGroupSWResAdd(id):
 @login_required
 def clientGroupSWResEnable(id):
 
-	if isOwnerOfGroup(id) or isAdminForGroup(id):
+	if isClientGroupOwner(id) or isAdminForGroup(id):
 		_form = request.form
 		key = _form.get('pk')
 		value = _form.get('value')
@@ -888,6 +925,12 @@ def revGroupSWRes(group_id):
 		setattr(grp_conf, "restrictions_version", rev_swres)
 		db.session.commit()
 
+def revAllGroupsSWRes():
+	"""Bump the restrictions version for every client group (used when a global restriction changes)."""
+	MPGroupConfig.query.update({MPGroupConfig.restrictions_version: MPGroupConfig.restrictions_version + 1},
+							   synchronize_session=False)
+	db.session.commit()
+
 @clients.route('/group/<id>/sw/res/remove',methods=['DELETE'])
 @login_required
 def clientGroupSWResDel(id):
@@ -896,7 +939,7 @@ def clientGroupSWResDel(id):
 	_sw_ids = request.form.get('rids').split(",")
 	if _sw_ids is not None and len(_sw_ids) > 0:
 		for i in _sw_ids:
-			print("Delete rid {}".format(i))
+			log_Debug("Delete rid {}".format(i))
 			MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == _group_id,
 											   MpClientGroupSoftwareRestrictions.appID == i).delete()
 			db.session.commit()
@@ -910,25 +953,6 @@ def clientGroupSWResDel(id):
 '''
 def getDoc(col_obj):
 	return col_obj.doc
-
-def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-	usrInf = accountInfo() # Check if console admin account
-
-	if usr:
-		if usrInf:
-			# User_type 0 is the main console admin, has access to everything
-			if usrInf.user_type == 0:
-				return True
-
-		pgroup = MpClientGroups.query.filter(MpClientGroups.group_id == id).first()
-		if pgroup:
-			if pgroup.group_owner == usr.user_id:
-				return True
-			else:
-				return False
-
-	return False
 
 def isAdminForGroup(id):
 	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
@@ -1040,11 +1064,3 @@ def defaultTasks():
 			_jData = json.load(data_file)
 
 	return _jData
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

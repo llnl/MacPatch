@@ -79,27 +79,25 @@ def construct_blueprint(auth_config: dict, application_root_uri: str = None) -> 
 			return render_template("auth_error.html", result=request.args, application_root_uri=app_root_uri)
 		
 		redirect_uri = url_for('.signin_oidc', _external=True, _scheme=auth_config['HTTPS_SCHEME'])
-		code = request.args['code']        
+		code = request.args.get('code')
+		if not code:
+			log_Info(f"[signin_oidc] No authorization code in request")
+			session.clear()
+			flash("Azure login did not complete, please re-login.")
+			return redirect(url_for('main.index'))
 
-		if request.args.get('code'):
-			cache = _load_cache()
-			result = _build_msal_app(auth_config=auth_config, cache=cache).acquire_token_by_authorization_code(
-									 request.args['code'], scopes=["User.Read"], redirect_uri=redirect_uri)
+		cache = _load_cache()
+		result = _build_msal_app(auth_config=auth_config, cache=cache).acquire_token_by_authorization_code(
+								 code, scopes=["User.Read"], redirect_uri=redirect_uri)
 
-			if "error" in result:
-				log_Error(f"[signin_oidc] result = {result}")
-				return render_template("auth_error.html", result=result, application_root_uri=app_root_uri)
-			
-			user = result.get("id_token_claims")
-			
-			# Not using AAD Roles, using roles defined from db
-			#if not _has_read_access(user):
-			#    result = {"error": "Authentication Failed", "error_description": "User does not have at least read access to this application."}
-			#    return render_template("auth_error.html", result=result, application_root_uri=app_root_uri)
-			
-			session["oid_user"] = user
-			_save_cache(cache)
-			
+		if "error" in result:
+			log_Error(f"[signin_oidc] result = {result}")
+			return render_template("auth_error.html", result=result, application_root_uri=app_root_uri)
+
+		# Not using AAD Roles, using roles defined from db
+		session["oid_user"] = result.get("id_token_claims")
+		_save_cache(cache)
+
 		# Setup User from DB
 		oun = session["oid_user"]["preferred_username"].split("@")
 		mp_user = AdmUsers.query.filter(AdmUsers.user_id == oun[0] ).first()
@@ -119,7 +117,6 @@ def construct_blueprint(auth_config: dict, application_root_uri: str = None) -> 
 
 		recordLoginAndAssignIfNeeded(oun[0], 2)
 		setLoginSessionInfo(mp_user.user_id)
-		print(f"app_root_uri = {app_root_uri}")
 		# Redirect to home page, authentication was successful
 		current_app.logger.info(f"User authentication successful for {session['oid_user'].get('name', 'unknown')}")
 		return redirect(app_root_uri)
@@ -135,7 +132,7 @@ def construct_blueprint(auth_config: dict, application_root_uri: str = None) -> 
 	@bp.route("/logout-complete")
 	def logout_complete():
 		current_app.logger.info(f'Logout complete')
-		app_root_uri = application_root_uri or url_for('index')
+		app_root_uri = application_root_uri or url_for('main.index')
 		return render_template("logout.html", application_root_uri=app_root_uri)
 
 	return bp

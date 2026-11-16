@@ -26,8 +26,6 @@
 #import "Logger.h"
 #import "MPScript.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPScript
 
 @implementation MPScript
 

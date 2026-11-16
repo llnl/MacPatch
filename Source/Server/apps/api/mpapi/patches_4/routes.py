@@ -348,6 +348,69 @@ class PatchGroupPatchesDyn(MPResource):
 		return _results
 
 
+# Get Patch Scan List
+class PatchScanList(MPResource):
+
+	def __init__(self):
+		self.reqparse = reqparse.RequestParser()
+		super(PatchScanList, self).__init__()
+
+	def get(self, client_id, severity='all'):
+
+		wsResult = WSResult()
+		wsData = WSData()
+		wsData.data = {}
+		wsData.type = 'PatchGroupPatches'
+		wsResult.result = wsData
+
+		try:
+			if not isValidClientID(client_id):
+				log_Error('[PatchScanList][Get]: Failed to verify ClientID (%s)' % (client_id))
+				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify ClientID'), 424
+
+			if not isValidSignature(self.req_signature, client_id, self.req_uri, self.req_ts):
+				log_Error('[PatchScanList][Get]: Failed to verify Signature for client (%s)' % (client_id))
+				return wsResult.resultNoSignature(errorno=424,errormsg='Failed to verify Signature'), 424
+
+			log_Debug('[PatchScanList][Get]: Args: ccuid=(%s) severity=(%s)' % (client_id, severity))
+
+			# Optimize: Get patch_state with a single optimized query
+			patch_state = self.getPatchStateForClient(client_id)
+
+			_scanList = PatchScanV3(patch_state)
+			_list = _scanList.getScanList('*', severity)
+
+			if _list is not None:
+				result = {'data': _list}
+				return {"result": result, "errorno": 0, "errormsg": 'none'}, 200
+			else:
+				log_Error('[PatchScanList][Get]: Failed to get a scan list for client %s' % (client_id))
+				return {"result": {}, "errorno": 0, "errormsg": 'none'}, 404
+
+		except Exception as e:
+			exc_type, exc_obj, exc_tb = sys.exc_info()
+			message=str(e.args[0]).encode("utf-8")
+			log_Error('[PatchScanList][Get][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, client_id, message))
+			return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
+
+	@cache.cached(timeout=300, key_prefix='patch_state_for_client')
+	def getPatchStateForClient(self, client_id):
+		"""Optimized: Get patch_state with a single query using joins"""
+		# Single query with joins instead of 3 separate queries
+		result = db.session.query(MpClientSettings.value).join(
+			MpClientGroupMembers,
+			MpClientSettings.group_id == MpClientGroupMembers.group_id
+		).filter(
+			MpClientGroupMembers.cuuid == client_id,
+			MpClientSettings.key == 'patch_state'
+		).first()
+
+		if result:
+			return result[0]
+
+		# Default to 'All' if no patch_state is configured
+		return 'All'
+
 # --------------------------------------------------------------------
 # MP Agent 3.4
 # Add S3 Support
@@ -356,4 +419,10 @@ patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/group/<string:cli
 patches_4_api.add_resource(PatchGroupPatches,			'/client/patch/<string:all>/<string:client_id>', endpoint='patchAll')
 
 patches_4_api.add_resource(PatchGroupPatchesDyn,		'/client/patch/groupdata/<string:client_id>')
+
+# --------------------------------------------------------------------
+# MP Agent 4.4
+
+patches_4_api.add_resource(PatchScanList, 			'/client/patch/scan/list/all/<string:client_id>', endpoint='sevAll')
+patches_4_api.add_resource(PatchScanList, 			'/client/patch/scan/list/<string:severity>/<string:client_id>', endpoint='sevCustom')
 

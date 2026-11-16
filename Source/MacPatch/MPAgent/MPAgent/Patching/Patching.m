@@ -365,7 +365,7 @@
         for (NSDictionary *patch in patches)
         {
             LogInfo(@"Pre staging update %@.",patch[@"patch"]);
-            qltrace(@"PATCH: %@",patch);
+            LogDebug(@"PATCH: %@",patch);
             @try
             {
                 if ([patch[@"type"] isEqualToString:@"Apple"])
@@ -381,7 +381,7 @@
                     NSArray *pkgsFromPatch = patch[@"patches"];
                     for (NSDictionary *_p in pkgsFromPatch)
                     {
-                        qltrace(@"PKGPATCH: %@",_p);
+                        LogDebug(@"PKGPATCH: %@",_p);
                         if ([_p[@"pkg_size"] integerValue] == 0) {
                             LogInfo(@"Skipping %@, due to zero size.",_p[@"patch_name"]);
                             continue;

@@ -27,13 +27,12 @@
 
 #import "Logger.h"
 #import "MPPatching.h"
+#import "Constants.h"
 #import "MPSettings.h"
 #import "MPAsus.h"
 #import "MPASUSCatalogs.h"
 #import "MPPatchScan.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPPatching
 
 typedef enum {
 	kScanRunning = 1,
@@ -1475,7 +1474,7 @@ typedef enum {
 		LogError(@"Error, invalid patch type. Can not post patch install." );
 	}
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/install/%@/%@/%@",patchID,pType,settings.ccuid];
+	NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/client/patch/install/%@/%@/%@",patchID,pType,settings.ccuid];
 	return [self postDataToWebService:urlPath data:nil];
 }
 
@@ -1507,13 +1506,13 @@ typedef enum {
 	switch (type)
 	{
 		case kApplePatches:
-			urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/1/%@",settings.ccuid];
+			urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/client/patch/scan/1/%@",settings.ccuid];
 			break;
 		case kCustomPatches:
-			urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/2/%@",settings.ccuid];
+			urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/client/patch/scan/2/%@",settings.ccuid];
 			break;
 		default:
-			urlPath = [NSString stringWithFormat:@"/api/v1/client/patch/scan/3/%@",settings.ccuid];
+			urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/client/patch/scan/3/%@",settings.ccuid];
 			break;
 	}
 	
@@ -1535,7 +1534,7 @@ typedef enum {
 	va_start(va, str);
 	NSString *string = [[NSString alloc] initWithFormat:str arguments:va];
 	va_end(va);
-	qltrace(@"postStatusToDelegate: %@",string);
+	LogDebug(@"postStatusToDelegate: %@",string);
 	if ([self.delegate respondsToSelector:@selector(patchProgress:)]) {
 		[self.delegate patchProgress:string];
 	}

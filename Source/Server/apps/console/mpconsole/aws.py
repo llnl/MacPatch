@@ -61,7 +61,7 @@ class MPaws:
 			_key = filePath[1:]
 			response = self.s3Client.upload_file(file, current_app.config['AWS_S3_BUCKET'], _key)
 		except ClientError as e:
-			print("Error: {}".format(e))
+			log_Error("[MPaws] Error: {}".format(e))
 			return False
 
 		return True
@@ -72,7 +72,7 @@ class MPaws:
 			response = self.s3Client.put_object(Body=fileObj, Bucket=current_app.config['AWS_S3_BUCKET'], Key=_key, ContentType=contentType)
 
 		except ClientError as e:
-			print("Error: {}".format(e))
+			log_Error("[MPaws] Error: {}".format(e))
 			return False
 
 		return True
@@ -97,7 +97,7 @@ class MPaws:
 			)
 
 		except ClientError as e:
-			print("Error: {}".format(e))
+			log_Error("[MPaws] Error: {}".format(e))
 			return False
 
 		return True

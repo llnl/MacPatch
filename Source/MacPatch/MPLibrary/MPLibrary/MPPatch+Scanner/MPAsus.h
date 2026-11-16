@@ -29,7 +29,6 @@
 
 #import <Cocoa/Cocoa.h>
 #import "MPNSTask.h"
-@class MPNetworkUtils;
 
 @protocol MPAsusDelegate
 

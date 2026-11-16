@@ -4,7 +4,7 @@ from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
 from datetime import datetime
-from distutils.version import LooseVersion
+from packaging import version
 import sys
 import plistlib
 import hashlib
@@ -142,16 +142,14 @@ class MP_ConfigData(MPResource):
 
 	def get(self, token):
 		try:
-			# DEBUG, remove in prod
-			if token != '0':
-				_user = verify_auth_token(token)
-				if not _user or (_user == "BadSignature" or _user == "SignatureExpired"):
-					log_Error('[MP_ConfigData][GET]: Failed to verify token')
-					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
+			_user = verify_auth_token(token)
+			if not _user or (_user == "BadSignature" or _user == "SignatureExpired"):
+				log_Error('[MP_ConfigData][GET]: Failed to verify token')
+				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
-					log_Error('[MP_ConfigData][GET]: Failed to verify user (%s) rights' % (_user))
-					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
+			if not isValidAdminUser(_user):
+				log_Error('[MP_ConfigData][GET]: Failed to verify user (%s) rights' % (_user))
+				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 
 			config = GenAgentConfig().config()
 			if config is None:
@@ -165,7 +163,6 @@ class MP_ConfigData(MPResource):
 				_srv_pub_key = res.pubKey
 				_srv_pub_key_hash = res.pubKeyHash
 
-			#configPlist = plistlib.writePlistToString(config)
 			configPlist = plistlib.dumps(config).decode('utf-8')
 			log_Debug("[MP_ConfigData][GET]: Agent Config Result: %s" % (configPlist))
 			resData = {'plist': configPlist, 'pubKey': _srv_pub_key, 'pubKeyHash': _srv_pub_key_hash}
@@ -186,20 +183,17 @@ class MP_UploadAgentPackage(MPResource):
 
 	def post(self, agent_id, token):
 		try:
-			# DEBUG, remove in prod
-			if token != '0':
-				_user = verify_auth_token(token)
-				if not _user or (_user == "BadSignature" or _user == "SignatureExpired"):
-					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify token')
-					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
+			_user = verify_auth_token(token)
+			if not _user or (_user == "BadSignature" or _user == "SignatureExpired"):
+				log_Error('[MP_UploadAgentPackage][Post]: Failed to verify token')
+				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
-					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify user (%s) rights' % (_user))
-					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
+			if not isValidAdminUser(_user):
+				log_Error('[MP_UploadAgentPackage][Post]: Failed to verify user (%s) rights' % (_user))
+				return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 
 			r = request
 			_files = r.files
-			# _filesName = ['fBase', 'fUpdate', 'fComplete']
 
 			fData = literal_eval(r.form['data'])
 			fBase = r.files['fBase']
@@ -551,7 +545,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
+			if not (version.parse(updateOSVer) <= version.parse(clientData['osver'])):
 				log_Error("[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
 
@@ -565,7 +559,7 @@ class AgentUpdates():
 			else:
 				return None
 
-		elif (LooseVersion(updateDict['version']) < LooseVersion(remoteClientAgentVersion)):
+		elif (version.parse(updateDict['version']) < version.parse(remoteClientAgentVersion)):
 			log_Info("[AgentUpdates][agentUpdates]: Client is running the latest version.")
 			return None
 
@@ -607,7 +601,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
+			if not (version.parse(updateOSVer) <= version.parse(clientData['osver'])):
 				log_Error("[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
 
@@ -621,7 +615,7 @@ class AgentUpdates():
 			else:
 				return None
 
-		elif (LooseVersion(updateDict['version']) < LooseVersion(remoteClientAgentVersion)):
+		elif (version.parse(updateDict['version']) < version.parse(remoteClientAgentVersion)):
 			log_Info("[AgentUpdates][agentUpdates]: Client is running the latest version.")
 			return None
 

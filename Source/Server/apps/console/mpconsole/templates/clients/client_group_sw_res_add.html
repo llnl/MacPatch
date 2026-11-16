@@ -1,0 +1,18 @@
+<form method="post" action="/clients/group/{{data.group_id}}/sw/res/add" id="client-group-restriction-form" class="client-group-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="group_id" value="{{ data.group_id or '' }}">
+    <div class="form-group">
+        <label for="swResIDLst">Software Restriction</label>
+        <select id="swResIDLst" name="appID" class="form-control" required data-group-picker data-placeholder="Select or search for a software restriction">
+            <option value=""></option>
+            {% for item in swResData %}
+            <option value="{{ item.appID }}">{{ item.displayName }}</option>
+            {% endfor %}
+        </select>
+        <small class="form-text text-muted">Select or search for a software restriction.</small>
+    </div>
+    <div class="client-group-modal-actions">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">{{ 'Add' if type == 'add' else 'Update' }}</button>
+    </div>
+</form>

@@ -33,8 +33,6 @@
 
 #import <CoreServices/CoreServices.h>
 
-#undef  ql_component
-#define ql_component lcl_cMain
 
 #define	BUNDLE_ID       @"gov.llnl.MPLoginAgent"
 

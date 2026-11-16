@@ -9,6 +9,7 @@ from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial
 
 '''
 ----------------------------------------------------------------
@@ -38,7 +39,7 @@ def index():
 
 	qGetSettings = MpClientsRegistrationSettings.query.first()
 
-	return render_template('registration.html', data={}, columns={}, group_name='name', group_id='name',
+	return render_template('admin/registration/registration.html', data={}, columns={}, group_name='name', group_id='name',
 						selectedTab=1,
 						settings=qGetSettings,
 						keyCols=_keyCols, regCols=_regClientCols, prkClientCols=_prkClientCols)
@@ -102,9 +103,9 @@ def clients():
 	return json.dumps(_results, default=json_serial), 200
 	#return json.dumps({'data': _results, 'total': len(_results)}, default=json_serial), 200
 
-def searchForGroup(group, list):
-	res = next((item for item in list if item["group_id"] == group))
-	return res['group_name']
+def searchForGroup(group, groups):
+	res = next((item for item in groups if item["group_id"] == group), None)
+	return res['group_name'] if res is not None else 'Unknown Group'
 
 # JSON
 @registration.route('/registered/client/<client_id>',methods=['DELETE'])
@@ -157,7 +158,7 @@ def parked():
 @login_required
 def addKey():
 	if request.method == 'GET':
-		return render_template('registration_key.html', data={})
+		return render_template('admin/registration/registration_key.html', data={})
 	else:
 		data = request.form.to_dict()
 		if data['rid'] == '0':
@@ -182,7 +183,7 @@ def addKey():
 def editKey(rid):
 	if request.method == 'GET':
 		qKey = MpRegKeys.query.filter(MpRegKeys.rid == rid).first()
-		return render_template('registration_key.html', data=qKey)
+		return render_template('admin/registration/registration_key.html', data=qKey)
 
 	elif request.method == 'DELETE':
 		qKey = MpRegKeys.query.filter(MpRegKeys.rid == rid).first()
@@ -208,11 +209,3 @@ def editKey(rid):
 
 		db.session.commit()
 		return json.dumps({}), 200
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")

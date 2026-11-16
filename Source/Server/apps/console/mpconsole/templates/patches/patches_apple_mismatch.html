@@ -9,21 +9,19 @@
 
 {% block pageHeader %}
 
-    <div class="container-fluid">
-        <div class="pull-left">{{pageTitle}}</div>
-        <div class="pull-right">
-            <button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
+    <span class="d-flex align-items-center justify-content-between">
+        <span class="mr-3">{{pageTitle}}</span>
+            <button type="button" class="btn btn-primary flex-shrink-0" aria-label="About mismatched Apple patches" data-container="body" data-toggle="popover"
                     data-placement="left"
                     data-content="Mismatched apple patches are patches that have been discovered by a scan but don’t have a corresponding patch in the MacPatch Apple patches. Sometimes editing the patch name will resolve the issue.">
-              <i class="fa fa-question"></i>
+              <i class="fa fa-question" aria-hidden="true"></i>
             </button>
-        </div>
-    </div>
+    </span>
 {%  endblock %}
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-condensed table-striped" data-toolbar="#toolbar" data-show-export="true">
+	<table id="table" class="table table-bordered table-sm table-striped" data-toolbar="#toolbar" data-show-export="true">
 		<div id="toolbar"></div>
 	</table>
 
@@ -33,7 +31,6 @@
 {% block javascript %}
 	{{ super() }}
 
-    <script src="{{ url_for('static', filename='yarn_components/popper.js/dist/umd/popper.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
     <script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>

@@ -1,140 +1,59 @@
 //
 //  InstalledSoftware.m
-//  FMDBme
-//
-//  Created by Charles Heizer on 10/24/19.
-//  Copyright © 2019 Charles Heizer. All rights reserved.
-//
+//  MPLibrary
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+
+ This file is part of MacPatch, a program for installing and patching
+ software.
+
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "InstalledSoftware.h"
 
-NSString *const kSWItemID = @"id";
-NSString *const kSWItemName = @"name";
-NSString *const kSWItemSUUID = @"suuid";
-NSString *const kSWItemTUUID = @"tuuid";
-NSString *const kSWItemUninstall = @"uninstall";
-NSString *const kSWItemHasUninstall = @"has_uninstall";
-NSString *const kSWItemJsonData = @"json_data";
-NSString *const kSWItemInstallDate = @"install_date";
-
-
-@interface InstalledSoftware ()
-
-- (id)objectOrNilForKey:(id)aKey fromDictionary:(NSDictionary *)dict;
-
-@end
-
 @implementation InstalledSoftware
 
-@synthesize id = _id;
-@synthesize name = _name;
-@synthesize suuid = _suuid;
-@synthesize tuuid = _tuuid;
-@synthesize uninstall = _uninstall;
-@synthesize has_uninstall = _has_uninstall;
-@synthesize json_data = _json_data;
-@synthesize install_date = _install_date;
-
-+ (instancetype)modelObjectWithDictionary:(NSDictionary *)dict
++ (NSString *)tableName
 {
-    return [[self alloc] initWithDictionary:dict];
+	return @"installed_software";
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dict
++ (NSString *)createTableSQL
 {
-    self = [super init];
-    
-    // This check serves to make sure that a non-NSDictionary object
-    // passed into the model class doesn't break the parsing.
-    if(self && [dict isKindOfClass:[NSDictionary class]]) {
-		self.id = [self objectOrNilForKey:kSWItemID fromDictionary:dict];
-		self.name = [self objectOrNilForKey:kSWItemName fromDictionary:dict];
-		self.suuid = [self objectOrNilForKey:kSWItemSUUID fromDictionary:dict];
-		self.tuuid = [self objectOrNilForKey:kSWItemTUUID fromDictionary:dict];
-		self.uninstall = [self objectOrNilForKey:kSWItemUninstall fromDictionary:dict];
-		self.has_uninstall = [[self objectOrNilForKey:kSWItemHasUninstall fromDictionary:dict] integerValue];
-		self.json_data = [self objectOrNilForKey:kSWItemJsonData fromDictionary:dict];
-		self.install_date = [self objectOrNilForKey:kSWItemInstallDate fromDictionary:dict];
-    }
-    
-    return self;
+	return @"CREATE TABLE IF NOT EXISTS installed_software ("
+		   @"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+		   @"name TEXT NOT NULL, "
+		   @"suuid TEXT, "
+		   @"tuuid TEXT NOT NULL UNIQUE, "
+		   @"uninstall TEXT, "
+		   @"has_uninstall INTEGER DEFAULT 0, "
+		   @"json_data TEXT, "
+		   @"install_date REAL NOT NULL DEFAULT (julianday('now')))";
 }
 
-- (NSDictionary *)dictionaryRepresentation
+- (instancetype)init
 {
-    NSMutableDictionary *mutableDict = [NSMutableDictionary dictionary];
-	[mutableDict setValue:self.id forKey:kSWItemID];
-	[mutableDict setValue:self.name forKey:kSWItemName];
-	[mutableDict setValue:self.suuid forKey:kSWItemSUUID];
-	[mutableDict setValue:self.tuuid forKey:kSWItemTUUID];
-	[mutableDict setValue:self.uninstall forKey:kSWItemUninstall];
-	[mutableDict setValue:[NSNumber numberWithLong:self.has_uninstall] forKey:kSWItemHasUninstall];
-	[mutableDict setValue:self.json_data forKey:kSWItemJsonData];
-	[mutableDict setValue:self.install_date forKey:kSWItemInstallDate];
-
-    return [NSDictionary dictionaryWithDictionary:mutableDict];
-}
-
-- (NSString *)description
-{
-    return [NSString stringWithFormat:@"%@", [self dictionaryRepresentation]];
-}
-
-#pragma mark - Helper Method
-- (id)objectOrNilForKey:(id)aKey fromDictionary:(NSDictionary *)dict
-{
-    id object = [dict objectForKey:aKey];
-    return [object isEqual:[NSNull null]] ? nil : object;
-}
-
-- (id)initWithCoder:(NSCoder *)decoder
-{
-    self = [super init];
-    if (!self) {
-        return nil;
-    }
-
-	self.id = [decoder decodeObjectForKey:kSWItemID];
-	self.name = [decoder decodeObjectForKey:kSWItemName];
-	self.suuid = [decoder decodeObjectForKey:kSWItemSUUID];
-	self.tuuid = [decoder decodeObjectForKey:kSWItemTUUID];
-	self.uninstall = [decoder decodeObjectForKey:kSWItemUninstall];
-	self.has_uninstall = [decoder decodeIntegerForKey:kSWItemHasUninstall];
-	self.json_data = [decoder decodeObjectForKey:kSWItemJsonData];
-	self.install_date = [decoder decodeObjectForKey:kSWItemInstallDate];
-
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)encoder
-{
-	[encoder encodeObject:self.id forKey:kSWItemID];
-	[encoder encodeObject:self.name forKey:kSWItemName];
-	[encoder encodeObject:self.suuid forKey:kSWItemSUUID];
-	[encoder encodeObject:self.tuuid forKey:kSWItemTUUID];
-	[encoder encodeObject:self.uninstall forKey:kSWItemUninstall];
-	[encoder encodeInteger:self.has_uninstall forKey:kSWItemHasUninstall];
-	[encoder encodeObject:self.json_data forKey:kSWItemJsonData];
-	[encoder encodeObject:self.install_date forKey:kSWItemInstallDate];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    InstalledSoftware *copy = [[InstalledSoftware alloc] init];
-    
-    if (copy)
-	{
-        copy.id = [self.id copyWithZone:zone];
-        copy.name = self.name;
-        copy.suuid = [self.suuid copyWithZone:zone];
-        copy.tuuid = [self.tuuid copyWithZone:zone];
-        copy.uninstall = [self.uninstall copyWithZone:zone];
-        copy.has_uninstall = self.has_uninstall;
-		copy.json_data = [self.json_data copyWithZone:zone];
-		copy.install_date = [self.install_date copyWithZone:zone];
-    }
-    
-    return copy;
+	self = [super init];
+	if (self) {
+		self.install_date = [NSDate date];
+		self.has_uninstall = @(0);
+	}
+	return self;
 }
 
 @end

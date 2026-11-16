@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.6.2
+# Version: 3.8.8
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -12,6 +12,40 @@
 # Simply modify the GITROOT and BUILDROOT variables
 #
 # History:
+# 3.8.8     Added Python version detection and selection
+#           Checks for Python 3.14 first (preferred), then any 3.12+
+#           Minimum version is 3.12, will use 3.14 if available
+#           Skips Python installation if suitable version already present
+# 3.8.7     Extended Python script permission handling
+#           All .py files in conf/scripts now get 755 (admin/utility scripts)
+#           Python scripts with shebangs in both apps and conf/scripts get 755
+#           Ensures ServerSetup.py and other admin scripts are executable
+# 3.8.6     Improved permission handling with explicit 755 for executables
+#           Sets all files to 644 first, then executables to 755 (not 754)
+#           Ensures consistent rwxr-xr-x (755) for all executable files
+#           Includes nginx binary, shell scripts, venv binaries, Python scripts
+#           Service files explicitly set to 644 (not executable)
+# 3.8.5     Fixed executable permission handling
+#           Explicitly ensures nginx binary remains executable
+#           Ensures shell scripts (.sh) remain executable
+#           Ensures virtual environment binaries remain executable
+#           Ensures Python scripts with shebangs remain executable
+#           Added verification step at end of build
+# 3.8.4     Added SECRET_KEY validation and generation
+#           Checks .mpglobal file for SECRET_KEY presence and length
+#           Offers to generate secure 64-character SECRET_KEY
+#           Validates existing keys are at least 32 characters
+#           Supports graceful key rotation (preserves old key as SECRET_KEY_OLD)
+# 3.8.3     Fixed nginx download function output handling
+#           Status messages now go to stderr, only path to stdout
+#           Prevents command substitution from capturing echo statements
+# 3.8.2     Added nginx download with fallback to bundled version
+#           Attempts to download latest nginx from nginx.org first
+#           Falls back to bundled nginx tar.gz if download fails
+#           Validates downloaded file before using it
+# 3.8.1     Check if Node.js is already installed before attempting reinstall
+#           Skip Node.js installation if version >= 18.0.0 is already present
+#           Skip yarn installation if already installed
 # 1.4:    Remove Jetty Support
 #     Added Tomcat 7.0.57
 # 1.5:      Added Tomcat 7.0.63
@@ -44,6 +78,9 @@
 # 3.6.2     Updated, now using npm to install yarn
 #           Add redis to server install, updated to python3.11 or python3.12
 # 3.7.0     Updated logic for CentOS
+# 3.8.0     Python 3.12 is the minimum supported version, 3.14 is recommended (MP_PYTHON
+#           selects the interpreter). RHEL 8 now uses python3.12. M2Crypto is no longer
+#           installed, nothing uses it, so SWIG is no longer a prerequisite.
 #
 # ----------------------------------------------------------------------------
 
@@ -105,6 +142,7 @@ py3="python3"
 majorVer="0"
 minorVer="0"
 buildVer="0"
+DTS=$(date +%Y%m%d_%H%M%S)
 
 if [[ $platform == 'linux' ]]; then
 
@@ -122,7 +160,7 @@ if [[ $platform == 'linux' ]]; then
             ;;
         8|8.*)
             RHEL_MAJOR="8"
-            py3="python3.11"
+            py3="python3.12"
             ;;
         9|9.*)
             RHEL_MAJOR="9"
@@ -187,12 +225,12 @@ done
 # ----------------------------------------------------------------------------
 # Requirements
 # ----------------------------------------------------------------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 
 if $USEMACOS; then
 
     if $MACPROMPTFORXCODE; then
-        clear
+        [ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
         echo
         echo "* Xcode requirements"
         echo "-----------------------------------------------------------------------"
@@ -223,11 +261,11 @@ if $USEMACOS; then
         echo "To install brew go to https://brew.sh and follow the install"
         echo "directions."
         echo
-        echo "This install requires \"Yarn\", \"OpenSSL\", \"SWIG\" and \"GPM\" to be installed"
+        echo "This install requires \"Yarn\", \"OpenSSL\" and \"GPM\" to be installed"
         echo "using brew. It's recommended that you install these two"
         echo "applications before continuing."
         echo
-        echo "Exapmple: brew install yarn openssl swig gpm"
+        echo "Exapmple: brew install yarn openssl gpm"
         echo
         read -p "Would you like to continue (Y/N)? [Y]: " BREWOK
         BREWOK=${BREWOK:-Y}
@@ -283,7 +321,7 @@ fi
 # ----------------------------------------------------------------------------
 # Main
 # ----------------------------------------------------------------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo
 echo "* Begin MacPatch Server build."
 echo "-----------------------------------------------------------------------"
@@ -379,14 +417,6 @@ if $USEMACOS; then
         XOPENSSL=true
     fi
 
-    XSWIG=false
-    sudo -u _appserver bash -c "brew list | grep swig > /dev/null 2>&1"
-    if [ $? != 0 ] ; then
-        # echo "SWIG is not installed using brew. Please install swig."
-        needsInstall=1
-        XSWIG=true
-    fi
-
     if [ "$needsInstall" -gt 0 ]; then
         echo
         echo
@@ -394,9 +424,6 @@ if $USEMACOS; then
         echo "--------------------------------------------"
         if $XOPENSSL; then
             echo "Please install OpenSSL: brew install openssl"
-        fi
-        if $XSWIG; then
-            echo "Please install SWIG: brew install swig"
         fi
         echo
         echo "Please open a new terminal and install the missing packages"
@@ -424,22 +451,44 @@ if $USELINUX; then
         curl -sLk https://dl.yarnpkg.com/rpm/yarn.repo -o /etc/yum.repos.d/yarn.repo
         # Check if needed packges are installed or install
         if [ $RHEL_MAJOR == "8" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.11" "python3.11-devel" "python3.11-setuptools" "python3.11-pip" "swig" "yarn" "redis6")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "yarn" "redis6")
         elif [ $RHEL_MAJOR == "9" ]; then
-            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "swig" "yarn" "redis")
+            pkgs=("gcc" "gcc-c++" "zlib-devel" "pcre-devel" "openssl-devel" "python3.12" "python3.12-devel" "python3.12-setuptools" "python3.12-pip" "yarn" "redis")
         fi
 
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
-                curl -sL https://rpm.nodesource.com/setup_22.x | sudo -E bash -
-                echo
-                echo "Install nodejs 22.x"
-                yum clean all
-                yum install -y -q -e 1 nodejs
-                echo
-                echo "Install yarn via npm"
-                npm install --global yarn
+                # Check if node is already installed with recent enough version
+                minNodeVer="18.0.0"
+                needsNodeInstall=true
+
+                if command -v node >/dev/null 2>&1; then
+                    nodeVer=$(node -v | sed 's/v//g')
+                    if [ $(version $nodeVer) -ge $(version $minNodeVer) ]; then
+                        echo "Node.js $nodeVer is already installed (minimum required: $minNodeVer)"
+                        needsNodeInstall=false
+                    else
+                        echo "Node.js $nodeVer is installed but below minimum version $minNodeVer"
+                    fi
+                fi
+
+                if $needsNodeInstall; then
+                    curl -sL https://rpm.nodesource.com/setup_22.x | sudo -E bash -
+                    echo
+                    echo "Install nodejs 22.x"
+                    yum clean all
+                    yum install -y -q -e 1 nodejs
+                fi
+
+                # Check if yarn is already installed
+                if ! command -v yarn >/dev/null 2>&1; then
+                    echo
+                    echo "Install yarn via npm"
+                    npm install --global yarn
+                else
+                    echo "Yarn is already installed"
+                fi
             else
                 if [ $i == "redis6" ]; then
                     echo " - Install $i"
@@ -466,18 +515,38 @@ if $USELINUX; then
         curl -sSk https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
         echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
         #statements
-        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "swig" "yarn")
+        pkgs=("build-essential" "zlib1g-dev" "libpcre3-dev" "libssl-dev" "python3-dev" "python3-pip" "python3-venv" "yarn")
         for i in "${pkgs[@]}"
         do
             if [ $i == "yarn" ]; then
-                if [ $(version $ubuntuVer) -lt $(version 16.05) ]; then
+                # Check if node is already installed with recent enough version
+                minNodeVer="18.0.0"
+                needsNodeInstall=true
+
+                if command -v node >/dev/null 2>&1; then
+                    nodeVer=$(node -v | sed 's/v//g')
+                    if [ $(version $nodeVer) -ge $(version $minNodeVer) ]; then
+                        echo "Node.js $nodeVer is already installed (minimum required: $minNodeVer)"
+                        needsNodeInstall=false
+                    else
+                        echo "Node.js $nodeVer is installed but below minimum version $minNodeVer"
+                    fi
+                fi
+
+                if $needsNodeInstall && [ $(version $ubuntuVer) -lt $(version 16.05) ]; then
                     curl -sL https://deb.nodesource.com/setup_22.x | sudo -E bash -
                     echo
                     echo "Install nodejs 22.x"
                     sudo apt-get install -y nodejs
+                fi
+
+                # Check if yarn is already installed
+                if ! command -v yarn >/dev/null 2>&1; then
                     echo
                     echo "Install yarn via npm"
                     npm install --global yarn
+                else
+                    echo "Yarn is already installed"
                 fi
             else
                 p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
@@ -494,7 +563,7 @@ if $USELINUX; then
     minNodeVer="18.0.0"
     nodeVer=`node -v | sed s/v//g`
     if [ $(version $nodeVer) -le $(version $minNodeVer) ]; then
-        clear
+        [ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
         echo "***** ERROR *****"
         echo "Node version failed. Expected version \">=18\". Got $nodeVer"
         echo "Please install a newer version of node and re-run this script."
@@ -510,6 +579,62 @@ fi
 
 
 # ------------------
+# ------------------
+# Download or use bundled NGINX
+# ------------------
+download_nginx() {
+    local nginx_version="${1:-1.31.7}"
+    local nginx_url="https://nginx.org/download/nginx-${nginx_version}.tar.gz"
+    local build_dir="/tmp/nginx-build-${DTS}"
+    local nginx_tar="nginx-${nginx_version}.tar.gz"
+    local download_success=false
+
+    # Send status messages to stderr so they don't get captured by command substitution
+    echo >&2
+    echo "* Downloading NGINX ${nginx_version}" >&2
+    echo "-----------------------------------------------------------------------" >&2
+
+    # Create temporary build directory
+    mkdir -p "${build_dir}"
+
+    # Try to download nginx from nginx.org
+    echo "Attempting to download nginx ${nginx_version} from nginx.org..." >&2
+    if curl -f -L -o "${build_dir}/${nginx_tar}" "${nginx_url}" 2>/dev/null; then
+        echo "✓ Successfully downloaded nginx ${nginx_version}" >&2
+        download_success=true
+
+        # Verify the download is a valid tar.gz
+        if tar -tzf "${build_dir}/${nginx_tar}" >/dev/null 2>&1; then
+            echo "✓ Download verified as valid tar.gz" >&2
+            # Only echo the path to stdout (this gets captured)
+            echo "${build_dir}/${nginx_tar}"
+            return 0
+        else
+            echo "✗ Downloaded file is not a valid tar.gz, will use bundled version" >&2
+            download_success=false
+        fi
+    else
+        echo "✗ Failed to download nginx from nginx.org" >&2
+    fi
+
+    # Fallback to bundled nginx tar.gz
+    if ! $download_success; then
+        echo "Using bundled nginx from repository..." >&2
+        local bundled_nginx=$(find "${SRC_DIR}" -name "nginx-*.tar.gz" -type f | head -n 1)
+
+        if [ -n "$bundled_nginx" ] && [ -f "$bundled_nginx" ]; then
+            local bundled_version=$(basename "$bundled_nginx" .tar.gz | sed 's/nginx-//')
+            echo "✓ Found bundled nginx ${bundled_version}: $bundled_nginx" >&2
+            # Only echo the path to stdout (this gets captured)
+            echo "$bundled_nginx"
+            return 0
+        else
+            echo "✗ ERROR: No bundled nginx found in ${SRC_DIR}" >&2
+            return 1
+        fi
+    fi
+}
+
 # Build NGINX
 # ------------------
 echo
@@ -517,10 +642,27 @@ echo "* Build and configure NGINX"
 echo "-----------------------------------------------------------------------"
 echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
 echo
-NGINX_SW=`find "${SRC_DIR}" -name "nginx-"* -type f -exec basename {} \; | tail -n +1 | head -n 1`
+
+# Download or get bundled nginx
+NGINX_TAR_PATH=$(download_nginx "1.31.2")
+if [ $? -ne 0 ] || [ -z "$NGINX_TAR_PATH" ]; then
+    echo "ERROR: Failed to obtain nginx source"
+    exit 1
+fi
+
+NGINX_SW=$(basename "$NGINX_TAR_PATH")
+echo "Using nginx: ${NGINX_SW}"
+echo
 
 mkdir -p ${BUILDROOT}/nginx
-tar xfz ${SRC_DIR}/${NGINX_SW} --strip 1 -C ${BUILDROOT}/nginx
+tar xfz "${NGINX_TAR_PATH}" --strip 1 -C ${BUILDROOT}/nginx
+
+# Clean up temporary download if it was downloaded
+if [[ "${NGINX_TAR_PATH}" == /tmp/nginx-build-* ]]; then
+    echo "Cleaning up temporary download directory..."
+    rm -rf "$(dirname "${NGINX_TAR_PATH}")"
+fi
+
 cd ${BUILDROOT}/nginx
 
 if $USELINUX; then
@@ -575,6 +717,43 @@ done
 ln -s ${MPSERVERBASE}/conf/Content/Doc ${MPBASE}/Content/Doc
 chown -R $OWNERGRP ${MPSERVERBASE}
 
+# Ensure critical binaries and scripts have correct permissions (755 for executables, 644 for regular files)
+echo "Setting correct file permissions..."
+
+# Set base permissions for all files and directories
+find "${MPSERVERBASE}" -type d -exec chmod 755 {} \; 2>/dev/null || true
+find "${MPSERVERBASE}" -type f -exec chmod 644 {} \; 2>/dev/null || true
+
+# Now set executable files to 755
+echo "Setting executable permissions (755)..."
+
+# Nginx binary
+if [ -f "${MPSERVERBASE}/nginx/sbin/nginx" ]; then
+    chmod 755 "${MPSERVERBASE}/nginx/sbin/nginx"
+fi
+
+# Shell scripts in all locations
+find "${MPSERVERBASE}/conf/scripts" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
+find "${MPSERVERBASE}/conf/Content/Web/clients" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
+find "${MPBASE}/scripts" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
+
+# Virtual environment binaries (all files in bin directories should be executable)
+for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+    if [ -d "$venv_bin" ]; then
+        find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
+    fi
+done
+
+# Python scripts with shebangs in apps and conf/scripts
+find "${MPSERVERBASE}/apps" -type f -name "*.py" -exec grep -l "^#!" {} \; 2>/dev/null | xargs -r chmod 755 2>/dev/null || true
+find "${MPSERVERBASE}/conf/scripts" -type f -name "*.py" -exec grep -l "^#!" {} \; 2>/dev/null | xargs -r chmod 755 2>/dev/null || true
+
+# All .py files in conf/scripts should be executable (they're typically admin scripts)
+find "${MPSERVERBASE}/conf/scripts" -type f -name "*.py" -exec chmod 755 {} \; 2>/dev/null || true
+
+# Systemd service files should be 644
+find "${MPSERVERBASE}/conf/scripts/systemd" -type f -name "*.service" -exec chmod 644 {} \; 2>/dev/null || true
+
 # Admin Site - App
 echo
 echo "* Configuring Console app"
@@ -588,6 +767,24 @@ if $USEMACOS; then
     chmod 0644 ${MPSERVERBASE}/conf/launchd/*.plist
 fi
 
+# Log rotation, the API & Console logs are written by several gunicorn worker
+# processes and are rotated by the OS (the apps re-open the files after rotation)
+echo
+echo "* Configuring log rotation"
+echo "-----------------------------------------------------------------------"
+if $USELINUX; then
+    mkdir -p /etc/logrotate.d
+    cp ${MPSERVERBASE}/conf/logrotate/macpatch /etc/logrotate.d/macpatch
+    chown root:root /etc/logrotate.d/macpatch
+    chmod 0644 /etc/logrotate.d/macpatch
+fi
+if $USEMACOS; then
+    mkdir -p /etc/newsyslog.d
+    cp ${MPSERVERBASE}/conf/newsyslog/macpatch.conf /etc/newsyslog.d/macpatch.conf
+    chown root:wheel /etc/newsyslog.d/macpatch.conf
+    chmod 0644 /etc/newsyslog.d/macpatch.conf
+fi
+
 echo
 echo "* Installing Javascript modules"
 echo
@@ -595,9 +792,118 @@ cd ${MPSERVERBASE}/apps/console/mpconsole
 yarn install --cwd ${MPSERVERBASE}/apps/console/mpconsole --modules-folder static/yarn_components --no-bin-links
 
 # ------------------------------------------------------------
+# Check and validate SECRET_KEY in .mpglobal
+# ------------------------------------------------------------
+echo
+echo "* Checking SECRET_KEY configuration"
+echo "-----------------------------------------------------------------------"
+
+MPGLOBAL_FILE="${MPSERVERBASE}/apps/.mpglobal"
+
+# Check if .mpglobal exists
+if [ ! -f "$MPGLOBAL_FILE" ]; then
+    echo "WARNING: .mpglobal file not found at ${MPGLOBAL_FILE}"
+    echo "Creating .mpglobal file..."
+    echo "# Shared App Variables" > "$MPGLOBAL_FILE"
+fi
+
+# Check if SECRET_KEY is set
+if ! grep -q "^SECRET_KEY=" "$MPGLOBAL_FILE"; then
+    echo
+    echo "============================================================================"
+    echo "CRITICAL: SECRET_KEY is not set in .mpglobal file!"
+    echo "============================================================================"
+    echo
+    echo "The SECRET_KEY is required for secure session management and token signing."
+    echo "You must set a strong, random SECRET_KEY before starting the MacPatch services."
+    echo
+    echo "Generate a secure key with:"
+    echo "  python3 -c 'import secrets; print(secrets.token_hex(32))'"
+    echo
+    echo "Then add it to ${MPGLOBAL_FILE}:"
+    echo "  SECRET_KEY=<your-generated-key>"
+    echo
+    echo "The SECRET_KEY must be at least 32 characters long."
+    echo
+    read -p "Would you like to generate and set a SECRET_KEY now? (Y/N) [Y]: " GENERATE_KEY
+    GENERATE_KEY=${GENERATE_KEY:-Y}
+
+    if [ "$GENERATE_KEY" == "Y" ] || [ "$GENERATE_KEY" == "y" ]; then
+        # Generate a secure random key
+        NEW_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+
+        if [ -n "$NEW_SECRET_KEY" ]; then
+            echo >> "$MPGLOBAL_FILE"
+            echo "# Flask secret key for session management and token signing" >> "$MPGLOBAL_FILE"
+            echo "# Generated: $(date)" >> "$MPGLOBAL_FILE"
+            echo "SECRET_KEY=${NEW_SECRET_KEY}" >> "$MPGLOBAL_FILE"
+
+            echo
+            echo "✓ SECRET_KEY has been generated and saved to ${MPGLOBAL_FILE}"
+            echo
+        else
+            echo
+            echo "ERROR: Failed to generate SECRET_KEY"
+            echo "Please set it manually in ${MPGLOBAL_FILE}"
+            exit 1
+        fi
+    else
+        echo
+        echo "Build will continue, but you MUST set SECRET_KEY before starting services!"
+        echo "File location: ${MPGLOBAL_FILE}"
+        echo
+    fi
+else
+    # SECRET_KEY exists, validate it
+    SECRET_KEY_VALUE=$(grep "^SECRET_KEY=" "$MPGLOBAL_FILE" | cut -d= -f2)
+    SECRET_KEY_LENGTH=${#SECRET_KEY_VALUE}
+
+    if [ $SECRET_KEY_LENGTH -lt 32 ]; then
+        echo
+        echo "============================================================================"
+        echo "WARNING: SECRET_KEY is too short (${SECRET_KEY_LENGTH} characters)"
+        echo "============================================================================"
+        echo
+        echo "The SECRET_KEY must be at least 32 characters long for security."
+        echo "Current length: ${SECRET_KEY_LENGTH}"
+        echo
+        echo "Generate a new secure key with:"
+        echo "  python3 -c 'import secrets; print(secrets.token_hex(32))'"
+        echo
+        read -p "Would you like to generate a new SECRET_KEY now? (Y/N) [Y]: " REGEN_KEY
+        REGEN_KEY=${REGEN_KEY:-Y}
+
+        if [ "$REGEN_KEY" == "Y" ] || [ "$REGEN_KEY" == "y" ]; then
+            NEW_SECRET_KEY=$(python3 -c 'import secrets; print(secrets.token_hex(32))')
+
+            if [ -n "$NEW_SECRET_KEY" ]; then
+                # Backup old key as SECRET_KEY_OLD for rotation support
+                sed -i.bak "s/^SECRET_KEY=.*/SECRET_KEY_OLD=${SECRET_KEY_VALUE}/" "$MPGLOBAL_FILE"
+                echo "SECRET_KEY=${NEW_SECRET_KEY}" >> "$MPGLOBAL_FILE"
+
+                echo
+                echo "✓ New SECRET_KEY generated and saved"
+                echo "✓ Old key preserved as SECRET_KEY_OLD for graceful rotation"
+                echo
+            else
+                echo
+                echo "ERROR: Failed to generate SECRET_KEY"
+                exit 1
+            fi
+        else
+            echo
+            echo "WARNING: Continuing with short SECRET_KEY - services may fail to start!"
+            echo
+        fi
+    else
+        echo "✓ SECRET_KEY is set and valid (${SECRET_KEY_LENGTH} characters)"
+    fi
+fi
+
+# ------------------------------------------------------------
 # Generate self signed certificates
 # ------------------------------------------------------------
-#clear
+#[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo
 echo "* Creating self signed SSL certificate"
 echo "-----------------------------------------------------------------------"
@@ -650,11 +956,59 @@ if [ "$CA_CERT" != "NA" ]; then
     CA_STR="--cert \"$CA_CERT\""
 fi
 
+# Python 3.12 is the minimum supported version and 3.14 is recommended.
+# Set MP_PYTHON to use a specific interpreter, e.g. MP_PYTHON=python3.14
+# If MP_PYTHON is not set, check for python3.14 first (preferred), then python3.12+
+if [ -z "$MP_PYTHON" ]; then
+    # Check for python3.14 first (preferred version)
+    if command -v python3.14 > /dev/null 2>&1; then
+        py3="python3.14"
+        echo "Found preferred Python 3.14"
+    else
+        # Check if default py3 meets minimum version (3.12)
+        if command -v "$py3" > /dev/null 2>&1; then
+            pyVer=$("$py3" -c 'import sys; print(".".join(map(str, sys.version_info[:2])))' 2>/dev/null)
+            if [ -n "$pyVer" ]; then
+                pyMajor=$(echo "$pyVer" | cut -d. -f1)
+                pyMinor=$(echo "$pyVer" | cut -d. -f2)
+                if [ "$pyMajor" -eq 3 ] && [ "$pyMinor" -ge 12 ]; then
+                    echo "Found Python $pyVer (meets minimum 3.12)"
+                else
+                    echo "Python $pyVer found but does not meet minimum version 3.12"
+                    py3=""
+                fi
+            else
+                py3=""
+            fi
+        else
+            py3=""
+        fi
+
+        # If no suitable Python found, error out
+        if [ -z "$py3" ]; then
+            echo "MacPatch Server requires Python 3.12 or higher (3.14 is recommended)."
+            echo "No suitable Python interpreter found. Install Python 3.12+, or set"
+            echo "MP_PYTHON to the interpreter to use, e.g. MP_PYTHON=python3.14"
+            exit 1
+        fi
+    fi
+else
+    # User specified MP_PYTHON, use it but validate minimum version
+    py3="$MP_PYTHON"
+    if ! command -v "$py3" > /dev/null 2>&1 || ! "$py3" -c 'import sys; sys.exit(0 if sys.version_info >= (3, 12) else 1)'; then
+        echo "MacPatch Server requires Python 3.12 or higher (3.14 is recommended)."
+        echo "\"$py3\" was not found or is older than 3.12. Install a newer Python, or set"
+        echo "MP_PYTHON to the interpreter to use, e.g. MP_PYTHON=python3.14"
+        exit 1
+    fi
+fi
+echo "Using Python: $($py3 --version 2>&1) ($(command -v "$py3"))"
+
 cd "${MPSERVERBASE}/apps"
 if $USEMACOS; then
-    python3 -m venv env/server --copies --clear
-    python3 -m venv env/api --copies --clear
-    python3 -m venv env/console --copies --clear
+    $py3 -m venv env/server --copies --clear
+    $py3 -m venv env/api --copies --clear
+    $py3 -m venv env/console --copies --clear
     OPENSSLPWD=`sudo -u _appserver bash -c "brew --prefix openssl"`
 
     # Server venv
@@ -685,12 +1039,6 @@ if $USEMACOS; then
     source ${MPSERVERBASE}/env/console/bin/activate
     ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    # Install M2Crypto first
-    env LDFLAGS="-L${OPENSSLPWD}/lib" \
-    CFLAGS="-I${OPENSSLPWD}/include" \
-    SWIG_FEATURES="-cpperraswarn -includeall -I${OPENSSLPWD}/include" \
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
-
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
     deactivate
@@ -709,7 +1057,6 @@ else
     ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
     ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install m2crypto --no-cache-dir --upgrade $CA_STR
     deactivate
 
     echo "Creating api virtual env..."
@@ -738,7 +1085,7 @@ rm -rf ${BUILDROOT}
 # ------------------
 # Set Permissions
 # ------------------
-clear
+[ -t 1 ] && command -v clear >/dev/null 2>&1 && clear 2>/dev/null || true
 echo "Setting Permissions..."
 chmod -R 0775 "${MPBASE}/Content"
 chown -R $OWNERGRP "${MPBASE}/Content"
@@ -746,6 +1093,48 @@ chmod -R 0775 "${MPSERVERBASE}/logs"
 chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
 chown -R $OWNERGRP "${MPSERVERBASE}/env"
+
+# Final check: ensure all files have correct permissions (755 for executables, 644 for others)
+echo "Final permission verification..."
+
+# Nginx binary
+if [ -f "${MPSERVERBASE}/nginx/sbin/nginx" ]; then
+    chmod 755 "${MPSERVERBASE}/nginx/sbin/nginx"
+    echo "✓ Nginx binary (755)"
+fi
+
+# Shell scripts in various locations
+for script_dir in "${MPBASE}/scripts" "${MPSERVERBASE}/conf/scripts" "${MPSERVERBASE}/conf/Content/Web/clients"; do
+    if [ -d "$script_dir" ]; then
+        # Set all .sh files to 755
+        find "$script_dir" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
+        # Set non-.sh files to 644 (like .service files)
+        find "$script_dir" -type f ! -name "*.sh" -exec chmod 644 {} \; 2>/dev/null || true
+    fi
+done
+echo "✓ Shell scripts (755)"
+
+# Virtual environment binaries (API and Console) - all should be 755
+for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+    if [ -d "$venv_bin" ]; then
+        find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
+    fi
+done
+echo "✓ Virtual environment binaries (755)"
+
+# Python scripts with shebangs should be 755
+find "${MPSERVERBASE}/apps" -type f -name "*.py" -exec grep -l "^#!" {} \; 2>/dev/null | xargs -r chmod 755 2>/dev/null || true
+find "${MPSERVERBASE}/conf/scripts" -type f -name "*.py" -exec grep -l "^#!" {} \; 2>/dev/null | xargs -r chmod 755 2>/dev/null || true
+
+# All .py files in conf/scripts should be executable (they're typically admin scripts)
+find "${MPSERVERBASE}/conf/scripts" -type f -name "*.py" -exec chmod 755 {} \; 2>/dev/null || true
+echo "✓ Python scripts (755)"
+
+# Ensure systemd service files are 644 (not executable)
+if [ -d "${MPSERVERBASE}/conf/scripts/systemd" ]; then
+    find "${MPSERVERBASE}/conf/scripts/systemd" -type f -name "*.service" -exec chmod 644 {} \; 2>/dev/null || true
+    echo "✓ Systemd service files (644)"
+fi
 
 echo
 echo

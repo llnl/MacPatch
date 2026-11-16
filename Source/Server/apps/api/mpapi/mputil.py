@@ -16,6 +16,7 @@ import pwd
 import grp
 import os
 import hmac
+import time
 from ldap3 import Server, Connection, ALL, AUTO_BIND_NO_TLS, SUBTREE, ALL_ATTRIBUTES
 from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from itsdangerous import BadSignature, SignatureExpired
@@ -29,8 +30,10 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+from cryptography.fernet import Fernet
 
-from base64 import b64encode, b64decode
+from base64 import b64encode, b64decode, urlsafe_b64encode
 
 from mpapi.app import db
 from mpapi.model import MPAgentRegistration, MpClient, AdmGroupUsers, AdmUsers, AdmUsersInfo, MpSiteKeys
@@ -80,6 +83,24 @@ def isValidSignature(Signature, ClientID, Data, TimeStamp):
 
 		log_Debug('[isValidSignature][Data]: (%s)' % (str(Data)))
 		log_Debug('[isValidSignature][Time]: (%s)' % (TimeStamp))
+
+		# SECURITY FIX: Check timestamp freshness to prevent replay attacks
+		try:
+			request_timestamp = int(TimeStamp)
+		except (ValueError, TypeError):
+			log_Error("[isValidSignature] Invalid timestamp format: %s" % TimeStamp)
+			return False
+
+		current_timestamp = int(time.time())
+		timestamp_window = current_app.config.get('SIGNATURE_TIMESTAMP_WINDOW', 300)  # Default 5 minutes
+
+		# Check if timestamp is within acceptable window (not too old, not too far in future)
+		time_diff = abs(current_timestamp - request_timestamp)
+		if time_diff > timestamp_window:
+			log_Error("[isValidSignature] Timestamp outside acceptable window. "
+					  f"Current: {current_timestamp}, Request: {request_timestamp}, "
+					  f"Diff: {time_diff}s, Max: {timestamp_window}s")
+			return False
 
 		secret = bytes(cKey,'utf-8')
 		message_str = '%s-%s' % (str(Data), TimeStamp)
@@ -347,26 +368,56 @@ def isValidToken(user, token):
 		return False
 
 def verify_auth_token(token):
-	try:
-		log_Info("verify_auth_token try")
-		log_Info(f"token: {token}")
-		data = jwt.decode(
-			token,
-			current_app.config['SECRET_KEY'],
-			#leeway=timedelta(seconds=10),
-			#leeway=30,
-			algorithms=["HS256"],
-			verify=True, options={'verify_exp':False}
-		)
-		log_Info(f"verify_auth_token: {data}")
-		log_Info(f"verify_auth_token: {data['id']}")
-		return data['id']
-	except jwt.exceptions.ExpiredSignatureError:
-		log_Error("[verify_auth_token]: Token has expired")
-		return "SignatureExpired"
-	except Exception as e:
-		log_Error(f"[verify_auth_token][Invalid Token]: {e}")
-		return "BadSignature"
+	"""
+	Verify JWT token with support for graceful key rotation.
+
+	Tries to validate the token with:
+	1. Current SECRET_KEY (primary)
+	2. SECRET_KEY_OLD (if set, for graceful rotation)
+	3. SECRET_KEY_OLD_2 (if set, for extended rotation)
+
+	This allows rotating keys without immediately invalidating all existing tokens.
+	"""
+	# Get all keys (primary + old keys for rotation)
+	secret_keys = current_app.config.get('SECRET_KEYS', [current_app.config['SECRET_KEY']])
+
+	# Try each key in order (primary first, then old keys)
+	last_exception = None
+	for i, secret_key in enumerate(secret_keys):
+		try:
+			data = jwt.decode(
+				token,
+				secret_key,
+				algorithms=["HS256"],
+				options={'verify_signature': True}  # Explicitly enable signature verification
+			)
+
+			if i > 0:
+				log_Info(f"verify_auth_token: Token validated with OLD key #{i} (consider key rotation)")
+
+			log_Debug(f"verify_auth_token: {data}")
+			log_Debug(f"verify_auth_token: {data['id']}")
+			return data['id']
+
+		except jwt.exceptions.ExpiredSignatureError as e:
+			# Token expired - don't try other keys
+			log_Error("[verify_auth_token]: Token has expired")
+			return "SignatureExpired"
+
+		except jwt.exceptions.InvalidSignatureError:
+			# Wrong key - try next one
+			last_exception = "InvalidSignature"
+			continue
+
+		except Exception as e:
+			# Other error - try next key
+			log_Error(f"[verify_auth_token][Key #{i}][Exception]: {e}")
+			last_exception = str(e)
+			continue
+
+	# None of the keys worked
+	log_Error(f"[verify_auth_token][Invalid Token]: Failed with all {len(secret_keys)} key(s)")
+	return "BadSignature"
 	
 
 def verify_auth_tokenOLD(token):
@@ -543,6 +594,128 @@ def verifySignedData(signature, data):
 
 	log_Error("[verifySignedData] Error, unable to get RSA keys from database.")
 	return False
+
+# ----------------------------------------------------------------------------
+'''
+	Symmetric Encryption/Decryption using Fernet
+'''
+def _get_encryption_key():
+	"""Derive a Fernet key from the SECRET_KEY"""
+	secret_key = current_app.config['SECRET_KEY'].encode('utf-8')
+	# Use a fixed salt for key derivation (since we want consistent keys across requests)
+	salt = b'MacPatch_DB_Config_Salt_v1'
+	kdf = PBKDF2HMAC(
+		algorithm=hashes.SHA256(),
+		length=32,
+		salt=salt,
+		iterations=100000,
+		backend=default_backend()
+	)
+	key = urlsafe_b64encode(kdf.derive(secret_key))
+	return key
+
+def encryptData(data):
+	"""Encrypt data using Fernet symmetric encryption"""
+	try:
+		if isinstance(data, dict):
+			data = json.dumps(data)
+		if isinstance(data, str):
+			data = data.encode('utf-8')
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		encrypted = f.encrypt(data)
+		return b64encode(encrypted).decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e.args[0]) if e.args else str(e)
+		log_Error('[encryptData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
+		return None
+
+def decryptData(encrypted_data):
+	"""Decrypt data using Fernet symmetric encryption"""
+	import traceback
+	try:
+		if isinstance(encrypted_data, str):
+			encrypted_data = b64decode(encrypted_data.encode('utf-8'))
+
+		key = _get_encryption_key()
+		f = Fernet(key)
+		decrypted = f.decrypt(encrypted_data)
+
+		# Try to parse as JSON, otherwise return as string
+		try:
+			return json.loads(decrypted.decode('utf-8'))
+		except:
+			return decrypted.decode('utf-8')
+	except Exception as e:
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message = str(e) if str(e) else repr(e)
+		log_Error('[decryptData][Exception][Line: {}] Type: {} Message: {}'.format(
+			exc_tb.tb_lineno, exc_type.__name__, message))
+		log_Error('[decryptData] Traceback: {}'.format(traceback.format_exc()))
+		return None
+
+# ----------------------------------------------------------------------------
+'''
+	JWT Token Validation for Console-to-API Authentication
+'''
+from functools import wraps
+
+def require_jwt_token(f):
+	"""Decorator to validate JWT token for Console-to-API endpoints"""
+	@wraps(f)
+	def decorated_function(*args, **kwargs):
+		token = None
+		auth_header = request.headers.get('Authorization')
+
+		if auth_header:
+			try:
+				# Expected format: "Bearer <token>"
+				token = auth_header.split(" ")[1]
+			except IndexError:
+				log_Error('[JWT] Invalid Authorization header format')
+				return {'errorno': 401, 'errormsg': 'Invalid authorization header format'}, 401
+
+		if not token:
+			log_Error('[JWT] No token provided')
+			return {'errorno': 401, 'errormsg': 'Authentication token required'}, 401
+
+		try:
+			secret_key = current_app.config.get('SECRET_KEY')
+			if not secret_key:
+				log_Error('[JWT] SECRET_KEY not configured')
+				return {'errorno': 500, 'errormsg': 'Server authentication not configured'}, 500
+
+			# Decode and validate token
+			payload = jwt.decode(
+				token,
+				secret_key,
+				algorithms=['HS256'],
+				audience='mpapi',
+				options={'require': ['exp', 'iat', 'iss', 'aud']}
+			)
+
+			# Verify issuer
+			if payload.get('iss') != 'mpconsole':
+				log_Error('[JWT] Invalid token issuer: {}'.format(payload.get('iss')))
+				return {'errorno': 401, 'errormsg': 'Invalid token issuer'}, 401
+
+			log_Debug('[JWT] Token validated successfully')
+
+		except jwt.ExpiredSignatureError:
+			log_Error('[JWT] Token has expired')
+			return {'errorno': 401, 'errormsg': 'Token has expired'}, 401
+		except jwt.InvalidTokenError as e:
+			log_Error('[JWT] Invalid token: {}'.format(str(e)))
+			return {'errorno': 401, 'errormsg': 'Invalid authentication token'}, 401
+		except Exception as e:
+			log_Error('[JWT] Token validation error: {}'.format(str(e)))
+			return {'errorno': 401, 'errormsg': 'Token validation failed'}, 401
+
+		return f(*args, **kwargs)
+
+	return decorated_function
 
 # ----------------------------------------------------------------------------
 '''

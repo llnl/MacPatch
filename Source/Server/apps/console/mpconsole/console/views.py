@@ -1,12 +1,12 @@
-from flask import render_template, request, session
-from sqlalchemy import desc
+from flask import render_template, request, session, jsonify
+from sqlalchemy import desc, func, case, or_
 from werkzeug.security import generate_password_hash
 import json
 import re
 import uuid
 import requests
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from hashlib import sha1, sha256
 
 from .  import console
@@ -14,9 +14,58 @@ from mpconsole.app import db
 from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
+from mpconsole.mputil import decryptData, generate_jwt_token, json_serial
 from mpconsole.app_decorators import login_required
 
 ''' Global '''
+
+@console.route('/change_log')
+@login_required
+def changeLogView():
+	if not localAdmin() and not adminRole():
+		return 'Administrator access is required.', 403
+	return render_template('admin/change_log.html')
+
+
+@console.route('/change_log/data')
+@login_required
+def changeLogData():
+	if not localAdmin() and not adminRole():
+		return jsonify(errormsg='Administrator access is required.'), 403
+	try:
+		limit = min(max(int(request.args.get('limit', 25)), 1), 100)
+		offset = max(int(request.args.get('offset', 0)), 0)
+		query = ChangeLog.query
+		for field in ('actor', 'record_table', 'action'):
+			value = request.args.get(field, '').strip()
+			if value:
+				query = query.filter(getattr(ChangeLog, field) == value)
+		for field, inclusive in (('from_date', True), ('to_date', False)):
+			value = request.args.get(field, '')
+			if value:
+				date_value = datetime.strptime(value, '%Y-%m-%d')
+				query = query.filter(ChangeLog.created_at >= date_value) if inclusive else query.filter(ChangeLog.created_at < date_value + timedelta(days=1))
+		search = request.args.get('search', '').strip()
+		if search:
+			query = query.filter(or_(*(field.contains(search, autoescape=True) for field in
+				(ChangeLog.actor, ChangeLog.record_table, ChangeLog.record_label, ChangeLog.endpoint, ChangeLog.request_id))))
+	except ValueError:
+		return jsonify(errormsg='Enter valid pagination values and dates.'), 400
+	total = query.count()
+	entries = query.order_by(ChangeLog.created_at.desc(), ChangeLog.rid.desc()).offset(offset).limit(limit).all()
+	return jsonify(total=total, rows=[dict(rid=row.rid, created_at=row.created_at.isoformat() + 'Z',
+		actor=row.actor, action=row.action, record_table=row.record_table, record_key=row.record_key,
+		record_label=row.record_label, changes=row.changes, request_id=row.request_id,
+		endpoint=row.endpoint, method=row.method) for row in entries])
+
+
+@console.route('/change_log/filters')
+@login_required
+def changeLogFilters():
+	if not localAdmin() and not adminRole():
+		return jsonify(errormsg='Administrator access is required.'), 403
+	return jsonify(actors=[v for v, in db.session.query(ChangeLog.actor).distinct().order_by(ChangeLog.actor)],
+		tables=[v for v, in db.session.query(ChangeLog.record_table).distinct().order_by(ChangeLog.record_table)])
 
 '''
 	User/Admin Roles
@@ -46,6 +95,7 @@ def deleteAdminAccount(user_id):
 
 	elif request.method == 'POST':
 		data = request.form.to_dict()
+		data.pop('csrf_token', None)
 		if adminRole():
 			log("{} update account {} options.".format(session.get('user'), user_id))
 			qAdm = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == user_id).first()
@@ -110,7 +160,7 @@ def accountAdd():
 				if key != 'user_type':
 					if key in usrAttrs:
 						if key == 'user_pass':
-							hash_pass = generate_password_hash(value)
+							hash_pass = generate_password_hash(value, method='pbkdf2:sha256')
 							setattr(usr, key, hash_pass)
 						else:
 							setattr(usr, key, value)
@@ -139,7 +189,7 @@ def admin():
 @console.route('/tasks')
 @login_required
 def tasks():
-	return render_template('console_tasks.html')
+	return render_template('admin/console_tasks.html')
 
 @console.route('/tasks/assignClientsToGroups',methods=['POST'])
 @login_required
@@ -227,7 +277,7 @@ def agentDeploy(tab=1):
 	groupResult['Filters'] = {'data': _filters, 'columns': sortedFilterCols}
 	groupResult['Admin'] = True
 
-	return render_template('adm_agent_deploy.html', gResults=groupResult, agentCols=columns1, filterCols=columns2, selectedTab=tab, curAgentID=_curAgentID)
+	return render_template('admin/agent/adm_agent_deploy.html', gResults=groupResult, agentCols=columns1, filterCols=columns2, selectedTab=tab, curAgentID=_curAgentID)
 
 @console.route('/agents', methods=['GET'])
 @login_required
@@ -243,8 +293,8 @@ def agentsList():
 	for p in agents:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -292,8 +342,8 @@ def agentsFiltersList():
 	for p in agents:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -306,7 +356,7 @@ def agentFilter(id):
 	if id != 0:
 		_filter = MpClientAgentsFilter.query.filter(MpClientAgentsFilter.rid == id).first()
 
-	return render_template('agent_filter.html', data=_filter)
+	return render_template('clients/agent_filter.html', data=_filter)
 
 @console.route('/agent/filter/<id>', methods=['POST'])
 @login_required
@@ -344,7 +394,208 @@ def agentFilterPost(id):
 @console.route('/agent/configure')
 @login_required
 def agentConfig():
-	return render_template('console_tasks.html')
+	return render_template('admin/console_tasks.html')
+
+'''
+----------------------------------------------------------------
+	Agent Config
+----------------------------------------------------------------
+'''
+
+@console.route('/agent/config')
+@login_required
+def agentConfigView():
+	if not (adminRole() or localAdmin()):
+		return redirect(url_for('dashboard.index'))
+	cols = [('name', 'Config Name'), ('aid', 'Config ID'), ('isDefault', 'Default'), ('revision', 'Revision')]
+	return render_template('admin/agent/agent_config.html', columns=cols)
+
+@console.route('/agent/config/list', methods=['GET'])
+@login_required
+def agentConfigList():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'data': [], 'total': 0}), 403
+
+	configs = AgentConfig.query.all()
+	_results = []
+	for config in configs:
+		row = {
+			'aid': config.aid,
+			'name': config.name,
+			'isDefault': config.isDefault,
+			'revision': config.revision
+		}
+		_results.append(row)
+
+	log_Debug('[agentConfigList] Returning %d configs' % len(_results))
+	response = {'data': _results, 'total': len(_results)}
+	return json.dumps(response, default=json_serial), 200, {'Content-Type': 'application/json'}
+
+@console.route('/agent/config/add', methods=['GET'])
+@login_required
+def agentConfigAdd():
+	if not (adminRole() or localAdmin()):
+		return '', 403
+
+	# Default agent configuration values
+	default_config_data = [
+		{'akey': 'AllowClient', 'akeyValue': '1', 'enforced': 1},
+		{'akey': 'AllowServer', 'akeyValue': '0', 'enforced': 1},
+		{'akey': 'CheckSignatures', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'Description', 'akeyValue': 'Default Agent Config', 'enforced': 0},
+		{'akey': 'Domain', 'akeyValue': 'Default', 'enforced': 0},
+		{'akey': 'MPProxyEnabled', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'MPProxyServerAddress', 'akeyValue': 'AUTOFILL', 'enforced': 0},
+		{'akey': 'MPProxyServerPort', 'akeyValue': '3600', 'enforced': 0},
+		{'akey': 'MPServerAddress', 'akeyValue': 'AUTOFILL', 'enforced': 0},
+		{'akey': 'MPServerAllowSelfSigned', 'akeyValue': '0', 'enforced': 0},
+		{'akey': 'MPServerPort', 'akeyValue': '3600', 'enforced': 0},
+		{'akey': 'MPServerSSL', 'akeyValue': '1', 'enforced': 0},
+		{'akey': 'PatchGroup', 'akeyValue': 'Default', 'enforced': 0},
+		{'akey': 'Reboot', 'akeyValue': '1', 'enforced': 0},
+		{'akey': 'SWDistGroup', 'akeyValue': 'Default', 'enforced': 0}
+	]
+
+	return render_template('admin/agent/agent_config_edit.html', config=None, config_data=default_config_data)
+
+@console.route('/agent/config/edit/<aid>', methods=['GET'])
+@login_required
+def agentConfigEdit(aid):
+	if not (adminRole() or localAdmin()):
+		return '', 403
+
+	config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+	if not config:
+		return 'Configuration not found', 404
+
+	config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).all()
+	return render_template('admin/agent/agent_config_edit.html', config=config, config_data=config_data)
+
+@console.route('/agent/config/save', methods=['POST'])
+@login_required
+def agentConfigSave():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'error': 1, 'errormsg': 'Unauthorized'}), 403
+
+	try:
+		_form = request.form
+		log_Info(f"{_form}")
+		aid = _form.get('aid', '')
+		name = _form.get('name', '')
+		is_default = _form.get('isDefault', '0')
+
+		log_Info('[agentConfigSave] User %s saving agent config: name=%s, aid=%s, isDefault=%s' % (session.get('user'), name, aid, is_default))
+
+		# If setting as default, unset other defaults
+		if is_default == '1':
+			log_Info('[agentConfigSave] Unsetting other default configs')
+			AgentConfig.query.update({'isDefault': 0})
+
+		# Create or update config
+		if aid:
+			# Update existing
+			config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+			if not config:
+				return json.dumps({'error': 1, 'errormsg': 'Configuration not found'}), 404
+
+			config.name = name
+			config.isDefault = is_default
+			log_Info('[agentConfigSave] Updating existing config: %s' % aid)
+		else:
+			# Create new
+			aid = str(uuid.uuid4())
+			config = AgentConfig(aid=aid, name=name, isDefault=is_default, revision='0')
+			db.session.add(config)
+			log_Info('[agentConfigSave] Creating new config with aid: %s' % aid)
+
+		# Save config data (key-value pairs)
+		# Delete existing data
+		AgentConfigData.query.filter(AgentConfigData.aid == aid).delete()
+
+		# Add new data from form
+		config_keys = [k for k in _form.keys() if k.startswith('config_')]
+		log_Info('[agentConfigSave] Saving %d config key-value pairs' % len(config_keys))
+		log_Debug('[agentConfigSave] Form keys: %s' % list(_form.keys()))
+
+		if len(config_keys) == 0:
+			log_Error('[agentConfigSave] No configuration keys provided')
+			return json.dumps({'error': 1, 'errormsg': 'At least one configuration setting is required'}), 400
+
+		for key in config_keys:
+			akey = key.replace('config_', '')
+			akeyValue = _form.get(key, '')
+			enforced = _form.get('enforced_' + akey, '0')
+
+			log_Debug('[agentConfigSave] Adding config: %s=%s (enforced=%s)' % (akey, akeyValue, enforced))
+			data = AgentConfigData(aid=aid, akey=akey, akeyValue=akeyValue, enforced=enforced)
+			db.session.add(data)
+
+		# Update revision hash
+		db.session.commit()
+
+		# Calculate revision hash
+		config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).all()
+		reslst = []
+		for i in config_data:
+			reslst.append(i.akeyValue.lower())
+
+		reslststr = "".join(reslst)
+		import hashlib
+		try:
+			configHash = hashlib.md5(reslststr.encode('utf-8'), usedforsecurity=False).hexdigest()
+		except TypeError:
+			# Older Python versions don't support usedforsecurity parameter
+			configHash = hashlib.md5(reslststr.encode('utf-8')).hexdigest()
+
+		config.revision = configHash
+		db.session.commit()
+
+		log_Info('[agentConfigSave] Successfully saved config %s with revision %s' % (name, configHash))
+
+		return json.dumps({'error': 0, 'aid': aid}), 200
+
+	except Exception as e:
+		log_Error('[agentConfigSave] Error saving config: %s' % str(e))
+		db.session.rollback()
+		return json.dumps({'error': 1, 'errormsg': str(e)}), 500
+
+@console.route('/agent/config/remove', methods=['DELETE'])
+@login_required
+def agentConfigRemove():
+	if not (adminRole() or localAdmin()):
+		return json.dumps({'error': 1, 'errormsg': 'Unauthorized'}), 403
+
+	try:
+		aids = request.form.get('aids', '').split(',')
+		log_Info('[agentConfigRemove] User %s deleting agent configs: %s' % (session.get('user'), aids))
+
+		for aid in aids:
+			if not aid:
+				continue
+
+			config = AgentConfig.query.filter(AgentConfig.aid == aid).first()
+			if config:
+				if config.isDefault == 1:
+					log_Error('[agentConfigRemove] Cannot delete default config: %s' % aid)
+					return json.dumps({'error': 1, 'errormsg': 'Cannot delete default configuration'}), 400
+
+				log_Info('[agentConfigRemove] Deleting config: %s (%s)' % (config.name, aid))
+
+				# Delete config data first
+				AgentConfigData.query.filter(AgentConfigData.aid == aid).delete()
+
+				# Delete config
+				db.session.delete(config)
+
+		db.session.commit()
+		log_Info('[agentConfigRemove] Successfully deleted configs')
+
+		return json.dumps({'error': 0}), 200
+
+	except Exception as e:
+		log_Error('[agentConfigRemove] Error deleting config: %s' % str(e))
+		db.session.rollback()
+		return json.dumps({'error': 1, 'errormsg': str(e)}), 500
 
 @console.route('/agent/deploy', methods=['DELETE'])
 @login_required
@@ -392,7 +643,7 @@ def agentPluginsView():
 	columns = [('rid', 'rid', '0'), ('pluginName', 'Name', '1'), ('pluginBundleID', 'Bundle ID', '1'),
 				('pluginVersion', 'Version', '1'), ('hash', 'Hash', '1'), ('active', 'Enabled', '1')]
 
-	return render_template('agent_plugins.html', data={}, columns=columns)
+	return render_template('admin/agent/agent_plugins.html', data={}, columns=columns)
 
 @console.route('/agent/plugins/list', methods=['GET'])
 @login_required
@@ -407,8 +658,8 @@ def agentPluginsList():
 	for p in plugins:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			row[c[0]] = eval(y)
+			y = c[0]
+			row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -423,7 +674,7 @@ def agentPluginsEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('agent_plugins_update.html', data=_filter)
+	return render_template('admin/agent/agent_plugins_update.html', data=_filter)
 
 @console.route('/agent/plugins/update', methods=['POST'])
 @login_required
@@ -480,7 +731,7 @@ def mpServerView():
 				('allowSelfSignedCert', 'Allow Self-Signed Cert', '1'),('isMaster', 'Master', '1'), ('isProxy', 'Proxy', '1'),
 				('active', 'Enabled', '1')]
 
-	return render_template('mp_servers.html', columns=columns)
+	return render_template('admin/servers/mp_servers.html', columns=columns)
 
 @console.route('/servers/mp/list', methods=['GET'])
 @login_required
@@ -496,8 +747,8 @@ def mpServersList():
 	for p in _servers:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			res = eval(y)
+			y = c[0]
+			res = getattr(p, y)
 			if c[0] != 'rid':
 				if res == 1:
 					row[c[0]] = 'Yes'
@@ -521,7 +772,7 @@ def mpServerEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('mp_server_update.html', data=_filter)
+	return render_template('admin/servers/mp_server_update.html', data=_filter)
 
 @console.route('/servers/mp/update', methods=['POST', 'DELETE'])
 @login_required
@@ -581,26 +832,53 @@ def updateServerRev():
 
 	db.session.commit()
 
-@console.route('/servers/db/<server>/<port>', methods=['GET'])
+@console.route('/servers/db/<id>', methods=['GET'])
 @login_required
-def mpServerDBConfig(server,port):
+def mpServerDBConfig(id):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
 
 	_uuid = str(uuid.uuid4())
 	dt  = datetime.now()
 	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
-	srvHashStr = "{}{}{}".format(_uuid,dt,type).encode('utf-8')
+	srvHashStr = "{}{}".format(_uuid,dt).encode('utf-8')
 	srvHash = sha1(srvHashStr).hexdigest()
 
 	_data = []
-	_url = "https://{}:{}/api/v1/db/config".format(server,port)
-	#_url = "http://0.0.0.0:5000/api/v1/db/config".format(server,port) # For Testing
-	headers = {'x-agent-id': '1', 'x-agent-ver': '99'}
+	_url = "https://{}:{}/api/v1/server/db/config".format(_server.server,_server.port)
+	log_Info(_url)
+
+	# Generate JWT token for authentication
+	jwt_token = generate_jwt_token()
+	if not jwt_token:
+		log_Error("Failed to generate JWT token")
+		return render_template('admin/mp_server_db_config.html', server=_server.server, data={'error': 'Authentication failed'})
+
+	headers = {
+		'x-agent-id': '1',
+		'x-agent-ver': '99',
+		'Authorization': 'Bearer {}'.format(jwt_token)
+	}
 	r = requests.get(_url, headers=headers, verify=False)
 	if r.status_code == 200:
 		rawData = json.loads(r.text)
-		_data = rawData['result']
+		log_Info("Encrypted response received")
 
-	return render_template('admin/mp_server_db_config.html', server=server, data=_data)
+		# Check if response is encrypted
+		if rawData.get('encrypted', False):
+			encrypted_result = rawData['result']
+			# Decrypt the data
+			decrypted_data = decryptData(encrypted_result)
+			if decrypted_data:
+				_data = decrypted_data
+				log_Info("DB Config decrypted successfully")
+			else:
+				log_Error("Failed to decrypt DB Config")
+				_data = {'error': 'Failed to decrypt configuration'}
+		else:
+			# Fallback for unencrypted response
+			_data = rawData['result']
+
+	return render_template('admin/mp_server_db_config.html', server=_server.server, data=_data)
 
 class logline(object):  # no instance of this class should be created
 
@@ -611,12 +889,59 @@ class logline(object):  # no instance of this class should be created
 		self.text = ''
 
 	def parseLine(self,line):
-		_date = line.split(",")
-		self.date = _date[0]
-		x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
-		self.app = x.group(1)
-		self.level = x.group(2)
-		self.text = line.split("---")[1]
+		try:
+			# Try to parse MacPatch format: "2026-10-22 15:27:32,495 [mpconsole.app][INF] --- message"
+			if ',' in line and '[' in line and ']' in line and '---' in line:
+				_date = line.split(",")
+				self.date = _date[0] if len(_date) > 0 else ''
+
+				x = re.search(r'\[(.*?)\]\[(.*?)\]', line)
+				if x:
+					self.app = x.group(1)
+					self.level = x.group(2)
+				else:
+					self.app = 'unknown'
+					self.level = 'INFO'
+
+				parts = line.split("---")
+				self.text = parts[1].strip() if len(parts) > 1 else line
+
+			# Try to parse gunicorn format: "[2026-10-22 16:02:22 -0700] [3033945] [INFO] Worker spawned (pid: 3033945)"
+			elif line.startswith('[') and line.count('[') >= 3:
+				# Extract date from first brackets
+				date_match = re.match(r'\[([^\]]+)\]', line)
+				if date_match:
+					self.date = date_match.group(1)
+
+				# Extract level from third set of brackets
+				level_match = re.search(r'\]\s*\[(\w+)\]', line)
+				if level_match:
+					self.level = level_match.group(1)
+				else:
+					self.level = 'INFO'
+
+				self.app = 'gunicorn'
+
+				# Extract message after the third bracket
+				text_match = re.search(r'\]\s*\[\w+\]\s*(.+)$', line)
+				if text_match:
+					self.text = text_match.group(1).strip()
+				else:
+					self.text = line
+
+			# Fallback for unknown formats
+			else:
+				self.date = ''
+				self.app = 'system'
+				self.level = 'INFO'
+				self.text = line
+		except Exception as e:
+			log_Error('[logline] Unable to parse log line: %s' % (e,))
+			# Fallback on error
+			self.date = ''
+			self.app = 'error'
+			self.level = 'ERR'
+			self.text = line
 
 	def printLine(self):
 		row = {}
@@ -626,9 +951,17 @@ class logline(object):  # no instance of this class should be created
 		row['text'] = self.text
 		return row
 
-@console.route('/server/log/<server>/<type>', methods=['GET'])
+@console.route('/server/log/<id>/<type>', methods=['GET'])
 @login_required
-def serversLog(server,type):
+def serversLog(id,type):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
+	columns = [('date', 'Date', '1'), ('app', 'App', '1'), ('level', 'Level', '1'), ('text', 'Message', '1')]
+	return render_template('logs.html', columns=columns, server=_server.server, server_id=id, log_type=type)
+
+@console.route('/server/log/data/<id>/<type>', methods=['GET'])
+@login_required
+def serversLogData(id,type):
+	_server = MpServer.query.filter(MpServer.rid == id).first()
 	_uuid = str(uuid.uuid4())
 	dt  = datetime.now()
 	dts = str((dt - datetime(1970, 1, 1)).total_seconds())
@@ -643,14 +976,21 @@ def serversLog(server,type):
 	db.session.commit()
 
 	_data = []
-	_url = "https://{}:3600/api/v2/server/log/{}/{}/{}".format(server, _uuid, type, srvHash)
-	r = requests.get(_url, verify=False)
+	_url = "https://{}:{}/api/v2/server/log/{}/{}/{}".format(_server.server, _server.port, _uuid, type, srvHash)
+
+	# Generate JWT token for authentication
+	jwt_token = generate_jwt_token()
+	if not jwt_token:
+		log_Error("Failed to generate JWT token for log request")
+		return json.dumps([])
+
+	headers = {'Authorization': 'Bearer {}'.format(jwt_token)}
+	r = requests.get(_url, headers=headers, verify=False)
 	if r.status_code == 200:
 		rawData = json.loads(r.text)
 		_data = rawData['data']
 
-	columns = [('date', 'Date', '1'), ('app', 'App', '1'), ('level', 'Level', '1'), ('text', 'Message', '1')]
-	return render_template('logs.html', columns=columns, server=server, data=_data)
+	return json.dumps(_data)
 
 '''
 ----------------------------------------------------------------
@@ -664,7 +1004,7 @@ def asusServersView():
 	columns = [('rid', 'rid', '0'), ('catalog_url', 'Catalog URL', '1'), ('os_major', 'OS Major', '1'),
 	('os_minor', 'OS Minor', '1'),('proxy', 'Proxy', '1'), ('active', 'Enabled', '1')]
 
-	return render_template('asus_servers.html', columns=columns)
+	return render_template('admin/servers/asus_servers.html', columns=columns)
 
 @console.route('/servers/asus/list', methods=['GET'])
 @login_required
@@ -679,8 +1019,8 @@ def asusServersList():
 	for p in _servers:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
-			res = eval(y)
+			y = c[0]
+			res = getattr(p, y)
 			if c[0] == 'proxy' or c[0] == 'active':
 				if res == 1:
 					row[c[0]] = 'Yes'
@@ -691,7 +1031,7 @@ def asusServersList():
 
 		_results.append(row)
 
-	return json.dumps({'data': _results, 'total': 0}, default=json_serial), 200
+	return jsonify(data=_results, total=len(_results))
 
 @console.route('/servers/asus/<id>', methods=['GET'])
 @login_required
@@ -704,7 +1044,7 @@ def asusServerEdit(id):
 	else:
 		_filter = {}
 
-	return render_template('asus_server_update.html', data=_filter)
+	return render_template('admin/servers/asus_server_update.html', data=_filter)
 
 @console.route('/servers/asus/update', methods=['POST', 'DELETE'])
 @login_required
@@ -774,7 +1114,7 @@ def updateASUSRev():
 @console.route('/server/datasources')
 @login_required
 def dataSourcesView():
-	return render_template('datasources.html')
+	return render_template('admin/datasources.html')
 
 ''' Global '''
 def getDoc(col_obj):
@@ -783,10 +1123,93 @@ def getDoc(col_obj):
 	else:
 		return col_obj.doc
 
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
+'''
+----------------------------------------------------------------
+	Inventory Statistics
+	What MPInventoryD did with the inventory files clients sent
+----------------------------------------------------------------
+'''
+INV_STATS_PERIODS = (1, 7, 30, 120)
 
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")
+@console.route('/inventory/stats')
+@login_required
+def inventoryStats():
+	if not adminRole():
+		return render_template('403.html'), 403
+
+	return render_template('admin/inventory_stats.html', periods=INV_STATS_PERIODS)
+
+''' AJAX Method '''
+@console.route('/inventory/stats/data')
+@login_required
+def inventoryStatsData():
+	if not adminRole():
+		return json.dumps({'errorno': 403}), 403
+
+	try:
+		days = min(max(int(request.args.get('days', 7)), 1), 3650)
+	except ValueError:
+		days = 7
+
+	since = datetime.now() - timedelta(days=days)
+	since_day = (datetime.now() - timedelta(days=days - 1)).date()
+
+	def n(value):
+		return int(value or 0)
+
+	D, S = MpInvStatsDaily, MpInvStats
+	ok = D.result == 'ok'
+
+	# Loads per day, from the daily roll-up
+	daily = {}
+	for day, result, loads in (db.session.query(D.day, D.result, func.sum(D.loads))
+							   .filter(D.day >= since_day).group_by(D.day, D.result).all()):
+		d = daily.setdefault(str(day), {'day': str(day), 'ok': 0, 'failed': 0})
+		d['ok' if result == 'ok' else 'failed'] += n(loads)
+
+	# Totals per inventory table
+	tables = []
+	for r in (db.session.query(D.inv_table, func.sum(D.loads), func.sum(case((ok, D.loads), else_=0)),
+							   func.sum(D.rows_inserted), func.sum(D.rows_updated), func.sum(D.rows_purged),
+							   func.sum(D.file_bytes), func.sum(D.queued_ms_total), func.max(D.queued_ms_max),
+							   func.sum(case((ok, D.load_ms_total), else_=0)), func.max(D.load_ms_max))
+			  .filter(D.day >= since_day).group_by(D.inv_table).all()):
+		loads, loaded = n(r[1]), n(r[2])
+		tables.append({'inv_table': r[0] or '(unknown)', 'loads': loads, 'failed': loads - loaded,
+					   'rows_inserted': n(r[3]), 'rows_updated': n(r[4]), 'rows_purged': n(r[5]),
+					   'file_bytes': n(r[6]),
+					   'avg_queued_ms': n(r[7]) // loads if loads else 0, 'max_queued_ms': n(r[8]),
+					   'avg_load_ms': n(r[9]) // loaded if loaded else 0, 'max_load_ms': n(r[10])})
+	tables.sort(key=lambda t: (-t['failed'], -t['loads']))
+
+	loads = sum(t['loads'] for t in tables)
+	failed = sum(t['failed'] for t in tables)
+	loaded = loads - failed
+	totals = {'loads': loads, 'failed': failed,
+			  'success_rate': round(100.0 * loaded / loads, 1) if loads else None,
+			  'rows_inserted': sum(t['rows_inserted'] for t in tables),
+			  'rows_purged': sum(t['rows_purged'] for t in tables),
+			  'file_bytes': sum(t['file_bytes'] for t in tables),
+			  'avg_queued_ms': sum(t['avg_queued_ms'] * t['loads'] for t in tables) // loads if loads else 0,
+			  'max_queued_ms': max([t['max_queued_ms'] for t in tables] or [0]),
+			  'avg_load_ms': sum(t['avg_load_ms'] * (t['loads'] - t['failed']) for t in tables) // loaded if loaded else 0,
+			  'max_load_ms': max([t['max_load_ms'] for t in tables] or [0])}
+
+	# Why loads failed, grouped by cause and table (needs the per file rows, kept for a shorter time)
+	causes = []
+	for r in (db.session.query(S.result, S.inv_table, func.count(S.rid), func.count(func.distinct(S.cuuid)),
+							   func.max(S.started), func.max(S.error_no), func.max(S.error_stage), func.max(S.error_msg))
+			  .filter(S.started >= since, S.result != 'ok').group_by(S.result, S.inv_table)
+			  .order_by(func.count(S.rid).desc()).all()):
+		causes.append({'result': r[0], 'inv_table': r[1] or '(unknown)', 'failures': n(r[2]), 'clients': n(r[3]),
+					   'last': r[4], 'error_no': r[5], 'error_stage': r[6], 'example': r[7]})
+
+	recent = []
+	for r in (S.query.filter(S.started >= since, S.result != 'ok').order_by(S.started.desc()).limit(100).all()):
+		recent.append({'started': r.started, 'cuuid': r.cuuid, 'inv_table': r.inv_table, 'result': r.result,
+					   'error_no': r.error_no, 'error_stage': r.error_stage, 'error_msg': r.error_msg,
+					   'file_name': r.file_name, 'rows_received': n(r.rows_received), 'file_bytes': n(r.file_bytes)})
+
+	return json.dumps({'days': days, 'since': since, 'totals': totals,
+					   'daily': [daily[k] for k in sorted(daily)], 'tables': tables,
+					   'causes': causes, 'recent': recent}, default=json_serial), 200

@@ -1,12 +1,13 @@
 import os
 import logging, logging.handlers
+from flask.logging import default_handler
 import json
 import subprocess
 import sys
 
 from flask import Flask, request, abort
 from datetime import datetime, date
-from distutils.version import LooseVersion
+from packaging import version
 
 from mpapi.config import Config
 from mpapi.extensions import db, migrate, cache, aws
@@ -65,7 +66,7 @@ def create_app(config_object=Config):
 
 				# Agent Ver is Less than Min Agent Ver
 				if app.config['VERIFY_MIN_AGENT_VER']:
-					if LooseVersion(_req_agent_ver) < LooseVersion(app.config['MIN_AGENT_VER']):
+					if version.parse(_req_agent_ver) < version.parse(str(app.config['MIN_AGENT_VER'])):
 						abort(409)
 						#return {'errorno': 409, 'errormsg': 'Agent Version not accepted.', 'result': {}}, 409
 					else:
@@ -96,7 +97,8 @@ def read_siteconfig_server_data(app):
 def register_extensions(app):
 	db.init_app(app)
 	migrate.init_app(app, db)
-	cache.init_app(app, config={'CACHE_TYPE': 'simple'})
+	# Flask-Caching 2.5+ uses 'SimpleCache' instead of 'simple'
+	cache.init_app(app, config={'CACHE_TYPE': 'SimpleCache'})
 	aws.init_app(app)
 
 def register_blueprints(app):
@@ -197,28 +199,68 @@ def register_blueprints(app):
 	from .support import support as bp_support
 	app.register_blueprint(bp_support, url_prefix=app.config['URL_PREFIX'])
 
+	# /api/v5: single API baseline for MacPatch 4.4.0+ clients. The versioned blueprints above
+	# can be removed once their support window ends.
+	from .agent_5 import agent_5 as bp_agent_5
+	app.register_blueprint(bp_agent_5, url_prefix='/api/v5')
+	from .aws_5 import aws_5 as bp_aws_5
+	app.register_blueprint(bp_aws_5, url_prefix='/api/v5')
+	from .checkin_5 import checkin_5 as bp_checkin_5
+	app.register_blueprint(bp_checkin_5, url_prefix='/api/v5')
+	from .inventory_5 import inventory_5 as bp_inventory_5
+	app.register_blueprint(bp_inventory_5, url_prefix='/api/v5')
+	from .patches_5 import patches_5 as bp_patches_5
+	app.register_blueprint(bp_patches_5, url_prefix='/api/v5')
+	from .provisioning_5 import provisioning_5 as bp_provisioning_5
+	app.register_blueprint(bp_provisioning_5, url_prefix='/api/v5')
+	from .register_5 import register_5 as bp_register_5
+	app.register_blueprint(bp_register_5, url_prefix='/api/v5')
+	from .software_5 import software_5 as bp_software_5
+	app.register_blueprint(bp_software_5, url_prefix='/api/v5')
+	from .status_5 import status_5 as bp_status_5
+	app.register_blueprint(bp_status_5, url_prefix='/api/v5')
+
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+	'''
+	WatchedFileHandler re-opens the log file once it has been rotated (renamed) by
+	logrotate (Linux) or newsyslog (macOS), it is safe to use from every gunicorn worker.
+	The log is not rotated in-process, every worker process would rotate the same file.
+
+	When running as root (gunicorn master with preload_app), a file it creates is given
+	to the owner of the log directory, so the workers can still open it after a rotation.
+	'''
+	def _open(self):
+		stream = super()._open()
+		if os.geteuid() == 0:
+			try:
+				_dir = os.stat(os.path.dirname(self.baseFilename))
+				os.chown(self.baseFilename, _dir.st_uid, _dir.st_gid)
+			except OSError:
+				pass
+		return stream
+
 def setup_logging(app):
-	# Configure logging
-	handler = logging.handlers.RotatingFileHandler(app.config['LOG_FILE'], maxBytes=10485760, backupCount=30)
+	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
+	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
 
-	if app.config['LOGGING_LEVEL'].lower() == 'info':
-		app.logger.setLevel(logging.INFO)
-	elif app.config['LOGGING_LEVEL'].lower() == 'debug':
-		app.logger.setLevel(logging.DEBUG)
-	elif app.config['LOGGING_LEVEL'].lower() == 'warning':
-		app.logger.setLevel(logging.WARNING)
-	elif app.config['LOGGING_LEVEL'].lower() == 'error':
-		app.logger.setLevel(logging.ERROR)
-	elif app.config['LOGGING_LEVEL'].lower() == 'critical':
-		app.logger.setLevel(logging.CRITICAL)
-	else:
-		app.logger.setLevel(logging.INFO)
+	# Flask adds a stderr handler by default, under gunicorn that duplicates every
+	# line into stderr (journald / launchd stderr file, which is not rotated)
+	app.logger.removeHandler(default_handler)
 
-	app.logger.setLevel(logging.DEBUG)
-	handler = logging.StreamHandler(sys.stdout)
+	# create_app can be called more than once in a process, do not add duplicate handlers
+	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:
+		app.logger.removeHandler(_handler)
+		_handler.close()
+
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
-	handler.setFormatter(formatter)
-	app.logger.addHandler(handler)
+	handlers = [OwnedWatchedFileHandler(app.config['LOG_FILE'])]
+	if app.debug:
+		handlers.append(logging.StreamHandler(sys.stdout))
+
+	for _handler in handlers:
+		_handler._macpatch = True
+		_handler.setFormatter(formatter)
+		app.logger.addHandler(_handler)
 
 def json_serial(obj):
 	"""JSON serializer for objects not serializable by default json code"""

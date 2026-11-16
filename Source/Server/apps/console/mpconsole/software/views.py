@@ -1,4 +1,4 @@
-from flask import render_template, request, session
+from flask import render_template, request, session, url_for
 from werkzeug.utils import secure_filename
 from sqlalchemy.orm.session import make_transient
 from sqlalchemy.sql import text
@@ -53,8 +53,8 @@ def groups():
 	for r in qGet:
 		_drow = {}
 		for c in _cols:
-			_obj = "r." + c['field']
-			_objVal = eval(_obj)
+			_obj = c['field']
+			_objVal = getattr(r, _obj)
 			try:
 				if c['field'] == 'mdate':
 					_drow[c['field']] = _objVal.strftime("%Y-%m-%d %H:%M:%S")
@@ -63,9 +63,7 @@ def groups():
 				else:
 					_drow[c['field']] = _objVal
 			except Exception as e:
-				exc_type, exc_obj, exc_tb = sys.exc_info()
-				message=str(e.args[0]).encode("utf-8")
-				log_Error(message)
+				log_Exception('Unable to read field {}: {}'.format(c['field'], e))
 
 		_rows.append(_drow)
 
@@ -175,6 +173,7 @@ def showFiltersForGroup(id):
 
 ''' AJAX Route '''
 @software.route('/group/filter/list/<id>/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def filtersForGroup(id,limit,offset,search,sort,order):
 
 	total = 0
@@ -205,13 +204,13 @@ def filtersForGroup(id,limit,offset,search,sort,order):
 	for p in query:
 		row = {}
 		for x in colsForQuery:
-			y = "p."+x
+			y = x
 			if x == 'mdate':
-				row[x] = eval(y)
+				row[x] = getattr(p, y)
 			elif x == 'type':
-				row[x] = eval(y).title()
+				row[x] = getattr(p, y).title()
 			else:
-				row[x] = eval(y)
+				row[x] = getattr(p, y)
 
 		_results.append(row)
 
@@ -327,14 +326,14 @@ def tasks():
 		for c in colsForQuery:
 
 			if c in ('sw_start_datetime','sw_end_datetime','mdate'):
-				dt_obj = eval("d."+c)
+				dt_obj = getattr(d, c)
 				if dt_obj:
-					row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
+					row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
 			elif c == 'active':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Yes" if _a == 1 else "No"
 			else:
-				row[c] = eval("d."+c)
+				row[c] = getattr(d, c)
 
 		_data.append(row)
 
@@ -409,6 +408,7 @@ def taskSave(id):
 
 ''' AJAX Method '''
 @software.route('/task/generate/<id>', methods=['POST'])
+@login_required
 def generateTask(id):
 
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
@@ -439,15 +439,31 @@ def taskRemove():
 		for t in _form['tasks'].split(","):
 			_task = MpSoftwareTask.query.filter(MpSoftwareTask.tuuid == t).first()
 			if _task is not None:
-				log_Info("Delete sw task %s" % (_task.name))
+				log_Info("[taskRemove] User %s deleting software task: %s (tuuid=%s)" % (session.get('user'), _task.name, t))
+
+				# Remove from software groups
 				_tasks = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_task_id == t).all()
 				if _tasks is not None:
 					for x in _tasks:
-						log_Info("Delete %s from sw group %s" % (x.sw_task_id, x.sw_group_id))
+						log_Info("[taskRemove] Removing task %s from software group %s" % (x.sw_task_id, x.sw_group_id))
 						MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.rid == x.rid).delete()
+
+				# Remove from client groups
+				_clientGroups = MpClientGroupSoftware.query.filter(MpClientGroupSoftware.tuuid == t).all()
+				if _clientGroups is not None and len(_clientGroups) > 0:
+					log_Info("[taskRemove] Task is assigned to %d client group(s), removing..." % len(_clientGroups))
+					for cg in _clientGroups:
+						# Get group name for logging
+						group = MpClientGroups.query.filter(MpClientGroups.group_id == cg.group_id).first()
+						group_name = group.group_name if group else cg.group_id
+						log_Info("[taskRemove] Removing task from client group: %s (group_id=%s)" % (group_name, cg.group_id))
+						MpClientGroupSoftware.query.filter(MpClientGroupSoftware.rid == cg.rid).delete()
+				else:
+					log_Info("[taskRemove] Task not assigned to any client groups")
 
 				db.session.delete(_task)
 				db.session.commit()
+				log_Info("[taskRemove] Successfully deleted task: %s" % _task.name)
 
 	return json.dumps({'error':0}), 201
 
@@ -479,7 +495,7 @@ def swGroupTasks(id):
 			if c == 'sw_task_id':
 				row2[c] = d.tuuid
 			else:
-				row2[c] = eval("d."+c)
+				row2[c] = getattr(d, c)
 
 		_data.append(row2)
 
@@ -510,6 +526,7 @@ def swGroupTasks(id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/task/add/<task_id>')
+@login_required
 def swGroupTasksAdd(id, task_id):
 
 	qGet = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == id, MpSoftwareGroupTasks.sw_task_id == task_id).first()
@@ -527,6 +544,7 @@ def swGroupTasksAdd(id, task_id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/task/remove/<task_id>')
+@login_required
 def swGroupTasksRemove(id, task_id):
 
 	qGet = MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == id, MpSoftwareGroupTasks.sw_task_id == task_id).first()
@@ -544,6 +562,7 @@ def swGroupTasksRemove(id, task_id):
 
 ''' AJAX Method '''
 @software.route('/group/<id>/tasks/save')
+@login_required
 def swGroupTasksSave(id):
 	tData = tasksForGroup(id)
 	if tData is None:
@@ -680,18 +699,18 @@ def packages():
 		row = {}
 		for c in colsForQuery:
 			if c in ('mdate'):
-				row[c] = eval("d."+c).strftime("%Y-%m-%d %H:%M:%S")
+				row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
 			elif c == 'sReboot':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = "Yes" if _a == 1 else "No"
 			elif c == 'sState':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = options[_a]
 			elif c == 'sw_size':
-				_a = eval("d."+c)
+				_a = getattr(d, c)
 				row[c] = humansize(_a * 1024)
 			else:
-				row[c] = eval("d."+c)
+				row[c] = getattr(d, c)
 
 		_data.append(row)
 
@@ -740,7 +759,8 @@ def addSWPackage():
 
 	_data['BUNDLEIDS'] = _patchBundleIDs
 
-	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True')
+	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True',
+						   wizard_title='New Software Package', wizard_return_url=url_for('software.packages'))
 
 @software.route('/package/edit/<id>')
 @login_required
@@ -803,10 +823,12 @@ def editSWPackage(id):
 
 	_data['BUNDLEIDS'] = _patchBundleIDs
 
-	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True')
+	return render_template('software/software_pkg_wizard.html', data=_data, isAdmin='True',
+						   wizard_title='Edit Software Package', wizard_return_url=url_for('software.packages'))
 
 ''' AJAX Method '''
 @software.route('/package/save', methods=['POST'])
+@login_required
 def saveSWPackage():
 
 	# Check for SUUID, if missing gen one
@@ -814,6 +836,10 @@ def saveSWPackage():
 	_suuid = request.form.get('suuid')
 	if _suuid is None:
 		_suuid = str(uuid.uuid4())
+	elif not isValidUUID(_suuid):
+		# suuid is used to build file system paths, it must be a UUID
+		log_Error("{} invalid software id {}.".format(session.get('user'), _suuid))
+		return json.dumps({'errorno': 400, 'errormsg': 'Invalid software id.'}), 400
 
 	''' Process Requisists '''
 	_reqsPre = []
@@ -826,19 +852,19 @@ def saveSWPackage():
 			if "preSWPKG_Order_" in v:
 					x = v.split("_")[-1]
 					_rowPre['suuid'] = _suuid
-					_rowPre['suuid_ref'] = eval("request.form.get('preSWPKG_"+x+"')")
+					_rowPre['suuid_ref'] = request.form.get(f'preSWPKG_{x}')
 					_rowPre['type'] = 0
 					_rowPre['type_txt'] = "PRE"
-					_rowPre['type_order'] = eval("request.form.get('preSWPKG_Order_"+x+"')")
+					_rowPre['type_order'] = request.form.get(f'preSWPKG_Order_{x}')
 					_reqsPre.append(_rowPre)
 
 			elif "postSWPKG_Order_" in v:
 					x = v.split("_")[-1]
 					_rowPost['suuid'] = _suuid
-					_rowPost['suuid_ref'] = eval("request.form.get('postSWPKG_"+x+"')")
+					_rowPost['suuid_ref'] = request.form.get(f'postSWPKG_{x}')
 					_rowPost['type'] = 1
 					_rowPost['type_txt'] = "POST"
-					_rowPost['type_order'] = eval("request.form.get('postSWPKG_Order_"+x+"')")
+					_rowPost['type_order'] = request.form.get(f'postSWPKG_Order_{x}')
 					_reqsPost.append(_rowPost)
 
 	_new = False
@@ -851,8 +877,34 @@ def saveSWPackage():
 		setattr(qSW, 'suuid', _suuid)
 		setattr(qSW, 'cdate', datetime.now())
 
+	# SECURITY: Whitelist of allowed columns to prevent mass assignment vulnerability
+	# Only user-editable fields should be in this list
+	ALLOWED_COLUMNS = {
+		'patch_bundle_id',
+		'auto_patch',
+		'sState',
+		'sName',
+		'sVendor',
+		'sVersion',
+		'sDescription',
+		'sVendorURL',
+		'sReboot',
+		'sw_app_path',
+		'sw_type',
+		'sw_path',
+		'sw_url',
+		'sw_useS3',
+		'sw_size',
+		'sw_hash',
+		'sw_pre_install_script',
+		'sw_post_install_script',
+		'sw_uninstall_script',
+		'sw_env_var',
+		'sw_img_path'
+	}
+
 	for v in request.form:
-		if v != 'suuid':
+		if v != 'suuid' and v in ALLOWED_COLUMNS:
 			setattr(qSW, v, request.form[v])
 
 	setattr(qSW, 'mdate', datetime.now())
@@ -928,10 +980,8 @@ def saveSWPackage():
 		if request.form['sw_useS3'] == '1':
 			aws = MPaws()
 			_fileData = saveSoftwareFileToTMP(_suuid, mainFile)
-			print(_fileData['filePath'])
-			print(_fileData['fileURL'])
 			aws.uploadFileToS3(_fileData['filePath'], _fileData['fileURL'])
-			shutil.rmtree(os.path.join('/tmp/sw', request.form['suuid']))
+			shutil.rmtree(os.path.join('/tmp/sw', _suuid))
 		else:
 			_fileData = saveSoftwareFile(_suuid, mainFile)
 			log_Info('_fileData')
@@ -1057,6 +1107,7 @@ def saveImageFile(suuid, file):
 
 ''' AJAX Method '''
 @software.route('/package/duplicate/<id>')
+@login_required
 def duplicateSWPackage(id):
 
 	_suuid = str(uuid.uuid4())
@@ -1094,6 +1145,7 @@ def duplicateSWPackage(id):
 
 ''' AJAX Method '''
 @software.route('/package/delete/<id>')
+@login_required
 def deleteSWPackage(id):
 
 	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
@@ -1132,6 +1184,7 @@ def deleteSWPackage(id):
 	return json.dumps({'error': 0}), 200
 
 @software.route('/s3url/<id>', methods=['GET'])
+@login_required
 def getS3URL(id):
 	aws = MPaws()
 	sw_S3path = aws.getS3UrlForSoftware(id)

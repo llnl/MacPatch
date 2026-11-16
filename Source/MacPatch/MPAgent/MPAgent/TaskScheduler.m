@@ -146,8 +146,9 @@ static TaskScheduler *_shared = nil;
 {
     LogInfo(@"=== Reloading tasks from config file ===");
     
-    // Stop all existing tasks
+    // Stop all existing tasks, keeping them so they can be restored if the load fails
     [self stopAllTasks];
+    NSDictionary *previousTasks = [self.tasks copy];
     
     // Clear task dictionary
     [self.tasks removeAllObjects];
@@ -155,6 +156,11 @@ static TaskScheduler *_shared = nil;
     // Load configuration from file
     if (![self loadConfigFromFile]) {
         LogError(@"Failed to load config file, keeping existing tasks");
+        [self.tasks removeAllObjects]; // Drop anything partially loaded
+        [self.tasks addEntriesFromDictionary:previousTasks];
+        for (NSString *name in previousTasks) {
+            [self startTask:name];
+        }
         return;
     }
     
@@ -276,7 +282,7 @@ static TaskScheduler *_shared = nil;
                 [self addDailyTask:name hour:hour minute:minute taskBlock:[self taskBlockForName:task[@"cmd"]]];
                 
             }
-            else if ([type isEqualToString:@"weekly"])
+            else if ([recurringType isEqualToString:@"weekly"])
             {
                 
                 NSString *timeStr = [intervals[2] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
@@ -287,12 +293,16 @@ static TaskScheduler *_shared = nil;
                 NSInteger minute = time.minute;
                 
                 // Add The Task to the scheduler
-                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:name]];
+                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:task[@"cmd"]]];
             
             }
-            else if ([type isEqualToString:@"weekday"])
+            else if ([recurringType isEqualToString:@"weekday"])
             {
                 // RECURRING@WeekDay@2@12:00:00 = Run every Monday at Noon
+                if ([intervals count] < 4) {
+                    LogInfo(@"Skipping weekday task '%@': interval syntax %@ is malformed.", name, [task objectForKey:@"interval"]);
+                    continue;
+                }
                 NSString *weekdayStr = [intervals[2] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
                 NSString *timeStr = [intervals[3] stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
                 NSDateComponents *time = [NSDate timeComponentsFromString:timeStr];
@@ -303,9 +313,9 @@ static TaskScheduler *_shared = nil;
                 NSInteger minute = time.minute;
                 
                 // Add The Task to the scheduler
-                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:name]];
+                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:task[@"cmd"]]];
             }
-            else if ([type isEqualToString:@"monthly"])
+            else if ([recurringType isEqualToString:@"monthly"])
             {
                 // CEH Not implemented yet
                 /*
@@ -317,7 +327,7 @@ static TaskScheduler *_shared = nil;
                 NSInteger minute = time.minute;
                 
                 // Add The Task to the scheduler
-                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:name]];
+                [self addWeeklyTask:name weekday:weekday hour:hour minute:minute taskBlock:[self taskBlockForName:task[@"cmd"]]];
                 */
             }
             else

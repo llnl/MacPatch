@@ -32,19 +32,22 @@ RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
 MP_SCRIPT="${MP_HOME}/conf/scripts"
 MP_INVDIR="${MP_HOME}/InvData/files"
+MP_PYTHON="${MP_HOME}/env/server/bin/python3"
 
 case "$1" in
  start)
 	if [ -f $MP_SCRIPT/MPInventoryD.py ]; then
 	    echo $"Starting MacPatch Inventory"
-		$MP_SCRIPT/MPInventoryD.py --config $MP_HOME/etc/siteconfig.json --files $MP_INVDIR &
+		$MP_PYTHON $MP_SCRIPT/MPInventoryD.py --config $MP_HOME/etc/siteconfig.json --files $MP_INVDIR &
     fi
 	;;
  stop)
 	if [ -f $MP_SCRIPT/MPInventoryD.py ]; then
 		echo $"Stopping MacPatch Inventory"
-		mpPID=`ps -ef | grep MPInventoryD.py | grep -v grep | awk '{ print $2 }'`
-		kill -9 $mpPID
+		mpPID=`ps -ef | grep "[M]PInventoryD.py" | awk '{ print $2 }'`
+		if [ -n "$mpPID" ]; then
+			kill -9 $mpPID
+		fi
     fi
  	;;
  *)

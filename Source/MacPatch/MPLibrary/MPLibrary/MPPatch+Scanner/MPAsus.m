@@ -27,8 +27,6 @@
 #import "MPASUSCatalogs.h"
 #import "Constants.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPAsus
 
 @interface MPAsus ()
 {
@@ -265,7 +263,7 @@
 		LogError(@"Error installing %@.",approvedUpdate);
 		LogError(@"%@.",taskErr.localizedDescription);
 	} else {
-		qltrace(@"%@",taskStr);
+		LogDebug(@"%@",taskStr);
 		result = TRUE;
 		if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
 		{
@@ -304,7 +302,7 @@
         LogError(@"Error installing all apple updates.");
         LogError(@"%@.",taskErr.localizedDescription);
     } else {
-        qltrace(@"%@",taskStr);
+        LogDebug(@"%@",taskStr);
         result = TRUE;
         if ([taskStr containsString:@"computer must shut down." ignoringCase:YES])
         {

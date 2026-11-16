@@ -25,18 +25,17 @@
 
 #import "Logger.h"
 #import "MPASUSCatalogs.h"
-#import "MPNetworkUtils.h"
 #import "MPSystemInfo.h"
 #import "Suserver.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPASUSCatalogs
 
 @interface MPASUSCatalogs ()
 {
     MPSettings      *settings;
-    MPNetworkUtils  *mpNetworkUtils;
 }
+
+// Helper method to check if URL is valid and returns expected status code
+- (BOOL)isURLValidWithTimeout:(NSString *)urlString expectedStatusCode:(NSInteger)statusCode timeoutInterval:(NSTimeInterval)timeout;
 
 @end
 
@@ -47,8 +46,7 @@
     self = [super init];
 	if (self)
     {
-        mpNetworkUtils  = [[MPNetworkUtils alloc] init];
-        settings        = [MPSettings sharedInstance];
+        settings = [MPSettings sharedInstance];
     }
     return self;
 }
@@ -135,17 +133,16 @@
     NSString *newCatalogURL = NULL;
     for (Suserver *server in suServers)
     {
-        if ([mpNetworkUtils isHostURLReachable:server.catalogURL])
+        if ([self isURLValidWithTimeout:server.catalogURL expectedStatusCode:200 timeoutInterval:10.0])
         {
-            if ([mpNetworkUtils isURLValid:server.catalogURL returnCode:200])
-            {
-                LogDebug(@"SU Catalog verified: %@",server.catalogURL);
-                newCatalogURL = server.catalogURL;
-                break;
-            } else {
-                LogError(@"CatalogURL: %@ did not return 200.",server.catalogURL);
-                continue;
-            }
+            LogDebug(@"SU Catalog verified: %@",server.catalogURL);
+            newCatalogURL = server.catalogURL;
+            break;
+        }
+        else
+        {
+            LogError(@"CatalogURL: %@ did not return 200 or is unreachable.",server.catalogURL);
+            continue;
         }
     }
     
@@ -155,9 +152,74 @@
 	
 	// Catalog is already set, no need to reset it
 	if ([newCatalogURL isEqualToString:[self currentCatalogURL]]) return YES;
-	
+
 	// Write and return
     return [self writeCatalogURL:newCatalogURL];
+}
+
+#pragma mark - Helper Methods
+
+- (BOOL)isURLValidWithTimeout:(NSString *)urlString expectedStatusCode:(NSInteger)statusCode timeoutInterval:(NSTimeInterval)timeout
+{
+    if (!urlString || [urlString length] == 0) {
+        return NO;
+    }
+
+    NSURL *url = [NSURL URLWithString:urlString];
+    if (!url) {
+        LogError(@"Invalid URL: %@", urlString);
+        return NO;
+    }
+
+    __block BOOL result = NO;
+    __block BOOL completed = NO;
+
+    NSURLSessionConfiguration *config = [NSURLSessionConfiguration defaultSessionConfiguration];
+    config.timeoutIntervalForRequest = timeout;
+    config.timeoutIntervalForResource = timeout;
+    NSURLSession *session = [NSURLSession sessionWithConfiguration:config];
+
+    NSURLRequest *request = [NSURLRequest requestWithURL:url
+                                             cachePolicy:NSURLRequestReloadIgnoringLocalCacheData
+                                         timeoutInterval:timeout];
+
+    NSURLSessionDataTask *task = [session dataTaskWithRequest:request
+                                            completionHandler:^(NSData *data, NSURLResponse *response, NSError *error)
+    {
+        if (error) {
+            LogError(@"URL check failed for %@: %@", urlString, error.localizedDescription);
+            result = NO;
+        }
+        else if ([response isKindOfClass:[NSHTTPURLResponse class]])
+        {
+            NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse *)response;
+            if (httpResponse.statusCode == statusCode) {
+                result = YES;
+            } else {
+                LogDebug(@"URL %@ returned status code %ld, expected %ld",
+                        urlString, (long)httpResponse.statusCode, (long)statusCode);
+                result = NO;
+            }
+        }
+        else
+        {
+            result = NO;
+        }
+
+        completed = YES;
+    }];
+
+    [task resume];
+
+    // Wait for completion with timeout
+    NSDate *timeoutDate = [NSDate dateWithTimeIntervalSinceNow:timeout + 1.0];
+    while (!completed && [[NSDate date] compare:timeoutDate] == NSOrderedAscending) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:0.1]];
+    }
+
+    [session finishTasksAndInvalidate];
+
+    return result;
 }
 
 @end

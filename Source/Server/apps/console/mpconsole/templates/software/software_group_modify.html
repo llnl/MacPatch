@@ -7,7 +7,8 @@
 {% block bodyPanel %}
 <div class="container">
 	<form method='post' action='/software/group/save' id="myForm">
-		<table class="table-condensed">
+		<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+		<table class="table-sm">
 			<tbody>
 			<tr>
 				<td>

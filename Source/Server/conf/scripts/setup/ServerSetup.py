@@ -40,6 +40,7 @@ import grp
 import shutil
 import json
 import getpass
+import subprocess
 import types
 from packaging.version import Version
 import sys
@@ -75,6 +76,9 @@ MP_SRV_CONF		= MP_SRV_BASE+"/conf"
 MP_SRV_CONT		= MP_BASE+"/Content/Web"
 MP_INV_DIR		= MP_SRV_BASE+"/InvData"
 MP_SRV_KEYS		= MP_SRV_ETC +"/keys"
+
+MP_CONSOLE_APP		= MP_SRV_APPS+"/console/mpconsole"
+MP_CONSOLE_FLASK	= MP_SRV_BASE+"/env/console/bin/flask"
 
 os_type 		= platform.system()
 system_name 	= platform.uname()[1]
@@ -586,54 +590,49 @@ def linkStartupScripts(service,action='enable',altType=None):
 		os.system("update-rc.d "+service+" defaults")
 
 # ----------------------------------------------------------------------------
-# MPAdmin Config Class
+# MacPatch Console Database & Admin Account Class
 # ----------------------------------------------------------------------------
 
-class MPAdmin:
+class MPConsoleDB:
+	'''
+	Creates/upgrades the database schema, adds the default data and creates the
+	console admin account. Uses the console flask commands (mpconsole/cli.py), they
+	run in the console virtual env as the MacPatch service user so the console
+	log file is not owned by root.
+	'''
 
-	def __init__(self):
-		self.mp_adm_name = "mpadmin"
-		self.mp_adm_pass = "*mpadmin*"
-		MPAdmin.config_file = MP_CONF_FILE
-
-	def loadConfig(self):
-		config = {}
+	def runFlask(self, *args):
+		existsOrExit(MP_CONSOLE_FLASK)
 		try:
-			fd = open(MPAdmin.config_file, 'r+')
-			config = json.load(fd)
-			fd.close()
-		except:
-			print(f"COULD NOT LOAD: {MPAdmin.config_file}")
-			exit(1)
+			result = subprocess.run([MP_CONSOLE_FLASK] + list(args), cwd=MP_CONSOLE_APP, user=gUID, group=gGID, extra_groups=[])
+			return result.returncode == 0
+		except OSError as e:
+			print(f"Error: unable to run {MP_CONSOLE_FLASK} {' '.join(args)}: {e}")
+			return False
 
-		return config
+	def setupDatabase(self, ask=True):
+		os.system('clear')
+		print("Setup MacPatch Database Schema & Default Data...")
+		print("The database and account must already exist (MPDBSetup.sql).")
+		if ask:
+			setup_answer = input("Would you like to create/upgrade the database schema and add the default data now [Y]?:").upper() or "Y"
+			if setup_answer != "Y":
+				print(f"Skipped, run it later with: sudo {os.path.abspath(__file__)} --setup-db")
+				return False
 
-	def writeConfig(self, config):
-		print("Writing configuration data to file ...")
-		with open(MPAdmin.config_file, "w") as outfile:
-			json.dump(config, outfile, indent=4)
+		print("Creating/upgrading database schema ...")
+		if not self.runFlask('db', 'upgrade', 'head'):
+			print("Error: database schema upgrade failed, verify the database settings with --config database")
+			return False
+
+		print("Adding default data ...")
+		return self.runFlask('populate-db')
 
 	def configAdminUser(self):
-		conf = self.loadConfig()
-
 		os.system('clear')
-		print("Set Default Admin name and password...")
-
-		set_admin_info = input("Would you like to set the admin name and password [Y]:").upper() or "Y"
-		if set_admin_info == "Y":
-			mp_adm_name = input("MacPatch Default Admin Account Name [mpadmin]: ") or "mpadmin"
-			conf["settings"]["users"]["admin"]["name"] = mp_adm_name
-			print("MacPatch MacPatch Default Admin Account Password")
-			mp_adm_pass = passwordEntry()
-			conf["settings"]["users"]["admin"]["pass"] = mp_adm_pass
-		else:
-			return
-
-		save_answer = input("Would you like the save these settings [Y]?:").upper() or "Y"
-		if save_answer == "Y":
-			self.writeConfig(conf)
-		else:
-			return self.configAdminUser()
+		print("Create MacPatch Console Admin Account...")
+		mp_adm_name = input("Admin account name [mpadmin]: ") or "mpadmin"
+		return self.runFlask('add-admin', '--username', mp_adm_name)
 
 # ----------------------------------------------------------------------------
 # DB Config Class
@@ -839,9 +838,10 @@ def main():
 	parser = argparse.ArgumentParser(description='MacPatch Server Setup')
 	setup_group = parser.add_argument_group('First time setup of all components')
 	setup_group.add_argument("--setup", help="Setup All Components", required=False, action='store_true')
+	setup_group.add_argument("--setup-db", dest="setupDB", help="Create/upgrade the database schema and add the default data, prompts for the first admin account if needed.", required=False, action='store_true')
 
 	config_group = parser.add_argument_group('Component Configuration')
-	config_group.add_argument("--config", dest="configArg", choices=("admin", "database", "ldap", "api"), help="admin/database/ldap/api the confiduration to be edited.", required=False)
+	config_group.add_argument("--config", dest="configArg", choices=("admin", "database", "ldap", "api"), help="admin (create a console admin account)/database/ldap/api the configuration to be edited.", required=False)
 
 	services_group = parser.add_argument_group('Services')
 	if os_type == 'Darwin':
@@ -869,14 +869,15 @@ def main():
 		srvconf = MPConfigDefaults()
 		srvconf.genConfigDefaults()
 
-		adm = MPAdmin()
-		adm.configAdminUser()
-
 		db = MPDatabase()
 		db.configDatabase()
 
 		ldap = MPLdap()
 		ldap.configLdap()
+
+		# Schema, default data and first admin account, needs the database settings above
+		consoleDB = MPConsoleDB()
+		consoleDB.setupDatabase()
 
 		os.system('clear')
 		srvList = setupServices()
@@ -891,11 +892,14 @@ def main():
 
 		return
 
+	if args.setupDB:
+		_consoleDB = MPConsoleDB()
+		sys.exit(0 if _consoleDB.setupDatabase(ask=False) else 1)
+
 	if args.configArg is not None:
 		if args.configArg == 'admin':
-			_adm = MPAdmin()
-			_adm.configAdminUser()
-			sys.exit()
+			_consoleDB = MPConsoleDB()
+			sys.exit(0 if _consoleDB.configAdminUser() else 1)
 		elif args.configArg == 'database':
 			_db = MPDatabase()
 			_db.configDatabase()

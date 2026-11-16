@@ -192,7 +192,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if (_wkWebView) {
 		NSRect frame = _wkWebView.frame;
 		NSView *superview = _wkWebView.superview;
-		NSArray *constraints = _wkWebView.constraints.copy;
+		WKWebView *oldWebView = _wkWebView;
+		// Pinning constraints (leading/trailing/top) live on the superview, sizing ones on the view itself
+		NSMutableArray<NSLayoutConstraint *> *constraints = [NSMutableArray arrayWithArray:oldWebView.constraints];
+		for (NSLayoutConstraint *c in superview.constraints) {
+			if (c.firstItem == oldWebView || c.secondItem == oldWebView) [constraints addObject:c];
+		}
 		BOOL usesAutoLayout = !_wkWebView.translatesAutoresizingMaskIntoConstraints;
 		
 		[_wkWebView removeFromSuperview];
@@ -206,13 +211,14 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 		if (usesAutoLayout && constraints.count > 0) {
 			for (NSLayoutConstraint *constraint in constraints) {
 				NSLayoutConstraint *newConstraint = [NSLayoutConstraint
-					constraintWithItem:(constraint.firstItem == _wkWebView ? _wkWebView : constraint.firstItem)
+					constraintWithItem:(constraint.firstItem == oldWebView ? _wkWebView : constraint.firstItem)
 					attribute:constraint.firstAttribute
 					relatedBy:constraint.relation
-					toItem:(constraint.secondItem == _wkWebView ? _wkWebView : constraint.secondItem)
+					toItem:(constraint.secondItem == oldWebView ? _wkWebView : constraint.secondItem)
 					attribute:constraint.secondAttribute
 					multiplier:constraint.multiplier
 					constant:constraint.constant];
+				newConstraint.priority = constraint.priority;
 				[newConstraint setActive:YES];
 			}
 		}
@@ -331,9 +337,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 // main thread, passing it an error indicating if the connection was successful.
 {
     //assert([NSThread isMainThread]);
-    
+
     // Ensure that there's a helper tool connection in place.
-    self.workerConnection = nil;
     [self connectToHelperTool];
 
 	if (![self verifyServiceVersion]) {
@@ -343,6 +348,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 														NSLocalizedFailureReasonErrorKey: @"Could not reach the MacPatch helper application.",
 														NSLocalizedRecoverySuggestionErrorKey: @"Verify if gov.llnl.mp.helper is running."}];
 		commandBlock(workerErr);
+		return;
 	}
     commandBlock(nil);
 }
@@ -368,14 +374,17 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	
 	if (!hasConnection)
 	{
-		NSAlert *alert = [[NSAlert alloc] init];
-		[alert setMessageText:@"MacPatch Helper Verification"];
-		[alert setInformativeText:@"This application requires a helper application to perform certain actions. The helper applciation can not be verified. MacPatch may not work as expected."];
-		[alert addButtonWithTitle:@"OK"];
-		[alert setAlertStyle:NSAlertStyleCritical];
-		[alert runModal];
+		// Defer alert to avoid "runModal inside transaction" error
+		dispatch_async(dispatch_get_main_queue(), ^{
+			NSAlert *alert = [[NSAlert alloc] init];
+			[alert setMessageText:@"MacPatch Helper Verification"];
+			[alert setInformativeText:@"This application requires a helper application to perform certain actions. The helper applciation can not be verified. MacPatch may not work as expected."];
+			[alert addButtonWithTitle:@"OK"];
+			[alert setAlertStyle:NSAlertStyleCritical];
+			[alert runModal];
+		});
 	}
-	
+
 	return hasConnection;
 }
 

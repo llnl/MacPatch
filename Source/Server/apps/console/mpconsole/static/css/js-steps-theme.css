@@ -1,0 +1,48 @@
+/* Shared MacPatch appearance for JS Steps wizards. */
+html.mp-wizard-document { font-size: 12px; }
+html.mp-wizard-document body,
+.mp-wizard-form {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  color: #333;
+}
+html.mp-wizard-document body { background: #fff; }
+
+#overlay { opacity: 1; background-color: rgba(0, 0, 0, 0.7); }
+#overlay .well { background-color: #f8f9fc; }
+
+.mp-wizard-form .wizard .body h4 { font-size: 18px; line-height: 24px; }
+.mp-wizard-form .wizard .body h5 { font-size: 12px; line-height: 18px; }
+.mp-wizard-form .wizard > .content { height: auto; min-height: 0; overflow: visible; background: #eee; }
+.mp-wizard-form .wizard > .content > .body { position: relative; float: none; width: 100%; height: auto; padding: 15px; }
+
+.mp-wizard-form .wizard > .steps > ul { display: flex; }
+.mp-wizard-form .wizard > .steps > ul > li { flex: 1; float: none; min-width: 0; width: auto; }
+.mp-wizard-form .wizard > .steps a { font-size: 12px; line-height: 18px; padding: 8px 10px; overflow-wrap: anywhere; }
+.mp-wizard-form .wizard > .steps .number { font-size: 14px; line-height: 18px; }
+
+.mp-wizard-form .wizard > .actions > ul { display: flex; gap: 8px; width: 100%; }
+.mp-wizard-form .wizard > .actions > ul > li { float: none; margin: 0; }
+.mp-wizard-form .wizard > .actions > ul > .wizard-cancel { margin-right: auto; }
+.mp-wizard-form .wizard > .actions a { font-size: 12px; line-height: 18px; padding: 6px 12px; }
+
+.mp-wizard-form .wizard .row { padding-bottom: 10px; }
+.mp-wizard-form .wizard .row > [class*="col-"] { min-width: 0; overflow-wrap: anywhere; }
+.mp-wizard-form .wizard input, .mp-wizard-form .wizard textarea, .mp-wizard-form .wizard select, .mp-wizard-form .wizard button,
+.mp-wizard-form .wizard .selectize-input, .mp-wizard-form .wizard .selectize-dropdown {
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 18px;
+}
+.mp-wizard-form .wizard input, .mp-wizard-form .wizard textarea, .mp-wizard-form .wizard select,
+.mp-wizard-form .wizard .ace_editor, .mp-wizard-form .wizard .selectize-control,
+.mp-wizard-form .wizard .selectize-input, .mp-wizard-form .wizard .selectize-dropdown {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.mp-wizard-form .wizard .selectize-input .item, .mp-wizard-form .wizard .selectize-dropdown .option {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}

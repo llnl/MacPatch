@@ -2,7 +2,7 @@ from flask import request, abort, current_app
 from flask_restful import reqparse
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import text
-from distutils.version import LooseVersion, StrictVersion
+from packaging import version
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from ast import literal_eval
@@ -389,7 +389,7 @@ class ConfigData(MPResource):
 					log_Error('[MP_ConfigData][GET]: Failed to verify token')
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
+				if not isValidAgentUploadUser(_user):
 					log_Error('[MP_ConfigData][GET]: Failed to verify user (%s) rights' % (_user))
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 
@@ -433,7 +433,7 @@ class UploadAgentPackage(MPResource):
 					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify token')
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify token'}, 424
 
-				if not isValidAdminUser(_user):
+				if not isValidAgentUploadUser(_user):
 					log_Error('[MP_UploadAgentPackage][Post]: Failed to verify user (%s) rights' % (_user))
 					return {"result": '', "errorno": 424, "errormsg": 'Failed to verify user rights'}, 424
 
@@ -477,7 +477,16 @@ class UploadAgentPackage(MPResource):
 			upload_dir = os.path.join(current_app.config['AGENT_CONTENT_DIR'], agent_id)
 			_files = [fBase, fUpdate, fAgent]
 			if not os.path.isdir(upload_dir):
-				os.makedirs(upload_dir)
+				os.makedirs(upload_dir, mode=0o775)
+				# Change ownership to www-data:www-data
+				try:
+					import pwd
+					import grp
+					uid = pwd.getpwnam('www-data').pw_uid
+					gid = grp.getgrnam('www-data').gr_gid
+					os.chown(upload_dir, uid, gid)
+				except Exception as e:
+					log_Error('[MP_UploadAgentPackage][Post]: Failed to chown directory: %s' % str(e))
 
 			for f in _files:
 				log_Debug('Saving: %s' % (f.filename))
@@ -489,6 +498,16 @@ class UploadAgentPackage(MPResource):
 					os.remove(_pkg_file_path)
 
 				f.save(_pkg_file_path)
+				# Change file ownership to www-data:www-data
+				try:
+					import pwd
+					import grp
+					uid = pwd.getpwnam('www-data').pw_uid
+					gid = grp.getgrnam('www-data').gr_gid
+					os.chown(_pkg_file_path, uid, gid)
+					os.chmod(_pkg_file_path, 0o664)
+				except Exception as e:
+					log_Error('[MP_UploadAgentPackage][Post]: Failed to chown file %s: %s' % (filename, str(e)))
 				if "Base.pkg" in f.filename:
 					fBaseHash = fileHashSHA1(_pkg_file_path)
 				elif "Updater.pkg" in f.filename:
@@ -589,7 +608,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
+			if not (version.parse(updateOSVer) <= version.parse(clientData['osver'])):
 				log_Error(
 					"[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
@@ -605,7 +624,7 @@ class AgentUpdates():
 			else:
 				return None
 
-		elif (LooseVersion(updateDict['version']) < LooseVersion(remoteClientAgentVersion)):
+		elif (version.parse(updateDict['version']) < version.parse(remoteClientAgentVersion)):
 			log_Info("[AgentUpdates][agentUpdates]: Client is running the latest version.")
 			return None
 
@@ -649,7 +668,7 @@ class AgentUpdates():
 		# Check OS is supported
 		if updateDict['osver'] != '*':
 			updateOSVer = updateDict['osver'].replace('+', '')
-			if not (LooseVersion(updateOSVer) <= LooseVersion(clientData['osver'])):
+			if not (version.parse(updateOSVer) <= version.parse(clientData['osver'])):
 				log_Error(
 					"[AgentUpdates][agentUpdates]: Client OS Ver is not greater or equal to the min os supported.")
 				return None
@@ -665,7 +684,7 @@ class AgentUpdates():
 			else:
 				return None
 
-		elif (LooseVersion(updateDict['version']) < LooseVersion(remoteClientAgentVersion)):
+		elif (version.parse(updateDict['version']) < version.parse(remoteClientAgentVersion)):
 			log_Info("[AgentUpdates][agentUpdates]: Client is running the latest version.")
 			return None
 
@@ -682,7 +701,7 @@ class AgentUpdates():
 			log_Debug("[AgentUpdates][agentUpdates]: Client (%s) Update Data: %s" % (cuuid, update))
 			return update
 		else:
-			log_Info(f"[AgentUpdates][agentUpdates]: Client ({cuuid}}), filter excluded this agent.")
+			log_Info(f"[AgentUpdates][agentUpdates]: Client ({cuuid}), filter excluded this agent.")
 			return {}
 
 	''' Get the RID of the latest updater agent update '''

@@ -1,0 +1,61 @@
+<form method="post" id="registrationKeyForm" class="registration-key-form">
+    {% if data.rid is defined and data.rid >= 1 %}
+    <div class="form-group registration-key-field">
+        <label for="regKey">Key</label>
+        <div class="registration-key-value">
+            <input id="regKey" class="form-control" type="text" value="{{ data.regKey or '' }}" readonly>
+        </div>
+    </div>
+    {% endif %}
+    <div class="form-group registration-key-field">
+        <label for="registrationKeyType">Key Type</label>
+        <div class="registration-key-value">
+            <select class="form-control" id="registrationKeyType" name="keyType">
+                <option value="0" {% if data.keyType == 0 %}selected{% endif %}>Client</option>
+                <option value="1" {% if data.keyType == 1 %}selected{% endif %}>Group</option>
+            </select>
+        </div>
+    </div>
+    <div class="form-group registration-key-field">
+        <label for="keyQuery">Key Query</label>
+        <div class="registration-key-value">
+            <input name="keyQuery" id="keyQuery" class="form-control" type="text" value="{{ data.keyQuery or '' }}">
+        </div>
+    </div>
+    <div class="form-group registration-key-field">
+        <label for="registrationKeyValidFrom">Valid From</label>
+        <div class="registration-key-value">
+            <div class="input-group date form_datetime">
+                <input id="registrationKeyValidFrom" name="validFromDate" type="text" class="form-control" value="{{ data.validFromDate or '' }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-default input-group-addon" aria-label="Choose valid from date">
+                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group registration-key-field">
+        <label for="registrationKeyValidTo">Valid To</label>
+        <div class="registration-key-value">
+            <div class="input-group date form_datetime">
+                <input id="registrationKeyValidTo" name="validToDate" type="text" class="form-control" value="{{ data.validToDate or '' }}">
+                <div class="input-group-append">
+                    <button type="button" class="btn btn-default input-group-addon" aria-label="Choose valid to date">
+                        <i class="fa fa-calendar" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group registration-key-field">
+        <label for="registrationKeyActive">Active</label>
+        <div class="registration-key-value">
+            <select class="form-control" id="registrationKeyActive" name="active">
+                <option value="0" {% if data.active == 0 %}selected{% endif %}>No</option>
+                <option value="1" {% if data.active == 1 %}selected{% endif %}>Yes</option>
+            </select>
+        </div>
+    </div>
+    <input type="hidden" name="rid" value="{{ data.rid or '0' }}">
+</form>

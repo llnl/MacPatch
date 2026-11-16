@@ -2,11 +2,9 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-
 {%  endblock %}
 
 {% block pageHeader %}
@@ -15,7 +13,7 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-condensed table-striped" data-show-export="true">
+	<div id="custom-patches-table-container">
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
 			<button id="addButton" type="button" class="btn btn-default" title="Add New Patch"><i class="glyphicon glyphicon-plus"></i></button>
@@ -23,7 +21,8 @@
 			<button id="delButton" type="button" class="btn btn-default" title="Delete Patch"><i class="glyphicon glyphicon-trash"></i></button>
 			{% endif %}
 		</div>
-	</table>
+		<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
+	</div>
 
 {% endblock %}
 
@@ -31,10 +30,9 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 
 
 	<script>
@@ -50,7 +48,7 @@
 			search: true,
 			idField: 'puuid',
 			sortable: true,
-			resizable: true,
+			resizable: false,
 			detailFormatter: detailFormatter,
 			icons: {
 				refresh: 'fa fa-refresh',
@@ -74,7 +72,9 @@
 				title: '',
 				align: 'center',
 				events: operateEvents,
-				formatter: operateFormatter
+				formatter: operateFormatter,
+				width: 70,
+				widthUnit: 'px'
 			},
 			{% for col in columnsAll %}
 
@@ -210,19 +210,7 @@
 
 		$addButton.click(function ()
 		{
-			$('#myContent').remove();
-			var _url = "/patches/customPatchWizardAdd";
-			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
-			 ' frameborder="0" allowtransparency="true"' +
-			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
-
-			$('#modalTitle').html("New Custom Patch");
-			$('#modalSaveButton').hide();
-			$('#modalCancelButton').hide();
-			$('#modalBody').html(innerHTML);
-			$('#modalBody').css({'height':'88vh'});
-			$('#modalDialog').addClass("modal-wide");
-			$('#modalDialog').modal('show');
+			WizardNavigation.open("/patches/customPatchWizardAdd");
 		});
 	});
 
@@ -266,20 +254,8 @@
 	window.operateEvents = {
 		'click .edit': function (e, value, row, index)
 		{
-			$('#myContent').remove();
-
-			var _url = "/patches/customPatchWizard/" + row['puuid'];
-			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
-			 ' frameborder="0" allowtransparency="true"' +
-			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
-
-			$('#modalTitle').html("Edit Custom Patch");
-			$('#modalSaveButton').hide();
-			$('#modalCancelButton').hide();
-			$('#modalBody').html(innerHTML);
-			$('#modalBody').css({'height':'88vh'});
-			$('#modalDialog').addClass("modal-wide");
-			$('#modalDialog').modal('show');
+			e.preventDefault();
+			WizardNavigation.open("/patches/customPatchWizard/" + encodeURIComponent(row['puuid']));
 		},
 		'click .description': function (e, value, row, index) {
 			alert('You click description action, row: ' + JSON.stringify(row));

@@ -1,38 +1,42 @@
 # ----------------------------------------------------------
 # MacPatch Admin Console
-# - 3.9.4
-# - Implemented Azure AD Auth using Microsoft msal library
-# - Session is now managed using Redis
+# - 4.4.0
+# - Migrated to Bootstrap 4.6
 #
 # ----------------------------------------------------------
 import os
 import json
 import sys
-from flask import Flask, session, g, request, url_for, redirect, abort, flash
+from flask import Flask, session, g, request, url_for, redirect, abort, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, current_user
 from flask_session import Session
 from flask_caching import Cache
-from flask_cors import CORS
+from flask_wtf.csrf import CSRFProtect, CSRFError
 from pymysql import OperationalError as PyOperationalError
+from sqlalchemy import func
 from datetime import timedelta, datetime
 from dateutil.parser import parse as dateParse
 
 import logging
 import logging.handlers
+from flask.logging import default_handler
 from mpconsole.config import Config
-from mpconsole.extensions import db, migrate
+from mpconsole.csrf import configure_csrf_signing
+from mpconsole.extensions import migrate
 from mpconsole.mplogger import *
+from mpconsole.session_auth import session_expired_response
 
 db = SQLAlchemy()
-cors = CORS()
 cache = Cache()
 _session = Session()
+csrf = CSRFProtect()
 
 # Configure authentication
 login_manager = LoginManager()
 login_manager.session_protection = "strong"
 login_manager.login_view = "auth.login"
+login_manager.unauthorized_handler(session_expired_response)
 
 def create_app(config_object=Config):
 	app = Flask(__name__)
@@ -56,7 +60,7 @@ def create_app(config_object=Config):
 
 	@app.before_request
 	def before_request():
-		if request.endpoint != 'static' or request.endpoint != 'auth.logout' or request.endpoint != 'local_auth.logout':
+		if request.endpoint not in ('static', 'auth.logout', 'local_auth.logout'):
 			_last_activity = session.get('last_activity')
 			if isinstance(_last_activity, str):
 				# Session filesystem will store the date as dateObj
@@ -64,42 +68,37 @@ def create_app(config_object=Config):
 				_last_activity = dateParse(_last_activity)
 
 			if _last_activity is not None:
-				if (datetime.now() - _last_activity) > timedelta(minutes=app.config['SESSION_TIMEOUT_MINUTES']):
+				if (datetime.now(tz=_last_activity.tzinfo) - _last_activity) > timedelta(minutes=app.config['SESSION_TIMEOUT_MINUTES']):
 					log_Debug(f"[before_request][{request.endpoint}]: _last_activity is greater than the session timeout.")
-					session.clear()
-					return redirect(url_for('main.index'))
+					return session_expired_response()
 				
 			session['last_activity'] = datetime.now()
 			g.user = current_user
-			
-	@app.context_processor
-	def checkForSession():
-		# Flask Template context_processor
-		# If session user is not found pass to error handler
-		allowEndpoint = ['main.index', 'auth.login', 'agent.clientDownload']
+
+		# Every endpoint requires a logged in session, except the public ones. Routes also
+		# use @login_required, this catches a route that is missing it.
+		# request.endpoint is None for 404/405, let those through to the error handlers.
+		if request.endpoint is None or request.endpoint in publicEndpoints(app):
+			return
+
 		if app.config['LOCAL_AUTH_ALLOWED']:
-			allowEndpoint.append('local_auth.login')
-		
-		if request.endpoint not in allowEndpoint:
-			if app.config['LOCAL_AUTH_ALLOWED']:
-				if session.get('oid_user') is None and session.get('user') is None:
-					log_Error(f"session.get('oid_user') and session.get('user') is None")
-					abort(412)
-			else:
-				if session.get('oid_user') is None:
-					log_Error(f"session.get('oid_user') is None")
-					abort(412)
+			hasSession = session.get('user') is not None or session.get('oid_user') is not None
+		else:
+			hasSession = session.get('oid_user') is not None
 
-		# Have to pass something otherwise it errors with None type
-		return {"_foo_": "bar"}
+		if not hasSession:
+			log_Debug(f"[before_request][{request.endpoint}]: No user session.")
+			return session_expired_response()
 
-	@app.errorhandler(412)
-	def session_not_found(e):
-		# Using Error 412 as session data not found.
-		# Re-Direct to login
-		log_Error(f"{e}")
-		flash("Your session has expired.")
-		return redirect(url_for('main.index'))
+	@app.errorhandler(CSRFError)
+	def csrf_error(e):
+		# Missing or invalid CSRF token, usually a stale page after the session expired
+		log_Error(f"[csrf_error][{request.endpoint}]: {e.description}")
+		if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.accept_mimetypes.best == 'application/json':
+			return jsonify(error='csrf_failed', errormsg='Your request could not be verified. Please reload the page and try again.'), 400
+
+		flash('Your request could not be verified. Please try again.')
+		return redirect(request.referrer or url_for('main.index'))
 
 	@app.teardown_request
 	def shutdown_session(exception):
@@ -112,7 +111,8 @@ def create_app(config_object=Config):
 		if app.config['ENABLE_INTUNE']:
 			enableIntune = 1
 
-		return dict(patchGroupCount=patchGroupCount(), clientCount=clientCount(), intune=enableIntune)
+		patchGroupCount, clientCount = baseCounts()
+		return dict(patchGroupCount=patchGroupCount, clientCount=clientCount, intune=enableIntune)
 
 	read_siteconfig_server_data(app)
 
@@ -127,19 +127,44 @@ def create_app(config_object=Config):
 					schema_data = json.load(data_file)
 
 				app.config["MDM_SCHEMA"] = schema_data
-			except OSError:
-				print('Well darn.')
-				return
+			except (OSError, ValueError) as e:
+				app.logger.error(f"Unable to read MDM schema file {mdm_schema_file.strip()}: {e}")
 
 	initialize_extensions(app)
 	register_blueprints(app)
+	from mpconsole.model import ChangeLog
+	from mpconsole.change_log import install_change_log
+	with app.app_context():
+		install_change_log(db.engine, ChangeLog.__table__)
+
+	@app.cli.command('init-change-log')
+	def init_change_log():
+		"""Create only the additive change_log table on an existing installation."""
+		ChangeLog.__table__.create(db.engine, checkfirst=True)
+		print('change_log table is ready.')
+
+	# Setup commands (populate-db, add-admin, ...) used by ServerSetup.py
+	from mpconsole.cli import register_cli
+	register_cli(app)
 
 	return app
+
+def publicEndpoints(app):
+	# Endpoints that do not require a logged in session
+	endpoints = {'static', 'main.index', 'agent.clientDownload', 'content.content',
+				 'auth.login', 'auth.signin_oidc', 'auth.logout', 'auth.logout_complete', 'auth.ping',
+				 'local_auth.logout'}
+	if app.config['LOCAL_AUTH_ALLOWED']:
+		endpoints.add('local_auth.login')
+	return endpoints
 
 def initialize_extensions(app):
 	db.init_app(app)
 	login_manager.init_app(app)
 	migrate.init_app(app, db)
+	configure_csrf_signing()
+	csrf.init_app(app)
+	cache.init_app(app)
 
 def register_blueprints(app):
 	from .errors import errors as errors_blueprint
@@ -201,28 +226,47 @@ def register_blueprints(app):
 
 	return app
 
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+	'''
+	WatchedFileHandler re-opens the log file once it has been rotated (renamed) by
+	logrotate (Linux) or newsyslog (macOS), it is safe to use from every gunicorn worker.
+	The log is not rotated in-process, every worker process would rotate the same file.
+
+	When running as root (gunicorn master with preload_app), a file it creates is given
+	to the owner of the log directory, so the workers can still open it after a rotation.
+	'''
+	def _open(self):
+		stream = super()._open()
+		if os.geteuid() == 0:
+			try:
+				_dir = os.stat(os.path.dirname(self.baseFilename))
+				os.chown(self.baseFilename, _dir.st_uid, _dir.st_gid)
+			except OSError:
+				pass
+		return stream
+
 def setup_logging(app):
-	# Configure logging
-	handler = logging.handlers.TimedRotatingFileHandler(app.config['LOG_FILE'], when='midnight', interval=1, backupCount=30)
+	_level = getattr(logging, app.config['LOGGING_LEVEL'].upper(), logging.INFO)
+	app.logger.setLevel(_level if isinstance(_level, int) else logging.INFO)
 
-	if app.config['LOGGING_LEVEL'].lower() == 'info':
-		app.logger.setLevel(logging.INFO)
-	elif app.config['LOGGING_LEVEL'].lower() == 'debug':
-		app.logger.setLevel(logging.DEBUG)
-	elif app.config['LOGGING_LEVEL'].lower() == 'warning':
-		app.logger.setLevel(logging.WARNING)
-	elif app.config['LOGGING_LEVEL'].lower() == 'error':
-		app.logger.setLevel(logging.ERROR)
-	elif app.config['LOGGING_LEVEL'].lower() == 'critical':
-		app.logger.setLevel(logging.CRITICAL)
-	else:
-		app.logger.setLevel(logging.INFO)
+	# Flask adds a stderr handler by default, under gunicorn that duplicates every
+	# line into stderr (journald / launchd stderr file, which is not rotated)
+	app.logger.removeHandler(default_handler)
 
-	app.logger.setLevel(logging.DEBUG)
-	handler = logging.StreamHandler(sys.stdout)
+	# create_app can be called more than once in a process, do not add duplicate handlers
+	for _handler in [h for h in app.logger.handlers if getattr(h, '_macpatch', False)]:
+		app.logger.removeHandler(_handler)
+		_handler.close()
+
 	formatter = logging.Formatter(app.config['LOGGING_FORMAT'])
-	handler.setFormatter(formatter)
-	app.logger.addHandler(handler)
+	handlers = [OwnedWatchedFileHandler(app.config['LOG_FILE'])]
+	if app.debug:
+		handlers.append(logging.StreamHandler(sys.stdout))
+
+	for _handler in handlers:
+		_handler._macpatch = True
+		_handler.setFormatter(formatter)
+		app.logger.addHandler(_handler)
 
 '''
 ----------------------------------------------------------------
@@ -230,33 +274,24 @@ Global
 ----------------------------------------------------------------
 '''
 def read_siteconfig_server_data(app):
-
-	data = {}
-	if os.path.exists(app.config['SITECONFIG_FILE'].strip()):
-		try:
-			with open(app.config['SITECONFIG_FILE'].strip()) as data_file:
-				data = json.load(data_file)
-
-		except OSError:
-			print('Well darn.')
-			return
-
-	else:
-		print("Error, could not open file " + app.config['SITECONFIG_FILE'].strip())
+	# siteconfig.json is read once at startup, mputil.return_data_for_root_key reads
+	# from MP_SETTINGS. Restart the console after changing siteconfig.json.
+	app.config['MP_SETTINGS'] = {}
+	_file = app.config['SITECONFIG_FILE'].strip()
+	try:
+		with open(_file) as data_file:
+			data = json.load(data_file)
+	except (OSError, ValueError) as e:
+		app.logger.error(f"Unable to read site config file {_file}: {e}")
 		return
 
-	if "settings" in data:
-		app.config['MP_SETTINGS'] = data['settings']
-		return
+	app.config['MP_SETTINGS'] = data.get('settings', {})
 
-def patchGroupCount():
-	from .model import MpPatchGroup
-	qGet = MpPatchGroup.query.all()
-	count = len(qGet)
-	return count
-
-def clientCount():
-	from .model import MpClient
-	qGet = MpClient.query.with_entities(MpClient.cuuid).all()
-	count = len(qGet)
-	return count
+@cache.cached(timeout=60, key_prefix='mp_base_counts')
+def baseCounts():
+	# Patch group & client counts shown on every page, cached so each page render
+	# does not query the database
+	from .model import MpPatchGroup, MpClient
+	patchGroups = db.session.query(func.count()).select_from(MpPatchGroup).scalar()
+	clients = db.session.query(func.count()).select_from(MpClient).scalar()
+	return patchGroups, clients

@@ -1,0 +1,22 @@
+# MacPatch log rotation (Linux), installed to /etc/logrotate.d/macpatch
+#
+# Gunicorn (API & Console) access/error logs and the API & Console app logs.
+# These are written by several gunicorn worker processes, so they are rotated
+# here and not by the apps. The apps use WatchedFileHandler, which re-opens a
+# log file once it has been rotated, no signal or restart is needed.
+
+/opt/MacPatch/Server/logs/gMPConsole_*.log
+/opt/MacPatch/Server/logs/gMPAPI_*.log
+/opt/MacPatch/Server/apps/logs/*.log
+{
+	su www-data www-data
+	daily
+	maxsize 100M
+	rotate 30
+	dateext
+	compress
+	delaycompress
+	missingok
+	notifempty
+	create 0664 www-data www-data
+}

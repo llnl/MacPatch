@@ -1,4 +1,4 @@
-from flask import render_template, request, send_file
+from flask import render_template, request, send_file, url_for
 from datetime import *
 import json
 from datetime import datetime
@@ -13,8 +13,9 @@ from mpconsole.app import db, login_manager
 from mpconsole.model import *
 from mpconsole.modes import *
 from mpconsole.mplogger import *
-from mpconsole.clients.views import revGroupSWRes
+from mpconsole.clients.views import revGroupSWRes, revAllGroupsSWRes
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso, allowed_file
 
 '''
 	This method queries the DB for all uploaded profiles
@@ -46,15 +47,15 @@ def profilesListJSON():
 	for p in profileQuery:
 		row = {}
 		for c in columns:
-			y = "p." + c[0]
+			y = c[0]
 			if c[0] == 'enabled' or c[0] == 'uninstallOnRemove' or c[0] == 'isglobal':
-				row[c[0]] = "Yes" if eval(y) == 1 else "No"
+				row[c[0]] = "Yes" if getattr(p, y) == 1 else "No"
 			else:
-				row[c[0]] = eval(y)
+				row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
-	return json.dumps(_results, default=json_serial), 200
+	return json.dumps(_results, default=json_serial_iso), 200
 
 '''
 	This method renders the os_profile_manager.html File
@@ -65,7 +66,8 @@ def profilesListJSON():
 def profileAdd():
 
 	profile_id = str(uuid.uuid4())
-	return render_template('os_managment/os_profile_manager.html', profileData={}, profileCriteriaAlt={}, profileDataAlt={}, profileDataRE={}, profileID=profile_id)
+	return render_template('os_managment/os_profile_manager.html', profileData={}, profileCriteriaAlt={}, profileDataAlt={}, profileDataRE={}, profileID=profile_id,
+						   wizard_title='New OS Profile', wizard_return_url=url_for('osmanage.profiles'))
 
 '''
 	This method renders the os_profile_manager.html File
@@ -119,16 +121,14 @@ def profileEdit(profile_id):
 		pretty_string = indent(pData2,indentation='    ')
 
 	return render_template('os_managment/os_profile_manager.html', profileData=profile, profileDataAlt=pData, profileCriteriaAlt=cri,
-						   profileDataRE=pretty_string, profileID=profile_id, groupPolicyID=groupPolicyID)
+						   profileDataRE=pretty_string, profileID=profile_id, groupPolicyID=groupPolicyID,
+						   wizard_title='Edit OS Profile', wizard_return_url=url_for('osmanage.profiles'))
 
 ''' Private '''
 '''
 	Method to verify file extension
 '''
 ALLOWED_EXTENSIONS = set(['plist', 'mobileprovision', 'mobileconfig'])
-def allowed_file(filename):
-	return '.' in filename and filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
 ''' AJAX Request '''
 @osmanage.route('/profile/save/<profile_id>', methods=['POST'])
 @login_required
@@ -147,7 +147,7 @@ def profileSave(profile_id):
 			_file = request.files['profileFile']
 			_file_data = _file.read()
 
-			if _file_data and allowed_file(_file.filename):
+			if _file_data and allowed_file(_file.filename, ALLOWED_EXTENSIONS):
 				# Gen Hash
 				profile__hash = hashlib.md5(_file_data).hexdigest()
 				#setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
@@ -333,7 +333,8 @@ def addProfileToGroup(group_id):
 		row['title'] = p.profileName + " (" + p.profileIdentifier +")"
 		profilesRes.append(row)
 
-	return render_template('os_managment/os_profile_wizard.html', profileData={}, profileCriteria={}, profileCriteriaAlt={}, profileArray=profilesRes, groupID=group_id)
+	return render_template('os_managment/os_profile_wizard.html', profileData={}, profileCriteria={}, profileCriteriaAlt={}, profileArray=profilesRes, groupID=group_id,
+						   wizard_title='Assign OS Profile', wizard_return_url=url_for('clients.clientGroup', name=group_id))
 
 @osmanage.route('/profile/group/<group_id>/edit/<policy_id>',methods=['GET'])
 @login_required
@@ -368,7 +369,8 @@ def editProfileInGroup(group_id, policy_id):
 	if accessToGroup(group_id):
 		userHasRights = 1
 
-	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri, isAdmin=userHasRights)
+	return render_template('os_managment/os_profile_wizard.html', profileData=policyQuery, profileCriteria=profileCritLst, profileArray=profilesRes, groupID=group_id, profileCriteriaAlt=cri, isAdmin=userHasRights,
+						   wizard_title='Edit OS Profile Assignment', wizard_return_url=url_for('clients.clientGroup', name=group_id))
 
 
 def accessToGroup(groupID):
@@ -431,8 +433,8 @@ def groupProfiles(group_id):
 				if c[0] == 'pName':
 					row[c[0]] = p.profileName
 				else:
-					y = "p[0]."+c[0]
-					row[c[0]] = eval(y)
+					y = c[0]
+					row[c[0]] = getattr(p[0], y)
 
 			_results.append(row)
 
@@ -555,13 +557,11 @@ def appFilterList():
 	_results = []
 	if srList is not None:
 		for sr in srList:
-			print(sr)
 			row = {}
 			for c in swaf_columns:
-				y = "sr."+c[0]
-				row[c[0]] = eval(y)
+				y = c[0]
+				row[c[0]] = getattr(sr, y)
 			_results.append(row)
-	print(_results)	
 	return json.dumps(_results), 200
 
 @osmanage.route('/app_filter/add')
@@ -597,6 +597,9 @@ def appFilterSave():
 			swRes = MpSoftwareRestrictions()
 			isNew = True
 
+		# Global state before the edit, a rule moving to/from global affects every group
+		wasGlobal = (not isNew) and bool(swRes.isglobal)
+
 		# Save Profile Data
 		setattr(swRes, 'bundleID', formDict['bundleID'])
 		setattr(swRes, 'displayName', formDict['displayName'])
@@ -613,6 +616,13 @@ def appFilterSave():
 			log("{} added new software restriction ({}).".format(session.get('user'), appID))
 
 		db.session.commit()
+
+		# Clients only re-fetch restrictions when the group's restrictions version changes
+		if wasGlobal or bool(swRes.isglobal):
+			revAllGroupsSWRes()
+		else:
+			for swResG in MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.appID == swRes.appID).all():
+				revGroupSWRes(swResG.group_id)
 		return json.dumps({'error': 0}), 200
 	else:
 		return json.dumps({'error': 401}), 401
@@ -625,8 +635,11 @@ def appFilterDelete():
 		if request.method == 'DELETE':
 			formDict = request.form.to_dict()
 			app_ids = formDict['appID'].split(",")
+			globalDeleted = False
 			for aid in app_ids:
 				delSWRes = MpSoftwareRestrictions.query.filter(MpSoftwareRestrictions.appID == aid).first()
+				if delSWRes is not None and delSWRes.isglobal:
+					globalDeleted = True
 				delSWResForGroup = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.appID == aid).all()
 				if delSWRes is not None:
 					log_Info("{} deleted software restriction {}.".format(session.get('user'), delSWRes.displayName))
@@ -639,6 +652,8 @@ def appFilterDelete():
 						db.session.delete(swResG)
 
 			db.session.commit()
+			if globalDeleted:
+				revAllGroupsSWRes()
 
 		return json.dumps({'error': 0}), 200
 	else:
@@ -649,7 +664,7 @@ swafcg_columns = [('appID', 'App ID', '0'),('displayName', 'Display Name', '1'),
 
 ''' AJAX Method '''
 @osmanage.route('/app_filter/list/<client_group>', methods=['GET'])
-
+@login_required
 def appFilterClientGroupList(client_group):
 
 	cgList = MpClientGroupSoftwareRestrictions.query.filter(MpClientGroupSoftwareRestrictions.group_id == client_group).all()
@@ -693,11 +708,11 @@ def osConfig():
 	for p in profileQuery:
 		row = {}
 		for c in columns:
-			y = "p."+c[0]
+			y = c[0]
 			if c[0] == 'enabled' or c[0] == 'uninstallOnRemove':
-				row[c[0]] = "Yes" if eval(y) == 1 else "No"
+				row[c[0]] = "Yes" if getattr(p, y) == 1 else "No"
 			else:
-				row[c[0]] = eval(y)
+				row[c[0]] = getattr(p, y)
 
 		_results.append(row)
 
@@ -716,11 +731,3 @@ def escapeStringForACEEditor(data_string):
 	result = result.replace('${', r'\${')
 	result = result.replace('}', r'\}')
 	return result
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

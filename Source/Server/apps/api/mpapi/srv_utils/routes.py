@@ -77,34 +77,39 @@ class DataBaseConfigData(MPResource):
 		self.reqparse = reqparse.RequestParser()
 		super(DataBaseConfigData, self).__init__()
 
+	@require_jwt_token
 	def get(self):
-
+		log_Info("[GET]: DB Config")
 		dbConfig = {'DB_USER':'','DB_PASS':'', 'DB_HOST':'','DB_PORT':3306,'DB_NAME': 'MacPatchDB3',
 					'DATABASE_URI':'','TRACK_MODIFICATIONS':False,'ENGINE_OPTIONS':{}}
 
 		if current_app.config['DB_USER']:
 			dbConfig['DB_USER'] = current_app.config['DB_USER']
 		if current_app.config['DB_PASS']:
-			dbConfig['DB_PASS'] = ''
+			dbConfig['DB_PASS'] = '********'  # Mask password for security
 		if current_app.config['DB_HOST']:
 			dbConfig['DB_HOST'] = current_app.config['DB_HOST']
 		if current_app.config['DB_PORT']:
 			dbConfig['DB_PORT'] = current_app.config['DB_PORT']
 		if current_app.config['DB_NAME']:
 			dbConfig['DB_NAME'] = current_app.config['DB_NAME']
-		if current_app.config['DB_URI_STRING']:
-			dbConfig['DATABASE_URI'] = current_app.config['DB_URI_STRING']
 		if current_app.config['SQLALCHEMY_TRACK_MODIFICATIONS']:
 			dbConfig['TRACK_MODIFICATIONS'] = current_app.config['SQLALCHEMY_TRACK_MODIFICATIONS']
 		if current_app.config['SQLALCHEMY_ENGINE_OPTIONS']:
 			dbConfig['ENGINE_OPTIONS'] = current_app.config['SQLALCHEMY_ENGINE_OPTIONS']
 
-		return {"result": dbConfig, "errorno": 0, "errormsg": 'none'}, 200
+		# Encrypt the sensitive database configuration
+		encryptedConfig = encryptData(dbConfig)
+		if encryptedConfig is None:
+			log_Error("[GET]: DB Config - Failed to encrypt data")
+			return {"result": '', "errorno": 500, "errormsg": 'Failed to encrypt configuration'}, 500
+
+		return {"result": encryptedConfig, "encrypted": True, "errorno": 0, "errormsg": 'none'}, 200
 
 # Routes
 
 # SUS
-srv_api.add_resource(SUSPatchData,			'/sus/patches/apple')
+srv_api.add_resource(SUSPatchData, '/sus/patches/apple')
 
 # Database
-srv_api.add_resource(DataBaseConfigData,	'/db/config')
+srv_api.add_resource(DataBaseConfigData, '/server/db/config')

@@ -25,8 +25,6 @@
 		8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FAEF641145F1774006284B2 /* MPScript.m */; };
 		8F4B1E0116DD1D6400E15A9E /* MPInstaller.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F051CF4146847B100510AF7 /* MPInstaller.m */; };
 		8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FAEF650145F187C006284B2 /* MPDataMgr.m */; };
-		8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCB7755140C2F0700D86586 /* lcl.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
-		8F4B1E1516DD1D6400E15A9E /* LCLLogFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FCB775D140C2F0700D86586 /* LCLLogFile.m */; settings = {COMPILER_FLAGS = "-fno-objc-arc"; }; };
 		8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF636145F1774006284B2 /* MPAsus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FED886F146462DB00709F8E /* MPASUSCatalogs.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2616DD1D8C00E15A9E /* MPBundle.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF638145F1774006284B2 /* MPBundle.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -35,14 +33,7 @@
 		8F4B1E2916DD1D8C00E15A9E /* MPScript.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF640145F1774006284B2 /* MPScript.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2A16DD1D8C00E15A9E /* MPInstaller.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F051CF3146847B100510AF7 /* MPInstaller.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E2C16DD1D8C00E15A9E /* MPDataMgr.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF64F145F187C006284B2 /* MPDataMgr.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4116DD1D8C00E15A9E /* lcl_config_logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7751140C2F0700D86586 /* lcl_config_logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4316DD1D8C00E15A9E /* lcl_config_extensions.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4416DD1D8C00E15A9E /* lcl_config_components.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB774F140C2F0700D86586 /* lcl_config_components.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4516DD1D8C00E15A9E /* LCLLogFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB775C140C2F0700D86586 /* LCLLogFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7761140C2F0700D86586 /* qlog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FAEF65E145F1922006284B2 /* RegexKitLite.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FCB7754140C2F0700D86586 /* lcl.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F4E3CB82406EC57008CA5E6 /* MPPassItem.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F4E3CBB2406EC57008CA5E6 /* MPPassItem.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F4E3CB92406EC57008CA5E6 /* MPPassItem.m */; };
 		8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6122494D0600FDFBCA /* AgentData.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -53,16 +44,14 @@
 		8F60AD7022494D8600FDFBCA /* CocoaSecurity.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8F730CBE2409E1FB00876026 /* MPFileVaultInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */; };
 		8F730CBF2409E26100876026 /* MPFileVaultInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F8019F122848A5B006E6BC5 /* GCDTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F8019F222848A5C006E6BC5 /* GCDTask.m */; };
+		8F7816AA3070294F00A5FCBB /* MPModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F7816A83070294F00A5FCBB /* MPModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8F7816AB3070294F00A5FCBB /* MPModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F7816A93070294F00A5FCBB /* MPModel.m */; };
 		8F835311217E8BA90034FEFB /* NSDate+MPHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = 8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */; };
 		8FA139F221B7857D00124016 /* ConfigProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139EE21B7857D00124016 /* ConfigProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139EF21B7857D00124016 /* ConfigProfile.m */; };
 		8FA139F421B7857D00124016 /* MPConfigProfiles.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA139F021B7857D00124016 /* MPConfigProfiles.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA139F521B7857D00124016 /* MPConfigProfiles.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA139F121B7857D00124016 /* MPConfigProfiles.m */; };
-		8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21F892F16EE690016379E /* MPLogger.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21F8B2F16EE6C0016379E /* MPLogger.m */; };
 		8FA21FBB2F2180CA0016379E /* Logger.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA21FB92F2180CA0016379E /* Logger.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FA21FBC2F2180CA0016379E /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA21FBA2F2180CA0016379E /* Logger.m */; };
 		8FA21FBE2F218DF30016379E /* OSLog.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8FA21FBD2F218DF30016379E /* OSLog.framework */; };
@@ -77,25 +66,6 @@
 		8FA28EE121939EE2005D5E92 /* FMDatabaseAdditions.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28ED621939EE2005D5E92 /* FMDatabaseAdditions.m */; };
 		8FA28EE221939EE2005D5E92 /* FMResultSet.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28ED721939EE2005D5E92 /* FMResultSet.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		8FA28EE321939EE2005D5E92 /* FMDatabasePool.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28ED821939EE2005D5E92 /* FMDatabasePool.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FA28EF721939EF8005D5E92 /* FMXColumnMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EE421939EF7005D5E92 /* FMXColumnMap.m */; };
-		8FA28EF821939EF8005D5E92 /* FMXColumnMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EE521939EF7005D5E92 /* FMXColumnMap.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28EF921939EF8005D5E92 /* FMXCsvTable.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EE621939EF7005D5E92 /* FMXCsvTable.m */; };
-		8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EE721939EF7005D5E92 /* FMXDatabaseMigration.m */; };
-		8FA28EFB21939EF8005D5E92 /* FMDBx.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EE821939EF7005D5E92 /* FMDBx.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28EFC21939EF8005D5E92 /* FMXDatabaseConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EE921939EF7005D5E92 /* FMXDatabaseConfiguration.m */; };
-		8FA28EFD21939EF8005D5E92 /* FMXDatabaseManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EEA21939EF7005D5E92 /* FMXDatabaseManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28EFE21939EF8005D5E92 /* FMXCsvTable.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EEB21939EF7005D5E92 /* FMXCsvTable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28EFF21939EF8005D5E92 /* FMXTableMap.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EEC21939EF7005D5E92 /* FMXTableMap.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28F0021939EF8005D5E92 /* FMXQuery.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EED21939EF7005D5E92 /* FMXQuery.m */; };
-		8FA28F0121939EF8005D5E92 /* FMXDatabaseConfiguration.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EEE21939EF8005D5E92 /* FMXDatabaseConfiguration.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		8FA28F0221939EF8005D5E92 /* FMXHelpers.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EEF21939EF8005D5E92 /* FMXHelpers.m */; };
-		8FA28F0321939EF8005D5E92 /* FMXModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EF021939EF8005D5E92 /* FMXModel.m */; };
-		8FA28F0421939EF8005D5E92 /* FMXHelpers.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EF121939EF8005D5E92 /* FMXHelpers.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28F0521939EF8005D5E92 /* FMXModel.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EF221939EF8005D5E92 /* FMXModel.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28F0621939EF8005D5E92 /* FMXQuery.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EF321939EF8005D5E92 /* FMXQuery.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28F0721939EF8005D5E92 /* FMXTableMap.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EF421939EF8005D5E92 /* FMXTableMap.m */; };
-		8FA28F0821939EF8005D5E92 /* FMXDatabaseMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA28EF521939EF8005D5E92 /* FMXDatabaseMigration.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FA28F0921939EF8005D5E92 /* FMXDatabaseManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA28EF621939EF8005D5E92 /* FMXDatabaseManager.m */; };
 		8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FA8B0CE23636B3500B030C9 /* RequiredPatch.m */; };
 		8FA8B0D123636B3600B030C9 /* RequiredPatch.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FA8B0CF23636B3600B030C9 /* RequiredPatch.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FB1AB6D27A453DA003DC95C /* MPServerPing.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FB1AB6B27A453DA003DC95C /* MPServerPing.h */; settings = {ATTRIBUTES = (Private, ); }; };
@@ -134,9 +104,6 @@
 		8FF3D6612170113900059ACD /* MPDiskUtil.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6532170113800059ACD /* MPDiskUtil.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6622170113900059ACD /* MPDate.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6542170113800059ACD /* MPDate.m */; };
 		8FF3D6632170113900059ACD /* MPNSTask.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6552170113800059ACD /* MPNSTask.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FF3D6642170113900059ACD /* MPNetworkUtils.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6562170113800059ACD /* MPNetworkUtils.m */; };
-		8FF3D6652170113900059ACD /* MPNetworkUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6572170113800059ACD /* MPNetworkUtils.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8FF3D6662170113900059ACD /* MPLog.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6582170113800059ACD /* MPLog.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6672170113900059ACD /* MPSystemInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6592170113800059ACD /* MPSystemInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6682170113900059ACD /* MPClientInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D65A2170113800059ACD /* MPClientInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6692170113900059ACD /* MPNSTask.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D65B2170113800059ACD /* MPNSTask.m */; };
@@ -179,7 +146,6 @@
 		8FF3D6B7217012D600059ACD /* MPCodeSign.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6AB217012D600059ACD /* MPCodeSign.m */; };
 		8FF3D6C02170131700059ACD /* MPSWTasks.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D6BA2170131700059ACD /* MPSWTasks.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D6C42170131700059ACD /* MPSWTasks.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D6BE2170131700059ACD /* MPSWTasks.m */; };
-		8FF3D7222170196800059ACD /* MPLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D7212170196800059ACD /* MPLog.m */; };
 		8FF3D73121701AB600059ACD /* NSDate+Helper.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72321701AB500059ACD /* NSDate+Helper.m */; };
 		8FF3D73221701AB600059ACD /* NSFileManager+DirectoryLocations.h in Headers */ = {isa = PBXBuildFile; fileRef = 8FF3D72421701AB500059ACD /* NSFileManager+DirectoryLocations.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */ = {isa = PBXBuildFile; fileRef = 8FF3D72521701AB500059ACD /* NSString+Hash.m */; };
@@ -226,8 +192,8 @@
 		8F60AD6C22494D8600FDFBCA /* CocoaSecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CocoaSecurity.h; sourceTree = "<group>"; };
 		8F730CBC2409E1FA00876026 /* MPFileVaultInfo.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPFileVaultInfo.m; sourceTree = "<group>"; };
 		8F730CBD2409E1FB00876026 /* MPFileVaultInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPFileVaultInfo.h; sourceTree = "<group>"; };
-		8F8019F122848A5B006E6BC5 /* GCDTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GCDTask.h; sourceTree = "<group>"; };
-		8F8019F222848A5C006E6BC5 /* GCDTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GCDTask.m; sourceTree = "<group>"; };
+		8F7816A83070294F00A5FCBB /* MPModel.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPModel.h; sourceTree = "<group>"; };
+		8F7816A93070294F00A5FCBB /* MPModel.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPModel.m; sourceTree = "<group>"; };
 		8F83530F217E8BA90034FEFB /* NSDate+MPHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSDate+MPHelper.h"; sourceTree = "<group>"; };
 		8F835310217E8BA90034FEFB /* NSDate+MPHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+MPHelper.m"; sourceTree = "<group>"; };
 		8FA139EE21B7857D00124016 /* ConfigProfile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConfigProfile.h; sourceTree = "<group>"; };
@@ -235,8 +201,6 @@
 		8FA139F021B7857D00124016 /* MPConfigProfiles.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPConfigProfiles.h; sourceTree = "<group>"; };
 		8FA139F121B7857D00124016 /* MPConfigProfiles.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPConfigProfiles.m; sourceTree = "<group>"; };
 		8FA13A1121B874A900124016 /* libz.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.1.dylib; path = ../../../../../../../usr/lib/libz.1.dylib; sourceTree = "<group>"; };
-		8FA21F892F16EE690016379E /* MPLogger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MPLogger.h; sourceTree = "<group>"; };
-		8FA21F8B2F16EE6C0016379E /* MPLogger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MPLogger.m; sourceTree = "<group>"; };
 		8FA21FB92F2180CA0016379E /* Logger.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Logger.h; sourceTree = "<group>"; };
 		8FA21FBA2F2180CA0016379E /* Logger.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Logger.m; sourceTree = "<group>"; };
 		8FA21FBD2F218DF30016379E /* OSLog.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OSLog.framework; path = System/Library/Frameworks/OSLog.framework; sourceTree = SDKROOT; };
@@ -251,25 +215,6 @@
 		8FA28ED621939EE2005D5E92 /* FMDatabaseAdditions.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMDatabaseAdditions.m; sourceTree = "<group>"; };
 		8FA28ED721939EE2005D5E92 /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
 		8FA28ED821939EE2005D5E92 /* FMDatabasePool.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabasePool.h; sourceTree = "<group>"; };
-		8FA28EE421939EF7005D5E92 /* FMXColumnMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXColumnMap.m; path = MPLibrary/FMDBx/FMXColumnMap.m; sourceTree = "<group>"; };
-		8FA28EE521939EF7005D5E92 /* FMXColumnMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXColumnMap.h; path = MPLibrary/FMDBx/FMXColumnMap.h; sourceTree = "<group>"; };
-		8FA28EE621939EF7005D5E92 /* FMXCsvTable.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXCsvTable.m; path = MPLibrary/FMDBx/FMXCsvTable.m; sourceTree = "<group>"; };
-		8FA28EE721939EF7005D5E92 /* FMXDatabaseMigration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXDatabaseMigration.m; path = MPLibrary/FMDBx/FMXDatabaseMigration.m; sourceTree = "<group>"; };
-		8FA28EE821939EF7005D5E92 /* FMDBx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMDBx.h; path = MPLibrary/FMDBx/FMDBx.h; sourceTree = "<group>"; };
-		8FA28EE921939EF7005D5E92 /* FMXDatabaseConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXDatabaseConfiguration.m; path = MPLibrary/FMDBx/FMXDatabaseConfiguration.m; sourceTree = "<group>"; };
-		8FA28EEA21939EF7005D5E92 /* FMXDatabaseManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXDatabaseManager.h; path = MPLibrary/FMDBx/FMXDatabaseManager.h; sourceTree = "<group>"; };
-		8FA28EEB21939EF7005D5E92 /* FMXCsvTable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXCsvTable.h; path = MPLibrary/FMDBx/FMXCsvTable.h; sourceTree = "<group>"; };
-		8FA28EEC21939EF7005D5E92 /* FMXTableMap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXTableMap.h; path = MPLibrary/FMDBx/FMXTableMap.h; sourceTree = "<group>"; };
-		8FA28EED21939EF7005D5E92 /* FMXQuery.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXQuery.m; path = MPLibrary/FMDBx/FMXQuery.m; sourceTree = "<group>"; };
-		8FA28EEE21939EF8005D5E92 /* FMXDatabaseConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXDatabaseConfiguration.h; path = MPLibrary/FMDBx/FMXDatabaseConfiguration.h; sourceTree = "<group>"; };
-		8FA28EEF21939EF8005D5E92 /* FMXHelpers.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXHelpers.m; path = MPLibrary/FMDBx/FMXHelpers.m; sourceTree = "<group>"; };
-		8FA28EF021939EF8005D5E92 /* FMXModel.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXModel.m; path = MPLibrary/FMDBx/FMXModel.m; sourceTree = "<group>"; };
-		8FA28EF121939EF8005D5E92 /* FMXHelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXHelpers.h; path = MPLibrary/FMDBx/FMXHelpers.h; sourceTree = "<group>"; };
-		8FA28EF221939EF8005D5E92 /* FMXModel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXModel.h; path = MPLibrary/FMDBx/FMXModel.h; sourceTree = "<group>"; };
-		8FA28EF321939EF8005D5E92 /* FMXQuery.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXQuery.h; path = MPLibrary/FMDBx/FMXQuery.h; sourceTree = "<group>"; };
-		8FA28EF421939EF8005D5E92 /* FMXTableMap.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXTableMap.m; path = MPLibrary/FMDBx/FMXTableMap.m; sourceTree = "<group>"; };
-		8FA28EF521939EF8005D5E92 /* FMXDatabaseMigration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = FMXDatabaseMigration.h; path = MPLibrary/FMDBx/FMXDatabaseMigration.h; sourceTree = "<group>"; };
-		8FA28EF621939EF8005D5E92 /* FMXDatabaseManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = FMXDatabaseManager.m; path = MPLibrary/FMDBx/FMXDatabaseManager.m; sourceTree = "<group>"; };
 		8FA8B0CE23636B3500B030C9 /* RequiredPatch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = RequiredPatch.m; sourceTree = "<group>"; };
 		8FA8B0CF23636B3600B030C9 /* RequiredPatch.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RequiredPatch.h; sourceTree = "<group>"; };
 		8FAEF636145F1774006284B2 /* MPAsus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MPAsus.h; sourceTree = "<group>"; };
@@ -298,18 +243,6 @@
 		8FC0A9A421838A0A006C7FCB /* MPDownloadManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MPDownloadManager.m; sourceTree = "<group>"; };
 		8FC444151D00921900EF328C /* NSString+Base64.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSString+Base64.h"; sourceTree = "<group>"; };
 		8FC444161D00921900EF328C /* NSString+Base64.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Base64.m"; sourceTree = "<group>"; };
-		8FCB774F140C2F0700D86586 /* lcl_config_components.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_components.h; sourceTree = "<group>"; };
-		8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_extensions.h; sourceTree = "<group>"; };
-		8FCB7751140C2F0700D86586 /* lcl_config_logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl_config_logger.h; sourceTree = "<group>"; };
-		8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LCLLogFileConfig.h; sourceTree = "<group>"; };
-		8FCB7754140C2F0700D86586 /* lcl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = lcl.h; sourceTree = "<group>"; };
-		8FCB7755140C2F0700D86586 /* lcl.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = lcl.m; sourceTree = "<group>"; };
-		8FCB7759140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		8FCB775C140C2F0700D86586 /* LCLLogFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LCLLogFile.h; sourceTree = "<group>"; };
-		8FCB775D140C2F0700D86586 /* LCLLogFile.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LCLLogFile.m; sourceTree = "<group>"; };
-		8FCB775F140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
-		8FCB7761140C2F0700D86586 /* qlog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = qlog.h; sourceTree = "<group>"; };
-		8FCB7762140C2F0700D86586 /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.md; sourceTree = "<group>"; };
 		8FE5608316DE6CB700BB7600 /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		8FE5608516DE6CBE00BB7600 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
 		8FE5608716DE6CC600BB7600 /* libicucore.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libicucore.dylib; path = usr/lib/libicucore.dylib; sourceTree = SDKROOT; };
@@ -338,9 +271,6 @@
 		8FF3D6532170113800059ACD /* MPDiskUtil.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPDiskUtil.h; path = MPLibrary/MPDiskUtil.h; sourceTree = "<group>"; };
 		8FF3D6542170113800059ACD /* MPDate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPDate.m; path = MPLibrary/MPDate.m; sourceTree = "<group>"; };
 		8FF3D6552170113800059ACD /* MPNSTask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPNSTask.h; path = MPLibrary/MPNSTask.h; sourceTree = "<group>"; };
-		8FF3D6562170113800059ACD /* MPNetworkUtils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPNetworkUtils.m; path = MPLibrary/MPNetworkUtils.m; sourceTree = "<group>"; };
-		8FF3D6572170113800059ACD /* MPNetworkUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPNetworkUtils.h; path = MPLibrary/MPNetworkUtils.h; sourceTree = "<group>"; };
-		8FF3D6582170113800059ACD /* MPLog.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPLog.h; path = MPLibrary/MPLog.h; sourceTree = "<group>"; };
 		8FF3D6592170113800059ACD /* MPSystemInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSystemInfo.h; path = MPLibrary/MPSystemInfo.h; sourceTree = "<group>"; };
 		8FF3D65A2170113800059ACD /* MPClientInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPClientInfo.h; path = MPLibrary/MPClientInfo.h; sourceTree = "<group>"; };
 		8FF3D65B2170113800059ACD /* MPNSTask.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPNSTask.m; path = MPLibrary/MPNSTask.m; sourceTree = "<group>"; };
@@ -349,8 +279,6 @@
 		8FF3D65F2170113900059ACD /* MPDiskUtil.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPDiskUtil.m; path = MPLibrary/MPDiskUtil.m; sourceTree = "<group>"; };
 		8FF3D6602170113900059ACD /* MPDate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPDate.h; path = MPLibrary/MPDate.h; sourceTree = "<group>"; };
 		8FF3D66F2170119200059ACD /* InventoryPlugin.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = InventoryPlugin.h; path = MPLibrary/InventoryPlugin.h; sourceTree = "<group>"; };
-		8FF3D671217011C500059ACD /* MPPython.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPPython.h; path = MPLibrary/MPPython.h; sourceTree = "<group>"; };
-		8FF3D672217011C500059ACD /* MPPython.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPPython.m; path = MPLibrary/MPPython.m; sourceTree = "<group>"; };
 		8FF3D675217011E700059ACD /* MPHTTPRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPHTTPRequest.m; path = MPLibrary/MPHTTPRequest.m; sourceTree = "<group>"; };
 		8FF3D676217011E700059ACD /* MPRESTfull.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPRESTfull.h; path = MPLibrary/MPRESTfull.h; sourceTree = "<group>"; };
 		8FF3D677217011E700059ACD /* MPHTTPRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPHTTPRequest.h; path = MPLibrary/MPHTTPRequest.h; sourceTree = "<group>"; };
@@ -385,7 +313,6 @@
 		8FF3D6AB217012D600059ACD /* MPCodeSign.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPCodeSign.m; path = MPLibrary/MPCodeSign.m; sourceTree = "<group>"; };
 		8FF3D6BA2170131700059ACD /* MPSWTasks.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MPSWTasks.h; path = MPLibrary/MPSWTasks.h; sourceTree = "<group>"; };
 		8FF3D6BE2170131700059ACD /* MPSWTasks.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPSWTasks.m; path = MPLibrary/MPSWTasks.m; sourceTree = "<group>"; };
-		8FF3D7212170196800059ACD /* MPLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MPLog.m; path = MPLibrary/MPLog.m; sourceTree = "<group>"; };
 		8FF3D72321701AB500059ACD /* NSDate+Helper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSDate+Helper.m"; sourceTree = "<group>"; };
 		8FF3D72421701AB500059ACD /* NSFileManager+DirectoryLocations.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "NSFileManager+DirectoryLocations.h"; sourceTree = "<group>"; };
 		8FF3D72521701AB500059ACD /* NSString+Hash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "NSString+Hash.m"; sourceTree = "<group>"; };
@@ -455,14 +382,8 @@
 				8FA6A76C1B90D6FE006A329B /* Inventory */,
 				8FF3D6602170113900059ACD /* MPDate.h */,
 				8FF3D6542170113800059ACD /* MPDate.m */,
-				8FF3D6572170113800059ACD /* MPNetworkUtils.h */,
-				8FF3D6562170113800059ACD /* MPNetworkUtils.m */,
 				8FF3D6552170113800059ACD /* MPNSTask.h */,
 				8FF3D65B2170113800059ACD /* MPNSTask.m */,
-				8FF3D6582170113800059ACD /* MPLog.h */,
-				8FF3D7212170196800059ACD /* MPLog.m */,
-				8FA21F892F16EE690016379E /* MPLogger.h */,
-				8FA21F8B2F16EE6C0016379E /* MPLogger.m */,
 				8FF3D65A2170113800059ACD /* MPClientInfo.h */,
 				8FF3D65D2170113900059ACD /* MPClientInfo.m */,
 				8FF3D6532170113800059ACD /* MPDiskUtil.h */,
@@ -498,6 +419,8 @@
 		8F03BE8C2362330700987AD7 /* ClientDB */ = {
 			isa = PBXGroup;
 			children = (
+				8F7816A83070294F00A5FCBB /* MPModel.h */,
+				8F7816A93070294F00A5FCBB /* MPModel.m */,
 				8F03BE8E2362331600987AD7 /* MPClientDB.h */,
 				8F03BE8D2362331400987AD7 /* MPClientDB.m */,
 				8F03BE912362332800987AD7 /* Model */,
@@ -591,15 +514,6 @@
 			name = "MacPatch+SWDist";
 			sourceTree = "<group>";
 		};
-		8F8019F022848A3A006E6BC5 /* GCDTask */ = {
-			isa = PBXGroup;
-			children = (
-				8F8019F122848A5B006E6BC5 /* GCDTask.h */,
-				8F8019F222848A5C006E6BC5 /* GCDTask.m */,
-			);
-			path = GCDTask;
-			sourceTree = "<group>";
-		};
 		8F83530E217E8B230034FEFB /* NSDate-Category */ = {
 			isa = PBXGroup;
 			children = (
@@ -608,32 +522,6 @@
 			);
 			name = "NSDate-Category";
 			path = "MPLibrary/NSDate-Category";
-			sourceTree = "<group>";
-		};
-		8FA28ECD21939EBC005D5E92 /* FMDBx */ = {
-			isa = PBXGroup;
-			children = (
-				8FA28EE821939EF7005D5E92 /* FMDBx.h */,
-				8FA28EE521939EF7005D5E92 /* FMXColumnMap.h */,
-				8FA28EE421939EF7005D5E92 /* FMXColumnMap.m */,
-				8FA28EEB21939EF7005D5E92 /* FMXCsvTable.h */,
-				8FA28EE621939EF7005D5E92 /* FMXCsvTable.m */,
-				8FA28EEE21939EF8005D5E92 /* FMXDatabaseConfiguration.h */,
-				8FA28EE921939EF7005D5E92 /* FMXDatabaseConfiguration.m */,
-				8FA28EEA21939EF7005D5E92 /* FMXDatabaseManager.h */,
-				8FA28EF621939EF8005D5E92 /* FMXDatabaseManager.m */,
-				8FA28EF521939EF8005D5E92 /* FMXDatabaseMigration.h */,
-				8FA28EE721939EF7005D5E92 /* FMXDatabaseMigration.m */,
-				8FA28EF121939EF8005D5E92 /* FMXHelpers.h */,
-				8FA28EEF21939EF8005D5E92 /* FMXHelpers.m */,
-				8FA28EF221939EF8005D5E92 /* FMXModel.h */,
-				8FA28EF021939EF8005D5E92 /* FMXModel.m */,
-				8FA28EF321939EF8005D5E92 /* FMXQuery.h */,
-				8FA28EED21939EF7005D5E92 /* FMXQuery.m */,
-				8FA28EEC21939EF7005D5E92 /* FMXTableMap.h */,
-				8FA28EF421939EF8005D5E92 /* FMXTableMap.m */,
-			);
-			name = FMDBx;
 			sourceTree = "<group>";
 		};
 		8FA6A76C1B90D6FE006A329B /* Inventory */ = {
@@ -701,50 +589,6 @@
 			);
 			name = Base64;
 			path = MPLibrary/Base64;
-			sourceTree = "<group>";
-		};
-		8FCB774E140C2F0700D86586 /* Logging */ = {
-			isa = PBXGroup;
-			children = (
-				8FCB7751140C2F0700D86586 /* lcl_config_logger.h */,
-				8FCB7752140C2F0700D86586 /* LCLLogFileConfig.h */,
-				8FCB7750140C2F0700D86586 /* lcl_config_extensions.h */,
-				8FCB774F140C2F0700D86586 /* lcl_config_components.h */,
-				8FCB7753140C2F0700D86586 /* LibComponentLogging-Core */,
-				8FCB775A140C2F0700D86586 /* LibComponentLogging-LogFile */,
-				8FCB7760140C2F0700D86586 /* LibComponentLogging-qlog */,
-			);
-			name = Logging;
-			path = MPLibrary/Logging;
-			sourceTree = "<group>";
-		};
-		8FCB7753140C2F0700D86586 /* LibComponentLogging-Core */ = {
-			isa = PBXGroup;
-			children = (
-				8FCB7754140C2F0700D86586 /* lcl.h */,
-				8FCB7755140C2F0700D86586 /* lcl.m */,
-				8FCB7759140C2F0700D86586 /* README.md */,
-			);
-			path = "LibComponentLogging-Core";
-			sourceTree = "<group>";
-		};
-		8FCB775A140C2F0700D86586 /* LibComponentLogging-LogFile */ = {
-			isa = PBXGroup;
-			children = (
-				8FCB775C140C2F0700D86586 /* LCLLogFile.h */,
-				8FCB775D140C2F0700D86586 /* LCLLogFile.m */,
-				8FCB775F140C2F0700D86586 /* README.md */,
-			);
-			path = "LibComponentLogging-LogFile";
-			sourceTree = "<group>";
-		};
-		8FCB7760140C2F0700D86586 /* LibComponentLogging-qlog */ = {
-			isa = PBXGroup;
-			children = (
-				8FCB7761140C2F0700D86586 /* qlog.h */,
-				8FCB7762140C2F0700D86586 /* README.md */,
-			);
-			path = "LibComponentLogging-qlog";
 			sourceTree = "<group>";
 		};
 		8FCB77A3140C314C00D86586 /* Helpers */ = {
@@ -852,14 +696,11 @@
 		8FED881F1463165B00709F8E /* Third Party Classes */ = {
 			isa = PBXGroup;
 			children = (
-				8F8019F022848A3A006E6BC5 /* GCDTask */,
 				8FE7E9B422372E7C000FAA6A /* UAObfuscatedString */,
 				8FE7E9AB22372E28000FAA6A /* CocoaSecurity */,
 				8F83530E217E8B230034FEFB /* NSDate-Category */,
 				8FF3D6E32170147200059ACD /* FMDB */,
-				8FA28ECD21939EBC005D5E92 /* FMDBx */,
 				8FAEF668145F19AC006284B2 /* Base64 */,
-				8FCB774E140C2F0700D86586 /* Logging */,
 				8FAEF65D145F1922006284B2 /* RegexKitLite */,
 			);
 			name = "Third Party Classes";
@@ -870,8 +711,6 @@
 			children = (
 				8F60AD6122494D0600FDFBCA /* AgentData.h */,
 				8F60AD6222494D0600FDFBCA /* AgentData.m */,
-				8FF3D671217011C500059ACD /* MPPython.h */,
-				8FF3D672217011C500059ACD /* MPPython.m */,
 				8FA139EE21B7857D00124016 /* ConfigProfile.h */,
 				8FA139EF21B7857D00124016 /* ConfigProfile.m */,
 				8FA139F021B7857D00124016 /* MPConfigProfiles.h */,
@@ -918,7 +757,6 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8F8019F322848A5C006E6BC5 /* GCDTask.h in Headers */,
 				8FC0A9A521838A0B006C7FCB /* MPDownloadManager.h in Headers */,
 				8F4B1E2316DD1D8C00E15A9E /* MPAsus.h in Headers */,
 				8F4B1E2516DD1D8C00E15A9E /* MPASUSCatalogs.h in Headers */,
@@ -946,26 +784,14 @@
 				8FF3D6682170113900059ACD /* MPClientInfo.h in Headers */,
 				8FF3D66E2170113900059ACD /* MPDate.h in Headers */,
 				8FF3D6672170113900059ACD /* MPSystemInfo.h in Headers */,
-				8FF3D6652170113900059ACD /* MPNetworkUtils.h in Headers */,
 				8FF3D6C02170131700059ACD /* MPSWTasks.h in Headers */,
 				8FF3D6972170127D00059ACD /* Agent.h in Headers */,
-				8FF3D6662170113900059ACD /* MPLog.h in Headers */,
 				8F1B07FF223184E0004D2ACF /* MPPatchScan.h in Headers */,
 				8FF3D6842170123900059ACD /* STHTTPRequest.h in Headers */,
 				8FF3D6892170125900059ACD /* MPSettings.h in Headers */,
 				8FF3D6612170113900059ACD /* MPDiskUtil.h in Headers */,
 				8FF3D6702170119200059ACD /* InventoryPlugin.h in Headers */,
 				8F4B1E2C16DD1D8C00E15A9E /* MPDataMgr.h in Headers */,
-				8FA28F0521939EF8005D5E92 /* FMXModel.h in Headers */,
-				8FA28F0621939EF8005D5E92 /* FMXQuery.h in Headers */,
-				8FA28F0421939EF8005D5E92 /* FMXHelpers.h in Headers */,
-				8FA28EF821939EF8005D5E92 /* FMXColumnMap.h in Headers */,
-				8FA28EFB21939EF8005D5E92 /* FMDBx.h in Headers */,
-				8FA28EFF21939EF8005D5E92 /* FMXTableMap.h in Headers */,
-				8FA28EFE21939EF8005D5E92 /* FMXCsvTable.h in Headers */,
-				8FA28F0821939EF8005D5E92 /* FMXDatabaseMigration.h in Headers */,
-				8FA28EFD21939EF8005D5E92 /* FMXDatabaseManager.h in Headers */,
-				8F4B1E4116DD1D8C00E15A9E /* lcl_config_logger.h in Headers */,
 				8FF3D73621701AB600059ACD /* NSMutableDictionary+Helper.h in Headers */,
 				8FA139F421B7857D00124016 /* MPConfigProfiles.h in Headers */,
 				8FA139F221B7857D00124016 /* ConfigProfile.h in Headers */,
@@ -973,7 +799,6 @@
 				8FA28EE221939EE2005D5E92 /* FMResultSet.h in Headers */,
 				8FA28ED921939EE2005D5E92 /* FMDatabaseQueue.h in Headers */,
 				8FA28EDE21939EE2005D5E92 /* FMDatabaseAdditions.h in Headers */,
-				8FA28F0121939EF8005D5E92 /* FMXDatabaseConfiguration.h in Headers */,
 				8FA28EE321939EE2005D5E92 /* FMDatabasePool.h in Headers */,
 				8FA28EDD21939EE2005D5E92 /* FMDB.h in Headers */,
 				8FF3D73C21701AB600059ACD /* NSDate+Helper.h in Headers */,
@@ -993,17 +818,11 @@
 				8FF3D73421701AB600059ACD /* NSDictionary+Helper.h in Headers */,
 				8FBC25612407417600996F5B /* DHCachedPasswordUtil.h in Headers */,
 				8F4E3CBA2406EC57008CA5E6 /* MPPassItem.h in Headers */,
-				8FA21F8A2F16EE690016379E /* MPLogger.h in Headers */,
 				8FF3D73921701AB600059ACD /* NSString+Hash.h in Headers */,
 				8FA21FBB2F2180CA0016379E /* Logger.h in Headers */,
-				8F4B1E4216DD1D8C00E15A9E /* LCLLogFileConfig.h in Headers */,
+				8F7816AA3070294F00A5FCBB /* MPModel.h in Headers */,
 				8F60AD6322494D0600FDFBCA /* AgentData.h in Headers */,
-				8F4B1E4316DD1D8C00E15A9E /* lcl_config_extensions.h in Headers */,
-				8F4B1E4416DD1D8C00E15A9E /* lcl_config_components.h in Headers */,
-				8F4B1E4516DD1D8C00E15A9E /* LCLLogFile.h in Headers */,
-				8F4B1E4616DD1D8C00E15A9E /* qlog.h in Headers */,
 				8F4B1E4716DD1D8C00E15A9E /* RegexKitLite.h in Headers */,
-				8F4B1EA816DD267B00E15A9E /* lcl.h in Headers */,
 				8FEC938717CBFEFB00AA9C1C /* MPApplePatch.h in Headers */,
 				8F2E697B19229A85001BF9D6 /* MPFailedRequests.h in Headers */,
 				8FE03DCC1B60020B005D39EE /* NSData+Base64.h in Headers */,
@@ -1043,7 +862,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2640;
+				LastUpgradeCheck = 2700;
 			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "MPLibrary" */;
 			compatibilityVersion = "Xcode 11.4";
@@ -1076,7 +895,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ ! -d \"$HOME/Developer/Xcode/MP32/include\" ]; then\n    mkdir -p \"$HOME/Developer/Xcode/MP32/include\"\nfi\n\ncp -r \"${TARGET_BUILD_DIR}/usr/local/include/\" \"$HOME/Developer/Xcode/MP32/include\"\ncp -r \"${TARGET_BUILD_DIR}/libMPLibrary.a\" \"$HOME/Developer/Xcode/MP32/libMPLibrary.a\"\n";
+			shellScript = "if [ ! -d \"$HOME/Developer/Xcode/MP32/include\" ]; then\n    mkdir -p \"$HOME/Developer/Xcode/MP32/include\"\nfi\n\nif [ -d \"${TARGET_BUILD_DIR}/usr/local/include\" ]; then\n    ditto \"${TARGET_BUILD_DIR}/usr/local/include\" \"$HOME/Developer/Xcode/MP32/include\"\nfi\n\nif [ -f \"${TARGET_BUILD_DIR}/libMPLibrary.a\" ]; then\n    ditto \"${TARGET_BUILD_DIR}/libMPLibrary.a\" \"$HOME/Developer/Xcode/MP32/libMPLibrary.a\"\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -1085,20 +904,17 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8FA28EF721939EF8005D5E92 /* FMXColumnMap.m in Sources */,
-				8FA28EF921939EF8005D5E92 /* FMXCsvTable.m in Sources */,
+				8F7816AB3070294F00A5FCBB /* MPModel.m in Sources */,
 				8FF3D69B2170127D00059ACD /* Task.m in Sources */,
 				8FC0A9A621838A0B006C7FCB /* MPDownloadManager.m in Sources */,
 				8FF3D67C217011E700059ACD /* MPRESTfull.m in Sources */,
 				8FF3D679217011E700059ACD /* MPHTTPRequest.m in Sources */,
 				8FA139F321B7857D00124016 /* ConfigProfile.m in Sources */,
 				8FF3D6B4217012D600059ACD /* MPClientKey.m in Sources */,
-				8FA28F0221939EF8005D5E92 /* FMXHelpers.m in Sources */,
 				8FE663FE22287A4F00F12AC8 /* MPPatching.m in Sources */,
 				8FF3D6AE217012D600059ACD /* MPSimpleKeychain.m in Sources */,
 				8FF3D6962170127D00059ACD /* Server.m in Sources */,
 				8FE66402222887BB00F12AC8 /* MPFileUtils.m in Sources */,
-				8FF3D7222170196800059ACD /* MPLog.m in Sources */,
 				8FF3D651217010E700059ACD /* Constants.m in Sources */,
 				8FF3D73521701AB600059ACD /* NSFileManager+DirectoryLocations.m in Sources */,
 				8F4B1DFA16DD1D6400E15A9E /* MPAsus.m in Sources */,
@@ -1109,9 +925,7 @@
 				8F03BE982362334800987AD7 /* History.m in Sources */,
 				8F4B1DFC16DD1D6400E15A9E /* MPASUSCatalogs.m in Sources */,
 				8FC1CF542526920900DAD699 /* NSData+Base64.m in Sources */,
-				8FA28EFC21939EF8005D5E92 /* FMXDatabaseConfiguration.m in Sources */,
 				8F4B1DFD16DD1D6400E15A9E /* MPBundle.m in Sources */,
-				8FA21F8C2F16EE6C0016379E /* MPLogger.m in Sources */,
 				8F4B1DFE16DD1D6400E15A9E /* MPFileCheck.m in Sources */,
 				8F4B1DFF16DD1D6400E15A9E /* MPOSCheck.m in Sources */,
 				8F4B1E0016DD1D6400E15A9E /* MPScript.m in Sources */,
@@ -1121,17 +935,12 @@
 				8FB1AB6E27A453DA003DC95C /* MPServerPing.m in Sources */,
 				8FF3D73321701AB600059ACD /* NSString+Hash.m in Sources */,
 				8F4B1E0316DD1D6400E15A9E /* MPDataMgr.m in Sources */,
-				8F4B1E1416DD1D6400E15A9E /* lcl.m in Sources */,
-				8FF3D6642170113900059ACD /* MPNetworkUtils.m in Sources */,
-				8F4B1E1516DD1D6400E15A9E /* LCLLogFile.m in Sources */,
 				8FF3D66A2170113900059ACD /* MPSystemInfo.m in Sources */,
 				8F60AD6422494D0600FDFBCA /* AgentData.m in Sources */,
-				8FA28F0721939EF8005D5E92 /* FMXTableMap.m in Sources */,
 				8FC1CF52252690B600DAD699 /* NSString+Base64.m in Sources */,
 				8FF3D66D2170113900059ACD /* MPDiskUtil.m in Sources */,
 				8FA28EE021939EE2005D5E92 /* FMDatabase.m in Sources */,
 				8FA28EE121939EE2005D5E92 /* FMDatabaseAdditions.m in Sources */,
-				8FA28F0321939EF8005D5E92 /* FMXModel.m in Sources */,
 				8FF3D6622170113900059ACD /* MPDate.m in Sources */,
 				8FF3D6692170113900059ACD /* MPNSTask.m in Sources */,
 				8F835312217E8BA90034FEFB /* NSDate+MPHelper.m in Sources */,
@@ -1151,7 +960,6 @@
 				8FF3D66B2170113900059ACD /* MPClientInfo.m in Sources */,
 				8FE663FA222879EB00F12AC8 /* MPSoftware.m in Sources */,
 				8FF3D69A2170127D00059ACD /* Agent.m in Sources */,
-				8FA28F0921939EF8005D5E92 /* FMXDatabaseManager.m in Sources */,
 				8FF3D6B5217012D600059ACD /* MPRemoteFingerprint.m in Sources */,
 				8FF3D6802170120600059ACD /* MPWSResult.m in Sources */,
 				8F03BE992362334800987AD7 /* InstalledSoftware.m in Sources */,
@@ -1159,14 +967,11 @@
 				8FF3D68C2170125900059ACD /* MPSettings.m in Sources */,
 				8FF3D68B2170125900059ACD /* MPDefaults.m in Sources */,
 				8FA8B0D023636B3600B030C9 /* RequiredPatch.m in Sources */,
-				8FA28F0021939EF8005D5E92 /* FMXQuery.m in Sources */,
 				8FF3D73D21701AB600059ACD /* NSFileManager+Helper.m in Sources */,
 				8F03BE8F2362331600987AD7 /* MPClientDB.m in Sources */,
 				8FA28EDF21939EE2005D5E92 /* FMResultSet.m in Sources */,
 				8F60AD6822494D5000FDFBCA /* UAObfuscatedString.m in Sources */,
-				8FA28EFA21939EF8005D5E92 /* FMXDatabaseMigration.m in Sources */,
 				8FF3D6832170123900059ACD /* STHTTPRequest.m in Sources */,
-				8F8019F422848A5C006E6BC5 /* GCDTask.m in Sources */,
 				8FF3D6A02170129B00059ACD /* MPCrypto.m in Sources */,
 				8FA28EDC21939EE2005D5E92 /* FMDatabasePool.m in Sources */,
 			);
@@ -1202,6 +1007,7 @@
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1247,6 +1053,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				DEAD_CODE_STRIPPING = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
@@ -1285,6 +1092,7 @@
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1.0.0;
 				DEAD_CODE_STRIPPING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -1338,6 +1146,7 @@
 				CURRENT_PROJECT_VERSION = 1.0.0;
 				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "MPLibrary/MPLibrary-Prefix.pch";
