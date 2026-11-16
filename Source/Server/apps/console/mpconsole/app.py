@@ -22,6 +22,7 @@ import logging
 import logging.handlers
 from flask.logging import default_handler
 from mpconsole.config import Config
+from mpconsole.csrf import configure_csrf_signing
 from mpconsole.extensions import migrate
 from mpconsole.mplogger import *
 from mpconsole.session_auth import session_expired_response
@@ -161,6 +162,7 @@ def initialize_extensions(app):
 	db.init_app(app)
 	login_manager.init_app(app)
 	migrate.init_app(app, db)
+	configure_csrf_signing()
 	csrf.init_app(app)
 	cache.init_app(app)
 
