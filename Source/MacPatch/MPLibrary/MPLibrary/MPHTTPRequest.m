@@ -14,8 +14,6 @@
 static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 #import <CommonCrypto/CommonHMAC.h>
 
-#undef  ql_component
-#define ql_component lcl_cMPHTTPRequest
 
 @interface MPHTTPRequest ()
 {
@@ -161,7 +159,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
 {
     NSMutableArray *_servers = [NSMutableArray new];
     NSDictionary *agentData = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_DEPL_PLIST];
-    
+
     Server *server1 = [[Server  alloc] init];
     server1.host = agentData[@"MPServerAddress"];
     server1.port = [agentData[@"MPServerPort"] integerValue];
@@ -205,45 +203,6 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
         }
     }];
     
-    if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
-        self.serverArray = _servers;
-        self.requestCount = -1;
-    } else {
-        dispatch_sync(self.stateQueue, ^{
-            self.serverArray = _servers;
-            self.requestCount = -1;
-        });
-    }
-}
-
-- (void)populateServerArrayUsingAgentPlistOG
-{
-    NSMutableArray *_servers = [NSMutableArray new];
-    NSDictionary *agentData = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_DEPL_PLIST];
-    
-    Server *server1 = [[Server  alloc] init];
-    server1.host = agentData[@"MPServerAddress"];
-    server1.port = [agentData[@"MPServerPort"] integerValue];
-    server1.usessl = [agentData[@"MPServerSSL"] integerValue];
-    server1.allowSelfSigned = [agentData[@"MPServerAllowSelfSigned"] integerValue];
-    server1.isMaster = 1;
-    server1.isProxy = 0;
-    [_servers addObject:server1];
-    
-    if (agentData[@"MPProxyEnabled"])
-    {
-        if ([agentData[@"MPProxyEnabled"] integerValue] == 1)
-        {
-            Server *server2 = [[Server  alloc] init];
-            server2.host = agentData[@"MPProxyServerAddress"];
-            server2.port = [agentData[@"MPProxyServerPort"] integerValue];
-            server2.usessl = [agentData[@"MPServerSSL"] integerValue];
-            server2.allowSelfSigned = [agentData[@"MPServerAllowSelfSigned"] integerValue];
-            server2.isMaster = 0;
-            server2.isProxy = 1;
-            [_servers addObject:server2];
-        }
-    }
     if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
         self.serverArray = _servers;
         self.requestCount = -1;
@@ -476,7 +435,15 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     for (Server *server in servers)
     {
+        // Set allowSelfSignedCert based on server configuration
         BOOL allowSelfSigned = (server.allowSelfSigned == 1);
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.allowSelfSignedCert = allowSelfSigned;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.allowSelfSignedCert = allowSelfSigned;
+            });
+        }
 
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         LogInfo(@"URL: %@",url);
@@ -506,8 +473,16 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     for (Server *server in servers)
     {
+        // Set allowSelfSignedCert based on server configuration
         BOOL allowSelfSigned = (server.allowSelfSigned == 1);
-        
+        if (dispatch_get_specific(kMPHTTPRequestStateQueueKey)) {
+            self.allowSelfSignedCert = allowSelfSigned;
+        } else {
+            dispatch_sync(self.stateQueue, ^{
+                self.allowSelfSignedCert = allowSelfSigned;
+            });
+        }
+
         LogDebug(@"[runSyncPOST][server]: %@",server.toDictionary);
         url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, urlPath];
         LogDebug(@"[runSyncPOST] URL: %@",url);
@@ -794,8 +769,6 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
 	for (Server *server in servers)
 	{
-		BOOL allowSelfSigned = (server.allowSelfSigned == 1);
-
 		url = [NSString stringWithFormat:@"%@://%@:%d%@",server.usessl ? @"https":@"http", server.host, (int)server.port, aURLPath];
 		LogInfo(@"URL: %@",url);
 		//
@@ -1005,7 +978,7 @@ static const void *kMPHTTPRequestStateQueueKey = &kMPHTTPRequestStateQueueKey;
     
     NSString *aStrToSign = [NSString stringWithFormat:@"%@-%@",aData,aTimeStamp];
     
-    qltrace(@"String to Sign: (%@)",aStrToSign);
+    LogDebug(@"String to Sign: (%@)",aStrToSign);
     
     const char *cKey  = [aKey cStringUsingEncoding:NSUTF8StringEncoding];
     const char *cData = [aStrToSign cStringUsingEncoding:NSUTF8StringEncoding];

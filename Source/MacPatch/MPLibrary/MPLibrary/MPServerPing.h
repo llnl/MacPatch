@@ -32,6 +32,10 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (BOOL)serverHostIsReachable:(NSString *)hostName port:(NSInteger)port;
 
+/// Same test, but honors the server's SSL settings. Without allowSelfSigned a server
+/// using a self-signed certificate fails TLS verification and is reported unreachable.
+- (BOOL)serverHostIsReachable:(NSString *)hostName port:(NSInteger)port useSSL:(BOOL)useSSL allowSelfSigned:(BOOL)allowSelfSigned;
+
 @end
 
 NS_ASSUME_NONNULL_END

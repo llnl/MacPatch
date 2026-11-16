@@ -18,116 +18,40 @@ from mpconsole.mpldap import MPldap
 @local_auth.route("/login", methods=["GET", "POST"])
 def login():
 	form = LoginForm()
-	if form.username.data is not None:
-		formUserID = form.username.data
-		log_Info(f"Begin login attempt for user {formUserID}")
-	else:
-		log_Error("Form data is incomplete.")
+	if not form.validate_on_submit():
 		return render_template("local_auth/login.html", form=form)
 
-	# Read from siteconfig file
-	_localAdm = return_data_for_root_key('users')
+	formUserID = form.username.data
+	log_Info(f"Begin login attempt for user {formUserID}")
 
-	tryLocalAdmin = False
-	if 'admin' in _localAdm:
-		tryLocalAdmin = _localAdm['admin']['enabled']
-		log_Debug("Local admin enabled: {}".format(tryLocalAdmin))
+	# Local database account, this includes the initial admin account
+	# created with scripts/create_admin_account.py
+	user = AdmUsers.query.filter(AdmUsers.user_id == formUserID).first()
+	if user is not None and user.check_password(form.password.data):
+		if accountIsEnabled(user.user_id):
+			log_Info(f"Console user login sucessful for user {formUserID}")
+			return completeLogin(user, 1)
 
-	if form.validate_on_submit():
-		# Check if the user exists in the db
-		user = AdmUsers.query.filter(AdmUsers.user_id == formUserID).first()
-		if tryLocalAdmin:
-			_lUser = _localAdm['admin']['name']
-			_lPass = _localAdm['admin']['pass']
-			if formUserID == _lUser:
-				if _lPass == form.password.data:
-					if user is None:
-						user = AdmUsers()
-						user.user_id = formUserID
-						user.user_pass = "NA"
-						db.session.add(user)
-						db.session.commit()
+		log_Error(f"User {formUserID} account is not enabled.")
 
-						makeUserAdmin(user.user_id, 0)
+	# Not a local db user, lets see if LDAP is enabled and try that
+	elif current_app.config['LDAP_SRVC_ENABLED'] and ldapAuthenticate(formUserID, form.password.data):
+		if accountIsEnabled(formUserID):
+			if user is None:
+				user = addUser(formUserID)
 
-					login_user(user)
-					session['user'] = formUserID
-					session['user_key'] = Fernet.generate_key().decode()
-					recordLoginAndAssignIfNeeded(user.user_id, 0)
-					setLoginSessionInfo(user.user_id)
+			log_Info(f"LDAP login sucessful for user {formUserID}")
+			return completeLogin(user, 2)
 
-					log_Info(f"Local admin login sucessful for user {formUserID}")
-					return redirect(url_for('dashboard.index', username=user.user_id))
-		
-		# Check if user is local db user
-		if user is not None and user.check_password(form.password.data):
-			if accountIsEnabled(user.user_id):
-				login_user(user)
-				session['user'] = formUserID
-				session['user_key'] = Fernet.generate_key().decode()
-				recordLoginAndAssignIfNeeded(user.user_id, 1)
-				setLoginSessionInfo(user.user_id)
+		log_Error(f"Account {formUserID} exists but is disabled.")
 
-				log_Info(f"Console user login sucessful for user {formUserID}")
-				return redirect(url_for('dashboard.index', username=user.user_id))
-			else:
-				log_Error(f"User {formUserID} account is not enabled.")
-		
-		# Not a local db user, lets see if LDAP is enabled and try that
-		else:
-			if current_app.config['LDAP_SRVC_ENABLED']:
-			# LDAP is enabled
-				log_Debug("Ldap is enabled.")
-				# Init LDAP class
-				mpLDAP = MPldap(current_app)
-				# Seach the directory for user logging in
-				foundUserDN = mpLDAP.findOUN(formUserID)
-
-				if foundUserDN is not None:
-					# User was found in the directory 
-					# Lets try the auth for the user logging in
-					if mpLDAP.authOUN(foundUserDN, formUserID, form.password.data):
-						# LDAP Login Using the user DN passed
-						if accountExists(formUserID):
-							# The UserID Exists in MacPatch DB
-							_usrActIsEnabled = accountIsEnabled(formUserID)
-							if _usrActIsEnabled:
-								# Account is enabled
-								session['user'] = formUserID
-								session['user_key'] = Fernet.generate_key().decode()
-								login_user(user)
-								recordLoginAndAssignIfNeeded(user.user_id, 2)
-								setLoginSessionInfo(user.user_id)
-								log_Info(f"LDAP login sucessful for user {formUserID}")
-
-								return redirect(url_for('dashboard.index', username=user.user_id))
-							else:
-								log_Error(f"Account {formUserID} exists but is disabled.")
-
-						else:
-							# The UserID does not exists, create and login
-							user = addUser(formUserID)
-							login_user(user)
-							recordLoginAndAssignIfNeeded(user.user_id, 2)
-							setLoginSessionInfo(user.user_id)
-							session['user'] = form.username.data
-							session['user_key'] = Fernet.generate_key().decode()
-						
-							log_Info(f"LDAP login sucessful for user {formUserID}")
-							return redirect(url_for('dashboard.index', username=user.user_id))
-					else:
-						# LDAP Login Using the user DN failed
-						log_Error(f"{formUserID} Failed to login to LDAP.")
-						
-
-		flash('Incorrect username or password.')
-		log_Error(f"Failed login attempt for user {form.username.data}")
-
+	flash('Incorrect username or password.')
+	log_Error(f"Failed login attempt for user {formUserID}")
 	return render_template("local_auth/login.html", form=form)
 
 @local_auth.route("/logout")
 def logout():
-	log("Log out user %s" % (session['user']))
+	log("Log out user %s" % (session.get('user')))
 
 	logout_user()
 	session.clear()
@@ -145,11 +69,27 @@ def handle_error(e):
 # Helper methods
 # --------------------------------------------
 
-def accountExists(user_id):
-	_account = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == user_id).first()
-	if _account:
+def completeLogin(user, user_type):
+	# Log in with Flask-Login and set the session values MacPatch relies on
+	login_user(user)
+	session['user'] = user.user_id
+	session['user_key'] = Fernet.generate_key().decode()
+	recordLoginAndAssignIfNeeded(user.user_id, user_type)
+	setLoginSessionInfo(user.user_id)
+	return redirect(url_for('dashboard.index', username=user.user_id))
+
+def ldapAuthenticate(user_id, password):
+	log_Debug("Ldap is enabled.")
+	mpLDAP = MPldap(current_app)
+	# Seach the directory for user logging in
+	foundUserDN = mpLDAP.findOUN(user_id)
+	if foundUserDN is None:
+		return False
+
+	if mpLDAP.authOUN(foundUserDN, user_id, password):
 		return True
 
+	log_Error(f"{user_id} Failed to login to LDAP.")
 	return False
 
 def accountIsEnabled(user_id):
@@ -182,22 +122,6 @@ def recordLoginAndAssignIfNeeded(user_id,user_type):
 
 	db.session.commit()
 	return
-
-def makeUserAdmin(user_id, user_type):
-	_account = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == user_id).first()
-	if _account is None:
-		# Add Account and Set as Admin
-		_account = AdmUsersInfo()
-		setattr(_account, 'user_id', user_id)
-		setattr(_account, 'user_type', user_type)
-		setattr(_account, 'last_login', datetime.now())
-		setattr(_account, 'number_of_logins', 0)
-		setattr(_account, 'enabled', 1)
-		setattr(_account, 'admin', 1)
-		setattr(_account, 'autopkg', 1)
-		setattr(_account, 'agentUpload', 1)
-		setattr(_account, 'apiAccess', 1)
-		db.session.add(_account)
 
 def setLoginSessionInfo(user_id):
 

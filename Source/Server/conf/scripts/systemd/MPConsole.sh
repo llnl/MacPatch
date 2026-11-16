@@ -39,10 +39,8 @@ case "$1" in
 	echo $"Starting MacPatch Admin Console"
     source "${ENV_HOME}/bin/activate"
 	${ENV_HOME}/bin/gunicorn \
-	--pythonpath ${ENV_HOME}/lib/python3.12/site-packages \
+	--pythonpath "$(${ENV_HOME}/bin/python3 -c 'import sysconfig; print(sysconfig.get_path("purelib"))')" \
 	--config ${MP_HOME}/apps/console/gunicorn_config.py \
-	--access-logfile ${MP_HOME}/logs/g_console_access.log \
-	--error-logfile ${MP_HOME}/logs/g_console_error.log \
 	--chdir ${MP_HOME}/apps/console "app:create_app()" \
 	--pid $PIDFile &
 	;;

@@ -98,9 +98,9 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	}
 	
 	LogDebug(@"Setup Set Patch");
-	qltrace(@"cellStartNote: %@",cellStartNote);
-	qltrace(@"cellProgressNote: %@",cellProgressNote);
-	qltrace(@"cellStopNote: %@",cellStopNote);
+	LogDebug(@"cellStartNote: %@",cellStartNote);
+	LogDebug(@"cellProgressNote: %@",cellProgressNote);
+	LogDebug(@"cellStopNote: %@",cellStopNote);
 }
 
 - (BOOL)isConcurrent
@@ -121,7 +121,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	isFinished = YES;
 	[self didChangeValueForKey:@"isExecuting"];
 	[self didChangeValueForKey:@"isFinished"];
-	qltrace(@"-(void)finish ... calling %@",cellStopNote);
+	LogDebug(@"-(void)finish ... calling %@",cellStopNote);
 	[[NSNotificationCenter defaultCenter] postNotificationName:cellStopNote object:nil userInfo:userInfo];
 	//LogInfo(@"finish");
 	//(@"showRebootWindow: %d",showRebootWindow);

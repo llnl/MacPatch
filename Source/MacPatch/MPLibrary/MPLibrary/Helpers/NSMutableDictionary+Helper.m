@@ -32,10 +32,11 @@ static NSString *toString(id object)
 }
 
 // helper function: get the url encoded string form of any object
-static NSString *urlEncode(id object) 
+static NSString *urlEncode(id object)
 {
 	NSString *string = toString(object);
-	return [string stringByAddingPercentEscapesUsingEncoding: NSUTF8StringEncoding];
+	NSCharacterSet *allowedCharacters = [NSCharacterSet URLQueryAllowedCharacterSet];
+	return [string stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
 }
 
 @implementation NSMutableDictionary (NSMutableDictionaryHelper)

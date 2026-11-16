@@ -7,6 +7,7 @@ from datetime import datetime
 from . import dashboard
 from mpconsole.app import db, login_manager
 from mpconsole.app_decorators import login_required
+from mpconsole.mputil import json_serial_iso
 from mpconsole.model import *
 
 @dashboard.route('/dashboard')
@@ -216,12 +217,13 @@ def drilldown(chart,value):
 
 # Modal Data, for refresh etc
 @dashboard.route('/data/<chart>/<value>')
+@login_required
 def drilldowndata(chart,value):
 	result = drillDownDataFilter(chart, value)
 	if result is not None:
-		return json.dumps(result[0], default=json_serial), 200
+		return json.dumps(result[0], default=json_serial_iso), 200
 	else:
-		return json.dumps([], default=json_serial), 404
+		return json.dumps([], default=json_serial_iso), 404
 
 # Private/local
 def drillDownDataFilter(chart, filterValue):
@@ -300,7 +302,7 @@ def osVersionCollection(os_version):
 		_dict = c[0].asDict
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
-		if c.group_id and _client_Groups[c.group_id]:
+		if c.group_id and _client_Groups.get(c.group_id):
 			_dict['client_group'] = _client_Groups[c.group_id]
 		else:
 			_dict['client_group'] = "NA"
@@ -331,7 +333,7 @@ def osVersionMinorCollection(os_version_minor):
 		_dict = c[0].asDict
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
-		if c.group_id and _client_Groups[c.group_id]:
+		if c.group_id and _client_Groups.get(c.group_id):
 			_dict['client_group'] = _client_Groups[c.group_id]
 		else:
 			_dict['client_group'] = "NA"
@@ -363,7 +365,7 @@ def needsRebootCollection(reboot):
 		_dict = c[0].asDict
 		_dict['addomain'] = c.mpa_ADDomain
 		_dict['addn'] = c.mpa_distinguishedName
-		if c.group_id and _client_Groups[c.group_id]:
+		if c.group_id and _client_Groups.get(c.group_id):
 			_dict['client_group'] = _client_Groups[c.group_id]
 		else:
 			_dict['client_group'] = "NA"
@@ -409,7 +411,7 @@ def modelTypeCollection(model):
 				if _name == 'client_group':
 					_row_val = row[_name]
 					if _row_val:
-						_dict[_name] = _client_Groups[_row_val]
+						_dict[_name] = _client_Groups.get(_row_val, "")
 					else:
 						_dict[_name] = ""
 				else:
@@ -478,7 +480,7 @@ def modelTypesCollection(model):
 				if _name == 'client_group':
 					_row_val = row[_name]
 					if _row_val:
-						_dict[_name] = _client_Groups[_row_val]
+						_dict[_name] = _client_Groups.get(_row_val, "")
 					else:
 						_dict[_name] = ""
 				else:
@@ -528,7 +530,7 @@ def requiredPatchCollection(patch):
 				if _name == 'client_group':
 					_row_val = row[_name]
 					if _row_val:
-						_dict[_name] = _client_Groups[_row_val]
+						_dict[_name] = _client_Groups.get(_row_val, "")
 					else:
 						_dict[_name] = ""
 				else:
@@ -579,7 +581,7 @@ def installedPatchCollection(patch):
 				if _name == 'client_group':
 					_row_val = row[_name]
 					if _row_val:
-						_dict[_name] = _client_Groups[_row_val]
+						_dict[_name] = _client_Groups.get(_row_val, "")
 					else:
 						_dict[_name] = ""
 				else:
@@ -620,7 +622,7 @@ def agentStatusCollection(state):
 		_dict['addn'] = row.mpa_distinguishedName
 
 		if row.group_id:
-			_dict['client_group'] = _client_Groups[row.group_id]
+			_dict['client_group'] = _client_Groups.get(row.group_id, "")
 		else:
 			_dict['client_group'] = ""
 
@@ -668,7 +670,7 @@ def agentVersionCollection(version):
 
 		_dict['addomain'] = row.mpa_ADDomain
 		_dict['addn'] = row.mpa_distinguishedName
-		if row.group_id and _client_Groups[row.group_id]:
+		if row.group_id and _client_Groups.get(row.group_id):
 			_dict['client_group'] = _client_Groups[row.group_id]
 		else:
 			_dict['client_group'] = "NA"
@@ -676,11 +678,3 @@ def agentVersionCollection(version):
 		_results.append(_dict)
 
 	return _results, colNames
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.isoformat()
-		return serial
-	raise TypeError("Type not serializable")

@@ -130,6 +130,8 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)configureCellUI
 {
     [self connectToHelperTool];
+    // -1 means "no server tried yet"; the property defaults to 0, which skips the first server
+    self.requestCount = -1;
     [self loadImage];
     
     // Ensure progress bar is set up

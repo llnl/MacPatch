@@ -1,0 +1,18 @@
+<form method="post" action="/clients/group/{{data.group_id}}/sw/add" id="client-group-software-form" class="client-group-modal-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="group_id" value="{{ data.group_id or '' }}">
+    <div class="form-group">
+        <label for="swIDLst">Software Task</label>
+        <select id="swIDLst" name="tuuid" class="form-control" required data-group-picker data-placeholder="Select or search for a software task">
+            <option value=""></option>
+            {% for item in swData %}
+            <option value="{{ item.tuuid }}">{{ item.name }}</option>
+            {% endfor %}
+        </select>
+        <small class="form-text text-muted">Select or search for a software task.</small>
+    </div>
+    <div class="client-group-modal-actions">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">{{ 'Add' if type == 'add' else 'Update' }}</button>
+    </div>
+</form>

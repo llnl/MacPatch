@@ -25,6 +25,7 @@
  */
 
 #import "MPSettings.h"
+#import "Constants.h"
 static const void *kMPSettingsMutationQueueKey = &kMPSettingsMutationQueueKey;
 
 #import <IOKit/IOKitLib.h>
@@ -38,8 +39,6 @@ static const void *kMPSettingsMutationQueueKey = &kMPSettingsMutationQueueKey;
 #define SCHEMA_REV  340
 
 
-#undef  ql_component
-#define ql_component lcl_cMPSettings
 
 static MPSettings *_instance = nil; 
 static dispatch_once_t _onceToken;
@@ -188,7 +187,7 @@ static dispatch_queue_t _settingsQueue = NULL;
         req = [[MPHTTPRequest alloc] init];
     }
     
-    NSString *urlPath = [@"/api/v1/agent/config/info" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [MP_API_PREFIX @"/agent/config/info" stringByAppendingPathComponent:self.ccuid];
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
@@ -216,7 +215,7 @@ static dispatch_queue_t _settingsQueue = NULL;
         req = [[MPHTTPRequest alloc] init];
     }
     
-    NSString *urlPath = [@"/api/v2/agent/config/data" stringByAppendingPathComponent:self.ccuid];
+    NSString *urlPath = [MP_API_PREFIX @"/agent/config/data" stringByAppendingPathComponent:self.ccuid];
     result = [req runSyncGET:urlPath];
     
     if (result.statusCode >= 200 && result.statusCode <= 299) {
@@ -293,14 +292,14 @@ static dispatch_queue_t _settingsQueue = NULL;
                 LogInfo(@"Update Agent tasks, tasks did not match.");
                 [self updateSettingsUsingKey:@"tasks" settings:remoteSettings[@"settings"][@"tasks"]];
             }
-            if ([[remoteRevs objectForKey:@"swrestrictions"] isEqualTo:[self readSoftwareRestrictionRevisionFromFile]]) {
-                // Usdate Tasks
+            if ([[remoteRevs objectForKey:@"swrestrictions"] intValue] != [[localRevs objectForKey:@"swrestrictions"] intValue]) {
+                // Update Software Restrictions
                 LogInfo(@"Update Software restrictions, restrictions did not match.");
-                [self writeNewSoftwareRestritionsFile];
-                
-                NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
-                [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
-                [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+                if ([self writeNewSoftwareRestritionsFile]) {
+                    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
+                    [dict[@"revs"] setObject:[remoteRevs objectForKey:@"swrestrictions"] forKey:@"swrestrictions"];
+                    [dict writeToFile:MP_AGENT_SETTINGS atomically:YES];
+                }
             }
             LogInfo(@"Setting have been updated.");
             ok = YES;
@@ -415,6 +414,16 @@ static dispatch_queue_t _settingsQueue = NULL;
     return result;
 }
 
+/// Test a server dictionary, honoring its useHTTPS and allowSelfSigned settings.
+- (BOOL)serverIsReachable:(NSDictionary *)srv usingPing:(MPServerPing *)ping
+{
+    BOOL useSSL = srv[@"useHTTPS"] ? ([srv[@"useHTTPS"] integerValue] != 0) : YES;
+    return [ping serverHostIsReachable:srv[@"host"]
+                                  port:[srv[@"port"] integerValue]
+                                useSSL:useSSL
+                       allowSelfSigned:([srv[@"allowSelfSigned"] integerValue] == 1)];
+}
+
 - (NSArray *)serversFromDictionary:(NSDictionary *)settings
 {
     MPServerPing *ping = [MPServerPing new];
@@ -433,34 +442,37 @@ static dispatch_queue_t _settingsQueue = NULL;
         }
         
         if ([_srv[@"serverType"] integerValue] == 2) {
-            if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+            if ([self serverIsReachable:_srv usingPing:ping]) {
                 _proxy = [_srv copy];
             }
             continue;
         }
         
-        if ([ping serverHostIsReachable:_srv[@"host"] port:[_srv[@"port"] integerValue]]) {
+        if ([self serverIsReachable:_srv usingPing:ping]) {
             [_srvsRaw addObject:[_srv copy]];
         }
     }
     
-    if (_srvsRaw.count >= 1) {
-        if (_master) {
-            if ([ping serverHostIsReachable:_master[@"host"] port:[_master[@"port"] integerValue]]) {
-                // Since we have reachable servers in the array, only add master if reachable
-                [_srvsRaw addObject:_master]; // Add the master
-            }
+    BOOL masterReachable = NO;
+    if (_master) {
+        masterReachable = [self serverIsReachable:_master usingPing:ping];
+        if (masterReachable) {
+            // Master is a valid server even when it is the only one defined
+            [_srvsRaw addObject:_master];
         }
-        if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
-        for (NSDictionary *s in _srvsRaw)
-        {
-            [_srvs addObject:[[Server alloc] initWithDictionary:s]];
-        }
-    } else {
+    }
+    
+    if (_srvsRaw.count == 0 && _master) {
         // No servers which are reachable, add the master server so there
         // is at least 1 server in the array and it can timeout.
-        [_srvs addObject:[[Server alloc] initWithDictionary:_master]];
+        [_srvsRaw addObject:_master];
         LogError(@"No reachable servers. Adding master (%@) to prevent issues. This will timeout.",_master[@"host"]);
+    }
+    
+    if (_proxy) [_srvsRaw addObject:_proxy]; // Add the proxy
+    for (NSDictionary *s in _srvsRaw)
+    {
+        [_srvs addObject:[[Server alloc] initWithDictionary:s]];
     }
     
     // Now we just read the plist, it's server list is randomized on version rev
@@ -510,7 +522,7 @@ static dispatch_queue_t _settingsQueue = NULL;
     NSMutableArray *_srvs = [NSMutableArray new];
     if (@available(macOS 11.0, *)) {
         // macOS 10.13 or later code path
-        qltrace(@"suServersFromDictionary is no longer supported by Apple.");
+        LogDebug(@"suServersFromDictionary is no longer supported by Apple.");
     } else {
         // code for earlier than 10.14
         

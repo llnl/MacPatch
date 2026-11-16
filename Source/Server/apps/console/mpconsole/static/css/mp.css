@@ -98,12 +98,12 @@ body.modal-open .modal .modal-dialog {
 	width: 44px;
 }
 
-.table-condensed thead > tr > th {
+.datetimepicker .table-condensed thead > tr > th {
 	padding: 0px !important;
 	font-size: 12px;
 }
 
-.table-condensed tbody > tr > td {
+.datetimepicker .table-condensed tbody > tr > td {
 	padding: 4px !important;
 	font-size: 12px;
 }
@@ -113,15 +113,15 @@ body.modal-open .modal .modal-dialog {
    background-color: #f2f2f2;
 }
 
-/* Fix issue with stripped and warning and danger colors */
-.table-striped > tbody > tr > .danger,
-.table-striped > tbody > .danger > td,
-.table-striped > tbody > .danger > th {
+/* Preserve classic status colors on striped data tables. */
+.table-striped > tbody > tr > .table-danger,
+.table-striped > tbody > .table-danger > td,
+.table-striped > tbody > .table-danger > th {
   background-color: #f2dede !important;
 }
-.table-striped > tbody > tr > .warning,
-.table-striped > tbody > .warning > td,
-.table-striped > tbody > .warning > th {
+.table-striped > tbody > tr > .table-warning,
+.table-striped > tbody > .table-warning > td,
+.table-striped > tbody > .table-warning > th {
   background-color: #fcf8e3 !important;
 }
 
@@ -184,6 +184,17 @@ body.modal-open .modal .modal-dialog {
 	display: inline-block;
 }
 
+.server-log-action {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35em;
+	white-space: nowrap;
+}
+
+.server-log-action .fa {
+	flex-shrink: 0;
+}
+
 .buttonItemVC {
 	display: grid;
 	align-items: center;
@@ -198,15 +209,6 @@ body.modal-open .modal .modal-dialog {
 	padding-right: 10px;
 }
 
-/* Override */
-.table-condensedX > thead > tr > th,
-.table-condensedX > tbody > tr > th,
-.table-condensedX > tfoot > tr > th,
-.table-condensedX > thead > tr > td,
-.table-condensedX > tbody > tr > td,
-.table-condensedX > tfoot > tr > td {
-  padding: 5px;
-}
 
 .fa.disabled, .fa[disabled], .disabled > .fa, [disabled] > .fa {
   opacity: 0.4;

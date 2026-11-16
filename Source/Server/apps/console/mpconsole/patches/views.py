@@ -165,96 +165,105 @@ def applePatchWizard(akey):
 	else:
 		canEdit=0
 
-	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit)
+	return render_template('patches/apple_patch_wizard.html', data=cList, columns=cListCols, dataAdds=patchAdds, dataCrit=patchCrit, dataCritLen=patchCritLen, canEdit=canEdit,
+						   wizard_title='Edit Apple Patch', wizard_return_url=url_for('patches.apple'))
 
 @patches.route('/applePatchWizard/update',methods=['POST'])
 @login_required
 def applePatchWizardUpdate():
 
-	if localAdmin() or adminRole():
-		critDict = dict(request.form)
-		suname = request.form['supatchnameOrig']
-		akey = request.form['akey']
-
-		# Set / Update Values in ApplePatch table
-		_applePatch = ApplePatch.query.filter(ApplePatch.akey == akey).first()
-		setattr(_applePatch, 'supatchname', request.form['supatchname'])
-		db.session.commit()
-
-		# Set / Update Values in MP Apple Patch Additions table
-		patchAdds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == suname).first()
-		setattr(patchAdds, 'supatchname', request.form['supatchname'])
-		setattr(patchAdds, 'patch_reboot', request.form['patch_reboot'])
-		setattr(patchAdds, 'patch_install_weight', request.form['patchInstallWeight'])
-		setattr(patchAdds, 'severity', request.form['patch_severity'])
-		setattr(patchAdds, 'user_install', request.form['user_install'])
-		db.session.commit()
-
-		# Remove Criteria before adding new / updating
-		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == suname).delete()
-		db.session.commit()
-
-		for key in critDict:
-			if "reqCri_Order_" in key:
-				nid = str(str(critDict[key][0]).split("_")[-1])
-				order = critDict[key][0]
-
-				patchCrit = ApplePatchCriteria()
-				setattr(patchCrit, 'puuid', akey)
-				setattr(patchCrit, 'supatchname', request.form['supatchname'])
-				setattr(patchCrit, 'type', critDict["reqCri_type_" + nid][0])
-				setattr(patchCrit, 'type_action', critDict["reqCri_type_action_" + nid][0])
-				setattr(patchCrit, 'type_data', critDict["reqCri_type_data_" + nid][0])
-				setattr(patchCrit, 'type_order', order)
-				setattr(patchCrit, 'cdate', datetime.now())
-				setattr(patchCrit, 'mdate', datetime.now())
-
-				db.session.add(patchCrit)
-				db.session.commit()
-
-		log("{} updated apple patch {}({}).".format(session.get('user'), request.form['supatchname'], akey))
-
-	else:
+	if not localAdmin() and not adminRole():
 		log_Error("{} does not have permission to update apple patch.".format(session.get('user')))
-		return json.dumps({'error': 'Does not have permission to update apple patch.'}, default=json_serial), 401
+		return json.dumps({'error': 'Does not have permission to update apple patch.'}), 403
 
-	return json.dumps({}, default=json_serial), 200
+	form = request.form
+	suname = form['supatchnameOrig']
+	akey = form['akey']
+	new_name = form['supatchname']
+	# Form values are strings; row IDs come from field names, independently of order.
+	criteria = []
+	try:
+		for key in form:
+			if not key.startswith('reqCri_Order_'):
+				continue
+			nid = key.removeprefix('reqCri_Order_')
+			order = int(form[key])
+			action = int(form['reqCri_type_action_' + nid])
+			if order < 0 or action not in (0, 1):
+				raise ValueError('Invalid criteria order or action')
+			criteria.append({
+				'type': form['reqCri_type_' + nid],
+				'type_action': action,
+				'type_data': form['reqCri_type_data_' + nid],
+				'type_order': order
+			})
+	except (KeyError, ValueError):
+		return json.dumps({'error': 'Each script requires valid order, action, and script fields.'}), 400
+
+	apple_patch = ApplePatch.query.filter(ApplePatch.akey == akey).first()
+	patch_adds = ApplePatchAdditions.query.filter(ApplePatchAdditions.supatchname == suname).first()
+	if apple_patch is None or patch_adds is None:
+		return json.dumps({'error': 'Apple patch was not found. Refresh and try again.'}), 404
+
+	try:
+		apple_patch.supatchname = new_name
+		patch_adds.supatchname = new_name
+		patch_adds.patch_reboot = form['patch_reboot']
+		patch_adds.patch_install_weight = form['patchInstallWeight']
+		patch_adds.severity = form['patch_severity']
+		patch_adds.user_install = form['user_install']
+		ApplePatchCriteria.query.filter(ApplePatchCriteria.supatchname == suname).delete()
+		for values in criteria:
+			patch_criteria = ApplePatchCriteria()
+			patch_criteria.puuid = akey
+			patch_criteria.supatchname = new_name
+			for key, value in values.items():
+				setattr(patch_criteria, key, value)
+			patch_criteria.cdate = datetime.now()
+			patch_criteria.mdate = datetime.now()
+			db.session.add(patch_criteria)
+		db.session.commit()
+	except Exception as error:
+		db.session.rollback()
+		log_Error('Apple patch update failed: {}'.format(error))
+		return json.dumps({'error': 'The Apple patch could not be saved.'}), 500
+
+	log("{} updated apple patch {}({}).".format(session.get('user'), new_name, akey))
+	return json.dumps({}), 200
+
+def migrateApplePatchState(source, target):
+	if not localAdmin() and not adminRole():
+		message = 'You do not have permission to change Apple patch states.'
+		log_Error("{}: {}".format(session.get('user'), message))
+		return json.dumps({'errormsg': message}), 403
+
+	try:
+		updated = ApplePatchAdditions.query.filter(
+			ApplePatchAdditions.patch_state == source
+		).update({'patch_state': target}, synchronize_session=False)
+		db.session.commit()
+	except Exception as error:
+		db.session.rollback()
+		log_Error('Apple patch state migration failed: {}'.format(error))
+		return json.dumps({'errormsg': 'The Apple patch states could not be saved.'}), 500
+
+	log("{} moved {} Apple patches from {} to {}.".format(session.get('user'), updated, source, target))
+	return json.dumps({'updated': updated, 'source': source, 'target': target}), 200
+
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toQA',methods=['GET'])
 @login_required
 @cross_origin()
 def migrateApplePatchesToQA():
-	if localAdmin() or adminRole():
-		query = ApplePatchAdditions.query.filter(ApplePatchAdditions.patch_state == 'Create').all()
-		if query is not None:
-			for row in query:  # all() is extra
-				row.patch_state = 'QA'
-
-		db.session.commit()
-		return json.dumps({}, default=json_serial), 200
-
-	else:
-		log_Error("{} does not have permission to migrate apple patch(s) to QA state.".format(session.get('user')))
-		return json.dumps({}, default=json_serial), 403
+	return migrateApplePatchState('Create', 'QA')
 
 ''' AJAX Request '''
 @patches.route('/apple/bulk/toProd',methods=['GET'])
 @login_required
 @cross_origin()
 def migrateApplePatchesToProd():
-	if localAdmin() or adminRole():
-		query = ApplePatchAdditions.query.filter(ApplePatchAdditions.patch_state == 'QA').all()
-		if query is not None:
-			for row in query:  # all() is extra
-				row.patch_state = 'Production'
-
-		db.session.commit()
-		return json.dumps({}, default=json_serial), 200
-
-	else:
-		log_Error("{} does not have permission to migrate apple patch(s) to Production state.".format(session.get('user')))
-		return json.dumps({}, default=json_serial), 403
+	return migrateApplePatchState('QA', 'Production')
 
 '''
 ----------------------------------------------------------------
@@ -273,6 +282,7 @@ def custom():
 
 ''' AJAX Request '''
 @patches.route('/custom/list',methods=['GET'])
+@login_required
 @cross_origin()
 def customList():
 
@@ -294,7 +304,6 @@ def customList():
 				if _res != "None":
 					_row['pkg_url'] = _res
 				else:
-					print(_dict)
 					_row['pkg_url'] = ""
 			else:
 				_row['pkg_url'] = ""
@@ -313,7 +322,7 @@ def customPatchWizardAdd():
 
 	return render_template('patches/custom_patch_wizard.html',data=cList, columns=cListCols,
 							dataCrit={}, dataCritLen=0,
-							hasOSArch=False, dataReq={})
+							hasOSArch=False, dataReq={}, wizard_title='New Custom Patch', wizard_return_url=url_for('patches.custom'))
 
 @patches.route('/customPatchWizard/<puuid>')
 @login_required
@@ -357,10 +366,12 @@ def customPatchWizard(puuid):
 
 	return render_template('patches/custom_patch_wizard.html', data=patch, columns=patchCols, dataAlt=patchDict,
 							dataCrit=patchCrit, dataCritLen=patchCritLen, dataCritAlt=pathCritLst,
-							hasOSArch=_hasOSArch, dataReq=patchReq, baseurl=base_url)
+							hasOSArch=_hasOSArch, dataReq=patchReq, baseurl=base_url,
+							wizard_title='Edit Custom Patch - ' + (patch.patch_name or ''), wizard_return_url=url_for('patches.custom'))
 
 ''' AJAX Request '''
 @patches.route('/customPatchWizard/update',methods=['POST'])
+@login_required
 def customPatchWizardUpdate():
 	# Get Patch ID
 	try:
@@ -372,6 +383,11 @@ def customPatchWizardUpdate():
 			log_Error("{} does not have permission to change custom patch {}.".format(session.get('user'), puuid))
 			return {}, 403
 
+		# puuid is used to build file system paths, it must be a UUID
+		if not isValidUUID(puuid):
+			log_Error("{} invalid custom patch id {}.".format(session.get('user'), puuid))
+			return {}, 400
+
 		# Save File, returns path to file
 		_file = None
 		_fileData = None
@@ -381,7 +397,7 @@ def customPatchWizardUpdate():
 				aws = MPaws()
 				_fileData = savePatchFileToTMP(puuid, _file)
 				aws.uploadFileToS3(_fileData['filePath'],_fileData['fileURL'])
-				shutil.rmtree(os.path.join('/tmp', request.form['puuid']))
+				shutil.rmtree(os.path.join('/tmp', puuid))
 			else:
 				_fileData = savePatchFile(puuid, _file)
 
@@ -466,9 +482,9 @@ def customPatchWizardUpdate():
 		log("{} updated custom patch {}.".format(session.get('user'), puuid))
 
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		log_Error('Message: %s' % (e))
-		return {'errorno': 500, 'errormsg': e, 'result': {}}, 500
+		db.session.rollback()
+		log_Exception('Message: %s' % (e))
+		return {'errorno': 500, 'errormsg': str(e), 'result': {}}, 500
 
 	return {}, 200
 
@@ -603,9 +619,8 @@ def customDuplicate(patch_id):
 	try:
 		db.session.commit()
 	except Exception as e:
-		exc_type, exc_obj, exc_tb = sys.exc_info()
-		message=str(e.args[0]).encode("utf-8")
-		log_Error('Message: %s' % (message))
+		db.session.rollback()
+		log_Exception('Message: %s' % (e))
 
 	return json.dumps({}, default=json_serial), 200
 
@@ -642,9 +657,8 @@ def customDelete():
 		try:
 			db.session.commit()
 		except Exception as e:
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			message=str(e.args[0]).encode("utf-8")
-			log_Error('Message: %s' % (message))
+			db.session.rollback()
+			log_Exception('Message: %s' % (e))
 	
 	# Update Patch Groups
 	_update_groups = set(update_groups)
@@ -668,6 +682,7 @@ def removePatchFromPatchGroupsAlt(patch_id):
 
 ''' AJAX Request '''
 @patches.route('/custom/picker',methods=['GET'])
+@login_required
 @cross_origin()
 def customPatchPicker():
 
@@ -761,14 +776,6 @@ def patchGroups():
 
 	return render_template('patches/patch_groups.html', data=rows, columns=cListColsLimited)
 
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	raise TypeError("Type not serializable")
-
 # TODO Change to use AJAX
 @patches.route('/patchGroups/add')
 @login_required
@@ -846,7 +853,7 @@ def patchGroupUpdate():
 def patchGroupDelete(id):
 	qGroup = MpPatchGroup.query.filter(MpPatchGroup.id == id).first()
 	groupName = qGroup.name
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to delete patch group {}.".format(session.get('user'), groupName))
 		return json.dumps({}), 403
 
@@ -882,6 +889,7 @@ def patchGroupAdmins(id):
 	group. Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/members/<id>')
+@login_required
 def patchGroupMembers(id):
 	rowCounter = 0
 	patchGroupMembers = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id).all()
@@ -892,8 +900,8 @@ def patchGroupMembers(id):
 		rowCounter += rowCounter
 		row = {}
 		for x in colsForQuery:
-			y = "p."+x
-			row[x] = eval(y)
+			y = x
+			row[x] = getattr(p, y)
 
 		_results.append(row)
 
@@ -905,8 +913,9 @@ def patchGroupMembers(id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/member/add/<id>', methods=['POST'])
+@login_required
 def patchGroupMemberAdd(id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to add patch group member.".format(session.get('user')))
 		return json.dumps({}), 403
 
@@ -937,8 +946,9 @@ def patchGroupMemberAdd(id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/patchGroup/member/delete/<id>', methods=['POST'])
+@login_required
 def patchGroupMemberDelete(id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(id):
 		log_Error("{} does not have permission to delete patch group member.".format(session.get('user')))
 		return json.dumps({}), 403
 
@@ -1012,12 +1022,13 @@ def patchGroupContentEdit(id):
 		_results.append(_row)
 
 	_type = "false"
-	if isOwnerOfGroup(id):
+	if isPatchGroupOwner(id):
 		_type = "true"
 
 	return render_template('patches/patch_group_patches.html', name=patchGroup.name, pid=id, data=_results, columns=columns, isOwner=_type, groupID=id)
 
 @patches.route('/group/list/<group_id>')
+@login_required
 def patchGroupContent(group_id):
 
 	args = request.args
@@ -1080,7 +1091,7 @@ def patchGroupContent(group_id):
 @patches.route('/group/add/<group_id>/<patch_id>')
 @login_required
 def patchGroupContentAdd(group_id, patch_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to add content to patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1099,7 +1110,7 @@ def patchGroupContentAdd(group_id, patch_id):
 @patches.route('/group/add/bulk/<group_id>', methods=['POST'])
 @login_required
 def patchGroupContentAddBulk(group_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to add bulk content to patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1120,8 +1131,9 @@ def patchGroupContentAddBulk(group_id):
 	return json.dumps({'errorno': 0}), 200
 
 @patches.route('/group/remove/<group_id>/<patch_id>')
+@login_required
 def patchGroupContentDel(group_id, patch_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to remove content from patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1141,8 +1153,9 @@ def patchGroupContentDel(group_id, patch_id):
 	Its used by the patch_group_admins.html file
 '''
 @patches.route('/group/save/<group_id>')
+@login_required
 def patchGroupPatchesSave(group_id):
-	if not localAdmin() and not adminRole() and not isOwnerOfGroup(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
 		log_Error("{} does not have permission to save content for patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
@@ -1273,6 +1286,7 @@ def requiredList():
 
 ''' AJAX Route '''
 @patches.route('/required/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def requiredListPaged(limit,offset,search,sort,order):
 	# This has to be cleaned up
 	total = 0
@@ -1293,8 +1307,6 @@ def requiredListPaged(limit,offset,search,sort,order):
 	
 	# Result is a tuple, records = 0, rowCount = 1
 	_result = qResult[0]
-	import pprint
-	pprint.pprint(_result[0])
 	
 	# Parse results, and create list for json result
 	_results = []
@@ -1330,7 +1342,6 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 	sql0 = None
 	sql1 = None
-	res1 = None
 
 	filterStr = str(filterStr)
 	#offset = page * page_size
@@ -1338,7 +1349,7 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 
 	if filterStr == 'undefined' or len(filterStr) <= 0:
 		# Query for All Records, sql0 is used for count, sql1 is the query for paging
-		sql0 = text("""SELECT date FROM mp_client_patches_full_view""")
+		sql0 = "SELECT COUNT(*) FROM mp_client_patches_full_view"
 		sql1 =	f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
 				f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
 				f"ORDER BY {order_by_str} LIMIT {str(offset)}, {str(page_size)}"
@@ -1361,10 +1372,9 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 				else:
 					whereStr = whereStr + " OR " + col[0] + " like '%" + filterStr + "%'"
 
-		sql0 = f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v " \
+		sql0 = f"SELECT COUNT(*) FROM mp_client_patches_full_view v " \
 			   f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
 			   f"{whereStr}"
-		sql0 = text(sql0)
 
 		sql1 =  f"SELECT v.*, c.hostname, c.ipaddr, c.osver FROM mp_client_patches_full_view v "\
 					f"Left Join mp_clients c ON c.cuuid = v.cuuid " \
@@ -1372,24 +1382,15 @@ def requiredQuery(filterStr='undefined', page=0, page_size=0, sort='date', order
 					f"ORDER BY {order_by_str}  LIMIT {str(offset)} , {str(page_size)}"
 
 
-	recCounter1 = 0
-	recCounter2 = 0
-	# Execute the SQL statement(s)
-	if sql0 is not None:
-		with db.engine.connect() as conn:
-			raw_result1 = conn.execute(sql0)
-			res1 = raw_result1.mappings().all()
-		recCounter1 = len(res1)
+	# Execute the SQL statement(s), the total count is only needed when the search changed
+	total = 0
+	with db.engine.connect() as conn:
+		if getCount:
+			total = conn.execute(text(sql0)).scalar()
+		result = conn.execute(text(sql1)).mappings().all()
 
-	if sql1 is not None:
-		with db.engine.connect() as conn:
-			print(sql1)
-			raw_result = conn.execute(text(sql1))
-			result = raw_result.mappings().all()
-		recCounter2 = len(result)
-
-	# Return tuple, query results and a record count
-	return (result, recCounter1, recCounter2)
+	# Return tuple, query results, total record count and page record count
+	return (result, total, len(result))
 
 def isDateString(string, fuzzy=False):
 	"""
@@ -1413,6 +1414,7 @@ def installedList():
 
 ''' AJAX Route '''
 @patches.route('/installed/<limit>/<offset>/<search>/<sort>/<order>')
+@login_required
 def installedListPaged(limit,offset,search,sort,order):
 	total = 0
 	getNewTotal = True
@@ -1445,13 +1447,13 @@ def installedListPaged(limit,offset,search,sort,order):
 	for p in query:
 		row = {}
 		for x in colsForQuery:
-			y = "p[0]."+x
+			y = x
 			if x == 'mdate':
-				row[x] = eval(y)
+				row[x] = getattr(p[0], y)
 			elif x == 'type':
-				row[x] = eval(y).title()
+				row[x] = getattr(p[0], y).title()
 			else:
-				row[x] = eval(y)
+				row[x] = getattr(p[0], y)
 
 		row['hostname'] = p.hostname
 		row['ipaddr'] = p.ipaddr
@@ -1500,34 +1502,8 @@ def installedQuery(filterStr='undefined', page=0, page_size=0, sort='mdate', ord
 
 
 ''' Global '''
-def isOwnerOfGroup(id):
-	usr = AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
-
-	if usr:
-		pgroup = PatchGroupMembers.query.filter(PatchGroupMembers.patch_group_id == id,
-												PatchGroupMembers.is_owner == 1).first()
-		if pgroup:
-			if pgroup.user_id == usr.user_id:
-				return True
-			else:
-				return False
-
-	return False
-
 def getDoc(col_obj):
 	return col_obj.doc
-
-def daysFromDate(now,date):
-	x = now - date
-	return x.days
-
-def json_serial(obj):
-	"""JSON serializer for objects not serializable by default json code"""
-
-	if isinstance(obj, datetime):
-		serial = obj.strftime('%Y-%m-%d %H:%M:%S')
-		return serial
-	
 
 def escapeStringForACEEditor(data_string):
 	#result = ""

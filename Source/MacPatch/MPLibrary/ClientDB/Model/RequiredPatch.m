@@ -1,139 +1,59 @@
 //
 //  RequiredPatch.m
-//  FMDBme
-//
-//  Created by Charles Heizer on 10/25/19.
-//  Copyright © 2019 Charles Heizer. All rights reserved.
-//
+//  MPLibrary
+/*
+ Copyright (c) 2026, Lawrence Livermore National Security, LLC.
+ Produced at the Lawrence Livermore National Laboratory (cf, DISCLAIMER).
+ Written by Charles Heizer <heizer1 at llnl.gov>.
+ LLNL-CODE-636469 All rights reserved.
+
+ This file is part of MacPatch, a program for installing and patching
+ software.
+
+ MacPatch is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License (as published by the Free
+ Software Foundation) version 2, dated June 1991.
+
+ MacPatch is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the IMPLIED WARRANTY OF MERCHANTABILITY or FITNESS
+ FOR A PARTICULAR PURPOSE. See the terms and conditions of the GNU General Public
+ License for more details.
+
+ You should have received a copy of the GNU General Public License along
+ with MacPatch; if not, write to the Free Software Foundation, Inc.,
+ 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ */
 
 #import "RequiredPatch.h"
 
-NSString *const kPatchItemID		= @"id";
-NSString *const kPatchItemType 		= @"type";
-NSString *const kPatchItemPatchID 	= @"patch_id";
-NSString *const kPatchItemPatch 	= @"patch";
-NSString *const kPatchItemVersion 	= @"patch_version";
-NSString *const kPatchItemReboot 	= @"patch_reboot";
-NSString *const kPatchItemData 		= @"patch_data";
-NSString *const kPatchItemScanDate 	= @"patch_scandate";
-
-
-@interface RequiredPatch ()
-
-- (id)objectOrNilForKey:(id)aKey fromDictionary:(NSDictionary *)dict;
-
-@end
-
 @implementation RequiredPatch
 
-@synthesize id = _id;
-@synthesize type = _type;
-@synthesize patch_id = _patch_id;
-@synthesize patch = _patch;
-@synthesize patch_version = _patch_version;
-@synthesize patch_reboot = _patch_reboot;
-@synthesize patch_data = _patch_data;
-@synthesize patch_scandate = _patch_scandate;
-
-
-+ (instancetype)modelObjectWithDictionary:(NSDictionary *)dict
++ (NSString *)tableName
 {
-    return [[self alloc] initWithDictionary:dict];
+	return @"required_patches";
 }
 
-- (instancetype)initWithDictionary:(NSDictionary *)dict
++ (NSString *)createTableSQL
 {
-    self = [super init];
-    
-    // This check serves to make sure that a non-NSDictionary object
-    // passed into the model class doesn't break the parsing.
-    if(self && [dict isKindOfClass:[NSDictionary class]]) {
-		self.id = [self objectOrNilForKey:kPatchItemID fromDictionary:dict];
-		self.type = [self objectOrNilForKey:kPatchItemType fromDictionary:dict];
-		self.patch_id = [self objectOrNilForKey:kPatchItemPatchID fromDictionary:dict];
-		self.patch = [self objectOrNilForKey:kPatchItemPatch fromDictionary:dict];
-		self.patch_version = [self objectOrNilForKey:kPatchItemVersion fromDictionary:dict];
-		self.patch_reboot = [[self objectOrNilForKey:kPatchItemReboot fromDictionary:dict] integerValue];
-		self.patch_data = [self objectOrNilForKey:kPatchItemData fromDictionary:dict];
-		self.patch_scandate = [self objectOrNilForKey:kPatchItemScanDate fromDictionary:dict];
-    }
-    
-    return self;
+	return @"CREATE TABLE IF NOT EXISTS required_patches ("
+		   @"id INTEGER PRIMARY KEY AUTOINCREMENT, "
+		   @"type TEXT NOT NULL, "
+		   @"patch_id TEXT NOT NULL UNIQUE, "
+		   @"patch TEXT NOT NULL, "
+		   @"patch_version TEXT, "
+		   @"patch_reboot INTEGER DEFAULT 0, "
+		   @"patch_data BLOB, "
+		   @"patch_scandate REAL NOT NULL DEFAULT (julianday('now')))";
 }
 
-- (NSDictionary *)dictionaryRepresentation
+- (instancetype)init
 {
-    NSMutableDictionary *mutableDict = [NSMutableDictionary dictionary];
-	[mutableDict setValue:self.id forKey:kPatchItemID];
-	[mutableDict setValue:self.type forKey:kPatchItemType];
-	[mutableDict setValue:self.patch_id forKey:kPatchItemPatchID];
-	[mutableDict setValue:self.patch forKey:kPatchItemPatch];
-	[mutableDict setValue:self.patch_version forKey:kPatchItemVersion];
-	[mutableDict setValue:[NSNumber numberWithLong:self.patch_reboot] forKey:kPatchItemReboot];
-	[mutableDict setValue:self.patch_data forKey:kPatchItemData];
-	[mutableDict setValue:self.patch_scandate forKey:kPatchItemScanDate];
-    return [NSDictionary dictionaryWithDictionary:mutableDict];
-}
-
-- (NSString *)description
-{
-    return [NSString stringWithFormat:@"%@", [self dictionaryRepresentation]];
-}
-
-#pragma mark - Helper Method
-- (id)objectOrNilForKey:(id)aKey fromDictionary:(NSDictionary *)dict
-{
-    id object = [dict objectForKey:aKey];
-    return [object isEqual:[NSNull null]] ? nil : object;
-}
-
-- (id)initWithCoder:(NSCoder *)decoder
-{
-    self = [super init];
-    if (!self) {
-        return nil;
-    }
-	
-	self.id = [decoder decodeObjectForKey:kPatchItemID];
-	self.type = [decoder decodeObjectForKey:kPatchItemType];
-	self.patch_id = [decoder decodeObjectForKey:kPatchItemPatchID];
-	self.patch =[decoder decodeObjectForKey:kPatchItemPatch];
-	self.patch_version = [decoder decodeObjectForKey:kPatchItemVersion];
-	self.patch_reboot = [decoder decodeIntegerForKey:kPatchItemReboot];
-	self.patch_data = [decoder decodeObjectForKey:kPatchItemData];
-	self.patch_scandate = [decoder decodeObjectForKey:kPatchItemScanDate];
-    return self;
-}
-
-- (void)encodeWithCoder:(NSCoder *)encoder
-{
-	[encoder encodeObject:self.id forKey:kPatchItemID];
-	[encoder encodeObject:self.type forKey:kPatchItemType];
-	[encoder encodeObject:self.patch_id forKey:kPatchItemPatchID];
-	[encoder encodeObject:self.patch forKey:kPatchItemPatch];
-	[encoder encodeObject:self.patch_version forKey:kPatchItemVersion];
-	[encoder encodeInteger:self.patch_reboot forKey:kPatchItemReboot];
-	[encoder encodeObject:self.patch_data forKey:kPatchItemData];
-	[encoder encodeObject:self.patch_scandate forKey:kPatchItemScanDate];
-}
-
-- (id)copyWithZone:(NSZone *)zone
-{
-    RequiredPatch *copy = [[RequiredPatch alloc] init];
-    
-    if (copy)
-	{
-        copy.id = [self.id copyWithZone:zone];
-        copy.type = [self.type copyWithZone:zone];
-        copy.patch_id = [self.patch_id copyWithZone:zone];
-        copy.patch = [self.patch copyWithZone:zone];
-        copy.patch_version = [self.patch_version copyWithZone:zone];
-        copy.patch_reboot = self.patch_reboot;
-		copy.patch_data = [self.patch_data copyWithZone:zone];
-		copy.patch_scandate = [self.patch_scandate copyWithZone:zone];
-    }
-    
-    return copy;
+	self = [super init];
+	if (self) {
+		self.patch_scandate = [NSDate date];
+		self.patch_reboot = @(0);
+	}
+	return self;
 }
 
 @end

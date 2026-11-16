@@ -10,6 +10,7 @@ from mpapi.app import db
 from mpapi.mputil import *
 from mpapi.model import *
 from mpapi.mplogger import *
+from mpapi.shared.inventory import stageInventory
 
 parser = reqparse.RequestParser()
 
@@ -29,48 +30,11 @@ class AddInventoryData(MPResource):
 			log_Error('[AddInventoryData][Post]: Failed to verify Signature for client (%s)' % (cuuid))
 			return {"result": '', "errorno": 412, "errormsg": 'Failed to verify Signature'}, 412
 
-		_server_config = current_app.config['MP_SETTINGS']['server']
-		log_Debug('[AddInventoryData][Post]: _server_config = %s' % (_server_config))
-		_dt = datetime.now().strftime('%Y%m%d%H%M%S')
-
-		jData = request.get_json(force=True)
-		if jData:
-			try:
-				if 'inventory_dir' in _server_config:
-
-					_file_Dir = os.path.join(_server_config['inventory_dir'], 'files')
-					log_Debug('[AddInventoryData][Post]: _file_Dir = %s' % (_file_Dir))
-					if not os.path.exists(_file_Dir):
-						log_Debug('[AddInventoryData][Post]: Create _file_Dir: %s' % (_file_Dir))
-						os.makedirs(_file_Dir)
-
-					if os.path.exists(_file_Dir):
-						log_Debug('[AddInventoryData][Post]: Save Inventory Data to file')
-						_file_str = (str(_dt), jData['table'], ".mpd")
-						_file_Name = "_".join(_file_str)
-						_file_Path = os.path.join(_file_Dir, _file_Name)
-						log_Debug('[AddInventoryData][Post]: file = %s' % (_file_Path))
-						with open(_file_Path, 'w') as outfile:
-							json_string = json.dumps(jData)
-							log_Debug('[AddInventoryData][Post]: json_string = %s' % (json_string))
-							outfile.write(json_string)
-
-						log_Info('[AddInventoryData][Post]: Writing inventory file (%s) to disk.' % (_file_Name))
-
-					return {"result": '', "errorno": 0, "errormsg": ''}, 201
-
-				else:
-					log_Error('[AddInventoryData][Post]: Inventory directory object not found in config.')
-					return {"result": '', "errorno": 412, "errormsg": 'Inventory directory object not found in config.'}, 412
-
-			except Exception as e:
-				exc_type, exc_obj, exc_tb = sys.exc_info()
-				message=str(e.args[0]).encode("utf-8")
-				log_Error('[AddInventoryData][Post][Exception][Line: {}] CUUID: {} Message: {}'.format(exc_tb.tb_lineno, cuuid, message))
-				return {'errorno': 500, 'errormsg': message, 'result': {}}, 500
-
-		log_Error('[AddInventoryData][Post]: Inventory data is empty.')
-		return {"result": '', "errorno": 412, "errormsg": 'Inventory Data empty'}, 412
+		# Saved for MPInventoryD to load, see shared/inventory.py
+		success, code, message = stageInventory(cuuid, request.get_json(force=True, silent=True))
+		if success:
+			return {"result": '', "errorno": 0, "errormsg": ''}, code
+		return {"result": '', "errorno": code, "errormsg": message}, code
 
 
 class InventoryState(MPResource):

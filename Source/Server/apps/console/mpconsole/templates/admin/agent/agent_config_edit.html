@@ -1,0 +1,176 @@
+<form id="agentConfigForm">
+	<input type="hidden" name="aid" id="aid" value="{% if config %}{{ config.aid }}{% endif %}">
+
+	<div class="form-group">
+		<label for="name">Configuration Name</label>
+		<input type="text" class="form-control" name="name" id="name" value="{% if config %}{{ config.name }}{% endif %}" required>
+	</div>
+
+	<div class="form-group">
+		<div class="checkbox">
+			<label>
+				<input type="checkbox" name="isDefault" id="isDefault" value="1" {% if config and config.isDefault == 1 %}checked{% endif %}>
+				Set as Default Configuration
+			</label>
+		</div>
+	</div>
+
+	<hr>
+	<h4>Configuration Settings</h4>
+	<div id="configDataContainer">
+		{% if config_data %}
+			{% for data in config_data %}
+			<div class="row config-row" style="margin-bottom: 10px;">
+				<div class="col-md-4">
+					<input type="text" class="form-control" name="config_key_{{ loop.index }}" placeholder="Key" value="{{ data.akey }}" required>
+				</div>
+				<div class="col-md-5">
+					<input type="text" class="form-control" name="config_{{ data.akey }}" placeholder="Value" value="{{ data.akeyValue }}" required>
+				</div>
+				<div class="col-md-2">
+					<label class="checkbox-inline">
+						<input type="checkbox" name="enforced_{{ data.akey }}" value="1" {% if data.enforced == 1 %}checked{% endif %}> Enforced
+					</label>
+				</div>
+				<div class="col-md-1">
+					<button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>
+				</div>
+			</div>
+			{% endfor %}
+		{% else %}
+			<div class="row config-row" style="margin-bottom: 10px;">
+				<div class="col-md-4">
+					<input type="text" class="form-control config-key" placeholder="Key" required>
+				</div>
+				<div class="col-md-5">
+					<input type="text" class="form-control config-value" placeholder="Value" required>
+				</div>
+				<div class="col-md-2">
+					<label class="checkbox-inline">
+						<input type="checkbox" class="config-enforced" value="1"> Enforced
+					</label>
+				</div>
+				<div class="col-md-1">
+					<button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>
+				</div>
+			</div>
+		{% endif %}
+	</div>
+
+	<button type="button" id="addRowButton" class="btn btn-sm btn-default"><i class="fa fa-plus"></i> Add Setting</button>
+</form>
+
+<script>
+$(document).ready(function() {
+	// Add new config row
+	$('#addRowButton').on('click', function() {
+		var timestamp = Date.now();
+		var newRow = $('<div class="row config-row" style="margin-bottom: 10px;" data-row-id="' + timestamp + '">' +
+			'<div class="col-md-4">' +
+				'<input type="text" class="form-control config-key" placeholder="Key" data-row-id="' + timestamp + '" required>' +
+			'</div>' +
+			'<div class="col-md-5">' +
+				'<input type="text" class="form-control config-value" placeholder="Value" data-row-id="' + timestamp + '" required>' +
+			'</div>' +
+			'<div class="col-md-2">' +
+				'<label class="checkbox-inline">' +
+					'<input type="checkbox" class="config-enforced" value="1" data-row-id="' + timestamp + '"> Enforced' +
+				'</label>' +
+			'</div>' +
+			'<div class="col-md-1">' +
+				'<button type="button" class="btn btn-sm btn-danger remove-row"><i class="fa fa-trash"></i></button>' +
+			'</div>' +
+		'</div>');
+
+		$('#configDataContainer').append(newRow);
+	});
+
+	// Remove config row
+	$(document).on('click', '.remove-row', function() {
+		if ($('.config-row').length > 1) {
+			$(this).closest('.config-row').remove();
+		} else {
+			alert('At least one configuration setting is required.');
+		}
+	});
+
+	// Save button click handler
+	$('#modalSaveButton').off('click').on('click', function(e) {
+		e.preventDefault();
+
+		// Build form data
+		var data = {
+			'aid': $('#aid').val(),
+			'name': $('#name').val(),
+			'isDefault': $('#isDefault').is(':checked') ? '1' : '0'
+		};
+
+		// Collect all config values from the form
+		// Get all inputs with name starting with "config_" (but not "config_key_")
+		$('input[type="text"][name^="config_"]').each(function() {
+			var name = $(this).attr('name');
+			if (name && name.indexOf('config_key_') !== 0) {
+				// This is a config value input like name="config_AllowClient"
+				data[name] = $(this).val();
+			}
+		});
+
+		// Get all config values from dynamically added rows (with classes, no name attribute)
+		$('.config-row').each(function() {
+			var $row = $(this);
+			var $keyInput = $row.find('.config-key');
+			// Only process if this is a dynamic row (has .config-key class)
+			if ($keyInput.length > 0 && !$keyInput.attr('name')) {
+				var key = $keyInput.val();
+				var value = $row.find('.config-value').val();
+				if (key && value) {
+					data['config_' + key] = value;
+				}
+			}
+		});
+
+		// Collect all enforced checkboxes with name attributes
+		$('input[type="checkbox"][name^="enforced_"]').each(function() {
+			var name = $(this).attr('name');
+			data[name] = $(this).is(':checked') ? '1' : '0';
+		});
+
+		// Handle class-based enforced checkboxes from dynamic rows (no name attribute)
+		$('.config-row').each(function() {
+			var $row = $(this);
+			var $keyInput = $row.find('.config-key');
+			var $enforcedInput = $row.find('.config-enforced');
+			// Only process if this is a dynamic row
+			if ($keyInput.length > 0 && !$keyInput.attr('name') && $enforcedInput.length > 0) {
+				var key = $keyInput.val();
+				var enforced = $enforcedInput.is(':checked') ? '1' : '0';
+				if (key) {
+					data['enforced_' + key] = enforced;
+				}
+			}
+		});
+
+		console.log('Submitting form data:', data);
+
+		$.ajax({
+			url: '/console/agent/config/save',
+			type: 'POST',
+			data: data,
+			success: function(response) {
+				$('#modalDialog').modal('hide');
+				if (typeof $('#table').bootstrapTable === 'function') {
+					$('#table').bootstrapTable('refresh');
+				}
+			},
+			error: function(xhr) {
+				try {
+					var response = JSON.parse(xhr.responseText);
+					alert('Error saving configuration: ' + response.errormsg);
+				} catch(e) {
+					alert('Error saving configuration: ' + xhr.responseText);
+				}
+			}
+		});
+	});
+});
+</script>

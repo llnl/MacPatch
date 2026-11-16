@@ -1,3 +1,10 @@
+# Fix for Python 3.14 + gevent + boto3 asyncio conflict
+import os
+os.environ['BOTO_DISABLE_COMMONRUNTIME'] = '1'  # Disable boto3's asyncio event loop
+
+import warnings
+warnings.filterwarnings('ignore', category=RuntimeWarning, message='.*loop.*')
+
 import boto3
 from botocore.config import Config
 from botocore.errorfactory import ClientError

@@ -1,4 +1,5 @@
 import multiprocessing
+import os
 import gevent.monkey
 gevent.monkey.patch_all()
 
@@ -23,7 +24,7 @@ gevent.monkey.patch_all()
 #
 
 bind = '127.0.0.1:3601'
-backlog = 2048
+backlog = 4096  # Increased from 2048 for handling burst traffic (many agents checking in simultaneously)
 
 #
 # Worker processes
@@ -31,50 +32,40 @@ backlog = 2048
 #   workers - The number of worker processes that this server
 #       should keep alive for handling requests.
 #
-#       A positive integer generally in the 2-4 x $(NUM_CORES)
-#       range. You'll want to vary this a bit to find the best
-#       for your particular application's work load.
+#       For gevent workers: 2-4 x $(NUM_CORES) is recommended
+#       Each worker can handle many concurrent connections efficiently
 #
-#   worker_class - The type of workers to use. The default
-#       sync class should handle most 'normal' types of work
-#       loads. You'll want to read
-#       http://docs.gunicorn.org/en/latest/design.html#choosing-a-worker-type
-#       for information on when you might want to choose one
-#       of the other worker classes.
+#   worker_class - Using 'gevent' for high concurrency
+#       gevent uses greenlets (cooperative threading) which allows
+#       thousands of concurrent connections with low memory overhead
+#       Perfect for I/O-bound workloads like agent check-ins
 #
-#       A string referring to a Python path to a subclass of
-#       gunicorn.workers.base.Worker. The default provided values
-#       can be seen at
-#       http://docs.gunicorn.org/en/latest/settings.html#worker-class
+#   worker_connections - For gevent worker class, this limits the
+#       maximum number of simultaneous clients per worker process
 #
-#   worker_connections - For the eventlet and gevent worker classes
-#       this limits the maximum number of simultaneous clients that
-#       a single process can handle.
+#       Recommended: 1000-2000 for production (gevent can handle it)
+#       Total capacity = workers × worker_connections
+#       Example: 8 workers × 2000 = 16,000 concurrent agent connections
 #
-#       A positive integer generally set to around 1000.
+#   timeout - Worker timeout for long-running requests
+#       Set high enough for slow agent uploads/inventory submissions
+#       For gevent, this just ensures worker is responsive, not tied to request duration
 #
-#   timeout - If a worker does not notify the master process in this
-#       number of seconds it is killed and a new worker is spawned
-#       to replace it.
-#
-#       Generally set to thirty seconds. Only set this noticeably
-#       higher if you're sure of the repercussions for sync workers.
-#       For the non sync workers it just means that the worker
-#       process is still communicating and is not tied to the length
-#       of time required to handle a single request.
-#
-#   keepalive - The number of seconds to wait for the next request
-#       on a Keep-Alive HTTP connection.
-#
-#       A positive integer. Generally set in the 1-5 seconds range.
+#   keepalive - Seconds to wait for next request on Keep-Alive connection
+#       Enabling keepalive reduces connection overhead for agents
+#       making multiple rapid requests (check-in, inventory, patches)
 #
 
-workers = multiprocessing.cpu_count() + 1
-worker_connections = 100
+# Workers: 2x CPU cores for optimal gevent performance
+workers = multiprocessing.cpu_count() * 2
+
+# High concurrency: each worker handles up to 2000 concurrent connections
+worker_connections = 2000  # Increased from 100 for production workload
+
 worker_class = 'gevent'
-timeout = 300
-keepalive = 0
-preload_app = True
+timeout = 300  # 5 minutes for large agent uploads
+keepalive = 2  # Enable HTTP keepalive for faster agent reconnections
+preload_app = True  # Preload application code before forking workers (saves memory)
 
 #
 #   spew - Install a trace function that spews every line of Python
@@ -134,8 +125,8 @@ raw_env = [
 ]
 pidfile = None
 umask = 0
-user = None
-group = None
+user = 'www-data'
+group = 'www-data'
 tmp_upload_dir = None
 
 #
@@ -153,11 +144,62 @@ tmp_upload_dir = None
 
 #ccesslog = '-'
 #errorlog = '-'
-#accesslog = 'logs/gMPAPI_access.log'
-#errorlog = 'logs/gMPAPI_error.log'
+accesslog = '/opt/MacPatch/Server/logs/gMPAPI_access.log'
+errorlog = '/opt/MacPatch/Server/logs/gMPAPI_error.log'
 loglevel = 'info'
 
 access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"'
+
+#
+# Logger
+#
+#   Gunicorn runs a master and several worker processes that all write to the
+#   same access/error log files. The files must not be rotated in-process (every
+#   process would rotate the same file). They are rotated by logrotate (Linux,
+#   /etc/logrotate.d/macpatch) or newsyslog (macOS, /etc/newsyslog.d/macpatch.conf),
+#   WatchedFileHandler re-opens a file once it has been rotated.
+#
+
+import logging
+import logging.handlers
+from gunicorn.glogging import Logger
+
+class MacPatchFormatter(logging.Formatter):
+    def format(self, record):
+        formatted_time = self.formatTime(record, '%Y-%m-%d %H:%M:%S')
+        level_map = {'DEBUG': 'DBG', 'INFO': 'INF', 'WARNING': 'WRN', 'ERROR': 'ERR', 'CRITICAL': 'CRT'}
+        level_short = level_map.get(record.levelname, 'INF')
+        return f"{formatted_time},{int(record.msecs):03d} [gunicorn][{level_short}] --- {record.getMessage()}"
+
+class OwnedWatchedFileHandler(logging.handlers.WatchedFileHandler):
+    # A file (re)created by the master (root) is given to the worker user/group
+    def __init__(self, filename, uid, gid):
+        self._owner = (uid, gid)
+        super().__init__(filename)
+
+    def _open(self):
+        stream = super()._open()
+        if os.geteuid() == 0:
+            try:
+                os.chown(self.baseFilename, *self._owner)
+            except OSError:
+                pass
+        return stream
+
+class MacPatchLogger(Logger):
+    # Called on start and on every config reload (HUP), so the handlers are always replaced
+    def _set_handler(self, log, output, fmt, stream=None):
+        super()._set_handler(log, output, fmt, stream)
+        h = self._get_gunicorn_handler(log)
+        if type(h) is logging.FileHandler:
+            log.removeHandler(h)
+            h.close()
+            wh = OwnedWatchedFileHandler(h.baseFilename, self.cfg.user, self.cfg.group)
+            wh.setFormatter(MacPatchFormatter() if log is self.error_log else fmt)
+            wh._gunicorn = True
+            log.addHandler(wh)
+
+logger_class = MacPatchLogger
 
 #
 # Process naming

@@ -137,6 +137,71 @@ validateBoolean() {
 	fi
 }
 
+getServerAddress() {
+	local server=""
+	if [ -f "/Library/Application Support/MacPatch/gov.llnl.mpagent.plist" ]; then
+		server=$(defaults read "/Library/Application Support/MacPatch/gov.llnl.mpagent.plist" MPServerAddress 2>/dev/null || echo "")
+	fi
+	echo "$server"
+}
+
+installLazarus() {
+	echo "Checking for Lazarus installation..."
+
+	# Check if lazarus is already installed
+	if [ -f "/usr/local/sbin/lazarus" ]; then
+		echo "Lazarus is already installed at /usr/local/sbin/lazarus"
+		return 0
+	fi
+
+	echo "Lazarus not found, attempting to download and install..."
+
+	# Get server address from agent plist
+	local serverAddress=$(getServerAddress)
+
+	if [ -z "$serverAddress" ]; then
+		echo "Warning: Could not determine server address from agent plist. Skipping Lazarus installation."
+		return 1
+	fi
+
+	echo "Using server address: $serverAddress"
+
+	# Construct download URL
+	local lazarusURL="https://${serverAddress}/mp-content/lazarus/pkg/MPLazarus.pkg"
+	local tmpPkg="/private/tmp/MPLazarus.pkg"
+
+	# Clean up any existing temp package
+	rm -f "$tmpPkg"
+
+	# Download the package
+	echo "Downloading Lazarus from: $lazarusURL"
+	if /usr/bin/curl -f -s -L -o "$tmpPkg" "$lazarusURL" 2>/dev/null; then
+		echo "Download successful"
+
+		# Verify the download is a valid package
+		if /usr/sbin/pkgutil --check-signature "$tmpPkg" >/dev/null 2>&1 || [ -f "$tmpPkg" ]; then
+			echo "Installing Lazarus package..."
+			if /usr/sbin/installer -pkg "$tmpPkg" -target / 2>/dev/null; then
+				echo "Lazarus installed successfully"
+				rm -f "$tmpPkg"
+				return 0
+			else
+				echo "Error: Failed to install Lazarus package"
+				rm -f "$tmpPkg"
+				return 1
+			fi
+		else
+			echo "Error: Downloaded file is not a valid package"
+			rm -f "$tmpPkg"
+			return 1
+		fi
+	else
+		echo "Error: Failed to download Lazarus from $lazarusURL"
+		rm -f "$tmpPkg"
+		return 1
+	fi
+}
+
 # ******************************************************************
 # LaunchDaemon loading
 #
@@ -353,7 +418,6 @@ setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.agent.plist
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.helper.plist
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.status.ui.plist
 setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.updater.plist
-setOwnerAndPerms /Library/LaunchDaemons/gov.llnl.mp.planb.plist
 setOwnerAndPerms /Library/LaunchAgents/gov.llnl.mp.status.plist
 setHelperOwnerAndPerms /Library/PrivilegedHelperTools/gov.llnl.mp.helper
 setHelperOwnerAndPerms /Library/PrivilegedHelperTools/gov.llnl.mp.status.ui
@@ -465,6 +529,10 @@ else
 fi
 
 # ******************************************************************
+# Install Lazarus if not present
+installLazarus
+
+# ******************************************************************
 # Run Client Check-in
 CLIENTID=$(/Library/MacPatch/Client/MPAgent clientID)
 
@@ -526,11 +594,6 @@ if [ -z "$(isIload)" ]; then
 else
 	echo "Running iLoad, apps will launch on reboot."
 fi
-
-# ******************************************************************
-# Launch PlanB		    ********************************************
-#
-loadDaemon gov.llnl.mp.planb
 
 # ******************************************************************
 # Start LaunchAgent Apps *******************************************

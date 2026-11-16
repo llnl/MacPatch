@@ -3,16 +3,17 @@
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 {% endblock %}
 
 {% block bodyPanel %}
 
-	<table id="table_admins" data-toolbar="#toolbar" data-show-export="true" class="table table-condensed table-striped">
-		<div id="toolbar">
-			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-		</div>
-	</table>
+	<div id="patch-group-admins-toolbar">
+		<button id="addPatchGroupAdminButton" type="button" class="btn btn-default" title="Add Patch Group Admin"><i class="glyphicon glyphicon-plus" aria-hidden="true"></i></button>
+		<button id="deletePatchGroupAdminButton" type="button" class="btn btn-default" title="Remove Selected Admins"><i class="glyphicon glyphicon-trash" aria-hidden="true"></i></button>
+	</div>
+	<table id="table_admins" data-toolbar="#patch-group-admins-toolbar" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 
 {% endblock %}
 
@@ -21,10 +22,12 @@
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<script>
+	(function ($) {
+		'use strict';
 
 	$( document ).ready(function()
 	{
@@ -39,6 +42,10 @@
 			showRefresh: true,
 			idField: 'user_id',
 			resizable: true,
+			onEditableSave: function () {
+				// Let X-editable finish saving before replacing its row.
+				setTimeout(function () { $('#table_admins').bootstrapTable('refresh'); }, 0);
+			},
 			columns: [
 				{% for col in columns %}
 					{
@@ -58,11 +65,13 @@
 								editable: {
 									title: 'Edit User ID',
 									type: 'text',
+									mode: 'inline',
+									emptytext: 'Click to enter user ID',
+									validate: function (value) {
+										if (!value.trim()) return 'A user ID is required.';
+									},
 									pk: 1,
 									url: '/patches/patchGroup/member/add/{{group_id}}',
-									success: function(response, newValue) {
-										$('#table_admins').bootstrapTable('refresh');
-									},
 								},
 								{% endif %}
 							{% endif %}
@@ -72,33 +81,23 @@
 			]
 		});
 
-		window.operateEvents = {
-			'click .edit': function (e, value, row, index)
-			{
-
-			}
-		};
-
-		function operateFormatter(value, row, index)
-		{
-			var htmlData = [];
-			return htmlData.join('');
-		}
 	});
 
-	var $table = $('#table_admins'), $addButton = $('#addButton'), $delButton = $('#delButton');
+	var $table = $('#table_admins'), $addButton = $('#addPatchGroupAdminButton'), $delButton = $('#deletePatchGroupAdminButton');
 	$(function () {
-		$addButton.click(function ()
+		$addButton.click(function (event)
 		{
+			event.stopPropagation();
 			var randomId = 100 + ~~(Math.random() * 100);
 			$table.bootstrapTable('insertRow', {
 				index: 0,
 				row: {
 					rid: randomId,
-					user_id: 'Will Save on Edit',
+					user_id: '',
 					is_owner: 0
 				}
 			});
+			$table.find('tbody tr').first().find('a[data-name="user_id"]').editable('show');
 		});
 
 		$delButton.click(function ()
@@ -135,5 +134,6 @@
 		});
 	});
 
+	}(jQuery));
 	</script>
 {% endblock %}

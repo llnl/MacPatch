@@ -31,8 +31,6 @@
 #include <sys/types.h>
 #include <sys/sysctl.h>
 
-#undef  ql_component
-#define ql_component lcl_cMPClientInfo
 
 @interface MPClientInfo ()
 {

@@ -10,4 +10,4 @@ def clientDownload():
 				('pkg_hash', 'Package Hash', '1'), ('active', 'Active', '1'), ('state', 'State', '0'), ('mdate', 'Mod Date', '1')]
 
 	qGet1 = MpClientAgent.query.filter(MpClientAgent.type == 'app', MpClientAgent.active == '1').all()
-	return render_template('client_download.html', data=qGet1)
+	return render_template('clients/client_download.html', data=qGet1)

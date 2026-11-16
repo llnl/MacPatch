@@ -28,8 +28,6 @@
 #import "MPCrypto.h"
 #import "RegexKitLite.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPFileCheck
 
 @implementation MPFileCheck
 

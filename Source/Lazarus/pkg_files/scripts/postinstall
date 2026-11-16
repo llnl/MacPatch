@@ -1,0 +1,29 @@
+#!/bin/bash
+# MacPatch Lazarus Postinstall Script
+# Set ownership, permissions, and load the daemon
+
+echo "Setting ownership and permissions..."
+
+# Set ownership
+chown -R root:wheel "/usr/local/sbin/lazarus"
+chown -R root:wheel "/Library/LaunchDaemons/com.llnl.mp.lazarus.plist"
+chown -R root:wheel "/Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist"
+
+# Set permissions
+chmod 755 "/usr/local/sbin/lazarus"
+chmod 644 "/Library/LaunchDaemons/com.llnl.mp.lazarus.plist"
+chmod 644 "/Library/Application Support/MacPatch/gov.llnl.mp.lazarus.plist"
+
+# Create log file if it doesn't exist
+if [ ! -f "/Library/Logs/mp_lazarus.log" ]; then
+    touch "/Library/Logs/mp_lazarus.log"
+    chmod 644 "/Library/Logs/mp_lazarus.log"
+fi
+
+echo "Loading Lazarus daemon..."
+
+# Load the LaunchDaemon
+launchctl load "/Library/LaunchDaemons/com.llnl.mp.lazarus.plist"
+
+echo "MacPatch Lazarus installed successfully"
+exit 0

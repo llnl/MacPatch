@@ -28,8 +28,6 @@
 #import "MPOSCheck.h"
 #include "TargetConditionals.h"
 
-#undef  ql_component
-#define ql_component lcl_cMPOSCheck
 
 
 @interface NSApplication (SystemVersion)
@@ -93,8 +91,7 @@
 
 -(BOOL)checkOSArch:(NSString *)osArchString
 {
-    // CEH: Allow all right now.
-	BOOL result = YES;
+	BOOL result = NO;
     
 #if TARGET_OS_OSX
   // Put CPU-independent macOS code here.

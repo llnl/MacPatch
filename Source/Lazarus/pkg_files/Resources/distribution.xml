@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="1">
+    <title>MacPatch Lazarus</title>
+    <organization>gov.llnl.mp</organization>
+    <domains enable_localSystem="true"/>
+    <options customize="never" require-scripts="false" hostArchitectures="x86_64,arm64"/>
+
+    <!-- License -->
+    <license file="License.rtf"/>
+
+    <!-- Background -->
+    <background file="Background.png" alignment="bottomleft" scaling="proportional"/>
+
+    <!-- Welcome message -->
+    <welcome file="Welcome.rtf"/>
+
+    <choices-outline>
+        <line choice="default">
+            <line choice="gov.llnl.mp.lazarus"/>
+        </line>
+    </choices-outline>
+
+    <choice id="default"/>
+    <choice id="gov.llnl.mp.lazarus" visible="false">
+        <pkg-ref id="gov.llnl.mp.lazarus"/>
+    </choice>
+
+    <pkg-ref id="gov.llnl.mp.lazarus" version="__VERSION__" onConclusion="none">Lazarus-component.pkg</pkg-ref>
+</installer-gui-script>

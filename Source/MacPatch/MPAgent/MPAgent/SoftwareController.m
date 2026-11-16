@@ -26,6 +26,7 @@
  */
 
 #import "SoftwareController.h"
+#import "Constants.h"
 
 @interface SoftwareController ()
 {
@@ -115,7 +116,7 @@
 	int result = 1;
     
 	NSArray *tasks;
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",settings.ccuid, aGroupName];
+	NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/sw/tasks/%@/%@",settings.ccuid, aGroupName];
 	NSDictionary *data = [self getDataFromWS:urlPath];
 	
 	if (data[@"data"])
@@ -207,7 +208,7 @@
     NSString *clientGroup = agent.clientGroup;
     
     NSArray *tasks;
-    NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/tasks/%@/%@",settings.ccuid, clientGroup];
+    NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/sw/tasks/%@/%@",settings.ccuid, clientGroup];
     NSDictionary *data = [self getDataFromWS:urlPath];
     
     if (data[@"data"])
@@ -346,7 +347,7 @@
 	NSDictionary *task = nil;
 	NSDictionary *data = nil;
 	
-	NSString *urlPath = [NSString stringWithFormat:@"/api/v2/sw/task/%@/%@",settings.ccuid, swTaskID];
+	NSString *urlPath = [NSString stringWithFormat:MP_API_PREFIX @"/sw/task/%@/%@",settings.ccuid, swTaskID];
 	data = [self getDataFromWS:urlPath];
 	if (data[@"data"])
 	{
