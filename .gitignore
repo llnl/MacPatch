@@ -137,3 +137,6 @@ working/
 # MacPatch, ignore root dir items
 /Server
 /Content
+
+tests/
+_tests/
