@@ -1029,62 +1029,62 @@ if $USEMACOS; then
 
     # Server venv
     echo "Creating server scripts virtual env..."
-    source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/server/bin/activate
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install pycrypto --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install simplejson --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install requests --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install psutil --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/server/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     # API venv
     echo "Creating api virtual env..."
-    source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/api/bin/activate
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install \
     -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
     deactivate
 
     # Console venv
     echo "Creating console virtual env..."
-    source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/console/bin/activate
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/console/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
     deactivate
 
 else
-    $py3 -m venv "${MPSERVERBASE}/env/server" --copies --clear
-    $py3 -m venv "${MPSERVERBASE}/env/api" --copies --clear
-    $py3 -m venv "${MPSERVERBASE}/env/console" --copies --clear
+    $py3 -m venv env/server --copies --clear
+    $py3 -m venv env/api --copies --clear
+    $py3 -m venv env/console --copies --clear
 
     echo "Creating server scripts virtual env..."
-    source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/server/bin/activate
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install pycrypto --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install simplejson --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install requests --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install psutil --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install python-crontab --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
-    source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    source ${MPSERVERBASE}/apps/env/api/bin/activate
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
-    source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    source ${MPSERVERBASE}/apps/env/console/bin/activate
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 fi
 
