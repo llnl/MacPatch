@@ -1410,6 +1410,20 @@ fi
 
 log_message "Repository cloned successfully"
 
+# Clean up old virtual environments before building
+# New venvs will be created at Server/apps/env/ by MPBuildServer.sh
+log_message "Cleaning up old virtual environments..."
+if [ -d "${MPSERVERBASE}/env" ]; then
+    log_message "Removing old venv directory: ${MPSERVERBASE}/env"
+    rm -rf "${MPSERVERBASE}/env"
+fi
+
+# Also clean up any venvs that might be in apps/env from previous builds
+if [ -d "${MPSERVERBASE}/apps/env" ]; then
+    log_message "Removing old apps/env directory: ${MPSERVERBASE}/apps/env"
+    rm -rf "${MPSERVERBASE}/apps/env"
+fi
+
 log_message "Building MacPatch server..."
 if ! "$build_script"; then
     log_message "ERROR: Build failed"
@@ -1640,7 +1654,9 @@ if [[ "$platform" == "linux" ]]; then
     fi
 
     # Virtual environment binaries - all files in venv/bin should be 755
-    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin"; do
+    # Check both old location (Server/env) and new location (Server/apps/env)
+    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin" \
+                    "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
         if [ -d "$venv_bin" ]; then
             log_message "Setting venv binaries to 755: $venv_bin"
             find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
@@ -1683,7 +1699,9 @@ else
     fi
 
     # Virtual environment binaries - all files in venv/bin should be 755
-    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin"; do
+    # Check both old location (Server/env) and new location (Server/apps/env)
+    for venv_bin in "${MPSERVERBASE}/env/api/bin" "${MPSERVERBASE}/env/console/bin" "${MPSERVERBASE}/env/server/bin" \
+                    "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
         if [ -d "$venv_bin" ]; then
             log_message "Setting venv binaries to 755: $venv_bin"
             find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
