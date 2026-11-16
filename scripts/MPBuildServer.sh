@@ -486,8 +486,16 @@ if $USELINUX; then
                     echo
                     echo "Install yarn via npm"
                     npm install --global yarn
+                    # Update PATH to include npm global bin directory
+                    export PATH="$(npm config get prefix)/bin:$PATH"
+                    # Verify yarn is now accessible
+                    if ! command -v yarn >/dev/null 2>&1; then
+                        echo "ERROR: yarn installation failed"
+                        exit 1
+                    fi
+                    echo "Yarn installed successfully: $(yarn --version)"
                 else
-                    echo "Yarn is already installed"
+                    echo "Yarn is already installed: $(yarn --version)"
                 fi
             else
                 if [ $i == "redis6" ]; then
@@ -545,8 +553,16 @@ if $USELINUX; then
                     echo
                     echo "Install yarn via npm"
                     npm install --global yarn
+                    # Update PATH to include npm global bin directory
+                    export PATH="$(npm config get prefix)/bin:$PATH"
+                    # Verify yarn is now accessible
+                    if ! command -v yarn >/dev/null 2>&1; then
+                        echo "ERROR: yarn installation failed"
+                        exit 1
+                    fi
+                    echo "Yarn installed successfully: $(yarn --version)"
                 else
-                    echo "Yarn is already installed"
+                    echo "Yarn is already installed: $(yarn --version)"
                 fi
             else
                 p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
