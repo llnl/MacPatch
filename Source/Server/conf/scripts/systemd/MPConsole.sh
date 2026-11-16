@@ -30,7 +30,7 @@
 
 RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
-ENV_HOME="${MP_HOME}/env/console"
+ENV_HOME="${MP_HOME}/apps/env/console"
 PATH="${ENV_HOME}/bin",$PATH
 PIDFile="/tmp/mpconsole.pid"
 

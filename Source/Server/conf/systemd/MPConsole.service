@@ -4,6 +4,8 @@ After=network.target
 
 [Service]
 Type=simple
+User=www-data
+Group=www-data
 
 ExecStart=/bin/bash /opt/MacPatch/Server/conf/scripts/systemd/MPConsole.sh start
 ExecStop=/bin/bash /opt/MacPatch/Server/conf/scripts/systemd/MPConsole.sh stop

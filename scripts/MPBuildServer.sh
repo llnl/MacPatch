@@ -486,8 +486,16 @@ if $USELINUX; then
                     echo
                     echo "Install yarn via npm"
                     npm install --global yarn
+                    # Update PATH to include npm global bin directory
+                    export PATH="$(npm config get prefix)/bin:$PATH"
+                    # Verify yarn is now accessible
+                    if ! command -v yarn >/dev/null 2>&1; then
+                        echo "ERROR: yarn installation failed"
+                        exit 1
+                    fi
+                    echo "Yarn installed successfully: $(yarn --version)"
                 else
-                    echo "Yarn is already installed"
+                    echo "Yarn is already installed: $(yarn --version)"
                 fi
             else
                 if [ $i == "redis6" ]; then
@@ -545,8 +553,16 @@ if $USELINUX; then
                     echo
                     echo "Install yarn via npm"
                     npm install --global yarn
+                    # Update PATH to include npm global bin directory
+                    export PATH="$(npm config get prefix)/bin:$PATH"
+                    # Verify yarn is now accessible
+                    if ! command -v yarn >/dev/null 2>&1; then
+                        echo "ERROR: yarn installation failed"
+                        exit 1
+                    fi
+                    echo "Yarn installed successfully: $(yarn --version)"
                 else
-                    echo "Yarn is already installed"
+                    echo "Yarn is already installed: $(yarn --version)"
                 fi
             else
                 p=`dpkg -l | grep '^ii' | grep ${i} | head -n 1 | awk '{print $2}' | grep ^${i}`
@@ -583,7 +599,7 @@ fi
 # Download or use bundled NGINX
 # ------------------
 download_nginx() {
-    local nginx_version="${1:-1.31.7}"
+    local nginx_version="${1:-1.31.8}"
     local nginx_url="https://nginx.org/download/nginx-${nginx_version}.tar.gz"
     local build_dir="/tmp/nginx-build-${DTS}"
     local nginx_tar="nginx-${nginx_version}.tar.gz"
@@ -643,8 +659,8 @@ echo "-----------------------------------------------------------------------"
 echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
 echo
 
-# Download or get bundled nginx
-NGINX_TAR_PATH=$(download_nginx "1.31.2")
+# Download or get bundled nginx (uses default version from function: 1.31.8)
+NGINX_TAR_PATH=$(download_nginx)
 if [ $? -ne 0 ] || [ -z "$NGINX_TAR_PATH" ]; then
     echo "ERROR: Failed to obtain nginx source"
     exit 1
@@ -738,7 +754,7 @@ find "${MPSERVERBASE}/conf/Content/Web/clients" -type f -name "*.sh" -exec chmod
 find "${MPBASE}/scripts" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
 
 # Virtual environment binaries (all files in bin directories should be executable)
-for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+for venv_bin in "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
     if [ -d "$venv_bin" ]; then
         find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
     fi
@@ -1013,62 +1029,52 @@ if $USEMACOS; then
 
     # Server venv
     echo "Creating server scripts virtual env..."
-    source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir--no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/server/bin/activate
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/server/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/server/bin/pip3 \
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt $CA_STR --no-cache-dir
     deactivate
 
     # API venv
     echo "Creating api virtual env..."
-    source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/api/bin/activate
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/api/bin/pip3 -q install \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install \
     -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR --no-cache-dir
     deactivate
 
     # Console venv
     echo "Creating console virtual env..."
-    source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/console/bin/activate
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
 
-    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/env/console/bin/pip3 \
+    env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/console/bin/pip3 \
     -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR --no-cache-dir
     deactivate
 
 else
-    $py3 -m venv "${MPSERVERBASE}/env/server" --copies --clear
-    $py3 -m venv "${MPSERVERBASE}/env/api" --copies --clear
-    $py3 -m venv "${MPSERVERBASE}/env/console" --copies --clear
+    $py3 -m venv env/server --copies --clear
+    $py3 -m venv env/api --copies --clear
+    $py3 -m venv env/console --copies --clear
 
     echo "Creating server scripts virtual env..."
-    source ${MPSERVERBASE}/env/server/bin/activate
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install simplejson --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install psutil --no-cache-dir
-    ${MPSERVERBASE}/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+    source ${MPSERVERBASE}/apps/env/server/bin/activate
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt $CA_STR --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
-    source ${MPSERVERBASE}/env/api/bin/activate
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    source ${MPSERVERBASE}/apps/env/api/bin/activate
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/api/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
     deactivate
 
     echo "Creating console virtual env..."
-    source ${MPSERVERBASE}/env/console/bin/activate
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
+    source ${MPSERVERBASE}/apps/env/console/bin/activate
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install --upgrade pip --no-cache-dir
+    ${MPSERVERBASE}/apps/env/console/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredConsole.txt $CA_STR
     deactivate
 fi
 
@@ -1092,7 +1098,7 @@ chown -R $OWNERGRP "${MPBASE}/Content"
 chmod -R 0775 "${MPSERVERBASE}/logs"
 chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
-chown -R $OWNERGRP "${MPSERVERBASE}/env"
+chown -R $OWNERGRP "${MPSERVERBASE}/apps/env"
 
 # Final check: ensure all files have correct permissions (755 for executables, 644 for others)
 echo "Final permission verification..."
@@ -1115,7 +1121,7 @@ done
 echo "✓ Shell scripts (755)"
 
 # Virtual environment binaries (API and Console) - all should be 755
-for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+for venv_bin in "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
     if [ -d "$venv_bin" ]; then
         find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
     fi

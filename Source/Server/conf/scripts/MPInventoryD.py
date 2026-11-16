@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python3
+#!/opt/MacPatch/Server/apps/env/server/bin/python3
 
 '''
 	Copyright (c) 2026, Lawrence Livermore National Security, LLC.
@@ -186,8 +186,8 @@ class DBSession:
 		self.connection = pymysql.connect(
 			host=databaseConfig.host,
 			user=databaseConfig.user,
-			passwd=databaseConfig.password,
-			db=databaseConfig.database,
+			password=databaseConfig.password,
+			database=databaseConfig.database,
 			port=int(databaseConfig.port),
 			charset=databaseConfig.charset,
 			cursorclass=pymysql.cursors.Cursor,
@@ -262,8 +262,8 @@ class InvStats:
 
 	def _connect(self):
 		return pymysql.connect(
-			host=self.dbConfig.host, user=self.dbConfig.user, passwd=self.dbConfig.password,
-			db=self.dbConfig.database, port=int(self.dbConfig.port), charset=self.dbConfig.charset,
+			host=self.dbConfig.host, user=self.dbConfig.user, password=self.dbConfig.password,
+			database=self.dbConfig.database, port=int(self.dbConfig.port), charset=self.dbConfig.charset,
 			cursorclass=pymysql.cursors.Cursor, autocommit=False, connect_timeout=5)
 
 	def record(self, st):

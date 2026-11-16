@@ -4,11 +4,16 @@ After=syslog.target network.target
 
 [Service]
 Type=forking
+User=www-data
+Group=www-data
 
 ExecStart=/opt/MacPatch/Server/conf/scripts/systemd/MPInventoryD.sh start
 ExecStop=/opt/MacPatch/Server/conf/scripts/systemd/MPInventoryD.sh stop
 
 RemainAfterExit=yes
+
+# Prevent too many open files error
+LimitNOFILE=65536
 
 [Install]
 WantedBy=multi-user.target

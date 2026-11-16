@@ -32,7 +32,7 @@ RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
 MP_SCRIPT="${MP_HOME}/conf/scripts"
 MP_INVDIR="${MP_HOME}/InvData/files"
-MP_PYTHON="${MP_HOME}/env/server/bin/python3"
+MP_PYTHON="${MP_HOME}/apps/env/server/bin/python3"
 
 case "$1" in
  start)

@@ -30,7 +30,7 @@
 
 RETVAL=$?
 MP_HOME="/opt/MacPatch/Server"
-ENV_HOME="${MP_HOME}/env/api"
+ENV_HOME="${MP_HOME}/apps/env/api"
 PATH="${ENV_HOME}/bin",$PATH
 PIDFile="/tmp/mpapi.pid"
 
