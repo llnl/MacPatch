@@ -754,7 +754,7 @@ find "${MPSERVERBASE}/conf/Content/Web/clients" -type f -name "*.sh" -exec chmod
 find "${MPBASE}/scripts" -type f -name "*.sh" -exec chmod 755 {} \; 2>/dev/null || true
 
 # Virtual environment binaries (all files in bin directories should be executable)
-for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+for venv_bin in "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
     if [ -d "$venv_bin" ]; then
         find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
     fi
@@ -1031,14 +1031,9 @@ if $USEMACOS; then
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/apps/env/server/bin/activate
     ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install simplejson --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install psutil --no-cache-dir
 
     env "CFLAGS=-I/usr/local/include -L/usr/local/lib" ${MPSERVERBASE}/apps/env/server/bin/pip3 \
-    -q install -r ${MPSERVERBASE}/apps/pyRequiredAPI.txt $CA_STR
+    -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt $CA_STR --no-cache-dir
     deactivate
 
     # API venv
@@ -1067,12 +1062,7 @@ else
     echo "Creating server scripts virtual env..."
     source ${MPSERVERBASE}/apps/env/server/bin/activate
     ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install --upgrade pip --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install pycrypto --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install simplejson --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install requests --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install mysql-connector-python --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install psutil --no-cache-dir
-    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install python-crontab --no-cache-dir
+    ${MPSERVERBASE}/apps/env/server/bin/pip3 -q install -r ${MPSERVERBASE}/apps/pyRequiredServer.txt $CA_STR --no-cache-dir
     deactivate
 
     echo "Creating api virtual env..."
@@ -1108,7 +1098,7 @@ chown -R $OWNERGRP "${MPBASE}/Content"
 chmod -R 0775 "${MPSERVERBASE}/logs"
 chmod -R 0775 "${MPSERVERBASE}/etc"
 chmod -R 0775 "${MPSERVERBASE}/InvData"
-chown -R $OWNERGRP "${MPSERVERBASE}/env"
+chown -R $OWNERGRP "${MPSERVERBASE}/apps/env"
 
 # Final check: ensure all files have correct permissions (755 for executables, 644 for others)
 echo "Final permission verification..."
@@ -1131,7 +1121,7 @@ done
 echo "✓ Shell scripts (755)"
 
 # Virtual environment binaries (API and Console) - all should be 755
-for venv_bin in "${MPSERVERBASE}/apps/api/venv/bin" "${MPSERVERBASE}/apps/console/venv/bin"; do
+for venv_bin in "${MPSERVERBASE}/apps/env/api/bin" "${MPSERVERBASE}/apps/env/console/bin" "${MPSERVERBASE}/apps/env/server/bin"; do
     if [ -d "$venv_bin" ]; then
         find "$venv_bin" -type f -exec chmod 755 {} \; 2>/dev/null || true
     fi
