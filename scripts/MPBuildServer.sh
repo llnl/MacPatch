@@ -2,7 +2,7 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPBuildServer.sh
-# Version: 3.8.8
+# Version: 3.9.0
 #
 # Description:
 # This is a very simple script to demonstrate how to automate
@@ -12,6 +12,15 @@
 # Simply modify the GITROOT and BUILDROOT variables
 #
 # History:
+# 3.9.0     Major virtual environment and build improvements
+#           - Fixed virtual environment paths: now correctly uses Server/apps/env/
+#           - Server venv now uses pyRequiredServer.txt (was using wrong file)
+#           - Fixed yarn installation PATH issues (exports npm global bin to PATH)
+#           - Fixed nginx version: now uses 1.31.8 (was hardcoded to 1.31.2)
+#           - Made script location-independent: detects own directory, works from any location
+#           - Added source directory validation with clear error messages
+#           - Fixed chown and chmod commands to use correct venv paths
+#           - All three venvs (server/api/console) now use proper requirements files
 # 3.8.8     Added Python version detection and selection
 #           Checks for Python 3.14 first (preferred), then any 3.12+
 #           Minimum version is 3.12, will use 3.14 if available
@@ -129,6 +138,21 @@ MACPROMPTFORXCODE=true
 MACPROMPTFORBREW=true
 USEOLDPY=false
 
+# Determine script location and source directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_BASE="$(dirname "$SCRIPT_DIR")"  # Parent of scripts directory
+
+# Validate source directory exists
+if [ ! -d "${SOURCE_BASE}/Source/Server" ]; then
+    echo "ERROR: Source directory not found at ${SOURCE_BASE}/Source/Server"
+    echo "Script location: ${SCRIPT_DIR}"
+    echo "Expected parent: ${SOURCE_BASE}"
+    echo ""
+    echo "This script must be run from within a MacPatch repository structure."
+    exit 1
+fi
+
+# Installation paths (destination)
 MPBASE="/opt/MacPatch"
 MPSRVCONTENT="${MPBASE}/Content/Web"
 MPSERVERBASE="/opt/MacPatch/Server"
@@ -394,7 +418,9 @@ mkdirP ${MPBASE}/Content/Web/patches
 mkdirP ${MPBASE}/Content/Web/sav
 mkdirP ${MPBASE}/Content/Web/sw
 mkdirP ${MPBASE}/Content/Web/tools
-cp -rp ${MPBASE}/Source/Server ${MPSERVERBASE}
+# Copy server source files from where the script is located
+echo "Copying server files from: ${SOURCE_BASE}/Source/Server"
+cp -rp ${SOURCE_BASE}/Source/Server ${MPSERVERBASE}
 mkdirP ${MPSERVERBASE}/InvData/files
 mkdirP ${MPSERVERBASE}/lib
 mkdirP ${MPSERVERBASE}/logs
