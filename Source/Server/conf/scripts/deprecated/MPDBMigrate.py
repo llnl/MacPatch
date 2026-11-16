@@ -1,4 +1,4 @@
-#!/opt/MacPatch/Server/env/server/bin/python3
+#!/opt/MacPatch/Server/apps/env/server/bin/python3
 
 '''
  Copyright (c) 2024, Lawrence Livermore National Security, LLC.

@@ -4,6 +4,8 @@ After=syslog.target network.target remote-fs.target nss-lookup.target
 
 [Service]
 Type=forking
+User=www-data
+Group=www-data
 PIDFile=/opt/MacPatch/Server/nginx/logs/nginx.pid
 ExecStartPre=/opt/MacPatch/Server/nginx/sbin/nginx -t
 ExecStart=/opt/MacPatch/Server/nginx/sbin/nginx
