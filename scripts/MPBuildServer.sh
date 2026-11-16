@@ -599,7 +599,7 @@ fi
 # Download or use bundled NGINX
 # ------------------
 download_nginx() {
-    local nginx_version="${1:-1.31.7}"
+    local nginx_version="${1:-1.31.8}"
     local nginx_url="https://nginx.org/download/nginx-${nginx_version}.tar.gz"
     local build_dir="/tmp/nginx-build-${DTS}"
     local nginx_tar="nginx-${nginx_version}.tar.gz"
@@ -659,8 +659,8 @@ echo "-----------------------------------------------------------------------"
 echo "See nginx build status in ${MPSERVERBASE}/logs/nginx-build.log"
 echo
 
-# Download or get bundled nginx
-NGINX_TAR_PATH=$(download_nginx "1.31.2")
+# Download or get bundled nginx (uses default version from function: 1.31.8)
+NGINX_TAR_PATH=$(download_nginx)
 if [ $? -ne 0 ] || [ -z "$NGINX_TAR_PATH" ]; then
     echo "ERROR: Failed to obtain nginx source"
     exit 1
