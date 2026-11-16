@@ -530,11 +530,12 @@ class AgentUpdates():
 		# Get the Latest Agent Update Data from database
 		updateID = self.agentUpdaterUpdateID()
 		if updateID is None:
+			log_Info('[AgentUpdates][agentUpdaterUpdates]: No agent updater package configured.')
 			return None
 
 		updateDict = self.agentUpdateForID(updateID)
 		if updateDict is None:
-			log_Error('[AgentUpdates][agentUpdaterUpdates]: Error, we have a RID but no data.')
+			log_Info('[AgentUpdates][agentUpdaterUpdates]: No applicable agent updater package found.')
 			return None
 
 		clientData = self.clientOSInfo(cuuid)
@@ -585,12 +586,12 @@ class AgentUpdates():
 		# Get the Latest Agent Update Data from database
 		updateID = self.agentUpdateID()
 		if updateID is None:
+			log_Info('[AgentUpdates][agentUpdates]: No agent update package configured.')
 			return None
 
 		updateDict = self.agentUpdateForID(updateID)
-		log_Info('updateDict: %s' % (updateDict))
 		if updateDict is None:
-			log_Error("[AgentUpdates][agentUpdates]: Error, we have a RID but no data")
+			log_Info("[AgentUpdates][agentUpdates]: No applicable agent update package found.")
 			return None
 
 		clientData = self.clientOSInfo(cuuid)
