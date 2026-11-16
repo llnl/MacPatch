@@ -2,12 +2,20 @@
 #
 # ----------------------------------------------------------------------------
 # Script: MPServerUpgrader.sh
-# Version: 3.4.4
+# Version: 3.5.0
 #
 # Description:
 # Upgrade script will upgrade a current install of the MacPatch server
 #
 # History:
+# 3.5.0 - Virtual environment and SECRET_KEY improvements:
+#       - Cleans up old venvs before build (removes Server/env/, Server/apps/env/)
+#       - Ensures fresh venvs are created at correct location by MPBuildServer.sh
+#       - Fixed venv permission paths to use Server/apps/env/ instead of Server/env/
+#       - Added SECRET_KEY preservation during config restore
+#       - If old config lacks SECRET_KEY but new one has it, preserves the new key
+#       - Prevents loss of generated SECRET_KEY during upgrade
+#       - Checks both old and new venv locations for permission setting
 # 3.4.4 - Fixed terminal handling and added auto-confirm:
 #       - Made clear command conditional (only runs if terminal present)
 #       - Prevents "unknown terminal type" errors in non-interactive mode
