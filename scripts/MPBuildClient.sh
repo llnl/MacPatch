@@ -32,7 +32,8 @@ SCRIPT_PARENT=$(dirname $(dirname $0))
 SRCROOT="$SCRIPT_PARENT/Source"
 PKGROOT="$SCRIPT_PARENT/Packages"
 DATETIME=`date "+%Y%m%d-%H%M%S"`
-BUILDROOT="/private/var/tmp/MP/Client40/$DATETIME"
+MPBUILD_BASE="$HOME/MPBuild"
+BUILDROOT="$MPBUILD_BASE/Client"
 BUILD_NO_STR=`date +%Y%m%d-%H%M%S`
 
 AGENT_VERS="4.4.0"
@@ -42,7 +43,7 @@ UPDATEVER="4.4.0.0"
 PKG_STATE=""
 CODESIGNIDENTITY="*"
 MIN_OS="14.6"
-BUILDPLIST="/Library/Preferences/mp.build.client35.plist"
+BUILDPLIST="$MPBUILD_BASE/Settings/mp.build.client35.plist"
 
 # Extenral scripts run pre xcode compile
 EXTERNALSCRIPTS=false
@@ -101,6 +102,20 @@ while getopts "hs:p:b:l:mB:" opt; do
 			;;
 	esac
 done
+
+# ------------------------------------------------------------
+# Setup MPBuild directory structure and migrate settings
+# ------------------------------------------------------------
+mkdir -p "$MPBUILD_BASE/Settings"
+
+# Copy existing plist from system location if it exists and user plist doesn't
+SYSTEM_PLIST="/Library/Preferences/mp.build.client35.plist"
+if [ -f "$SYSTEM_PLIST" ] && [ ! -f "$BUILDPLIST" ]; then
+	if cp "$SYSTEM_PLIST" "$BUILDPLIST" 2>/dev/null; then
+		echo "Copied existing settings from $SYSTEM_PLIST to $BUILDPLIST"
+		echo
+	fi
+fi
 
 runExternalScripts ()
 {
