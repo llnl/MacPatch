@@ -3,8 +3,6 @@
 {% block styles %}
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<style>
 		.software-package-modal .modal-title { font-size: 18px; line-height: 24px; font-weight: 600; }
 	</style>
@@ -15,246 +13,107 @@
 {%  endblock %}
 
 {% block bodyPanel %}
-
-	<table id="table" class="table table-bordered table-sm table-striped" data-toolbar="#toolbar">
-		<div id="toolbar">
-			{% if session.role[0] == 1 %}
-			<button id="delButton" type="button" class="btn btn-default" title="Delete Package"><i class="glyphicon glyphicon-trash"></i></button>
-			<button id="addButton" type="button" class="btn btn-default" title="New Package"><i class="glyphicon glyphicon-plus"></i></button>
-			<button id="dupButton" type="button" class="btn btn-default" title="Duplicate Package"><i class="glyphicon glyphicon-duplicate"></i></button>
-			<button id="taskButton" type="button" class="btn btn-default" title="Generate Task from Package"><i class="glyphicon glyphicon-export"></i></button>
-			{% endif %}
-		</div>
-	</table>
-
+	<div id="toolbar">
+		{% if session.role[0] == 1 %}
+		<button id="delButton" type="button" class="btn btn-default" title="Delete Package"><i class="fa fa-trash"></i></button>
+		<button id="addButton" type="button" class="btn btn-default" title="New Package"><i class="fa fa-plus"></i></button>
+		<button id="dupButton" type="button" class="btn btn-default" title="Duplicate Package"><i class="fa fa-clone"></i></button>
+		<button id="taskButton" type="button" class="btn btn-default" title="Generate Task from Package"><i class="fa fa-share-square-o"></i></button>
+		{% endif %}
+	</div>
+	<table id="table" class="table table-bordered table-sm table-striped" data-toolbar="#toolbar"></table>
 {% endblock %}
 
 
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
+	(function () {
+		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
 
-	function operateFormatter(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<div class="buttonGroup">')
-		{% if session.role[0] == 1 %}
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Package">');
-		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
-		{% else %}
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="edit" href="javascript:void(0)" title="Package Data">');
-		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i></a>');
-		{% endif %}
-		htmlData.push('</div>');
-		htmlData.push('<i class="buttonSeperator"></i>');
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="download" href="/mp-content' + row['sw_url'] + '" title="Download Package" target=_blank>');
-		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
-		htmlData.push('</div>');
-		htmlData.push('</div>');
-		return htmlData.join('');
-		
-	}
-
-	window.operateEvents = {
-		'click .edit': function (e, value, row, index)
-		{
-			e.preventDefault();
-			WizardNavigation.open("/software/package/edit/" + encodeURIComponent(row['suuid']));
-		}
-	};
-
-	var _cols = [{
-					field: 'state',
-					checkbox: true,
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle',
-					width: 40,
-					{% if session.role[0] != 1 %}
-					visible: false,
-					{% endif %}
-				},
-					{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEvents,
-					formatter: operateFormatter,
-					width: 100,
-				},];
-
-	_cols.push.apply(_cols, {{data["columns"] | tojson}});
-	var _rows = {{data["rows"] | tojson}};
-
-	$( document ).ready(function()
-	{
-		$('#modalDialog').on('hidden.bs.modal.softwarePackage', function() {
-			$(this).removeClass('software-package-modal');
+		$('#modalDialog').on('hidden.bs.modal.softwarePackage', function () {
+			this.classList.remove('software-package-modal');
 		});
-		$('#table').bootstrapTable(
-		{
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '20', '50', '100', 'All'],
-			search: true,
-			showRefresh: false,
-			resizable: true,
-			sortable: true,
-			showColumns: false,
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
-			},
+
+		var table = MPTable.create('#table', {
 			idField: 'suuid',
-			columns: _cols,
-			data: _rows
-		});
-	});
-
-	var $table = $('#table'), $delBut = $('#delButton'), $addBut = $('#addButton'), $dupBut = $('#dupButton'), $tskBut = $('#taskButton'), $expBut = $('#exportButton'), $impBut = $('#importButton');
-	$(function () {
-		$delBut.click(function ()
-		{
-			{% if session.role[0] == 1 %}
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.suuid;
-			});
-			var name = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.sName;
-			});
-
-			if (confirm('Are you sure to delete (' + name +') ?'))
-			{
-				$.get( "/software/package/delete/" + ids).done(function(data)
-				{
-					var result = JSON.parse(data);
-					if (result.error == 0) {
-						$('#table').bootstrapTable('remove', {
-							field: 'suuid',
-							values: ids
-						});
-					} else {
-						$('#myContent').remove();
-						$('#modaliFrame').remove();
-						$('#modalDialog').removeClass("modal-wide");
-
-						$('#modalSaveButton').hide();
-						$('#modalCancelButton').html('Close');
-						$('#modalTitle').html('Error, Removing Software Package');
-						$('#modalBody').html('Delete item error!');
-						$('#modalBody').css({'height':'200px'});
-						$('#modalHeader').addClass('panel-heading');
-						$('#modalContent').addClass('panel-danger');
-						$('#modalDialog').modal('show');
-					}
-				});
-			}
-			{% endif %}
+			showColumns: false,
+			pageSize: 10,
+			checkbox: isAdmin,
+			columns: {{ data["columns"] | tojson }},
+			data: {{ data["rows"] | tojson }},
+			size: 'lg',
+			actionsWidth: 100,
+			actions: [
+				{ name: 'edit',
+				  icon:  isAdmin ? 'fa-pencil' : 'fa-search',
+				  title: isAdmin ? 'Edit Package' : 'Package Data',
+				  onClick: function (row, index, e) {
+					e.preventDefault();
+					WizardNavigation.open('/software/package/edit/' + encodeURIComponent(row.suuid));
+				  } },
+				{ name: 'download', icon: 'fa-download', title: 'Download Package',
+				  href: function (row) { return '/mp-content' + row.sw_url; } }
+			]
 		});
 
-		$addBut.click(function ()
-		{
-			{% if session.role[0] == 1 %}
-			WizardNavigation.open("/software/package/add");
-			{% endif %}
+		function selected() {
+			var rows = table.selections();
+			return { ids: rows.map(function (r) { return r.suuid; }), names: rows.map(function (r) { return r.sName; }) };
+		}
+
+		/* Requires exactly one selected package */
+		function single(what) {
+			var s = selected();
+			if (s.ids.length === 0) { alert('Please choose a package to ' + what + '.'); return null; }
+			if (s.ids.length > 1)   { alert('Please choose only 1 package.'); return null; }
+			return s;
+		}
+
+		function on(id, fn) { document.getElementById(id)?.addEventListener('click', fn); }
+
+		on('addButton', function () { WizardNavigation.open('/software/package/add'); });
+
+		on('delButton', function () {
+			var s = selected();
+			if (!confirm('Are you sure to delete (' + s.names + ') ?')) return;
+
+			MPHttp.getJSON('/software/package/delete/' + s.ids)
+				.then(function (result) {
+					if (result.error !== 0) throw new Error('error ' + result.error);
+					table.removeRows('suuid', s.ids);
+				})
+				.catch(function () { MPModal.error('Error, Removing Software Package', 'Delete item error!'); });
 		});
 
-		$dupBut.click(function ()
-		{
-			{% if session.role[0] == 1 %}
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.suuid;
-			});
-			var names = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.sName;
-			});
+		on('dupButton', function () {
+			var s = single('duplicate');
+			if (!s || !confirm('Are you sure to duplicate (' + s.names + ') ?')) return;
 
-			if (ids.length == 0) {
-				alert("Please choose a package to duplicate.")
-				return;
-			} else if (ids.length > 1) {
-				alert("Please choose only 1 package to duplicate.")
-				return;
-			}
-
-			if (confirm('Are you sure to duplicate (' + names +') ?'))
-			{
-				$.get( "/software/package/duplicate/" + ids).done(function(data)
-				{
-					var result = JSON.parse(data);
-
-					if (result.error == 0) {
-						alert("Software package was duplicated successfully.")
-						return;
-					} else {
-						alert("Error, software package was not duplicated.")
-						return;
-					}
-				});
-			}
-			{% endif %}
+			MPHttp.getJSON('/software/package/duplicate/' + s.ids)
+				.then(function (result) {
+					alert(result.error === 0 ? 'Software package was duplicated successfully.'
+					                         : 'Error, software package was not duplicated.');
+				})
+				.catch(function () { alert('Error, software package was not duplicated.'); });
 		});
 
-		$tskBut.click(function ()
-		{
-			{% if session.role[0] == 1 %}
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.suuid;
-			});
+		on('taskButton', function () {
+			var s = single('generate a task for');
+			if (!s || !confirm('Are you sure to generate a task for (' + s.names + ') ?')) return;
 
-			var names = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.sName;
-			});
-
-			if (ids.length == 0) {
-				alert("Please choose a package to generate a task for.")
-				return;
-			} else if (ids.length > 1) {
-				alert("Please choose only 1 package.")
-				return;
-			}
-
-			if (confirm('Are you sure to generate a task for (' + names +') ?'))
-			{
-				$.post( "/software/task/generate/" + ids).done(function(data)
-				{
-					var result = JSON.parse(data);
-
-					if (result.error == 0) {
-						alert("Software task was generated successfully.")
-						return;
-					} else {
-						alert("Error, software task was not generated.")
-						return;
-					}
-				});
-			}
-			{% endif %}
+			MPHttp.postJSON('/software/task/generate/' + s.ids)
+				.then(function (result) {
+					alert(result.error === 0 ? 'Software task was generated successfully.'
+					                         : 'Error, software task was not generated.');
+				})
+				.catch(function () { alert('Error, software task was not generated.'); });
 		});
-
-		$expBut.click(function ()
-		{
-			alert("Export Called, not done!");
-		});
-
-		$impBut.click(function ()
-		{
-			alert("Import Called, not done!");
-		});
-	});
+	}());
 
 	function closeModal() {
-		$("#modalDialog").modal("hide");
+		MPModal.close();
 	}
 	</script>
 {% endblock %}

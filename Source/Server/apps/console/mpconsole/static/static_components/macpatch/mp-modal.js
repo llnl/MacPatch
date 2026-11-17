@@ -11,6 +11,7 @@
  *       size    '' (default) | 'mid' | 'wide'
  *       height  css height for the body, e.g. '200px', '60vh'
  *       footer  false hides the Cancel/Save footer (default true)
+ *       onHidden  function called once, after the dialog has been closed
  *   MPModal.error(title, message)   red "Close only" dialog
  *   MPModal.close()
  *
@@ -50,6 +51,7 @@
         if (opts.size === 'wide') byId('modalDialog').classList.add('modal-wide');
         if (opts.size === 'mid') byId('modalDialog').classList.add('modal-mid');
         if (opts.footer === false) byId('modalFooter').style.display = 'none';
+        if (opts.onHidden) w.jQuery('#modalDialog').one('hidden.bs.modal', opts.onHidden);
 
         show();
     }

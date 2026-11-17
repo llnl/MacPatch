@@ -16,6 +16,11 @@
  *       ]
  *   });
  *   icon and title may be strings or functions(row).
+ *   An action with href: function(row) renders a real link (new tab) instead of a click handler.
+ *
+ *   checkbox: true           adds a leading checkbox column (use selections()/selectedIds(field))
+ *   leadColumns: [ ... ]     extra columns placed after the action column (e.g. a Filter column)
+ *   size: 'lg'               make action icons fa-lg
  *
  *   t.count()                     number of rows currently in the table
  *   t.removeRow(field, value)     remove the row whose field equals value
@@ -52,10 +57,11 @@
 
     function resolve(v, row) { return typeof v === 'function' ? v(row) : v; }
 
-    function actionColumn(actions, width) {
+    function actionColumn(actions, width, size) {
+        var sizeClass = size === 'lg' ? 'fa-lg' : '';
         var events = {};
         actions.forEach(function (a) {
-            events['click .' + a.name] = function (e, value, row, index) { a.onClick(row, index, e); };
+            if (a.onClick) events['click .' + a.name] = function (e, value, row, index) { a.onClick(row, index, e); };
         });
 
         return {
@@ -68,9 +74,12 @@
                 var items = actions
                     .filter(function (a) { return !a.show || a.show(row); })
                     .map(function (a) {
-                        return '<div class="buttonItem"><a class="' + esc(a.name) + '" href="javascript:void(0)"' +
+                        var href = a.href ? a.href(row) : '';
+                        var disabled = a.href && !href;
+                        return '<div class="buttonItem"><a class="' + esc(a.name) + (disabled ? ' disabled' : '') + '"' +
+                            ' href="' + (href ? esc(href) + '" target="_blank' : 'javascript:void(0)') + '"' +
                             ' title="' + esc(resolve(a.title, row)) + '">' +
-                            '<i class="fa ' + esc(resolve(a.icon, row)) + '" aria-hidden="true"></i></a></div>';
+                            '<i class="fa ' + esc(resolve(a.icon, row)) + (sizeClass ? ' ' + sizeClass : '') + '" aria-hidden="true"></i></a></div>';
                     });
                 return '<div class="buttonGroup">' + items.join('<i class="buttonSeperator"></i>') + '</div>';
             }
@@ -83,10 +92,15 @@
         var actions = options.actions;
         delete options.actions;
 
-        if (actions && actions.length) {
-            options.columns = [actionColumn(actions, options.actionsWidth)].concat(options.columns);
+        var lead = [];
+        if (options.checkbox) {
+            lead.push({ field: 'state', checkbox: true, align: 'center', valign: 'middle', width: 40 });
         }
-        delete options.actionsWidth;
+        if (actions && actions.length) {
+            lead.push(actionColumn(actions, options.actionsWidth, options.size));
+        }
+        options.columns = lead.concat(options.leadColumns || [], options.columns);
+        ['actionsWidth', 'checkbox', 'leadColumns', 'size'].forEach(function (k) { delete options[k]; });
 
         $table.bootstrapTable(options);
 
@@ -95,6 +109,8 @@
             count: function () { return $table.bootstrapTable('getData').length; },
             removeRow: function (field, value) { $table.bootstrapTable('remove', { field: field, values: [value] }); },
             selections: function () { return $table.bootstrapTable('getSelections'); },
+            selectedIds: function (field) { return $table.bootstrapTable('getSelections').map(function (r) { return r[field]; }); },
+            removeRows: function (field, values) { $table.bootstrapTable('remove', { field: field, values: values }); },
             refresh: function () { $table.bootstrapTable('refresh'); },
             load: function (rows) { $table.bootstrapTable('load', rows); }
         };

@@ -10,6 +10,8 @@
  *   MPHttp.post(url, data)          -> Promise<string>   (data: plain object or FormData, optional)
  *   MPHttp.getJSON(url)             -> Promise<object>
  *   MPHttp.postJSON(url, data)      -> Promise<object>   (parses the response body as JSON)
+ *   MPHttp.delete(url, data)        -> Promise<string>
+ *   MPHttp.errorMessage(err)        -> the server's {"errormsg": ...} text, or a generic message
  */
 (function (w) {
     'use strict';
@@ -66,8 +68,15 @@
         });
     }
 
+    function errorMessage(err) {
+        try { var m = JSON.parse(err.body).errormsg; if (m) return m; } catch (e) { /* not JSON */ }
+        return 'Request failed' + (err && err.status ? ' (HTTP ' + err.status + ')' : '') + '.';
+    }
+
     w.MPHttp = {
         request: request,
+        errorMessage: errorMessage,
+        delete: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
         get: function (url) { return request(url); },
         post: function (url, data) { return request(url, { method: 'POST', data: data }); },
         getJSON: function (url) { return request(url).then(JSON.parse); },
