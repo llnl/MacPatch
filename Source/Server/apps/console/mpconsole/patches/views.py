@@ -771,7 +771,9 @@ def patchGroups():
 
 		row['members'] = ','.join(members)
 		row['owner'] = x.user_id
-		row['mdate'] = x.mdate
+		row['user_id'] = x.user_id
+		row['type'] = {0: 'Production', 1: 'QA', 2: 'Dev'}.get(row['type'], 'NA')
+		row['mdate'] = str(x.mdate) if x.mdate is not None else ''
 		rows.append(row)
 
 	return render_template('patches/patch_groups.html', data=rows, columns=cListColsLimited)
