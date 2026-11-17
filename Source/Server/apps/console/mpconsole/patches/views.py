@@ -1263,12 +1263,9 @@ def _publishPatchGroup(group_id):
 # Private
 def patchDataForPatchID(patch_id):
 	sql = text("SELECT * from combined_patches_view Where id = :patchID")
+	# SQLAlchemy 2: parameters are passed as a dict, and the rows must be read while the connection is open
 	with db.engine.connect() as conn:
-		result = conn.execute(sql, patchID=patch_id)
-
-	_results = []
-	for v in result:
-		_results.append(dict(v))
+		_results = [dict(row) for row in conn.execute(sql, {'patchID': patch_id}).mappings().all()]
 
 	if len(_results) < 1:
 		return None
