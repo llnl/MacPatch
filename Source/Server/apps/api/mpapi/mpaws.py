@@ -115,9 +115,6 @@ class MPaws:
 		s3Client = None
 		self.app.logger.info(f"[MPaws][getS3Client]: USE_AWS_S3 = {self.config['USE_AWS_S3']}")
 		if self.config['USE_AWS_S3']:
-			self.app.logger.info('Initializing S3 Client Object')
-			self.app.logger.debug('key: ....' + self.config['AWS_S3_KEY'][-4:])
-			self.app.logger.debug('secret: ....' + self.app.config['AWS_S3_SECRET'][-4:])
 
 			config = Config(connect_timeout=5, retries={'max_attempts': 0})
 
@@ -139,9 +136,6 @@ class MPaws:
 		s3Client = None
 		self.app.logger.info(f"[MPaws][getS3Resource]: USE_AWS_S3 = {self.config['USE_AWS_S3']}")
 		if self.config['USE_AWS_S3']:
-			self.app.logger.info('Initializing S3 Resource Object')
-			self.app.logger.info('key: ....'+self.config['AWS_S3_KEY'][-4:])
-			self.app.logger.info('secret: ....'+self.config['AWS_S3_SECRET'][-4:])
 
 			config = Config(connect_timeout=5, retries={'max_attempts': 0})
 
