@@ -89,14 +89,14 @@
 			var shown = allRows().map(function (r) { return r.id; });
 
 			MPBusy.run(
-				MPHttp.sendJSON('/patches/group/select/' + encodeURIComponent(groupId), { shown: shown, selected: selected }),
+				MPHttp.sendJSON('/patches/group/select/' + encodeURIComponent(groupId), { shown: shown, selected: selected }, { timeout: 120000 }),
 				{ message: 'Saving...', button: this }
 			)
 				.then(function () {
 					alert('Patch group data saved successfully.');
 					WizardNavigation.returnToParent(returnUrl);
 				})
-				.catch(function (err) { alert(MPHttp.errorMessage(err) || 'Patch group data was not saved.'); });
+				.catch(function (err) { alert(err.timedOut ? err.message : (MPHttp.errorMessage(err) || 'Patch group data was not saved.')); });
 		});
 	}());
 	</script>

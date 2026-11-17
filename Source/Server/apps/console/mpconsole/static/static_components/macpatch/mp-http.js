@@ -10,7 +10,9 @@
  *   MPHttp.post(url, data)          -> Promise<string>   (data: plain object or FormData, optional)
  *   MPHttp.getJSON(url)             -> Promise<object>
  *   MPHttp.postJSON(url, data)      -> Promise<object>   (parses the response body as JSON)
- *   MPHttp.sendJSON(url, object)    -> Promise<object>   (POST with a JSON body, parses the JSON response)
+ *   MPHttp.sendJSON(url, object, {timeout: ms})  -> Promise<object>   (POST with a JSON body, parses the JSON response)
+ *       timeout is optional, when it passes the promise rejects with err.timedOut = true.  The server is not
+ *       stopped by that, it keeps working, the browser only stops waiting.
  *   MPHttp.delete(url, data)        -> Promise<string>
  *   MPHttp.errorMessage(err)        -> the server's {"errormsg": ...} text, or a generic message
  */
@@ -46,12 +48,25 @@
             body = new URLSearchParams(opts.data);   // form encoded, same as $.post
         }
 
+        var controller = opts.timeout ? new AbortController() : null;
+        var timer = controller ? setTimeout(function () { controller.abort(); }, opts.timeout) : null;
+
         return fetch(url, {
             method: method,
             headers: headers,
             body: body,
-            credentials: 'same-origin'
+            credentials: 'same-origin',
+            signal: controller ? controller.signal : undefined
+        }).catch(function (error) {
+            if (timer) clearTimeout(timer);
+            if (error && error.name === 'AbortError') {
+                var timedOut = new Error('The server is still working on this request. It was not stopped, check again in a few minutes.');
+                timedOut.timedOut = true;
+                throw timedOut;
+            }
+            throw error;
         }).then(function (response) {
+            if (timer) clearTimeout(timer);
             var loginUrl = response.headers.get('X-MacPatch-Login');
             if (response.status === 401 && loginUrl && !redirecting) {
                 var target = new URL(loginUrl, w.location.href);
@@ -80,7 +95,7 @@
     w.MPHttp = {
         request: request,
         errorMessage: errorMessage,
-        sendJSON: function (url, object) { return request(url, { method: 'POST', json: object }).then(JSON.parse); },
+        sendJSON: function (url, object, opts) { return request(url, { method: 'POST', json: object, timeout: opts && opts.timeout }).then(JSON.parse); },
         delete: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
         get: function (url) { return request(url); },
         post: function (url, data) { return request(url, { method: 'POST', data: data }); },
