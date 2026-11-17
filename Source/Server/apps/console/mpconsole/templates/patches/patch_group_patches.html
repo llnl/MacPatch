@@ -1,200 +1,103 @@
-<!DOCTYPE html>
-<meta name="csrf-token" content="{{ csrf_token() }}">
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block pageHeader %}{{ page_title }}{% endblock %}
+
+{# keeps Patches > Patch Groups open in the sidebar #}
+{% block bodyAttrs %} data-active-menu="{{ url_for('patches.patchGroups') }}"{% endblock %}
+
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet"> 
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
-
+	{{ super() }}
+	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
-{%  endblock %}
+{% endblock %}
 
-{% block body %}
-	<div>
-		<div id="patchesToolbar">
-            {% if isOwner == true or session.role[0] == 1 %}
-			<button id="selectAllButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-All</button>
-			<button id="selectAppleButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-Apple</button>
-			<button id="selectThirdButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-ok" aria-hidden="true"></i> Select-Custom</button>
-            {% endif %}
-		</div>
-		<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" data-show-columns="true" class="table table-bordered table-sm table-striped"></table>
+{% block bodyPanel %}
+	<div id="patchesToolbar">
+		{% if canEdit %}
+		<button id="selectAllButton" type="button" class="btn btn-default"><i class="fa fa-check" aria-hidden="true"></i> Select-All</button>
+		<button id="selectAppleButton" type="button" class="btn btn-default"><i class="fa fa-check" aria-hidden="true"></i> Select-Apple</button>
+		<button id="selectThirdButton" type="button" class="btn btn-default"><i class="fa fa-check" aria-hidden="true"></i> Select-Custom</button>
+		{% endif %}
+	</div>
+	<table id="patchesTable" data-toolbar="#patchesToolbar" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
+
+	<div class="mt-3">
+		{% if canEdit %}
+		<button type="button" class="btn btn-primary" id="saveButton">Save</button>
+		{% endif %}
+		<button type="button" class="btn btn-default" id="cancelButton">{{ 'Cancel' if canEdit else 'Close' }}</button>
 	</div>
 {% endblock %}
 
 
 {% block javascript %}
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-
+	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
-
 	<script>
-	$( document ).ready(function()
-	{
-		$('#patchesTable').bootstrapTable(
-		{
-			url: "/patches/group/list/{{groupID}}",
-			search: true,
+	(function () {
+		var groupId   = {{ groupID | tojson }};
+		var returnUrl = {{ return_url | tojson }};
+		var canEdit   = {{ canEdit | tojson }};
+
+		var table = MPTable.create('#patchesTable', {
+			url: '/patches/group/list/' + encodeURIComponent(groupId),
+			idField: 'id',
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
-			queryParamsType: "limit",
-			pagination: true,
-			sidePagination: "client",
 			showRefresh: true,
-			idField: 'id',
+			checkbox: canEdit,
+			stateField: 'state',
 			checkboxHeader: false,
-			maintainMetaData: true,
 			sortName: 'postdate',
 			sortOrder: 'desc',
 			resizable: true,
-			columns: [
-				{% for col in columns %}
-				{
-					{% if col[1] == 'state' %}
-						field: 'state',
-						title: '',
-						checkbox: true,
-						rowspan: 1,
-						align: 'center',
-						valign: 'middle',
-						sortable: true,
-						{% if isOwner == 'false' %}
-						disabled: true,
-						{% endif %}
-					{% else %}
-						field: '{{col[0]}}',
-						title: '{{col[1]}}',
-						{% if col[0] ==  'id' or col[0] == 'suname' or col[0] == 'patch_state' %}
-						visible: false,
-						{% endif %}
-						sortable: true
-					{% endif %}
-				},
-				{% endfor %}
-			],
-			onPostBody: function () {
-				removeSelected();
-			},
+			columns: {{ columns | tojson }}
+				.filter(function (c) { return c[1] !== 'state'; })
+				.map(function (c) {
+					return { field: c[0], title: c[1], visible: ['id', 'suname', 'patch_state'].indexOf(c[0]) === -1, sortable: true };
+				})
 		});
-	});
 
+		/* Checking a patch only changes the table, nothing is saved until Save is pressed */
 
-	/* Removed the selected row color from the table */
-	function removeSelected() {
-		$('#patchesTable tr').each(function (i, row, element) {
-			$(this).removeClass('selected');
+		/* Every patch the page loaded, even when a search is hiding some of them */
+		function allRows() { return table.$el.bootstrapTable('getData', { unfiltered: true, includeHiddenRows: true }); }
+
+		/* Checks every listed patch of a type that is not checked yet, on all pages, not only the visible one */
+		function bulkSelect(type) {
+			var ids = allRows().filter(function (row) {
+				var checked = row.state === true || row.state === 1 || row.state === '1';
+				return !checked && (!type || row.type === type);
+			}).map(function (row) { return row.id; });
+
+			if (ids.length) table.$el.bootstrapTable('checkBy', { field: 'id', values: ids });
+		}
+
+		document.getElementById('selectAllButton')?.addEventListener('click',   function () { bulkSelect(); });
+		document.getElementById('selectAppleButton')?.addEventListener('click', function () { bulkSelect('Apple'); });
+		document.getElementById('selectThirdButton')?.addEventListener('click', function () { bulkSelect('Third'); });
+
+		document.getElementById('cancelButton').addEventListener('click', function () {
+			WizardNavigation.returnToParent(returnUrl);
 		});
-	}
 
-	/* Save button and save content to json */
-	$(function () {
-		$('#saveGroupDataButton').click(function ()
-		{
-			{% if isOwner == 'true' or session.role[0] == 1 %}
-				// Overlay shows save progress wheel
-				$('#overlay').show();
+		document.getElementById('saveButton')?.addEventListener('click', function () {
+			var selected = table.selectedIds('id');
+			var shown = allRows().map(function (r) { return r.id; });
 
-				$.ajax({
-					type:'GET',
-					url: '/patches/group/save/{{groupID}}',
-					cache: false,
-					processData: false,
-					contentType: false,
-					success: function()
-					{
-						$('#overlay').hide();
-						alert("Patch group data saved successfully.");
-					},
-					error: function(jqXHR, textStatus, errorThrown){
-						$('#overlay').hide();
-						alert("Patch group data was not saved.");
-					}
-				});
-			{% endif %}
+			MPBusy.run(
+				MPHttp.sendJSON('/patches/group/select/' + encodeURIComponent(groupId), { shown: shown, selected: selected }),
+				{ message: 'Saving...', button: this }
+			)
+				.then(function () {
+					alert('Patch group data saved successfully.');
+					WizardNavigation.returnToParent(returnUrl);
+				})
+				.catch(function (err) { alert(MPHttp.errorMessage(err) || 'Patch group data was not saved.'); });
 		});
-	});
-
-	var bulkSavePending = false;
-	function selectPatches(type) {
-		if (bulkSavePending) return;
-		var $table = $('#patchesTable');
-		// getData includes all pages of the current search, not just visible rows.
-		var ids = $table.bootstrapTable('getData').filter(function (row) {
-			var selected = row.state === true || row.state === 1 || row.state === '1';
-			return !selected && (!type || row.type === type);
-		}).map(function (row) { return row.id; });
-		if (!ids.length) return;
-
-		bulkSavePending = true;
-		var $buttons = $('#selectAllButton, #selectAppleButton, #selectThirdButton');
-		$buttons.prop('disabled', true);
-		$.ajax({
-			url: "/patches/group/add/bulk/{{groupID}}",
-			type: 'POST',
-			cache: false,
-			data: JSON.stringify(ids),
-			dataType: 'json',
-			contentType: 'application/json'
-		}).done(function (response) {
-			if (response.errorno !== 0) {
-				alert('The patches could not be added to this group. Please try again.');
-				return;
-			}
-			// Reload only after the server has committed the new assignments.
-			$table.bootstrapTable('refresh');
-		}).fail(function (xhr) {
-			if (xhr.status === 401 && xhr.getResponseHeader('X-MacPatch-Login')) return;
-			var response = xhr.responseJSON;
-			alert(response && response.errormsg || 'The patches could not be added to this group. Please try again.');
-		}).always(function () {
-			bulkSavePending = false;
-			$buttons.prop('disabled', false);
-		});
-	}
-
-	$('#selectAllButton').click(function () { selectPatches(); });
-	$('#selectAppleButton').click(function () { selectPatches('Apple'); });
-	$('#selectThirdButton').click(function () { selectPatches('Third'); });
-
-	$('#patchesTable').on('check.bs.table', function (e, row, $element)
-	{
-		//This event fires every time a checkbox is checked
-		{% if isOwner == 'true' or session.role[0] == 1 %}
-			removeSelected();
-			$.get( "/patches/group/add/{{groupID}}/" + row['id']).done(function(data, status)
-			{
-				var result = JSON.parse(data);
-				if (result.error != 0) {
-					alert('An error was generated adding this patch to this group.');
-				}
-			});
-		{% endif %}
-	});
-
-	$('#patchesTable').on('uncheck.bs.table', function (e, row)
-	{
-		//This event fires every time a checkbox is unchecked
-		{% if isOwner == 'true' or session.role[0] == 1 %}
-			$.get( "/patches/group/remove/{{groupID}}/" + row['id']).done(function(data, status)
-			{
-				var result = JSON.parse(data);
-				if (result.error != 0) {
-					alert('An error was generated adding this patch to this group.');
-				}
-			});
-		{% endif %}
-	});
-
+	}());
 	</script>
 {% endblock %}

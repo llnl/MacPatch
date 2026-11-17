@@ -42,8 +42,7 @@ Patch Groups
 				  icon:  function (row) { return canEditMembers(row) ? 'fa-list-ul' : 'fa-search'; },
 				  title: function (row) { return canEditMembers(row) ? 'Add/Remove Patches' : 'View Patches'; },
 				  onClick: function (row) {
-					MPModal.open({ title: 'Add/Remove Patches : ' + row.name, iframe: '/patches/group/edit/' + row.id,
-					               size: 'wide', height: '80vh', footer: false });
+					WizardNavigation.open('/patches/group/edit/' + encodeURIComponent(row.id));
 				  } },
 				{ name: 'edit', icon: 'fa-pencil', title: 'Edit Patch Group Info',
 				  show: function (row) { return canEditMembers(row) && isOwner(row); },

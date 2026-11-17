@@ -1023,11 +1023,11 @@ def patchGroupContentEdit(id):
 
 		_results.append(_row)
 
-	_type = "false"
-	if isPatchGroupOwner(id):
-		_type = "true"
+	_canEdit = bool(localAdmin() or adminRole() or isPatchGroupOwner(id))
+	_title = '{} : {}'.format('Add/Remove Patches' if _canEdit else 'View Patches', patchGroup.name)
 
-	return render_template('patches/patch_group_patches.html', name=patchGroup.name, pid=id, data=_results, columns=columns, isOwner=_type, groupID=id)
+	return render_template('patches/patch_group_patches.html', name=patchGroup.name, pid=id, data=_results, columns=columns, groupID=id,
+						   canEdit=_canEdit, page_title=_title, return_url=url_for('patches.patchGroups'))
 
 @patches.route('/group/list/<group_id>')
 @login_required
@@ -1161,6 +1161,47 @@ def patchGroupPatchesSave(group_id):
 		log_Error("{} does not have permission to save content for patch group {}.".format(session.get('user'), group_id))
 		return json.dumps({}), 403
 
+	return _publishPatchGroup(group_id)
+
+''' AJAX Method, sets which of the shown patches are in the group, then publishes the group '''
+@patches.route('/group/select/<group_id>', methods=['POST'])
+@login_required
+def patchGroupContentSelect(group_id):
+	if not localAdmin() and not adminRole() and not isPatchGroupOwner(group_id):
+		log_Error("{} does not have permission to change content for patch group {}.".format(session.get('user'), group_id))
+		return json.dumps({'errormsg': 'You do not have permission to change this patch group.'}), 403
+
+	_body = request.get_json(silent=True) or {}
+	_shown = _body.get('shown')
+	_selected = _body.get('selected')
+	if not isinstance(_shown, list) or not isinstance(_selected, list):
+		return json.dumps({'errormsg': 'Missing the list of shown and selected patches.'}), 400
+
+	# Only patches the page listed can change, the group may hold others that its type hides from the list
+	_shown = set(str(i) for i in _shown)
+	_selected = set(str(i) for i in _selected) & _shown
+
+	_current = {}
+	for r in MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all():
+		_current.setdefault(r.patch_id, []).append(r)
+
+	for patch_id in _selected:
+		if patch_id not in _current:
+			log("{} added patch {} to patch group {}.".format(session.get('user'), patch_id, group_id))
+			qryAdd = MpPatchGroupPatches()
+			setattr(qryAdd, 'patch_group_id', group_id)
+			setattr(qryAdd, 'patch_id', patch_id)
+			db.session.add(qryAdd)
+
+	for patch_id in _shown - _selected:
+		for r in _current.get(patch_id, []):
+			log("{} removed patch {} from patch group {}.".format(session.get('user'), patch_id, group_id))
+			db.session.delete(r)
+
+	db.session.commit()
+	return _publishPatchGroup(group_id)
+
+def _publishPatchGroup(group_id):
 	_now = datetime.now()
 	dts = _now.strftime('%Y%m%d%H%M%S')
 
