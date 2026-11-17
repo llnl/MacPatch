@@ -13,7 +13,7 @@ import os
 import hashlib
 import shutil
 import json
-import time
+import time as _time  # not 'time': the star import from model.py brings in datetime.time and would replace it
 
 from datetime import datetime
 from dateutil.parser import parse
@@ -1211,14 +1211,14 @@ def _publishPatchGroup(group_id):
 	_patchData['AppleUpdates'] = []
 	_patchData['CustomUpdates'] = []
 
-	_started = time.time()
+	_started = _time.time()
 	_patchGroupPatches = MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all()
 	_total = len(_patchGroupPatches) if _patchGroupPatches is not None else 0
 	log("Publishing patch group {}, building the data for {} patch(es).".format(group_id, _total))
 	if _patchGroupPatches is not None:
 		for _count, p in enumerate(_patchGroupPatches, 1):
 			if _count % 100 == 0:
-				log("Publishing patch group {}: {} of {} patches, {:.1f}s.".format(group_id, _count, _total, time.time() - _started))
+				log("Publishing patch group {}: {} of {} patches, {:.1f}s.".format(group_id, _count, _total, _time.time() - _started))
 			row = {}
 			patch = patchDataForPatchID(p.patch_id)
 			if patch is None:
@@ -1263,7 +1263,7 @@ def _publishPatchGroup(group_id):
 		db.session.add(pData)
 
 	db.session.commit()
-	log("{} saved content for patch group {}, {} patches in {:.1f}s.".format(session.get('user'), group_id, _total, time.time() - _started))
+	log("{} saved content for patch group {}, {} patches in {:.1f}s.".format(session.get('user'), group_id, _total, _time.time() - _started))
 	return json.dumps({'errorno': 0}), 200
 
 # Private
