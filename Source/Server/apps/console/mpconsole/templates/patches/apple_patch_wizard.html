@@ -1,5 +1,8 @@
 {% extends "wizard_base.html" %}
 
+{# keeps Patches > Apple > Patches open in the sidebar #}
+{% block bodyAttrs %} data-active-menu="{{ url_for('patches.apple') }}"{% endblock %}
+
 {% block styles %}
 	{{ super() }}
 
@@ -214,22 +217,14 @@
 					formData.append(fName, xeditors[i]['instance'].getValue());
 				}
 
-				$.ajax({
-					type:'POST',
-					url: '/patches/applePatchWizard/update',
-					data: formData,
-					cache: false,
-					processData: false,
-					contentType: false,
-					success: function(){
+				MPBusy.run(MPHttp.post('/patches/applePatchWizard/update', formData), { message: 'Saving...' })
+					.then(function () {
 						alert("Patch Updated Successfully");
 						WizardNavigation.returnToParent({{ wizard_return_url | tojson }});
-					},
-					error: function(jqXHR, textStatus, errorThrown){
+					})
+					.catch(function () {
 						alert("Patch Failed to Update");
-
-					}
-				});
+					});
 
 				return false;
 			}

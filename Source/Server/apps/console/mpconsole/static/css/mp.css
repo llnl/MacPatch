@@ -228,9 +228,28 @@ a.mp-editable.mp-editable-empty {
 	border-bottom-color: #999;
 }
 .mp-editable-form {
-	min-width: 150px;
+	min-width: 120px;
+	gap: 3px;
+}
+/* About 20% smaller than Bootstrap's small controls (31px high, 14px font) */
+.mp-editable-form .mp-editable-input,
+.mp-editable-form .btn {
+	height: 25px;
+	padding: 0 6px;
+	font-size: 12px;
+	line-height: 23px;
 }
 .mp-editable-form .mp-editable-input {
 	width: auto;
-	min-width: 90px;
+	min-width: 72px;
+}
+.mp-editable-form .btn {
+	width: 26px;
+	padding: 0;
+}
+.mp-editable-form .btn .fa {
+	font-size: 11px;
+}
+.mp-editable-form .mp-editable-error {
+	font-size: 11px;
 }

@@ -104,7 +104,7 @@
         var oldValue = row[column.field];
         var form = document.createElement('form');
         form.className = 'mp-editable-form form-inline';
-        form.style.cssText = 'display:flex;gap:4px;align-items:flex-start;flex-wrap:wrap;';
+        form.style.cssText = 'display:flex;align-items:flex-start;flex-wrap:wrap;';
 
         var input = buildInput(opts, oldValue);
         var ok = document.createElement('button');

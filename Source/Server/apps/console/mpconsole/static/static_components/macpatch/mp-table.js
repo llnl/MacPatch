@@ -58,6 +58,13 @@
 
     function resolve(v, row) { return typeof v === 'function' ? v(row) : v; }
 
+    /* Width that fits the icons: about 20px per icon, 21px for each separator, plus the cell padding.
+       Pages with a fixed layout can still pass actionsWidth. */
+    function defaultActionsWidth(count, sizeClass) {
+        var icon = sizeClass ? 26 : 20;
+        return count * icon + Math.max(0, count - 1) * 21 + 24;
+    }
+
     function actionColumn(actions, width, size) {
         var sizeClass = size === 'lg' ? 'fa-lg' : '';
         var events = {};
@@ -69,7 +76,7 @@
             field: 'operate',
             title: '',
             align: 'center',
-            width: width || 160,
+            width: width || defaultActionsWidth(actions.length, sizeClass),
             events: events,
             formatter: function (value, row) {
                 var items = actions

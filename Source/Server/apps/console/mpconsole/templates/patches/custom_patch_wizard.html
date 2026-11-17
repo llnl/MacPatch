@@ -1,5 +1,8 @@
 {% extends "wizard_base.html" %}
 
+{# keeps Patches > Custom open in the sidebar #}
+{% block bodyAttrs %} data-active-menu="{{ url_for('patches.custom') }}"{% endblock %}
+
 {% block styles %}
 	{{ super() }}
     <!-- Set MetaData -->
