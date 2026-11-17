@@ -4,7 +4,6 @@
 	{{ super() }}
     <link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
@@ -26,8 +25,8 @@
 {% block bodyPanel %}
 		<div id="toolbar">
 			{% if session.role[0] == 1 %}
-			<button id="addButton" type="button" class="btn btn-default" title="Add Detection Criterion"><i class="glyphicon glyphicon-plus"></i></button>
-			<button id="delButton" type="button" class="btn btn-default" title="Delete Detection Criteria"><i class="glyphicon glyphicon-trash"></i></button>
+			<button id="addButton" type="button" class="btn btn-default" title="Add Detection Criterion"><i class="fa fa-plus"></i></button>
+			<button id="delButton" type="button" class="btn btn-default" title="Delete Detection Criteria"><i class="fa fa-trash"></i></button>
 			{% endif %}
 		</div>
 	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
@@ -40,135 +39,54 @@
 
     <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/ace-builds/src-min-noconflict/ace.js') }}"></script>
 
 	<script>
 
-		$( document ).ready(function()
-		{
-			$(function () {
-			  $('[data-toggle="popover"]').popover()
+		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
+		var allColumns = [{% for col in columnsAll %}{name: {{ col.name | tojson }}, info: {{ col.info | tojson }}}{{ ',' if not loop.last }}{% endfor %}];
+		var shown = {{ columns | tojson }};
+		var editors = {
+			active: { type: 'select', url: '/provision/criteria/active', source: [{value: 0, text: 'False'}, {value: 1, text: 'True'}] },
+			order:  { type: 'text',   url: '/provision/criteria/order' }
+		};
+
+		$('[data-toggle="popover"]').popover();
+
+		var table = MPTable.create('#table', {
+			url: '/provision/criteria/list',
+			idField: 'rid',
+			showRefresh: true,
+			showColumns: false,
+			pageList: ['10', '25', '50', '100', 'All'],
+			sortName: 'order',
+			resizable: true,
+			checkbox: isAdmin,
+			detailFormatter: detailFormatter,
+			size: 'lg',
+			actions: isAdmin ? [
+				{ name: 'edit', icon: 'fa-pencil', title: 'Edit Detection Criterion',
+				  onClick: function (row) { openCriteriaModal('/provision/criteria/edit/' + encodeURIComponent(row.rid), 'Edit Provision Detection Script'); } }
+			] : [],
+			columns: allColumns.filter(function (c) { return shown.indexOf(c.name) > -1; }).map(function (c) {
+				var col = { field: c.name, title: c.info, visible: c.name !== 'rid', sortable: true };
+				if (isAdmin && editors[c.name]) col.editable = editors[c.name];
+				return col;
 			})
-            $('#table').bootstrapTable( 
-            {
-                url: "/provision/criteria/list",
-                pagination: true,
-                sidePagination: 'client',
-                showRefresh: true,
-                pageList: ['10', '25', '50', '100', 'All'],
-                search: true,
-                idField: 'rid',
-				sortName: 'order',
-                sortable: true,
-                resizable: true,
-                detailFormatter: detailFormatter,
-                icons: {
-                    refresh: 'fa fa-refresh',
-                    toggle: 'fa fa-th-list',
-                    columns: 'fa fa-columns',
-                    detailOpen: 'glyphicon glyphicon-info-sign',
-                    detailClose: 'glyphicon glyphicon-minus-sign'
-                },
-                columns: [
-                {% if session.role[0] == 1 %}
-                {
-                        field: 'state',
-                        checkbox: true,
-                        rowspan: 1,
-                        align: 'center',
-                        valign: 'middle'
-                },
-                {% endif %}
-                {
-                    field: 'operate',
-                    title: '',
-                    align: 'center',
-                    valign: 'middle',
-                    class: 'text-nowrap',
-                    events: operateEvents,
-                    formatter: operateFormatter
-                },
-                {% for col in columnsAll %}
-
-                    {% if col.name in columns %}
-                        {
-                            field: '{{col.name}}',
-                            title: '{{col.info}}',
-                            {% if col.name ==  'rid' %}
-                            visible: false,
-                            {% endif %}
-                            sortable: true,
-
-                            {% if col.name == 'active' and session.role[0] == 1 %}
-                            editable: {
-                                type: 'select',
-                                url:  '/provision/criteria/active',
-                                source: [
-                                    {value: 0, text: 'False'},
-                                    {value: 1, text: 'True'},
-                                ]
-                            },
-                            {% endif %}
-                            {% if col.name == 'order' and session.role[0] == 1 %}
-                            editable: {
-                                type: 'text',
-                                url:  '/provision/criteria/order'
-                            },
-                            {% endif %}
-                        },
-                    {% endif %}
-
-                {% endfor %}
-                ]
-            });
-
 		});
+		var $table = table.$el;
 
 		function detailFormatter(index, row)
         {
-            var html = [];
-            var re = /\\n/g;
-            var re2 = /\\t/g;
-            var re3 = /<style([\S\s]*?)>([\S\s]*?)<\/style>/ig;
-            var decodedData = window.atob(row['description64']);
-            var description = decodedData.replace("Data('"," ");
-            description = description.replace("')"," ");
-            description = description.replace(re," ");
-            description = description.replace(re2," ");
-            description = description.replace(re3," ");
-            if (description.trim() == "") {
-                description = '<p>No Description</p>'
-            }
-            html.push(description);
-            return html.join('');
+            var description = window.atob(row.description64)
+                .replace("Data('", ' ').replace("')", ' ')
+                .replace(/\\n/g, ' ').replace(/\\t/g, ' ')
+                .replace(/<style([\S\s]*?)>([\S\s]*?)<\/style>/ig, ' ');
+            return description.trim() === '' ? '<p>No Description</p>' : description;
         }
 
-        window.operateEvents = {
-            'click .edit': function (e, value, row, index)
-            {
-                openCriteriaModal("/provision/criteria/edit/" + row['rid'], "Edit Provision Detection Script");
-            },
-            'click .description': function (e, value, row, index) {
-                alert('You click description action, row: ' + JSON.stringify(row));
-            }
-        };
-
-		function operateFormatter(value, row, index)
-        {
-            var htmlData = [];
-            {% if session.role[0] == 1 %}
-            htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Detection Criterion">');
-            htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
-            htmlData.push('</a>');
-            {% endif %}
-            return htmlData.join('');
-        }
-
-        var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
+        var $delButton = $('#delButton'), $addButton = $('#addButton');
         var criteriaEditor;
 
         function resizeCriteriaEditor() {
@@ -235,35 +153,16 @@
 		{
 			$delButton.click(function ()
 			{
-				var ids = $.map($table.bootstrapTable('getSelections'), function (row)
-				{
-					return row.rid;
-				});
+				var ids = table.selectedIds('rid');
+				if (!ids.length) { alert('Please choose a detection criterion to delete.'); return; }
 
-				var formData = new FormData();
-				formData.append("rid", ids);
-				$.ajax({
-					type:'DELETE',
-					url: '/provision/criteria/delete',
-					data: formData,
-					cache: false,
-					processData: false,
-					contentType: false,
-					success: function(){
-						alert("Criteria Deleted Successfully");
-						$('#modalDialog').modal('hide');
-						$table.bootstrapTable('remove', {
-							field: 'profileID',
-							values: ids
-						});
-						$table.bootstrapTable('refresh');
-					},
-					error: function(jqXHR, textStatus, errorThrown){
-						alert("Criteria Failed to Delete");
-						$('#modalDialog').modal('hide');
-					}
-				});
-				return true;
+				MPHttp.delete('/provision/criteria/delete', { rid: ids.toString() })
+					.then(function () {
+						alert('Criteria Deleted Successfully');
+						table.removeRows('rid', ids);
+						table.refresh();
+					})
+					.catch(function () { alert('Criteria Failed to Delete'); });
 			});
 
 			$addButton.click(function ()

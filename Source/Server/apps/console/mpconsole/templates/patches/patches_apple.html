@@ -3,8 +3,6 @@
 {% block styles %}
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block pageHeader %}
@@ -12,198 +10,95 @@ Apple Patches
 {%  endblock %}
 
 {% block bodyPanel %}
-
-	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true">
-		<div id="toolbar">
-			{% if session.role[0] == 1 %}
-			<button id="qaButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-cog"></i> Create -> QA</button>
-			<button id="prodButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-cog"></i> QA -> Prod</button>
-			{% endif %}
-		</div>
-	</table>
-
+	<div id="toolbar">
+		{% if session.role[0] == 1 %}
+		<button id="qaButton" type="button" class="btn btn-default"><i class="fa fa-cog"></i> Create -> QA</button>
+		<button id="prodButton" type="button" class="btn btn-default"><i class="fa fa-cog"></i> QA -> Prod</button>
+		{% endif %}
+	</div>
+	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
 {% endblock %}
 
 
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
+	(function () {
+		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
+		var hidden = ['rid', 'akey', 'description64', 'description', 'severity_int', 'osver_support'];
 
-	$( document ).ready(function()
-	{
-		$('#table').bootstrapTable(
-		{
-			url: "/patches/apple/list",
-			pagination: true,
-			sidePagination: 'client',
+		var editors = {
+			patch_state: { type: 'select', url: '/patches/apple/state',
+			               source: ['Create', 'QA', 'Production', 'Disabled'].map(function (s) { return {value: s, text: s}; }) },
+			severity: { type: 'select', url: '/patches/apple/severity',
+			            source: ['High', 'Medium', 'Low', 'Critical', 'Unknown'].map(function (s) { return {value: s, text: s}; }) }
+		};
+
+		var allColumns = [{% for col in columns %}{name: {{ col.name | tojson }}, info: {{ col.info | tojson }}}{{ ',' if not loop.last }}{% endfor %}];
+
+		var table = MPTable.create('#table', {
+			url: '/patches/apple/list',
+			idField: 'supatchname',
 			showRefresh: true,
+			showColumns: false,
 			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
-			idField: 'akey',
-			sortable: true,
 			detailView: true,
 			detailFormatter: detailFormatter,
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
-			},
-			idField: 'supatchname',
-			columns: [
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEvents,
-				formatter: operateFormatter
-			},
-			{% for col in columns %}
-			{
-				field: '{{col.name}}',
-				title: '{{col.info}}',
-				{% if col.name ==  'rid' or col.name == 'akey' or col.name == 'description64' or col.name == 'description'
-				or col.name == 'severity_int' or col.name == 'osver_support'
-				%}
-				visible: false,
-				{% endif %}
-				{% if col.name ==  'patch_state' and session.role[0] == 1 %}
-				editable: {
-					type: 'select',
-					url: '/patches/apple/state',
-					source: [
-						{value: 'Create', text: 'Create'},
-						{value: 'QA', text: 'QA'},
-						{value: 'Production', text: 'Production'},
-						{value: 'Disabled', text: 'Disabled'}
-					]
-				},
-				{% endif %}
-				{% if col.name == 'severity' and session.role[0] == 1 %}
-				editable: {
-					type: 'select',
-					url: '/patches/apple/severity',
-					source: [
-						{value: 'High', text: 'High'},
-						{value: 'Medium', text: 'Medium'},
-						{value: 'Low', text: 'Low'},
-						{value: 'Critical', text: 'Critical'},
-						{value: 'Unknown', text: 'Unknown'},
-					]
-				},
-				{% endif %}
-				sortable: true
-			},
-			{% endfor %}
-			],
-			data: [
-			{% for patch in data %}
-			{
-				{% for col in columns %}
-				{% if col.name ==  'severity'%}
-					{{col.name}}: '{{patch.severity}}',
-				{% elif col.name ==  'patch_state'%}
-					{{col.name}}: '{{patch.patch_state}}',
-				{% else %}
-					{{col.name}}: '{{patch[0][col.name]}}',
-				{% endif %}
-				{% endfor %}
-			},
-			{% endfor %}
-			]
+			size: 'lg',
+			actions: isAdmin ? [
+				{ name: 'edit', icon: 'fa-pencil', title: 'Edit',
+				  onClick: function (row, index, e) {
+					e.preventDefault();
+					WizardNavigation.open('/patches/applePatchWizard/' + encodeURIComponent(row.akey));
+				  } }
+			] : [],
+			columns: allColumns.map(function (c) {
+				var col = { field: c.name, title: c.info, visible: hidden.indexOf(c.name) === -1, sortable: true };
+				if (isAdmin && editors[c.name]) col.editable = editors[c.name];
+				return col;
+			})
 		});
-	});
 
-	function detailFormatter(index, row) {
-		var html = [];
-		var re = /\\n/g;
-		var re2 = /\\t/g;
-		var re3 = /<style([\S\s]*?)>([\S\s]*?)<\/style>/ig;
-		var decodedData = window.atob(row['description64']);
-		var description = decodedData.replace("Data('"," ");
-		description = description.replace("')"," ");
-		description = description.replace(re," ");
-		description = description.replace(re2," ");
-		description = description.replace(re3," ");
-		if (description.trim() == "") {
-			description = '<p>No Description</p>'
+		function detailFormatter(index, row) {
+			var description = window.atob(row.description64)
+				.replace("Data('", ' ').replace("')", ' ')
+				.replace(/\\n/g, ' ').replace(/\\t/g, ' ')
+				.replace(/<style([\S\s]*?)>([\S\s]*?)<\/style>/ig, ' ');
+			return description.trim() === '' ? '<p>No Description</p>' : description;
 		}
-		html.push(description);
-		return html.join('');
-	}
 
-	function operateFormatter(value, row, index)
-	{
-		if ( '{{session.role[0]}}' == 1 ) {
-			return [
-				'<div class="buttonGroup">',
-				'<div class="buttonItem">',	
-				'<a class="edit" href="javascript:void(0)" title="Edit">',
-				'<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>',
-				'</a>&nbsp;',
-				'</div></div>'
-			].join('');
-		} else {
-			return [
-				'<i class="fa fa-pencil fa-lg icon-invisible" aria-hidden="true"></i>',
-				'&nbsp;'
-			].join('');
-		}
-	}
-
-	var $_table = $('#table');
-	window.operateEvents = {
-		'click .edit': function (e, value, row, index)
-		{
-			e.preventDefault();
-			WizardNavigation.open("/patches/applePatchWizard/" + encodeURIComponent(row['akey']));
-		},
-		'click .description': function (e, value, row, index)
-		{
-			alert('You click description action, row: ' + JSON.stringify(row));
-		}
-	};
-
-	(function ($) {
+		/* Create -> QA and QA -> Production for every Apple patch */
 		var pending = false;
 		function migratePatches(source, target, url) {
 			if (pending || !confirm('Are you sure you want to change all Apple patches in "' + source + '" to "' + target + '"?')) return;
 			pending = true;
-			var $buttons = $('#qaButton, #prodButton');
-			$buttons.prop('disabled', true);
-			$.ajax({url: url, type: 'GET', cache: false, dataType: 'json'})
-				.done(function (response) {
+			var buttons = [document.getElementById('qaButton'), document.getElementById('prodButton')];
+			buttons.forEach(function (b) { b.disabled = true; });
+
+			MPBusy.run(MPHttp.getJSON(url), { message: 'Saving...' })
+				.then(function (response) {
 					if (!Number.isInteger(response.updated) || response.updated < 0) {
 						alert('The server did not confirm the patch state change. Refresh the page and try again.');
 						return;
 					}
-					$('#table').bootstrapTable('refresh');
-					if (response.updated === 0) {
-						alert('No Apple patches are currently in the "' + source + '" state.');
-					} else {
-						alert('Moved ' + response.updated + ' Apple patches from ' + source + ' to ' + target + '.');
-					}
+					table.refresh();
+					alert(response.updated === 0
+						? 'No Apple patches are currently in the "' + source + '" state.'
+						: 'Moved ' + response.updated + ' Apple patches from ' + source + ' to ' + target + '.');
 				})
-				.fail(function (xhr) {
-					if (xhr.status === 401 && xhr.getResponseHeader('X-MacPatch-Login')) return;
-					var response = xhr.responseJSON;
-					alert(response && response.errormsg || 'The Apple patch states could not be saved. Please try again.');
+				.catch(function (err) {
+					if (err.status === 401) return;       // the login redirect is already under way
+					alert(MPHttp.errorMessage(err) || 'The Apple patch states could not be saved. Please try again.');
 				})
-				.always(function () {
+				.then(function () {
 					pending = false;
-					$buttons.prop('disabled', false);
+					buttons.forEach(function (b) { b.disabled = false; });
 				});
 		}
-		$(function () {
-			$('#qaButton').click(function () { migratePatches('Create', 'QA', '/patches/apple/bulk/toQA'); });
-			$('#prodButton').click(function () { migratePatches('QA', 'Production', '/patches/apple/bulk/toProd'); });
-		});
-	}(jQuery));
 
+		document.getElementById('qaButton')?.addEventListener('click', function () { migratePatches('Create', 'QA', '/patches/apple/bulk/toQA'); });
+		document.getElementById('prodButton')?.addEventListener('click', function () { migratePatches('QA', 'Production', '/patches/apple/bulk/toProd'); });
+	}());
 	</script>
 {% endblock %}
