@@ -15,6 +15,7 @@
 		<button id="addButton" type="button" class="btn btn-default" title="New Software Task"><i class="fa fa-plus"></i></button>
 		<button id="deleteButton" type="button" class="btn btn-default" title="Delete Software Task"><i class="fa fa-trash"></i></button>
 		{% endif %}
+		<button id="refreshButton" type="button" class="btn btn-default" title="Refresh"><i class="fa fa-refresh"></i></button>
 	</div>
 	<table id="table" class="table table-bordered table-sm table-striped" data-toolbar="#toolbar"></table>
 {% endblock %}
@@ -28,24 +29,25 @@
 		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
 
 		var table = MPTable.create('#table', {
+			url: '/software/tasks/list',
 			idField: 'tuuid',
 			showColumns: false,
 			checkbox: isAdmin,
 			columns: {{ data["columns"] | tojson }},
-			data: {{ data["rows"] | tojson }},
 			size: 'lg',
 			actionsWidth: 60,
 			actions: isAdmin ? [
 				{ name: 'edit', icon: 'fa-pencil', title: 'Edit',
 				  onClick: function (row) {
-					MPModal.open({ title: 'Edit Software Task', url: '/software/task/edit/' + encodeURIComponent(row.tuuid), size: 'wide' });
+					WizardNavigation.open('/software/task/edit/' + encodeURIComponent(row.tuuid));
 				  } }
 			] : []
 		});
 
+		document.getElementById('refreshButton').addEventListener('click', function () { table.refresh(); });
+
 		document.getElementById('addButton')?.addEventListener('click', function () {
-			MPModal.open({ title: 'New Software Task', url: '/software/task/new', size: 'wide',
-			               onHidden: function () { table.refresh(); } });
+			WizardNavigation.open('/software/task/new');
 		});
 
 		document.getElementById('deleteButton')?.addEventListener('click', function () {

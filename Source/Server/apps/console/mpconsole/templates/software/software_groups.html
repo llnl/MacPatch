@@ -39,9 +39,7 @@
 				  icon:  isAdmin ? 'fa-th-list' : 'fa-search',
 				  title: isAdmin ? 'Add/Remove Software Tasks' : 'View Software Tasks',
 				  onClick: function (row) {
-					MPModal.open({ title: 'Add/Remove Software Tasks : ' + row.gName,
-					               iframe: '/software/group/' + encodeURIComponent(row.gid) + '/tasks',
-					               size: 'wide', height: '80vh', footer: false });
+					WizardNavigation.open('/software/group/' + encodeURIComponent(row.gid) + '/tasks');
 				  } },
 				{ name: 'edit', icon: 'fa-pencil', title: 'Edit Software Group Info',
 				  show: function () { return isAdmin; },
@@ -77,22 +75,6 @@
 
 		document.getElementById('addButton')?.addEventListener('click', function () {
 			MPModal.open({ title: 'Add Software Group', url: '/software/group/add/' + guid(), height: '200px' });
-		});
-
-		/* Saving the tasks shown in the iframe dialog */
-		document.getElementById('modalSaveButton').addEventListener('click', function () {
-			var frame = document.getElementById('modaliFrame');
-			if (!frame) return;
-			var groupEl = (frame.contentDocument || frame.contentWindow.document).getElementById('group_id');
-			var gid = groupEl && groupEl.textContent.trim();
-			if (!gid) return;
-
-			MPHttp.get('/software/group/' + encodeURIComponent(gid) + '/tasks/save')
-				.then(function () {
-					alert('Software tasks data saved successfully.');
-					MPModal.close();
-				})
-				.catch(function (err) { alert(MPHttp.errorMessage(err)); });
 		});
 	}());
 	</script>

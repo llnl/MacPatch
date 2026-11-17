@@ -128,7 +128,13 @@ def swGroupSave():
 		if is_admin >= 1:
 			setattr(mpsg, 'gName', group_name)
 			setattr(mpsg, 'gDescription', group_description)
-		if is_admin == 2:
+		if is_admin == 2 and group_owner:
+			if mpsgp is None:
+				# Group has no owner record yet (older groups), create it
+				mpsgp = MpSoftwareGroupPrivs()
+				setattr(mpsgp, 'gid', group_id)
+				setattr(mpsgp, 'isowner', 1)
+				db.session.add(mpsgp)
 			setattr(mpsgp, 'uid', group_owner)
 
 	else:
@@ -311,44 +317,44 @@ def saveGroupFilter(group_id):
 	-------------------------------------------------
 '''
 
+# (field, title, visible)
+_TASK_COLUMNS = [('tuuid','Task ID',0),('primary_suuid','Software ID',0),('name','Name',1),('active','Active',1),('sw_task_type','Task Type',1),
+	('sw_start_datetime','Valid From',1),('sw_end_datetime','Valid To',1),('mdate','Mod Date',1)]
+
 @software.route('/tasks')
 @login_required
 def tasks():
 
-	columns = [('tuuid','Task ID',0),('primary_suuid','Software ID',0),('name','Name',1),('active','Active',1),('sw_task_type','Task Type',1),
-	('sw_start_datetime','Valid From',1),('sw_end_datetime','Valid To',1),('mdate','Mod Date',1)]
-	colsForQuery = ['tuuid','primary_suuid','name','active','sw_task_type','sw_start_datetime','sw_end_datetime','mdate']
+	_columns = []
+	for c, t, v in _TASK_COLUMNS:
+		row = {'field': c, 'title': t, 'sortable': True}
+		if v == 0:
+			row['visible'] = False
+		_columns.append(row)
+
+	return render_template('software/software_tasks.html', data={'columns': _columns}, isAdmin=True)
+
+# AJAX request, rows for the software tasks table
+@software.route('/tasks/list')
+@login_required
+def tasksList():
 
 	qSWTasks = MpSoftwareTask.query.order_by(MpSoftwareTask.mdate.desc()).all()
 	_data = []
 	for d in qSWTasks:
 		row = {}
-		for c in colsForQuery:
-
+		for c, t, v in _TASK_COLUMNS:
 			if c in ('sw_start_datetime','sw_end_datetime','mdate'):
 				dt_obj = getattr(d, c)
-				if dt_obj:
-					row[c] = getattr(d, c).strftime("%Y-%m-%d %H:%M:%S")
+				row[c] = dt_obj.strftime("%Y-%m-%d %H:%M:%S") if dt_obj else ''
 			elif c == 'active':
-				_a = getattr(d, c)
-				row[c] = "Yes" if _a == 1 else "No"
+				row[c] = "Yes" if getattr(d, c) == 1 else "No"
 			else:
 				row[c] = getattr(d, c)
 
 		_data.append(row)
 
-	_columns = []
-	for c, t, v in columns:
-			row = {}
-			row['field'] = c
-			row['title'] = t
-			row['sortable'] = True
-			if v == 0:
-				row['visible'] = False
-
-			_columns.append(row)
-
-	return render_template('software/software_tasks.html', data={'rows':_data,'columns': _columns}, isAdmin=True)
+	return json.dumps(_data, default=json_serial), 200
 
 @software.route('/task/edit/<id>')
 @login_required
@@ -364,7 +370,8 @@ def taskEdit(id):
 	_data["Task"] = mpst.asDict
 	_data["SoftwareList"] = _swPkgs
 
-	return render_template('software/software_task_modify.html', data=_data, type='edit', isAdmin=True)
+	return render_template('software/software_task_modify.html', data=_data, type='edit', isAdmin=True,
+						   wizard_title='Edit Software Task', wizard_return_url=url_for('software.tasks'))
 
 @software.route('/task/new')
 @login_required
@@ -381,7 +388,8 @@ def taskNew():
 	_data["SoftwareList"] = _swPkgs
 	_data["NEWID"] = str(uuid.uuid4())
 
-	return render_template('software/software_task_modify.html', data=_data, type='new', isAdmin=True)
+	return render_template('software/software_task_modify.html', data=_data, type='new', isAdmin=True,
+						   wizard_title='New Software Task', wizard_return_url=url_for('software.tasks'))
 
 ''' AJAX Request '''
 @software.route('/task/save/<id>', methods=['POST'])
@@ -522,7 +530,13 @@ def swGroupTasks(id):
 	_isOwner = isOwnerOfSWGroup(id)
 	_isAdmin = isAdminForSWGroup(id)
 
-	return render_template('software/software_group_tasks.html', data={'rows':_data,'columns': _columns}, group_id=id, isOwner=_isOwner, isAdmin=_isAdmin)
+	_group = MpSoftwareGroup.query.filter(MpSoftwareGroup.gid == id).first()
+	_title = 'Add/Remove Software Tasks' if (_isOwner or _isAdmin) else 'Software Tasks'
+	if _group is not None:
+		_title = '{} : {}'.format(_title, _group.gName)
+
+	return render_template('software/software_group_tasks.html', data={'rows':_data,'columns': _columns}, group_id=id, isOwner=_isOwner, isAdmin=_isAdmin,
+						   page_title=_title, return_url=url_for('software.groups'))
 
 ''' AJAX Method '''
 @software.route('/group/<id>/task/add/<task_id>')
@@ -564,6 +578,41 @@ def swGroupTasksRemove(id, task_id):
 @software.route('/group/<id>/tasks/save')
 @login_required
 def swGroupTasksSave(id):
+	return _publishGroupTasks(id)
+
+''' AJAX Method, saves the whole set of selected tasks for a group at once '''
+@software.route('/group/<id>/tasks/select', methods=['POST'])
+@login_required
+def swGroupTasksSelect(id):
+	if not (isOwnerOfSWGroup(id) or isAdminForSWGroup(id)):
+		log_Error("{} does not have permission to change software tasks for group {}.".format(session.get('user'), id))
+		return json.dumps({'error':403,'errormsg':"You do not have permission to change this software group."}), 403
+
+	_body = request.get_json(silent=True) or {}
+	_selected = _body.get('selected')
+	if not isinstance(_selected, list):
+		return json.dumps({'error':400,'errormsg':"Missing list of selected tasks."}), 400
+	_selected = set(str(t) for t in _selected)
+
+	_existing = {}
+	for r in MpSoftwareGroupTasks.query.filter(MpSoftwareGroupTasks.sw_group_id == id).all():
+		_existing[r.sw_task_id] = r
+
+	for t in MpSoftwareTask.query.all():
+		_sel = 1 if t.tuuid in _selected else 0
+		if t.tuuid in _existing:
+			setattr(_existing[t.tuuid], 'selected', _sel)
+		elif _sel:
+			mpt = MpSoftwareGroupTasks()
+			setattr(mpt, 'sw_group_id', id)
+			setattr(mpt, 'sw_task_id', t.tuuid)
+			setattr(mpt, 'selected', 1)
+			db.session.add(mpt)
+
+	db.session.commit()
+	return _publishGroupTasks(id)
+
+def _publishGroupTasks(id):
 	tData = tasksForGroup(id)
 	if tData is None:
 		log_Error("Error: No data to write to database.")
@@ -571,6 +620,10 @@ def swGroupTasksSave(id):
 
 	isNewRecord=False
 	qGroup = MpSoftwareGroup.query.filter(MpSoftwareGroup.gid == id).first()
+	if qGroup is None:
+		log_Error("Software group {} does not exist, not writing its task data.".format(id))
+		return json.dumps({'error':404,'errormsg':"Software group not found."}), 404
+
 	qData = MpSoftwareTasksData.query.filter(MpSoftwareTasksData.gid == id).first()
 	if qData is None:
 		isNewRecord=True
@@ -1144,16 +1197,31 @@ def duplicateSWPackage(id):
 	return json.dumps({'error': 0}), 200
 
 ''' AJAX Method '''
-@software.route('/package/delete/<id>')
+@software.route('/package/dependents/<ids>')
 @login_required
-def deleteSWPackage(id):
+def swPackageDependents(ids):
+	"""Read only: the software tasks that use these packages, and the groups those tasks are in"""
+	from .checks import findPackageDependents
+	package_ids = [i for i in ids.split(',') if i]
+	return json.dumps({'error': 0, 'packages': findPackageDependents(package_ids)}), 200
 
-	qSW = MpSoftware.query.filter(MpSoftware.suuid == id).first()
-	qSWC = MpSoftwareCriteria.query.filter(MpSoftwareCriteria.suuid == id).all()
-	qSWR = MpSoftwareRequisits.query.filter(MpSoftwareRequisits.suuid == id).all()
+@software.route('/package/delete/<ids>')
+@login_required
+def deleteSWPackage(ids):
+	from .checks import findPackageDependents, deleteSoftwareTasks
 
+	package_ids = [i for i in ids.split(',') if i]
+	packages = MpSoftware.query.filter(MpSoftware.suuid.in_(package_ids)).all()
+	if len(packages) == 0:
+		return json.dumps({'error': 404, 'errormsg': 'Software package not found.'}), 404
 
-	if qSW is not None:
+	# Tasks that use these packages go first, removed from their groups, so nothing is left pointing at a missing package
+	task_ids = [t['tuuid'] for dep in findPackageDependents([p.suuid for p in packages]) for t in dep['tasks']]
+	if task_ids:
+		log_Info("[deleteSWPackage] User %s deleting %d software task(s) that use the package(s) being deleted" % (session.get('user'), len(task_ids)))
+		deleteSoftwareTasks(task_ids, republish=_publishGroupTasks, log=log_Info)
+
+	for qSW in packages:
 		# Need to delete from file system
 		try:
 			if qSW.sw_useS3 == 1:
@@ -1169,19 +1237,15 @@ def deleteSWPackage(id):
 		except OSError as e:
 			log_Error("Error Delete Dir: %s - %s." % (e.filename, e.strerror))
 
-	db.session.delete(qSW)
-
-	if qSWC:
-		for c in qSWC:
+		db.session.delete(qSW)
+		for c in MpSoftwareCriteria.query.filter(MpSoftwareCriteria.suuid == qSW.suuid).all():
 			db.session.delete(c)
-
-	if qSWR:
-		for c in qSWR:
+		for c in MpSoftwareRequisits.query.filter(MpSoftwareRequisits.suuid == qSW.suuid).all():
 			db.session.delete(c)
 
 	db.session.commit()
 
-	return json.dumps({'error': 0}), 200
+	return json.dumps({'error': 0, 'deletedTasks': len(task_ids)}), 200
 
 @software.route('/s3url/<id>', methods=['GET'])
 @login_required

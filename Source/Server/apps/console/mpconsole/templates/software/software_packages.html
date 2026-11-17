@@ -75,14 +75,41 @@
 
 		on('addButton', function () { WizardNavigation.open('/software/package/add'); });
 
+		/* Text for the confirmation, lists the tasks that go with the packages and the groups they are in */
+		function describeDependents(packages) {
+			var lines = [];
+			packages.forEach(function (pkg) {
+				lines.push('');
+				lines.push('Package: ' + pkg.name);
+				pkg.tasks.forEach(function (t) {
+					lines.push('   Software task: ' + t.name + (t.active === 1 ? '' : ' (inactive)'));
+					t.groups.forEach(function (g) { lines.push('      software group: ' + (g.name || '(group no longer exists)')); });
+					t.clientGroups.forEach(function (g) { lines.push('      client group: ' + (g.name || '(group no longer exists)')); });
+					if (!t.groups.length && !t.clientGroups.length) lines.push('      (not assigned to any group)');
+				});
+			});
+			return lines.join('\n');
+		}
+
 		on('delButton', function () {
 			var s = selected();
-			if (!confirm('Are you sure to delete (' + s.names + ') ?')) return;
+			if (s.ids.length === 0) { alert('Please choose a package to delete.'); return; }
 
-			MPHttp.getJSON('/software/package/delete/' + s.ids)
-				.then(function (result) {
-					if (result.error !== 0) throw new Error('error ' + result.error);
-					table.removeRows('suuid', s.ids);
+			var ids = s.ids.join(',');
+			MPHttp.getJSON('/software/package/dependents/' + encodeURIComponent(ids))
+				.then(function (info) {
+					var message = 'Are you sure to delete (' + s.names + ') ?';
+					if (info.packages.length) {
+						message = 'These software package(s) are used by software tasks:\n' + describeDependents(info.packages) +
+							'\n\nDeleting the package(s) will also remove those tasks from their groups and delete the tasks.\n\nDelete (' + s.names + ') ?';
+					}
+					if (!confirm(message)) return;
+
+					return MPBusy.run(MPHttp.getJSON('/software/package/delete/' + encodeURIComponent(ids)), { message: 'Deleting...', button: document.getElementById('delButton') })
+						.then(function (result) {
+							if (result.error !== 0) throw new Error('error ' + result.error);
+							table.removeRows('suuid', s.ids);
+						});
 				})
 				.catch(function () { MPModal.error('Error, Removing Software Package', 'Delete item error!'); });
 		});

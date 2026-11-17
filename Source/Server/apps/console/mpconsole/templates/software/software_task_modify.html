@@ -1,38 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-	<meta charset="utf-8">
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<meta name="description" content="">
-	<meta name="author" content="">
+{% extends "base.html" %}
 
-	<title>
-		{% block title %}
-		{% endblock %}
-	</title>
+{% block title %}{{ wizard_title }}{% endblock %}
+{% block pageHeader %}{{ wizard_title }}{% endblock %}
 
-	{% block styles %}
-		<!-- Bootstrap Core CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-		<!-- Custom CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
+{% block styles %}
+	{{ super() }}
+	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
+{% endblock %}
 
-		<!-- Custom Fonts -->
-		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
-		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-
-
-	{% endblock %}
-	<meta name="csrf-token" content="{{ csrf_token() }}">
-</head>
-
-<body>
-	{% block bodyPanel %}
-		<form role="form" id="myForm">
+{% block bodyPanel %}
+	<form role="form" id="myForm">
 			<div class="form-group">
 				<div class="well well-sm">
 					<label><h3>Task - Software Package Information</h3></label>
@@ -93,9 +71,9 @@
 							</div>
 							<div class="col-md-5">
 								<div class='input-group date' id='sw_start_datetime'>
-									<input class="form-control" type="text" name="sw_start_datetime" value="{{data['Task']['sw_start_datetime'] or '1970-01-01 12:00:00' }}">
-									<span class="input-group-addon">
-										<span class="glyphicon glyphicon-calendar"></span>
+									<input class="form-control" type="text" name="sw_start_datetime" value="{{ ((data['Task']['sw_start_datetime'] or '1970-01-01 12:00:00')|string)[:16] }}">
+									<span class="input-group-addon input-group-text">
+										<span class="fa fa-calendar"></span>
 									</span>
 								</div>
 							</div>
@@ -109,9 +87,9 @@
 							</div>
 							<div class="col-md-5">
 								<div class='input-group date' id='sw_end_datetime'>
-									<input class="form-control" type="text" name="sw_end_datetime" value="{{data['Task']['sw_end_datetime'] or '1970-01-01 12:00:00' }}">
-									<span class="input-group-addon">
-										<span class="glyphicon glyphicon-calendar"></span>
+									<input class="form-control" type="text" name="sw_end_datetime" value="{{ ((data['Task']['sw_end_datetime'] or '1970-01-01 12:00:00')|string)[:16] }}">
+									<span class="input-group-addon input-group-text">
+										<span class="fa fa-calendar"></span>
 									</span>
 								</div>
 							</div>
@@ -135,61 +113,49 @@
 				</div>
 			</div>
 		</form>
-	{% endblock %}
 
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
+	<div class="mt-3">
+		<button type="button" class="btn btn-primary" id="saveButton">Save</button>
+		<button type="button" class="btn btn-default" id="cancelButton">Cancel</button>
+	</div>
+{% endblock %}
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
-
+{% block javascript %}
+	{{ super() }}
 	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">
+	<script>
+	(function () {
+		var returnUrl = {{ wizard_return_url | tojson }};
 
-	{% block javascript %}
+		$('#sw_start_datetime').datetimepicker({
+			defaultDate: {{ ((data['Task']['sw_start_datetime'] or '1970-01-01 12:00:00')|string)[:16] | tojson }},
+			format: 'yyyy-mm-dd HH:ii'
+		});
+		$('#sw_end_datetime').datetimepicker({
+			defaultDate: {{ ((data['Task']['sw_end_datetime'] or '2050-01-01 12:00:00')|string)[:16] | tojson }},
+			format: 'yyyy-mm-dd HH:ii'
+		});
 
+		document.getElementById('cancelButton').addEventListener('click', function () {
+			WizardNavigation.returnToParent(returnUrl);
+		});
 
-		<script type="text/javascript">
-			$(document).ready(function()
-			{
-				$('#sw_start_datetime').datetimepicker({
-					defaultDate: '{{data['Task']['sw_start_datetime'] or '1970-01-01 12:00:00'}}',
-					format: 'yyyy-mm-dd HH:ii:ss'
-				});
-				$('#sw_end_datetime').datetimepicker( {
-					defaultDate: '{{data['Task']['sw_end_datetime'] or '2050-01-01 12:00:00'}}',
-					format: 'yyyy-mm-dd HH:ii:ss'
-				});
+		document.getElementById('saveButton').addEventListener('click', function () {
+			var data = {};
+			$('#myForm').serializeArray().forEach(function (x) { data[x.name] = x.value; });
 
-				$("#modalSaveButton").click(function()
-				{
-					var data = {};
-					$('#myForm').serializeArray().map(function(x){data[x.name] = x.value;});
-
-					var _url = "/software/task/save/{{data['Task']['tuuid'] or data['NEWID']}}";
-					$.ajax({
-						url: _url,
-						type: 'POST',
-						cache: false,
-						data: data,
-						error: function (request, status, error)
-						{
-							jsonValue = jQuery.parseJSON( request.responseText );
-							alert(jsonValue.error);
-						},
-						success: function () {
-							alert("Software task saved successfully.");
-							$('#modalDialog').modal('hide');
-						}
-					});
-
-					$('#myForm') = '';
-				});
+			/* The picker has no seconds, always save them as 00 */
+			['sw_start_datetime', 'sw_end_datetime'].forEach(function (k) {
+				if (data[k]) data[k] = data[k].substring(0, 16) + ':00';
 			});
-		</script>
-	{% endblock %}
-</body>
 
-</html>
+			MPHttp.post('/software/task/save/' + encodeURIComponent({{ (data['Task']['tuuid'] or data['NEWID']) | tojson }}), data)
+				.then(function () {
+					alert('Software task saved successfully.');
+					WizardNavigation.returnToParent(returnUrl);
+				})
+				.catch(function (err) { alert(MPHttp.errorMessage(err)); });
+		});
+	}());
+	</script>
+{% endblock %}

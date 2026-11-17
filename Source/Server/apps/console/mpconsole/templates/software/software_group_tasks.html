@@ -1,128 +1,68 @@
-<!DOCTYPE html>
-<meta name="csrf-token" content="{{ csrf_token() }}">
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+{% block pageHeader %}{{ page_title }}{% endblock %}
+
+{% block bodyAttrs %} data-active-menu="{{ url_for('software.groups') }}"{% endblock %}
+
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
-	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
-
+	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
+{% endblock %}
 
-{%  endblock %}
+{% block bodyPanel %}
+	<table id="tasksTable" class="table table-bordered table-sm table-striped"></table>
 
-{% block body %}
-	<div>
-		<table id="tasksTable" class="table table-bordered table-sm table-striped" data-toolbar="#tasksToolbar" data-show-export="true" data-show-columns="true">
-			<div id="tasksToolbar">
-			</div>
-		</table>
-		<div id="group_id" hidden>{{group_id}}</div>
-	</div>
-	<div id="overlay">
-		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
-		<h1 style="text-align: center; color: white; ">Saving...</h1>
+	<div class="mt-3">
+		{% if isOwner == true or isAdmin == true %}
+		<button type="button" class="btn btn-primary" id="saveButton">Save</button>
+		{% endif %}
+		<button type="button" class="btn btn-default" id="cancelButton">{{ 'Cancel' if (isOwner == true or isAdmin == true) else 'Close' }}</button>
 	</div>
 {% endblock %}
 
 
 {% block javascript %}
-	<!-- jQuery -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script>
-	var _cols = [{
-					field: 'selected',
-					{% if session.role[0] == 1 %}
-					checkbox: true,
-					{% else %}
-					checkbox: false,
-					visible: false,
-					{% endif %}
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle'
-				},];
+	(function () {
+		var groupId   = {{ group_id | tojson }};
+		var returnUrl = {{ return_url | tojson }};
+		var canEdit   = {{ (isOwner == true or isAdmin == true) | tojson }};
 
-	_cols.push.apply(_cols, {{data["columns"] | tojson}});
-	var _rows = {{data["rows"] | tojson}};
-
-
-
-	$( document ).ready(function()
-	{
-		$('#tasksTable').bootstrapTable(
-		{
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '20', '40', '100', 'All'],
+		var table = MPTable.create('#tasksTable', {
+			idField: 'sw_task_id',
 			pageSize: 20,
-			search: true,
-			showRefresh: false,
-			resizable: true,
-			sortable: true,
+			pageList: ['10', '20', '40', '100', 'All'],
 			showColumns: false,
-			detailView: false,
-			maintainSelected: true,
 			checkboxHeader: false,
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
-			},
-			idField: 'id',
 			sortName: 'postdate',
 			sortOrder: 'desc',
-			columns: _cols,
-			data: _rows
+			checkbox: canEdit,
+			stateField: 'selected',
+			columns: {{ data["columns"] | tojson }},
+			data: {{ data["rows"] | tojson }}
 		});
 
-		removeSelected();
-		window.parent.$("#modalLoading").hide();
-	});
-
-	/* Removed the selected row color from the table */
-	function removeSelected() {
-		$('#tasksTable tr').each(function (i, row, element) {
-			$(this).removeClass('selected');
+		document.getElementById('cancelButton').addEventListener('click', function () {
+			WizardNavigation.returnToParent(returnUrl);
 		});
-	}
 
-	$('#tasksTable').on('check.bs.table', function (e, row, $element)
-	{
-		//This event fires every time a checkbox is checked
-		{% if isOwner == true or isAdmin == true %}
-			removeSelected();
-			$.get( "/software/group/{{group_id}}/task/add/" + row['sw_task_id']).done(function(data, status)
-			{
-				var result = JSON.parse(data);
-				if (result.error != 0) {
-					alert('An error was generated adding this patch to this group.');
-				}
-			});
-		{% endif %}
-	});
+		/* Nothing is saved until Save is pressed, checking a task only changes the table */
+		document.getElementById('saveButton')?.addEventListener('click', function () {
+			var selected = table.selectedIds('sw_task_id');
 
-	$('#tasksTable').on('uncheck.bs.table', function (e, row)
-	{
-		//This event fires every time a checkbox is unchecked
-		{% if isOwner == true or isAdmin == true %}
-			$.get( "/software/group/{{group_id}}/task/remove/" + row['sw_task_id']).done(function(data, status)
-			{
-				var result = JSON.parse(data);
-				if (result.error != 0) {
-					alert('An error was generated adding this patch to this group.');
-				}
-			});
-		{% endif %}
-	});
-
+			MPBusy.run(
+				MPHttp.sendJSON('/software/group/' + encodeURIComponent(groupId) + '/tasks/select', { selected: selected }),
+				{ message: 'Saving...', button: this }
+			)
+				.then(function () {
+					alert('Software tasks data saved successfully.');
+					WizardNavigation.returnToParent(returnUrl);
+				})
+				.catch(function (err) { alert(MPHttp.errorMessage(err)); });
+		});
+	}());
 	</script>
 {% endblock %}
