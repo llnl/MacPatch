@@ -3,7 +3,6 @@
 {% block styles %}
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 {%  endblock %}
 
 {% block pageHeader %}
@@ -27,9 +26,6 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
 	(function () {
 		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
