@@ -1215,12 +1215,18 @@ def _publishPatchGroup(group_id):
 	_patchGroupPatches = MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all()
 	_total = len(_patchGroupPatches) if _patchGroupPatches is not None else 0
 	log("Publishing patch group {}, building the data for {} patch(es).".format(group_id, _total))
+
+	# One query for every patch in the group. combined_patches_view is a UNION with DISTINCT, so
+	# looking its rows up one patch at a time made the database build the whole view for each patch.
+	_patchRows = patchDataForPatchIDs([p.patch_id for p in _patchGroupPatches]) if _patchGroupPatches else {}
+	log("Publishing patch group {}: loaded the patch data in {:.1f}s.".format(group_id, _time.time() - _started))
+
 	if _patchGroupPatches is not None:
 		for _count, p in enumerate(_patchGroupPatches, 1):
 			if _count % 100 == 0:
 				log("Publishing patch group {}: {} of {} patches, {:.1f}s.".format(group_id, _count, _total, _time.time() - _started))
 			row = {}
-			patch = patchDataForPatchID(p.patch_id)
+			patch = _patchRows.get(p.patch_id)
 			if patch is None:
 				# Patch ID no longer exists, delete it from all
 				# patch groups
@@ -1265,6 +1271,20 @@ def _publishPatchGroup(group_id):
 	db.session.commit()
 	log("{} saved content for patch group {}, {} patches in {:.1f}s.".format(session.get('user'), group_id, _total, _time.time() - _started))
 	return json.dumps({'errorno': 0}), 200
+
+# Private
+def patchDataForPatchIDs(patch_ids, chunk=500):
+	"""Rows of combined_patches_view for many patches in a few queries, as {patch id: row dict}"""
+	rows = {}
+	patch_ids = list(dict.fromkeys(patch_ids))
+	with db.engine.connect() as conn:
+		for start in range(0, len(patch_ids), chunk):
+			part = patch_ids[start:start + chunk]
+			params = dict(('p%d' % i, pid) for i, pid in enumerate(part))
+			sql = text("SELECT * from combined_patches_view Where id IN (" + ", ".join(':' + k for k in params) + ")")
+			for row in conn.execute(sql, params).mappings().all():
+				rows.setdefault(row['id'], dict(row))
+	return rows
 
 # Private
 def patchDataForPatchID(patch_id):
