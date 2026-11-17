@@ -18,6 +18,7 @@
  *   icon and title may be strings or functions(row).
  *   An action with href: function(row) renders a real link (new tab) instead of a click handler.
  *
+ *   editable on a column      click-to-edit cells, see mp-edit.js (type, url, source, validate, ...)
  *   checkbox: true           adds a leading checkbox column (use selections()/selectedIds(field))
  *   leadColumns: [ ... ]     extra columns placed after the action column (e.g. a Filter column)
  *   size: 'lg'               make action icons fa-lg
@@ -94,13 +95,28 @@
 
         var lead = [];
         if (options.checkbox) {
-            lead.push({ field: 'state', checkbox: true, align: 'center', valign: 'middle', width: 40 });
+            lead.push({ field: options.stateField || 'state', checkbox: true, align: 'center', valign: 'middle', width: 40 });
         }
         if (actions && actions.length) {
             lead.push(actionColumn(actions, options.actionsWidth, options.size));
         }
         options.columns = lead.concat(options.leadColumns || [], options.columns);
-        ['actionsWidth', 'checkbox', 'leadColumns', 'size'].forEach(function (k) { delete options[k]; });
+
+        // bootstrap-table clears every check on a page change unless maintainMetaData is set
+        // ('maintainSelected' was removed from the library, this is its replacement).  Any table with a
+        // checkbox column keeps its selection, whether the page used the checkbox option or its own column.
+        var hasCheckbox = options.columns.some(function (c) { return c.checkbox; });
+        if (hasCheckbox && options.maintainMetaData === undefined) options.maintainMetaData = true;
+
+        ['actionsWidth', 'checkbox', 'stateField', 'leadColumns', 'size'].forEach(function (k) { delete options[k]; });
+
+        // Editable columns: the column's formatter shows the editable link, clicks are handled by MPEdit.
+        // bootstrap-table's own editable extension is switched off, MPEdit replaces x-editable.
+        options.editable = false;
+        if (w.MPEdit) {
+            w.MPEdit.attach($table, options.columns, options.idField);
+            options.columns.forEach(function (c) { delete c.editable; });
+        }
 
         $table.bootstrapTable(options);
 

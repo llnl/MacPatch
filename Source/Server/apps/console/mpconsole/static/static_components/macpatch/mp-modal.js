@@ -35,6 +35,34 @@
         byId('modalBody').style.height = '';
     }
 
+    /* Scripts inserted through innerHTML are not executed by browsers (jQuery .html() did run them),
+     * but the fetched dialog fragments rely on their inline scripts, and on the libraries they load
+     * themselves (jQuery, the datetime picker, ...).  Re-create each script and run them strictly in
+     * document order: an external script must finish loading before the next script runs, because
+     * dynamically created scripts would otherwise load asynchronously. */
+    function runScripts(container) {
+        var chain = Promise.resolve();
+        container.querySelectorAll('script').forEach(function (old) {
+            chain = chain.then(function () {
+                return new Promise(function (resolve) {
+                    var fresh = document.createElement('script');
+                    for (var i = 0; i < old.attributes.length; i++) {
+                        fresh.setAttribute(old.attributes[i].name, old.attributes[i].value);
+                    }
+                    fresh.async = false;
+                    fresh.text = old.text;
+                    if (old.src) {
+                        fresh.onload = resolve;
+                        fresh.onerror = resolve;      // keep going, as jQuery did
+                    }
+                    old.replaceWith(fresh);
+                    if (!old.src) resolve();
+                });
+            });
+        });
+        return chain;
+    }
+
     function present(opts, content) {
         reset();
 
@@ -43,6 +71,7 @@
         var body = byId('modalBody');
         if (typeof content === 'string') {
             body.innerHTML = '<div id="myContent">' + content + '</div>';
+            runScripts(body);
         } else {
             body.replaceChildren(content);
         }

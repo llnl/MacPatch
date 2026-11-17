@@ -57,7 +57,7 @@
 	<meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
 
-<body id="page-top" class="mp-console">
+<body id="page-top" class="mp-console"{% block bodyAttrs %}{% endblock %}>
 	<nav class="mp-topbar navbar navbar-expand navbar-light topbar" aria-label="Account navigation">
 		<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button" aria-label="Toggle sidebar"><i class="fa fa-bars"></i></button>
 		<a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard.index') }}">
@@ -290,6 +290,8 @@
 	<script src="{{ url_for('static', filename='static_components/macpatch/wizard-navigation.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-http.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-modal.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-busy.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-edit.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-table.js') }}"></script>
 
 	<!-- Metis Menu Plugin JavaScript -->
@@ -329,8 +331,11 @@
 		$(document).ready(function()
 		{
 			var $menu = $("#side-menu");
+			// Pages that are not in the menu themselves (edit pages, ...) can name the item they belong
+			// under with data-active-menu on <body>, so its section stays open.
+			var activePath = document.body.getAttribute("data-active-menu") || window.location.pathname;
 			var $currentLink = $menu.find(".nav-link[href]").filter(function() {
-				return this.getAttribute("href") !== "#" && this.pathname === window.location.pathname;
+				return this.getAttribute("href") !== "#" && this.pathname === activePath;
 			});
 			$currentLink.addClass("active").closest("li").addClass("active");
 			$currentLink.parents("li").addClass("mm-active");

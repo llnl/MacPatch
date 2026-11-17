@@ -10,6 +10,7 @@
  *   MPHttp.post(url, data)          -> Promise<string>   (data: plain object or FormData, optional)
  *   MPHttp.getJSON(url)             -> Promise<object>
  *   MPHttp.postJSON(url, data)      -> Promise<object>   (parses the response body as JSON)
+ *   MPHttp.sendJSON(url, object)    -> Promise<object>   (POST with a JSON body, parses the JSON response)
  *   MPHttp.delete(url, data)        -> Promise<string>
  *   MPHttp.errorMessage(err)        -> the server's {"errormsg": ...} text, or a generic message
  */
@@ -36,7 +37,10 @@
             if (token) headers['X-CSRFToken'] = token;
         }
 
-        if (opts.data instanceof FormData) {
+        if (opts.json !== undefined) {
+            headers['Content-Type'] = 'application/json';
+            body = JSON.stringify(opts.json);
+        } else if (opts.data instanceof FormData) {
             body = opts.data;
         } else if (opts.data) {
             body = new URLSearchParams(opts.data);   // form encoded, same as $.post
@@ -76,6 +80,7 @@
     w.MPHttp = {
         request: request,
         errorMessage: errorMessage,
+        sendJSON: function (url, object) { return request(url, { method: 'POST', json: object }).then(JSON.parse); },
         delete: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
         get: function (url) { return request(url); },
         post: function (url, data) { return request(url, { method: 'POST', data: data }); },
