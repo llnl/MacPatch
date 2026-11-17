@@ -213,8 +213,17 @@ body.mp-console {
   line-height: 20px;
 }
 
+/* Alternating rows are white and light gray. Checked rows keep their stripe, bootstrap-table would
+   otherwise shade them darker (tr.selected) and make the stripes look wrong. */
+.table-striped > tbody > tr > td,
+.table-striped > tbody > tr > th,
+.bootstrap-table .fixed-table-container .table-striped tbody tr.selected:nth-of-type(even) td {
+  background-color: #fff;
+}
+
 .table-striped > tbody > tr:nth-of-type(odd) > td,
-.table-striped > tbody > tr:nth-of-type(odd) > th {
+.table-striped > tbody > tr:nth-of-type(odd) > th,
+.bootstrap-table .fixed-table-container .table-striped tbody tr.selected:nth-of-type(odd) td {
   background-color: #f2f2f2;
 }
 
