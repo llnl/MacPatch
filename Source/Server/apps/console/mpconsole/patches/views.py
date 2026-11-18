@@ -1221,6 +1221,9 @@ def _publishPatchGroup(group_id):
 	_patchRows = patchDataForPatchIDs([p.patch_id for p in _patchGroupPatches]) if _patchGroupPatches else {}
 	log("Publishing patch group {}: loaded the patch data in {:.1f}s.".format(group_id, _time.time() - _started))
 
+	_spent = {'criteria': 0.0, 'custom': 0.0}
+	_counts = {'criteria': 0, 'custom': 0}
+
 	if _patchGroupPatches is not None:
 		for _count, p in enumerate(_patchGroupPatches, 1):
 			if _count % 100 == 0:
@@ -1240,14 +1243,20 @@ def _publishPatchGroup(group_id):
 					row["patch_install_weight"] = patch['patch_install_weight']
 					row["patch_reboot_override"] = patch['patch_reboot_override']
 					row["severity"] = patch['severity']
+					_t = _time.time()
 					row["hasCriteria"] = applePatchHasCriteria(patch['id'])
+					_spent['criteria'] += _time.time() - _t
+					_counts['criteria'] += 1
 					_patchData['AppleUpdates'].append(row)
 					continue
 				else:
 					row["patch_id"] = patch['id']
 					row["patch_install_weight"] = patch['patch_install_weight']
 					row["severity"] = patch['severity']
+					_t = _time.time()
 					row["patches"] = customDataForPatchID(patch['id'])
+					_spent['custom'] += _time.time() - _t
+					_counts['custom'] += 1
 					_patchData['CustomUpdates'].append(row)
 					continue
 
@@ -1256,6 +1265,9 @@ def _publishPatchGroup(group_id):
 	if pData is None:
 		isNew=True
 		pData = MpPatchGroupData()
+
+	log("Publishing patch group {}: {} Apple patch criteria lookups took {:.1f}s, {} custom patch lookups took {:.1f}s.".format(
+		group_id, _counts['criteria'], _spent['criteria'], _counts['custom'], _spent['custom']))
 
 	jsonData = json.dumps(_patchData)
 	setattr(pData, 'rev', dts)
