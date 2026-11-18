@@ -1182,22 +1182,26 @@ def patchGroupContentSelect(group_id):
 	_shown = set(str(i) for i in _shown)
 	_selected = set(str(i) for i in _selected) & _shown
 
-	_current = {}
-	for r in MpPatchGroupPatches.query.filter(MpPatchGroupPatches.patch_group_id == group_id).all():
-		_current.setdefault(r.patch_id, []).append(r)
+	# Only the patch ids are needed, not whole objects
+	_current = set(r[0] for r in db.session.query(MpPatchGroupPatches.patch_id).filter(MpPatchGroupPatches.patch_group_id == group_id).all())
 
-	for patch_id in _selected:
-		if patch_id not in _current:
-			log("{} added patch {} to patch group {}.".format(session.get('user'), patch_id, group_id))
-			qryAdd = MpPatchGroupPatches()
-			setattr(qryAdd, 'patch_group_id', group_id)
-			setattr(qryAdd, 'patch_id', patch_id)
-			db.session.add(qryAdd)
+	_toAdd = sorted(_selected - _current)
+	_toRemove = sorted((_shown - _selected) & _current)
 
-	for patch_id in _shown - _selected:
-		for r in _current.get(patch_id, []):
-			log("{} removed patch {} from patch group {}.".format(session.get('user'), patch_id, group_id))
-			db.session.delete(r)
+	# Each row done on its own is one database round trip (about 0.1 to 0.2s each when MySQL runs in Docker),
+	# so a group of 800 patches took minutes. Insert and delete in a few statements instead.
+	for start in range(0, len(_toAdd), 500):
+		db.session.execute(MpPatchGroupPatches.__table__.insert(),
+			[{'patch_group_id': group_id, 'patch_id': pid} for pid in _toAdd[start:start + 500]])
+
+	for start in range(0, len(_toRemove), 500):
+		db.session.execute(MpPatchGroupPatches.__table__.delete().where(
+			MpPatchGroupPatches.patch_group_id == group_id).where(MpPatchGroupPatches.patch_id.in_(_toRemove[start:start + 500])))
+
+	if _toAdd:
+		log("{} added {} patch(es) to patch group {}.".format(session.get('user'), len(_toAdd), group_id))
+	if _toRemove:
+		log("{} removed {} patch(es) from patch group {}.".format(session.get('user'), len(_toRemove), group_id))
 
 	db.session.commit()
 	return _publishPatchGroup(group_id)
@@ -1223,6 +1227,11 @@ def _publishPatchGroup(group_id):
 
 	_spent = {'criteria': 0.0, 'custom': 0.0}
 	_counts = {'criteria': 0, 'custom': 0}
+
+	# One query for the custom patches' data, instead of one per patch
+	_t = _time.time()
+	_customRows = customDataForPatchIDs([pid for pid, r in _patchRows.items() if r['type'] != "Apple"])
+	_spent['custom'] += _time.time() - _t
 
 	if _patchGroupPatches is not None:
 		for _count, p in enumerate(_patchGroupPatches, 1):
@@ -1253,9 +1262,7 @@ def _publishPatchGroup(group_id):
 					row["patch_id"] = patch['id']
 					row["patch_install_weight"] = patch['patch_install_weight']
 					row["severity"] = patch['severity']
-					_t = _time.time()
-					row["patches"] = customDataForPatchID(patch['id'])
-					_spent['custom'] += _time.time() - _t
+					row["patches"] = _customRows.get(patch['id'], [])
 					_counts['custom'] += 1
 					_patchData['CustomUpdates'].append(row)
 					continue
@@ -1266,8 +1273,8 @@ def _publishPatchGroup(group_id):
 		isNew=True
 		pData = MpPatchGroupData()
 
-	log("Publishing patch group {}: {} Apple patch criteria lookups took {:.1f}s, {} custom patch lookups took {:.1f}s.".format(
-		group_id, _counts['criteria'], _spent['criteria'], _counts['custom'], _spent['custom']))
+	log("Publishing patch group {}: {} Apple and {} custom patches, the custom patch data loaded in {:.1f}s.".format(
+		group_id, _counts['criteria'], _counts['custom'], _spent['custom']))
 
 	jsonData = json.dumps(_patchData)
 	setattr(pData, 'rev', dts)
@@ -1312,32 +1319,38 @@ def patchDataForPatchID(patch_id):
 
 # Private
 def applePatchHasCriteria(patch_id):
-	crit = ApplePatchCriteria.query.filter(ApplePatchCriteria.puuid == patch_id).all()
-	if crit is not None:
-		return "TRUE"
-	else:
-		return "FALSE"
+	# NOTE: this has always returned "TRUE" for every Apple patch. It used to query the criteria table and then test
+	# `.all()` against None, which is never true, so the query had no effect on the answer but cost a database round trip
+	# for each patch. The published value is kept as it was. To report real criteria, check for a row in
+	# mp_apple_patch_criteria for the patch, but that changes what clients receive.
+	return "TRUE"
 
 # Private
-def customDataForPatchID(patch_id):
-	_results = []
-	patches = MpPatch.query.filter(MpPatch.puuid == patch_id).all()
-	if patches is not None:
-		for p in patches:
-			row = {}
-			row["name"] = p.patch_name
-			row["hash"] = p.pkg_hash
-			row["preinst"] = b64EncodeAsString(p.pkg_preinstall, 'NA')
-			row["postinst"] = b64EncodeAsString(p.pkg_postinstall,'NA')
-			row["env"] = p.pkg_env_var or "NA"
-			row["reboot"] = p.patch_reboot
-			row["type"] = "1"
-			row["url"] = p.pkg_url or "NA"
-			row["size"] = p.pkg_size
-			row["baseline"] = "0"
-			_results.append(row)
+def customRowForPatch(p):
+	row = {}
+	row["name"] = p.patch_name
+	row["hash"] = p.pkg_hash
+	row["preinst"] = b64EncodeAsString(p.pkg_preinstall, 'NA')
+	row["postinst"] = b64EncodeAsString(p.pkg_postinstall,'NA')
+	row["env"] = p.pkg_env_var or "NA"
+	row["reboot"] = p.patch_reboot
+	row["type"] = "1"
+	row["url"] = p.pkg_url or "NA"
+	row["size"] = p.pkg_size
+	row["baseline"] = "0"
+	return row
 
-	return _results
+def customDataForPatchIDs(patch_ids, chunk=200):
+	"""The custom patch data for many patches in a few queries, as {patch id: [row, ...]}"""
+	result = {}
+	patch_ids = list(dict.fromkeys(patch_ids))
+	for start in range(0, len(patch_ids), chunk):
+		for p in MpPatch.query.filter(MpPatch.puuid.in_(patch_ids[start:start + chunk])).all():
+			result.setdefault(p.puuid, []).append(customRowForPatch(p))
+	return result
+
+def customDataForPatchID(patch_id):
+	return customDataForPatchIDs([patch_id]).get(patch_id, [])
 
 # Private
 def removePatchFromPatchGroups(patch_id):
