@@ -112,7 +112,10 @@ class Config(object):
 	SQLALCHEMY_DATABASE_URI         = DB_CONNECTOR+'://'
 	SQLALCHEMY_TRACK_MODIFICATIONS  = False
 	SQLALCHEMY_ENGINE_OPTIONS = {  'pool_size' : 200,
-								   'pool_recycle':120,
+	# pool_recycle: a connection older than this is replaced. It was 120, which made every worker
+	# open new connections (and a TLS handshake) constantly. pool_pre_ping still replaces any
+	# connection the database closed earlier.
+								   'pool_recycle': int(os.environ.get('DB_POOL_RECYCLE') or '1800'),
 								   'pool_timeout':15,
 								   'pool_pre_ping': True }
 

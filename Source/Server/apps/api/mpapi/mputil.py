@@ -531,49 +531,77 @@ def return_data_for_server_key(key):
 	Sign Message
 '''
 
-def signData(data):
+
+# The active site key is read from the database and parsed once per worker, then reused for
+# SITE_KEY_CACHE_TTL seconds (default 60). Parsing the RSA PEM on every request was the largest
+# single CPU cost of the agent config endpoints. A rotated key is picked up within the TTL.
+# A tuple is swapped in whole, so a request never sees a half updated cache.
+_site_key_cache = (None, 0.0)		# (private key object, monotonic expiry time)
+
+def _getSitePrivateKey():
+	"""
+	The active site private key, or None when there is no active key or it cannot be loaded.
+	Database errors are not caught here, they propagate as they did before the cache.
+	"""
+	global _site_key_cache
+
+	cached_key, expires = _site_key_cache
+	if cached_key is not None and time.monotonic() < expires:
+		return cached_key
+
 	qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
-	if qKeys is not None:
+	if qKeys is None:
+		_site_key_cache = (None, 0.0)
+		return None
 
-		if isinstance(data, dict):
-			_data = ""
-			for key in sorted(data):
-				if not isinstance(data[key], dict):
-					_data = _data + str(key) + str(data[key])
-				else:
-					_data = _data + str(key) + "DICT"
+	try:
+		private_key = serialization.load_pem_private_key( bytes(qKeys.priKey,'utf-8'), password=None, backend=default_backend() )
+	except Exception as e:
+		# Not cached, so a fixed key is picked up on the next request
+		log_Error("[getSitePrivateKey] Unable to load the site private key: %s" % e)
+		return None
 
-			data = _data
+	ttl = current_app.config.get('SITE_KEY_CACHE_TTL', 60)
+	_site_key_cache = (private_key, time.monotonic() + ttl)
+	return private_key
 
-		try:
-			private_key = serialization.load_pem_private_key( bytes(qKeys.priKey,'utf-8'), password=None, backend=default_backend() )
-			if not private_key:
-				log_Error("Missing Private Key.")
-			signature = private_key.sign( data.encode('utf-8'), padding.PKCS1v15(), hashes.SHA1() )
-			encodedSignature = b64encode(signature).decode('utf-8')
+def signData(data):
+	private_key = _getSitePrivateKey()
+	if private_key is None:
+		return None
 
-			return encodedSignature
+	if isinstance(data, dict):
+		_data = ""
+		for key in sorted(data):
+			if not isinstance(data[key], dict):
+				_data = _data + str(key) + str(data[key])
+			else:
+				_data = _data + str(key) + "DICT"
 
-		except InvalidKey:
-			log_Error("InvalidKey, Unable to sign data.")
-			return None
+		data = _data
 
-		except Exception as e:
-			log_Error("Error, Unable to sign data.")
-			exc_type, exc_obj, exc_tb = sys.exc_info()
-			message=str(e.args[0]).encode("utf-8")
-			log_Error('[signData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
-			return None
+	try:
+		signature = private_key.sign( data.encode('utf-8'), padding.PKCS1v15(), hashes.SHA1() )
+		encodedSignature = b64encode(signature).decode('utf-8')
 
-	else:
+		return encodedSignature
+
+	except InvalidKey:
+		log_Error("InvalidKey, Unable to sign data.")
+		return None
+
+	except Exception as e:
+		log_Error("Error, Unable to sign data.")
+		exc_type, exc_obj, exc_tb = sys.exc_info()
+		message=str(e.args[0]).encode("utf-8")
+		log_Error('[signData][Exception][Line: {}] Message: {}'.format(exc_tb.tb_lineno, message))
 		return None
 
 def verifySignedData(signature, data):
-	qKeys = MpSiteKeys.query.filter(MpSiteKeys.active == '1').first()
-	if qKeys is not None:
+	private_key = _getSitePrivateKey()
+	if private_key is not None:
 		try:
 			# Get Keys
-			private_key = serialization.load_pem_private_key( bytes(qKeys.priKey,'utf-8'), password=None, backend=default_backend() )
 			public_key = private_key.public_key()
 			# Verify Signature
 			result = public_key.verify(b64decode(signature), data.encode('utf-8'), padding.PKCS1v15(),hashes.SHA1())

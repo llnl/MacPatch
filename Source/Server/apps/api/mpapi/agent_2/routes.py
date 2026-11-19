@@ -15,6 +15,8 @@ from mpapi.app import db
 from mpapi.mputil import *
 from mpapi.model import *
 from mpapi.mplogger import *
+# After the star imports: model.py does "from datetime import *", which rebinds the name "time"
+from time import monotonic as _monotonic
 from mpapi.servers_2.routes import serverListForID, suServerListForID
 from mpapi.agent.routes import AgentUpdates
 from mpapi.extensions import cache
@@ -91,6 +93,25 @@ class _AgentConfigInfo(MPResource):
 		else:
 			return 0
 
+# Signed agent config responses, shared by the clients of a group.
+# The config does not depend on the client ID, only on the client group and the OS major.minor
+# version (the Apple software update catalogs). The key also holds the group's settings and tasks
+# revisions, so a change to those made in the console is served right away. Anything else (the
+# server list, the update catalogs, renaming a patch group) shows up when the entry expires, at
+# most AGENT_CONFIG_CACHE_TTL seconds later (default 60, 0 turns the cache off). The cache is per
+# worker process. The client ID and signature checks always run before the cache is read.
+_agent_config_cache = {}
+_AGENT_CONFIG_CACHE_MAX = 512
+
+def _agentConfigCacheKey(group_id, qClient):
+	qRev = MPGroupConfig.query.filter(MPGroupConfig.group_id == group_id).first()
+	if qRev is None:
+		return None
+	osver = ''
+	if qClient is not None and qClient.osver:
+		osver = '.'.join(str(qClient.osver).split('.')[:2])
+	return (group_id, osver, qClient is not None, qRev.rev_settings, qRev.rev_tasks)
+
 class _AgentConfig(MPResource):
 
 	def __init__(self):
@@ -128,6 +149,13 @@ class _AgentConfig(MPResource):
 				qGroup = MpClientGroups.query.filter(MpClientGroups.group_name == 'Default').first()
 				group_id = qGroup.group_id
 
+			# Same group and OS version as a recent request, serve the config signed then
+			cache_ttl = current_app.config.get('AGENT_CONFIG_CACHE_TTL', 60)
+			cache_key = _agentConfigCacheKey(group_id, qClient) if cache_ttl > 0 and group_id != 0 else None
+			if cache_key is not None:
+				hit = _agent_config_cache.get(cache_key)
+				if hit is not None and _monotonic() < hit[0]:
+					return hit[1], 200
 
 			qAgentSettings= MpClientSettings.query.filter(MpClientSettings.group_id == group_id).all()
 			if qAgentSettings is not None:
@@ -173,7 +201,15 @@ class _AgentConfig(MPResource):
 			agentConfig['revs'] = d_revs
 
 			if group_id != 0:
-				return {"errorno": 0, "errormsg": 'none', "result": {'type': 'AgentConfig', 'data': agentConfig}, 'signature': signData(json.dumps(agentConfig))}, 200
+				response = {"errorno": 0, "errormsg": 'none', "result": {'type': 'AgentConfig', 'data': agentConfig}, 'signature': signData(json.dumps(agentConfig))}
+
+				# Only a signed response is kept, an unsigned one (no site key) is built again next time
+				if cache_key is not None and response['signature'] is not None:
+					if len(_agent_config_cache) >= _AGENT_CONFIG_CACHE_MAX:
+						_agent_config_cache.clear()
+					_agent_config_cache[cache_key] = (_monotonic() + cache_ttl, response)
+
+				return response, 200
 			else:
 				return {"errorno": 404, "errormsg": 'Settings version or client group membersion not found.', "result": {'type': 'AgentConfig', 'data': {}}}, 404
 

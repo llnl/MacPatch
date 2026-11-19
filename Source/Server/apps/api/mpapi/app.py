@@ -11,6 +11,7 @@ from packaging import version
 
 from mpapi.config import Config
 from mpapi.extensions import db, migrate, cache, aws
+from mpapi import dbtls
 
 def create_app(config_object=Config):
 
@@ -95,6 +96,8 @@ def read_siteconfig_server_data(app):
 		return
 
 def register_extensions(app):
+	# One shared TLS context for the MySQL connections, see dbtls.py
+	dbtls.install()
 	db.init_app(app)
 	migrate.init_app(app, db)
 	# Flask-Caching 2.5+ uses 'SimpleCache' instead of 'simple'
