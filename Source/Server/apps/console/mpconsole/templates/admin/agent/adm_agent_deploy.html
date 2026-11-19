@@ -2,9 +2,7 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<style type="text/css">
 		.table {
 		  table-layout:fixed;
@@ -54,25 +52,17 @@
 				<div id="toolbar">
 					<button id="delAgentButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
 				</div>
-				<table id="tableAgents" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
-
-				</table>
-
-			{% else %}
-				<table id="tableAgents" class="table table-bordered table-sm table-striped" data-row-style="rowStyle"></table>
 			{% endif %}
+			<table id="tableAgents" class="table table-bordered table-sm table-striped"></table>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 2 %}show active{% endif %}" id="filters">
 			{% if gResults['Admin'] == True %}
-				<table id="tableFilters" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarFilters">
 				<div id="toolbarFilters">
 					<button id="addFilterButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
 					<button id="delFilterButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
 				</div>
-				</table>
-			{% else %}
-				<table id="tableFilters" class="table table-bordered table-sm table-striped" data-row-style="rowStyle"></table>
 			{% endif %}
+			<table id="tableFilters" class="table table-bordered table-sm table-striped"></table>
 		</div>
 	</div>
 {% endblock %}
@@ -81,11 +71,6 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
 	<script>
 	function download(path) {
@@ -93,296 +78,129 @@
 		iframe.src = path;
 	}
 
-	$( document ).ready(function()
-	{
-		$('#tableAgents').bootstrapTable({
-			striped: true,
-			ajax: function loadMyRows(params)
-			{
-				if (params.data.search == '') {
-					params.data.search = undefined;
-				}
-				// /profiles/group/<groupid>
-				var _url = "/console/agents";
-				$.ajax({
-					type: 'GET',
-					url: _url,
-					cache: false,
-					dataType: 'json',
-					success: function(res)
-					{
-						params.success({
-							total: res.total,
-							rows: res.data
-						});
-					}
-				});
-			},
-			search: true,
-			pageSize: 20,
-			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
-			queryParamsType: "limit",
-			sidePagination: "server",
-			showRefresh: true,
-			resizable: true,
-			idField: 'rid',
-			columns: [
-				{
-					field: 'rowState',
-					checkbox: true,
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle'
-				},
-				{% for col in agentCols %}
-					{
+	(function () {
+		var isAdmin = {{ (gResults['Admin'] == True) | tojson }};
+		var isRole1 = Number({{ session.role[0] | tojson }}) === 1;
 
-						{% if col[2] == '0' %}
-						visible: false,
-						{% endif %}
-						sortable: true,
-						field: '{{col[0]}}',
-						title: '{{col[1]}}',
-						{% if col[0] == 'active' and session.role[0] == 1 %}
-						editable: {
-							type: 'select',
-							url:  '/console/agents/update/active',
-							source: [
-								{value: 0, text: 'False'},
-								{value: 1, text: 'True'},
-							]
-						},
-						{% endif %}
-						{% if col[0] == 'build' and session.role[0] == 1 %}
-						editable: {
-							type: 'text',
-							url:  '/console/agents/update/build'
-						},
-						{% endif %}
-						{% if col[0] == 'agent_ver' and session.role[0] == 1 %}
-						editable: {
-							type: 'text',
-							url:  '/console/agents/update/agent_ver'
-						},
-						{% endif %}
-						{% if col[0] == 'version' and session.role[0] == 1 %}
-						editable: {
-							type: 'text',
-							url:  '/console/agents/update/version'
-						},
-						{% endif %}
-						{% if col[0] == 'osver' and session.role[0] == 1 %}
-						editable: {
-							type: 'text',
-							url:  '/console/agents/update/osver'
-						},
-						{% endif %}
-					},
-				{% endfor %}
-			]
-		});
+		// inline editing on these columns (role 1 only), saved through MPEdit
+		var editableCols = {
+			active:    { type: 'select', url: '/console/agents/update/active',
+			             source: [{value: 0, text: 'False'}, {value: 1, text: 'True'}] },
+			build:     { type: 'text', url: '/console/agents/update/build' },
+			agent_ver: { type: 'text', url: '/console/agents/update/agent_ver' },
+			version:   { type: 'text', url: '/console/agents/update/version' },
+			osver:     { type: 'text', url: '/console/agents/update/osver' }
+		};
 
-		$('#tableFilters').bootstrapTable({
-			striped: true,
-			ajax: function loadMyRows(params)
-			{
-				if (params.data.search == '') {
-					params.data.search = undefined;
-				}
-				// /profiles/group/<groupid>
-				var _url = "/console/agent/filters";
-				$.ajax({
-					type: 'GET',
-					url: _url,
-					cache: false,
-					dataType: 'json',
-					success: function(res)
-					{
-						params.success({
-							total: res.total,
-							rows: res.data
-						});
-					}
-				});
-			},
-			search: true,
-			pageSize: 20,
-			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
-			queryParamsType: "limit",
-			sidePagination: "server",
-			showRefresh: true,
-			resizable: true,
-			columns: [
-				{
-					field: 'rowState',
-					checkbox: true,
-					rowspan: 1,
-					align: 'center',
-					valign: 'middle'
-				},
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: operateEventsFilter,
-					formatter: operateFormatterFilter,
-					visible: true,
-					width: '40px'
-				},
-				{% for col in filterCols %}
-					{
-
-						{% if col[2] == '0' %}
-						visible: false,
-						{% endif %}
-						sortable: true,
-						field: '{{col[0]}}',
-						title: '{{col[1]}}'
-
-					},
-				{% endfor %}
-			]
-		});
-
-		$('#addFilterButton').click(function ()
-		{
-			$.get( "/console/agent/filter/0").done(function(data)
-			{
-				$('#modalTitle').html('Add Agent Filter');
-				$('#modalCancelButton').html('Close');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'300px'});
-				$('#modalDialog').addClass("modal-mid");
-				$('#modalDialog').modal('show');
-
-				$("#modalDialog").on("hidden.bs.modal", function () {
-					$filtersTable.bootstrapTable('refresh');
-				});
+		function toColumns(cols, withEdit) {
+			return cols.map(function (c) {
+				var col = { field: c[0], title: c[1], sortable: true, visible: c[2] !== '0' };
+				if (withEdit && isRole1 && editableCols[c[0]]) col.editable = editableCols[c[0]];
+				return col;
 			});
+		}
+
+		var agentsTable = MPTable.create('#tableAgents', {
+			striped: true,
+			url: '/console/agents',
+			dataField: 'data',
+			ajaxOptions: { cache: false },
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			showRefresh: true,
+			idField: 'rid',
+			toolbar: isAdmin ? '#toolbar' : undefined,
+			checkbox: true,
+			stateField: 'rowState',
+			columns: toColumns({{ agentCols | tojson }}, true)
 		});
-	});
 
-	$('#tableAgents').on('editable-save.bs.table', function ()
-	{
-			$('#tableAgents').bootstrapTable('refresh');
-	});
+		var filtersTable = MPTable.create('#tableFilters', {
+			striped: true,
+			url: '/console/agent/filters',
+			dataField: 'data',
+			ajaxOptions: { cache: false },
+			pageSize: 20,
+			pageList: [5, 10, 20, 50, 100, 200],
+			showRefresh: true,
+			toolbar: isAdmin ? '#toolbarFilters' : undefined,
+			checkbox: true,
+			stateField: 'rowState',
+			size: 'lg',
+			actions: [
+				{ name: 'editFilter', icon: 'fa-pencil', title: 'Edit Filter',
+				  onClick: function (row) { openFilterModal('/console/agent/filter/' + row.rid, 'Edit Agent Filter'); } }
+			],
+			columns: toColumns({{ filterCols | tojson }}, false)
+		});
 
-	$('#tableAgents').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function ()
-	{
-			$('#delAgentButton').prop('disabled', !$('#tableAgents').bootstrapTable('getSelections').length);
-
-			// save your data, here just save the current page
-			// selections = getIdSelections();
-			// push or splice the selections if you want to save all data selections
-	});
-
-	$('#tableFilters').on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function ()
-	{
-			$('#delFilterButton').prop('disabled', !$('#tableFilters').bootstrapTable('getSelections').length);
-
-			// save your data, here just save the current page
-			// selections = getIdSelections();
-			// push or splice the selections if you want to save all data selections
-	});
-
-	function operateFormatterFilter(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<a class="editFilter" href="javascript:void(0)" title="Edit Filter">');
-		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
-		htmlData.push('</a>');
-		return htmlData.join('');
-	}
-
-	var $filtersTable = $('#tableFilters');
-
-	window.operateEventsFilter = {
-		'click .editFilter': function (e, value, row, index)
-		{
-			$.get( "/console/agent/filter/" + row['rid']).done(function(data)
-			{
-				$('#modalTitle').html('Edit Agent Filter');
+		function openFilterModal(url, title) {
+			$.get(url).done(function (data) {
+				$('#modalTitle').html(title);
 				$('#modalCancelButton').html('Close');
 				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'300px'});
+				$('#modalBody').css({'height': '300px'});
 				$('#modalDialog').addClass("modal-mid");
 				$('#modalDialog').modal('show');
 
 				$("#modalDialog").on("hidden.bs.modal", function () {
-					$filtersTable.bootstrapTable('refresh');
+					filtersTable.refresh();
 				});
 			});
 		}
-	};
 
-	var $_delAgentButton = $('#delAgentButton'), $_delFilterButton = $('#delFilterButton');
-	$(function () {
-		$_delAgentButton.click(function ()
-		{
-			var rows = $('#tableAgents').bootstrapTable('getSelections');
-			var rowsArr = [];
-			for (x in rows) {
-				var _puuid = rows[x]['puuid'];
-				rowsArr.push(_puuid);
-			}
+		agentsTable.$el.on('editable-save.bs.table', function () { agentsTable.refresh(); });
 
-			let unique = [...new Set(rowsArr)];
+		agentsTable.$el.on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {
+			$('#delAgentButton').prop('disabled', !agentsTable.selections().length);
+		});
 
-			confirm_str = "Are you sure you want to remove these agent(s)?\nNote: This remove the related agent package if not selected.\n Base.pkg and Updater.pkg";
-			if (confirm(confirm_str) == true)
-			{
-				var _url = "/console/agent/deploy";
+		filtersTable.$el.on('check.bs.table uncheck.bs.table check-all.bs.table uncheck-all.bs.table', function () {
+			$('#delFilterButton').prop('disabled', !filtersTable.selections().length);
+		});
+
+		$('#addFilterButton').click(function () { openFilterModal('/console/agent/filter/0', 'Add Agent Filter'); });
+
+		$('#delAgentButton').click(function () {
+			var unique = [...new Set(agentsTable.selectedIds('puuid'))];
+
+			var confirm_str = "Are you sure you want to remove these agent(s)?\nNote: This remove the related agent package if not selected.\n Base.pkg and Updater.pkg";
+			if (confirm(confirm_str) == true) {
 				$.ajax({
-					url: _url,
+					url: "/console/agent/deploy",
 					type: 'DELETE',
 					cache: false,
-					data: {'filters':unique.toString()},
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
+					data: {'filters': unique.toString()},
+					error: function (request) {
+						alert(jQuery.parseJSON(request.responseText).errormsg);
 					},
 					success: function () {
-						$('#tableAgents').bootstrapTable('refresh');
+						agentsTable.refresh();
 						alert("Agent(s) removed successfully.");
 					}
 				});
 			}
 		});
 
-		$_delFilterButton.click(function ()
-		{
-			var rows = $('#tableFilters').bootstrapTable('getSelections');
-			var rowsArr = [];
-			for (x in rows) {
-				var _rid = rows[x]['rid'];
-				rowsArr.push(_rid);
-			}
+		$('#delFilterButton').click(function () {
+			var unique = [...new Set(filtersTable.selectedIds('rid'))];
 
-			let unique = [...new Set(rowsArr)];
-
-			if (confirm("Are you sure you want to remove these agent filter(s)?") == true)
-			{
-				var _url = "/console/agent/deploy/filter";
+			if (confirm("Are you sure you want to remove these agent filter(s)?") == true) {
 				$.ajax({
-					url: _url,
+					url: "/console/agent/deploy/filter",
 					type: 'DELETE',
 					cache: false,
-					data: {'filters':unique.toString()},
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
+					data: {'filters': unique.toString()},
+					error: function (request) {
+						alert(jQuery.parseJSON(request.responseText).errormsg);
 					},
 					success: function () {
-						$('#tableFilters').bootstrapTable('refresh');
+						filtersTable.refresh();
 						alert("Filter(s) removed successfully.");
 					}
 				});
 			}
 		});
-	});
+	}());
 	</script>
 {% endblock %}

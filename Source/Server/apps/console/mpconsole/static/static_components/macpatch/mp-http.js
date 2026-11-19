@@ -13,6 +13,7 @@
  *   MPHttp.sendJSON(url, object, {timeout: ms})  -> Promise<object>   (POST with a JSON body, parses the JSON response)
  *       timeout is optional, when it passes the promise rejects with err.timedOut = true.  The server is not
  *       stopped by that, it keeps working, the browser only stops waiting.
+ *   MPHttp.sendJSONAs(method, url, object)  -> Promise<object>   (same as sendJSON for PUT / DELETE ...)
  *   MPHttp.delete(url, data)        -> Promise<string>
  *   MPHttp.errorMessage(err)        -> the server's {"errormsg": ...} text, or a generic message
  */
@@ -96,6 +97,7 @@
         request: request,
         errorMessage: errorMessage,
         sendJSON: function (url, object, opts) { return request(url, { method: 'POST', json: object, timeout: opts && opts.timeout }).then(JSON.parse); },
+        sendJSONAs: function (method, url, object) { return request(url, { method: method, json: object }).then(JSON.parse); },
         delete: function (url, data) { return request(url, { method: 'DELETE', data: data }); },
         get: function (url) { return request(url); },
         post: function (url, data) { return request(url, { method: 'POST', data: data }); },

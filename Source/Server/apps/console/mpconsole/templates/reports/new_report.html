@@ -262,7 +262,7 @@
 			{
 				var jData = $.parseJSON(data);
 				$('#table').bootstrapTable('destroy')
-				$table.bootstrapTable({data: jData.data, columns: jData.cols });
+				MPTable.create('#table', {data: jData.data, columns: jData.cols, pagination: false, search: false, showColumns: false, persistColumns: false});
 			});
 		}
 

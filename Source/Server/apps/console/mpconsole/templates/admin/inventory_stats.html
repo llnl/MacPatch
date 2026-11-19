@@ -131,13 +131,11 @@
 	function failedF(v) { return v > 0 ? '<span class="text-danger"><b>' + num(v) + '</b></span>' : '0'; }
 
 	function initTable(selector, columns, sortName, sortOrder) {
-		$(selector).bootstrapTable({
-			pagination: true,
-			sidePagination: 'client',
+		MPTable.create(selector, {
 			pageSize: 10,
 			pageList: [10, 25, 50, 100],
-			search: true,
-			sortable: true,
+			showColumns: false,
+			persistColumns: false,
 			sortName: sortName,
 			sortOrder: sortOrder || 'desc',
 			columns: columns,

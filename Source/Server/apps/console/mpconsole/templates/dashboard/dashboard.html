@@ -5,6 +5,14 @@
 	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='yarn_components/morris.js/morris.css') }}" rel="stylesheet">
+	<style>
+		/* Panels side by side in one row get the same height; a chart without tabs is centered in the space. */
+		.dashboard-panels > [class*="col-"] { display: flex; }
+		.dashboard-panels .panel { display: flex; flex-direction: column; width: 100%; }
+		.dashboard-panels .panel-body { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+		.dashboard-panels .panel-body > .tab-content,
+		.dashboard-panels .panel-body > ul.nav { width: 100%; }
+	</style>
 {%  endblock %}
 
 {% block pageHeader %}
@@ -13,7 +21,7 @@
 
 {% block bodyPanel %}
 
-			<div class="row">
+			<div class="row dashboard-panels">
 				<div class="col-lg-6">
 					<div class="panel panel-default">
 						<div class="panel-heading">
@@ -87,7 +95,7 @@
                     </div>
 				</div>
             </div>
-            <div class="row">
+            <div class="row dashboard-panels">
 				<!-- /.col-lg-6 -->
 				<div class="col-lg-6">
 					<div class="panel panel-default">
@@ -132,7 +140,7 @@
 					<!-- /.panel -->
 				</div>
             </div>
-            <div class="row">
+            <div class="row dashboard-panels">
 				<!-- /.col-lg-6 -->
 				<div class="col-lg-6">
 					<div class="panel panel-default">

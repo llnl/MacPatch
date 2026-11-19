@@ -1213,3 +1213,33 @@ def inventoryStatsData():
 	return json.dumps({'days': days, 'since': since, 'totals': totals,
 					   'daily': [daily[k] for k in sorted(daily)], 'tables': tables,
 					   'causes': causes, 'recent': recent}, default=json_serial), 200
+
+
+''' User preferences '''
+
+@console.route('/prefs/columns', methods=['GET', 'PUT', 'DELETE'])
+@login_required
+def userPrefsColumns():
+	from mpconsole import user_prefs
+	user = user_prefs.current_user()
+	body = request.get_json(silent=True) or {}
+	key = request.args.get('key') if request.method == 'GET' else body.get('key')
+	if not user or not isinstance(key, str) or not user_prefs.KEY_PATTERN.match(key):
+		return jsonify(errormsg='Invalid preference key.'), 400
+
+	if request.method == 'GET':
+		columns = user_prefs.get_columns(user, key)
+		if columns is None:
+			return jsonify(errormsg='Nothing saved.'), 404
+		return jsonify(columns=columns, hash=user_prefs.column_hash(columns))
+
+	if request.method == 'DELETE':
+		user_prefs.reset_columns(user, key)
+		return jsonify(result='ok')
+
+	columns = body.get('columns')
+	if not user_prefs.valid_columns(columns):
+		return jsonify(errormsg='Invalid column preferences.'), 400
+	if not user_prefs.save_columns(user, key, columns):
+		return jsonify(errormsg='Too many saved preferences.'), 400
+	return jsonify(result='ok', hash=user_prefs.column_hash(columns))

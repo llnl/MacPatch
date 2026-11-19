@@ -14,13 +14,12 @@ MDM Group Members - {{ groupname }}
     {% for col in columns %}
 
     {% endfor %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-bordered table-sm table-striped">
-		<div id="toolbar">
-            {% if session.role[0] == 1 %}
-			    <button id="addButton" type="button" class="btn btn-default" title="Add MDM Group"><i class="glyphicon glyphicon-plus"></i></button>
-            {% endif %}
-		</div>
-	</table>
+	<div id="toolbar">
+		{% if session.role[0] == 1 %}
+		<button id="addButton" type="button" class="btn btn-default" title="Add MDM Group"><i class="glyphicon glyphicon-plus"></i></button>
+		{% endif %}
+	</div>
+	<table id="table" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 {% endblock %}
 
 
@@ -28,52 +27,33 @@ MDM Group Members - {{ groupname }}
 	{{ super() }}
 
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<script>
     $('#mdm').addClass('active');
 
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable(
-		{
-            url: "/mdm/groups/members/{{ groupid }}/list",
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '20', '50', '100', 'All'],
-			search: true,
+		var groupId = {{ groupid | tojson }};
+		var table = MPTable.create('#table', {
+			url: "/mdm/groups/members/" + encodeURIComponent(groupId) + "/list",
+			toolbar: '#toolbar',
 			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
-			},
 			idField: 'id',
-			columns: [
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEvents,
-				formatter: operateFormatter
-			},
-			{% for col in columns %}
-			{
-                    field: '{{ col['column'] }}',
-                    title: '{{ col['displayName'] }}',
-                    {% if col['visible'] == 0 %}
-                    visible: false,
-                    {% endif %}
-                    sortable: true
-			},
-			{% endfor %}
+			size: 'lg',
+			columnsKey: 'mdm_group_members',
+			actions: [
+				{ name: 'remove', icon: 'fa-trash-o', title: 'Remove Group Member',
+				  onClick: function (row) {
+					$.ajax({
+						url: '/mdm/groups/members/' + encodeURIComponent(groupId) + '/' + encodeURIComponent(row.id),
+						type: 'DELETE',
+						success: function () { table.refresh(); }
+					});
+				  } }
 			],
-			data: [
-
+			columns: [
+			{% for col in columns %}
+			{ field: {{ col['column'] | tojson }}, title: {{ col['displayName'] | tojson }}{% if col['visible'] == 0 %}, visible: false{% endif %}, sortable: true },
+			{% endfor %}
 			]
 		});
 
@@ -94,33 +74,5 @@ MDM Group Members - {{ groupname }}
             $('#modalDialog').modal('show');
         });
 	});
-    function operateFormatter(value, row, index)
-    {
-        var htmlData = [];
-        htmlData.push('<table>');
-        htmlData.push('<tr><td>');
-        htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Group Member">');
-        htmlData.push('<i class="fa fa-trash-o fa-lg"></i></a>');
-        htmlData.push('</td>');
-
-        htmlData.push('</td></tr></table>');
-        return htmlData.join('');
-    }
-
-    window.operateEvents = {
-        'click .remove': function (e, value, row, index)
-        {
-            var _url = '/mdm/groups/members/{{ groupid }}/' + row.id
-            $.ajax({
-                url: _url,
-                type: 'DELETE',
-                success: function(result) {
-                    // Do something with the result
-                    $('#table').bootstrapTable('refresh');
-                }
-            });
-        }
-    };
-
 	</script>
 {% endblock %}

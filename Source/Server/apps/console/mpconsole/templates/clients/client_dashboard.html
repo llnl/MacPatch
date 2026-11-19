@@ -33,6 +33,7 @@
 
 
 	<meta name="csrf-token" content="{{ csrf_token() }}">
+	<script>window.MP_PREFS = {{ user_prefs | default({}) | tojson }};</script>
 </head>
 
 <body class="mp-console client-dashboard">
@@ -113,6 +114,8 @@
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-http.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-table.js') }}"></script>
 	{% block javascript %}
 	<script type="text/javascript">
 
@@ -126,14 +129,14 @@
 			var _rows = obj['data'];
 			var _cols = obj.columns;
 
-			$('#rpatchesTable').bootstrapTable(
+			MPTable.create('#rpatchesTable',
 			{
 				striped: true,
+				persistColumns: false,
 				pagination: false,
 				sidePagination: 'client',
 				search: false,
 				showRefresh: false,
-				resizable: false,
 				sortable: true,
 				showColumns: false,
 				columns: _cols,
@@ -147,14 +150,14 @@
 			var _rows1 = obj1['data'];
 			var _cols1 = obj1.columns;
 
-			$('#ipatchesTable').bootstrapTable(
+			MPTable.create('#ipatchesTable',
 			{
 				striped: true,
+				persistColumns: false,
 				pagination: false,
 				sidePagination: 'client',
 				search: false,
 				showRefresh: false,
-				resizable: false,
 				sortable: true,
 				showColumns: false,
 				columns: _cols1,
@@ -182,14 +185,14 @@
 
 					$('#invTable').bootstrapTable('destroy');
 
-					$('#invTable').bootstrapTable(
+					MPTable.create('#invTable',
 					{
 						striped: true,
+						columnsKey: 'client-dashboard-inventory:' + String(invType).replace(/[^A-Za-z0-9_.-]/g, '_'),
 						pagination: true,
 						sidePagination: 'client',
 						search: true,
 						showRefresh: false,
-						resizable: false,
 						sortable: true,
 						showColumns: true,
 						exportDataType: 'all',

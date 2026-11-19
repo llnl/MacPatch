@@ -81,32 +81,26 @@ Agent Registration
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 2 %}show active{% endif %}" id="keys">
 			<h4>Registration Keys</h4>
-			<table id="tableKeys" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarKeys" data-side-pagination="client" data-pagination="true" data-search="true">
-				<div id="toolbarKeys">
-					<button id="addKeyButton" type="button" class="btn btn-default" title="Add Registration Key"><i class="glyphicon glyphicon-plus"></i></button>
-				</div>
-			</table>
+			<div id="toolbarKeys">
+				<button id="addKeyButton" type="button" class="btn btn-default" title="Add Registration Key"><i class="glyphicon glyphicon-plus"></i></button>
+			</div>
+			<table id="tableKeys" class="table table-bordered table-sm table-striped"></table>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 3 %}show active{% endif %}" id="regClients">
 			<h4>Registred Clients</h4>
-			<table id="tableClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
-				<div id="toolbarClients">
-				</div>
-			</table>
+			<div id="toolbarClients"></div>
+			<table id="tableClients" class="table table-bordered table-sm table-striped"></table>
 		</div>
 		{% else %}
 		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="regClients">
-			<table id="tableClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbarClients" data-side-pagination="client" data-pagination="true" data-search="true">
-				<div id="toolbarClients">
-				</div>
-			</table>
+			<div id="toolbarClients"></div>
+			<table id="tableClients" class="table table-bordered table-sm table-striped"></table>
 		</div>
 		{% endif %}
 		{% if session.role[0] == 1 %}
 		<div class="tab-pane fade {% if selectedTab == 4 %}show active{% endif %}" id="parkedClients">
 			<h4>Parked Clients</h4>
-			<table id="tableParkedClients" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-show-export="true" data-side-pagination="client" data-pagination="true" data-search="true">
-			</table>
+			<table id="tableParkedClients" class="table table-bordered table-sm table-striped" data-show-export="true"></table>
 		</div>
 		{% endif %}
 	</div>
@@ -124,9 +118,6 @@ Agent Registration
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
 
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
 
@@ -137,64 +128,89 @@ Agent Registration
 	{
 		$('#datetimepickerA').datetimepicker();
 		{% if session.role[0] == 1 %}
-		$('#tableKeys').bootstrapTable(
+		MPTable.create('#tableKeys',
 		{
 			url: "/registration/keys",
-			search: true,
+			toolbar: '#toolbarKeys',
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
 			queryParamsType: "limit",
 			showRefresh: true,
+			actions: [
+				{ name: 'editKey', icon: 'fa-pencil', title: 'Edit Key',
+				  onClick: function (row) {
+					openRegistrationKeyModal('/registration/key/edit/' + encodeURIComponent(row['rid']), 'Edit Registration Key');
+				  } },
+				{ name: 'removeKey', icon: 'fa-trash-o', title: 'Remove Key',
+				  onClick: function (row) {
+					if (!confirm("Are you sure you want to delete this key?")) return;
+					$.ajax({
+						url: "/registration/key/edit/" + encodeURIComponent(row['rid']),
+						cache: false,
+						type: 'DELETE',
+						error: function (request, status, error)
+						{
+							alert(MPHttp.errorMessage({status: request.status, body: request.responseText}));
+						},
+						success: function () {
+							$('#tableKeys').bootstrapTable('refresh');
+						}
+					});
+				  } }
+			],
 			columns: [
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: keyEvents,
-					formatter: keyFormatter,
-					visible: true
-				},
 				{% for col in keyCols %}
 					{
 						{% if col.name == 'rid' %}
 						visible: false,
 						{% endif %}
 						sortable: true,
-						field: '{{col.name}}',
-						title: '{{col.label}}'
+						field: {{ col.name | tojson }},
+						title: {{ col.label | tojson }}
 					},
 				{% endfor %}
 			]
 		});
 		{% endif %}
-		$('#tableClients').bootstrapTable(
+		MPTable.create('#tableClients',
 		{
 			url: "/registration/clients",
-			search: true,
+			toolbar: '#toolbarClients',
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
 			queryParamsType: "limit",
 			showRefresh: true,
 			idField: 'cuuid',
+			size: 'lg',
+			actions: [
+				{% if session.role[0] == 1 %}
+				{ name: 'remove', icon: 'fa-trash-o', title: 'Remove Client',
+				  onClick: function (row) {
+					if (!confirm("Are you sure you want to delete this client?")) return;
+					$.ajax({
+						url: "/registration/registered/client/" + encodeURIComponent(row['cuuid']),
+						cache: false,
+						type: 'DELETE',
+						error: function (request, status, error)
+						{
+							alert(MPHttp.errorMessage({status: request.status, body: request.responseText}));
+						},
+						success: function () {
+							$('#tableClients').bootstrapTable('refresh');
+						}
+					});
+				  } }
+				{% endif %}
+			],
 			columns: [
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: eventsClients,
-					formatter: formatterClients,
-					visible: true
-				},
 				{% for col in regCols %}
 					{
 						{% if col.name == 'rid' %}
 						visible: false,
 						{% endif %}
 						sortable: true,
-						field: '{{col.name}}',
-						title: '{{col.label}}',
+						field: {{ col.name | tojson }},
+						title: {{ col.label | tojson }},
 						{% if session.role[0] == 1 %}
 						{% if col.name == 'enabled' %}
 						editable: {
@@ -212,171 +228,34 @@ Agent Registration
 			]
 		});
 		{% if session.role[0] == 1 %}
-		$('#tableParkedClients').bootstrapTable(
+		// The old Approve / Remove icons here were never wired to a handler (the click map listed other
+		// class names), so they did nothing.  They are kept as they were: icons only.
+		MPTable.create('#tableParkedClients',
 		{
 			url: "/registration/parked",
-			search: true,
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
 			queryParamsType: "limit",
 			showRefresh: true,
+			actions: [
+				{ name: 'approveClient', icon: 'fa-thumbs-o-up', title: 'Approve Client' },
+				{ name: 'removeParked', icon: 'fa-trash-o', title: 'Remove Client' }
+			],
 			columns: [
-				{
-					field: 'operate',
-					title: '',
-					align: 'center',
-					events: eventsParked,
-					formatter: formatterParked,
-					visible: true
-				},
 				{% for col in prkClientCols %}
 					{
 						{% if col.name == 'rid' %}
 						visible: false,
 						{% endif %}
 						sortable: true,
-						field: '{{col.name}}',
-						title: '{{col.label}}'
+						field: {{ col.name | tojson }},
+						title: {{ col.label | tojson }}
 					},
 				{% endfor %}
 			]
 		});
 		{% endif %}
 	});
-
-	// Keys Tab
-	function keyFormatter(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<div class="buttonGroup">')
-		htmlData.push('<div class="buttonItem">')
-		htmlData.push('<a class="editKey" href="javascript:void(0)" title="Edit Key">');
-		htmlData.push('<i class="fa fa-pencil" aria-hidden="true"></i></a>');
-		htmlData.push('</div>');
-		{% if session.role[0] == 1 %}
-		htmlData.push('<i class="buttonSeperator"></i>');
-		htmlData.push('<div class="buttonItem">')
-		htmlData.push('<a class="removeKey" href="javascript:void(0)" title="Remove Key">');
-		htmlData.push('<i class="fa fa-trash-o"></i></a>');
-		htmlData.push('</div>');
-		{% endif %}
-		htmlData.push('</div>');
-		return htmlData.join('');
-	}
-
-	window.keyEvents =
-	{
-		'click .editKey': function (e, value, row, index)
-		{
-			openRegistrationKeyModal('/registration/key/edit/' + row['rid'], 'Edit Registration Key');
-		},
-		'click .removeKey': function (e, value, row, index)
-		{
-		{% if session.role[0] == 1 %}
-			var result = confirm("Are you sure you want to delete this key?");
-			if (result) {
-				var _url = "/registration/key/edit/" + row['rid']
-				$.ajax({
-					url: _url,
-					cache: false,
-					type: 'DELETE',
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
-					},
-					success: function () {
-						$('#tableKeys').bootstrapTable('refresh');
-					}
-				});
-			}
-		{% endif %}
-		}
-	};
-
-	// Registered Clients Tab
-	function formatterClients(value, row, index)
-	{
-	{% if session.role[0] == 1 %}
-		return [
-			'<div><a class="remove" href="javascript:void(0)" title="Remove Client">',
-			'<i class="fa fa-trash-o fa-lg" aria-hidden="true"></i>',
-			'</a>&nbsp;&nbsp;&nbsp;</div>'
-		].join('');
-	{% endif %}
-	}
-
-	window.eventsClients =
-	{
-		'click .remove': function (e, value, row, index)
-		{
-			var result = confirm("Are you sure you want to delete this client?");
-			if (result) {
-				var _url = "/registration/registered/client/" + row['cuuid'];
-				$.ajax({
-					url: _url,
-					cache: false,
-					type: 'DELETE',
-					error: function (request, status, error)
-					{
-						jsonValue = jQuery.parseJSON( request.responseText );
-						alert(jsonValue.errormsg);
-					},
-					success: function () {
-						$('#tableClients').bootstrapTable('refresh');
-					}
-				});
-			}
-		}
-	};
-
-	// Parked Clients Tab
-	function formatterParked(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<table><tr><td>')
-		htmlData.push('<a class="editKey" href="javascript:void(0)" title="Approve Client">');
-		htmlData.push('<i class="fa fa-thumbs-o-up" aria-hidden="true"></i>');
-		htmlData.push('</a>');
-		htmlData.push('</td><td>');
-		htmlData.push('<a class="removeKey" href="javascript:void(0)" title="Remove Client">');
-		htmlData.push('<i class="fa fa-trash-o"></i></a>');
-		htmlData.push('</td></tr></table>');
-		return htmlData.join('');
-	}
-
-	window.eventsParked =
-	{
-		'click .assign': function (e, value, row, index)
-		{
-			$.get( "/clients/show/move/client/" + row['cuuid']).done(function(data)
-			{
-				$('#myContent').remove();
-				$('#modalTitle').html('Move Client To Group');
-				$('#modalBody').html(data);
-				$('#modalBody').css({'height':'200px'});
-				$('#modalDialog').modal('show');
-			});
-		},
-		'click .dashboard': function (e, value, row, index)
-		{
-			$('#myContent').remove();
-			var _url = "/clients/dashboard/" + row['cuuid'];
-			var innerHTML = '<iframe src="' + _url + '" id="modaliFrame"' +
-			 ' frameborder="0" allowtransparency="true"' +
-			 ' style="width: 98%; height: 98%; position: absolute"></iframe>';
-
-			$('#modalTitle').html('Client Dashboard - ' + row['hostname']);
-			$('#modalSaveButton').remove();
-			$('#modalCancelButton').html('Close');
-			$('#modalBody').html(innerHTML);
-			$('#modalBody').css({'height':'88vh'});
-			$('#modalDialog').addClass("modal-wide");
-			$('#modalDialog').modal('show');
-		},
-	};
-
 
 	$('#settingsSaveButton').click(function ()
 	{

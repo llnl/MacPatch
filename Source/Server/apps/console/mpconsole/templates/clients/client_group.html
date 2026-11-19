@@ -2,7 +2,6 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/css/selectize.css') }}" rel="stylesheet">
@@ -29,14 +28,13 @@ Client Group - {{group_name}}
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="clients">
-			<table id="table" class="table table-bordered table-sm table-striped" data-row-style="rowStyle" data-toolbar="#toolbar">
-				<div id="toolbar">
-					{% if gResults['Owner'] == True or gResults['Admin'] == True %}
-					<button id="delClientButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-					{% endif %}
-					<button id="mvClientButton" type="button" class="btn btn-default" title="Assign To Group"><i class="glyphicon glyphicon-share"></i></button>
-				</div>
-			</table>
+			<div id="toolbar">
+				{% if gResults['Owner'] == True or gResults['Admin'] == True %}
+				<button id="delClientButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+				{% endif %}
+				<button id="mvClientButton" type="button" class="btn btn-default" title="Assign To Group"><i class="glyphicon glyphicon-share"></i></button>
+			</div>
+			<table id="table" class="table table-bordered table-sm table-striped"></table>
 			<div class="row">
 				<div class="col-md-3">
 					<label>Client Check-in Status</label>
@@ -206,8 +204,7 @@ Client Group - {{group_name}}
 			</form>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 3 %}show active{% endif %}" id="tasks">
-			<table id="tableTasks" class="table table-bordered table-sm table-striped">
-			</table>
+			<table id="tableTasks" class="table table-bordered table-sm table-striped"></table>
 		</div>
 		<div class="tab-pane fade {% if selectedTab == 5 %}show active{% endif %}" id="reqSoftware">
             <br>
@@ -219,12 +216,11 @@ Client Group - {{group_name}}
 	        <div class="tab-content">
 
                 <div class="tab-pane fade show active" id="swReq">
-                    <table id="tableSoftware" data-toolbar="#toolbarSoftware" data-show-export="true" class="table table-bordered table-sm table-striped">
-                        <div id="toolbarSoftware">
-                            <button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-                            <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-                        </div>
-                    </table>
+                    <div id="toolbarSoftware">
+                        <button id="addSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                        <button id="delSWButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                    </div>
+                    <table id="tableSoftware" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
                     <br>
                     <div class="panel panel-info">
                         <div class="panel-heading">
@@ -236,21 +232,19 @@ Client Group - {{group_name}}
                     </div>
                 </div>
                 <div class="tab-pane fade" id="swRes">
-                    <table id="tableSoftwareRes" data-toolbar="#toolbarSoftwareRes" data-unique-id="appID" data-show-export="true" class="table table-bordered table-sm table-striped">
-                        <div id="toolbarSoftwareRes">
-                            <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-                            <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-                        </div>
-                    </table>
+                    <div id="toolbarSoftwareRes">
+                        <button id="addSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+                        <button id="delSWResButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+                    </div>
+                    <table id="tableSoftwareRes" data-unique-id="appID" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
                 </div>
 		    </div>
         </div>
         <div class="tab-pane fade {% if selectedTab == 7 %}show active{% endif %}" id="users">
-			<table id="tableUsers" data-toolbar="#toolbarUsers" data-show-export="true" class="table table-bordered table-sm table-striped">
-				<div id="toolbarUsers">
-					<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-				</div>
-			</table>
+			<div id="toolbarUsers">
+				<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+			</div>
+			<table id="tableUsers" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 		</div>
 	</div>
 {% endblock %}
@@ -261,97 +255,76 @@ Client Group - {{group_name}}
 	<script src="{{ url_for('static', filename='yarn_components/@selectize/selectize/dist/js/selectize.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/client-group-modals.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
 
 	<script>
-	var $tasksTable = $('#tableTasks'), $ttRbutton = $('#ttRefreshbutton');
-	var $tableSoftware = $('#tableSoftware');
+		var $tableSoftware = $('#tableSoftware');
 	var $tableSoftwareRes = $('#tableSoftwareRes');
 
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable(
-		{
-            url: "/clients/group/{{group_id}}/clients",
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
-			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
+		MPTable.create('#table', {
+			url: "/clients/group/{{group_id}}/clients",
+			columnsKey: 'client-group-clients',
+			toolbar: '#toolbar',
 			idField: 'cuuid',
 			uniqueId: 'cuuid',
+			showRefresh: true,
+			pageList: ['10', '25', '50', '100', 'All'],
+			size: 'lg',
+			checkbox: true,
+			rowStyle: rowStyle,
+			{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
+			actions: [
+				{ name: 'dashboard', icon: 'fa-search', title: 'Client Dashboard',
+				  onClick: function (row) {
+					var frame = $('<iframe>', {
+						id: 'modaliFrame',
+						title: 'Client Dashboard',
+						src: "/clients/dashboard/" + encodeURIComponent(row['cuuid']),
+						css: {width: '100%', height: '100%', border: 0, display: 'block'}
+					});
+					ClientGroupModals.open({title: 'Client Dashboard - ' + row['hostname'], content: frame, wide: true, dashboard: true, footer: true});
+				  } }
+			],
+			{% endif %}
 			columns: [
-			{
-					field: 'state',
-					checkbox: true,
-					rowspan: 1,
+				{% for col in columns %}
+				{% if col.name != 'rid' %}
+				{
+					field: {{ col.name | tojson }},
+					title: {{ col.info | tojson }},
+					{% if col.name in ['cuuid', 'cdate', 'ostype', 'SLAM', 'macaddr', 'ADDN', 'agent_version', 'agent_build'] %}
+					visible: false,
+					{% elif col.name == 'needsreboot' %}
 					align: 'center',
-					valign: 'middle'
-			},
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEvents,
-				formatter: operateFormatter,
-				{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
-				visible: true,
-				{% else %}
-				visible: false,
+					formatter: rebootFormatter,
+					{% endif %}
+					sortable: true
+				},
 				{% endif %}
-			},
-			{% for col in columns %}
-			{% if col.name != 'rid' %}
-			{
-				field: '{{col.name}}',
-				title: '{{col.info}}',
-				{% if col.name == 'rid' or col.name == 'cuuid' or col.name == 'cdate' or col.name == 'ostype'
-                or col.name == 'SLAM' or col.name == 'macaddr' or col.name == 'ADDN' or col.name == 'agent_version'
-                or col.name == 'agent_build' %}
-				visible: false,
-				{% elif col.name == 'needsreboot' %}
-				align: 'center',
-				formatter: rebootFormatter,
-				{% endif %}
-				sortable: true
-
-			},
-            {% endif %}
-			{% endfor %}
-			{
-				field: 'clientState',
-				title: 'clientState',
-				visible: false
-			},
+				{% endfor %}
+				{ field: 'clientState', title: 'clientState', visible: false }
 			]
 		});
 
-		$tasksTable.bootstrapTable(
+		MPTable.create('#tableTasks',
 		{
 			url: "/clients/group/{{group_id}}/tasks",
-			search: true,
+			columnsKey: 'client-group-tasks',
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
 			queryParamsType: "limit",
-			pagination: true,
-			sidePagination: "client",
 			showRefresh: true,
-			resizable: true,
 			idField: 'cmd',
 			columns: [
 				{% for tcol in tasksCols %}
 					{
-						field: '{{tcol.name}}',
-						title: '{{tcol.info}}',
+						field: {{ tcol.name | tojson }},
+						title: {{ tcol.info | tojson }},
 						{% if tcol.name == 'id' or tcol.name == 'idrev' or tcol.name == 'parent' or tcol.name == 'cmdalt'
 						 or tcol.name == 'mode' or tcol.name == 'idsig' or tcol.name == 'group_id' or tcol.name == 'rid'
 						 or tcol.name == 'scope' or tcol.name == 'startdate' or tcol.name == 'enddate'%}
@@ -360,7 +333,7 @@ Client Group - {{group_name}}
 						{% if tcol.name == 'active' %}
 						editable: {
 							type: 'select',
-							url: '/clients/group/{{gResults['Group']['id']}}/task/active',
+							url: '/clients/group/' + {{ gResults['Group']['id'] | tojson }} + '/task/active',
 							source: [
 								{value: '0', text: 'False'},
 								{value: '1', text: 'True'},
@@ -370,15 +343,14 @@ Client Group - {{group_name}}
 						{% if tcol.name ==  'interval' %}
 						editable: {
 							type: 'text',
-							url: '/clients/group/{{gResults['Group']['id']}}/task/interval'
+							url: '/clients/group/' + {{ gResults['Group']['id'] | tojson }} + '/task/interval'
 						},
 						{% endif %}
 						{% if tcol.name ==  'startdate' or tcol.name ==  'enddate' %}
 						editable: {
 							type: 'date',
 							format: 'yyyy-mm-dd',
-							viewformat: 'yyyy-mm-dd',
-							url: '/clients/group/{{gResults['Group']['id']}}/task/{{tcol.name}}'
+							url: '/clients/group/' + {{ gResults['Group']['id'] | tojson }} + '/task/' + {{ tcol.name | tojson }}
 						},
 						{% endif %}
 						sortable: true
@@ -387,72 +359,66 @@ Client Group - {{group_name}}
 			]
 		});
 
-		$tableSoftware.bootstrapTable(
+		MPTable.create('#tableSoftware',
 		{
 			striped: true,
-            url: "/clients/group/{{group_id}}/software",
+			url: "/clients/group/{{group_id}}/software",
+			columnsKey: 'client-group-software',
 			dataField: 'data',
-			pagination: true,
-			sidePagination: 'client',
 			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
 			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
 			idField: 'rid',
 			uniqueId: 'rid',
+			toolbar: '#toolbarSoftware',
+			checkbox: true,
 			columns: [
-            {
-                field: 'state',
-                checkbox: true,
-                rowspan: 1,
-                align: 'center',
-                valign: 'middle'
-			},
 			{% for swcol in swCols %}
 			{
-				field: '{{swcol[0]}}',
-				title: '{{swcol[1]}}',
-                {% if swcol[2] == '0' %}
-                visible: false,
-                {% endif %}
+				field: {{ swcol[0] | tojson }},
+				title: {{ swcol[1] | tojson }},
+				{% if swcol[2] == '0' %}
+				visible: false,
+				{% endif %}
 				sortable: true
 			},
 			{% endfor %}
 			]
 		});
 
-		$('#tableUsers').bootstrapTable(
+		MPTable.create('#tableUsers',
 		{
 			striped: true,
-			pagination: true,
-			sidePagination: 'client',
+			columnsKey: 'client-group-users',
 			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
 			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
 			idField: 'user_id',
 			uniqueId: 'user_id',
+			toolbar: '#toolbarUsers',
+			size: 'lg',
+			{% if gResults['Owner'] == True %}
+			actions: [
+				{ name: 'remove', icon: 'fa-trash-o', title: 'Remove User from Group',
+				  onClick: function (row) {
+					$.ajax({
+						url: "/clients/group/" + {{ gResults['Group']['id'] | tojson }} + "/" + encodeURIComponent(row['user_id']) + "/remove",
+						cache: false,
+						error: function (request, status, error)
+						{
+							var jsonValue = jQuery.parseJSON( request.responseText );
+							alert(jsonValue.errormsg);
+						},
+						success: function () {
+							$('#tableUsers').bootstrapTable('removeByUniqueId', row['user_id']);
+						}
+					});
+				  } }
+			],
+			{% endif %}
 			columns: [
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEventsUsers,
-				formatter: operateFormatterUsers,
-				{% if gResults['Owner'] == True %}
-				visible: true,
-				{% else %}
-				visible: false,
-				{% endif %}
-			},
 			{% for ucol in gResults['Users']['columns'] %}
 			{
-				field: '{{ucol[0]}}',
-				title: '{{ucol[1]}}',
+				field: {{ ucol[0] | tojson }},
+				title: {{ ucol[1] | tojson }},
 				sortable: true
 			},
 			{% endfor %}
@@ -460,43 +426,37 @@ Client Group - {{group_name}}
 			data: [
 			{% for usr in gResults['Users']['users'] %}
 			{
-				'user_id': "{{usr.user_id}}",
-				'owner': "{{usr.owner}}"
+				'user_id': {{ usr.user_id | string | tojson }},
+				'owner': {{ usr.owner | string | tojson }}
 			},
 			{% endfor %}
 			]
 		});
 
-		$('#tableSoftwareRes').bootstrapTable({
+		MPTable.create('#tableSoftwareRes', {
 			url: "/osmanage/app_filter/list/{{group_id}}",
+			columnsKey: 'client-group-software-restrictions',
 			striped: true,
-			search: true,
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
-			sidePagination: "client",
 			showRefresh: true,
-            idField: 'appID',
+			idField: 'appID',
+			uniqueId: 'appID',
+			toolbar: '#toolbarSoftwareRes',
+			checkbox: true,
 			columns: [
-            {
-                field: 'state',
-                checkbox: true,
-                rowspan: 1,
-                align: 'center',
-                valign: 'middle'
-			},
             {% for col in swResCols %}
                 {
                     {% if col[2] == '0' %}
                     visible: false,
                     {% endif %}
                     sortable: true,
-                    field: '{{col[0]}}',
-                    title: '{{col[1]}}',
+                    field: {{ col[0] | tojson }},
+                    title: {{ col[1] | tojson }},
                     {% if col[0] == 'enabled' %}
                     editable: {
                         type: 'select',
-                        url: '/clients/group/{{gResults['Group']['id']}}/sw/res/enable',
+                        url: '/clients/group/' + {{ gResults['Group']['id'] | tojson }} + '/sw/res/enable',
                         source: [
                             {value: '1', text: 'Yes'},
                             {value: '0', text: 'No'},
@@ -536,16 +496,6 @@ Client Group - {{group_name}}
 		return {classes: "normal"};
 	}
 
-	function operateFormatter(value, row, index) {
-		return [
-			{% if gResults['Group']['name'] == 'Default' or gResults['Owner'] == True or gResults['Admin'] == True %}
-			'<div class="operateWidth-md"><a class="dashboard" href="javascript:void(0)" title="Client Dashboard">',
-			'<i class="fa fa-search fa-lg" aria-hidden="true"></i>',
-			'</a></div>'
-			{% endif %}
-		].join('');
-	}
-
 	function rebootFormatter(value, row, index) {
 		if (value == 'true') {
 			return [
@@ -563,82 +513,7 @@ Client Group - {{group_name}}
 
 	}
 
-	/* Events for client table */
-	window.operateEvents = {
-		'click .mvClientButton': function (e, value, row, index)
-		{
-            ClientGroupModals.load("/clients/show/move/client/" + encodeURIComponent(row['cuuid']), {
-                title: 'Move Client To Group',
-                ready: function ($body) {
-                    $body.find('#cuuids').val(row['cuuid']);
-                    $body.find('#orig_group_id').val({{ group_id | tojson }});
-                    $body.find('#currentGroupName').text({{ group_name | tojson }});
-                }
-            });
-		},
-		'click .dashboard': function (e, value, row, index)
-		{
-            var frame = $('<iframe>', {
-                id: 'modaliFrame',
-                title: 'Client Dashboard',
-                src: "/clients/dashboard/" + encodeURIComponent(row['cuuid']),
-                css: {width: '100%', height: '100%', border: 0, display: 'block'}
-            });
-            ClientGroupModals.open({title: 'Client Dashboard - ' + row['hostname'], content: frame, wide: true, dashboard: true, footer: true});
-		},
-	};
-
-	function operateFormatterUsers(value, row, index) {
-		{% if gResults['Owner'] == True %}
-		return [
-			'<div><a class="remove" href="javascript:void(0)" title="Remove User from Group">',
-			'<i class="fa fa-trash-o fa-lg" aria-hidden="true"></i>',
-			'</a>&nbsp;&nbsp;&nbsp;</div>'
-		].join('');
-		{% else %}
-		return [
-			''
-		].join('');
-		{% endif %}
-	}
-
-	/* Events for software table */
-	function operateFormatterSW(value, row, index) {
-		var htmlData = [];
-		return htmlData.join('');
-	}
-
-	window.operateEventsSW = {
-		'click .removeSW': function (e, value, row, index)
-		{
-
-		},
-		'click .addSW': function (e, value, row, index)
-		{
-
-		}
-	};
-
-	window.operateEventsUsers = {
-		'click .remove': function (e, value, row, index)
-		{
-			var _url = "/clients/group/{{gResults['Group']['id']}}/" + row['user_id'] + "/remove";
-			$.ajax({
-				url: _url,
-				cache: false,
-				error: function (request, status, error)
-				{
-					jsonValue = jQuery.parseJSON( request.responseText );
-					alert(jsonValue.errormsg);
-				},
-				success: function () {
-					$('#tableUsers').bootstrapTable('removeByUniqueId', row['user_id']);
-				}
-			});
-		}
-	};
-
-	var $table = $('#tableUsers'), $addButton = $('#addButton'),
+	var $addButton = $('#addButton'),
 	$_settingsSaveButton = $('#settingsSaveButton'), $_delClientButton = $('#delClientButton');
 
 	var $addSWButton = $('#addSWButton'), $delSWButton = $('#delSWButton');

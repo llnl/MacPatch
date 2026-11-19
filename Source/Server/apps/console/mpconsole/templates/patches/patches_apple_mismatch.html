@@ -3,7 +3,6 @@
 {% block styles %}
 	{{ super() }}
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 {%  endblock %}
 
@@ -21,9 +20,8 @@
 
 {% block bodyPanel %}
 
-	<table id="table" class="table table-bordered table-sm table-striped" data-toolbar="#toolbar" data-show-export="true">
-		<div id="toolbar"></div>
-	</table>
+	<div id="toolbar"></div>
+	<table id="table" class="table table-bordered table-sm table-striped"></table>
 
 {% endblock %}
 
@@ -42,8 +40,7 @@
 	    $(function () {
           $('[data-toggle="popover"]').popover()
         })
-		$('#table').bootstrapTable(
-		{
+		MPTable.create('#table', {
 			ajax: function loadMyRows(params)
 			{
 				var _url = "/patches/apple/mismatch/list";
@@ -62,30 +59,20 @@
 					}
 				});
 			},
-			search: true,
+			toolbar: '#toolbar',
+			showExport: true,
 			pageSize: 20,
 			pageList: [5, 10, 20, 50, 100, 200],
-			pagination: true,
 			queryParamsType: "limit",
 			sidePagination: "client",
 			idField: 'patch',
-			sortable: true,
 			sortName: 'count',
 			sortOrder: 'desc',
 			showRefresh: true,
 			exportTypes: ['csv', 'excel', 'json', 'xml', 'txt'],
-			columns: [
-				{% for col in columns %}
-					{
-						{% if col[2] == '0' %}
-						visible: false,
-						{% endif %}
-						sortable: true,
-						field: '{{col[0]}}',
-						title: '{{col[1]}}'
-					},
-				{% endfor %}
-			]
+			columns: {{ columns | tojson }}.map(function (c) {
+				return { field: c[0], title: c[1], sortable: true, visible: c[2] !== '0' };
+			})
 		});
 
 	});

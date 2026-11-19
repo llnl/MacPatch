@@ -1,6 +1,6 @@
 # ----------------------------------------------------------
 # MacPatch Admin Console
-# - 4.4.0
+# - 5.0.0
 # - Migrated to Bootstrap 4.6
 #
 # ----------------------------------------------------------
@@ -111,8 +111,10 @@ def create_app(config_object=Config):
 		if app.config['ENABLE_INTUNE']:
 			enableIntune = 1
 
+		from mpconsole.user_prefs import prefs_for_user
 		patchGroupCount, clientCount = baseCounts()
-		return dict(patchGroupCount=patchGroupCount, clientCount=clientCount, intune=enableIntune)
+		return dict(patchGroupCount=patchGroupCount, clientCount=clientCount, intune=enableIntune,
+					user_prefs=prefs_for_user())
 
 	read_siteconfig_server_data(app)
 

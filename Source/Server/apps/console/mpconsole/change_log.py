@@ -61,6 +61,10 @@ def _metadata():
                 endpoint=str(request.endpoint or '')[:255], method=request.method)
 
 
+# Tables that are not audited: per user UI preferences change on every click and are not configuration.
+UNTRACKED_TABLES = {'mp_adm_user_prefs'}
+
+
 def install_change_log(engine, log_table):
     if getattr(engine, '_macpatch_change_log_installed', False):
         return
@@ -83,7 +87,7 @@ def install_change_log(engine, log_table):
         if not active(context.execution_options) or not context.compiled:
             return
         statement = context.compiled.statement
-        if not isinstance(statement, (Update, Delete)) or statement.table.name == log_table.name:
+        if not isinstance(statement, (Update, Delete)) or statement.table.name in UNTRACKED_TABLES | {log_table.name}:
             return
         table = statement.table
         if not len(table.primary_key):
@@ -104,7 +108,7 @@ def install_change_log(engine, log_table):
         if not active(options) or not isinstance(statement, (Insert, Update, Delete)):
             return
         table = statement.table
-        if table.name == log_table.name:
+        if table.name == log_table.name or table.name in UNTRACKED_TABLES:
             return
         if not len(table.primary_key):
             raise RuntimeError('Console change logging requires a primary key: ' + table.name)

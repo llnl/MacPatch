@@ -15,64 +15,36 @@ MDM - Enrolled Devices
     {% for col in columns %}
 
     {% endfor %}
-	<table id="table" data-toolbar="#toolbar" data-show-export="true" class="table table-bordered table-sm table-striped">
-		<div id="toolbar">
-            {% if session.role[0] == 1 %}
-            <button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
-            {% endif %}
-            &nbsp;<div id="lastSync">Last Sync: {{ lastSync }}</div>
-		</div>
-	</table>
+	<div id="toolbar">
+		{% if session.role[0] == 1 %}
+		<button id="syncButton" type="button" class="btn btn-default" title="Sync Content from InTune"><i class="glyphicon glyphicon-cloud-download"></i></button>
+		{% endif %}
+		&nbsp;<div id="lastSync">Last Sync: {{ lastSync }}</div>
+	</div>
+	<table id="table" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 {% endblock %}
 
 
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<script>
 
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable(
-		{
-            url: "/mdm/enrolledDevices/list",
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '20', '50', '100', 'All'],
-			search: true,
+		MPTable.create('#table', {
+			url: "/mdm/enrolledDevices/list",
+			toolbar: '#toolbar',
 			showRefresh: true,
-			resizable: true,
-			sortable: true,
-			showColumns: true,
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-				detailOpen: 'glyphicon glyphicon-info-sign',
-				detailClose: 'glyphicon glyphicon-minus-sign'
-			},
 			idField: 'rid',
 			columns: [
 			{% for col in columns %}
-            {% if col != 'rid' %}
-                {% if col.info %}
-			{
-
-                    field: '{{col.name}}',
-                    title: '{{col.info}}',
-                    {% if col.name == 'rid' or col.name == 'id' or col.name == 'userid' or col.name == 'udid' %}
-                    visible: false,
-                    {% endif %}
-                    sortable: true
-
-			},
-                {% endif %}
-            {% endif %}
+			{% if col != 'rid' %}
+			{% if col.info %}
+			{ field: {{ col.name | tojson }}, title: {{ col.info | tojson }}{% if col.name == 'rid' or col.name == 'id' or col.name == 'userid' or col.name == 'udid' %}, visible: false{% endif %}, sortable: true },
+			{% endif %}
+			{% endif %}
 			{% endfor %}
-			],
-			data: [
-
 			]
 		});
 

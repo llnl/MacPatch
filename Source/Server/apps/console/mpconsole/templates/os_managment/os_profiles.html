@@ -2,7 +2,6 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
@@ -14,14 +13,13 @@
 
 {% block bodyPanel %}
 
-	<table id="table" data-toolbar="#toolbar" class="table table-bordered table-sm table-striped">
-		<div id="toolbar">
-			{% if session.role[0] == 1 %}
-			<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-			<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
-			{% endif %}
-		</div>
-	</table>
+	<div id="toolbar">
+		{% if session.role[0] == 1 %}
+		<button id="addButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
+		<button id="delButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-trash"></i></button>
+		{% endif %}
+	</div>
+	<table id="table" class="table table-bordered table-sm table-striped"></table>
 
 {% endblock %}
 
@@ -29,78 +27,61 @@
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
-	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<script>
 	$( document ).ready(function()
 	{
-		$('#table').bootstrapTable(
-		  {
-			  url: "/osmanage/profiles/list",
-			  pagination: true,
-			  sidePagination: 'client',
-			  showRefresh: true,
-			  pageList: ['10', '25', '50', '100', 'All'],
-			  search: true,
-			  idField: 'profileID',
-			  sortable: true,
-			  showColumns: true,
-			  resziable: true,
-			  columns: [
-			  {
-				  field: 'state',
-				  checkbox: true,
-				  rowspan: 1,
-				  align: 'center',
-				  valign: 'middle',
-				  width: 40,
-				  {% if session.role[0] != 1 %}
-				  visible: false,
-				  {% endif %}
-			  },
-			  {
-				  field: 'operate',
-				  title: '',
-				  align: 'center',
-				  events: operateEvents,
-				  formatter: operateFormatter,
-				  width: 80
-			  },
-			  {% for col in columns %}
-			  {
-				  field: '{{col[0]}}',
-				  title: '{{col[1]}}',
-				  {% if col[0] == 'profileID' %}
-				  visible: false,
-				  {% elif col[2] == '0' %}
-				  visible: false,
-				  {% endif %}
-				  sortable: true
-			  },
-			  {% endfor %}
-			  ],
-			  data: [
-				  {% for d in data %}
-				  {
-					  {% for col in columns %}
-						  {{col[0]}} : `{{ d[col[0]] }}`,
-					  {% endfor %}
-				  },
-				  {% endfor %}
-			  ]
-		});
-	});
+		var isAdmin = {{ (session.role[0] == 1) | tojson }};
 
-	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
-	$(function ()
-	{
-		$delButton.click(function ()
+		var table = MPTable.create('#table', {
+			url: "/osmanage/profiles/list",
+			toolbar: '#toolbar',
+			showRefresh: true,
+			pageList: ['10', '25', '50', '100', 'All'],
+			idField: 'profileID',
+			checkbox: isAdmin,
+			size: 'lg',
+			actions: [
+				{ name: 'edit',
+				  icon: isAdmin ? 'fa-pencil' : 'fa-search',
+				  title: isAdmin ? 'Edit Profile' : 'Profile Data',
+				  onClick: function (row) {
+					WizardNavigation.open("/osmanage/profiles/update/" + encodeURIComponent(row['profileID']));
+				  } },
+				{ name: 'download', icon: 'fa-download', title: 'Download Profile',
+				  onClick: function (row) {
+					var _fileName = row['profileName'].replace(/\s/g,'') + '.mobileconfig';
+					var _url = '/osmanage/profile/download/' + encodeURIComponent(row['profileID']);
+					var req = new XMLHttpRequest();
+					req.open("GET", _url, true);
+					req.responseType = "blob";
+					req.onload = function () {
+						var link = document.createElement('a');
+						link.href = window.URL.createObjectURL(req.response);
+						link.download = _fileName;
+						link.click();
+					};
+					req.send();
+				  } }
+			],
+			columns: [
+			{% for col in columns %}
+			{ field: {{ col[0] | tojson }}, title: {{ col[1] | tojson }}{% if col[0] == 'profileID' or col[2] == '0' %}, visible: false{% endif %}, sortable: true },
+			{% endfor %}
+			],
+			data: [
+				{% for d in data %}
+				{
+					{% for col in columns %}
+					{{ col[0] | tojson }}: {{ d[col[0]] | string | tojson }},
+					{% endfor %}
+				},
+				{% endfor %}
+			]
+		});
+
+		$('#delButton').click(function ()
 		{
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row)
-			{
-				return row.profileID;
-			});
+			var ids = table.selectedIds('profileID');
 
 			var formData = new FormData();
 			formData.append("profileID", ids);
@@ -114,10 +95,7 @@
 				success: function(){
 					alert("OS Profile Deleted Successfully");
 					$('#modalDialog').modal('hide');
-					$table.bootstrapTable('remove', {
-						field: 'profileID',
-						values: ids
-					});
+					table.removeRows('profileID', ids);
 				},
 				error: function(jqXHR, textStatus, errorThrown){
 					alert("OS Profile Failed to Delete");
@@ -127,58 +105,10 @@
 			return true;
 		});
 
-		$addButton.click(function ()
+		$('#addButton').click(function ()
 		{
 			WizardNavigation.open("/osmanage/profiles/add");
 		});
 	});
-
-	function operateFormatter(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<div class="buttonGroup">');
-		{% if session.role[0] == 1 %}
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Profile">');
-		htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i>');
-		{% else %}
-		htmlData.push('<div class="buttonItem">');
-		htmlData.push('<a class="edit" href="javascript:void(0)" title="Profile Data">');
-		htmlData.push('<i class="fa fa-search fa-lg" aria-hidden="true"></i></a>');
-		{% endif %}
-		htmlData.push('</div>');
-		htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-		htmlData.push('<a class="download" href="javascript:void(0)" title="Download Profile">');
-		htmlData.push('<i class="fa fa-download fa-lg"></i></a>');
-		htmlData.push('</div>');
-		htmlData.push('</div>');
-		return htmlData.join('');
-	}
-
-	window.operateEvents = {
-		'click .edit': function (e, value, row, index)
-		{
-			e.preventDefault();
-			WizardNavigation.open("/osmanage/profiles/update/" + encodeURIComponent(row['profileID']));
-		},
-		'click .description': function (e, value, row, index) {
-			alert('You click description action, row: ' + JSON.stringify(row));
-		},
-        'click .download': function (e, value, row, index) {
-            var _fileName = row['profileName'].replace(/\s/g,'') + '.mobileconfig';
-			var _url = '/osmanage/profile/download/' + row['profileID'];
-			var req = new XMLHttpRequest();
-            req.open("GET", _url, true);
-            req.responseType = "blob";
-            req.onload = function (event) {
-                var blob = req.response;
-                var link=document.createElement('a');
-                link.href=window.URL.createObjectURL(blob);
-                link.download=_fileName;
-                link.click();
-            };
-            req.send();
-		}
-	};
 	</script>
 {% endblock %}

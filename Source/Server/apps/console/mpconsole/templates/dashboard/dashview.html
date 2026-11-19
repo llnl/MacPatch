@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <meta name="csrf-token" content="{{ csrf_token() }}">
+	<script>window.MP_PREFS = {{ user_prefs | default({}) | tojson }};</script>
 {% block styles %}
 	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
@@ -15,7 +15,7 @@
 {% block body %}
 	<div>
 		<div id="chartDataToolbar"></div>
-		<table id="chartDataTable" data-toolbar="#chartDataToolbar" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
+		<table id="chartDataTable" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
 	</div>
 	<div id="overlay">
 		<img id="overlayImg" src="{{ url_for('static', filename='img/36.png')}}" style="display:block;margin:auto;padding-top:10%;" />
@@ -32,16 +32,18 @@
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
     <script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/export/bootstrap-table-export.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/tableexport.jquery.plugin/tableExport.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-http.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/macpatch/mp-table.js') }}"></script>
 
 	<script>
 	$( document ).ready(function()
 	{
-		$('#chartDataTable').bootstrapTable(
+		MPTable.create('#chartDataTable',
 		{
+			toolbar: '#chartDataToolbar',
+			columnsKey: 'dashboard-chart-data',
 			striped: true,
 			url: "/dashboard/data/{{chart}}/{{value}}",
 			search: true,
@@ -54,12 +56,11 @@
             showColumns: true,
             exportTypes: ['json', 'xml', 'csv', 'txt'],
             exportDataType: "all",
-			resizable: true,
 			columns: [
 				{% for col in columns %}
 				{
-					field: '{{col['name']}}',
-					title: '{{col['label']}}',
+					field: {{ col['name'] | tojson }},
+					title: {{ col['label'] | tojson }},
 					sortable: true
 				},
 				{% endfor %}

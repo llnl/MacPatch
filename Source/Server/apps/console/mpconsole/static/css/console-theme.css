@@ -266,6 +266,36 @@ body.mp-console {
   line-height: 20px;
 }
 
+/* MPTable tables fit the window width: header text wraps between words instead of forcing each column to the
+   width of its whole title, and long unbroken values (hostnames, serial numbers) wrap rather than widen the table. */
+.bootstrap-table .fixed-table-container .table.mp-table thead th .th-inner {
+  white-space: normal;
+  overflow-wrap: normal;   /* headers wrap between words only, never inside one */
+  word-break: normal;
+  hyphens: none;
+}
+
+.bootstrap-table .fixed-table-container .table.mp-table td {
+  overflow-wrap: anywhere;
+}
+
+/* Fonts scale down with the window width.  The upper bound is the current size (14px, or 12px for
+   table-sm); below about 1250px wide they shrink, down to a floor that stays readable. */
+.bootstrap-table .fixed-table-container .table.mp-table,
+.bootstrap-table .fixed-table-container .table.mp-table th,
+.bootstrap-table .fixed-table-container .table.mp-table td,
+.bootstrap-table .fixed-table-container .table.mp-table thead th .th-inner {
+  font-size: clamp(11px, 0.8vw + 4px, 14px);
+  line-height: 1.4;
+}
+
+.bootstrap-table .fixed-table-container .table.mp-table.table-sm,
+.bootstrap-table .fixed-table-container .table.mp-table.table-sm th,
+.bootstrap-table .fixed-table-container .table.mp-table.table-sm td,
+.bootstrap-table .fixed-table-container .table.mp-table.table-sm .th-inner {
+  font-size: clamp(10px, 0.8vw + 2px, 12px);
+}
+
 /* Denser rows for tables that opt into table-sm. */
 .table.table-sm,
 .table.table-sm th,

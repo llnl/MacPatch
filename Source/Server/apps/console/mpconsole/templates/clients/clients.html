@@ -2,7 +2,6 @@
 
 {% block styles %}
 	{{ super() }}
-	<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 {%  endblock %}
 
@@ -18,8 +17,6 @@ Clients - All
 {% block javascript %}
 	{{ super() }}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<script>
 	(function () {
 		var hidden = ['addn', 'cuuid', 'cdate', 'macaddr'];
@@ -29,7 +26,6 @@ Clients - All
 			idField: 'cuuid',
 			showRefresh: true,
 			pageList: ['10', '25', '50', '100', 'All'],
-			resizable: true,
 			columns: {{ colNames | tojson }}.map(function (c) {
 				return { field: c.name, title: c.label, visible: hidden.indexOf(c.name) === -1, sortable: true };
 			})

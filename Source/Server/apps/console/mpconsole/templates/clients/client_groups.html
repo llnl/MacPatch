@@ -32,185 +32,69 @@ Client Groups
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script>
+	(function () {
+		var rights = {{ rights | tojson }}.map(String);
+		var currentUser = {{ session.user | tojson }};
+		var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
 
-	var gRights = [];
-	{% for r in rights %}
-		gRights.push("{{r}}");
-	{% endfor %}
+		var counts = {};
+		{{ counts | tojson }}.forEach(function (c) { counts[c.group_id] = c.total; });
 
-	$( document ).ready(function()
-	{
-		$('#table').bootstrapTable(
-		{
-			pagination: true,
-			sidePagination: 'client',
-			pageList: ['10', '25', '50', '100', 'All'],
-			search: true,
-			showRefresh: false,
-			sortable: true,
+		var rows = {{ data | tojson }}.map(function (g) {
+			g.count = counts[g.group_id] || 0;
+			return g;
+		});
+
+		function isDefault(row)    { return row.group_name === 'Default'; }
+		function hasRowRight(row)  { return isDefault(row) || rights.indexOf(String(row.group_id)) > -1; }
+		function canRemove(row)    { return !isDefault(row) && (row.group_owner === currentUser || isAdmin); }
+
+		var table = MPTable.create('#table', {
 			idField: 'group_id',
 			sortName: 'count',
 			sortOrder: 'desc',
-			icons: {
-				refresh: 'fa fa-refresh',
-				toggle: 'fa fa-th-list',
-				columns: 'fa fa-columns',
-			},
+			pageList: ['10', '25', '50', '100', 'All'],
+			size: 'lg',
 			columns: [
-			{
-				field: 'operate',
-				title: '',
-				align: 'center',
-				events: operateEvents,
-				formatter: operateFormatter,
-				width: 120
-			},
-			{% for col in columns %}
-			{
-				field: '{{col.name}}',
-				title: '{{col.info}}',
-				{% if col.name ==  'rid' or  col.name ==  'group_id' %}
-				visible: false,
-				{% endif %}
-				sortable: true
-			},
-			{% endfor %}
-			{
-				field: 'count',
-				title: 'No. Clients',
-				sortable: true
-			},
-			],
-			data: [
-			{% for g in data %}
-			{
 				{% for col in columns %}
-					{{col.name}}: '{{g[col.name]}}',
+				{ field: {{ col.name | tojson }}, title: {{ col.info | tojson }}, sortable: true{% if col.name == 'rid' or col.name == 'group_id' %}, visible: false{% endif %} },
 				{% endfor %}
-					'count': 0,
-				{% if counts|length >= 1 %}
-					{% for count in counts %}
-						{% if count['group_id'] == g['group_id'] %}
-							'count': {{count['total']}},
-						{% endif %}
-					{% endfor %}
-				{% endif %}
-			},
-			{% endfor %}
+				{ field: 'count', title: 'No. Clients', sortable: true }
+			],
+			data: rows,
+			actions: [
+				{ name: 'edit', icon: 'fa-pencil', title: 'Edit Client Group',
+				  show: hasRowRight, showDisabled: true,
+				  onClick: function (row) { window.location.href = '/clients/group/' + encodeURIComponent(row.group_id); } },
+				{ name: 'modify', icon: 'fa-edit', title: 'Modify Client Group',
+				  show: hasRowRight, showDisabled: true,
+				  onClick: function (row) {
+					ClientGroupModals.load('/clients/group/modify/' + encodeURIComponent(row.group_id), {title: 'Edit Client Group'});
+				  } },
+				{ name: 'remove', icon: 'fa-trash-o', title: 'Remove Client Group',
+				  show: canRemove, showDisabled: true,
+				  onClick: removeGroup }
 			]
 		});
-	});
 
-	function operateFormatter(value, row, index)
-	{
-		var htmlData = [];
-		htmlData.push('<div class="buttonGroup">');	
-		var hasRowRight = false;
+		function removeGroup(row) {
+			if (!confirm('Are you sure you want to delete this client group (' + row.group_name + ') ?')) return;
 
-		hasRowRight = false;
-		for (i = 0; i < gRights.length; i++)
-		{
-			if (gRights[i] == row.group_id || row.group_name == 'Default')
-			{
-				hasRowRight = true;
-			}
-		}
-		if (hasRowRight || row.group_name == 'Default') {
-			htmlData.push('<div class="buttonItem">');
-			htmlData.push('<a class="edit" href="javascript:void(0)" title="Edit Patch Group">');
-			htmlData.push('<i class="fa fa-pencil fa-lg" aria-hidden="true"></i></a>');
-			htmlData.push('</div>');
-			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-			htmlData.push('<a class="modify" href="javascript:void(0)" title="Modify Patch Group">');
-			htmlData.push('<i class="fa fa-edit fa-lg"></i></a>');
-			htmlData.push('</div>');
-		} else {
-			htmlData.push('<div class="buttonItem">');
-			htmlData.push('<i class="fa fa-pencil fa-lg disabled" aria-hidden="true"></i>');
-			htmlData.push('</div>');
-			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-			htmlData.push('<i class="fa fa-edit fa-lg disabled"></i>');
-			htmlData.push('</div>');
-		}
-
-		if (((row['group_owner'] == '{{session.user}}') || ({{session.role[0]}} == 1)) && row['count'] >= 0 && row.group_name != 'Default') {
-			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-			htmlData.push('<a class="remove" href="javascript:void(0)" title="Remove Patch Group">');
-			htmlData.push('<i class="fa fa-trash-o fa-lg"></i></a>');
-			htmlData.push('</div>');
-		} else {
-			htmlData.push('<i class="buttonSeperator"></i><div class="buttonItem">');
-			htmlData.push('<i class="fa fa-trash-o fa-lg disabled"></i></a>');
-			htmlData.push('</div>');
-		}
-
-		htmlData.push('</div>');
-		return htmlData.join('');
-	}
-
-	window.operateEvents = {
-		'click .edit': function (e, value, row, index)
-		{
-			var _url = '/clients/group/' + row.group_id
-			$(location).attr('href',_url);
-		},
-		'click .modify': function (e, value, row, index)
-		{
-            ClientGroupModals.load('/clients/group/modify/' + encodeURIComponent(row.group_id), {title: 'Edit Client Group'});
-		},
-		'click .remove': function (e, value, row, index)
-		{
-			if (confirm('Are you sure you want to delete this patch group (' + row['name'] +') ?'))
-			{
-				var _url = "/clients/group/" + row.group_id;
-				return $.ajax({
-					url: _url,
-					type: 'DELETE',
-					data: {},
-					success: function(data)
-					{
-						$('#table').bootstrapTable('remove', {
-							field: 'group_id',
-							values: [row.group_id]
-						});
-						$('#table').bootstrapTable('refresh');
-					},
-					error: function (xhr, textStatus, errorThrown)
-					{
-	                    var err = xhr.responseJSON || {};
-                    if (!err.errormsg) {
-                        try { err = JSON.parse(xhr.responseText); } catch (error) { err = {}; }
-                    }
-                    ClientGroupModals.open({
-                        title: 'Error, Removing Client Group',
-                        content: $('<p>').text(err.errormsg || 'Unable to remove this client group.'),
-                        footer: true,
-                        danger: true
-                    });
-					}
+			MPHttp.delete('/clients/group/' + encodeURIComponent(row.group_id))
+				.then(function () { table.removeRow('group_id', row.group_id); })
+				.catch(function (err) {
+					ClientGroupModals.open({
+						title: 'Error, Removing Client Group',
+						content: $('<p>').text(MPHttp.errorMessage(err)),
+						footer: true,
+						danger: true
+					});
 				});
-			}
 		}
-	};
 
-	var $table = $('#table'), $delButton = $('#delButton'), $addButton = $('#addButton');
-	$(function ()
-	{
-		$delButton.click(function ()
-		{
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row) {
-				return row.puuid;
-			});
-			$table.bootstrapTable('remove', {
-				field: 'puuid',
-				values: ids
-			});
+		document.getElementById('addButton').addEventListener('click', function () {
+			ClientGroupModals.load('/clients/group/add', {title: 'Add Client Group'});
 		});
-
-		$addButton.click(function ()
-		{
-            ClientGroupModals.load('/clients/group/add', {title: 'Add Client Group'});
-		});
-	});
+	}());
 	</script>
 {% endblock %}

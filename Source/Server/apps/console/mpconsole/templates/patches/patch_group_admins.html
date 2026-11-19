@@ -1,6 +1,5 @@
 {% block styles %}
-<link href="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
+<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
@@ -13,79 +12,62 @@
 		<button id="addPatchGroupAdminButton" type="button" class="btn btn-default" title="Add Patch Group Admin"><i class="glyphicon glyphicon-plus" aria-hidden="true"></i></button>
 		<button id="deletePatchGroupAdminButton" type="button" class="btn btn-default" title="Remove Selected Admins"><i class="glyphicon glyphicon-trash" aria-hidden="true"></i></button>
 	</div>
-	<table id="table_admins" data-toolbar="#patch-group-admins-toolbar" data-show-export="true" class="table table-bordered table-sm table-striped"></table>
+	<table id="table_admins" class="table table-bordered table-sm table-striped"></table>
 
 {% endblock %}
 
 {% block javascript %}
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/extensions/resizable/bootstrap-table-resizable.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
-
-	<script src="{{ url_for('static', filename='yarn_components/jquery-resizable-columns/dist/jquery.resizableColumns.min.js') }}"></script>
 	<script>
 	(function ($) {
 		'use strict';
 
+	var groupId = {{ group_id | tojson }};
+	var isAdmin = Number({{ session.role[0] | tojson }}) === 1;
+	var $table, table;
+
 	$( document ).ready(function()
 	{
-		$('#table_admins').bootstrapTable(
-		{
-            url: "/patches/patchGroup/members/{{group_id}}",
-			search: true,
+		var columns = {{ columns | tojson }}.filter(function (c) {
+			return c[0] !== 'rid';      // the checkbox column replaces it
+		}).map(function (c) {
+			var col = { field: c[0], title: c[1], sortable: true };
+			if (c[0] === 'user_id' && isAdmin) {
+				col.editable = {
+					title: 'Edit User ID',
+					type: 'text',
+					emptytext: 'Click to enter user ID',
+					validate: function (value) {
+						if (!value.trim()) return 'A user ID is required.';
+					},
+					pk: 1,
+					url: '/patches/patchGroup/member/add/' + encodeURIComponent(groupId)
+				};
+			}
+			return col;
+		});
+
+		table = MPTable.create('#table_admins', {
+			url: '/patches/patchGroup/members/' + encodeURIComponent(groupId),
+			toolbar: '#patch-group-admins-toolbar',
+			checkbox: true,
 			pageSize: 10,
 			pageList: [5, 10, 20, 50],
 			pagination: false,
-			sidePagination: "client",
 			showRefresh: true,
+			showColumns: false,
+			persistColumns: false,
 			idField: 'user_id',
-			resizable: true,
-			onEditableSave: function () {
-				// Let X-editable finish saving before replacing its row.
-				setTimeout(function () { $('#table_admins').bootstrapTable('refresh'); }, 0);
-			},
-			columns: [
-				{% for col in columns %}
-					{
-						{% if col[0] == 'rid' %}
-							field: 'Enabled',
-							checkbox: true,
-							rowspan: 1,
-							align: 'center',
-							valign: 'middle',
-							sortable: false
-						{% else %}
-							sortable: true,
-							field: '{{col[0]}}',
-							title: '{{col[1]}}',
-							{% if col[0] ==  'user_id' %}
-								{% if session.role[0] == 1 %}
-								editable: {
-									title: 'Edit User ID',
-									type: 'text',
-									mode: 'inline',
-									emptytext: 'Click to enter user ID',
-									validate: function (value) {
-										if (!value.trim()) return 'A user ID is required.';
-									},
-									pk: 1,
-									url: '/patches/patchGroup/member/add/{{group_id}}',
-								},
-								{% endif %}
-							{% endif %}
-						{% endif %}
-					},
-				{% endfor %}
-			]
+			columns: columns
+		});
+		$table = table.$el;
+
+		$table.on('editable-save.bs.table', function () {
+			// Let the editor finish saving before replacing its row.
+			setTimeout(function () { table.refresh(); }, 0);
 		});
 
-	});
-
-	var $table = $('#table_admins'), $addButton = $('#addPatchGroupAdminButton'), $delButton = $('#deletePatchGroupAdminButton');
-	$(function () {
-		$addButton.click(function (event)
+		$('#addPatchGroupAdminButton').click(function (event)
 		{
 			event.stopPropagation();
 			var randomId = 100 + ~~(Math.random() * 100);
@@ -97,19 +79,13 @@
 					is_owner: 0
 				}
 			});
-			$table.find('tbody tr').first().find('a[data-name="user_id"]').editable('show');
+			$table.find('tbody tr').first().find('a.mp-editable[data-mp-edit="user_id"]').click();
 		});
 
-		$delButton.click(function ()
+		$('#deletePatchGroupAdminButton').click(function ()
 		{
-			var ids = $.map($table.bootstrapTable('getSelections'), function (row)
-			{
-				return row.user_id;
-			});
-			$table.bootstrapTable('remove', {
-				field: 'user_id',
-				values: ids
-			});
+			var ids = table.selectedIds('user_id');
+			table.removeRows('user_id', ids);
 
 			// Create form object of the id(s) to remove
 			var formData = new FormData();
@@ -117,17 +93,17 @@
 
 			$.ajax({
 				type:'POST',
-				url: '/patches/patchGroup/member/delete/{{group_id}}',
+				url: '/patches/patchGroup/member/delete/' + encodeURIComponent(groupId),
 				data: formData,
 				cache: false,
 				processData: false,
 				contentType: false,
 				success: function() {
-					$('#table_admins').bootstrapTable('refresh');
+					table.refresh();
 					alert("Admin Deleted Successfully");
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
-					$('#table_admins').bootstrapTable('refresh');
+					table.refresh();
 					alert("Admin Failed to Delete");
 				}
 			});

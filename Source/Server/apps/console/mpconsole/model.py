@@ -1169,6 +1169,17 @@ class AdmUsersInfo(CommonBase):
 	agentUpload        = Column(INTEGER(1, unsigned=True), server_default='0')
 	apiAccess          = Column(INTEGER(1, unsigned=True), server_default='0')
 
+class AdmUserPrefs(CommonBase):
+	# Per user console preferences (e.g. which table columns are shown). Not written to change_log.
+	__tablename__ = 'mp_adm_user_prefs'
+	__table_args__ = (UniqueConstraint('user_id', 'pref_key', name='uq_adm_user_prefs_user_key'),)
+
+	rid       = Column(BigInteger().with_variant(Integer, 'sqlite'), primary_key=True, autoincrement=True)
+	user_id   = Column(String(255), nullable=False)
+	pref_key  = Column(String(200), nullable=False)
+	value     = Column(JSON, nullable=False)
+	mdate     = Column(DateTime, nullable=False)
+
 class AdmGroupUsers(CommonBase):
 	__tablename__ = 'mp_adm_group_users'
 
