@@ -70,6 +70,12 @@
                                                 <action selector="pressedWithSender:" target="Voe-Tx-rLC" id="brd-Ln-mQJ"/>
                                             </connections>
                                         </menuItem>
+                                        <menuItem title="Upload Tested Packages" id="uT1-Pk-g01">
+                                            <modifierMask key="keyEquivalentModifierMask"/>
+                                            <connections>
+                                                <action selector="uploadTestedPackages:" target="Voe-Tx-rLC" id="uT2-Pk-g02"/>
+                                            </connections>
+                                        </menuItem>
                                     </items>
                                 </menu>
                             </menuItem>

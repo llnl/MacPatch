@@ -94,6 +94,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 		NotificationCenter.default.post(name: Notification.Name("ResetAuthToken"), object: nil)
 	}
     
+    private var mainViewController: ViewController? {
+        return NSApplication.shared.windows.compactMap { $0.contentViewController as? ViewController }.first
+    }
+
+    @IBAction func uploadTestedPackages(_ sender: NSObject?)
+    {
+        mainViewController?.uploadPendingPackages(sender)
+    }
+
+    // Only enable File > Upload Tested Packages when there is something to upload
+    @objc func validateMenuItem(_ menuItem: NSMenuItem) -> Bool
+    {
+        if menuItem.action == #selector(uploadTestedPackages(_:)) {
+            return mainViewController?.canUploadPendingPackages ?? false
+        }
+        return true
+    }
+
     @IBAction func pressed(sender: AnyObject) {
         if let window = NSApplication.shared.mainWindow {
             if let viewController = window.contentViewController as? ViewController {

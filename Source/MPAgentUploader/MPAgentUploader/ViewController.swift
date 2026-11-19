@@ -103,7 +103,16 @@ class ViewController: NSViewController, AuthViewControllerDelegate
     
     var plugins_list: [String: Any] = [:]
     var profiles_list: [String: Any] = [:]
-    
+
+    /// Compressed packages held back because "Do not upload package" is enabled
+    var pendingUploadPackages: [String] = []
+    var isUploadingPending = false
+
+    /// True when the File > Upload Tested Packages menu item should be enabled
+    var canUploadPendingPackages: Bool {
+        return defaults.bool(forKey: "doNotUpload") && !pendingUploadPackages.isEmpty && !isUploadingPending
+    }
+
     
     override func viewDidLoad()
     {
@@ -712,6 +721,14 @@ class ViewController: NSViewController, AuthViewControllerDelegate
                 }
             } else {
                 log.debug("Upload is disabled, opening working dir.")
+                // Keep the compressed packages so they can be uploaded later from the File menu
+                let pending: [String] = flattend_packages.compactMap {
+                    $0.replacingOccurrences(of: "toSign_", with: "").stringByAppendingPathExtension(ext: "zip")
+                }
+                await MainActor.run {
+                    self.pendingUploadPackages = pending
+                    self.postPackageStatus.stringValue = "Packages not uploaded. Use File > Upload Tested Packages when ready."
+                }
                 NSWorkspace.shared.open(URL(fileURLWithPath: base_dir))
             }
             await MainActor.run {
@@ -720,8 +737,104 @@ class ViewController: NSViewController, AuthViewControllerDelegate
         }
     }
 
+    /// Uploads the packages held back by "Do not upload package" (File > Upload Tested Packages)
+    @IBAction func uploadPendingPackages(_ sender: Any?)
+    {
+        guard canUploadPendingPackages else { return }
+
+        let missing = pendingUploadPackages.filter { !fm.fileExists(atPath: $0) }
+        if !missing.isEmpty {
+            log.error("Pending packages no longer exist: \(missing.joined(separator: ", "))")
+            _ = alertWithOK(title: "Packages Not Found", infoText: "The tested packages could no longer be found. Please run the process again.")
+            pendingUploadPackages = []
+            return
+        }
+
+        isUploadingPending = true
+        toggleUIBegin()
+        postPackageImage.image = NSImage.init(named: NSImage.removeTemplateName)
+        postPackageStatus.stringValue = "Uploading tested packages..."
+
+        let packages = pendingUploadPackages
+        let serverHost = mpServerHost.stringValue
+        let serverPort = mpServerPort.stringValue
+        let serverUseSSL = useSSL.state == .on
+        let formData: [String: Any] = ["app": agent_dictionary, "update": updater_dictionary,
+                                       "plugins": collectPluginsData(), "profiles": []]
+        let authUser = authUserID.stringValue
+        let authPass = authUserPass.stringValue
+        let currentToken = api_token
+
+        // Same pattern as processAgentPackage: run the upload from a detached task
+        Task.detached(priority: .userInitiated) {
+            // The server is the authority on expiry, so ask it whether the saved token still works
+            var apiToken = currentToken
+            let tokenValid = (apiToken != "NA") && !apiToken.isEmpty && self.isTokenValid(token: apiToken)
+            if !tokenValid {
+                log.info("Auth token missing or expired, requesting a new one.")
+                await MainActor.run { self.postPackageStatus.stringValue = "Authenticating..." }
+                if let newToken = await self.requestNewAuthToken(user: authUser, pass: authPass, host: serverHost, port: serverPort, useSSL: serverUseSSL) {
+                    apiToken = newToken
+                    await MainActor.run {
+                        self.api_token = newToken
+                        self.postPackageStatus.stringValue = "Uploading tested packages..."
+                    }
+                } else {
+                    await MainActor.run {
+                        self.isUploadingPending = false
+                        self.postPackageImage.image = NSImage.init(named: "RedDot")
+                        self.postPackageStatus.stringValue = "Authentication failed."
+                        self.toggleUIEnd()
+                        _ = self.alertWithOK(title: "Authentication Failed", infoText: "Could not get a new auth token. Check the user name and password and try again.")
+                    }
+                    return
+                }
+            }
+
+            let ok = await MainActor.run {
+                self.uploadPackagesToServer(packages: packages, formData: formData, serverHost: serverHost, serverPort: serverPort, useSSL: serverUseSSL, apiToken: apiToken)
+            }
+            await MainActor.run {
+                self.isUploadingPending = false
+                if ok {
+                    log.info("Uploaded tested packages.")
+                    self.pendingUploadPackages = []
+                    self.postPackageImage.image = NSImage.init(named: "GreenDot")
+                    self.postPackageStatus.stringValue = ""
+                } else {
+                    log.error("Error posting tested packages.")
+                    self.postPackageImage.image = NSImage.init(named: "RedDot")
+                    self.postPackageStatus.stringValue = "Error posting packages."
+                }
+                self.toggleUIEnd()
+            }
+        }
+    }
+
+    /// Requests a fresh auth token from the server, returns nil on failure
+    func requestNewAuthToken(user: String, pass: String, host: String, port: String, useSSL: Bool) async -> String?
+    {
+        let _ssl = useSSL ? "https" : "http"
+        let _url = "\(_ssl)://\(host):\(port)\(URI_PREFIX)/auth/token"
+        let _params: [String: Any] = ["authUser": user, "authPass": pass]
+
+        return await withCheckedContinuation { continuation in
+            NetworkService.shared.request(_url, method: .post, parameters: _params, encoding: .json)
+            { response in
+                switch response.result {
+                case .failure(let error):
+                    log.error("Token request failed: \(error.localizedDescription)")
+                    continuation.resume(returning: nil)
+                case .success(let resultData):
+                    let token = ((resultData as? [String: Any])?["result"] as? [String: Any])?["token"] as? String
+                    continuation.resume(returning: token)
+                }
+            }
+        }
+    }
+
 // MARK: - Helper Methods
-    
+
     func toggleUIBegin()
     {
         DispatchQueue.main.async
