@@ -754,7 +754,7 @@ class AgentUpdates():
 			_res = sql_con.execute(text(_sql))
 			res = _res.mappings().first()
 			if res is not None:
-				return res
+				return res.rid
 
 		return None
 
@@ -772,7 +772,7 @@ class AgentUpdates():
 			_res = sql_con.execute(text(_sql))
 			res = _res.mappings().first()
 			if res is not None:
-				return res
+				return res.rid
 
 		return None
 
