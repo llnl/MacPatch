@@ -147,3 +147,7 @@ yarn_components/
 
 tests/
 _tests/
+
+# MPAgentUploader build output
+/Source/MPAgentUploader/build/
+/Source/MPAgentUploader/dist/
