@@ -9,11 +9,11 @@
 
 {% block pageHeader %}
 <div class="container-fluid">
-	<div class="pull-left">Provisioning - Scripts</div>
-	<div class="pull-right">
-		<button type="button" class="btn btn-primary" data-container="body" data-toggle="popover"
-				data-placement="left"
-				data-content="Provisioning scripts, have two types - Pre and Post. The scripts will run before required software and after required software has been installed.">
+	<div class="float-start">Provisioning - Scripts</div>
+	<div class="float-end">
+		<button type="button" class="btn btn-primary" data-bs-container="body" data-bs-toggle="popover"
+				data-bs-placement="left"
+				data-bs-content="Provisioning scripts, have two types - Pre and Post. The scripts will run before required software and after required software has been installed.">
 		  <i class="fa fa-question"></i>
 		</button>
 	</div>
@@ -42,7 +42,7 @@
 	<script>
 	$( document ).ready(function()
 	{
-		$('[data-toggle="popover"]').popover();
+		$('[data-bs-toggle="popover"]').popover();
 
 		var isAdmin = {{ (session.role[0] == 1) | tojson }};
 

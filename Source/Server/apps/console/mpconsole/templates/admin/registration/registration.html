@@ -20,14 +20,14 @@ Agent Registration
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs">
 		{% if session.role[0] == 1 %}
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#settings" data-toggle="tab">Settings</a></li>
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#keys" data-toggle="tab">Keys</a></li>
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 3 %}active{% endif %}" href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#settings" data-bs-toggle="tab">Settings</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#keys" data-bs-toggle="tab">Keys</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 3 %}active{% endif %}" href="#regClients" data-bs-toggle="tab">Registered Clients</a></li>
 		{% else %}
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#regClients" data-toggle="tab">Registered Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#regClients" data-bs-toggle="tab">Registered Clients</a></li>
 		{% endif %}
 		{% if session.role[0] == 1 %}
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 4 %}active{% endif %}" href="#parkedClients" data-toggle="tab">Parked Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 4 %}active{% endif %}" href="#parkedClients" data-bs-toggle="tab">Parked Clients</a></li>
 		{% endif %}
 	</ul>
 	<div class="tab-content">
@@ -69,7 +69,7 @@ Agent Registration
 							</div>
 
 							<div class="row row-grid top10">
-								<div class="col-md-6 text-right">
+								<div class="col-md-6 text-end">
 									<button type="button" class="btn btn-primary" id="settingsSaveButton">Save Settings</button>
 								</div>
 							</div>

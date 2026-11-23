@@ -9,10 +9,10 @@
 {% block pageHeader %}
 
     <span class="d-flex align-items-center justify-content-between">
-        <span class="mr-3">{{pageTitle}}</span>
-            <button type="button" class="btn btn-primary flex-shrink-0" aria-label="About mismatched Apple patches" data-container="body" data-toggle="popover"
-                    data-placement="left"
-                    data-content="Mismatched apple patches are patches that have been discovered by a scan but don’t have a corresponding patch in the MacPatch Apple patches. Sometimes editing the patch name will resolve the issue.">
+        <span class="me-3">{{pageTitle}}</span>
+            <button type="button" class="btn btn-primary flex-shrink-0" aria-label="About mismatched Apple patches" data-bs-container="body" data-bs-toggle="popover"
+                    data-bs-placement="left"
+                    data-bs-content="Mismatched apple patches are patches that have been discovered by a scan but don’t have a corresponding patch in the MacPatch Apple patches. Sometimes editing the patch name will resolve the issue.">
               <i class="fa fa-question" aria-hidden="true"></i>
             </button>
     </span>
@@ -38,7 +38,7 @@
 	$( document ).ready(function()
 	{
 	    $(function () {
-          $('[data-toggle="popover"]').popover()
+          $('[data-bs-toggle="popover"]').popover()
         })
 		MPTable.create('#table', {
 			ajax: function loadMyRows(params)

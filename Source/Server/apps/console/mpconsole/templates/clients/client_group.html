@@ -18,12 +18,12 @@ Client Group - {{group_name}}
 	<!-- Tab panes -->
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs">
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#clients" data-toggle="tab">Clients</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#clients" data-bs-toggle="tab">Clients</a></li>
 		{% if readOnly == False %}
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#settings" data-toggle="tab">Agent Settings</a></li>
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 3 %}active{% endif %}" href="#tasks" data-toggle="tab">Agent Tasks</a></li>
-        <li class="nav-item"><a class="nav-link {% if selectedTab == 5 %}active{% endif %}" href="#reqSoftware" data-toggle="tab">Software</a></li>
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 7 %}active{% endif %}" href="#users" data-toggle="tab">Users</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#settings" data-bs-toggle="tab">Agent Settings</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 3 %}active{% endif %}" href="#tasks" data-bs-toggle="tab">Agent Tasks</a></li>
+        <li class="nav-item"><a class="nav-link {% if selectedTab == 5 %}active{% endif %}" href="#reqSoftware" data-bs-toggle="tab">Software</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 7 %}active{% endif %}" href="#users" data-bs-toggle="tab">Users</a></li>
 		{% endif %}
 	</ul>
 	<div class="tab-content">
@@ -192,7 +192,7 @@ Client Group - {{group_name}}
 						<div class="row row-grid top10">
 							<div class="col-md-4">
 							</div>
-							<div class="col-md-3 text-right">
+							<div class="col-md-3 text-end">
 								<button type="button" class="btn btn-primary" id="settingsSaveButton">Save Settings</button>
 							</div>
 						</div>
@@ -209,8 +209,8 @@ Client Group - {{group_name}}
 		<div class="tab-pane fade {% if selectedTab == 5 %}show active{% endif %}" id="reqSoftware">
             <br>
             <ul class="nav nav-tabs">
-                <li class="nav-item"><a class="nav-link active" href="#swReq" data-toggle="tab">Required Software</a></li>
-                <li class="nav-item"><a class="nav-link" href="#swRes" data-toggle="tab">Software Restrictions</a></li>
+                <li class="nav-item"><a class="nav-link active" href="#swReq" data-bs-toggle="tab">Required Software</a></li>
+                <li class="nav-item"><a class="nav-link" href="#swRes" data-bs-toggle="tab">Software Restrictions</a></li>
 	        </ul>
 
 	        <div class="tab-content">

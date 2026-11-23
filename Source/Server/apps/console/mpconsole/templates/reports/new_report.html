@@ -54,14 +54,14 @@
 {% block bodyPanel %}
 <div id="report-builder-page">
 	<div class="panel panel-default">
-		<div class="panel-heading{% if not selTables %} collapsed{% endif %}" data-toggle="collapse" data-target="#collapseOrderItems1" role="button" aria-controls="collapseOrderItems1" aria-expanded="{{ 'true' if selTables else 'false' }}">
+		<div class="panel-heading{% if not selTables %} collapsed{% endif %}" data-bs-toggle="collapse" data-bs-target="#collapseOrderItems1" role="button" aria-controls="collapseOrderItems1" aria-expanded="{{ 'true' if selTables else 'false' }}">
 			<strong>Tables &amp; Columns</strong> <i class="chevron fa fa-fw" aria-hidden="true"></i>
 		</div>
 		<div class="collapse{% if selTables %} show{% endif %}" id="collapseOrderItems1">
 			<div class="panel-body">
 				<div class="row report-selectors">
 					<div class="col-md-6 mb-3">
-						<label for="tables" class="font-weight-bold mb-3">Table</label>
+						<label for="tables" class="fw-bold mb-3">Table</label>
 						<select name="tables" size="14" id="tables">
 							{% for table in tables %}
 							<option {% if table[1] == 1 %}selected{% endif %}>{{table[0]}}</option>
@@ -69,10 +69,10 @@
 						</select>
 					</div>
 					<div class="col-md-6 mb-3">
-						<label for="columns" class="font-weight-bold mb-3">Columns</label>
+						<label for="columns" class="fw-bold mb-3">Columns</label>
 						<select name="columns" size="14" multiple id="columns"></select>
 					</div>
-					<div class="col-12 text-right" id="queryButtons">
+					<div class="col-12 text-end" id="queryButtons">
 						<button type="button" id="btn-rules" class="btn btn-primary set-sql btn-xs">
 							<i class="fa fa-search" aria-hidden="true"></i> Filter Query
 						</button>
@@ -139,7 +139,6 @@
 	{
 		$('#reports').addClass("active");
 
-		$('#collapseOrderItems1').collapse({toggle: false});
 		var $table = $('#table');
 		var selected_table = "";
 		var selected_colums = "";

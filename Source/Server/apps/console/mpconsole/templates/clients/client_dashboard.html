@@ -90,8 +90,8 @@
 			<div class="panel-heading client-inventory-heading">
 				<div id="invTitle">Inventory</div>
 				<div class="dropdown">
-					<button type="button" id="menu1" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Collections</button>
-					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="menu1">
+					<button type="button" id="menu1" class="btn btn-default btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Collections</button>
+					<div class="dropdown-menu dropdown-menu-end" aria-labelledby="menu1">
 						{% for t in invTypes %}
 						<a class="dropdown-item" data-inventory-table="{{ t['table'] }}" href="#">{{ t['name'] }}</a>
 						{% endfor %}

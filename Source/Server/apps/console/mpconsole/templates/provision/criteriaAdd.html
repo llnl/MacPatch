@@ -1,6 +1,6 @@
 <form id="provisionCriteriaForm" class="provision-criteria-form">
     <input name="rid" type="hidden" value="{{ data.rid or 'NA' }}">
-    <div class="form-row">
+    <div class="row">
         <div class="form-group col-sm-9">
             <label for="provisionCriteriaType">Type</label>
             <select id="provisionCriteriaType" name="type" class="form-control" required>
@@ -16,7 +16,7 @@
     <div class="form-group mb-0">
         <div class="d-flex align-items-center justify-content-between mb-2">
             <label id="provisionCriteriaQueryLabel" class="mb-0">Criteria Query</label>
-            <button type="button" class="btn btn-primary btn-sm" data-toggle="collapse" data-target="#provisionCriteriaHelp" aria-expanded="false" aria-controls="provisionCriteriaHelp">
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="collapse" data-bs-target="#provisionCriteriaHelp" aria-expanded="false" aria-controls="provisionCriteriaHelp">
                 <i class="fa fa-question" aria-hidden="true"></i> Syntax help
             </button>
         </div>

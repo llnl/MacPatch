@@ -96,8 +96,11 @@
   margin-bottom: -1px;
 }
 
-.modal-header .close { order: 2; }
-.modal-header .modal-title { order: 1; }
+/* mp.css makes .modal a flex container; Bootstrap 5's dialog then shrinks to its content, so give it the
+   standard width (the size classes below and in mp.css override this). */
+.modal .modal-dialog { width: 100%; max-width: 500px; }
+.modal-header { justify-content: space-between; align-items: center; }
+.modal-header .modal-title { margin: 0; font-size: 1.25rem; line-height: 1.5; text-align: left; }
 .modal.modal-wide .modal-dialog { max-width: none; }
 .modal.modal-mid .modal-dialog,
 .modal.modal-mid-wide .modal-dialog,

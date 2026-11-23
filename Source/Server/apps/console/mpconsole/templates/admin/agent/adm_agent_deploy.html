@@ -23,7 +23,7 @@
 		<div class="col-lg-6 col-xs-12">
 			Client Agent - Deployment
 		</div>
-		<div class="col-lg-6 col-xs-12 text-right">
+		<div class="col-lg-6 col-12 text-end">
 			<button class="btn btn-default" onclick='download("/mp-content/clients/{{curAgentID}}/MacPatch.pkg.zip")'>
 				<span class="glyphicon glyphicon-save"></span> Current Client Agent
 			</button>
@@ -43,8 +43,8 @@
 	<!-- Tab panes -->
 	<!-- Nav tabs -->
 	<ul class="nav nav-tabs">
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#agents" data-toggle="tab">Client Agents</a></li>
-		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#filters" data-toggle="tab">Deploy Filter</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 1 %}active{% endif %}" href="#agents" data-bs-toggle="tab">Client Agents</a></li>
+		<li class="nav-item"><a class="nav-link {% if selectedTab == 2 %}active{% endif %}" href="#filters" data-bs-toggle="tab">Deploy Filter</a></li>
 	</ul>
 	<div class="tab-content">
 		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="agents">
