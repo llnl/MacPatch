@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="18122"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="18122"/>
         <capability name="System colors introduced in macOS 10.13" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -63,14 +62,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ZpB-Ri-HE2">
+                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ZpB-Ri-HE2">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
-                                                <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                                                <wkPreferences key="preferences"/>
-                                            </wkWebViewConfiguration>
-                                        </wkWebView>
+                                        </customView>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -79,14 +74,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="ojk-5Q-hFc">
+                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ojk-5Q-hFc">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
-                                                <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                                                <wkPreferences key="preferences"/>
-                                            </wkWebViewConfiguration>
-                                        </wkWebView>
+                                        </customView>
                                     </subviews>
                                 </view>
                             </tabViewItem>
@@ -99,14 +90,10 @@
                                             <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                             <subviews>
-                                                <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="eU9-5T-iEm">
+                                                <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="eU9-5T-iEm">
                                                     <rect key="frame" x="19" y="16" width="800" height="545"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                                    <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
-                                                        <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                                                        <wkPreferences key="preferences"/>
-                                                    </wkWebViewConfiguration>
-                                                </wkWebView>
+                                                </customView>
                                             </subviews>
                                         </view>
                                         <progressIndicator hidden="YES" wantsLayer="YES" fixedFrame="YES" maxValue="100" style="bar" translatesAutoresizingMaskIntoConstraints="NO" id="ToK-wv-osf">
@@ -162,14 +149,10 @@
                                     <rect key="frame" x="0.0" y="0.0" width="838" height="563"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <subviews>
-                                        <wkWebView wantsLayer="YES" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="tbE-2I-NrC">
+                                        <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="tbE-2I-NrC">
                                             <rect key="frame" x="19" y="16" width="800" height="545"/>
                                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                                            <wkWebViewConfiguration key="configuration" suppressesIncrementalRendering="YES">
-                                                <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                                                <wkPreferences key="preferences"/>
-                                            </wkWebViewConfiguration>
-                                        </wkWebView>
+                                        </customView>
                                     </subviews>
                                 </view>
                             </tabViewItem>

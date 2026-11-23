@@ -231,10 +231,12 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 	if (self.webView) {
 		NSRect frame = self.webView.frame;
 		NSView *superview = self.webView.superview;
-		
+		NSAutoresizingMaskOptions mask = self.webView.autoresizingMask;
+
 		[self.webView removeFromSuperview];
-		
+
 		self.webView = [[WKWebView alloc] initWithFrame:frame configuration:_sharedWebViewConfiguration];
+		self.webView.autoresizingMask = mask;
 		self.webView.navigationDelegate = self;
 		
 		[superview addSubview:self.webView];
