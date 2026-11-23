@@ -310,7 +310,7 @@
 						var jData = msg;
 						alert("Report Updated Successfully");
 						$('#modalDialog').modal('hide');
-						$("#reports ul").append('<li class="nav-item"><a class="nav-link" href="/reports/show/'+jData.id+'"><i class="fa fa-cube fa-fw"></i> DATA </a></li>');
+						$("#menu-reports .collapse-inner").append($('<a>', {'class': 'collapse-item', href: '/reports/show/' + encodeURIComponent(jData.id)}).text(' DATA '));
 						window.location.replace('/reports/show/'+jData.id);
 					},
 					error: function(jqXHR, textStatus, errorThrown){

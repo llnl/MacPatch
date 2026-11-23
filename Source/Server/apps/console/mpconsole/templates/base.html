@@ -11,14 +11,8 @@
 	<title>{% block title %}{% endblock %}</title>
 
 	{% block styles %}
-		<!-- Bootstrap Core CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-
-		<!-- MetisMenu CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.css') }}" rel="stylesheet">
-
-		<!-- Custom CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
+		<!-- Bootstrap 5.3 + SB Admin 2 -->
+		<link href="{{ url_for('static', filename='css/sb-admin-2-bs5.min.css') }}" rel="stylesheet">
 
 		<link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
@@ -60,193 +54,132 @@
 
 <body id="page-top" class="mp-console"{% block bodyAttrs %}{% endblock %}>
 	<nav class="mp-topbar navbar navbar-expand navbar-light topbar" aria-label="Account navigation">
-		<button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3" type="button" aria-label="Toggle sidebar"><i class="fa fa-bars"></i></button>
+		<button id="sidebarToggleTop" class="btn btn-link rounded-circle me-3" type="button" aria-label="Toggle sidebar"><i class="fa fa-bars"></i></button>
 		<a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard.index') }}">
 			<img src="{{ url_for('static', filename='img/mp_3_icon_40.png') }}" alt="MacPatch" width="40" height="40">
 			<span>MacPatch - Admin Console</span>
 		</a>
-		<ul class="navbar-nav ml-auto">
+		<ul class="navbar-nav ms-auto">
 			<li class="nav-item dropdown no-arrow">
-				<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-					<span class="mr-2">Welcome {{ session.user }}</span><i class="fa fa-user fa-fw"></i><i class="fa fa-caret-down ml-1"></i>
+				<a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<span class="me-2">Welcome {{ session.user }}</span><i class="fa fa-user fa-fw"></i><i class="fa fa-caret-down ms-1"></i>
 				</a>
-					<div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown">
-					<a class="dropdown-item" href="#" onclick="aboutConsole();return false;"><i class="fa fa-question-circle fa-fw mr-2"></i>About MP Console</a>
+				<div class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="userDropdown">
+					<a class="dropdown-item" href="#" onclick="aboutConsole();return false;"><i class="fa fa-question-circle fa-fw me-2"></i>About MP Console</a>
 					<div class="dropdown-divider"></div>
-					<a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out fa-fw mr-2"></i>Logout</a>
+					<a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="fa fa-sign-out fa-fw me-2"></i>Logout</a>
 				</div>
 			</li>
 		</ul>
 	</nav>
 	<div id="wrapper">
-		<ul class="navbar-nav sidebar sidebar-light accordion" id="side-menu">
+		<ul class="navbar-nav sidebar sidebar-light accordion" id="accordionSidebar">
 
-			<!-- /input-group -->
 			<li class="nav-item">
-				<a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fa fa-dashboard fa-fw"></i> Dashboard</a>
+				<a class="nav-link" href="{{ url_for('dashboard.index') }}"><i class="fa fa-dashboard fa-fw"></i> <span>Dashboard</span></a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="{{ url_for('clients.clientsList') }}"><i class="fa fa-desktop fa-fw"></i> Clients</a>
+				<a class="nav-link" href="{{ url_for('clients.clientsList') }}"><i class="fa fa-desktop fa-fw"></i> <span>Clients</span></a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="{{ url_for('clients.clientGroups') }}"><i class="fa fa-object-group fa-fw"></i> Client Groups</a>
+				<a class="nav-link" href="{{ url_for('clients.clientGroups') }}"><i class="fa fa-object-group fa-fw"></i> <span>Client Groups</span></a>
 			</li>
 			<li class="nav-item">
-				<a class="nav-link" href="#"><i class="fa fa-cubes fa-fw"></i> Patches<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level">
-					<li class="nav-item">
-						<a class="nav-link" href="#"><i class="fa fa-apple fa-fw"></i> Apple<span class="fa arrow"></span></a>
-						<ul class="nav nav-third-level">
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('patches.apple') }}"><i class="fa fa-list-alt fa-fw"></i> Patches</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('patches.appleMismatchPatches') }}"><i class="fa fa-list-alt fa-fw"></i> Name Mismatches</a>
-							</li>
-						</ul>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('patches.custom') }}"><i class="fa fa-archive fa-fw"></i> Custom</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('patches.patchGroups') }}"><i class="fa fa-list fa-fw"></i> Patch Groups
-							<small class="badge badge-light ml-2" id="labelPatchGroupCount">{{ patchGroupCount or '0' }}</small>
-						</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="#"><i class="fa fa-database fa-fw"></i> Patch Status<span class="fa arrow"></span></a>
-						<ul class="nav nav-third-level">
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('patches.requiredList') }}"><i class="fa fa-list-alt fa-fw"></i> Detected</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('patches.installedList') }}"><i class="fa fa-list-alt fa-fw"></i> Installed</a>
-							</li>
-						</ul>
-					</li>
-				</ul>
-				<!-- /.nav-second-level -->
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-patches" aria-expanded="false" aria-controls="menu-patches">
+					<i class="fa fa-cubes fa-fw"></i> <span>Patches</span>
+				</a>
+				<div id="menu-patches" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						<a class="collapse-item collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-patches-apple" aria-expanded="false" aria-controls="menu-patches-apple"><i class="fa fa-apple fa-fw"></i> Apple</a>
+						<div id="menu-patches-apple" class="collapse collapse-sub" data-bs-parent="#menu-patches-inner">
+							<a class="collapse-item" href="{{ url_for('patches.apple') }}"><i class="fa fa-list-alt fa-fw"></i> Patches</a>
+							<a class="collapse-item" href="{{ url_for('patches.appleMismatchPatches') }}"><i class="fa fa-list-alt fa-fw"></i> Name Mismatches</a>
+						</div>
+						<a class="collapse-item" href="{{ url_for('patches.custom') }}"><i class="fa fa-archive fa-fw"></i> Custom</a>
+						<a class="collapse-item" href="{{ url_for('patches.patchGroups') }}"><i class="fa fa-list fa-fw"></i> Patch Groups <small class="badge text-bg-light ms-2" id="labelPatchGroupCount">{{ patchGroupCount or '0' }}</small></a>
+						<a class="collapse-item collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-patches-status" aria-expanded="false" aria-controls="menu-patches-status"><i class="fa fa-database fa-fw"></i> Patch Status</a>
+						<div id="menu-patches-status" class="collapse collapse-sub" data-bs-parent="#menu-patches-inner">
+							<a class="collapse-item" href="{{ url_for('patches.requiredList') }}"><i class="fa fa-list-alt fa-fw"></i> Detected</a>
+							<a class="collapse-item" href="{{ url_for('patches.installedList') }}"><i class="fa fa-list-alt fa-fw"></i> Installed</a>
+						</div>
+					</div>
+				</div>
 			</li>
 			<li class="nav-item" id="software">
-				<a class="nav-link" href="#"><i class="fa fa-cubes fa-fw"></i> Software<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level">
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('software.groups') }}"><i class="fa fa-folder-open-o fa-fw"></i> Groups</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('software.tasks') }}"><i class="fa fa-tasks fa-fw"></i> Tasks</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('software.packages') }}"><i class="fa fa-archive fa-fw"></i> Packages</a>
-					</li>
-				</ul>
-				<!-- /.nav-second-level -->
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-software" aria-expanded="false" aria-controls="menu-software">
+					<i class="fa fa-cubes fa-fw"></i> <span>Software</span>
+				</a>
+				<div id="menu-software" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						<a class="collapse-item" href="{{ url_for('software.groups') }}"><i class="fa fa-folder-open-o fa-fw"></i> Groups</a>
+						<a class="collapse-item" href="{{ url_for('software.tasks') }}"><i class="fa fa-tasks fa-fw"></i> Tasks</a>
+						<a class="collapse-item" href="{{ url_for('software.packages') }}"><i class="fa fa-archive fa-fw"></i> Packages</a>
+					</div>
+				</div>
 			</li>
 			<li class="nav-item" id="management">
-				<a class="nav-link" href="#"><i class="fa fa-crosshairs fa-fw"></i> OS Management<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level">
-					<!-- Depricated, USE MDM now
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('osmanage.profiles') }}"><i class="fa fa-list fa-fw"></i> Profiles</a>
-					</li>
-					-->
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('osmanage.appFilters') }}"><i class="fa fa-list fa-fw"></i>Software Restrictions</a>
-					</li>
-					{% if session.role[0] == 1 %}
-					<!--
-
-					<li class="nav-item">
-					<a class="nav-link" href="#"><i class="fa fa-database fa-fw"></i> Security Configuration<span class="fa arrow"></span></a>
-					<ul class="nav nav-third-level">
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('osmanage.osConfig') }}"><i class="fa fa-list-alt fa-fw"></i> Rule Groups</a>
-					</li>
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('osmanage.osConfig') }}"><i class="fa fa-list-alt fa-fw"></i> Rules</a>
-					</li>
-					</ul>
-					</li>
-					-->
-					{% endif %}
-				</ul>
-				<!-- /.nav-second-level -->
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-management" aria-expanded="false" aria-controls="menu-management">
+					<i class="fa fa-crosshairs fa-fw"></i> <span>OS Management</span>
+				</a>
+				<div id="menu-management" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						<a class="collapse-item" href="{{ url_for('osmanage.appFilters') }}"><i class="fa fa-list fa-fw"></i> Software Restrictions</a>
+					</div>
+				</div>
 			</li>
 			<li class="nav-item" id="provisioning">
-				<a class="nav-link" href="#"><i class="fa fa-exchange fa-fw"></i> Provisioning<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level" id="provisioning_list">
-					<li class="nav-item"><a class="nav-link" href="{{ url_for('provision.criteria') }}"> <i class="fa fa-code-fork fa-fw"></i> Detection Criteria</a></li>
-					<li class="nav-item"><a class="nav-link" href="{{ url_for('provision.scripts') }}"><i class="fa fa-file-code-o fa-fw"></i> Scripts</a></li>
-					<li class="nav-item"><a class="nav-link" href="{{ url_for('provision.tasks') }}"><i class="fa fa-archive fa-fw"></i> Software</a></li>
-					<li class="nav-item"><a class="nav-link" href="{{ url_for('provision.uiConfig') }}"><i class="fa fa-sliders fa-fw"></i> UI Config</a></li>
-
-					<!--
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('provision.testTask') }}"><i class="fa fa-file-o fa-fw"></i> Test</a>
-					</li>
-					-->
-				</ul>
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-provisioning" aria-expanded="false" aria-controls="menu-provisioning">
+					<i class="fa fa-exchange fa-fw"></i> <span>Provisioning</span>
+				</a>
+				<div id="menu-provisioning" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						<a class="collapse-item" href="{{ url_for('provision.criteria') }}"><i class="fa fa-code-fork fa-fw"></i> Detection Criteria</a>
+						<a class="collapse-item" href="{{ url_for('provision.scripts') }}"><i class="fa fa-file-code-o fa-fw"></i> Scripts</a>
+						<a class="collapse-item" href="{{ url_for('provision.tasks') }}"><i class="fa fa-archive fa-fw"></i> Software</a>
+						<a class="collapse-item" href="{{ url_for('provision.uiConfig') }}"><i class="fa fa-sliders fa-fw"></i> UI Config</a>
+					</div>
+				</div>
 			</li>
 			<li class="nav-item" id="reports">
-				<a class="nav-link" href="#"><i class="fa fa-list fa-fw"></i> Reports<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level" id="reports_list">
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('reports.new') }}"><i class="fa fa-cube fa-fw"></i> New Report</a>
-					</li>
-				</ul>
-				<!-- /.nav-second-level -->
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-reports" aria-expanded="false" aria-controls="menu-reports">
+					<i class="fa fa-list fa-fw"></i> <span>Reports</span>
+				</a>
+				<div id="menu-reports" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						<a class="collapse-item" href="{{ url_for('reports.new') }}"><i class="fa fa-cube fa-fw"></i> New Report</a>
+					</div>
+				</div>
+			</li>
+			<li class="nav-item" id="admin">
+				<a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-admin" aria-expanded="false" aria-controls="menu-admin">
+					<i class="fa fa-cog fa-fw"></i> <span>Admin</span>
+				</a>
+				<div id="menu-admin" class="collapse" data-bs-parent="#accordionSidebar">
+					<div class="collapse-inner">
+						{% if session.role[0] == 1 %}
+						<a class="collapse-item collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#menu-admin-agent" aria-expanded="false" aria-controls="menu-admin-agent"><i class="fa fa-cogs fa-fw"></i> Client Agent</a>
+						<div id="menu-admin-agent" class="collapse collapse-sub" data-bs-parent="#menu-admin-inner">
+							<a class="collapse-item" href="{{ url_for('console.agentDeploy') }}"><i class="fa fa-rocket fa-fw"></i> Deploy</a>
+							<a class="collapse-item" href="{{ url_for('console.agentConfigView') }}"><i class="fa fa-sliders fa-fw"></i> Config</a>
+							<a class="collapse-item" href="{{ url_for('console.agentPluginsView') }}"><i class="fa fa-puzzle-piece fa-fw"></i> Plugins</a>
+						</div>
+						{% endif %}
+						<a class="collapse-item" href="{{ url_for('registration.index') }}"><i class="fa fa-handshake-o fa-fw"></i> Registration</a>
+						{% if session.role[0] == 1 %}
+						<a class="collapse-item" href="{{ url_for('console.mpServerView') }}"><i class="fa fa-server fa-fw"></i> MacPatch Servers</a>
+						<a class="collapse-item" href="{{ url_for('console.asusServersView') }}"><i class="fa fa-server fa-fw"></i> SoftwareUpdate Servers</a>
+						<a class="collapse-item" href="{{ url_for('console.inventoryStats') }}"><i class="fa fa-bar-chart fa-fw"></i> Inventory Stats</a>
+						<a class="collapse-item" href="{{ url_for('console.changeLogView') }}"><i class="fa fa-history fa-fw"></i> Change Log</a>
+						<a class="collapse-item" href="{{ url_for('console.accounts') }}"><i class="fa fa-users fa-fw"></i> Accounts</a>
+						{% endif %}
+					</div>
+				</div>
 			</li>
 
-			<li class="nav-item" id="admin">
-				<a class="nav-link" href="#"><i class="fa fa-cog fa-fw"></i> Admin<span class="fa arrow"></span></a>
-				<ul class="nav nav-second-level">
-					{% if session.role[0] == 1 %}
-					<li class="nav-item">
-						<a class="nav-link" href="#"><i class="fa fa-cogs fa-fw"></i> Client Agent<span class="fa arrow"></span></a>
-						<ul class="nav nav-third-level">
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('console.agentDeploy') }}"><i class="fa fa-rocket fa-fw fa-lg"></i> Deploy</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('console.agentConfigView') }}"><i class="fa fa-sliders fa-fw fa-lg"></i> Config</a>
-							</li>
-							<li class="nav-item">
-								<a class="nav-link" href="{{ url_for('console.agentPluginsView') }}"><i class="fa fa-puzzle-piece fa-fw fa-lg"></i> Plugins</a>
-							</li>
-						</ul>
-					</li>
-					{% endif %}
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('registration.index') }}"><i class="fa fa-handshake-o fa-fw"></i> Registration</a>
-					</li>
-					{% if session.role[0] == 1 %}
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('console.mpServerView') }}"><i class="fa fa-server fa-fw"></i> MacPatch Servers</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('console.asusServersView') }}"><i class="fa fa-server fa-fw"></i> SoftwareUpdate Servers</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('console.inventoryStats') }}"><i class="fa fa-bar-chart fa-fw"></i> Inventory Stats</a>
-					</li>
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('console.changeLogView') }}"><i class="fa fa-history fa-fw"></i> Change Log</a>
-					</li>
-					<!-- Add in updates
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('console.dataSourcesView') }}"><i class="fa fa-database fa-fw"></i> DataSources</a>
-					</li>
-					<li class="nav-item">
-					<a class="nav-link" href="{{ url_for('console.tasks') }}"><i class="fa fa-cube fa-fw"></i> Jobs</a>
-					</li>
-					-->
-					<li class="nav-item">
-						<a class="nav-link" href="{{ url_for('console.accounts') }}"><i class="fa fa-users fa-fw"></i> Accounts</a>
-					</li>
-					{% endif %}
-				</ul>
-				<!-- /.nav-second-level -->
-			</li>
+			<hr class="sidebar-divider d-none d-md-block">
+			<div class="text-center d-none d-md-inline">
+				<button class="rounded-circle border-0" id="sidebarToggle" type="button" aria-label="Collapse sidebar"></button>
+			</div>
 		</ul>
 
 		<div id="content-wrapper" class="d-flex flex-column">
@@ -265,14 +198,14 @@
 		<div class="modal-dialog">
 			<div class="modal-content" id="modalContent">
 				<div class="modal-header" id="modalHeader">
-					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
 					<h4 class="modal-title" id="modalTitle"></h4>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 				<div class="modal-body" id="modalBody">
 					<!-- output data here-->
 				</div>
 				<div class="modal-footer" id="modalFooter">
-					<button type="button" class="btn btn-default" data-dismiss="modal" id="modalCancelButton">Cancel</button>
+					<button type="button" class="btn btn-default" data-bs-dismiss="modal" id="modalCancelButton">Cancel</button>
 					<button type="button" class="btn btn-primary" id="modalSaveButton">Save</button>
 				</div>
 			</div><!-- /.modal-content -->
@@ -287,7 +220,7 @@
 	{% block jsPre %}{% endblock %}
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap5/bootstrap.bundle.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/wizard-navigation.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-http.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-modal.js') }}"></script>
@@ -295,7 +228,6 @@
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-edit.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-table.js') }}"></script>
 
-	<!-- Metis Menu Plugin JavaScript -->
 	<script>
 		function randomColor()
 		{
@@ -331,50 +263,16 @@
 		// Show List Of Reports
 		$(document).ready(function()
 		{
-			var $menu = $("#side-menu");
-			// Pages that are not in the menu themselves (edit pages, ...) can name the item they belong
-			// under with data-active-menu on <body>, so its section stays open.
-			var activePath = document.body.getAttribute("data-active-menu") || window.location.pathname;
-			var $currentLink = $menu.find(".nav-link[href]").filter(function() {
-				return this.getAttribute("href") !== "#" && this.pathname === activePath;
-			});
-			$currentLink.addClass("active").closest("li").addClass("active");
-			$currentLink.parents("li").addClass("mm-active");
-			// Keep the existing menu styling, with immediate, height-free toggles.
-			$menu.addClass('metismenu');
-			$menu.find('li > ul').each(function() {
-				var $submenu = $(this);
-				var expanded = $submenu.parent().hasClass('mm-active');
-				$submenu.addClass('mm-collapse').toggleClass('mm-show', expanded);
-				$submenu.siblings('a').attr('aria-expanded', String(expanded));
-			});
-			$menu.on('click', 'li > a', function(event) {
-				var $link = $(this);
-				var $item = $link.parent();
-				var $submenu = $item.children('ul');
-				if (!$submenu.length) return;
-				event.preventDefault();
-				if ($link.attr('aria-disabled') === 'true') return;
-				var expanded = !$submenu.hasClass('mm-show');
-				if (expanded) {
-					var $siblings = $item.siblings('li');
-					$siblings.removeClass('mm-active').children('ul').removeClass('mm-show');
-					$siblings.children('a[aria-expanded]').attr('aria-expanded', 'false');
-				}
-				$item.toggleClass('mm-active', expanded);
-				$submenu.toggleClass('mm-show', expanded);
-				$link.attr('aria-expanded', String(expanded));
-			});
-			var _url = "/reports/list";
 			$.ajax({
 				type: 'GET',
-				url: _url,
+				url: "/reports/list",
 				cache: false,
 				dataType: 'json',
 				success: function(res)
 				{
 					$.each(res.data, function(i, p) {
-						$("#reports ul").append('<li class="nav-item"><a class="nav-link" href="/reports/show/'+p.id+'"><i class="fa fa-file-text-o fa-fw"></i>'+ p.name +'</a></li>');
+						$("#menu-reports .collapse-inner").append($('<a>', {'class': 'collapse-item', href: '/reports/show/' + encodeURIComponent(p.id)})
+							.append($('<i>', {'class': 'fa fa-file-text-o fa-fw'})).append(document.createTextNode(' ' + p.name)));
 					});
 				}
 			});
@@ -383,9 +281,8 @@
 	{% block javascript %}{% endblock %}
 
 
-	<!-- Custom Theme JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery.easing/jquery.easing.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/js/sb-admin-2.js') }}"></script>
+	<!-- Console shell: sidebar toggle and active menu section -->
+	<script src="{{ url_for('static', filename='static_components/macpatch/shell.js') }}"></script>
 
 </body>
 

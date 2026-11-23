@@ -57,6 +57,15 @@ body.mp-console {
   border-right: 1px solid #e7e7e7;
 }
 
+/* The toggle button collapses the sidebar completely, as it did before. */
+.mp-console .sidebar.toggled { display: none; }
+
+/* No hamburger on a wide window: the sidebar toggle there is the round button under the menu. */
+@media (min-width: 768px) {
+  .mp-console #sidebarToggleTop { display: none; }
+}
+
+/* Sidebar rows: full width, light gray, blue links, a divider under every row. */
 .mp-console .sidebar .nav-item,
 .mp-console .sidebar .nav-item:last-child {
   margin: 0;
@@ -79,34 +88,90 @@ body.mp-console {
 .mp-console .sidebar .nav-item .nav-link i {
   color: #337ab7;
   font-size: 14px;
+  margin-right: 4px;
 }
+
+/* The theme sizes every span in a link for its narrow icon rail; the labels here use the normal size. */
+.mp-console .sidebar .nav-item .nav-link span { display: inline; font-size: inherit; }
 
 .mp-console .sidebar .nav-item .nav-link:hover,
 .mp-console .sidebar .nav-item.active > .nav-link,
-.mp-console .sidebar .nav-item.mm-active > .nav-link,
-.mp-console .sidebar .nav-item .nav-link.active {
+.mp-console .sidebar .nav-item .nav-link:not(.collapsed)[data-bs-toggle="collapse"] {
   color: #337ab7;
   background: #eee;
   font-weight: 400;
 }
 
-.mp-console .sidebar .nav-item .nav-link .arrow { float: right; }
-.mp-console .sidebar .nav-item .nav-link .arrow::before { color: #337ab7; }
-.mp-console .sidebar .nav-second-level,
-.mp-console .sidebar .nav-third-level {
+/* Chevron: pointing left when closed, down when open, like the classic console. */
+.mp-console .sidebar .nav-item .nav-link[data-bs-toggle="collapse"]::after {
+  content: "\f104";
+  color: #337ab7;
+  float: right;
+  width: 1rem;
+  text-align: center;
+  font-weight: 900;
+  font-family: "Font Awesome 5 Free";
+}
+.mp-console .sidebar .nav-item .nav-link[data-bs-toggle="collapse"]:not(.collapsed)::after { content: "\f107"; }
+
+/* Submenus: rows that run the full width of the sidebar (the theme gives the collapse a 16px side margin). */
+.mp-console .sidebar .nav-item .collapse,
+.mp-console .sidebar .nav-item .collapsing { margin: 0; }
+
+.mp-console .sidebar .nav-item .collapse .collapse-inner,
+.mp-console .sidebar .nav-item .collapsing .collapse-inner {
   margin: 0;
   padding: 0;
   border-radius: 0;
   background: #f8f8f8;
+  box-shadow: none;
+  min-width: 0;
+  width: 100%;
 }
 
-.mp-console .sidebar .nav-second-level:not(.mm-show),
-.mp-console .sidebar .nav-third-level:not(.mm-show) {
-  display: none;
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-sub { margin: 0; padding: 0; width: 100%; }
+
+/* Count badge next to Patch Groups. */
+.mp-console .sidebar .badge { font-size: 12px; font-weight: 600; padding: 4px 8px; color: #333; background: #e7e7e7; }
+
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-item,
+.mp-console .sidebar .nav-item .collapsing .collapse-inner .collapse-item {
+  display: block;
+  margin: 0;
+  padding: 10px 15px 10px 32px;
+  border-bottom: 1px solid #e7e7e7;
+  border-radius: 0;
+  color: #337ab7;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.mp-console .sidebar .nav-second-level .nav-link { padding-left: 32px; }
-.mp-console .sidebar .nav-third-level .nav-link { padding-left: 48px; }
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-item i { color: #337ab7; margin-right: 4px; }
+
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-item:hover,
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-item.active,
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-item:not(.collapsed)[data-bs-toggle="collapse"] {
+  color: #337ab7;
+  background: #eee;
+  font-weight: 400;
+}
+
+/* Third level: indented one step further. */
+.mp-console .sidebar .collapse-sub { background: #f8f8f8; }
+.mp-console .sidebar .nav-item .collapse .collapse-inner .collapse-sub .collapse-item { padding-left: 48px; }
+
+.mp-console .sidebar .collapse-item[data-bs-toggle="collapse"]::after {
+  content: "\f104";
+  float: right;
+  font-weight: 900;
+  font-family: "Font Awesome 5 Free";
+}
+.mp-console .sidebar .collapse-item[data-bs-toggle="collapse"]:not(.collapsed)::after { content: "\f107"; }
+
 .mp-console #page-wrapper { padding: 0 15px 20px; }
 .mp-console .row { margin-right: -15px; margin-left: -15px; }
 .mp-console [class^="col-"], .mp-console [class*=" col-"] { padding-right: 15px; padding-left: 15px; }
@@ -162,7 +227,6 @@ body.mp-console {
   .mp-console .mp-topbar .navbar-brand img { width: 32px; height: 32px; }
   .mp-console .mp-topbar .nav-item .nav-link { font-size: 12px; }
   .mp-console .sidebar { width: 180px !important; }
-  .mp-console .sidebar.toggled { display: none; }
   .mp-console .sidebar .nav-item .nav-link { font-size: 13px; }
   .mp-console .mp-page-heading { margin-top: 25px; }
 }
@@ -175,11 +239,6 @@ body.mp-console {
 
 #content-wrapper { min-width: 0; }
 
-.mp-console .sidebar .nav-second-level,
-.mp-console .sidebar .nav-third-level {
-  flex-direction: column;
-  list-style: none;
-}
 
 /* Classic data tables: gray grid, white headings, striped rows, and blue actions. */
 .table {
