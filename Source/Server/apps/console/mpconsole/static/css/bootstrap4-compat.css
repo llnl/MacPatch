@@ -74,7 +74,7 @@ select.form-control:not([multiple]):not([size]), select.form-control[size="1"]:n
 select.form-control.form-control-sm:not([multiple]):not([size]), select.form-control.form-control-sm[size="1"]:not([multiple]) { padding-right: 2rem; }
 
 /* Bootstrap 5 dropped .form-group (it used to carry the space between form rows). */
-.form-group { margin-bottom: 1rem; }
+.form-group { margin-bottom: .5rem; }
 .form-group.mb-0 { margin-bottom: 0; }
 /* A form-group that is also a grid row keeps the row's gutters; only the space below is added. */
 .form-group.row { --bs-gutter-y: 0; }

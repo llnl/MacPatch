@@ -4,7 +4,7 @@
 #modalDialog.client-group-modal .modal-body { height: auto; max-height: calc(100vh - 160px); overflow-y: auto; }
 #modalDialog.client-group-modal .modal-body.client-group-dashboard { height: 75vh; }
 .client-group-modal-form { width: 100%; margin: 0; }
-.client-group-modal-form .form-group { margin-bottom: 16px; }
+.client-group-modal-form .form-group { margin-bottom: .5rem; }
 .client-group-modal-form .form-control,
 .client-group-modal-form .selectize-control,
 .client-group-modal-form .selectize-input { width: 100%; min-width: 0; max-width: 100%; }
