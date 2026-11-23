@@ -23,3 +23,11 @@ article.flashes {
   background-color: #449d44;
 }
 
+
+/* Console blue for links and form focus, instead of the theme's indigo. */
+a { color: #337ab7; }
+a:hover, a:focus { color: #23527c; }
+.form-control:focus {
+  border-color: #66afe9;
+  box-shadow: 0 0 0 .2rem rgba(51, 122, 183, .25);
+}

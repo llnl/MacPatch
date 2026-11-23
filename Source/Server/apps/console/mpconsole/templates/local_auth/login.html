@@ -12,14 +12,8 @@
 
 	<title>MacPatch - Admin Console</title>
 
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-
-	<!-- MetisMenu CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.css') }}" rel="stylesheet">
-
-	<!-- Custom CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
+	<!-- Bootstrap 5.3 + SB Admin 2 -->
+	<link href="{{ url_for('static', filename='css/sb-admin-2-bs5.min.css') }}" rel="stylesheet">
 
 	<!-- Custom Fonts -->
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
@@ -35,11 +29,11 @@
 <body>
 	<div class="container">
 		<div class="row">
-			<div class="col-md-4 col-md-offset-4">
+			<div class="col-md-4 offset-md-4">
 				<div class="login-panel panel panel-default">
 					<div class="panel-heading text-center">
-						<img class="center-block" src="{{ url_for('static', filename='img/mp_3_icon_90.png') }}" />
-						<h4 class="center-block">MacPatch Admin Console</h4>
+						<img class="mx-auto d-block" src="{{ url_for('static', filename='img/mp_3_icon_90.png') }}" />
+						<h4 class="mx-auto d-block">MacPatch Admin Console</h4>
 					</div>
 					<div class="panel-body">
 						<br>
@@ -52,7 +46,7 @@
 								<div class="form-group">
 									<input class="form-control" placeholder="Password" name="password" type="password" value="">
 								</div>
-								<input class="btn btn-lg btn-login-alt btn-block" type="submit" value="Login">
+								<input class="btn btn-lg btn-login-alt w-100" type="submit" value="Login">
 							</fieldset>
 						</form>
 					</div>
@@ -65,7 +59,7 @@
 			</div>
 		</div>
 			<div class="row">
-				<div class="col-md-4 col-md-offset-4">
+				<div class="col-md-4 offset-md-4">
 					<article class="flashes">
 						{% with messages = get_flashed_messages() %}
 						  {% if messages %}
@@ -87,14 +81,9 @@
 	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 
 	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap5/bootstrap.bundle.min.js') }}"></script>
 
-	<!-- Metis Menu Plugin JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/metismenu/dist/metisMenu.min.js') }}"></script>
 
-	<!-- Custom Theme JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/jquery.easing/jquery.easing.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/js/sb-admin-2.js') }}"></script>
 </body>
 
 </html>
