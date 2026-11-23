@@ -148,3 +148,45 @@
   border: 1px dashed #BBB;
   opacity: .7;
 }
+
+/* ---- Console look for the Bootstrap 5 build -------------------------------------------------------------
+   The plugin's template marks every condition button btn-primary, so the selected one (AND / OR) looked the
+   same as the other, and NOT barely changed when on. The plugin keeps an `active` class on the selected
+   condition and on NOT; show it. */
+.query-builder .rules-group-header .group-conditions > .btn,
+.query-builder .rules-group-header .group-conditions > .btn-default,
+.query-builder .rules-group-header [data-not="group"] {
+  color: #333;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  cursor: pointer;
+}
+.query-builder .rules-group-header .group-conditions > .btn:hover,
+.query-builder .rules-group-header [data-not="group"]:hover { background-color: #eee; }
+.query-builder .rules-group-header .group-conditions > .btn.active,
+.query-builder .rules-group-header [data-not="group"].active {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #2e6da4;
+}
+
+/* Add rule / Add group in the console blue instead of the theme's green. */
+.query-builder .group-actions .btn-success {
+  color: #fff;
+  background-color: #337ab7;
+  border-color: #2e6da4;
+}
+.query-builder .group-actions .btn-success:hover,
+.query-builder .group-actions .btn-success:focus {
+  background-color: #286090;
+  border-color: #204d74;
+}
+
+/* AND / OR only mean something with two or more rules, so the plugin disables them until then. Show that. */
+.query-builder .rules-group-header .group-conditions > .btn.disabled {
+  opacity: .55;
+  cursor: not-allowed;
+}
+.query-builder .rules-group-header .group-conditions > .btn.disabled.active {
+  opacity: .75;
+}
