@@ -57,13 +57,7 @@ body.mp-console {
   border-right: 1px solid #e7e7e7;
 }
 
-/* The toggle button collapses the sidebar completely, as it did before. */
-.mp-console .sidebar.toggled { display: none; }
 
-/* No hamburger on a wide window: the sidebar toggle there is the round button under the menu. */
-@media (min-width: 768px) {
-  .mp-console #sidebarToggleTop { display: none; }
-}
 
 /* Sidebar rows: full width, light gray, blue links, a divider under every row. */
 .mp-console .sidebar .nav-item,
@@ -438,3 +432,20 @@ body.mp-console {
   background: #fff;
 }
 
+
+
+/* The theme's primary is an indigo (#3248f2); focus rings, checked boxes and keyboard focus use it through
+   fixed values, so they are set to the console blue here. */
+.mp-console .form-control:focus,
+.mp-console .form-select:focus,
+.mp-console .form-check-input:focus {
+  border-color: #66afe9;
+  box-shadow: 0 0 0 .2rem rgba(51, 122, 183, .25);
+}
+.mp-console .form-check-input:checked,
+.mp-console .form-check-input[type=checkbox]:indeterminate {
+  background-color: #337ab7;
+  border-color: #337ab7;
+}
+.mp-console .nav-link:focus-visible,
+.mp-console .btn:focus-visible { box-shadow: 0 0 0 .2rem rgba(51, 122, 183, .25); }

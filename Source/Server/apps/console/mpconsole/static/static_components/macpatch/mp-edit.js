@@ -104,8 +104,7 @@
 
         var oldValue = row[column.field];
         var form = document.createElement('form');
-        form.className = 'mp-editable-form form-inline';
-        form.style.cssText = 'display:flex;align-items:flex-start;flex-wrap:wrap;';
+        form.className = 'mp-editable-form';
 
         var input = buildInput(opts, oldValue);
         var ok = document.createElement('button');
@@ -116,9 +115,13 @@
         cancel.innerHTML = '<i class="fa fa-times" aria-hidden="true"></i>';
         var message = document.createElement('div');
         message.className = 'mp-editable-error text-danger small';
-        message.style.cssText = 'flex-basis:100%;display:none;';
+        message.style.display = 'none';
 
-        form.appendChild(input); form.appendChild(ok); form.appendChild(cancel); form.appendChild(message);
+        // The field and both buttons sit in one row (see mp.css); only the error message gets its own line.
+        var row_ = document.createElement('div');
+        row_.className = 'mp-editable-row';
+        row_.appendChild(input); row_.appendChild(ok); row_.appendChild(cancel);
+        form.appendChild(row_); form.appendChild(message);
         link.style.display = 'none';
         link.parentNode.insertBefore(form, link.nextSibling);
         input.focus();

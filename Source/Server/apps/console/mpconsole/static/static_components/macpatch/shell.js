@@ -1,8 +1,7 @@
-/* Console shell (Bootstrap 5 / SB Admin 2): sidebar toggle, responsive collapse, and opening the menu
- * section of the current page.
+/* Console shell (Bootstrap 5 / SB Admin 2): opens the menu section of the current page.  The sidebar is
+ * always shown, there is no hide/show toggle.
  *
- * Replaces sb-admin-2.js (jQuery .collapse() plugin calls do not exist in Bootstrap 5) and the metismenu
- * code that used to live in base.html.
+ * Replaces sb-admin-2.js and the metismenu code that used to live in base.html.
  *
  * A page that is not in the menu itself (edit pages, wizards) names the item it belongs under with
  * data-active-menu on <body>.
@@ -12,34 +11,6 @@
 
     var sidebar = d.querySelector('.sidebar');
     if (!sidebar) return;
-
-    function sections() { return sidebar.querySelectorAll('.collapse'); }
-
-    function hideSections() {
-        sections().forEach(function (el) {
-            var c = w.bootstrap.Collapse.getInstance(el);
-            if (c) c.hide(); else el.classList.remove('show');
-        });
-    }
-
-    function setToggled(on) {
-        d.body.classList.toggle('sidebar-toggled', on);
-        sidebar.classList.toggle('toggled', on);
-        if (on) hideSections();
-    }
-
-    d.querySelectorAll('#sidebarToggle, #sidebarToggleTop').forEach(function (btn) {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            setToggled(!sidebar.classList.contains('toggled'));
-        });
-    });
-
-    // Small windows start with the sidebar closed; shrinking the window closes it again.
-    var phone = w.matchMedia('(max-width: 767.98px)');
-    function onPhone(e) { if (e.matches) setToggled(true); }
-    onPhone(phone);
-    (phone.addEventListener ? phone.addEventListener('change', onPhone) : phone.addListener(onPhone));
 
     // Open the section that holds the current page and mark its link.
     var activePath = d.body.getAttribute('data-active-menu') || w.location.pathname;

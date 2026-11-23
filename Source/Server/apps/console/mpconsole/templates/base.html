@@ -54,7 +54,6 @@
 
 <body id="page-top" class="mp-console"{% block bodyAttrs %}{% endblock %}>
 	<nav class="mp-topbar navbar navbar-expand navbar-light topbar" aria-label="Account navigation">
-		<button id="sidebarToggleTop" class="btn btn-link rounded-circle me-3" type="button" aria-label="Toggle sidebar"><i class="fa fa-bars"></i></button>
 		<a class="navbar-brand d-flex align-items-center" href="{{ url_for('dashboard.index') }}">
 			<img src="{{ url_for('static', filename='img/mp_3_icon_40.png') }}" alt="MacPatch" width="40" height="40">
 			<span>MacPatch - Admin Console</span>
@@ -176,10 +175,6 @@
 				</div>
 			</li>
 
-			<hr class="sidebar-divider d-none d-md-block">
-			<div class="text-center d-none d-md-inline">
-				<button class="rounded-circle border-0" id="sidebarToggle" type="button" aria-label="Collapse sidebar"></button>
-			</div>
 		</ul>
 
 		<div id="content-wrapper" class="d-flex flex-column">

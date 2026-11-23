@@ -229,8 +229,17 @@ a.mp-editable.mp-editable-empty {
 }
 .mp-editable-form {
 	min-width: 120px;
+}
+/* The field, Save and Cancel are always one row, however narrow the column is: the field gives way,
+   the buttons keep their size. The error message is outside this row, so it wraps on its own. */
+.mp-editable-form .mp-editable-row {
+	display: flex;
+	flex-wrap: nowrap;
+	align-items: center;
 	gap: 3px;
 }
+.mp-editable-form .mp-editable-row .btn { flex: 0 0 26px; }
+.mp-editable-form .mp-editable-row .mp-editable-input { flex: 1 1 auto; min-width: 48px; }
 /* A cell that opens a list shows a chevron, so it reads as a dropdown before it is clicked. */
 a.mp-editable-select::after {
 	content: "\f107";
