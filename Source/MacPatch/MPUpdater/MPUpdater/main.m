@@ -32,7 +32,7 @@
 #include <getopt.h>
 #include <unistd.h>
 
-#define APPVERSION	@"4.4.0.0"
+#define APPVERSION	@"4.4.1.0"
 #define APPNAME		@"MPUpdater"
 
 void usage(void);

@@ -42,6 +42,23 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 
 @end
 
+// The xib holds plain placeholder views because a WKWebView archived by the macOS 26 SDK
+// can't be decoded on macOS 15 and earlier. Swap in a real WKWebView once the nib is loaded.
+static WKWebView *MPWebViewReplacingPlaceholder(NSView *placeholder, BOOL suppressIncrementalRendering)
+{
+    if (placeholder == nil || [placeholder isKindOfClass:[WKWebView class]]) {
+        return (WKWebView *)placeholder;
+    }
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    config.suppressesIncrementalRendering = suppressIncrementalRendering;
+    config.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:placeholder.frame configuration:config];
+    webView.autoresizingMask = placeholder.autoresizingMask;
+    webView.allowsLinkPreview = NO;
+    [placeholder.superview replaceSubview:placeholder with:webView];
+    return webView;
+}
+
 @implementation AgentVC
 {
 	NSMutableDictionary *outlineViewData;
@@ -50,6 +67,7 @@ with MacPatch; if not, write to the Free Software Foundation, Inc.,
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    _wkWebView = MPWebViewReplacingPlaceholder(_wkWebView, NO);
     NSDictionary *data = [NSDictionary dictionaryWithContentsOfFile:MP_AGENT_SETTINGS];
     settings = data[@"settings"];
     dispatch_async(dispatch_get_main_queue(), ^{

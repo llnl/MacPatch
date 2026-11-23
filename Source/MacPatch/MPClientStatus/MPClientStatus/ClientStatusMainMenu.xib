@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="23504"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="23504"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -1113,14 +1112,10 @@ KQAyADcASQBMAFEAUwBdAGMAbABzAHgAgACVAJcAmQCbAJ0ApwCuALMAvgDBAMMAxQDHAMwA1wDgAOgA
                 <rect key="frame" x="0.0" y="0.0" width="620" height="442"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <wkWebView wantsLayer="YES" focusRingType="none" fixedFrame="YES" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="r0j-lI-7S5">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="r0j-lI-7S5">
                         <rect key="frame" x="0.0" y="42" width="620" height="400"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <wkWebViewConfiguration key="configuration">
-                            <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                            <wkPreferences key="preferences"/>
-                        </wkWebViewConfiguration>
-                    </wkWebView>
+                    </customView>
                     <button verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="W5t-0c-pCg">
                         <rect key="frame" x="18" y="12" width="115" height="18"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>

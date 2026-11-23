@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="25098"/>
-        <plugIn identifier="com.apple.WebKit2IBPlugin" version="25098"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -321,19 +320,12 @@
                         <autoresizingMask key="autoresizingMask"/>
                     </scroller>
                 </scrollView>
-                <wkWebView wantsLayer="YES" focusRingType="none" allowsLinkPreview="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Ndj-oS-qTw">
+                <customView translatesAutoresizingMaskIntoConstraints="NO" id="Ndj-oS-qTw">
                     <rect key="frame" x="0.0" y="587" width="961" height="122"/>
                     <constraints>
                         <constraint firstAttribute="height" constant="122" id="QF3-uP-eL1"/>
                     </constraints>
-                    <wkWebViewConfiguration key="configuration">
-                        <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                        <wkPreferences key="preferences"/>
-                    </wkWebViewConfiguration>
-                    <connections>
-                        <outlet property="navigationDelegate" destination="-2" id="E5c-Aw-bG8"/>
-                    </connections>
-                </wkWebView>
+                </customView>
                 <popUpButton verticalHuggingPriority="750" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="29">
                     <rect key="frame" x="20" y="557" width="200" height="19"/>
                     <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
@@ -394,18 +386,10 @@
                 <rect key="frame" x="0.0" y="0.0" width="760" height="671"/>
                 <autoresizingMask key="autoresizingMask"/>
                 <subviews>
-                    <wkWebView wantsLayer="YES" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WR7-1D-O9L">
+                    <customView fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="WR7-1D-O9L">
                         <rect key="frame" x="0.0" y="0.0" width="760" height="671"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <wkWebViewConfiguration key="configuration">
-                            <audiovisualMediaTypes key="mediaTypesRequiringUserActionForPlayback" none="YES"/>
-                            <wkPreferences key="preferences" javaScriptCanOpenWindowsAutomatically="NO"/>
-                        </wkWebViewConfiguration>
-                        <connections>
-                            <outlet property="UIDelegate" destination="-2" id="ZVs-kn-Jov"/>
-                            <outlet property="navigationDelegate" destination="-2" id="gCg-yN-D2b"/>
-                        </connections>
-                    </wkWebView>
+                    </customView>
                     <progressIndicator wantsLayer="YES" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" maxValue="100" bezeled="NO" indeterminate="YES" style="spinning" translatesAutoresizingMaskIntoConstraints="NO" id="ocX-pB-uud">
                         <rect key="frame" x="364" y="320" width="32" height="32"/>
                         <autoresizingMask key="autoresizingMask" flexibleMinX="YES" flexibleMaxX="YES" flexibleMinY="YES"/>
