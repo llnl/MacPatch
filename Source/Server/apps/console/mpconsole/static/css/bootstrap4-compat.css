@@ -60,6 +60,26 @@
 .form-control-static { min-height: 2.375rem; padding-top: .375rem; }
 .input-sm { height: calc(1.5em + .5rem + 2px); padding: .25rem .5rem; font-size: .875rem; }
 .control-label { padding-top: .375rem; }
+/* A <select class="form-control"> was drawn with a native arrow in Bootstrap 4. In Bootstrap 5 the arrow belongs
+   to .form-select, so give the same arrow and right-hand room to selects that still use .form-control. */
+select.form-control:not([multiple]):not([size]), select.form-control[size="1"]:not([multiple]) {
+  --bs-form-select-bg-img: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%235a5c69' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  padding-right: 2.25rem;
+  background-image: var(--bs-form-select-bg-img);
+  background-repeat: no-repeat;
+  background-position: right .75rem center;
+  background-size: 16px 12px;
+  appearance: none;
+}
+select.form-control.form-control-sm:not([multiple]):not([size]), select.form-control.form-control-sm[size="1"]:not([multiple]) { padding-right: 2rem; }
+
+/* Bootstrap 5 dropped .form-group (it used to carry the space between form rows). */
+.form-group { margin-bottom: 1rem; }
+.form-group.mb-0 { margin-bottom: 0; }
+/* A form-group that is also a grid row keeps the row's gutters; only the space below is added. */
+.form-group.row { --bs-gutter-y: 0; }
+.form-group > .col-form-label { padding-top: calc(.375rem + 1px); padding-bottom: calc(.375rem + 1px); }
+
 .form-horizontal .form-group { display: flex; flex-wrap: wrap; margin-right: -.75rem; margin-left: -.75rem; }
 .well { padding: 1.25rem; margin-bottom: 1.25rem; background: #f8f9fc; border: 1px solid #e3e6f0; border-radius: .35rem; }
 
