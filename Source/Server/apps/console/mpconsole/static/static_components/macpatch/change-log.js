@@ -10,8 +10,15 @@
         var $table = $('#change-log-table-view');
         var $filters = $('#change-log-filters');
         var $error = $('#change-log-error');
-        $table.bootstrapTable({
+        MPTable.create('#change-log-table-view', {
             url: '/console/change_log/data',
+            idField: 'rid',
+            persistColumns: false,
+            showColumns: false,
+            // Every formatter below escapes its own output, and `changes` is an object the formatter needs as one.
+            escape: false,
+            // A plus/minus, not MPTable's info icon: this is the only table with expandable rows.
+            icons: {detailOpen: 'fa fa-plus', detailClose: 'fa fa-minus'},
             sidePagination: 'server', pagination: true, pageSize: 25,
             pageList: [25, 50, 100], search: true, searchTimeOut: 400,
             showRefresh: true, uniqueId: 'rid', detailView: true,
