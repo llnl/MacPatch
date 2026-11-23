@@ -108,10 +108,10 @@ class MPaws:
 		s3Client = None
 		if current_app.config['USE_AWS_S3']:
 			try:
-				log_Error('current_app.config[USE_AWS_S3]')
-				log_Error('key: '+current_app.config['AWS_S3_KEY'])
-				log_Error('secret: '+current_app.config['AWS_S3_SECRET'])
-				log_Error('current_app.config[USE_AWS_S3]')
+				#log_Error('current_app.config[USE_AWS_S3]')
+				#log_Error('key: '+current_app.config['AWS_S3_KEY'])
+				#log_Error('secret: '+current_app.config['AWS_S3_SECRET'])
+				#log_Error('current_app.config[USE_AWS_S3]')
 
 				config = Config(connect_timeout=5, retries={'max_attempts': 0})
 

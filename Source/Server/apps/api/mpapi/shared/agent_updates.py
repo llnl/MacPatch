@@ -2,7 +2,8 @@ from packaging import version
 from sqlalchemy import text
 
 from mpapi.extensions import db
-from mpapi.model import MpClientAgent, MpClient, MpClientPlist, MpClientAgentsFilter
+from mpapi.model import (MpClientAgent, MpClient, MpClientPlist, MpClientAgentsFilter,
+						 MpClientGroupMembers, MpClientGroups)
 from mpapi.mplogger import log_Info, log_Error, log_Debug
 
 # Agent update kinds: the stored procedure argument for each
@@ -25,19 +26,30 @@ def latest_update_for(kind):
 
 
 def client_info(cuuid):
-	"""Client attributes the update filters are evaluated against."""
+	"""
+	Client attributes the update filters are evaluated against.
+
+	A filter on "Domain" is evaluated against the client's group name, as the earlier agent
+	code did (it is not the AD domain and not the deprecated mp_clients_plist Domain).
+	"""
 	info = {'cuuid': cuuid, 'osver': '10.9.0', 'ipaddr': '127.0.0.1', 'hostname': 'localhost',
-			'domain': 'Default', 'patchgroup': 'Default'}
+			'domain': 'NA', 'client_group': 'NA', 'patchgroup': 'Default'}
 
 	client = (MpClient.query.with_entities(MpClient.osver, MpClient.ipaddr, MpClient.hostname)
 			  .filter(MpClient.cuuid == cuuid).first())
 	if client is not None:
 		info['osver'], info['ipaddr'], info['hostname'] = client
 
-	plist = (MpClientPlist.query.with_entities(MpClientPlist.Domain, MpClientPlist.PatchGroup)
+	group = (MpClientGroups.query.with_entities(MpClientGroups.group_name)
+			 .join(MpClientGroupMembers, MpClientGroupMembers.group_id == MpClientGroups.group_id)
+			 .filter(MpClientGroupMembers.cuuid == cuuid).first())
+	if group is not None and group[0]:
+		info['domain'] = info['client_group'] = group[0]
+
+	plist = (MpClientPlist.query.with_entities(MpClientPlist.PatchGroup)
 			 .filter(MpClientPlist.cuuid == cuuid).first())
-	if plist is not None:
-		info['domain'], info['patchgroup'] = plist
+	if plist is not None and plist[0]:
+		info['patchgroup'] = plist[0]
 
 	return info
 

@@ -149,7 +149,7 @@ def getSiteKeyData():
 	return keyData
 
 def md5ForFile(fname):
-	hash_md5 = hashlib.md5()
+	hash_md5 = hashlib.md5(usedforsecurity=False)
 	with open(fname, "rb") as f:
 		for chunk in iter(lambda: f.read(4096), b""):
 			hash_md5.update(chunk)
@@ -207,7 +207,7 @@ def getRevisonForConfig(configID):
 			reslst.append(i.akeyValue.lower())
 
 		reslststr = "".join(reslst)
-		configHash = hashlib.md5(str(reslststr).encode('utf-8')).hexdigest()
+		configHash = hashlib.md5(str(reslststr).encode('utf-8'), usedforsecurity=False).hexdigest()
 
 		return configHash
 	else:

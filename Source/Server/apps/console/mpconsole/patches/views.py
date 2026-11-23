@@ -518,7 +518,7 @@ def savePatchFile(puuid, file):
 		log_Info('Saving file to (%s)' % (_file_path))
 		file.save(_file_path)
 
-		md5 = hashlib.md5()
+		md5 = hashlib.md5(usedforsecurity=False)
 		with open(_file_path,'rb') as f: 
 			for chunk in iter(lambda: f.read(8192), b''): 
 				md5.update(chunk)
@@ -556,7 +556,7 @@ def savePatchFileToTMP(puuid, file):
 		log_Info('Saving file to (%s)' % (_file_path))
 		file.save(_file_path)
 
-		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read()).hexdigest()
+		result['fileHash'] = hashlib.md5(open(_file_path, 'rb').read(), usedforsecurity=False).hexdigest()
 		result['fileSize'] = (os.path.getsize(_file_path)/float(1000))
 
 	return result
@@ -1278,7 +1278,7 @@ def _publishPatchGroup(group_id):
 
 	jsonData = json.dumps(_patchData)
 	setattr(pData, 'rev', dts)
-	setattr(pData, 'hash', hashlib.md5(jsonData.encode('utf-8')).hexdigest())
+	setattr(pData, 'hash', hashlib.md5(jsonData.encode('utf-8'), usedforsecurity=False).hexdigest())
 	setattr(pData, 'data', jsonData)
 	setattr(pData, 'data_type', "JSON")
 	setattr(pData, 'mdate', _now)

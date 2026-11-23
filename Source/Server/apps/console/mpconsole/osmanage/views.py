@@ -149,7 +149,7 @@ def profileSave(profile_id):
 
 			if _file_data and allowed_file(_file.filename, ALLOWED_EXTENSIONS):
 				# Gen Hash
-				profile__hash = hashlib.md5(_file_data).hexdigest()
+				profile__hash = hashlib.md5(_file_data, usedforsecurity=False).hexdigest()
 				#setattr(profile, 'profileData', _file_data.encode('string-escape').encode('utf-8'))
 				setattr(profile, 'profileData', _file_data)
 				setattr(profile, 'profileHash', profile__hash)
