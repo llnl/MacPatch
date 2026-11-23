@@ -10,7 +10,7 @@
  *   pk          value sent as `pk`, default is the row's idField
  *   source      [{value, text}] for select
  *   validate    function(value) -> an error message to refuse the value
- *   title       tooltip on the cell
+ *   title       tooltip on the cell (select cells get a small chevron after the text, see mp.css)
  *   emptytext   shown when the cell is empty
  *   format      for date, 'yyyy-mm-dd' (default)
  *
@@ -51,7 +51,7 @@
     function display(opts, value, field) {
         var text = textFor(opts, value);
         var empty = text === '';
-        return '<a href="javascript:void(0)" class="mp-editable' + (empty ? ' mp-editable-empty' : '') + '"' +
+        return '<a href="javascript:void(0)" class="mp-editable' + (opts.type === 'select' ? ' mp-editable-select' : '') + (empty ? ' mp-editable-empty' : '') + '"' +
             ' data-mp-edit="' + esc(field) + '"' + (opts.title ? ' title="' + esc(opts.title) + '"' : '') + '>' +
             esc(empty ? (opts.emptytext || EMPTY_DEFAULT) : text) + '</a>';
     }
@@ -72,7 +72,8 @@
             input.type = opts.type === 'date' ? 'date' : 'text';
             input.value = value === null || value === undefined ? '' : String(value);
         }
-        input.className = 'form-control form-control-sm mp-editable-input';
+        // Bootstrap 5 draws a select's arrow through .form-select; .form-control leaves it a plain box.
+        input.className = (opts.type === 'select' ? 'form-select form-select-sm' : 'form-control form-control-sm') + ' mp-editable-input';
         return input;
     }
 

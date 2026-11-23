@@ -231,6 +231,19 @@ a.mp-editable.mp-editable-empty {
 	min-width: 120px;
 	gap: 3px;
 }
+/* A cell that opens a list shows a chevron, so it reads as a dropdown before it is clicked. */
+a.mp-editable-select::after {
+	content: "\f107";
+	display: inline-block;
+	margin-left: 5px;
+	font-family: "Font Awesome 5 Free", "Font Awesome 6 Free", "Font Awesome 7 Free";
+	font-weight: 900;
+	font-size: 11px;
+	line-height: 1;
+	color: #337ab7;
+}
+a.mp-editable-select.mp-editable-empty::after { color: #999; }
+
 /* About 20% smaller than Bootstrap's small controls (31px high, 14px font) */
 .mp-editable-form .mp-editable-input,
 .mp-editable-form .btn {
@@ -242,6 +255,14 @@ a.mp-editable.mp-editable-empty {
 .mp-editable-form .mp-editable-input {
 	width: auto;
 	min-width: 72px;
+}
+/* The select keeps room on the right for Bootstrap's arrow (the shorthand above removed it). */
+.mp-editable-form select.mp-editable-input {
+	padding: 0 24px 0 6px;
+	background-position: right 6px center;
+	background-size: 10px 8px;
+	border-color: #337ab7;
+	cursor: pointer;
 }
 .mp-editable-form .btn {
 	width: 26px;
