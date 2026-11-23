@@ -82,6 +82,23 @@
 
 @end
 
+// The xib holds plain placeholder views because a WKWebView archived by the macOS 26 SDK
+// can't be decoded on macOS 15 and earlier. Swap in a real WKWebView once the nib is loaded.
+static WKWebView *MPWebViewReplacingPlaceholder(NSView *placeholder, BOOL suppressIncrementalRendering)
+{
+    if (placeholder == nil || [placeholder isKindOfClass:[WKWebView class]]) {
+        return (WKWebView *)placeholder;
+    }
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    config.suppressesIncrementalRendering = suppressIncrementalRendering;
+    config.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:placeholder.frame configuration:config];
+    webView.autoresizingMask = placeholder.autoresizingMask;
+    webView.allowsLinkPreview = NO;
+    [placeholder.superview replaceSubview:placeholder with:webView];
+    return webView;
+}
+
 @implementation Provisioning
 
 @dynamic window;
@@ -89,6 +106,10 @@
 - (void)windowDidLoad
 {
     [super windowDidLoad];
+    _welcomeWebView = MPWebViewReplacingPlaceholder(_welcomeWebView, YES);
+    _collectionWebView = MPWebViewReplacingPlaceholder(_collectionWebView, YES);
+    _installWebView = MPWebViewReplacingPlaceholder(_installWebView, YES);
+    _finishWebView = MPWebViewReplacingPlaceholder(_finishWebView, YES);
     fm = [NSFileManager defaultManager];
     BOOL backgroundOn = NO;
     

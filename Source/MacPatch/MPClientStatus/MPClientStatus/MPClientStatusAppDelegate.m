@@ -78,6 +78,23 @@ dispatch_source_t CreateDispatchTimer(double interval, dispatch_queue_t queue, d
 }
 
 
+// The xib holds plain placeholder views because a WKWebView archived by the macOS 26 SDK
+// can't be decoded on macOS 15 and earlier. Swap in a real WKWebView once the nib is loaded.
+static WKWebView *MPWebViewReplacingPlaceholder(NSView *placeholder, BOOL suppressIncrementalRendering)
+{
+    if (placeholder == nil || [placeholder isKindOfClass:[WKWebView class]]) {
+        return (WKWebView *)placeholder;
+    }
+    WKWebViewConfiguration *config = [[WKWebViewConfiguration alloc] init];
+    config.suppressesIncrementalRendering = suppressIncrementalRendering;
+    config.mediaTypesRequiringUserActionForPlayback = WKAudiovisualMediaTypeNone;
+    WKWebView *webView = [[WKWebView alloc] initWithFrame:placeholder.frame configuration:config];
+    webView.autoresizingMask = placeholder.autoresizingMask;
+    webView.allowsLinkPreview = NO;
+    [placeholder.superview replaceSubview:placeholder with:webView];
+    return webView;
+}
+
 @implementation MPClientStatusAppDelegate
 {
     dispatch_source_t _lastCheckInTimer;
@@ -176,6 +193,7 @@ NSString *const kRequiredPatchesChangeNotification  = @"kRequiredPatchesChangeNo
 -(void)awakeFromNib
 {
     LogInfo(@"start awakeFromNib");
+    _wkWebView = MPWebViewReplacingPlaceholder(_wkWebView, NO);
     fm = [NSFileManager defaultManager];
 	settings = [MPSettings sharedInstance];
 	[settings refresh];
