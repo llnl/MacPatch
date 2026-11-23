@@ -508,11 +508,9 @@ def agentConfigSave():
 			db.session.add(config)
 			log_Info('[agentConfigSave] Creating new config with aid: %s' % aid)
 
-		# Save config data (key-value pairs)
-		# Delete existing data
-		AgentConfigData.query.filter(AgentConfigData.aid == aid).delete()
-
-		# Add new data from form
+		# Save config data (key-value pairs). Update the rows that exist, add new keys and remove only the
+		# keys that were taken out of the form, so unchanged settings keep their row (and are not logged
+		# as deleted and re-created on every save).
 		config_keys = [k for k in _form.keys() if k.startswith('config_')]
 		log_Info('[agentConfigSave] Saving %d config key-value pairs' % len(config_keys))
 		log_Debug('[agentConfigSave] Form keys: %s' % list(_form.keys()))
@@ -521,20 +519,39 @@ def agentConfigSave():
 			log_Error('[agentConfigSave] No configuration keys provided')
 			return json.dumps({'error': 1, 'errormsg': 'At least one configuration setting is required'}), 400
 
+		submitted = {}
 		for key in config_keys:
-			akey = key.replace('config_', '')
-			akeyValue = _form.get(key, '')
-			enforced = _form.get('enforced_' + akey, '0')
+			akey = key.replace('config_', '', 1)
+			submitted[akey] = (_form.get(key, ''), _form.get('enforced_' + akey, '0'))
 
-			log_Debug('[agentConfigSave] Adding config: %s=%s (enforced=%s)' % (akey, akeyValue, enforced))
-			data = AgentConfigData(aid=aid, akey=akey, akeyValue=akeyValue, enforced=enforced)
-			db.session.add(data)
+		existing = {}
+		for row in AgentConfigData.query.filter(AgentConfigData.aid == aid).order_by(AgentConfigData.rid).all():
+			if row.akey in existing:
+				# A key stored more than once (from earlier saves): keep the first row
+				db.session.delete(row)
+			else:
+				existing[row.akey] = row
+
+		for akey, (akeyValue, enforced) in submitted.items():
+			log_Debug('[agentConfigSave] Config: %s=%s (enforced=%s)' % (akey, akeyValue, enforced))
+			row = existing.get(akey)
+			if row is None:
+				db.session.add(AgentConfigData(aid=aid, akey=akey, akeyValue=akeyValue, enforced=enforced))
+			else:
+				if row.akeyValue != akeyValue:
+					row.akeyValue = akeyValue
+				if str(row.enforced) != str(enforced):
+					row.enforced = enforced
+
+		for akey, row in existing.items():
+			if akey not in submitted:
+				db.session.delete(row)
 
 		# Update revision hash
 		db.session.commit()
 
 		# Calculate revision hash
-		config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).all()
+		config_data = AgentConfigData.query.filter(AgentConfigData.aid == aid).order_by(AgentConfigData.rid).all()
 		reslst = []
 		for i in config_data:
 			reslst.append(i.akeyValue.lower())

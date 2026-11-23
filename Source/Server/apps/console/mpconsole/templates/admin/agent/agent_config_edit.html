@@ -98,6 +98,11 @@ $(document).ready(function() {
 	$('#modalSaveButton').off('click').on('click', function(e) {
 		e.preventDefault();
 
+		// A second click while the first save is running would create the configuration twice.
+		var $save = $(this);
+		if ($save.prop('disabled')) return;
+		$save.prop('disabled', true);
+
 		// Build form data
 		var data = {
 			'aid': $('#aid').val(),
@@ -157,12 +162,14 @@ $(document).ready(function() {
 			type: 'POST',
 			data: data,
 			success: function(response) {
+				$save.prop('disabled', false);
 				$('#modalDialog').modal('hide');
 				if (typeof $('#table').bootstrapTable === 'function') {
 					$('#table').bootstrapTable('refresh');
 				}
 			},
 			error: function(xhr) {
+				$save.prop('disabled', false);
 				try {
 					var response = JSON.parse(xhr.responseText);
 					alert('Error saving configuration: ' + response.errormsg);
