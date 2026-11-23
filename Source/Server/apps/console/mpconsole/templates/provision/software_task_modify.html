@@ -13,12 +13,10 @@
 	</title>
 
 	{% block styles %}
-		<!-- Bootstrap Core CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
-		<!-- Custom CSS -->
-		<link href="{{ url_for('static', filename='yarn_components/startbootstrap-sb-admin-2/css/sb-admin-2.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/sb-admin-2-bs5.min.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 		<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 
 		<!-- Custom Fonts -->
 		<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
@@ -82,7 +80,7 @@
 							<div class="col-md-5">
 								<div class='input-group date' id='sw_start_datetime'>
 									<input class="form-control" type="text" name="sw_start_datetime" value="{{data['Task']['sw_start_datetime'] or '2021-01-01 12:00:00' }}">
-									<span class="input-group-addon">
+									<span class="input-group-addon input-group-text">
 										<span class="glyphicon glyphicon-calendar"></span>
 									</span>
 								</div>
@@ -98,7 +96,7 @@
 							<div class="col-md-5">
 								<div class='input-group date' id='sw_end_datetime'>
 									<input class="form-control" type="text" name="sw_end_datetime" value="{{data['Task']['sw_end_datetime'] or '2050-01-01 12:00:00' }}">
-									<span class="input-group-addon">
+									<span class="input-group-addon input-group-text">
 										<span class="glyphicon glyphicon-calendar"></span>
 									</span>
 								</div>
@@ -149,8 +147,7 @@
 	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 	<script src="{{ url_for('static', filename='yarn_components/moment/moment.js') }}"></script>
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap5/bootstrap.bundle.min.js') }}"></script>
 
 	<script src="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/js/bootstrap-datetimepicker.min.js') }}"></script>
 	<link href="{{ url_for('static', filename='static_components/smalot-bootstrap-datetimepicker/css/bootstrap-datetimepicker.css') }}" rel="stylesheet">

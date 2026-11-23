@@ -11,8 +11,9 @@
 	<title>{% block title %}{% endblock %}</title>
 
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/sb-admin-2-bs5.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/bootstrap4-compat.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/console-theme.css') }}" rel="stylesheet">
 	<!-- Custom Fonts -->
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
@@ -32,8 +33,7 @@
 	<!-- jQuery -->
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap5/bootstrap.bundle.min.js') }}"></script>
 {% endblock %}
 </body>
 

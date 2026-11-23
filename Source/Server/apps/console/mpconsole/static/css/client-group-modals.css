@@ -15,3 +15,10 @@
 .client-group-picker-dropdown { z-index: 1060; height: auto; background: #fff; font-size: 14px; line-height: 20px; }
 .client-group-picker-dropdown .selectize-dropdown-content { max-height: 200px; overflow-y: auto; overflow-x: hidden; }
 .client-group-picker-dropdown .option { white-space: normal; overflow-wrap: anywhere; }
+
+/* Selectize (Bootstrap 5 theme) focus ring in the console blue, like the other form fields. */
+#modalDialog .selectize-control.single .selectize-input.focus,
+#modalDialog .selectize-control.multi .selectize-input.focus {
+  border-color: #66afe9;
+  box-shadow: 0 0 0 .2rem rgba(51, 122, 183, .25);
+}

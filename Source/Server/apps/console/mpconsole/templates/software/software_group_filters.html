@@ -5,10 +5,8 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
 {% block styles %}
-	<!-- Bootstrap Core CSS -->
-	<link href="{{ url_for('static', filename='yarn_components/bootstrap/dist/css/bootstrap.min.css') }}" rel="stylesheet">
+	<link href="{{ url_for('static', filename='css/sb-admin-2-bs5.min.css') }}" rel="stylesheet">
 	<link href="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.css') }}" rel="stylesheet">
-	<link href="{{ url_for('static', filename='css/bootstrap-table-editable.css') }}" rel="stylesheet">
 	<!-- Custom Fonts -->
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/all.min.css') }}" rel="stylesheet" type="text/css">
 	<link href="{{ url_for('static', filename='yarn_components/@fortawesome/fontawesome-free/css/v4-shims.min.css') }}" rel="stylesheet" type="text/css">
@@ -60,14 +58,10 @@
 	<script src="{{ url_for('static', filename='yarn_components/jquery/dist/jquery.min.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/session-navigation.js') }}"></script>
 
-	<!-- Bootstrap Core JavaScript -->
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap/dist/js/bootstrap.bundle.min.js') }}"></script>
+	<script src="{{ url_for('static', filename='static_components/bootstrap5/bootstrap.bundle.min.js') }}"></script>
 
 	<!-- Bootstrap Table -->
 	<script src="{{ url_for('static', filename='yarn_components/bootstrap-table/dist/bootstrap-table.min.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/bootstrap-table-editable/bootstrap-table-editable.js') }}"></script>
-	<script src="{{ url_for('static', filename='yarn_components/bootstrap-editable/js/index.js') }}"></script>
-	<script src="{{ url_for('static', filename='static_components/macpatch/bootstrap4-editable.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-http.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-edit.js') }}"></script>
 	<script src="{{ url_for('static', filename='static_components/macpatch/mp-table.js') }}"></script>

@@ -83,7 +83,10 @@ select.form-control.form-control-sm:not([multiple]):not([size]), select.form-con
 .form-horizontal .form-group { display: flex; flex-wrap: wrap; margin-right: -.75rem; margin-left: -.75rem; }
 .well { padding: 1.25rem; margin-bottom: 1.25rem; background: #f8f9fc; border: 1px solid #e3e6f0; border-radius: .35rem; }
 
-.input-group-addon {
+/* The datetimepicker plugin finds its trigger by the Bootstrap 3 class .input-group-addon, so templates keep it
+   next to Bootstrap 5's .input-group-text.  A button with that class sits inside the group like Bootstrap 5's
+   own input-group buttons. */
+.input-group > .input-group-addon:not(.input-group-text) {
   display: flex;
   align-items: center;
   padding: .375rem .75rem;
@@ -92,6 +95,8 @@ select.form-control.form-control-sm:not([multiple]):not([size]), select.form-con
   border: 1px solid #d1d3e2;
   border-radius: .35rem;
 }
+.input-group > button.input-group-addon { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: -1px; }
+.input-group > .input-group-addon.btn { background: #fff; }
 
 .label { display: inline-block; padding: .25em .5em; color: #fff; font-size: 75%; font-weight: 700; border-radius: .25rem; }
 .label-default { background: #858796; }
