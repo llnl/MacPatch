@@ -25,10 +25,10 @@
 		</div>
 		<div class="col-lg-6 col-12 text-end">
 			<button class="btn btn-default" onclick='download("/mp-content/clients/{{curAgentID}}/MacPatch.pkg.zip")'>
-				<span class="glyphicon glyphicon-save"></span> Current Client Agent
+				<span class="fa fa-save"></span> Current Client Agent
 			</button>
 			<button class="btn btn-default" onclick='download("/mp-content/tools/MPAgentUploader.zip")'>
-				<span class="glyphicon glyphicon-save"></span> Agent Uploader
+				<span class="fa fa-save"></span> Agent Uploader
 			</button>
 			<iframe id="dl-agentuploader" style="display:none;"></iframe>
 		</div>
@@ -50,7 +50,7 @@
 		<div class="tab-pane fade {% if selectedTab == 1 %}show active{% endif %}" id="agents">
 			{% if gResults['Admin'] == True %}
 				<div id="toolbar">
-					<button id="delAgentButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
+					<button id="delAgentButton" type="button" class="btn btn-default" disabled><i class="fa fa-trash"></i></button>
 				</div>
 			{% endif %}
 			<table id="tableAgents" class="table table-bordered table-sm table-striped"></table>
@@ -58,8 +58,8 @@
 		<div class="tab-pane fade {% if selectedTab == 2 %}show active{% endif %}" id="filters">
 			{% if gResults['Admin'] == True %}
 				<div id="toolbarFilters">
-					<button id="addFilterButton" type="button" class="btn btn-default"><i class="glyphicon glyphicon-plus"></i></button>
-					<button id="delFilterButton" type="button" class="btn btn-default" disabled><i class="glyphicon glyphicon-trash"></i></button>
+					<button id="addFilterButton" type="button" class="btn btn-default"><i class="fa fa-plus"></i></button>
+					<button id="delFilterButton" type="button" class="btn btn-default" disabled><i class="fa fa-trash"></i></button>
 				</div>
 			{% endif %}
 			<table id="tableFilters" class="table table-bordered table-sm table-striped"></table>

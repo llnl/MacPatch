@@ -290,8 +290,7 @@ body.mp-console {
   color: #23527c;
 }
 
-.table td a .fa,
-.table td a .glyphicon {
+.table td a .fa {
   color: inherit;
 }
 
