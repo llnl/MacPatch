@@ -63,10 +63,13 @@ def _currentUser():
 	return AdmUsers.query.filter(AdmUsers.rid == session.get('_user_id')).first()
 
 def isClientGroupOwner(group_id):
-	"""True if the user owns the client group, or is the main console admin (user_type 0)"""
+	"""True if the user owns the client group, is the main console admin (user_type 0), or has the admin right"""
 	usr = _currentUser()
 	if usr is None:
 		return False
+
+	if adminRole():
+		return True
 
 	usrInf = AdmUsersInfo.query.filter(AdmUsersInfo.user_id == session.get('user')).first()
 	if usrInf is not None and usrInf.user_type == 0:

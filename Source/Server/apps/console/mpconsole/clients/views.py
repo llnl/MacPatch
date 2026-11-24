@@ -960,8 +960,8 @@ def isAdminForGroup(id):
 
 	if usr:
 		if usrInf:
-			# User_type 0 is the main console admin, has access to everything
-			if usrInf.user_type == 0:
+			# User_type 0 is the main console admin, has access to everything; so does the admin right
+			if usrInf.user_type == 0 or adminRole():
 				return True
 
 		q_admin = MpClientGroupAdmins.query.filter(MpClientGroupAdmins.group_id == id).all()
@@ -983,8 +983,9 @@ def accessToGroups():
 	usrInf = accountInfo()
 	if usr:
 		if usrInf:
-			# User_type 0 is the main console admin, has access to everything
-			if usrInf.user_type == 0:
+			# User_type 0 is the main console admin, has access to everything; so does any account
+			# with the admin right (AdmUsersInfo.admin, held in session['role'][0]).
+			if usrInf.user_type == 0 or adminRole():
 				q_groups = MpClientGroups.query.all()
 				for row in q_groups:
 					_groups.add(row.group_id)
