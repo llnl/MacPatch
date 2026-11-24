@@ -24,6 +24,11 @@
 
     <link href="{{ url_for('static', filename='css/mp.css') }}" rel="stylesheet">
 
+	<style>
+		/* Ace takes its size from the element it is attached to; without a height these two collapse to 0px. */
+		#pkg_preinstall, #pkg_postinstall { height: 120px; width: 100%; }
+	</style>
+
 {%  endblock %}
 
 {% block bodyPanel %}
